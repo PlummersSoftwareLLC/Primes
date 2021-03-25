@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace PrimeSieveCS
 {
@@ -48,21 +49,23 @@ namespace PrimeSieveCS
                 return false;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool GetBit(int index)
             {
-                if (index % 2 == 0)
+                if ((index & 1) == 0)
                     return false;
-                return bitArray[index / 2];
+                return bitArray[(int)((uint)index / 2)];
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void ClearBit(int index)
             {
-                if (index % 2 == 0)
+                if ((index & 1) == 0)
                 {
                     Console.WriteLine("You are setting even bits, which is sub-optimal");
                     return;
                 }
-                bitArray[index / 2] = false;      
+                bitArray[(int)((uint)index / 2)] = false;      
             }
 
             // primeSieve
