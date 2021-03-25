@@ -67,12 +67,13 @@ class PrimeSieve:
     def sieve(sieve_size):
         factor = 3
         q = sqrt(sieve_size)
-        rawbits = np.full(sieve_size, True, b1)
+        rawbits = np.full(sieve_size // 2, True, b1)
 
         while factor < q:
-            for i in range(factor, sieve_size, 2):
-                if rawbits[i]:
-                    factor = i
+            for num in range(factor, sieve_size, 2):
+                if rawbits[num // 2]:
+                    factor = num
+                    break
 
             for num in range(factor * 3, sieve_size, factor * 2):
                 rawbits[num // 2] = False
@@ -132,7 +133,7 @@ if __name__ == '__main__':
 # Using time.time as opposed to timeit: 65 passes
 # Adding a better counting method:      69 passes
 # Finding next prime with increment 2:  85 passes
-# More efficient division by two:         114 passes
+# More efficient division by two:       114 passes
 # Inline clear_bit:                     209 passes
 # Naive JIT:                            2020 passes
-# Proper JIT with numpy:                25939 passes
+# Proper JIT with numpy:                10301 passes
