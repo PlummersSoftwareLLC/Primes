@@ -1,10 +1,11 @@
 ﻿// ---------------------------------------------------------------------------
-// PrimeCS.cs : Dave's Garage Prime Sieve in C++
+// PrimeCS.cs : Dave's Garage Prime Sieve in C#
 // ---------------------------------------------------------------------------
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace PrimeSieveCS
 {
@@ -112,26 +113,28 @@ namespace PrimeSieveCS
                 }
                 if (showResults)
                     Console.WriteLine("");
-                Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + this.sieveSize + ", Count: " + count + ", Valid: " + validateResults());
+                Console.WriteLine($"Passes: {passes:#,##0} | Time: {duration} | Avg: {(duration / passes)} | Limit: {this.sieveSize:#,##0} | Count: {count:#,##0} | Valid: {validateResults()}");
             }
         }
 
         static void Main(string[] args)
         {
-            var tStart = DateTime.UtcNow;
+            var stopWatch = new Stopwatch();
             var passes = 0;
             prime_sieve sieve = null;
+            long temMilliseconds = 10 * 1000;
 
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 10)
+            stopWatch.Start();
+            while (stopWatch.ElapsedMilliseconds < temMilliseconds)
             {
                 sieve = new prime_sieve(1000000);
                 sieve.runSieve();
                 passes++;
             }
 
-            var tD = DateTime.UtcNow - tStart;
+            stopWatch.Stop();
             if (sieve != null)
-                sieve.printResults(false, tD.TotalSeconds, passes);
+                sieve.printResults(false, stopWatch.Elapsed.TotalSeconds, passes);
         }
     }
 }
