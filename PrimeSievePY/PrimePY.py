@@ -7,10 +7,12 @@
 # call the runSieve method to do the calculation. printResults will dump the count to check validity.
 #
 # Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
+#
+# Updated 3/25/2021 by William Gaylord to use time instead of timeit and use python's builtin count function.
 
 from sys import stdout                      # So I can print without an automatic python newline
 from math import sqrt                       # Used by the sieve
-import timeit                               # For timing the durations
+import time                                 # For timing the durations
 
 class prime_sieve(object):
 
@@ -92,7 +94,7 @@ class prime_sieve(object):
     # runSieve, of course!
 
     def countPrimes(this):
-        return sum(1 for b in this.rawbits if b);
+        return this.rawbits.count(True)
 
     # printResults
     #
@@ -116,15 +118,15 @@ class prime_sieve(object):
   
 # MAIN Entry
 
-tStart = timeit.default_timer()                         # Record our starting time
+tStart = time.time()                                    # Record our starting time
 passes = 0                                              # We're going to count how many passes we make in fixed window of time
 
-while (timeit.default_timer() - tStart < 10):           # Run until more than 10 seconds have elapsed
+while (time.time() - tStart < 10):                      # Run until more than 10 seconds have elapsed
     sieve = prime_sieve(1000000)                        #  Calc the primes up to a million
     sieve.runSieve()                                    #  Find the results
     passes = passes + 1                                 #  Count this pass
     
-tD = timeit.default_timer() - tStart                    # After the "at least 10 seconds", get the actual elapsed
+tD = time.time() - tStart                              # After the "at least 10 seconds", get the actual elapsed
 
 sieve.printResults(False, tD, passes)                   # Display outcome
 
