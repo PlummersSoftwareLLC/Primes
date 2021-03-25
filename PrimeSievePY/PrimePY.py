@@ -8,128 +8,131 @@
 #
 # Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 
-from sys import stdout                      # So I can print without an automatic python newline
 from math import sqrt                       # Used by the sieve
-import timeit                               # For timing the durations
+import time                                 # For timing durations
+from typing import ClassVar, Dict     # For specifying types of variables
+import itertools                            # For chaining iterators
+from numba import njit, b1, int32
+import numpy as np
 
-class prime_sieve(object):
 
-    rawbits = None   # Storage for sieve - since we filter evens, just half as many bits
-    sieveSize = 0    # Upper limit, highest prime we'll consider
+class PrimeSieve:
+    rawbits: np.ndarray
+    """
+    Contents of the sieve.
+    We only store odd numbers, as they are the only interesting ones.
+    """
 
-    primeCounts = { 10 : 1,                 # Historical data for validating our results - the number of primes
-                    100 : 25,               # to be found under some limit, such as 168 primes under 1000
-                    1000 : 168,
-                    10000 : 1229,
-                    100000 : 9592,
-                    1000000 : 78498,
-                    10000000 : 664579,
-                    100000000 : 5761455
-                  }
+    sieve_size: int
+    """
+    Highest prime we'll consider
+    """
 
-    def __init__(this, limit):
-        this.sieveSize = limit
-        this.rawbits = [True] * (int((this.sieveSize+1)/2))
+    prime_counts: ClassVar[Dict[int, int]] = {
+        10: 1,
+        100: 25,
+        1000: 168,
+        10000: 1229,
+        100000: 9592,
+        1000000: 78498,
+        10000000: 664579,
+        100000000: 5761455
+    }
+    """
+    Historical data for validating our results (the number of primes to be found under some limit,
+    such as 168 primes under 1000
+    """
 
-    # Look up our count of primes in the historical data (if we have it) to see if it matches
+    def __init__(self, limit):
+        self.sieve_size = limit
 
-    def validateResults(this):                      # Check to see if this is an upper_limit we can
-        if this.sieveSize in this.primeCounts:      # the data, and (b) our count matches. Since it will return
-            return this.primeCounts[this.sieveSize] == this.countPrimes() # false for an unknown upper_limit, can't assume false == bad
+    def validate_results(self):
+        """
+        Check whether the number of found primes is correct
+        :return: whether or not the number of primes found is correct.
+        """
+        if self.sieve_size in self.prime_counts:      # the data, and (b) our count matches. Since it will return
+            return self.prime_counts[self.sieve_size] == self.count_primes() # false for an unknown upper_limit, can't assume false == bad
         return False
 
-    # GetBit
-    # 
-    # Gets a bit from the array of bits, but automatically just filters out even numbers as false,
-    # and then only uses half as many bits for actual storage
+    def get_bit(self, index):
+        """
+        Gets a bit from the array of bits.
+        :param index:
+        """
+        return self.rawbits[index // 2]
 
-    def GetBit(this, index):
-
-        if (index % 2 == 0): # even numbers are automaticallty returned as non-prime
-            return False
-        else:
-            return this.rawbits[int(index/2)]
-
-    # ClearBit
-    #
-    # Reciprocal of GetBit, ignores even numbers and just stores the odds. Since the prime sieve work should
-    # never waste time clearing even numbers, this code will assert if you try to
-
-    def ClearBit(this, index):
-
-        if (index % 2 == 0):
-            assert("If you're setting even bits, you're sub-optimal for some reason!")
-            return False
-        else:
-            this.rawbits[int(index/2)] = False
-
-    # primeSieve
-    # 
-    # Calculate the primes up to the specified limit
-
-    def runSieve(this):
-
+    @staticmethod
+    @njit(b1[:](int32))
+    def sieve(sieve_size):
         factor = 3
-        q = sqrt(this.sieveSize)
+        q = sqrt(sieve_size)
+        rawbits = np.full(sieve_size, True, b1)
 
-        while (factor < q):
-            for num in range (factor, this.sieveSize):
-                if (this.GetBit(num) == True):
-                    factor = num
-                    break
+        while factor < q:
+            for i in range(factor, sieve_size, 2):
+                if rawbits[i]:
+                    factor = i
 
-            # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-            # We can then step by factor * 2 because every second one is going to be even by definition
+            for num in range(factor * 3, sieve_size, factor * 2):
+                rawbits[num // 2] = False
+            factor += 2
+        return rawbits
 
-            for num in range (factor * 3, this.sieveSize, factor * 2): 
-                this.ClearBit(num)
+    def run_sieve(self):
+        """
+        Calculate the primes up to the specified limit
+        """
+        self.rawbits = PrimeSieve.sieve(self.sieve_size)
 
-            factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
+    def count_primes(self):
+        """
+        :return: the count of bits that are still set in the sieve, being the amount of primes.
+        """
+        return np.count_nonzero(self.rawbits)
 
-    # countPrimes
-    #
-    # Return the count of bits that are still set in the sieve. Assumes you've already called
-    # runSieve, of course!
+    def print_results(self, show_results, duration, passes):
+        """
+        Displays the primes found (or just the total count, depending on what you ask for)
+         
+        :param show_results: Show all primes 
+        :param duration:  The total time execution took
+        :param passes:  The amount of passes made
+        """
 
-    def countPrimes(this):
-        return sum(1 for b in this.rawbits if b);
+        if show_results:
+            print(", ".join(
+                map(str,
+                    itertools.chain([2], filter(
+                        lambda n: self.rawbits[n // 2],
+                        range(3, self.sieve_size, 2)))
+                    )
+            ))
 
-    # printResults
-    #
-    # Displays the primes found (or just the total count, depending on what you ask for)
-
-    def printResults(this, showResults, duration, passes):
-
-        if (showResults): # Since we auto-filter evens, we have to special case the number 2 which is prime
-            stdout.write("2, ");
-
-        count = 1
-        for num in range (3, this.sieveSize): # Count (and optionally dump) the primes that were found below the limit
-            if (this.GetBit(num) == True):
-                if (showResults):
-                    stdout.write(str(num) +", ")
-                count+=1
-
-        assert(count == this.countPrimes())
-        stdout.write("\n");
-        print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(this.sieveSize) + ", Count: " + str(count) + ", Valid: " + str(this.validateResults()))
-  
-# MAIN Entry
-
-tStart = timeit.default_timer()                         # Record our starting time
-passes = 0                                              # We're going to count how many passes we make in fixed window of time
-
-while (timeit.default_timer() - tStart < 10):           # Run until more than 10 seconds have elapsed
-    sieve = prime_sieve(1000000)                        #  Calc the primes up to a million
-    sieve.runSieve()                                    #  Find the results
-    passes = passes + 1                                 #  Count this pass
-    
-tD = timeit.default_timer() - tStart                    # After the "at least 10 seconds", get the actual elapsed
-
-sieve.printResults(False, tD, passes)                   # Display outcome
+        print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(self.sieve_size) + ", Count: " + str(self.count_primes()) + ", Valid: " + str(self.validate_results()))
 
 
+# Entrypoint
+if __name__ == '__main__':
+    tStart = time.time()                        # Record our starting time
+    passes = 0                                  # We're going to count how many passes we make in fixed window of time
 
+    while time.time() - tStart < 10:            # Run until more than 10 seconds have elapsed
+        sieve = PrimeSieve(1000000)             # Calc the primes up to a million
+        sieve.run_sieve()                       # Find the results
+        passes += 1                             # Count this pass
 
+    tD = time.time() - tStart                   # After the "at least 10 seconds", get the actual elapsed
 
+    sieve.print_results(False, tD, passes)      # Display outcome
 
+# Results:
+###
+# Original:                             56 passes
+# Using time.time as opposed to timeit: 65 passes
+# Adding a better counting method:      69 passes
+# Finding next prime with increment 2:  85 passes
+# More efficient division by two:         114 passes
+# Inline clear_bit:                     209 passes
+# Naive JIT:                            2020 passes
+# Proper JIT with numpy:                25939 passes
