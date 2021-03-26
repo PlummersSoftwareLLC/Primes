@@ -1,0 +1,15 @@
+[package]
+name = "prime-sieve-rust"
+version = "0.1.0"
+authors = ["Michael Barber <60610888+mike-barber@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bit-vec = "0.6"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
