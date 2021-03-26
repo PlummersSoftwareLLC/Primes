@@ -7,6 +7,8 @@
 #include <iostream>
 #include <bitset>
 #include <map>
+#include <cstring>
+#include <cmath>
 
 class prime_sieve
 {

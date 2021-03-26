@@ -3,7 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use bit_vec::BitVec;
+use smallbitvec::SmallBitVec;
 
 // pulled prime validator out into a separate struct, as it's defined
 // `const` in C++. There are various ways to do this in Rust, including
@@ -39,27 +39,30 @@ impl PrimeValidator {
 
 struct PrimeSieve {
     sieve_size: usize,
-    bits: BitVec,
+    bits: SmallBitVec,
 }
 
 impl PrimeSieve {
     fn new(sieve_size: usize) -> Self {
         PrimeSieve {
             sieve_size,
-            bits: BitVec::from_elem((sieve_size + 1) / 2, true),
+            bits: SmallBitVec::from_elem((sieve_size + 1) / 2, true),
         }
     }
 
-    fn clear_bit(&mut self, number: usize) {
-        assert!(number % 2 != 0, "You're setting even bits, which is sub-optimal.");
+    unsafe fn clear_bit(&mut self, number: usize) {
+        assert!(
+            number % 2 != 0,
+            "You're setting even bits, which is sub-optimal."
+        );
         let index = number / 2;
-        self.bits.set(index, false);
+        self.bits.set_unchecked(index, false);
     }
 
-    fn get_bit(&mut self, number: usize) -> bool {
+    unsafe fn get_bit(&mut self, number: usize) -> bool {
         match number % 2 {
             0 => false,
-            _ => self.bits.get(number / 2).expect("index out of bounds")
+            _ => self.bits.get_unchecked(number / 2),
         }
     }
 
@@ -79,17 +82,24 @@ impl PrimeSieve {
 
         while factor < q {
             for num in factor..self.sieve_size {
-                if self.get_bit(num) {
-                    factor = num;
-                    break;
+                // length already checked
+                unsafe { 
+                    if self.get_bit(num) {
+                        factor = num;
+                        break;
+                    }
                 }
             }
 
             // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             // We can then step by factor * 2 because every second one is going to be even by definition
-            let start = factor * 3;
-            for num in (start..self.sieve_size).step_by(factor * 2) {
-                self.clear_bit(num);
+            let mut num = factor * 3;
+            while num < self.sieve_size {
+                // length already checked
+                unsafe { 
+                    self.clear_bit(num);
+                }
+                num += factor * 2;
             }
 
             factor += 2;
