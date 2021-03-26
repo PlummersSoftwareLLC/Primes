@@ -61,7 +61,7 @@ mod primes {
                 "You're setting even bits, which is sub-optimal."
             );
             let index = number / 2;
-            
+
             debug_assert!(index / 8 < self.bits.len(), "bounds check");
             let word = self.bits.get_unchecked_mut(index / 8);
             *word &= !(1 << (index % 8));
