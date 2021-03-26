@@ -127,7 +127,7 @@ mod primes {
                 "Passes: {}, Time: {}, Avg: {}, Limit: {}, Count: {}, Valid: {}",
                 passes,
                 duration.as_secs_f32(),
-                duration.as_micros() / self.sieve_size as u128,
+                duration.as_secs_f32() / passes as f32,
                 self.sieve_size,
                 count,
                 validator.is_valid(self.sieve_size, self.count_primes())
