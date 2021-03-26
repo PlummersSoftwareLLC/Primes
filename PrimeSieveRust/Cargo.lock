@@ -3,12 +3,3 @@
 [[package]]
 name = "prime-sieve-rust"
 version = "0.1.0"
-dependencies = [
- "smallbitvec",
-]
-
-[[package]]
-name = "smallbitvec"
-version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "797a4eaffb90d896f29698d45676f9f940a71936d7574996a7df54593ba209fa"

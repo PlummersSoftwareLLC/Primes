@@ -10,7 +10,7 @@ mod primes {
     impl Default for PrimeValidator {
         fn default() -> Self {
             let map = [
-                (10, 1),   // Historical data for validating our results - the number of primes
+                (10, 4),   // Historical data for validating our results - the number of primes
                 (100, 25), // to be found under some limit, such as 168 primes under 1000
                 (1000, 168),
                 (10000, 1229),
@@ -35,7 +35,7 @@ mod primes {
         }
 
         #[allow(dead_code)]
-        pub fn known_results(&self) -> &HashMap<usize,usize> {
+        pub fn known_results(&self) -> &HashMap<usize, usize> {
             &self.0
         }
     }
@@ -47,7 +47,7 @@ mod primes {
 
     impl PrimeSieve {
         pub fn new(sieve_size: usize) -> Self {
-            let num_words = sieve_size / 8 + 1;
+            let num_words = sieve_size / 8 / 2 + 1;
             PrimeSieve {
                 sieve_size,
                 bits: vec![0xff; num_words],
@@ -61,6 +61,8 @@ mod primes {
                 "You're setting even bits, which is sub-optimal."
             );
             let index = number / 2;
+            
+            debug_assert!(index / 8 < self.bits.len(), "bounds check");
             let word = self.bits.get_unchecked_mut(index / 8);
             *word &= !(1 << (index % 8));
         }
@@ -71,6 +73,8 @@ mod primes {
                 return false;
             }
             let index = number / 2;
+
+            debug_assert!(index / 8 < self.bits.len(), "bounds check");
             let word = self.bits.get_unchecked(index / 8);
             *word & (1 << (index % 8)) != 0
         }
@@ -87,7 +91,9 @@ mod primes {
             let mut factor = 3;
             let q = (self.sieve_size as f32).sqrt() as usize;
 
-            while factor < q {
+            // note: need to check up to and including q, otherwise we
+            // fail to catch cases like sieve_size = 1000
+            while factor <= q {
                 for num in factor..self.sieve_size {
                     // length already checked
                     unsafe {
@@ -121,8 +127,13 @@ mod primes {
             validator: &PrimeValidator,
         ) {
             if show_results {
-                print!("2, ");
-                self.bits.iter();
+                print!("2,");
+
+                for num in 3..self.sieve_size {
+                    if unsafe { self.get_bit(num) } {
+                        print!("{},", num);
+                    }
+                }
                 print!("\n");
             }
 
@@ -165,7 +176,7 @@ fn main() {
     }
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 mod tests {
     use crate::primes::PrimeValidator;
 
@@ -177,7 +188,12 @@ mod tests {
         for (sieve_size, expected_primes) in validator.known_results().iter() {
             let mut sieve = primes::PrimeSieve::new(*sieve_size);
             sieve.run_sieve();
-            assert_eq!(*expected_primes, sieve.count_primes(), "wrong number of primes for sieve = {}", sieve_size);
+            assert_eq!(
+                *expected_primes,
+                sieve.count_primes(),
+                "wrong number of primes for sieve = {}",
+                sieve_size
+            );
         }
     }
 }
