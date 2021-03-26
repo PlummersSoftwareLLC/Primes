@@ -33,6 +33,11 @@ mod primes {
                 false
             }
         }
+
+        #[allow(dead_code)]
+        pub fn known_results(&self) -> &HashMap<usize,usize> {
+            &self.0
+        }
     }
 
     pub struct PrimeSieve {
@@ -70,8 +75,8 @@ mod primes {
             *word & (1 << (index % 8)) != 0
         }
 
-        // count number of primes
-        fn count_primes(&self) -> usize {
+        // count number of primes (not optimal, but doesn't need to be)
+        pub fn count_primes(&self) -> usize {
             (1..self.sieve_size)
                 .filter(|v| unsafe { self.get_bit(*v) })
                 .count()
@@ -157,5 +162,22 @@ fn main() {
             passes,
             &primes::PrimeValidator::default(),
         );
+    }
+}
+
+#[cfg(test)] 
+mod tests {
+    use crate::primes::PrimeValidator;
+
+    use super::*;
+
+    #[test]
+    fn sieve_known_correct() {
+        let validator = PrimeValidator::default();
+        for (sieve_size, expected_primes) in validator.known_results().iter() {
+            let mut sieve = primes::PrimeSieve::new(*sieve_size);
+            sieve.run_sieve();
+            assert_eq!(*expected_primes, sieve.count_primes(), "wrong number of primes for sieve = {}", sieve_size);
+        }
     }
 }
