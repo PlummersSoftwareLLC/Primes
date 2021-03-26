@@ -5,4 +5,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
 </Project>
