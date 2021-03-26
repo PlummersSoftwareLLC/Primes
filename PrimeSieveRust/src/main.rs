@@ -1,150 +1,149 @@
-use std::{
-    collections::HashMap,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
-use smallbitvec::SmallBitVec;
+mod primes {
+    use std::{collections::HashMap, time::Duration};
 
-// pulled prime validator out into a separate struct, as it's defined
-// `const` in C++. There are various ways to do this in Rust, including
-// lazy_static, etc. Should be able to do the const initialisation in the future.
-struct PrimeValidator(HashMap<usize, usize>);
-impl Default for PrimeValidator {
-    fn default() -> Self {
-        let map = [
-            (10, 1),   // Historical data for validating our results - the number of primes
-            (100, 25), // to be found under some limit, such as 168 primes under 1000
-            (1000, 168),
-            (10000, 1229),
-            (100000, 9592),
-            (1000000, 78498),
-            (10000000, 664579),
-            (100000000, 5761455),
-        ]
-        .iter()
-        .copied()
-        .collect();
-        PrimeValidator(map)
-    }
-}
-impl PrimeValidator {
-    fn is_valid(&self, sieve_size: usize, result: usize) -> bool {
-        if let Some(&expected) = self.0.get(&sieve_size) {
-            result == expected
-        } else {
-            false
+    // pulled prime validator out into a separate struct, as it's defined
+    // `const` in C++. There are various ways to do this in Rust, including
+    // lazy_static, etc. Should be able to do the const initialisation in the future.
+    pub struct PrimeValidator(HashMap<usize, usize>);
+    impl Default for PrimeValidator {
+        fn default() -> Self {
+            let map = [
+                (10, 1),   // Historical data for validating our results - the number of primes
+                (100, 25), // to be found under some limit, such as 168 primes under 1000
+                (1000, 168),
+                (10000, 1229),
+                (100000, 9592),
+                (1000000, 78498),
+                (10000000, 664579),
+                (100000000, 5761455),
+            ]
+            .iter()
+            .copied()
+            .collect();
+            PrimeValidator(map)
         }
     }
-}
-
-struct PrimeSieve {
-    sieve_size: usize,
-    bits: SmallBitVec,
-}
-
-impl PrimeSieve {
-    fn new(sieve_size: usize) -> Self {
-        PrimeSieve {
-            sieve_size,
-            bits: SmallBitVec::from_elem((sieve_size + 1) / 2, true),
+    impl PrimeValidator {
+        pub fn is_valid(&self, sieve_size: usize, result: usize) -> bool {
+            if let Some(&expected) = self.0.get(&sieve_size) {
+                result == expected
+            } else {
+                false
+            }
         }
     }
 
-    unsafe fn clear_bit(&mut self, number: usize) {
-        assert!(
-            number % 2 != 0,
-            "You're setting even bits, which is sub-optimal."
-        );
-        let index = number / 2;
-        self.bits.set_unchecked(index, false);
+    pub struct PrimeSieve {
+        sieve_size: usize,
+        bits: Vec<u8>,
     }
 
-    unsafe fn get_bit(&mut self, number: usize) -> bool {
-        match number % 2 {
-            0 => false,
-            _ => self.bits.get_unchecked(number / 2),
+    impl PrimeSieve {
+        pub fn new(sieve_size: usize) -> Self {
+            let num_words = sieve_size / 8 + 1;
+            PrimeSieve {
+                sieve_size,
+                bits: vec![0xff; num_words],
+            }
         }
-    }
 
-    // number of primes -> count number of true bits
-    fn count_primes(&self) -> usize {
-        self.bits.iter().filter(|x| *x).count()
-    }
+        // unsafe: ensure `number` is within bounds 1..sieve_size
+        unsafe fn clear_bit(&mut self, number: usize) {
+            assert!(
+                number % 2 != 0,
+                "You're setting even bits, which is sub-optimal."
+            );
+            let index = number / 2;
+            let word = self.bits.get_unchecked_mut(index / 8);
+            *word &= !(1 << (index % 8));
+        }
 
-    fn validate_results(&self, validator: &PrimeValidator) -> bool {
-        validator.is_valid(self.sieve_size, self.count_primes())
-    }
+        // unsafe: ensure `number` is within bounds 1..sieve_size
+        unsafe fn get_bit(&self, number: usize) -> bool {
+            if number % 2 == 0 {
+                return false;
+            }
+            let index = number / 2;
+            let word = self.bits.get_unchecked(index / 8);
+            *word & (1 << (index % 8)) != 0
+        }
 
-    // Calculate the primes up to the specified limit
-    fn run_sieve(&mut self) {
-        let mut factor = 3;
-        let q = (self.sieve_size as f32).sqrt() as usize;
+        // count number of primes
+        fn count_primes(&self) -> usize {
+            (1..self.sieve_size)
+                .filter(|v| unsafe { self.get_bit(*v) })
+                .count()
+        }
 
-        while factor < q {
-            for num in factor..self.sieve_size {
-                // length already checked
-                unsafe { 
-                    if self.get_bit(num) {
-                        factor = num;
-                        break;
+        // calculate the primes up to the specified limit
+        pub fn run_sieve(&mut self) {
+            let mut factor = 3;
+            let q = (self.sieve_size as f32).sqrt() as usize;
+
+            while factor < q {
+                for num in factor..self.sieve_size {
+                    // length already checked
+                    unsafe {
+                        if self.get_bit(num) {
+                            factor = num;
+                            break;
+                        }
                     }
                 }
-            }
 
-            // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-            // We can then step by factor * 2 because every second one is going to be even by definition
-            let mut num = factor * 3;
-            while num < self.sieve_size {
-                // length already checked
-                unsafe { 
-                    self.clear_bit(num);
+                // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
+                // We can then step by factor * 2 because every second one is going to be even by definition
+                let mut num = factor * 3;
+                while num < self.sieve_size {
+                    // length already checked
+                    unsafe {
+                        self.clear_bit(num);
+                    }
+                    num += factor * 2;
                 }
-                num += factor * 2;
+
+                factor += 2;
+            }
+        }
+
+        pub fn print_results(
+            &self,
+            show_results: bool,
+            duration: Duration,
+            passes: usize,
+            validator: &PrimeValidator,
+        ) {
+            if show_results {
+                print!("2, ");
+                self.bits.iter();
+                print!("\n");
             }
 
-            factor += 2;
+            let count = self.count_primes();
+
+            println!(
+                "Passes: {}, Time: {}, Avg: {}, Limit: {}, Count: {}, Valid: {}",
+                passes,
+                duration.as_secs_f32(),
+                duration.as_micros() / self.sieve_size as u128,
+                self.sieve_size,
+                count,
+                validator.is_valid(self.sieve_size, self.count_primes())
+            );
         }
-    }
-
-    fn print_results(
-        &self,
-        show_results: bool,
-        duration: Duration,
-        passes: usize,
-        validator: &PrimeValidator,
-    ) {
-        if show_results {
-            print!("2, ");
-            self.bits.iter();
-            print!("\n");
-        }
-
-        let count = self.count_primes();
-
-        println!(
-            "Passes: {}, Time: {}, Avg: {}, Limit: {}, Count: {}, Valid: {}",
-            passes,
-            duration.as_secs_f32(),
-            duration.as_micros() / passes as u128,
-            self.sieve_size,
-            count,
-            self.validate_results(validator)
-        );
     }
 }
 
 fn main() {
-    // let start = Instant::now();
-    // let end = Instant::now();
-    // let dur = end-start;
-
     let mut passes = 0;
     let mut prime_sieve = None;
 
     let start_time = Instant::now();
     let run_duration = Duration::from_secs(10);
     while (Instant::now() - start_time) < run_duration {
-        let mut sieve = PrimeSieve::new(1000000);
+        let mut sieve = primes::PrimeSieve::new(1000000);
         sieve.run_sieve();
         prime_sieve.replace(sieve);
         passes += 1;
@@ -156,7 +155,7 @@ fn main() {
             false,
             end_time - start_time,
             passes,
-            &PrimeValidator::default(),
+            &primes::PrimeValidator::default(),
         );
     }
 }
