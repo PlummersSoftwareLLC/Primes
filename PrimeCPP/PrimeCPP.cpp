@@ -3,8 +3,10 @@
 // ---------------------------------------------------------------------------
 
 #include <chrono>
+#include <vector>
 #include <ctime>
-#include <iostream>
+#include <cmath>
+#include <memory>
 #include <bitset>
 #include <map>
 
@@ -13,8 +15,8 @@ class prime_sieve
   private:
 
       int sieveSize = 0;
-      unsigned char * rawbits = nullptr;
-      const std::map<const int, const int> myDict = 
+      std::vector<unsigned char> rawbits;
+      const std::map<const int, const int> myDict =
       {
             { 10 , 1 },                 // Historical data for validating our results - the number of primes
             { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
@@ -57,15 +59,9 @@ class prime_sieve
       prime_sieve(int n)
       {
           sieveSize = n;
-          rawbits = (unsigned char *) malloc(n / 8 + 1);
-          if (rawbits)
-            memset(rawbits, 0xff, n / 8 + 1);
+          rawbits = std::vector<unsigned char>(n / 8 + 1, 0xff);
       }
 
-      ~prime_sieve()
-      {
-          free(rawbits);
-      }
 
       void runSieve()
       {
@@ -130,13 +126,12 @@ class prime_sieve
 int main()
 {
     auto passes = 0;
-    prime_sieve* sieve = nullptr;
+    std::unique_ptr<prime_sieve> sieve;
 
     auto tStart = std::chrono::steady_clock::now();
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - tStart).count() < 10)
     {
-        delete sieve;
-        sieve = new prime_sieve(1000000);
+        sieve = std::make_unique<prime_sieve>(1000000);
         sieve->runSieve();
         passes++;
     }
@@ -145,6 +140,5 @@ int main()
     if (sieve)
     {
         sieve->printResults(false, std::chrono::duration_cast<std::chrono::microseconds>(tD).count() / 1000000, passes);
-        delete sieve;
     }
 }
