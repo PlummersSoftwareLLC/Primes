@@ -14,7 +14,7 @@ from math import sqrt                       # Used by the sieve
 import timeit                               # For timing the durations
 
 class PrimeSieve(object):
-    """Prime number sieve."""
+    """ Prime number sieve. """
 
     rawbits = None    # Storage for sieve - since we filter evens, just half as many bits
     sieve_size = 0    # Upper limit, highest prime we'll consider
