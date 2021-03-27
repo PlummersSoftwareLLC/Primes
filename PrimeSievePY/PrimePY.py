@@ -112,10 +112,22 @@ class PrimeSieve:
     __len__ = count_primes
 
 
-sieve.printResults(False, tD, passes)                   # Display outcome
+if __name__ == '__main__':
+    NUMBER = 60
+    limit = 1_000_000
+    setup = f'''
+from PrimePY import PrimeSieve
+sieve = PrimeSieve({limit})
+    '''
 
+    to_timeit = 'sieve.run_sieve()'
 
+    time = timeit.timeit(to_timeit, setup, number=NUMBER)
 
+    print(f'Passed: {NUMBER}, Time: {time}, Avg: {time / NUMBER}, Limit: {limit}')
 
+    sieve = PrimeSieve(limit)
+    sieve()
 
-
+    print(repr(sieve))
+    print(sieve)
