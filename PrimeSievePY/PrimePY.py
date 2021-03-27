@@ -8,9 +8,8 @@
 #
 # Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 
-from sys import stdout                      # So I can print without an automatic python newline
-from math import sqrt                       # Used by the sieve
-import timeit                               # For timing the durations
+from math import sqrt  # Used by the sieve
+import timeit  # For timing the durations
 
 # Historical data for validating our results - the number of primes
 # to be found under some upper_limit, such as 168 primes under 1000
