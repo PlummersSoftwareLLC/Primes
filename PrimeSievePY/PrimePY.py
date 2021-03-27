@@ -3,8 +3,8 @@
 #
 # MyFirstPython Program (tm) Dave Plummer 8/9/2018
 #
-# This is the main prime_sieve class. Call it with the number you wish as an upper limit, then
-# call the runSieve method to do the calculation. printResults will dump the count to check validity.
+# This is the main PrimeSieve class. Call it with the number you wish as an upper upper_limit, then
+# call the run_sieve method to do the calculation. __repr__ will dump the count to check validity.
 #
 # Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 
