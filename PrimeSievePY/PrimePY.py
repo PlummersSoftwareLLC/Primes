@@ -27,19 +27,21 @@ PRIME_COUNTS = {10: 1,
         this.sieveSize = limit
         this.rawbits = [True] * (int((this.sieveSize+1)/2))
 
-    # Look up our count of primes in the historical data (if we have it) to see if it matches
+class PrimeSieve:
+    _raw_bits = None  # Storage for sieve - since we filter evens, just half as many bits
+    _sieve_size = 0  # Upper upper_limit, highest prime we'll consider
 
-    def validateResults(this):                      # Check to see if this is an upper_limit we can
-        if this.sieveSize in this.primeCounts:      # the data, and (b) our count matches. Since it will return
-            return this.primeCounts[this.sieveSize] == this.countPrimes() # false for an unknown upper_limit, can't assume false == bad
-        return False
+    def __init__(self, upper_limit: int):
+        self._sieve_size = upper_limit
+        self._raw_bits: list[bool] = [True] * ((self._sieve_size + 1) // 2)
 
-    # GetBit
-    # 
-    # Gets a bit from the array of bits, but automatically just filters out even numbers as false,
-    # and then only uses half as many bits for actual storage
+    def _validate_results(self) -> bool:
+        """
+        Checks result of sieve
 
-    def GetBit(this, index):
+        :return: True if sieve size is historical data and it matches for actual count of primes
+        """
+        return PRIME_COUNTS.get(self._sieve_size) == self.count_primes()
 
     def __getitem__(self, index: int) -> bool:
         """
@@ -58,20 +60,22 @@ PRIME_COUNTS = {10: 1,
     # Reciprocal of GetBit, ignores even numbers and just stores the odds. Since the prime sieve work should
     # never waste time clearing even numbers, this code will assert if you try to
 
-    def ClearBit(this, index):
+        return self._raw_bits[index // 2]
 
-        if (index % 2 == 0):
-            assert("If you're setting even bits, you're sub-optimal for some reason!")
-            return False
-        else:
-            this.rawbits[int(index/2)] = False
+    def _set_to_false(self, index: int) -> None:
+        """
+        Sets bit of list at index to False, ignores even indexes
 
-    # primeSieve
-    # 
-    # Calculate the primes up to the specified limit
+        :raises AssertionError: When try to set to False at even index
+        :param index: int
+        """
+        assert index % 2 != 0, 'If you`re setting even bits, you`re sub-optimal for some reason!'
+        self._raw_bits[index // 2] = False
 
-    def runSieve(this):
-
+    def run_sieve(self) -> None:
+        """
+        Calculate the primes up to the specified upper_limit
+        """
         factor = 3
         q = sqrt(this.sieveSize)
 
@@ -89,22 +93,13 @@ PRIME_COUNTS = {10: 1,
 
             factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
 
-    # countPrimes
-    #
-    # Return the count of bits that are still set in the sieve. Assumes you've already called
-    # runSieve, of course!
+    def count_primes(self) -> int:
+        """
+        Length of only primes numbers
 
-    def countPrimes(this):
-        return sum(1 for b in this.rawbits if b);
-
-    # printResults
-    #
-    # Displays the primes found (or just the total count, depending on what you ask for)
-
-    def printResults(this, showResults, duration, passes):
-
-        if (showResults): # Since we auto-filter evens, we have to special case the number 2 which is prime
-            stdout.write("2, ");
+        :return: int Number of primes, calculated for specific upper_limit
+        """
+        return sum(1 for b in self._raw_bits if b)
 
     def __repr__(self) -> str:
         """
