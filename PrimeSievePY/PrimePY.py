@@ -1,4 +1,3 @@
-
 # Python Prime Sieve
 #
 # MyFirstPython Program (tm) Dave Plummer 8/9/2018
@@ -23,9 +22,6 @@ PRIME_COUNTS = {10: 1,
                 100000000: 5761455
                 }
 
-    def __init__(this, limit):
-        this.sieveSize = limit
-        this.rawbits = [True] * (int((this.sieveSize+1)/2))
 
 class PrimeSieve:
     _raw_bits = None  # Storage for sieve - since we filter evens, just half as many bits
@@ -52,13 +48,6 @@ class PrimeSieve:
         """
         if index % 2 == 0:
             return False
-        else:
-            return this.rawbits[int(index/2)]
-
-    # ClearBit
-    #
-    # Reciprocal of GetBit, ignores even numbers and just stores the odds. Since the prime sieve work should
-    # never waste time clearing even numbers, this code will assert if you try to
 
         return self._raw_bits[index // 2]
 
@@ -77,21 +66,22 @@ class PrimeSieve:
         Calculate the primes up to the specified upper_limit
         """
         factor = 3
-        q = sqrt(this.sieveSize)
+        q = sqrt(self._sieve_size)
 
-        while (factor < q):
-            for num in range (factor, this.sieveSize):
-                if (this.GetBit(num) == True):
+        while factor < q:
+            for num in range(factor, self._sieve_size):
+                if self[num]:
                     factor = num
                     break
 
-            # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-            # We can then step by factor * 2 because every second one is going to be even by definition
+            # If marking factor 3, you wouldn't mark 6 (it's a multiple of 2) so start with the 3rd instance of this
+            # factor's multiple. We can then step by factor * 2 because every second one is going to be even by
+            # definition
 
-            for num in range (factor * 3, this.sieveSize, factor * 2): 
-                this.ClearBit(num)
+            for num in range(factor * 3, self._sieve_size, factor * 2):
+                self._set_to_false(num)
 
-            factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
+            factor += 2  # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
 
     def count_primes(self) -> int:
         """
