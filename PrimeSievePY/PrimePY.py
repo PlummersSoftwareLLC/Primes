@@ -41,7 +41,14 @@ PRIME_COUNTS = {10: 1,
 
     def GetBit(this, index):
 
-        if (index % 2 == 0): # even numbers are automaticallty returned as non-prime
+    def __getitem__(self, index: int) -> bool:
+        """
+        Gets a bit from the list of bits
+
+        :param index: int Index in list
+        :return: Value of the list at index, or False for even index
+        """
+        if index % 2 == 0:
             return False
         else:
             return this.rawbits[int(index/2)]
@@ -99,28 +106,26 @@ PRIME_COUNTS = {10: 1,
         if (showResults): # Since we auto-filter evens, we have to special case the number 2 which is prime
             stdout.write("2, ");
 
-        count = 1
-        for num in range (3, this.sieveSize): # Count (and optionally dump) the primes that were found below the limit
-            if (this.GetBit(num) == True):
-                if (showResults):
-                    stdout.write(str(num) +", ")
-                count+=1
+    def __repr__(self) -> str:
+        """
+        Formal string representation
 
-        assert(count == this.countPrimes())
-        stdout.write("\n");
-        print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(this.sieveSize) + ", Count: " + str(count) + ", Valid: " + str(this.validateResults()))
-  
-# MAIN Entry
+        :return: str that contains main information about results
+        """
+        return f'{self.__class__.__name__}[found {self.count_primes()} primes less than {self._sieve_size}, is valid=\
+{self._validate_results()}] '
 
-tStart = timeit.default_timer()                         # Record our starting time
-passes = 0                                              # We're going to count how many passes we make in fixed window of time
+    def __str__(self) -> str:
+        """
+        All found primes
 
-while (timeit.default_timer() - tStart < 10):           # Run until more than 10 seconds have elapsed
-    sieve = prime_sieve(1000000)                        #  Calc the primes up to a million
-    sieve.runSieve()                                    #  Find the results
-    passes = passes + 1                                 #  Count this pass
-    
-tD = timeit.default_timer() - tStart                    # After the "at least 10 seconds", get the actual elapsed
+        :return: str that contains all found primes during algorithm
+        """
+        return f'{", ".join(str(num) for num in range(1, self._sieve_size) if self[num])}'
+
+    __call__ = run_sieve
+    __len__ = count_primes
+
 
 sieve.printResults(False, tD, passes)                   # Display outcome
 
