@@ -57,15 +57,15 @@ void runSieve(prime_sieve& sieve)
 
     while (factor <= q)
     {
-        for (int num = factor; num < sieve.size(); num += 2)
+        for (int num = factor/2; num < sieve.size()/2; num += 2/2)
         {
             if (sieve[num])
             {
-                factor = num;
+                factor = num*2+1;
                 break;
             }
         }
-        for (int num = factor * factor; num < sieve.size(); num += factor * 2)
+        for (int num = factor * factor/2; num < sieve.size()/2; num += factor * 2/2)
             sieve.set_false(num);
 
         factor += 2;            
@@ -75,7 +75,7 @@ void runSieve(prime_sieve& sieve)
 int countPrimes(const prime_sieve& sieve)
 {
     int count = 1;
-    for (int i = 3; i < sieve.size(); i+=2)
+    for (int i = 3/2; i < sieve.size()/2; i+=2/2)
         if (sieve[i])
             count++;
     return count;
