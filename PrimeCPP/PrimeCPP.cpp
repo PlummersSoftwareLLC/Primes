@@ -20,7 +20,6 @@ class prime_sieve
 {
   private:
 
-      long sieveSize = 0;
       vector<bool> Bits;
       const std::map<const long, const int> myDict = 
       {
@@ -39,35 +38,31 @@ class prime_sieve
 
       bool validateResults()
       {
-          if (myDict.end() == myDict.find(sieveSize))
+          if (myDict.end() == myDict.find(Bits.size()))
               return false;
-          return myDict.find(sieveSize)->second == countPrimes();
+          return myDict.find(Bits.size())->second == countPrimes();
       }
 
    public:
 
       prime_sieve(long n) 
-          : sieveSize(n), Bits(n, true)
+          : Bits(n, true)
       {
       }
 
-      ~prime_sieve()
+      void clear() 
       {
+        std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
       }
-
-    void clear() 
-    {
-        std::fill(Bits.begin(), Bits.end(), true); // reset all bits to zero
-    }
     
       void runSieve()
       {
           int factor = 3;
-          int q = sqrt(sieveSize);
+          int q = sqrt(Bits.size());
 
           while (factor <= q)
           {
-              for (int num = factor; num < sieveSize; num += 2)
+              for (int num = factor; num < Bits.size(); num += 2)
               {
                   if (Bits[num])
                   {
@@ -75,7 +70,7 @@ class prime_sieve
                       break;
                   }
               }
-              for (int num = factor * factor; num < sieveSize; num += factor * 2)
+              for (int num = factor * factor; num < Bits.size(); num += factor * 2)
                   Bits[num] = false;
 
               factor += 2;            
@@ -88,7 +83,7 @@ class prime_sieve
               printf("2, ");
 
           int count = 1;
-          for (int num = 3; num <= sieveSize; num+=2)
+          for (int num = 3; num <= Bits.size(); num+=2)
           {
               if (Bits[num])
               {
@@ -105,7 +100,7 @@ class prime_sieve
                  passes, 
                  duration, 
                  duration / passes, 
-                 sieveSize, 
+                 Bits.size(), 
                  count,
                  countPrimes(), 
                  validateResults());
@@ -114,7 +109,7 @@ class prime_sieve
       int countPrimes()
       {
           int count = 1;
-          for (int i = 3; i < sieveSize; i+=2)
+          for (int i = 3; i < Bits.size(); i+=2)
               if (Bits[i])
                   count++;
           return count;
