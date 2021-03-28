@@ -17,37 +17,37 @@ using namespace std::chrono;
 
 class prime_sieve
 {
-private:
+  private:
 
-    vector<bool> Bits;
+      vector<bool> Bits;
 
-    void set_false(int i)
-    {
-        Bits[i/2]=false;
-    }
+      void set_false(int i)
+      {
+          Bits[i]=false;
+      }
     
-public:
+   public:
 
-    prime_sieve(long n) 
-        : Bits(n/2, true)
-    { }
+      prime_sieve(long n) 
+          : Bits(n, true)
+      { }
 
-    auto size() const
-    {
-        return Bits.size()*2;
-    }
+      auto size() const
+      {
+          return Bits.size();
+      }
     
-    void clear() 
-    {
-        std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
-    }
+      void clear() 
+      {
+          std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
+      }
 
-    bool operator[](int i) const // read only access
-    {
-        return Bits[i/2];
-    }
- 
-    friend void runSieve(prime_sieve& sieve); // give access to privates
+      bool operator[](int i) const // read only access
+      {
+          return Bits[i];
+      }
+
+      friend void runSieve(prime_sieve& sieve); // may access private members
 };
 
 void runSieve(prime_sieve& sieve)
@@ -66,7 +66,7 @@ void runSieve(prime_sieve& sieve)
             }
         }
         for (int num = factor * factor; num < sieve.size(); num += factor * 2)
-            sieve.set_false(false);
+            sieve.set_false(num);
 
         factor += 2;            
     }
@@ -102,25 +102,10 @@ bool validateResults(const prime_sieve& sieve)
     return myDict.find(sieve.size())->second == countPrimes(sieve);
 }
 
-void printResults(const prime_sieve& sieve,bool showResults, double duration, int passes)
+void printResults(const prime_sieve& sieve, double duration, int passes)
 {
-    if (showResults)
-        printf("2, ");
+    int count = countPrimes(sieve); 
 
-    int count = 1;
-    for (int num = 3; num <= sieve.size(); num+=2)
-    {
-        if (sieve[num])
-        {
-            if (showResults)
-                printf("%d, ", num);
-            count++;
-        }
-    }
-
-    if (showResults)
-        printf("\n");
-          
     printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
            passes, 
            duration, 
@@ -145,5 +130,5 @@ int main()
     }
     auto tD = steady_clock::now() - tStart;
 
-    printResults(sieve,false, duration_cast<microseconds>(tD).count() / 1000000, passes);
+    printResults(sieve, duration_cast<microseconds>(tD).count() / 1000000, passes);
 }
