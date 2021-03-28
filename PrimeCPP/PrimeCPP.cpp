@@ -15,15 +15,72 @@ using namespace std;
 using namespace std::chrono;
 
 
-
 class prime_sieve
 {
   private:
 
       vector<bool> Bits;
-      const std::map<const long, const int> myDict = 
+      
+   public:
+
+      prime_sieve(long n) 
+          : Bits(n, true)
       {
-            {          10L, 4         },                // Historical data for validating our results - the number of primes
+      }
+
+      auto size() const
+      {
+          return Bits.size();
+      }
+    
+      void clear() 
+      {
+          std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
+      }
+
+      bool operator[](int i) const // read only access
+      {
+          return Bits[i];
+      }
+    
+      void runSieve()
+      {
+          int factor = 3;
+          int q = sqrt(size());
+
+          while (factor <= q)
+          {
+              for (int num = factor; num < size(); num += 2)
+              {
+                  if (Bits[num])
+                  {
+                      factor = num;
+                      break;
+                  }
+              }
+              for (int num = factor * factor; num < size(); num += factor * 2)
+                  Bits[num] = false;
+
+              factor += 2;            
+          }
+      }
+      
+};
+
+int countPrimes(const prime_sieve& sieve)
+{
+    int count = 1;
+    for (int i = 3; i < sieve.size(); i+=2)
+        if (sieve[i])
+            count++;
+    return count;
+}
+
+bool validateResults(const prime_sieve& sieve)
+{
+    const std::map<const long, const int> myDict = 
+        {
+            {          10L, 4         },               // Historical data for validating our results - the number of primes
             {         100L, 25        },               // to be found under some limit, such as 168 primes under 1000
             {        1000L, 168       },
             {       10000L, 1229      },
@@ -34,87 +91,40 @@ class prime_sieve
             {  1000000000L, 50847534  },
             { 10000000000L, 455052511 },
 
-      };
+        };
+    if (myDict.end() == myDict.find(sieve.size()))
+        return false;
+    return myDict.find(sieve.size())->second == countPrimes(sieve);
+}
 
-      bool validateResults()
-      {
-          if (myDict.end() == myDict.find(Bits.size()))
-              return false;
-          return myDict.find(Bits.size())->second == countPrimes();
-      }
+void printResults(const prime_sieve& sieve,bool showResults, double duration, int passes)
+{
+    if (showResults)
+        printf("2, ");
 
-   public:
+    int count = 1;
+    for (int num = 3; num <= sieve.size(); num+=2)
+    {
+        if (sieve[num])
+        {
+            if (showResults)
+                printf("%d, ", num);
+            count++;
+        }
+    }
 
-      prime_sieve(long n) 
-          : Bits(n, true)
-      {
-      }
-
-      void clear() 
-      {
-        std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
-      }
-    
-      void runSieve()
-      {
-          int factor = 3;
-          int q = sqrt(Bits.size());
-
-          while (factor <= q)
-          {
-              for (int num = factor; num < Bits.size(); num += 2)
-              {
-                  if (Bits[num])
-                  {
-                      factor = num;
-                      break;
-                  }
-              }
-              for (int num = factor * factor; num < Bits.size(); num += factor * 2)
-                  Bits[num] = false;
-
-              factor += 2;            
-          }
-      }
-
-      void printResults(bool showResults, double duration, int passes)
-      {
-          if (showResults)
-              printf("2, ");
-
-          int count = 1;
-          for (int num = 3; num <= Bits.size(); num+=2)
-          {
-              if (Bits[num])
-              {
-                  if (showResults)
-                      printf("%d, ", num);
-                  count++;
-              }
-          }
-
-          if (showResults)
-              printf("\n");
+    if (showResults)
+        printf("\n");
           
-          printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
-                 passes, 
-                 duration, 
-                 duration / passes, 
-                 Bits.size(), 
-                 count,
-                 countPrimes(), 
-                 validateResults());
-      }
-
-      int countPrimes()
-      {
-          int count = 1;
-          for (int i = 3; i < Bits.size(); i+=2)
-              if (Bits[i])
-                  count++;
-          return count;
-      }
-};
+    printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
+           passes, 
+           duration, 
+           duration / passes, 
+           sieve.size(), 
+           count,
+           countPrimes(sieve), 
+           validateResults(sieve));
+}
 
 int main()
 {
@@ -130,5 +140,5 @@ int main()
     }
     auto tD = steady_clock::now() - tStart;
 
-    sieve.printResults(false, duration_cast<microseconds>(tD).count() / 1000000, passes);
+    printResults(sieve,false, duration_cast<microseconds>(tD).count() / 1000000, passes);
 }
