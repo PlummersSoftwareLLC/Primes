@@ -45,7 +45,7 @@ class prime_sieve
    public:
 
       prime_sieve(long n) 
-        : Bits(n, true), sieveSize(n)
+          : sieveSize(n), Bits(n, true)
       {
       }
 
