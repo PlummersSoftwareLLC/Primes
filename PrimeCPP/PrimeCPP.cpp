@@ -14,33 +14,72 @@
 using namespace std;
 using namespace std::chrono;
 
+/*
+vector<char> uses sizeof(bool)=1 byte (8 bits) for each bool. This is
+a way to use 1 bit per bool. The hope was that with less memory the
+caching would be faster but the complex indexing makes this much slower.
+ */
+template <typename T>
+class Bits
+{
+    vector<T> bits;
+public:
+    Bits(long n)
+        : bits(n)
+    {
+        clear();
+    }
+
+    void clear() 
+    {
+        T zero=0;
+        std::fill(bits.begin(), bits.end(), ~zero); // reset all bits to true
+    }
+
+    auto size() const
+    {
+        return bits.size();
+    }
+
+    bool get(int i) const 
+    {
+        T bit_mask=1;
+        return bits[i/sizeof(T)] & (bit_mask<< (i%sizeof(T)) );
+    }
+
+    void set_false(int i)
+    {
+        T bit_mask=1;
+        bits[i/sizeof(T)] &= ~(bit_mask<< (i%sizeof(T)) );
+    }
+};
 
 class prime_sieve
 {
   private:
 
-      vector<bool> Bits;
+    Bits<unsigned long> bits;
       
    public:
 
       prime_sieve(long n) 
-          : Bits(n, true)
+          : bits(n)
       {
       }
 
       auto size() const
       {
-          return Bits.size();
+          return bits.size();
       }
     
       void clear() 
       {
-          std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
+          bits.clear();
       }
 
       bool operator[](int i) const // read only access
       {
-          return Bits[i];
+          return bits.get(i);
       }
     
       void runSieve()
@@ -52,14 +91,14 @@ class prime_sieve
           {
               for (int num = factor; num < size(); num += 2)
               {
-                  if (Bits[num])
+                  if (bits.get(num))
                   {
                       factor = num;
                       break;
                   }
               }
               for (int num = factor * factor; num < size(); num += factor * 2)
-                  Bits[num] = false;
+                  bits.set_false(num);
 
               factor += 2;            
           }
@@ -140,5 +179,5 @@ int main()
     }
     auto tD = steady_clock::now() - tStart;
 
-    printResults(sieve,false, duration_cast<microseconds>(tD).count() / 1000000, passes);
+    printResults(sieve,true, duration_cast<microseconds>(tD).count() / 1000000, passes);
 }
