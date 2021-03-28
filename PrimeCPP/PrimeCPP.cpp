@@ -10,62 +10,61 @@
 #include <cstring>
 #include <cmath>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 using namespace std::chrono;
 
-
 class prime_sieve
 {
-  private:
+private:
 
-      vector<bool> Bits;
+    vector<bool> Bits;
 
-      void set_false(int i)
-      {
-          Bits[i]=false;
-      }
+    void set_false(int i)
+    { Bits[i]=false; }
     
-   public:
+public:
 
-      prime_sieve(long n) 
-          : Bits(n, true)
-      { }
+    prime_sieve(long n) 
+        : Bits(n/2, true) // We only need half the memory for only the odd numbers
+    { }
 
-      auto size() const
-      {
-          return Bits.size();
-      }
-    
-      void clear() 
-      {
-          std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
-      }
+    auto size() const // size of only odd numbers
+    { return Bits.size(); }
 
-      bool operator[](int i) const // read only access
-      {
-          return Bits[i];
-      }
+    auto logical_size() const // size of odd and even numbers
+    { return Bits.size()*2; }
 
-      friend void runSieve(prime_sieve& sieve); // may access private members
+    void clear() // reset all bits to true
+    { std::fill(Bits.begin(), Bits.end(), true); }
+
+    bool operator[](int i) const // read only access
+    { return Bits[i]; }
+
+    auto begin() const // begin iterator of odd bits
+    { return Bits.begin(); }
+
+    auto end() const // end iterator of odd bits
+    { return Bits.end(); }
+
+    friend void runSieve(prime_sieve& sieve); // may access private members
 };
 
 void runSieve(prime_sieve& sieve)
 {
     int factor = 3;
-    int q = sqrt(sieve.size());
+    int q = sqrt(sieve.logical_size());
 
     while (factor <= q)
     {
-        for (int num = factor/2; num < sieve.size()/2; num += 2/2)
+        auto iter = std::find(sieve.begin()+factor/2, sieve.end(), true);
+        if (iter!=sieve.end())
         {
-            if (sieve[num])
-            {
-                factor = num*2+1;
-                break;
-            }
+            int num=iter-sieve.begin();
+            factor=num*2+1;
         }
-        for (int num = factor * factor/2; num < sieve.size()/2; num += factor * 2/2)
+        for (int num = factor*factor/2; num < sieve.size(); num += factor)
             sieve.set_false(num);
 
         factor += 2;            
@@ -74,11 +73,7 @@ void runSieve(prime_sieve& sieve)
 
 int countPrimes(const prime_sieve& sieve)
 {
-    int count = 1;
-    for (int i = 3/2; i < sieve.size()/2; i+=2/2)
-        if (sieve[i])
-            count++;
-    return count;
+    return std::count(sieve.begin()++, sieve.end(), true);
 }
 
 bool validateResults(const prime_sieve& sieve)
@@ -97,9 +92,10 @@ bool validateResults(const prime_sieve& sieve)
             { 10000000000L, 455052511 },
 
         };
-    if (myDict.end() == myDict.find(sieve.size()))
+    auto iter=myDict.find(sieve.logical_size());
+    if (iter == myDict.end())
         return false;
-    return myDict.find(sieve.size())->second == countPrimes(sieve);
+    return iter->second == countPrimes(sieve);
 }
 
 void printResults(const prime_sieve& sieve, double duration, int passes)
@@ -110,7 +106,7 @@ void printResults(const prime_sieve& sieve, double duration, int passes)
            passes, 
            duration, 
            duration / passes, 
-           sieve.size(), 
+           sieve.logical_size(), 
            count,
            countPrimes(sieve), 
            validateResults(sieve));
