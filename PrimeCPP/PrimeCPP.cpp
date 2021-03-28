@@ -7,144 +7,125 @@
 #include <iostream>
 #include <bitset>
 #include <map>
+#include <cstring>
+#include <cmath>
+#include <array>
 
+const std::map<const int, const int> myDict =
+    {
+        {10, 1},   // Historical data for validating our results - the number of primes
+        {100, 25}, // to be found under some limit, such as 168 primes under 1000
+        {1000, 168},
+        {10000, 1229},
+        {100000, 9592},
+        {1000000, 78498},
+        {10000000, 664579},
+        {100000000, 5761455}};
+
+template <size_t N>
 class prime_sieve
 {
-  private:
+private:
 
-      int sieveSize = 0;
-      unsigned char * rawbits = nullptr;
-      const std::map<const int, const int> myDict = 
-      {
-            { 10 , 1 },                 // Historical data for validating our results - the number of primes
-            { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
-            { 1000 , 168 },
-            { 10000 , 1229 },
-            { 100000 , 9592 },
-            { 1000000 , 78498 },
-            { 10000000 , 664579 },
-            { 100000000 , 5761455 }
-      };
+    static bool validateResults(const std::array<unsigned char, N / 8 + 1>& a)
+    {
+        if (myDict.end() == myDict.find(N))
+            return false;
+        return myDict.find(N)->second == countPrimes(a);
+    }
 
-      bool validateResults()
-      {
-          if (myDict.end() == myDict.find(sieveSize))
-              return false;
-          return myDict.find(sieveSize)->second == countPrimes();
-      }
+    __attribute__((always_inline)) static constexpr bool GetBit(const std::array<unsigned char, N / 8 + 1>& a, unsigned int index)
+    {
+        auto val = index % 2;
+        index = index / 2;
+        return (a[index / 8] & (val << (index % 8))) != 0;
+    }
 
-      bool GetBit(unsigned int index)
-      {
-          if (index % 2 == 0)
-              return false;
-          index = index / 2;
-          return ((rawbits[index / 8]) & (1 << (index % 8))) != 0;
-      }
+    __attribute__((always_inline)) static consteval void ClearBit(std::array<unsigned char, N / 8 + 1>& a, unsigned int index)
+    {
 
-      void ClearBit(unsigned int index)
-      {
-          if (index % 2 == 0)
-          {
-              printf("You're setting even bits, which is sub-optimal.\n");
-              return;
-          }
-          index = index / 2;
-          rawbits[index / 8] &= ~(1 << (index % 8));
-      }
+        auto val = index % 2;
+        index = index / 2;
+        a[index / 8] &= ~(val << (index % 8));
+    }
 
-  public:
+public:
 
-      prime_sieve(int n)
-      {
-          sieveSize = n;
-          rawbits = (unsigned char *) malloc(n / 8 + 1);
-          if (rawbits)
-            memset(rawbits, 0xff, n / 8 + 1);
-      }
+    static consteval auto runSieve()
+    {
+        std::array<unsigned char, N / 8 + 1> rawbits2{};
+        for(auto& e : rawbits2) e = 0xff;
+        int factor = 3;
+        int q = sqrt(N);
 
-      ~prime_sieve()
-      {
-          free(rawbits);
-      }
+        while (factor < q)
+        {
+            for (int num = factor; num < N; num++)
+            {
+                if (GetBit(rawbits2, num))
+                {
+                    factor = num;
+                    break;
+                }
+            }
+            for (int num = factor * 3; num < N; num += factor * 2)
+                ClearBit(rawbits2, num);
 
-      void runSieve()
-      {
-          int factor = 3;
-          int q = sqrt(sieveSize);
+            factor += 2;
+        }
+        return rawbits2;
+    }
 
-          while (factor < q)
-          {
-              for (int num = factor; num < sieveSize; num++)
-              {
-                  if (GetBit(num))
-                  {
-                      factor = num;
-                      break;
-                  }
-              }
-              for (int num = factor * 3; num < sieveSize; num += factor * 2)
-                  ClearBit(num);
-               
-              factor += 2;
-          }
-      }
+    static void printResults(const std::array<unsigned char, N / 8 + 1>& a, bool showResults, double duration, int passes)
+    {
+        if (showResults)
+            printf("2, ");
 
-      void printResults(bool showResults, double duration, int passes)
-      {
-          if (showResults)
-              printf("2, ");
+        int count = 1;
+        for (int num = 3; num <= N; num++)
+        {
+            if (GetBit(a, num))
+            {
+                if (showResults)
+                    printf("%d, ", num);
+                count++;
+            }
+        }
 
-          int count = 1;
-          for (int num = 3; num <= sieveSize; num++)
-          {
-              if (GetBit(num))
-              {
-                  if (showResults)
-                      printf("%d, ", num);
-                  count++;
-              }
-          }
+        if (showResults)
+            printf("\n");
 
-          if (showResults)
-              printf("\n");
-          
-          printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %d, Count: %d, Valid: %d\n", 
-                 passes, 
-                 duration, 
-                 duration / passes, 
-                 sieveSize, 
-                 count, 
-                 validateResults());
-      }
+        printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %d, Count: %d, Valid: %d\n",
+               passes,
+               duration,
+               duration / passes,
+               static_cast<int>(N),
+               count,
+               validateResults(a));
+    }
 
-      int countPrimes()
-      {
-          int count = 0;
-          for (int i = 0; i < sieveSize; i++)
-              if (GetBit(i))
-                  count++;
-          return count;
-      }
+    static int countPrimes(const std::array<unsigned char, N / 8 + 1>& a)
+    {
+        int count = 0;
+        for (int i = 0; i < N; i++)
+            if (GetBit(a, i))
+                count++;
+        return count;
+    }
 };
 
 int main()
 {
     auto passes = 0;
-    prime_sieve* sieve = nullptr;
+    std::array<unsigned char, 1000000 / 8 + 1> data;
 
     auto tStart = std::chrono::steady_clock::now();
-    while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - tStart).count() < 10)
+    while(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - tStart).count() < 10)
     {
-        delete sieve;
-        sieve = new prime_sieve(1000000);
-        sieve->runSieve();
+        data = prime_sieve<1000000>::runSieve();
         passes++;
     }
     auto tD = std::chrono::steady_clock::now() - tStart;
-    
-    if (sieve)
-    {
-        sieve->printResults(false, std::chrono::duration_cast<std::chrono::microseconds>(tD).count() / 1000000, passes);
-        delete sieve;
-    }
+
+    prime_sieve<1000000>::printResults(data, false, std::chrono::duration_cast<std::chrono::microseconds>(tD).count() / 1000000.0, passes);
 }
