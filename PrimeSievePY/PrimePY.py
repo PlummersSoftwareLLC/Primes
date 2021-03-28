@@ -8,7 +8,6 @@
 #
 # Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 
-from sys import stdout                      # So I can print without an automatic python newline
 from math import sqrt                       # Used by the sieve
 import timeit                               # For timing the durations
 
@@ -101,17 +100,17 @@ class prime_sieve(object):
     def printResults(this, showResults, duration, passes):
 
         if showResults: # Since we auto-filter evens, we have to special case the number 2 which is prime
-            stdout.write("2, ")
+            print("2, ", end="")
 
         count = 1
         for num in range (3, this.sieveSize): # Count (and optionally dump) the primes that were found below the limit
             if this.GetBit(num):
                 if showResults:
-                    stdout.write(str(num) +", ")
+                    print(str(num) + ", ", end="")
                 count+=1
 
         assert(count == this.countPrimes())
-        stdout.write("\n")
+        print()
         print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(this.sieveSize) + ", Count: " + str(count) + ", Valid: " + str(this.validateResults()))
   
 # MAIN Entry
