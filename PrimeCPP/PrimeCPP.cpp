@@ -17,60 +17,60 @@ using namespace std::chrono;
 
 class prime_sieve
 {
-  private:
+private:
 
-      vector<bool> Bits;
+    vector<bool> Bits;
 
-      void set_false(int i)
-      {
-          Bits[i/2]=false;
-      }
+    void set_false(int i)
+    {
+        Bits[i/2]=false;
+    }
     
-   public:
+public:
 
-      prime_sieve(long n) 
-          : Bits(n/2, true)
-      {
-      }
+    prime_sieve(long n) 
+        : Bits(n/2, true)
+    { }
 
-      auto size() const
-      {
-          return Bits.size()*2;
-      }
+    auto size() const
+    {
+        return Bits.size()*2;
+    }
     
-      void clear() 
-      {
-          std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
-      }
+    void clear() 
+    {
+        std::fill(Bits.begin(), Bits.end(), true); // reset all bits to true
+    }
 
-      bool operator[](int i) const // read only access
-      {
-          return Bits[i/2];
-      }
+    bool operator[](int i) const // read only access
+    {
+        return Bits[i/2];
+    }
  
-      void runSieve()
-      {
-          int factor = 3;
-          int q = sqrt(size());
-
-          while (factor <= q)
-          {
-              for (int num = factor; num < size(); num += 2)
-              {
-                  if ((*this)[num])
-                  {
-                      factor = num;
-                      break;
-                  }
-              }
-              for (int num = factor * factor; num < size(); num += factor * 2)
-                  set_false(false);
-
-              factor += 2;            
-          }
-      }
-      
+    friend void runSieve(prime_sieve& sieve); // give access to privates
 };
+
+void runSieve(prime_sieve& sieve)
+{
+    int factor = 3;
+    int q = sqrt(sieve.size());
+
+    while (factor <= q)
+    {
+        for (int num = factor; num < sieve.size(); num += 2)
+        {
+            if (sieve[num])
+            {
+                factor = num;
+                break;
+            }
+        }
+        for (int num = factor * factor; num < sieve.size(); num += factor * 2)
+            sieve.set_false(false);
+
+        factor += 2;            
+    }
+}
 
 int countPrimes(const prime_sieve& sieve)
 {
@@ -140,7 +140,7 @@ int main()
     while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5)
     {
         sieve.clear();
-        sieve.runSieve();
+        runSieve(sieve);
         passes++;
     }
     auto tD = steady_clock::now() - tStart;
