@@ -14,6 +14,8 @@
 using namespace std;
 using namespace std::chrono;
 
+
+
 class prime_sieve
 {
   private:
@@ -53,6 +55,11 @@ class prime_sieve
       {
       }
 
+    void clear() 
+    {
+        std::fill(Bits.begin(), Bits.end(), true); // reset all bits to zero
+    }
+    
       void runSieve()
       {
           int factor = 3;
@@ -117,21 +124,16 @@ class prime_sieve
 int main()
 {
     auto passes = 0;
-    prime_sieve* sieve = nullptr;
-
+    prime_sieve sieve(1000000L);
+    
     auto tStart = steady_clock::now();
     while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5)
     {
-        delete sieve;
-        sieve = new prime_sieve(1000000L);
-        sieve->runSieve();
+        sieve.clear();
+        sieve.runSieve();
         passes++;
     }
     auto tD = steady_clock::now() - tStart;
-    
-    if (sieve)
-    {
-        sieve->printResults(false, duration_cast<microseconds>(tD).count() / 1000000, passes);
-        delete sieve;
-    }
+
+    sieve.printResults(false, duration_cast<microseconds>(tD).count() / 1000000, passes);
 }
