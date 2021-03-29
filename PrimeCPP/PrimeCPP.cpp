@@ -47,7 +47,7 @@ public:
 
     void runSieve()
     {
-        for (int f=1; f<=sqrt(Size)/2; f++)
+        for (int f=1; f<=sqrt(Size)/2; f++) // knowing sqrt(Size) at compile time doesn't help performance, strange 
         {
             // --------------------------
             for (int num = f; num < odd_size(); num++)
@@ -62,7 +62,7 @@ public:
                 f=iter-begin();*/
             //--------------------------
             
-            for (int num = f*f*2+f*2; num < odd_size(); num += f*2+1)
+            for (int num = f*2*(1+f); num < odd_size(); num += f*2+1)
                 set_false(num);
         }
     }
