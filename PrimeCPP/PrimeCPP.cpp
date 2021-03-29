@@ -5,6 +5,8 @@
 #include <chrono>
 #include <cstdlib>
 #include <map>
+#include <cstring>
+#include <cmath>
 
 class prime_sieve
 {
@@ -12,7 +14,7 @@ class prime_sieve
 
       int sieveSize = 0;
       unsigned char * rawbits = nullptr;
-      const std::map<const int, const int> myDict =
+      const std::map<const int, const int> myDict = 
       {
             { 10 , 4 },                 // Historical data for validating our results - the number of primes
             { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
