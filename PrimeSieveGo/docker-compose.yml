@@ -1,0 +1,6 @@
+version: '3.8'
+
+services:
+  primes:
+    build: .
+    image: davepl/prime-sieve-go
