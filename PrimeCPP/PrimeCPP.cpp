@@ -20,14 +20,14 @@ class prime_sieve
 {
 private:
 
-    array<bool,Size/2> Bits;
+    array<bool,Size/2> Bits; // We only need half the memory for only the odd numbers
 
     void set_false(int i)
     { Bits[i]=false; }
     
 public:
 
-    prime_sieve() // We only need half the memory for only the odd numbers
+    prime_sieve()
     { clear(); }
 
     void clear() // reset all bits to true
@@ -51,7 +51,7 @@ public:
         {
             // --------------------------
             for (int num = f; num < odd_size(); num++)
-                if ((*this)[num])
+                if (Bits[num])
                 {
                     f=num;
                     break;
