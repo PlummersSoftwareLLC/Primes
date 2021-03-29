@@ -36,44 +36,52 @@ public:
     auto logical_size() const // size of odd and even numbers
     { return Bits.size()*2; }
 
-    void clear() // reset all bits to true
-    { std::fill(Bits.begin(), Bits.end(), true); }
-
     bool operator[](int i) const // read only access
     { return Bits[i]; }
 
-    auto begin() const // begin iterator of odd bits
+    auto begin() const // begin iterator of odd number bits
     { return Bits.begin(); }
 
-    auto end() const // end iterator of odd bits
+    auto end() const // end iterator of odd number bits
     { return Bits.end(); }
 
-    friend void runSieve(prime_sieve& sieve); // may access private members
-};
+    void clear() // reset all bits to true
+    { std::fill(Bits.begin(), Bits.end(), true); }
 
-void runSieve(prime_sieve& sieve)
-{
-    int factor = 3;
-    int q = sqrt(sieve.logical_size());
-
-    while (factor <= q)
+    void runSieve()
     {
-        auto iter = std::find(sieve.begin()+factor/2, sieve.end(), true);
-        if (iter!=sieve.end())
-        {
-            int num=iter-sieve.begin();
-            factor=num*2+1;
-        }
-        for (int num = factor*factor/2; num < sieve.size(); num += factor)
-            sieve.set_false(num);
+        int factor = 3;
+        int q = sqrt(logical_size());
 
-        factor += 2;            
+        while (factor <= q)
+        {
+            auto iter = std::find(begin()+factor/2, end(), true);
+            if (iter!=end())
+            {
+                int num=iter-begin();
+                factor=num*2+1;
+            }
+            for (int num = factor*factor/2; num < size(); num += factor)
+                set_false(num);
+
+            factor += 2;            
+        }
     }
-}
+
+};
 
 int countPrimes(const prime_sieve& sieve)
 {
     return std::count(sieve.begin()++, sieve.end(), true);
+}
+
+void printPrimes(const prime_sieve& sieve)
+{
+    cout<<"2 ";
+    for (int num = 1; num < sieve.size(); num ++)
+        if (sieve[num])
+            cout<< num*2+1 <<' ';
+    cout<<'\n';
 }
 
 bool validateResults(const prime_sieve& sieve)
@@ -121,10 +129,11 @@ int main()
     while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5)
     {
         sieve.clear();
-        runSieve(sieve);
+        sieve.runSieve();
         passes++;
     }
     auto tD = steady_clock::now() - tStart;
 
     printResults(sieve, duration_cast<microseconds>(tD).count() / 1000000, passes);
+    // printPrimes(sieve);
 }
