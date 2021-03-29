@@ -30,10 +30,10 @@ public:
         : Bits(n/2, true) // We only need half the memory for only the odd numbers
     { }
 
-    auto size() const // size of only odd numbers
+    long size() const // size of only odd numbers
     { return Bits.size(); }
 
-    auto logical_size() const // size of odd and even numbers
+    long logical_size() const // size of odd and even numbers
     { return Bits.size()*2; }
 
     bool operator[](int i) const // read only access
@@ -50,21 +50,23 @@ public:
 
     void runSieve()
     {
-        int factor = 3;
-        int q = sqrt(logical_size());
-
-        while (factor <= q)
+        for (int f=1; f<=sqrt(logical_size())/2; f++)
         {
-            auto iter = std::find(begin()+factor/2, end(), true);
+            // --------------------------
+            for (int num = f; num < size(); num++)
+                if ((*this)[num])
+                {
+                    f=num;
+                    break;
+                }
+            //-------------------------- or use:
+            /* auto iter = std::find(begin()+f, end(), true);
             if (iter!=end())
-            {
-                int num=iter-begin();
-                factor=num*2+1;
-            }
-            for (int num = factor*factor/2; num < size(); num += factor)
+                f=iter-begin();*/
+            //--------------------------
+            
+            for (int num = f*f*2+f*2; num < size(); num += f*2+1)
                 set_false(num);
-
-            factor += 2;            
         }
     }
 
