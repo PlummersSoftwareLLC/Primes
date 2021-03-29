@@ -9,32 +9,32 @@
 #include <map>
 #include <cstring>
 #include <cmath>
-#include <vector>
+#include <array>
 #include <algorithm>
 
 using namespace std;
 using namespace std::chrono;
 
+template <long Size>
 class prime_sieve
 {
 private:
 
-    vector<bool> Bits;
+    array<bool,Size/2> Bits;
 
     void set_false(int i)
     { Bits[i]=false; }
     
 public:
 
-    prime_sieve(long n) 
-        : Bits(n/2, true) // We only need half the memory for only the odd numbers
-    { }
+    prime_sieve() // We only need half the memory for only the odd numbers
+    { clear(); }
 
+    void clear() // reset all bits to true
+    { std::fill(Bits.begin(), Bits.end(), true); }
+    
     long size() const // size of only odd numbers
     { return Bits.size(); }
-
-    long logical_size() const // size of odd and even numbers
-    { return Bits.size()*2; }
 
     bool operator[](int i) const // read only access
     { return Bits[i]; }
@@ -45,12 +45,9 @@ public:
     auto end() const // end iterator of odd number bits
     { return Bits.end(); }
 
-    void clear() // reset all bits to true
-    { std::fill(Bits.begin(), Bits.end(), true); }
-
     void runSieve()
     {
-        for (int f=1; f<=sqrt(logical_size())/2; f++)
+        for (int f=1; f<=sqrt(Size)/2; f++)
         {
             // --------------------------
             for (int num = f; num < size(); num++)
@@ -72,12 +69,15 @@ public:
 
 };
 
-int countPrimes(const prime_sieve& sieve)
+template <long Size>
+int countPrimes(const prime_sieve<Size>& sieve)
 {
-    return std::count(sieve.begin()++, sieve.end(), true);
+    auto iter=sieve.begin();
+    return std::count(iter++, sieve.end(), true);
 }
 
-void printPrimes(const prime_sieve& sieve)
+template <long Size>
+void printPrimes(const prime_sieve<Size>& sieve)
 {
     cout<<"2 ";
     for (int num = 1; num < sieve.size(); num ++)
@@ -86,7 +86,8 @@ void printPrimes(const prime_sieve& sieve)
     cout<<'\n';
 }
 
-bool validateResults(const prime_sieve& sieve)
+template <long Size>
+bool validateResults(const prime_sieve<Size>& sieve)
 {
     const std::map<const long, const int> myDict = 
         {
@@ -102,13 +103,14 @@ bool validateResults(const prime_sieve& sieve)
             { 10000000000L, 455052511 },
 
         };
-    auto iter=myDict.find(sieve.logical_size());
+    auto iter=myDict.find(Size);
     if (iter == myDict.end())
         return false;
     return iter->second == countPrimes(sieve);
 }
 
-void printResults(const prime_sieve& sieve, double duration, int passes)
+template <long Size>
+void printResults(const prime_sieve<Size>& sieve, double duration, int passes)
 {
     int count = countPrimes(sieve); 
 
@@ -116,7 +118,7 @@ void printResults(const prime_sieve& sieve, double duration, int passes)
            passes, 
            duration, 
            duration / passes, 
-           sieve.logical_size(), 
+           Size, 
            count,
            countPrimes(sieve), 
            validateResults(sieve));
@@ -125,7 +127,7 @@ void printResults(const prime_sieve& sieve, double duration, int passes)
 int main()
 {
     auto passes = 0;
-    prime_sieve sieve(1000000L);
+    prime_sieve<1000000L> sieve;
     
     auto tStart = steady_clock::now();
     while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5)
