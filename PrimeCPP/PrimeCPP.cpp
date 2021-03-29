@@ -33,7 +33,7 @@ public:
     void clear() // reset all bits to true
     { std::fill(Bits.begin(), Bits.end(), true); }
     
-    long size() const // size of only odd numbers
+    long odd_size() const // size of only odd numbers
     { return Bits.size(); }
 
     bool operator[](int i) const // read only access
@@ -50,7 +50,7 @@ public:
         for (int f=1; f<=sqrt(Size)/2; f++)
         {
             // --------------------------
-            for (int num = f; num < size(); num++)
+            for (int num = f; num < odd_size(); num++)
                 if ((*this)[num])
                 {
                     f=num;
@@ -62,7 +62,7 @@ public:
                 f=iter-begin();*/
             //--------------------------
             
-            for (int num = f*f*2+f*2; num < size(); num += f*2+1)
+            for (int num = f*f*2+f*2; num < odd_size(); num += f*2+1)
                 set_false(num);
         }
     }
@@ -80,7 +80,7 @@ template <long Size>
 void printPrimes(const prime_sieve<Size>& sieve)
 {
     cout<<"2 ";
-    for (int num = 1; num < sieve.size(); num ++)
+    for (int num = 1; num < sieve.odd_size(); num ++)
         if (sieve[num])
             cout<< num*2+1 <<' ';
     cout<<'\n';
