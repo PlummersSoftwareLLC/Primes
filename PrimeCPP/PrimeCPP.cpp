@@ -71,7 +71,7 @@ class prime_sieve
               for (int num = factor * factor; num < sieveSize; num += factor * 2)
                   Bits[num] = false;
 
-              factor += 2;            
+              factor += 2;
           }
       }
 
@@ -93,14 +93,14 @@ class prime_sieve
 
           if (showResults)
               printf("\n");
-          
+
           printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
-                 passes, 
-                 duration, 
-                 duration / passes, 
-                 sieveSize, 
+                 passes,
+                 duration,
+                 duration / passes,
+                 sieveSize,
                  count,
-                 countPrimes(), 
+                 countPrimes(),
                  validateResults());
       }
 
@@ -117,21 +117,17 @@ class prime_sieve
 int main()
 {
     auto passes = 0;
-    prime_sieve* sieve = nullptr;
-
     auto tStart = steady_clock::now();
-    while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5)
+
+    while (true)
     {
-        delete sieve;
-        sieve = new prime_sieve(1000000L);
-        sieve->runSieve();
+        prime_sieve sieve(1000000L);
+        sieve.runSieve();
         passes++;
-    }
-    auto tD = steady_clock::now() - tStart;
-    
-    if (sieve)
-    {
-        sieve->printResults(false, duration_cast<microseconds>(tD).count() / 1000000, passes);
-        delete sieve;
-    }
+        if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
+        {
+            sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000, passes);
+            break;
+        }
+    } 
 }
