@@ -11,7 +11,6 @@
 #include <cmath>
 #include <vector>
 
-
 #if defined(_MSC_VER) && !defined(__clang_major__)
 #define USE_RAWBITS
 #endif
@@ -138,7 +137,7 @@ class prime_sieve
           {
               for (SizeType num = factor; num <= halfsize; ++num)
               {
-                  if (GetBit(num))
+                  if (Bits[num])
                   {
                       factor = num;
                       step = factor * 2 + 1;
@@ -160,7 +159,7 @@ class prime_sieve
           int count = 1;
           for (int num = 1; num < (sieveSize + 1) / 2; ++num)
           {
-              if (GetBit(num))
+              if (Bits[num])
               {
                   if (showResults)
                       printf("%d, ", num * 2 + 1);
@@ -179,28 +178,6 @@ class prime_sieve
                  count,
                  countPrimes(), 
                  validateResults());
-
-        int count2 = countPrimes();
-
-        int spass = 0;
-        auto tStart = steady_clock::now();
-        while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5)
-        {
-            count2 &= countPrimes();
-            spass++;
-        }
-        auto tD = steady_clock::now() - tStart;
-
-        double d = duration_cast<microseconds>(tD).count() / 1000000;
-
-
-        printf("SPasses: %d, STime: %lf, SAvg: %lf, SCount: %d\n",
-
-            spass,
-            d,
-            d / spass,
-            count2);
-
 
       }
 
