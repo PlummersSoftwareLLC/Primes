@@ -39,7 +39,7 @@ class prime_sieve(object):
         return False
 
     # GetBit
-    # 
+    #
     # Gets a bit from the array of bits, but automatically just filters out even numbers as false,
     # and then only uses half as many bits for actual storage
 
@@ -64,7 +64,7 @@ class prime_sieve(object):
             this.rawbits[int(index/2)] = False
 
     # primeSieve
-    # 
+    #
     # Calculate the primes up to the specified limit
 
     def runSieve(this):
@@ -73,15 +73,14 @@ class prime_sieve(object):
         q = sqrt(this.sieveSize)
 
         while (factor < q):
-            for num in range (factor, this.sieveSize):
-                if (this.GetBit(num) == True):
-                    factor = num
-                    break
+            if not this.GetBit(factor):
+                factor += 2
+                continue
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
 
-            for num in range (factor * 3, this.sieveSize, factor * 2): 
+            for num in range (factor * factor, this.sieveSize, factor * 2):
                 this.ClearBit(num)
 
             factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
@@ -113,7 +112,7 @@ class prime_sieve(object):
         assert(count == this.countPrimes())
         stdout.write("\n");
         print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(this.sieveSize) + ", Count: " + str(count) + ", Valid: " + str(this.validateResults()))
-  
+
 # MAIN Entry
 
 tStart = timeit.default_timer()                         # Record our starting time
@@ -123,13 +122,7 @@ while (timeit.default_timer() - tStart < 10):           # Run until more than 10
     sieve = prime_sieve(1000000)                        #  Calc the primes up to a million
     sieve.runSieve()                                    #  Find the results
     passes = passes + 1                                 #  Count this pass
-    
+
 tD = timeit.default_timer() - tStart                    # After the "at least 10 seconds", get the actual elapsed
 
 sieve.printResults(False, tD, passes)                   # Display outcome
-
-
-
-
-
-
