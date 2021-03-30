@@ -11,6 +11,7 @@
 from sys import stdout                      # So I can print without an automatic python newline
 from math import sqrt                       # Used by the sieve
 import timeit                               # For timing the durations
+from array import array
 
 class prime_sieve(object):
 
@@ -29,7 +30,7 @@ class prime_sieve(object):
 
     def __init__(this, limit):
         this.sieveSize = limit
-        this.rawbits = [True] * ((this.sieveSize+1)//2)
+        this.rawbits = array('B', [1] * ((this.sieveSize+1)//2))
 
     # Look up our count of primes in the historical data (if we have it) to see if it matches
 
@@ -48,7 +49,7 @@ class prime_sieve(object):
         if (index % 2 == 0): # even numbers are automaticallty returned as non-prime
             return False
         else:
-            return this.rawbits[index//2]
+            return this.rawbits[index//2] == 1
 
     # ClearBit
     #
@@ -61,7 +62,7 @@ class prime_sieve(object):
             assert("If you're setting even bits, you're sub-optimal for some reason!")
             return False
         else:
-            this.rawbits[index//2] = False
+            this.rawbits[index//2] = 0
 
     # primeSieve
     #
