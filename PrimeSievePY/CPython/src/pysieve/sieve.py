@@ -7,7 +7,7 @@ class PrimeSieve:
 
     # Historical data for validating our results
     prime_counts = {
-        10: 1,  
+        10: 4,  
         100: 25,
         1000: 168,
         10000: 1229,
