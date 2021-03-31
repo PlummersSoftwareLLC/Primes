@@ -68,7 +68,7 @@ class prime_sieve(object):
     def runSieve(this):
 
         factor = 3
-        q = sqrt(this.sieveSize)
+        q = int(sqrt(this.sieveSize))
 
         while (factor < q):
             for num in range (factor, this.sieveSize):
