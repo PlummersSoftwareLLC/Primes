@@ -36,7 +36,7 @@ class prime_sieve(object):
         this.sieveSize = limit
         # Use one bit per odd integer
         # Hold this in an array of integers, since 32 bit access seems to be faster than with any other length.
-        this.rawbits = array('I', [255] * ((this.sieveSize+1)//DIVISOR+1))
+        this.rawbits = array('I', [2**ITEMSIZE-1] * ((this.sieveSize+1)//DIVISOR+1))
         # The size of array elements is implementation dependent, check that we have got it right
         assert(this.rawbits.itemsize*8 == ITEMSIZE)
         this.rawbits[-1] = 2** ((this.sieveSize//2)%ITEMSIZE) - 1
