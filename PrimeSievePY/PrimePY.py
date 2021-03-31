@@ -44,8 +44,7 @@ class prime_sieve(object):
     # and then only uses half as many bits for actual storage
 
     def GetBit(this, index):
-
-        if (index % 2 == 0): # even numbers are automaticallty returned as non-prime
+        if index % 2 == 0: # even numbers are automaticallty returned as non-prime
             return False
         else:
             return this.rawbits[int(index/2)]
@@ -56,8 +55,7 @@ class prime_sieve(object):
     # never waste time clearing even numbers, this code will assert if you try to
 
     def ClearBit(this, index):
-
-        if (index % 2 == 0):
+        if index % 2 == 0:
             assert("If you're setting even bits, you're sub-optimal for some reason!")
             return False
         else:
