@@ -87,9 +87,12 @@ def timefunc(func):
     duration = tend-tStart
 
     print(f"Function: {func.__name__}, Passes: {passes}, Time: {duration}, Avg: {duration/passes}, Limit: {num_itters}, Count: {passes}, Valid: {len(primes) == known_values.get(num_itters) or sum(primes) == known_values.get(num_itters)}")  # +1 because 2 isnt in the array
-    # Function: runSieve, Passes: 1780, Time: 10.0022926, Avg: 0.005619265505617978, Limit: 1000000, Count: 1780, Valid: True
-    # Function: getPrimes, Passes: 1590, Time: 10.002727600000002, Avg: 0.006291023647798743, Limit: 1000000, Count: 1590, Valid: True
+    # Function: runSieve, Passes: 1894, Time: 10.0005925, Avg: 0.005280143875395988, Limit: 1000000, Count: 1894, Valid: True
+    # Function: getPrimes, Passes: 1592, Time: 10.0009036, Avg: 0.006281974623115577, Limit: 1000000, Count: 1592, Valid: True
 
-validate()
+# 'Compile' the 2 functions before timing them
+runSieve(10)
+getPrimes(10)
+
 timefunc(runSieve)
 timefunc(getPrimes)
