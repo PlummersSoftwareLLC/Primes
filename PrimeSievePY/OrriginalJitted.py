@@ -40,6 +40,11 @@ def runSieve(sieveSize):
 
         factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
     
+    return rawbits
+
+@njit
+def getPrimes(number):
+    rawbits = runSieve(number)
     output = [2]
     for x, y in enumerate(rawbits[1:]):
         if y:
@@ -68,21 +73,23 @@ def validate():
         print(f"{num} took {end-start} seconds and returned {len(result)} primes, the true value is {primes} which is {len(result) == primes}")
         
 
-def timethem():
+def timefunc(func):
     print("Start timing process")
     num_itters = 1_000_000
     primes = []
     tStart = timeit.default_timer()                         # Record our starting time
     passes = 0                                              # We're going to count how many passes we make in fixed window of time
     while (timeit.default_timer() - tStart < 10):           # Run until more than 10 seconds have elapsed
-        primes = runSieve(num_itters)                       #  Find the results
+        primes = func(num_itters)                           #  Find the results
         passes = passes + 1                                 #  Count this pass
 
     tend = timeit.default_timer()
     duration = tend-tStart
 
-    print(f"Passes: {passes}, Time: {duration}, Avg: {duration/passes}, Limit: {num_itters}, Count: {passes}, Valid: {len(primes) == known_values.get(num_itters)}")
-    # Passes: 1550, Time: 10.003551700000001, Avg: 0.006453904322580646, Limit: 1000000, Count: 1550, Valid: True
+    print(f"Function: {func.__name__}, Passes: {passes}, Time: {duration}, Avg: {duration/passes}, Limit: {num_itters}, Count: {passes}, Valid: {len(primes) == known_values.get(num_itters) or sum(primes) == known_values.get(num_itters)}")  # +1 because 2 isnt in the array
+    # Function: runSieve, Passes: 1780, Time: 10.0022926, Avg: 0.005619265505617978, Limit: 1000000, Count: 1780, Valid: True
+    # Function: getPrimes, Passes: 1590, Time: 10.002727600000002, Avg: 0.006291023647798743, Limit: 1000000, Count: 1590, Valid: True
 
-
-timethem()
+validate()
+timefunc(runSieve)
+timefunc(getPrimes)
