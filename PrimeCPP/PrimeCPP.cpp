@@ -124,7 +124,7 @@ int main()
         prime_sieve sieve(1000000L);
         sieve.runSieve();
         passes++;
-        if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
+        if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 10)
         {
             sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000, passes);
             break;
