@@ -1,8 +1,11 @@
-# Simple Benchmark using Primes
+# Primes | A Software Drag Race
 
-For more info see the original [video](https://www.youtube.com/watch?v=D3h62rgewZM)
+Source code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video
+benchmarking the same prime number sieve in Python, C#, and C++.
 
-Results:
+[![Software Drag Racing | Dave's Garage](https://img.youtube.com/vi/D3h62rgewZM/0.jpg)](https://youtu.be/D3h62rgewZM)
+
+## Results table of the original implementation
 
 | System                      | Test                  | Results                                                               |
 | --------------------------- | --------------------- | --------------------------------------------------------------------- |
