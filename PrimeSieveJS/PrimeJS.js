@@ -33,30 +33,15 @@ class PrimeSieve{
 		return false;
 	}
 	
-	GetBit(index) {
-		if (index % 2 == 0)
-			return false;
-		// JavaScript supports bitwise operations, which more than doubles its speed compared to parseInt(index/2)
-		return !this.bitArray[index>>1];
-		//return !this.bitArray[parseInt(index/2)];
-	}
-	
-	ClearBit(index) {
-		if (index % 2 == 0) {
-			console.log('You are setting even bits, which is sub-optimal');
-			return;
-		}
-		this.bitArray[index>>1] = true;
-		//this.bitArray[parseInt(index/2)] = true;
-	}
-	
 	runSieve() {
 		let factor = 3;
 		let q = parseInt(Math.sqrt(this.sieveSize));
 		
 		while (factor <= q) {
 			for (let num = factor; num < this.sieveSize; ++num) {
-				if (this.GetBit(num)) {
+				// By not issuing function calls to GetBit and ClearBit, and instead
+				//	doing it inline, we more than triple the execution speed of our function.
+				if (!this.bitArray[num>>1] && !(num % 2 == 0)) {
 					factor = num;
 					break;
 				}
@@ -66,7 +51,8 @@ class PrimeSieve{
 			// We can then step by factor * 2 because every second one is going to be even by definition
 			
 			for (let num = factor * 3; num <= this.sieveSize; num += factor<<1) {
-				this.ClearBit(num);
+				this.bitArray[num>>1] = true;
+				//this.ClearBit(num);
 			}
 			
 			factor += 2;
@@ -79,7 +65,7 @@ class PrimeSieve{
 		
 		let count = 1;
 		for (let num = 3; num <= this.sieveSize; ++num) {
-			if (this.GetBit(num)) {
+			if (!this.bitArray[num>>1] && !(num % 2 == 0)) {
 				if (showResults) {
 					process.stdout.write(num + ', ');
 				}
