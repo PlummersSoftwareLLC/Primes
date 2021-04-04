@@ -15,7 +15,7 @@ pub fn Sieve(comptime NumType: type) type {
                 .sieveSize = size,
                 .bits = try ArrayList(u8).initCapacity(allocator, size),
             };
-            try self.bits.appendNTimes(1, size);
+            try self.bits.appendNTimes(0, size);
             return self;
         }
 
@@ -30,7 +30,7 @@ pub fn Sieve(comptime NumType: type) type {
             while (factor <= q) : (factor += 2) {
                 var num: NumType = factor;
                 factorSet: while (num < self.sieveSize) : (num += 2) {
-                    if (self.bits.items[num] != 0) {
+                    if (self.bits.items[num] == 0) {
                         factor = num;
                         break :factorSet;
                     }
@@ -38,7 +38,7 @@ pub fn Sieve(comptime NumType: type) type {
 
                 num = factor * factor;
                 while (num < self.sieveSize) : (num += factor * 2) {
-                    self.bits.items[num] = 0;
+                    self.bits.items[num] = 1;
                 }
             }
         }
