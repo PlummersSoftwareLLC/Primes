@@ -9,7 +9,7 @@ class PrimeSieve
 {
     private array $rawbits;
 
-    private array $primeCounts = [
+    public static array $primeCounts = [
         10 => 1,
         100 => 25,
         1000 => 168,
@@ -24,13 +24,8 @@ class PrimeSieve
         private int $sieveSize = 1000000,
     )
     {
-        $rawbitCount = (int)($this->sieveSize + 1) / 2;
-        $this->rawbits = array_fill(0, $rawbitCount, true);
-    }
-
-    private function validateResult(): ?int
-    {
-        return $this->primeCounts[$this->sieveSize];
+        $rawbitSize = (int)($this->sieveSize + 1) / 2;
+        $this->rawbits = array_fill(0, $rawbitSize, true);
     }
 
     private function getBit(int $index): bool
@@ -69,51 +64,60 @@ class PrimeSieve
         }
     }
 
-    public function printResults(
-        int $duration,
-        int $passes,
-        bool $showResults = true,
-    ): void
+    public function printResults(): void
     {
-        if ($showResults) {
-            echo '2' . ", ";
-        }
-
-        $count = 1;
-
         foreach (range(3, $this->sieveSize) as $num) {
             if ($this->getBit($num)) {
-                if ($showResults) {
-                    echo $num . ", ";
-                }
-                $count++;
+                echo $num . ", ";
             }
         }
+    }
 
-        echo sprintf("Passes: %d, Time: %dms, Avg: %dms, Limit: %d, Count: %d, Valid: %s",
-            $passes,
-            $duration,
-            $duration / $passes,
-            $this->sieveSize,
-            $count,
-            ($this->validateResult() === $count) ? 'True' : 'False'
-        );
+    public function getRawbitCount(): int
+    {
+        return array_sum($this->rawbits);
     }
 }
 
-$tStart = hrtime(true);
-$passes = 0;
+//Entry
+$tStart = hrtime(true);       //Init time
+$passes = 0;                            //Init passes
+$sieveSize = 1000000;                   //Set sieve size
+$printResults = false;                  //Print the prime numbers that are found
+$rawbitCount = null;                    //Init a rawbitCount to validate the result
 
 while (getTimeDiffInMs($tStart) < 10000) {
-    $sieve = new PrimeSieve(1000000);
+    $sieve = new PrimeSieve($sieveSize);
     $sieve->runSieve();
+    $rawbitCount = $sieve->getRawbitCount();
     $passes++;
 
-    $sieve->printResults(getTimeDiffInMs($tStart), $passes, false);
-    echo "\n";
+    if ($printResults) {
+        $sieve->printResults();
+        echo "\n";
+    }
 }
+
+
+$tD = getTimeDiffInMs($tStart);     //Get to total time passed
+
+//Print the results
+printf(
+    "Passes: %d, Time: %dms, Avg: %dms, Limit: %d, Count: %d, Valid: %s",
+    $passes,
+    $tD,
+    $tD / $passes,
+    $sieveSize,
+    $rawbitCount,
+    (validateResult($sieveSize) === $rawbitCount) ? 'True' : 'False'
+);
 
 function getTimeDiffInMs(int $tStart): int
 {
     return (hrtime(true) - $tStart) / 1e+6;
+}
+
+function validateResult($sieveSize): ?int
+{
+    return PrimeSieve::$primeCounts[$sieveSize];
 }
