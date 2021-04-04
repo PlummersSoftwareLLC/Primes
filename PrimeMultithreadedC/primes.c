@@ -211,7 +211,7 @@ int main(int cargs, const char** vargs)
 	gettimeofday(&end, NULL);
 
 	// final primes stats
-	fprintf(stderr, "Found %lu primes in %f seconds.\n", primes_size + 1, (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
+	fprintf(stderr, "Found %lu primes in %f seconds\n", primes_size + 1, (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
 
 	if(checkerrors())
 	{
