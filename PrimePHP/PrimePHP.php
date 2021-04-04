@@ -85,8 +85,9 @@ $passes = 0;                            //Init passes
 $sieveSize = 1000000;                   //Set sieve size
 $printResults = false;                  //Print the prime numbers that are found
 $rawbitCount = null;                    //Init a rawbitCount to validate the result
+$runTime = 10;                          //The amount of seconds the script should be running for
 
-while (getTimeDiffInMs($tStart) < 10000) {
+while (getTimeDiffInMs($tStart) < $runTime * 1000) {
     $sieve = new PrimeSieve($sieveSize);
     $sieve->runSieve();
     $rawbitCount = $sieve->getRawbitCount();
