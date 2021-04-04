@@ -24,6 +24,23 @@ jobs:
         working-directory: PrimeSievePY
         run: echo ::set-output name=result::$(python3 PrimePY.py)
 
+  pypy:
+    runs-on: ubuntu-latest
+
+    outputs:
+      result: ${{ steps.benchmark.outputs.result }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up PyPy 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: pypy-3.7
+      - name: Benchmark
+        id: benchmark
+        working-directory: PrimeSievePY
+        run: echo ::set-output name=result::$(pypy PrimePY.py)
+
   cpp:
     runs-on: ubuntu-latest
 
@@ -59,6 +76,7 @@ jobs:
 
     needs:
       - python
+      - pypy
       - cpp
       - csharp
 
@@ -71,5 +89,6 @@ jobs:
             | Language | Result                             |
             | ---------|------------------------------------|
             | Python   | ${{ needs.python.outputs.result }} |
+            | PyPy     | ${{ needs.pypy.outputs.result }}   |
             | C++      | ${{ needs.cpp.outputs.result }}    |
             | C#       | ${{ needs.csharp.outputs.result }} |
