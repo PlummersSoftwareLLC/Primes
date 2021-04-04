@@ -13,7 +13,7 @@ pub fn main() anyerror!void {
 
     var passes: u64 = 0;
     while (timer.read() < 5 * 1_000_000_000) : (passes += 1) {
-        var sieve = try Sieve(u64).init(&allocator.allocator, size);
+        var sieve = try Sieve(usize).init(&allocator.allocator, size);
         sieve.run();
         sieve.deinit();
     }
