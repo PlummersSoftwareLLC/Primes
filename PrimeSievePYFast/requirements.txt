@@ -1,0 +1,3 @@
+# These work only on CPython, not PyPy
+numba
+pytest
