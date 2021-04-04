@@ -24,7 +24,8 @@ class PrimeSieve
         private int $sieveSize = 1000000,
     )
     {
-        $this->rawbits = array_fill(0, (int)($this->sieveSize + 1) / 2, true);
+        $rawbitCount = (int)($this->sieveSize + 1) / 2;
+        $this->rawbits = array_fill(0, $rawbitCount, true);
     }
 
     private function validateResult(): ?int
@@ -103,11 +104,16 @@ class PrimeSieve
 $tStart = hrtime(true);
 $passes = 0;
 
-while ((hrtime(true) - $tStart) / 1e+6 < 10000) {
+while (getTimeDiffInMs($tStart) < 10000) {
     $sieve = new PrimeSieve(1000000);
     $sieve->runSieve();
-    $passes += 1;
+    $passes++;
 
-    $sieve->printResults((hrtime(true) - $tStart) / 1e+6, $passes, false);
+    $sieve->printResults(getTimeDiffInMs($tStart), $passes, false);
     echo "\n";
+}
+
+function getTimeDiffInMs(int $tStart): int
+{
+    return (hrtime(true) - $tStart) / 1e+6;
 }
