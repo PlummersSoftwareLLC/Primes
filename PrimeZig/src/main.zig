@@ -19,7 +19,7 @@ pub fn main() anyerror!void {
     }
 
     const elapsed = @intToFloat(f32, timer.read()) / 1_000_000_000.0;
-    print("Passes: {}, Time: {}, Avg: {}, Limit: {}\n", .{
+    print("Passes: {}, Time: {d:.5}, Avg: {d:.5}, Limit: {}\n", .{
         passes,
         elapsed,
         elapsed / @intToFloat(f32, passes),
