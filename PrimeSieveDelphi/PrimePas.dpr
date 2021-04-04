@@ -22,6 +22,7 @@ type
 		procedure InitializeBits;
 	public
 		constructor Create(Size: Integer);
+		destructor Destroy; override;
 
 		procedure RunSieve; // Calculate the primes up to the specified limit
 
@@ -50,7 +51,7 @@ begin
 
 	// Historical data for validating our results - the number of primes
 	// to be found under some limit, such as 168 primes under 1000
-	FMyDict.Add(       10, 1);
+	FMyDict.Add(       10, 4); //nobody noticed that 1 is wrong? [2, 3, 5, 7]
 	FMyDict.Add(      100, 25);
 	FMyDict.Add(     1000, 168);
 	FMyDict.Add(    10000, 1229);
@@ -58,6 +59,13 @@ begin
 	FMyDict.Add(  1000000, 78498);
 	FMyDict.Add( 10000000, 664579);
 	FMyDict.Add(100000000, 5761455);
+end;
+
+destructor TPrimeSieve.Destroy;
+begin
+	FreeAndNil({var}FMyDict);
+
+	inherited;
 end;
 
 function TPrimeSieve.CountPrimes: Integer;
