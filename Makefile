@@ -1,7 +1,11 @@
 run:
-	- g++ -O3 -flto PrimeCPP/PrimeCPP.cpp && ./a.out
+	- echo "C++:"
+	- g++ -O3 -flto -march=native PrimeCPP/PrimeCPP.cpp && ./a.out
+	- echo "C#:"
 	- cd PrimeCS && dotnet run --configuration Release
-	- cd PrimeRs && cargo run -q --release
+	- echo "Rust:"
+	- cd PrimeRs && cargo run -q --release -- -C target-cpu=native
+	- echo "Python:"
 	- python3 PrimeSievePY/PrimePY.py
 
 clean:

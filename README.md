@@ -13,14 +13,22 @@ In my AMD 3900XT machine here are the results:
 
 ```
 make run
-g++ -O3 -flto PrimeCPP/PrimeCPP.cpp && ./a.out
-Passes: 9686, Time: 5.000000, Avg: 0.000516, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
+echo "C++:"
+C++:
+g++ -O3 -flto -march=native PrimeCPP/PrimeCPP.cpp && ./a.out
+Passes: 9506, Time: 5.000000, Avg: 0.000526, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
+echo "C#:"
+C#:
 cd PrimeCS && dotnet run --configuration Release
-Passes: 3942, Time: 10.0004223, Avg: 0.002536890487062405, Limit: 1000000, Count: 78498, Valid: True
-cd PrimeRs && cargo run -q --release
-Passes: 15607, Time: 5.0002155, Avg: 0.00032038288, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 4105, Time: 10.0015522, Avg: 0.0024364317174177834, Limit: 1000000, Count: 78498, Valid: True
+echo "Rust:"
+Rust:
+cd PrimeRs && cargo run -q --release -- -C target-cpu=native
+Passes: 15560, Time: 5.000209, Avg: 0.00032135018, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+echo "Python:"
+Python:
 python3 PrimeSievePY/PrimePY.py
-Passes: 64, Time: 10.103218182004639, Avg: 0.15786278409382248, Limit: 1000000, Count: 78498, Valid: True
+Passes: 67, Time: 10.142712171000312, Avg: 0.15138376374627333, Limit: 1000000, Count: 78498, Valid: True
 ```
 
 
