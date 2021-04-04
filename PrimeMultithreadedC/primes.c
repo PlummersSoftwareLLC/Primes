@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/sysinfo.h>
@@ -14,6 +15,20 @@ num_t primes_upto = 3;
 pthread_mutex_t primes_lock;
 num_t* workers_upto;
 int cpus;
+
+const num_t myDict[10][2] =
+{
+      {          10L, 4         },                // Historical data for validating our results - the number of primes
+      {         100L, 25        },               // to be found under some limit, such as 168 primes under 1000
+      {        1000L, 168       },
+      {       10000L, 1229      },
+      {      100000L, 9592      },
+      {     1000000L, 78498     },
+      {    10000000L, 664579    },
+      {   100000000L, 5761455   },
+      {  1000000000L, 50847534  },
+      { 10000000000L, 455052511 },
+};
 
 int num_compare(const void* va, const void* vb)
 {
@@ -113,6 +128,27 @@ nextprime:
 	pthread_mutex_unlock(&primes_lock);
 }
 
+bool checkerrors()
+{
+	num_t nearest_limit = 0;
+	num_t valid_primes = 1;
+
+	for(int i = 0; i < 10; i++)
+	{
+		if(myDict[i][0] <= limit && myDict[i][0] > nearest_limit)
+		{
+			nearest_limit = myDict[i][0];
+			valid_primes = myDict[i][1];
+		}
+	}
+
+	num_t j;
+	
+	for(j = 0; j < primes_size && primes[j] < nearest_limit; j++) {}
+	
+	return (j + 1 != valid_primes);
+}
+
 int main(int cargs, const char** vargs)
 {
 	if(cargs == 2)
@@ -175,10 +211,21 @@ int main(int cargs, const char** vargs)
 	gettimeofday(&end, NULL);
 
 	// final primes stats
-	fprintf(stderr, "Found %lu primes in %f seconds\n", primes_size + 1, (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
+	fprintf(stderr, "Found %lu primes in %f seconds.\n", primes_size + 1, (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
 
+	if(checkerrors())
+	{
+		fprintf(stderr, "Found errors\n");
+	}
+
+	else
+	{
+		fprintf(stderr, "Found no errors\n");
+	}
+
+	/*
 	qsort(primes, primes_size, sizeof(num_t), num_compare);
-
+	
 	// display all the primes
 	printf("2\n");
 
@@ -186,6 +233,7 @@ int main(int cargs, const char** vargs)
 	{
 		printf("%lu\n", primes[i]);
 	}
+	*/
 
 	// wait for the stats thread to exit
 	//pthread_join(thread_stats, NULL);
