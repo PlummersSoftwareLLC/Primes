@@ -83,7 +83,3 @@ function main()
 end
 
 main()
-
-### Results of my first run:
-### true
-### Passes: 155, Time: 5.011000156402588, Avg: 0.03232903326711347, Limit: 1000000, Count: 78498, Valid: true
