@@ -1,24 +1,24 @@
 const std = @import("std");
 const heap = std.heap;
 const print = std.debug.print;
-const Timer = std.time.Timer;
+const time = std.time;
 const Sieve = @import("./prime.zig").Sieve;
 
 pub fn main() anyerror!void {
-    const timer = try Timer.start();
+    const timer = try time.Timer.start();
     const size: u64 = 1_000_000;
 
     var allocator = heap.ArenaAllocator.init(heap.page_allocator);
     defer allocator.deinit();
 
     var passes: u64 = 0;
-    while (timer.read() < 5 * 1_000_000_000) : (passes += 1) {
-        var sieve = try Sieve(usize).init(&allocator.allocator, size);
+    while (timer.read() < 5 * time.ns_per_s) : (passes += 1) {
+        var sieve = try Sieve(u32).init(&allocator.allocator, size);
         sieve.run();
         sieve.deinit();
     }
 
-    const elapsed = @intToFloat(f32, timer.read()) / 1_000_000_000.0;
+    const elapsed = @intToFloat(f32, timer.read()) / @intToFloat(f32, time.ns_per_s);
     print("Passes: {}, Time: {d:.5}, Avg: {d:.5}, Limit: {}\n", .{
         passes,
         elapsed,

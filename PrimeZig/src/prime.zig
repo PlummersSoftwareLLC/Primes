@@ -2,22 +2,20 @@ const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 
-const print = std.debug.print;
-
 /// Prime number sieve.
 pub fn Sieve(comptime NumType: type) type {
     return struct {
         sieveSize: usize,
-        bits: ArrayList(bool),
+        bits: ArrayList(u8),
 
         const Self = @This();
 
         pub fn init(allocator: *Allocator, size: usize) !Self {
             var self = Self{
                 .sieveSize = size,
-                .bits = try ArrayList(bool).initCapacity(allocator, size),
+                .bits = try ArrayList(u8).initCapacity(allocator, size),
             };
-            try self.bits.appendNTimes(true, size);
+            try self.bits.appendNTimes(1, size);
             return self;
         }
 
@@ -32,7 +30,7 @@ pub fn Sieve(comptime NumType: type) type {
             while (factor <= q) : (factor += 2) {
                 var num: NumType = factor;
                 factorSet: while (num < self.sieveSize) : (num += 2) {
-                    if (self.bits.items[num]) {
+                    if (self.bits.items[num] != 0) {
                         factor = num;
                         break :factorSet;
                     }
@@ -40,7 +38,7 @@ pub fn Sieve(comptime NumType: type) type {
 
                 num = factor * factor;
                 while (num < self.sieveSize) : (num += factor * 2) {
-                    self.bits.items[num] = false;
+                    self.bits.items[num] = 0;
                 }
             }
         }
@@ -50,7 +48,7 @@ pub fn Sieve(comptime NumType: type) type {
             var idx: NumType = 3;
 
             while (idx < self.sieveSize) : (idx += 2) {
-                count += if (self.bits.items[idx]) @as(NumType, 1) else @as(NumType, 0);
+                count += if (self.bits.items[idx] == 0) @as(NumType, 1) else @as(NumType, 0);
             }
 
             return count;
