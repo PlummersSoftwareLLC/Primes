@@ -3,7 +3,7 @@
 Source code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video
 benchmarking the same prime number sieve in Python, C#, Swift and C++.
 
-This branch adds a Swift implementation that stays close to Dave's original C++ version that used a byte buffer to store the bits rather than std::vector<bool>.
+This branch adds a Swift implementation that stays close to Dave's original C++ version that used a byte buffer to store the bits rather than std::vector\<bool\>.
 
 The Swift version uses an UnsafeRawMutableBuffer for storage, which gives better performance than Array\<UInt8\> at the expense of safety.
 
