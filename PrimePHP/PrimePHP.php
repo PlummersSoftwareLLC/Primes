@@ -56,7 +56,8 @@ class PrimeSieve
                 }
             }
 
-            foreach (range($factor * 3, $this->sieveSize, $factor * 2) as $num) {
+
+            for ($i = $factor * 3; $i <= $this->sieveSize; $i += $factor * 2) {
                 $this->clearBit($num);
             }
 
