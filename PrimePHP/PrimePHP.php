@@ -49,16 +49,15 @@ class PrimeSieve
         $q = sqrt($this->sieveSize);
 
         while ($factor < $q) {
-            foreach (range($factor, $this->sieveSize) as $num) {
-                if ($this->getBit($num)) {
-                    $factor = $num;
+            for ($i = $factor; $i <= $this->sieveSize; $i++) {
+                if ($this->getBit($i)) {
+                    $factor = $i;
                     break;
                 }
             }
 
-
             for ($i = $factor * 3; $i <= $this->sieveSize; $i += $factor * 2) {
-                $this->clearBit($num);
+                $this->clearBit($i);
             }
 
             $factor += 2;
