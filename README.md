@@ -11,17 +11,13 @@ Build with: `swiftc -Ounchecked -o prime primes.swift`
 
 My results for 5 second runs on a MacBook Pro i7-7820HQ 2.9GHz running Big Sur 11.2.3.
 
-| Language    | Passes |
-| ----------- | ------ |
-| C++         | 6,100  |
-| Python      | 21     |
-| C# via Mono | 622    |
-| Swift       | 1,252  |
+| Language    | Passes |Build                                       |Run               |
+| ----------- | ------ |--------------------------------------------|------------------|
+| C++         | 6,100  |clang++ -O3 -std=c++17 -o prime PrimeCPP.cpp|./prime           |
+| Python      | 21     |N/A                                         |python3 PrimePY.py|
+| C# via Mono | 622    |mcs -out:prime -optimize PrimeCS.cs.        |mono prime        |
+| Swift       | 1,252  |swiftc -Ounchecked -o prime primes.swift.   |./prime           |
 
-This comes with the proviso that I don't know what I'm doing with C#! For what it's worth I built the C# version with:  
-`mcs -out:prime -optimize PrimeCS.cs`   
-and ran as:  
-`mono prime`
-
+This comes with the proviso that I don't know what I'm doing with C#!
 
 [![Software Drag Racing | Dave's Garage](https://img.youtube.com/vi/D3h62rgewZM/0.jpg)](https://youtu.be/D3h62rgewZM)
