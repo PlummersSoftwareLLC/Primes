@@ -1,0 +1,60 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/bruce3434/proj/gh/Primes/PrimeCS/PrimeCS.csproj": {}
+  },
+  "projects": {
+    "/home/bruce3434/proj/gh/Primes/PrimeCS/PrimeCS.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/bruce3434/proj/gh/Primes/PrimeCS/PrimeCS.csproj",
+        "projectName": "PrimeCS",
+        "projectPath": "/home/bruce3434/proj/gh/Primes/PrimeCS/PrimeCS.csproj",
+        "packagesPath": "/home/bruce3434/.nuget/packages/",
+        "outputPath": "/home/bruce3434/proj/gh/Primes/PrimeCS/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/bruce3434/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net5.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net5.0": {
+            "targetAlias": "net5.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net5.0": {
+          "targetAlias": "net5.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/snap/dotnet-sdk/116/sdk/5.0.201/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+/home/bruce3434/proj/gh/Primes/PrimeCS/bin/Release/net5.0/PrimeCS
+/home/bruce3434/proj/gh/Primes/PrimeCS/bin/Release/net5.0/PrimeCS.deps.json
+/home/bruce3434/proj/gh/Primes/PrimeCS/bin/Release/net5.0/PrimeCS.runtimeconfig.json
+/home/bruce3434/proj/gh/Primes/PrimeCS/bin/Release/net5.0/PrimeCS.runtimeconfig.dev.json
+/home/bruce3434/proj/gh/Primes/PrimeCS/bin/Release/net5.0/PrimeCS.dll
+/home/bruce3434/proj/gh/Primes/PrimeCS/bin/Release/net5.0/ref/PrimeCS.dll
+/home/bruce3434/proj/gh/Primes/PrimeCS/bin/Release/net5.0/PrimeCS.pdb
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.csprojAssemblyReference.cache
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.GeneratedMSBuildEditorConfig.editorconfig
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.AssemblyInfoInputs.cache
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.AssemblyInfo.cs
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.csproj.CoreCompileInputs.cache
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.dll
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/ref/PrimeCS.dll
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.pdb
+/home/bruce3434/proj/gh/Primes/PrimeCS/obj/Release/net5.0/PrimeCS.genruntimeconfig.cache
