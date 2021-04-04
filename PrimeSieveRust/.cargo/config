@@ -1,7 +1,12 @@
 [build]
 
 [target.x86_64-pc-windows-msvc]
-rustflags = ["-C", "target-cpu=native" ]
+rustflags = [ "-C", "target-cpu=native" ]
 
 [target.x86_64-unknown-linux-gnu]
 rustflags = [ "-C", "target-cpu=native" ]
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = [ "-C", "target-cpu=native" ]
+
+# mac -- you'll need to add the appropriate one here

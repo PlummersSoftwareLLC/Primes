@@ -43,6 +43,7 @@ This is quite a bit faster than Dave's C++ results for the Pi, so I reckon there
 I've enabled all the optimisation I'm aware of, including:
 - setting `target-cpu=native`
 - link time optimisation and `codegen-units=1`
+- pay attention to [.cargo/config](.cargo/config) if you want to run it on, say, Mac. 
 
 ## Quick start for non-Rust people
 
