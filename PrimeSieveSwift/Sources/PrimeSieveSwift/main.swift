@@ -15,9 +15,7 @@ struct BoolBitArray: BitArray {
     /// Gets a bit from the array of bits, but automatically just filters out even numbers as false,
     /// and then only uses half as many bits for actual storage
     func getBit(_ idx: Int) -> Bool {
-        if idx % 2 == 0 {
-            return false
-        }
+        assert(idx % 2 != 0)
         return rawBits[idx / 2]
     }
 
@@ -25,9 +23,7 @@ struct BoolBitArray: BitArray {
     /// Since the prime sieve work should never waste time clearing even numbers,
     /// this code will assert if you try to
     mutating func clearBit(_ idx: Int) {
-        if idx % 2 == 0 {
-            fatalError("If you're setting even bits, you're sub-optimal for some reason!")
-        }
+        assert(idx % 2 != 0, "If you're setting even bits, you're sub-optimal for some reason!")
         rawBits[idx / 2] = false
     }
 }
