@@ -111,7 +111,8 @@ class prime_sieve(object):
                 count+=1
 
         assert(count == this.countPrimes())
-        stdout.write("\n");
+        if (showResults): 
+            stdout.write("\n");
         print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(this.sieveSize) + ", Count: " + str(count) + ", Valid: " + str(this.validateResults()))
   
 # MAIN Entry

@@ -11,30 +11,31 @@ benchmarking the same prime number sieve in Python, C#, and C++; forked to add R
 
 In my AMD 3900XT machine here are the results:
 
-- C++:
-	
-	- Compile command: `g++ -O3 -flto`
-	- GCC version: 10.2
-	- Result: `Passes: 10430, Time: 5.000000, Avg: 0.000479, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1`
-	
-- Rust:
+```
+make run
+g++ -O3 -flto PrimeCPP/PrimeCPP.cpp && ./a.out
+Passes: 9686, Time: 5.000000, Avg: 0.000516, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
+cd PrimeCS && dotnet run --configuration Release
+Passes: 3942, Time: 10.0004223, Avg: 0.002536890487062405, Limit: 1000000, Count: 78498, Valid: True
+cd PrimeRs && cargo run -q --release
+Passes: 15607, Time: 5.0002155, Avg: 0.00032038288, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+python3 PrimeSievePY/PrimePY.py
+Passes: 64, Time: 10.103218182004639, Avg: 0.15786278409382248, Limit: 1000000, Count: 78498, Valid: True
+```
 
-	- Compile command: `cargo build --release`
-	- Rust version: 1.51
-	- Result: `Passes: 14768, Time: 5.0001297, Avg: 0.00033857865, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true`
-	
-	
----
 
-- C# Dotnet Core
-	
-	- Run command: `dotnet run --configuration Release`
-	- dotnet version: 5.0.201
-	- Result: `Passes: 3812, Time: 10.0004937, Avg: 0.0026234243704092337, Limit: 1000000, Count: 78498, Valid: True`
+```
+make print_versions 
+g++ --version
+g++ (Ubuntu 10.2.0-13ubuntu1) 10.2.0
+Copyright (C) 2020 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-- Python:
-
-	- Run command: `python3 PrimePY.py`
-	- Python version: Python 3.8.6
-	- Result: `Passes: 68, Time: 10.042399984988151, Avg: 0.147682352720414, Limit: 1000000, Count: 78498, Valid: True`
-
+dotnet --version
+5.0.201
+rustc --version
+rustc 1.51.0 (2fd73fabe 2021-03-23)
+python3 --version
+Python 3.8.6
+```
