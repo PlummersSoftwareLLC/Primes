@@ -15,8 +15,8 @@ My results for 5 second runs on a MacBook Pro i7-7820HQ 2.9GHz running Big Sur 1
 | ----------- | ------ |--------------------------------------------|------------------|
 | C++         | 6,100  |clang++ -O3 -std=c++17 -o prime PrimeCPP.cpp|./prime           |
 | Python      | 21     |N/A                                         |python3 PrimePY.py|
-| C# via Mono | 622    |mcs -out:prime -optimize PrimeCS.cs.        |mono prime        |
-| Swift       | 1,252  |swiftc -Ounchecked -o prime primes.swift.   |./prime           |
+| C# via Mono | 622    |mcs -out:prime -optimize PrimeCS.cs         |mono prime        |
+| Swift       | 1,252  |swiftc -Ounchecked -o prime primes.swift    |./prime           |
 
 This comes with the proviso that I don't know what I'm doing with C#!
 
