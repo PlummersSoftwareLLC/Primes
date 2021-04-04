@@ -12,3 +12,11 @@ edition = "2018"
 opt-level = 3
 lto = true
 codegen-units = 1
+
+[[bin]]
+name = "simple-bits"
+path = "src/simple-bits.rs"
+
+[[bin]]
+name = "abstracted"
+path = "src/abstracted.rs"
