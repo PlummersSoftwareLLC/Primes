@@ -42,24 +42,6 @@ class prime_sieve
           return myDict.find(sieveSize)->second == countPrimes();
       }
 
-      float fastInverseSqrt(float input)
-      {
-          long i;
-          float x2, y;
-          const float threeHalves = 1.5F;
-          
-          x2 = input * 0.5F;
-          y = input;
-          i = *(long*)&y;
-
-          i = 0x5f3759df - (i >> 1);
-          y = *(float*)&i;
-          y = y *(threeHalves - (x2 * y * y));
-          y = y * (threeHalves - (x2 * y * y));
-
-          return y;
-      }
-
    public:
 
       prime_sieve(long n) 
@@ -74,7 +56,7 @@ class prime_sieve
       void runSieve()
       {
           int factor = 3;
-          int q = fastInverseSqrt(sieveSize);
+          int q = sqrt(sieveSize);
 
           while (factor <= q)
           {
