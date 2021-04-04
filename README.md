@@ -1,4 +1,4 @@
-# Swift implementation of Dave's prime seive
+# Swift implementation of Dave's prime sieve
 
 Source code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video
 benchmarking the same prime number sieve in Python, C#, Swift and C++.
