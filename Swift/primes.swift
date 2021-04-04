@@ -22,7 +22,7 @@ class PrimeSieve {
     init(size: Int) {
         sieveSize = size
         rawBits = UnsafeMutableRawBufferPointer.allocate(byteCount: size / 8 + 1, alignment: MemoryLayout<UInt8>.alignment)
-        rawBits.initializeMemory(as: UInt8.self, repeating: 0xff)
+        rawBits.initializeMemory(as: UInt8.self, repeating: 0xaa)
     }
     
     
@@ -37,22 +37,11 @@ class PrimeSieve {
     
     
     func getBit(index: Int) -> Bool {
-        
-        if index % 2 == 0 {
-            return false
-        }
-        
         return (rawBits[index / 8] & (1 << (index % 8))) != 0
     }
     
     
     func clearBit(index: Int) {
-        
-        if (index % 2 == 0) {
-            print("You're setting even bits, which is sub-optimal.")
-            return
-        }
-        
         rawBits[index / 8] &= ~(1 << (index % 8))
     }
     
