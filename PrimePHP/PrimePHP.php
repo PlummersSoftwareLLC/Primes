@@ -23,7 +23,7 @@ class PrimeSieve
     ];
 
     public function __construct(
-        $sieveSize = 1000000,
+        $sieveSize = 1000000
     )
     {
         $this->sieveSize = $sieveSize;
