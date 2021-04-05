@@ -63,7 +63,7 @@ fn runFixedArrayListBacked(
         field.deinit();
     }
 
-    printResults("FixedArrayList(" ++ @typeName(Type) ++ ")", passes, timer.read(), size);
+    printResults("FixedAllocator+ArrayList(" ++ @typeName(Type) ++ ")", passes, timer.read(), size);
 }
 
 fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, limit: usize) void {
