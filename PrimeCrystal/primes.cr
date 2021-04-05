@@ -77,9 +77,9 @@ end
 
 passes = 0
 start_time = Time.utc.to_unix
-sieve = PrimeSieve.new(1000000_u64)
 
 loop do
+  sieve = PrimeSieve.new(1000000_u64)
   sieve.run_sieve
   passes += 1
 
