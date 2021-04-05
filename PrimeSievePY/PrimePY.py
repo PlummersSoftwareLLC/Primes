@@ -27,15 +27,15 @@ class prime_sieve(object):
                     100000000 : 5761455
                   }
 
-    def __init__(this, limit):
-        this.sieveSize = limit
-        this.rawbits = [True] * (int((this.sieveSize+1)/2))
+    def __init__(self, limit):
+        self.sieveSize = limit
+        self.rawbits = [True] * (int((self.sieveSize+1)/2))
 
     # Look up our count of primes in the historical data (if we have it) to see if it matches
 
-    def validateResults(this):                      # Check to see if this is an upper_limit we can
-        if this.sieveSize in this.primeCounts:      # the data, and (b) our count matches. Since it will return
-            return this.primeCounts[this.sieveSize] == this.countPrimes() # false for an unknown upper_limit, can't assume false == bad
+    def validateResults(self):                      # Check to see if this is an upper_limit we can
+        if self.sieveSize in self.primeCounts:      # the data, and (b) our count matches. Since it will return
+            return self.primeCounts[self.sieveSize] == self.countPrimes() # false for an unknown upper_limit, can't assume false == bad
         return False
 
     # GetBit
@@ -43,46 +43,37 @@ class prime_sieve(object):
     # Gets a bit from the array of bits, but automatically just filters out even numbers as false,
     # and then only uses half as many bits for actual storage
 
-    def GetBit(this, index):
-
-        if (index % 2 == 0): # even numbers are automaticallty returned as non-prime
-            return False
-        else:
-            return this.rawbits[int(index/2)]
+    def GetBit(self, index):
+        return self.rawbits[int(index/2)]
 
     # ClearBit
     #
     # Reciprocal of GetBit, ignores even numbers and just stores the odds. Since the prime sieve work should
     # never waste time clearing even numbers, this code will assert if you try to
 
-    def ClearBit(this, index):
-
-        if (index % 2 == 0):
-            assert("If you're setting even bits, you're sub-optimal for some reason!")
-            return False
-        else:
-            this.rawbits[int(index/2)] = False
+    def ClearBit(self, index):
+        self.rawbits[int(index/2)] = False
 
     # primeSieve
     # 
     # Calculate the primes up to the specified limit
 
-    def runSieve(this):
+    def runSieve(self):
 
         factor = 3
-        q = sqrt(this.sieveSize)
+        q = sqrt(self.sieveSize)
 
         while (factor < q):
-            for num in range (factor, this.sieveSize):
-                if (this.GetBit(num) == True):
+            for num in range (factor, self.sieveSize, 2):
+                if (self.GetBit(num) == True):
                     factor = num
                     break
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
 
-            for num in range (factor * 3, this.sieveSize, factor * 2): 
-                this.ClearBit(num)
+            for num in range (factor * 3, self.sieveSize, factor * 2): 
+                self.ClearBit(num)
 
             factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
 
@@ -91,28 +82,28 @@ class prime_sieve(object):
     # Return the count of bits that are still set in the sieve. Assumes you've already called
     # runSieve, of course!
 
-    def countPrimes(this):
-        return sum(1 for b in this.rawbits if b);
+    def countPrimes(self):
+        return sum(self.rawbits)
 
     # printResults
     #
     # Displays the primes found (or just the total count, depending on what you ask for)
 
-    def printResults(this, showResults, duration, passes):
+    def printResults(self, showResults, duration, passes):
 
         if (showResults): # Since we auto-filter evens, we have to special case the number 2 which is prime
-            stdout.write("2, ");
+            stdout.write("2, ")
 
         count = 1
-        for num in range (3, this.sieveSize): # Count (and optionally dump) the primes that were found below the limit
-            if (this.GetBit(num) == True):
+        for num in range (3, self.sieveSize): # Count (and optionally dump) the primes that were found below the limit
+            if (num % 2 == 1 and self.GetBit(num) == True):
                 if (showResults):
                     stdout.write(str(num) +", ")
                 count+=1
 
-        assert(count == this.countPrimes())
-        stdout.write("\n");
-        print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(this.sieveSize) + ", Count: " + str(count) + ", Valid: " + str(this.validateResults()))
+        assert(count == self.countPrimes())
+        stdout.write("\n")
+        print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(self.sieveSize) + ", Count: " + str(self.countPrimes()) + ", Valid: " + str(self.validateResults()))
   
 # MAIN Entry
 
