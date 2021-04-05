@@ -60,18 +60,12 @@ class prime_sieve
 
           while (factor <= q)
           {
-              for (int num = factor; num < sieveSize; num += 2)
-              {
-                  if (Bits[num])
-                  {
-                      factor = num;
-                      break;
-                  }
-              }
               for (int num = factor * factor; num < sieveSize; num += factor * 2)
                   Bits[num] = false;
 
-              factor += 2;
+              // searching for the next prime factor
+	      for (factor+=2;factor<sieveSize;factor+=2)
+		if (Bits[factor]) break;
           }
       }
 
