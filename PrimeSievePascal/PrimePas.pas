@@ -1,5 +1,10 @@
 program PrimePas;
 
+{ ********************************************************************************
+ This is adapted from https://github.com/JackTrapper/Primes/tree/main/PrimeSieveDelphi
+ The primary objective being to compile under Free Pascal Compiler, without any external libraries
+******************************************************************************** }
+
 {$IFDEF FPC}
   {$MODE OBJFPC}  
 {$ELSE}
@@ -22,7 +27,6 @@ type
 	private
 		FSieveSize: Integer;
 		FBitArray: array of ByteBool; {ByteBool: 4644. WordBool: 4232. LongBool: 3673}
-		{FMyDict: TDictionary<Integer, Integer>;}
 		FMyList: array of Integer;
 
 		function GetBit(Index: Integer): Boolean;
@@ -57,7 +61,6 @@ begin
 	SetLength(FBitArray, (FSieveSize+1) div 2);
 	InitializeBits;
 
-	//FMyDict := TDictionary<Integer, Integer>.Create;
 	SetLength(FMyList, 9);
 
 
