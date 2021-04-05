@@ -8,32 +8,26 @@ pub fn main() anyerror!void {
     const size: u64 = 1_000_000;
     const run_for: u64 = 5; // Seconds
 
-    // Runs with ArenaAllocator that is backed by a page allocator.
-    try runArenaArrayListBacked(u8, 0, 1, size, run_for);
-    try runArenaArrayListBacked(bool, true, false, size, run_for);
-    try runArenaArrayListBacked(u1, 0, 1, size, run_for);
-    try runArenaArrayListBacked(u2, 0, 1, size, run_for);
-    try runArenaArrayListBacked(u4, 0, 1, size, run_for);
-    try runArenaArrayListBacked(u32, 0, 1, size, run_for);
-    try runArenaArrayListBacked(u64, 0, 1, size, run_for);
+    comptime const configs = .{
+        .{ u8, 0, 1 },
+        .{ bool, true, false },
+        .{ u1, 0, 1 },
+        .{ u2, 0, 1 },
+        .{ u4, 0, 1 },
+        .{ u32, 0, 1 },
+        .{ u64, 0, 1 },
+    };
 
-    // Runs on a FixedAllocator, that is backed by a buffer in stack.
-    try runFixedArrayListBacked(u8, 0, 1, size, run_for);
-    try runFixedArrayListBacked(bool, true, false, size, run_for);
-    try runFixedArrayListBacked(u1, 0, 1, size, run_for);
-    try runFixedArrayListBacked(u2, 0, 1, size, run_for);
-    try runFixedArrayListBacked(u4, 0, 1, size, run_for);
-    try runFixedArrayListBacked(u32, 0, 1, size, run_for);
-    try runFixedArrayListBacked(u64, 0, 1, size, run_for);
+    inline for (configs) |run| {
+        // Runs with ArenaAllocator that is backed by a page allocator.
+        try runArenaArrayListBacked(run[0], run[1], run[2], size, run_for);
 
-    // Runs backed by page alocator (pages allocated from OS directly).
-    try runArrayListBacked(u8, 0, 1, size, run_for);
-    try runArrayListBacked(bool, true, false, size, run_for);
-    try runArrayListBacked(u1, 0, 1, size, run_for);
-    try runArrayListBacked(u2, 0, 1, size, run_for);
-    try runArrayListBacked(u4, 0, 1, size, run_for);
-    try runArrayListBacked(u32, 0, 1, size, run_for);
-    try runArrayListBacked(u64, 0, 1, size, run_for);
+        // Runs on a FixedAllocator, that is backed by a buffer in stack.
+        try runFixedArrayListBacked(run[0], run[1], run[2], size, run_for);
+
+        // Runs backed by page alocator (pages allocated from OS directly).
+        try runArrayListBacked(run[0], run[1], run[2], size, run_for);
+    }
 }
 
 fn runArrayListBacked(
