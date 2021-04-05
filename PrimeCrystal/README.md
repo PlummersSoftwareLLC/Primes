@@ -142,28 +142,28 @@ To run the benchmark just use the `run.sh` utility script
 And here are the results:
 
 ```
-Iteration 01: Passes: 2856 Time: 5.000000 Avg: 0.001751 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 02: Passes: 2984 Time: 5.000000 Avg: 0.001676 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 03: Passes: 3029 Time: 5.000000 Avg: 0.001651 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 04: Passes: 3043 Time: 5.000000 Avg: 0.001643 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 05: Passes: 3049 Time: 5.000000 Avg: 0.001640 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 06: Passes: 3054 Time: 5.000000 Avg: 0.001637 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 07: Passes: 3050 Time: 5.000000 Avg: 0.001639 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 08: Passes: 3054 Time: 5.000000 Avg: 0.001637 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 09: Passes: 3062 Time: 5.000000 Avg: 0.001633 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 10: Passes: 3077 Time: 5.000000 Avg: 0.001625 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 11: Passes: 3061 Time: 5.000000 Avg: 0.001633 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 12: Passes: 3037 Time: 5.000000 Avg: 0.001646 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 13: Passes: 3059 Time: 5.000000 Avg: 0.001635 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 14: Passes: 3060 Time: 5.000000 Avg: 0.001634 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 15: Passes: 3042 Time: 5.000000 Avg: 0.001644 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 16: Passes: 3071 Time: 5.000000 Avg: 0.001628 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 17: Passes: 3045 Time: 5.000000 Avg: 0.001642 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 18: Passes: 3072 Time: 5.000000 Avg: 0.001628 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 19: Passes: 3059 Time: 5.000000 Avg: 0.001635 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 20: Passes: 3069 Time: 5.000000 Avg: 0.001629 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 01: Passes: 3373 Time: 5.000000 Avg: 0.001482 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 02: Passes: 3720 Time: 5.000000 Avg: 0.001344 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 03: Passes: 3728 Time: 5.000000 Avg: 0.001341 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 04: Passes: 3734 Time: 5.000000 Avg: 0.001339 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 05: Passes: 3751 Time: 5.000000 Avg: 0.001333 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 06: Passes: 3816 Time: 5.000000 Avg: 0.001310 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 07: Passes: 3745 Time: 5.000000 Avg: 0.001335 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 08: Passes: 3691 Time: 5.000000 Avg: 0.001355 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 09: Passes: 3754 Time: 5.000000 Avg: 0.001332 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 10: Passes: 3730 Time: 5.000000 Avg: 0.001340 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 11: Passes: 3823 Time: 5.000000 Avg: 0.001308 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 12: Passes: 3823 Time: 5.000000 Avg: 0.001308 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 13: Passes: 3797 Time: 5.000000 Avg: 0.001317 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 14: Passes: 3839 Time: 5.000000 Avg: 0.001302 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 15: Passes: 3794 Time: 5.000000 Avg: 0.001318 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 16: Passes: 3704 Time: 5.000000 Avg: 0.001350 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 17: Passes: 3829 Time: 5.000000 Avg: 0.001306 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 18: Passes: 3825 Time: 5.000000 Avg: 0.001307 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 19: Passes: 3807 Time: 5.000000 Avg: 0.001313 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 20: Passes: 3823 Time: 5.000000 Avg: 0.001308 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
 -----
-Best result is: 3077
+Best result is: 3839
 ```
 
 ## Running it under Raspberry Pi
