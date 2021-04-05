@@ -20,9 +20,7 @@ class PrimeSieve
 
   def run_sieve
     factor = 3
-    q = Math.sqrt(@sieve_size)
-
-    while factor <= q
+    while factor <= Math.sqrt(@sieve_size)
       num = factor
       while num < @sieve_size
         if (@bits[num])
@@ -77,9 +75,9 @@ end
 
 passes = 0
 start_time = Time.utc.to_unix
+sieve = PrimeSieve.new(1000000_u64)
 
-while true
-  sieve = PrimeSieve.new(1000000_u64)
+loop do
   sieve.run_sieve
   passes += 1
 
