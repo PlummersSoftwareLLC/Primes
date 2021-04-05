@@ -2,7 +2,7 @@ const std = @import("std");
 const heap = std.heap;
 const print = std.debug.print;
 const time = std.time;
-const Sieve = @import("./prime.zig").Sieve;
+const prime = @import("./prime.zig");
 
 pub fn main() anyerror!void {
     const timer = try time.Timer.start();
@@ -13,9 +13,9 @@ pub fn main() anyerror!void {
 
     var passes: u64 = 0;
     while (timer.read() < 5 * time.ns_per_s) : (passes += 1) {
-        var sieve = try Sieve(u64).init(&allocator.allocator, size);
-        sieve.run();
-        sieve.deinit();
+        var field = try prime.ArrayListField(u8, 0, 1).init(&allocator.allocator, size);
+        prime.Sieve.init(&field.field, size).run();
+        field.deinit();
     }
 
     const elapsed = @intToFloat(f32, timer.read()) / @intToFloat(f32, time.ns_per_s);
