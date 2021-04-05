@@ -67,7 +67,7 @@ struct PrimeSieve
   end
 
   def count_primes
-    ((3..@sieve_size).step(2).select { |v| @bits[v] }).size + 1
+    ((3..@sieve_size).step(2).select { |v| !@bits[v] }).size + 1
   end
 
   def validate_results
