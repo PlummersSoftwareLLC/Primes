@@ -1,13 +1,15 @@
 <?php
 
 /**
- * PHP 8 Prime Sieve
+ * PHP Prime Sieve
  * Class PrimeSieve
  */
 
 class PrimeSieve
 {
     private array $rawbits;
+
+    private int $sieveSize;
 
     public static array $primeCounts = [
         10 => 1,
@@ -21,9 +23,10 @@ class PrimeSieve
     ];
 
     public function __construct(
-        private int $sieveSize = 1000000,
+        $sieveSize = 1000000,
     )
     {
+        $this->sieveSize = $sieveSize;
         $rawbitSize = (int)($this->sieveSize + 1) / 2;
         $this->rawbits = array_fill(0, $rawbitSize, true);
     }
@@ -66,9 +69,9 @@ class PrimeSieve
 
     public function printResults(): void
     {
-        foreach (range(3, $this->sieveSize) as $num) {
-            if ($this->getBit($num)) {
-                echo $num . ", ";
+        for ($i = 0; $i < $this->sieveSize; $i++) {
+            if ($this->getBit($i)) {
+                echo $i . ", ";
             }
         }
     }
@@ -80,7 +83,7 @@ class PrimeSieve
 }
 
 //Entry
-$tStart = hrtime(true);       //Init time
+$tStart = microtime(true);       //Init time
 $passes = 0;                            //Init passes
 $sieveSize = 1000000;                   //Set sieve size
 $printResults = false;                  //Print the prime numbers that are found
@@ -113,9 +116,9 @@ printf(
     (validateResult($sieveSize) === $rawbitCount) ? 'True' : 'False'
 );
 
-function getTimeDiffInMs(int $tStart): int
+function getTimeDiffInMs(float $tStart): int
 {
-    return (hrtime(true) - $tStart) / 1e+6;
+    return (microtime(true) - $tStart) * 1000;
 }
 
 function validateResult($sieveSize): ?int
