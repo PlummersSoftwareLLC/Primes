@@ -4,6 +4,6 @@
 # clang -Ofast -std=c++17 -lc++ PrimeCPP.cpp -oPrimes_clang.exe
 
 clang++ -Ofast -std=c++17 PrimeCPP.cpp -oPrimes_clang++.exe
-cp Primes_clang.exe Primes.exe
+cp Primes_clang++.exe Primes.exe
 
 ./Primes.exe
