@@ -10,9 +10,12 @@
 #include <cstring>
 #include <cmath>
 #include <vector>
+#include <thread>
 
 using namespace std;
 using namespace std::chrono;
+
+#define UPPER_LIMIT 1000000L
 
 class prime_sieve
 {
@@ -34,13 +37,6 @@ class prime_sieve
             { 10000000000L, 455052511 },
 
       };
-
-      bool validateResults()
-      {
-          if (myDict.end() == myDict.find(sieveSize))
-              return false;
-          return myDict.find(sieveSize)->second == countPrimes();
-      }
 
    public:
 
@@ -71,11 +67,27 @@ class prime_sieve
               for (int num = factor * factor; num < sieveSize; num += factor * 2)
                   Bits[num] = false;
 
-              factor += 2;
+              factor += 2;            
           }
       }
 
-      void printResults(bool showResults, double duration, int passes)
+      int countPrimes() const
+      {
+          int count = 1;
+          for (int i = 3; i < sieveSize; i+=2)
+              if (Bits[i])
+                  count++;
+          return count;
+      }
+
+      bool validateResults() const
+      {
+          if (myDict.end() == myDict.find(sieveSize))
+              return false;
+          return myDict.find(sieveSize)->second == countPrimes();
+      }
+
+      void printResults(bool showResults, double duration, int passes) const
       {
           if (showResults)
               printf("2, ");
@@ -93,41 +105,45 @@ class prime_sieve
 
           if (showResults)
               printf("\n");
-
-          printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
-                 passes,
-                 duration,
-                 duration / passes,
-                 sieveSize,
+          
+          printf("Passes: %d, Threads: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
+                 passes, 
+                 thread::hardware_concurrency(),
+                 duration, 
+                 duration / passes, 
+                 sieveSize, 
                  count,
-                 countPrimes(),
+                 countPrimes(), 
                  validateResults());
       }
-
-      int countPrimes()
-      {
-          int count = 1;
-          for (int i = 3; i < sieveSize; i+=2)
-              if (Bits[i])
-                  count++;
-          return count;
-      }
 };
+
+void RunSieve()
+{
+    prime_sieve sieve(UPPER_LIMIT);
+    sieve.runSieve();
+}
 
 int main()
 {
     auto passes = 0;
     auto tStart = steady_clock::now();
 
-    while (true)
+    while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5)
     {
-        prime_sieve sieve(1000000L);
-        sieve.runSieve();
-        passes++;
-        if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
-        {
-            sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000, passes);
-            break;
-        }
-    } 
+        auto cThreads = thread::hardware_concurrency();
+        vector<thread> threadPool;
+        for(auto i = 0; i < cThreads; i++)
+            threadPool.push_back(thread(RunSieve));
+        for (auto &th : threadPool) 
+            th.join();
+        passes += cThreads;
+    }
+    auto tEnd = steady_clock::now() - tStart;
+    
+    prime_sieve checkSieve(UPPER_LIMIT);
+    checkSieve.runSieve();
+    checkSieve.printResults(false, duration_cast<microseconds>(tEnd).count() / 1000000.0, passes);
+
+    return checkSieve.validateResults();
 }

@@ -1,0 +1,7 @@
+version: "2.7"
+
+services:
+    primes:
+        build: .
+        environment:
+            NO_COMPILE: 1
