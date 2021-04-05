@@ -20,15 +20,16 @@ var myDict = map[int]int{
 func (s *Sieve) runSieve() {
 	factor := 3
 	var q = int(math.Sqrt(float64(s.sieveSize)))
-
+	sieveSize := s.sieveSize
+	bitArray := s.bitArray
 	for factor <= q {
-		for num := factor; num < s.sieveSize; num += 2 {
-			if s.bitArray[num] {
+		for num := factor; num < sieveSize; num += 2 {
+			if bitArray[num] {
 				factor = num
 				break
 			}
 		}
-		for num := factor * factor; num < s.sieveSize; num += factor * 2 {
+		for num := factor * factor; num < sieveSize; num += factor * 2 {
 			s.bitArray[num] = false
 		}
 		factor += 2
@@ -93,10 +94,10 @@ func main() {
 	startClock := time.Now()
 
 	initBitArray := make([]bool, 1e6)
-	for i := range initBitArray {
-		initBitArray[i] = true
-	}
 	for {
+		for i := range initBitArray {
+			initBitArray[i] = true
+		}
 		sieve := Sieve{bitArray: initBitArray, sieveSize: 1e6}
 		sieve.runSieve()
 		passes++
