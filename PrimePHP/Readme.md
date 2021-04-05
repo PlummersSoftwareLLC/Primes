@@ -19,19 +19,25 @@ Passes: 195, Time: 5.013734, Avg: 0.025711, Limit: 1000000, Count1: 78498, Count
 
 Install PHP (CLI - Command Line Interface) 7.4 or above
 
-> PHP 8.0 is provided with Ubuntu 20.10 and installable using `sudo apt install php-cli`
+> PHP is provided with Ubuntu and installable using `sudo apt install php-cli`
 
+How to verify installed PHP version:
+
+```bash
+$ php -v
+PHP 8.0.3 (cli) (built: Mar  5 2021 07:54:30) ( NTS )
+```
 
 # EXECUTE
 
 PHP 7.4 or above
 
 ```bash
-$ php -dopcache.enable_cli=1 -dopcache.enable=1 -dxdebug.mode=off PrimeSieve.php
+$ php -dopcache.enable_cli=1 -dopcache.enable=1 -dxdebug.mode=off PrimePHP.php
 ```
 
-PHP 8.0 or above (with JIT compiler)
+PHP with JIT compiler (requires PHP 8.0 or above)
 
 ```bash
-$ php -dopcache.enable_cli=1 -dopcache.enable=1 -dopcache.jit_buffer_size=100M -dopcache.jit=1255 -dxdebug.mode=off PrimeSieve.php
+$ php -dopcache.enable_cli=1 -dopcache.enable=1 -dopcache.jit_buffer_size=100M -dopcache.jit=1255 -dxdebug.mode=off PrimePHP.php
 ```
