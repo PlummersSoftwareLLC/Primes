@@ -2,7 +2,7 @@ const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 
-/// A PrimeField that is backed by comptime configurable type ArrayList.
+/// A prime number field that is backed by comptime configurable type ArrayList.
 /// This enables use of any type you like, just specify the values that
 /// will stand in for true and false.
 pub fn ArrayListField(comptime Type: type, comptime trueVal: Type) type {
@@ -29,7 +29,8 @@ pub fn ArrayListField(comptime Type: type, comptime trueVal: Type) type {
     };
 }
 
-/// Prime number sieve.
+/// Prime number sieve. Can be configured with any desired time
+/// at compile time. So that switching between them would be easy.
 pub fn Sieve(
     comptime Type: type,
     comptime trueVal: Type,
