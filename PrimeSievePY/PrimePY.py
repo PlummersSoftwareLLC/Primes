@@ -23,7 +23,7 @@ class PrimeSieve:
 
     def __init__(self, limit):
         self._size = limit
-        self._bits = bytearray(b"\x01" * ((self._size + 1) // 2))
+        self._bits = bytearray(b"\x01") * ((self._size + 1) // 2)
 
     def validate_results(self):                      # Check to see if this is an upper_limit we can
 
