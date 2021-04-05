@@ -110,28 +110,45 @@ public class PrimeSieveJava
 	
 	public static void main(String[] args)
 	{
-		long start = System.currentTimeMillis();
+        int sieveLimit = 1000000;
+        double executionTimeSeconds = 5;
+        
+        for (String arg : args)
+        {
+            String argValue = arg.substring(arg.indexOf('=') + 1, arg.length());
+            if (arg.startsWith("--seconds="))
+            {
+                executionTimeSeconds = Double.parseDouble(argValue);
+            }
+            else if (arg.startsWith("--limit="))
+            {
+                sieveLimit = Integer.parseInt(argValue);
+            }
+        }
+        
+		long start = System.nanoTime();
 		int passes = 0;
 		PrimeSieveJava sieve = null;
+        final double secondsToNanos = 1000000000;
 		
-		while ((System.currentTimeMillis() - start) < 10000)
+		while ((System.nanoTime() - start) < executionTimeSeconds * secondsToNanos)
 		{
-			sieve = new PrimeSieveJava(1000000);
+			sieve = new PrimeSieveJava(sieveLimit);
 			sieve.runSieve();
 			passes++;
 		}
 		
-		long delta = System.currentTimeMillis() - start;
+		long delta = System.nanoTime() - start;
 		if (sieve != null)
 		{
-			sieve.printResults(false, delta / 1000d, passes);
+			sieve.printResults(false, delta / secondsToNanos, passes);
 		}
 	}
 	
 	static
 	{
 		VALIDATION_DATA = new HashMap<>();
-		VALIDATION_DATA.put(10, 1);
+		VALIDATION_DATA.put(10, 4);
 		VALIDATION_DATA.put(100, 25);
 		VALIDATION_DATA.put(1000, 168);
 		VALIDATION_DATA.put(10000, 1229);
