@@ -6,22 +6,34 @@ const prime = @import("./prime.zig");
 
 pub fn main() anyerror!void {
     const size: u64 = 1_000_000;
+    const run_for: u64 = 5; // Seconds
 
-    try runArrayListBacked(u8, 0, 1, size);
-    try runArrayListBacked(bool, true, false, size);
-    try runArrayListBacked(u1, 0, 1, size);
-    try runArrayListBacked(u2, 0, 1, size);
-    try runArrayListBacked(u4, 0, 1, size);
-    try runArrayListBacked(u32, 0, 1, size);
-    try runArrayListBacked(u64, 0, 1, size);
+    // Runs with ArenaAllocator that is backed by a page allocator.
+    try runArenaArrayListBacked(u8, 0, 1, size, run_for);
+    try runArenaArrayListBacked(bool, true, false, size, run_for);
+    try runArenaArrayListBacked(u1, 0, 1, size, run_for);
+    try runArenaArrayListBacked(u2, 0, 1, size, run_for);
+    try runArenaArrayListBacked(u4, 0, 1, size, run_for);
+    try runArenaArrayListBacked(u32, 0, 1, size, run_for);
+    try runArenaArrayListBacked(u64, 0, 1, size, run_for);
 
-    try runFixedArrayListBacked(u8, 0, 1, size);
-    try runFixedArrayListBacked(bool, true, false, size);
-    try runFixedArrayListBacked(u1, 0, 1, size);
-    try runFixedArrayListBacked(u2, 0, 1, size);
-    try runFixedArrayListBacked(u4, 0, 1, size);
-    try runFixedArrayListBacked(u32, 0, 1, size);
-    try runFixedArrayListBacked(u64, 0, 1, size);
+    // Runs on a FixedAllocator, that is backed by a buffer in stack.
+    try runFixedArrayListBacked(u8, 0, 1, size, run_for);
+    try runFixedArrayListBacked(bool, true, false, size, run_for);
+    try runFixedArrayListBacked(u1, 0, 1, size, run_for);
+    try runFixedArrayListBacked(u2, 0, 1, size, run_for);
+    try runFixedArrayListBacked(u4, 0, 1, size, run_for);
+    try runFixedArrayListBacked(u32, 0, 1, size, run_for);
+    try runFixedArrayListBacked(u64, 0, 1, size, run_for);
+
+    // Runs backed by page alocator (pages allocated from OS directly).
+    try runArrayListBacked(u8, 0, 1, size, run_for);
+    try runArrayListBacked(bool, true, false, size, run_for);
+    try runArrayListBacked(u1, 0, 1, size, run_for);
+    try runArrayListBacked(u2, 0, 1, size, run_for);
+    try runArrayListBacked(u4, 0, 1, size, run_for);
+    try runArrayListBacked(u32, 0, 1, size, run_for);
+    try runArrayListBacked(u64, 0, 1, size, run_for);
 }
 
 fn runArrayListBacked(
@@ -29,6 +41,26 @@ fn runArrayListBacked(
     comptime trueVal: Type,
     comptime falseVal: Type,
     size: u64,
+    run_for: u64,
+) anyerror!void {
+    const timer = try time.Timer.start();
+
+    var passes: u64 = 0;
+    while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
+        var field = try prime.ArrayListField(Type, trueVal).init(heap.page_allocator, size);
+        prime.Sieve(Type, trueVal, falseVal).init(field.slice(), size).run();
+        field.deinit();
+    }
+
+    printResults("PageAllocator+ArrayList(" ++ @typeName(Type) ++ ")", passes, timer.read(), size);
+}
+
+fn runArenaArrayListBacked(
+    comptime Type: type,
+    comptime trueVal: Type,
+    comptime falseVal: Type,
+    size: u64,
+    run_for: u64,
 ) anyerror!void {
     const timer = try time.Timer.start();
 
@@ -36,13 +68,13 @@ fn runArrayListBacked(
     defer allocator.deinit();
 
     var passes: u64 = 0;
-    while (timer.read() < 5 * time.ns_per_s) : (passes += 1) {
+    while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
         var field = try prime.ArrayListField(Type, trueVal).init(&allocator.allocator, size);
         prime.Sieve(Type, trueVal, falseVal).init(field.slice(), size).run();
         field.deinit();
     }
 
-    printResults("ArrayList(" ++ @typeName(Type) ++ ")", passes, timer.read(), size);
+    printResults("ArenaAllocator+ArrayList(" ++ @typeName(Type) ++ ")", passes, timer.read(), size);
 }
 
 fn runFixedArrayListBacked(
@@ -50,6 +82,7 @@ fn runFixedArrayListBacked(
     comptime trueVal: Type,
     comptime falseVal: Type,
     comptime size: u64,
+    run_for: u64,
 ) anyerror!void {
     const timer = try time.Timer.start();
 
@@ -57,7 +90,7 @@ fn runFixedArrayListBacked(
     var allocator = heap.FixedBufferAllocator.init(buffer[0..]);
 
     var passes: u64 = 0;
-    while (timer.read() < 5 * time.ns_per_s) : (passes += 1) {
+    while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
         var field = try prime.ArrayListField(Type, trueVal).init(&allocator.allocator, size);
         prime.Sieve(Type, trueVal, falseVal).init(field.slice(), size).run();
         field.deinit();
