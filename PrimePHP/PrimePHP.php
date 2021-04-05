@@ -2,20 +2,17 @@
 
 declare(strict_types=1);
 
-/**
- * PHP Prime Sieve
- * Class PrimeSieve
- */
-
-class PrimeSieve
+final class PrimeSieve
 {
-    private array $rawbits;
+    private int $sieveSize = 0;
 
-    private int $sieveSize;
+    /** @var SplFixedArray<bool> */
+    private SplFixedArray $Bits;
 
-    public static array $primeCounts = [
-        10 => 4,
-        100 => 25,
+    /** @var array<int, int> */
+    private const myDict = [
+        10 => 1,                 // Historical data for validating our results - the number of primes
+        100 => 25,               // to be found under some limit, such as 168 primes under 1000
         1000 => 168,
         10000 => 1229,
         100000 => 9592,
@@ -24,106 +21,105 @@ class PrimeSieve
         100000000 => 5761455,
     ];
 
-    public function __construct(
-        $sieveSize = 1000000
-    )
+    private function validateResults(): bool
     {
-        $this->sieveSize = $sieveSize;
-        $rawbitSize = (int)(($this->sieveSize + 1) / 2);
-        $this->rawbits = array_fill(0, $rawbitSize, true);
-    }
-
-    private function getBit(int $index): bool
-    {
-        if ($index % 2 !== 0) {
-            return $this->rawbits[(int)$index / 2];
+        if (!\array_key_exists($this->sieveSize, self::myDict)) {
+            return false;
         }
-        return false;
+
+        return self::myDict[$this->sieveSize] === $this->countPrimes();
     }
 
-    private function clearBit(int $index): void
+    public function __construct(int $n)
     {
-        if ($index % 2 !== 0) {
-            $this->rawbits[(int)$index / 2] = false;
-        }
+        $this->sieveSize = $n;
+        $this->Bits = new SplFixedArray($this->sieveSize);
     }
 
-    public function runSieve()
+    public function runSieve(): void
     {
         $factor = 3;
-        $q = sqrt($this->sieveSize);
+        $q = \sqrt($this->sieveSize);
 
-        while ($factor < $q) {
-            for ($i = $factor; $i <= $this->sieveSize; $i++) {
-                if ($this->getBit($i)) {
-                    $factor = $i;
+        while ($factor <= $q) {
+            for ($num = $factor; $num < $this->sieveSize; $num += 2) {
+                if (!$this->Bits[$num]) {
+                    $factor = $num;
+
                     break;
                 }
             }
 
-            for ($i = $factor * 3; $i <= $this->sieveSize; $i += $factor * 2) {
-                $this->clearBit($i);
+            for ($num = $factor * $factor; $num < $this->sieveSize; $num += $factor * 2) {
+                $this->Bits[$num] = true;
             }
 
             $factor += 2;
         }
     }
 
-    public function printResults(): void
+    public function printResults(bool $showResults, float $duration, int $passes): void
     {
-        for ($i = 0; $i < $this->sieveSize; $i++) {
-            if ($this->getBit($i)) {
-                echo $i . ", ";
+        if ($showResults) {
+            echo '2, ';
+        }
+
+        $count = 1;
+
+        for ($num = 3; $num <= $this->sieveSize; $num += 2) {
+            if (!$this->Bits[$num]) {
+                if ($showResults) {
+                    echo $num.', ';
+                }
+
+                ++$count;
             }
         }
+
+        if ($showResults) {
+            echo "\n";
+        }
+
+        \printf(
+            "Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n",
+            $passes,
+            $duration,
+            $duration / $passes,
+            $this->sieveSize,
+            $count,
+            $this->countPrimes(),
+            $this->validateResults()
+        );
     }
 
-    public function getRawbitCount(): int
+    public function countPrimes(): int
     {
-        return array_sum($this->rawbits);
+        $count = 1;
+
+        for ($i = 3; $i < $this->sieveSize; $i += 2) {
+            if (!$this->Bits[$i]) {
+                ++$count;
+            }
+        }
+
+        return $count;
     }
 }
 
-//Entry
-$tStart = microtime(true);       //Init time
-$passes = 0;                            //Init passes
-$sieveSize = 1000000;                   //Set sieve size
-$printResults = false;                  //Print the prime numbers that are found
-$rawbitCount = null;                    //Init a rawbitCount to validate the result
-$runTime = 10;                          //The amount of seconds the script should be running for
+$passes = 0;
+$tStart = \microtime(true);
 
-while (getTimeDiffInMs($tStart) < $runTime * 1000) {
-    $sieve = new PrimeSieve($sieveSize);
+while (true) {
+    $sieve = new PrimeSieve(1000000);
     $sieve->runSieve();
-    $rawbitCount = $sieve->getRawbitCount();
-    $passes++;
 
-    if ($printResults) {
-        $sieve->printResults();
-        echo "\n";
+    ++$passes;
+
+    $tD = \microtime(true) - $tStart;
+
+    if ($tD >= 5) {
+        $sieve->printResults(false, $tD, $passes);
+
+        break;
     }
-}
-
-
-$tD = getTimeDiffInMs($tStart);     //Get to total time passed
-
-//Print the results
-printf(
-    "Passes: %d, Time: %dms, Avg: %dms, Limit: %d, Count: %d, Valid: %s",
-    $passes,
-    $tD,
-    $tD / $passes,
-    $sieveSize,
-    $rawbitCount,
-    (validateResult($sieveSize) === $rawbitCount) ? 'True' : 'False'
-);
-
-function getTimeDiffInMs(float $tStart): int
-{
-    return (int)(microtime(true) - $tStart) * 1000;
-}
-
-function validateResult($sieveSize): ?int
-{
-    return PrimeSieve::$primeCounts[$sieveSize];
 }
