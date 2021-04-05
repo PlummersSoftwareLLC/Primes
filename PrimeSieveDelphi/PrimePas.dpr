@@ -1,25 +1,35 @@
 program PrimePas;
 
-{$APPTYPE CONSOLE}
+{$IFDEF FPC}
+  {$MODE OBJFPC}  
+{$ELSE}
+  {$APPTYPE CONSOLE}
+{$ENDIF}
 
 uses
+	{$IFDEF FPC}
+	SysUtils,
+	dateutils,
+	{$ELSE}
 	System.SysUtils,
+	Windows,
+	{$ENDIF}
 	Classes,
-	System.Generics.Collections,
-	System.Timespan,
-	Math,
-	Windows;
+	Math;
 
 type
 	TPrimeSieve = class
 	private
 		FSieveSize: Integer;
-		FBitArray: array of ByteBool; //ByteBool: 4644. WordBool: 4232. LongBool: 3673
-		FMyDict: TDictionary<Integer, Integer>;
+		FBitArray: array of ByteBool; {ByteBool: 4644. WordBool: 4232. LongBool: 3673}
+		{FMyDict: TDictionary<Integer, Integer>;}
+		FMyList: array of Integer;
 
 		function GetBit(Index: Integer): Boolean;
 		procedure ClearBit(Index: Integer);
 		procedure InitializeBits;
+
+		function ArrayIndex( Size: Integer ): Integer;
 	public
 		constructor Create(Size: Integer);
 		destructor Destroy; override;
@@ -47,25 +57,40 @@ begin
 	SetLength(FBitArray, (FSieveSize+1) div 2);
 	InitializeBits;
 
-	FMyDict := TDictionary<Integer, Integer>.Create;
+	//FMyDict := TDictionary<Integer, Integer>.Create;
+	SetLength(FMyList, 9);
+
 
 	// Historical data for validating our results - the number of primes
 	// to be found under some limit, such as 168 primes under 1000
-	FMyDict.Add(       10, 4); //nobody noticed that 1 is wrong? [2, 3, 5, 7]
-	FMyDict.Add(      100, 25);
-	FMyDict.Add(     1000, 168);
-	FMyDict.Add(    10000, 1229);
-	FMyDict.Add(   100000, 9592);
-	FMyDict.Add(  1000000, 78498);
-	FMyDict.Add( 10000000, 664579);
-	FMyDict.Add(100000000, 5761455);
+
+	// Instead of using a Dictionary/Map here, we are going to use a simple array, 
+	// since we can easily predict the 9 elements and calculate the required index 
+	// with Log10/Pow if need be. This is primarly done to avoid needing external 
+	// libraries, rather than to speed up the code. (even though it may do so).
+
+	FMyList[0] := 0;
+	FMyList[1] := 4;       // 10
+	FMyList[2] := 25;      // 100
+	FMyList[3] := 168;     // 1000
+	FMyList[4] := 1229;    // 10000
+	FMyList[5] := 9592;    // 100000
+	FMyList[6] := 78498;   // 1000000  
+	FMyList[7] := 664579;  // 10000000
+	FMyList[8] := 5761455; // 100000000
 end;
 
 destructor TPrimeSieve.Destroy;
 begin
-	FreeAndNil({var}FMyDict);
-
 	inherited;
+end;
+
+function TPrimeSieve.ArrayIndex( Size: Integer ): Integer;
+begin
+	if (Size=0) then
+		Result := 0
+	else
+		Result := trunc(Log10(Size));
 end;
 
 function TPrimeSieve.CountPrimes: Integer;
@@ -84,9 +109,13 @@ begin
 end;
 
 function TPrimeSieve.ValidateResults: Boolean;
+var
+	idx: Integer;
 begin
-	if FMyDict.ContainsKey(FSieveSize) then
-		Result := FMyDict[FSieveSize] = Self.CountPrimes
+	// if FSieveSize is a whole number below our array size, then it will be in our array
+	idx := trunc(Log10(FSieveSize));
+	if (idx <= length(FMyList)) then
+		Result := FMyList[ idx ] = Self.CountPrimes
 	else
 		Result := False;
 end;
@@ -146,13 +175,13 @@ begin
 }
 	if (Index mod 2) = 0 then
 	begin
-//		Writeln('You are setting even bits, which is sub-optimal');
+		Writeln('You are setting even bits, which is sub-optimal');
 		Exit;
 	end;
 
-	//Any compiler worth its salt converts "div 2" into "shr 1".
-	//In this case Delphi is worth it's salt; emitting "sar".
-	//(But don't forget: Delphi still can't hoist loop variables)
+	{Any compiler worth its salt converts "div 2" into "shr 1".
+	In this case Delphi is worth it's salt; emitting "sar".
+	(But don't forget: Delphi still can't hoist loop variables)}
 	FBitArray[Index div 2] := False;
 end;
 
@@ -168,22 +197,24 @@ begin
 
 	while (factor <= q) do
 	begin
-		for num := factor to FSieveSize do
+		// Refactored to while loop so we are not limited to incrementing by 1, based on CCP code from @DavePL rather than python
+		num := factor;
+		while ( num < FSieveSize ) do
 		begin
 			if GetBit(num) then
 			begin
 				factor := num;
 				Break;
 			end;
+			Inc(num, 2);
 		end;
 
-		// If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-		// We can then step by factor * 2 because every second one is going to be even by definition
-		num := factor*3;
-		while num <= FSieveSize do
+		// Refactored to while loop so we are not limited to incrementing by 1, based on CCP code from @DavePL rather than python
+		num := factor * factor;
+		while ( num < FSieveSize ) do 
 		begin
-			ClearBit(num);
-			Inc(num, factor*2);
+			FBitArray[num div 2] := false;
+			inc(num, factor*2);
 		end;
 
 		Inc(factor, 2);
@@ -223,38 +254,40 @@ var
 	sieve: TPrimeSieve;
 	dtStart: TDateTime;
 	passes: Integer;
-	tD: TTimeSpan;
+	tD: TDateTime;
 begin
-	dtStart := Now;
+	dtStart := Now();
 	passes := 0;
 
 	sieve := nil;
-	while TTimeSpan.Subtract(Now, dtStart).TotalSeconds < 10 do
-	begin
-		if Assigned(sieve) then
-			sieve.Free;
+	sieve := TPrimeSieve.Create(1000000);
 
-		sieve := TPrimeSieve.Create(1000000);
+	while SecondsBetween( Now(), dtStart ) < 5 do
+	begin
+		//if Assigned(sieve) then
+		//sieve.Free;
+
+		//sieve := TPrimeSieve.Create(1000000);
 		sieve.RunSieve;
 		Inc(passes);
 	end;
 
-	tD := TTimeSpan.Subtract(Now, dtStart);
+	tD := SecondsBetween( Now(), dtStart );
 	if Assigned(sieve) then
-		sieve.PrintResults(False, tD.TotalSeconds, passes);
+		sieve.PrintResults(False, tD, passes);
 end;
 
 {
 	Intel Core i5-9400 @ 2.90 GHz
-
 	- 32-bit: 4,809 passes
 	- 64-bit: 2,587 passes
+
+	FPC Intel Core i9-9900K @ 3.6Ghz
+	- 64-bit: 2,934 passes 
 }
 begin
 	try
 		Main;
-		WriteLn('Press enter to close...');
-		Readln;
 	except
 		on E: Exception do
 			Writeln(E.ClassName, ': ', E.Message);
