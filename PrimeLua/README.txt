@@ -5,6 +5,14 @@ Only three changes come to mind -
  - I changed the format of the bit array. Lua isn't strongly typed, so don't feel too bad. I changed it to make the search more simple. The input is now the key (sort of. Lua doesn't like non consecutive numerical keys in tables)
  - Lua starts at 1 in tables (arrays) which caused a bug that I fixed poorly (I just translated the code, so wasn't close enough to debug it well). That caused the output to show the wrong count. The easiest fix was to kill that code and write is again. It's only three lines or therabouts.
 
-To run, install Roblox Studio and launch the RBXL file.
+TO RUN LUA FILE
+ - Install Lua interpreter (tested against 5.1.5-51)
+ - run `lua Primes.lua` to run with default parameters (target of 1000, durations of 2 seconds) OR...
+ - eun `lua Primes.lua [target] [dration in seconds]` to set your own parameters, ie, `lua Primes.lua 1000000 5` (NB - I suggest you don't bother with a target this high. Lua is very, very slow!)
 
-To run without Roblox Studio, go here - https://www.roblox.com/games/6602512508/Primes
+TO RUN RBXL
+ - install Roblox Studio 
+ - launch the RBXL file.
+
+TO RUN RBXL W/O ROBLOX STUDIO
+ - go here to https://www.roblox.com/games/6602512508/Primes
