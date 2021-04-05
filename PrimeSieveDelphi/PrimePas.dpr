@@ -1,7 +1,7 @@
 program PrimePas;
 
 {
-	Passes: 8123, Time: 9.9999998 s, Avg: 1.2311 ms, Limit: 1000000, Count: 78498, Valid: Yes
+	Passes: 8648, Time: 9.9999998 s, Avg: 1.1563 ms, Limit: 1000000, Count: 78498, Valid: Yes
 
 	Intel Core i5-9400 @ 2.90 GHz
 	32-bit
@@ -25,7 +25,6 @@ type
 		FBitArray: array of ByteBool; //ByteBool: 4644. WordBool: 4232. LongBool: 3673
 
 		function GetBit(Index: Integer): Boolean; inline;
-		procedure ClearBit(Index: Integer); inline;
 		procedure InitializeBits;
 	public
 		constructor Create(Size: Integer);
@@ -36,7 +35,7 @@ type
 		function CountPrimes: Integer;
 		function ValidateResults: Boolean;
 
-		procedure PrintResults(ShowResults: Boolean; Duration: Double; Passes: Integer);
+		function GetResults(ShowResults: Boolean; Duration: Double; Passes: Integer): string;
 	end;
 
 { TPrimeSieve }
@@ -107,7 +106,8 @@ begin
 		Exit;
 	end;
 
-	Result := FBitArray[Index div 2];
+//	Result := FBitArray[Index div 2]
+	Result := FBitArray[Index shr 1];
 end;
 
 procedure TPrimeSieve.InitializeBits;
@@ -138,29 +138,6 @@ begin
 	end;
 end;
 
-procedure TPrimeSieve.ClearBit(Index: Integer);
-const
-	SWarning = 'You are setting even bits, which is sub-optimal';
-begin
-{
-	Profiling shows 99% of the execution is spent here in ClearBit.
-	Which is surprising, as you'd think the branch predictor would realize this branch is **never** taken.
-}
-	if ((Index and 1) = 0) then
-	begin
-//		Writeln('You are setting even bits, which is sub-optimal');	//6617
-//		WriteLn(SWarning); //6612
-//		No warning: 8113
-		Exit;
-	end;
-
-	//Any compiler worth its salt converts "div 2" into "shr 1".
-	//In this case Delphi is worth it's salt; emitting "sar".
-	//(But don't forget: Delphi still can't hoist loop variables)
-	FBitArray[Index div 2] := False;
-end;
-
-
 procedure TPrimeSieve.RunSieve;
 var
 	factor: Integer;
@@ -186,23 +163,25 @@ begin
 		num := factor*3;
 		while num <= FSieveSize do
 		begin
-			ClearBit(num);
-			Inc(num, factor*2);
+			FBitArray[num shr 1] := False; //num is (or at least better be) always odd
+			Inc(num, (factor shl 1)); //7714
 		end;
 
 		Inc(factor, 2);
 	end;
 end;
 
-procedure TPrimeSieve.PrintResults(ShowResults: Boolean; Duration: Double; Passes: Integer);
+function TPrimeSieve.GetResults(ShowResults: Boolean; Duration: Double; Passes: Integer): string;
 var
 	count: Integer;
 	num: Integer;
 const
 	SYesNo: array[Boolean] of string = ('No', 'Yes');
 begin
+	Result := '';
+
 	if ShowResults then
-		Write('2, ');
+		Result := Result+'2, ';
 
 	count := 1;
 	for num := 3 to FSieveSize do
@@ -210,16 +189,17 @@ begin
 		if GetBit(num) then
 		begin
 			if ShowResults then
-				Write(IntToStr(num) + ', ');
+				Result := Result + IntToStr(num) + ', ';
 			Inc(count);
 		end;
 	end;
 
 	if ShowResults then
-		WriteLn('');
+		Result := Result+#13#10;
 
-	WriteLn(Format('Passes: %d, Time: %.7f s, Avg: %.4f ms, Limit: %d, Count: %d, Valid: %s',
-			[Passes, Duration, Duration/Passes*1000, FSieveSize, count, SYesNo[ValidateResults]]));
+	Result := Result+
+			Format('Passes: %d, Time: %.7f s, Avg: %.4f ms, Limit: %d, Count: %d, Valid: %s',
+					[Passes, Duration, Duration/Passes*1000, FSieveSize, count, SYesNo[ValidateResults]]);
 end;
 
 procedure Main;
@@ -229,6 +209,7 @@ var
 	passes: Integer;
 	dtEnd: TDateTime;
 	totalSeconds: Real;
+	sResults: string;
 const
 	TEN_SECONDS = 10.0/60/60/24;
 begin
@@ -248,8 +229,11 @@ begin
 	end;
 
 	totalSeconds := (Now-dtStart)*24*60*60;
-	if Assigned(sieve) then
-		sieve.PrintResults(False, totalSeconds, passes);
+	if not Assigned(sieve) then
+		Exit;
+
+	sResults := sieve.GetResults(False, totalSeconds, passes);
+	WriteLn(sResults);
 end;
 
 begin
