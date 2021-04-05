@@ -14,7 +14,7 @@ class PrimeSieve
     private int $sieveSize;
 
     public static array $primeCounts = [
-        10 => 1,
+        10 => 4,
         100 => 25,
         1000 => 168,
         10000 => 1229,
