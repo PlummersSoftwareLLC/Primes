@@ -55,7 +55,7 @@ class PrimeSieve
 
     puts if show_results
 
-    printf("Passes %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %s\n",
+    printf("Passes: %d Time: %f Avg: %f Limit: %d Count1: %d Count2: %d Valid: %s\n",
       passes,
       duration,
       (duration / passes),
