@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <math.h>
 #include <time.h>
 
@@ -13,8 +14,7 @@
 
 #define SIEVE_SIZE 1000000L
 
-struct valid_result { long upto; long count; } ;
-struct valid_result valid_results[]=
+struct valid_result { long upto; long count; } valid_results[]=
       {
             {          10L, 4         },                // Historical data for validating our results - the number of primes
             {         100L, 25        },               // to be found under some limit, such as 168 primes under 1000
@@ -28,21 +28,21 @@ struct valid_result valid_results[]=
             { 10000000000L, 455052511 }
       };
 
-u_int64_t field[SIEVE_SIZE/64];
+uint64_t field[SIEVE_SIZE/64];
 
-int resetBits()
+void resetBits()
 {
     memset(field,~0,SIEVE_SIZE/64*8);
 }
 
-u_int64_t getBit(long n)
+inline uint64_t getBit(long n)
 {
-    return field[n>>6]&(1L<<(n%64));
+    return field[n>>6]&(1L<<(n&63));
 }
 
-void unsetBit(long n)
+inline void unsetBit(long n)
 {
-    field[n>>6]&=~(1L<<(n%64));
+    field[n>>6]&=~(1L<<(n&63));
 }
 
 int countPrimes()
@@ -68,18 +68,18 @@ void runSieve()
 
     while (factor <= q)
     {
+	// remove prime multiples
         for (int num = factor * factor; num < SIEVE_SIZE; num += factor * 2)
             unsetBit(num);
 
         // searching for the next prime factor
-	for (factor+=2;factor<SIEVE_SIZE;factor+=2)
+	for (factor+=2;factor<=q;factor+=2)
 		if (getBit(factor)) break;
     }
 }
 
 void printResults(int showResults, double duration, int passes)
 {
-    int count = 1;
     if (showResults)
     {
         printf("2, ");
