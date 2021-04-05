@@ -20,26 +20,27 @@ class prime_sieve
 
       long sieveSize = 0;
       vector<bool> Bits;
-      const std::map<const long, const int> myDict = 
+      const std::map<const long long, const int> resultsDictionary = 
       {
-            {          10L, 4         },                // Historical data for validating our results - the number of primes
-            {         100L, 25        },               // to be found under some limit, such as 168 primes under 1000
-            {        1000L, 168       },
-            {       10000L, 1229      },
-            {      100000L, 9592      },
-            {     1000000L, 78498     },
-            {    10000000L, 664579    },
-            {   100000000L, 5761455   },
-            {  1000000000L, 50847534  },
-            { 10000000000L, 455052511 },
+            {          10LL, 4         },               // Historical data for validating our results - the number of primes
+            {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
+            {        1000LL, 168       },
+            {       10000LL, 1229      },
+            {      100000LL, 9592      },
+            {     1000000LL, 78498     },
+            {    10000000LL, 664579    },
+            {   100000000LL, 5761455   },
+            {  1000000000LL, 50847534  },
+            { 10000000000LL, 455052511 },
 
       };
 
       bool validateResults()
       {
-          if (myDict.end() == myDict.find(sieveSize))
+          auto result = resultsDictionary.find(sieveSize);
+          if (resultsDictionary.end() == result)
               return false;
-          return myDict.find(sieveSize)->second == countPrimes();
+          return result->second == countPrimes();
       }
 
    public:
@@ -56,7 +57,7 @@ class prime_sieve
       void runSieve()
       {
           int factor = 3;
-          int q = sqrt(sieveSize);
+          int q = (int) sqrt(sieveSize);
 
           while (factor <= q)
           {
@@ -80,7 +81,7 @@ class prime_sieve
           if (showResults)
               printf("2, ");
 
-          int count = 1;
+          int count = (sieveSize >= 2);                             // Starting count (2 is prime)
           for (int num = 3; num <= sieveSize; num+=2)
           {
               if (Bits[num])
@@ -106,7 +107,7 @@ class prime_sieve
 
       int countPrimes()
       {
-          int count = 1;
+          int count =  (sieveSize >= 2);;
           for (int i = 3; i < sieveSize; i+=2)
               if (Bits[i])
                   count++;
