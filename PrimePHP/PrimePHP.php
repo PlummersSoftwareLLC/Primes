@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * PHP Prime Sieve
  * Class PrimeSieve
@@ -27,7 +29,7 @@ class PrimeSieve
     )
     {
         $this->sieveSize = $sieveSize;
-        $rawbitSize = (int)($this->sieveSize + 1) / 2;
+        $rawbitSize = (int)(($this->sieveSize + 1) / 2);
         $this->rawbits = array_fill(0, $rawbitSize, true);
     }
 
@@ -118,7 +120,7 @@ printf(
 
 function getTimeDiffInMs(float $tStart): int
 {
-    return (microtime(true) - $tStart) * 1000;
+    return (int)(microtime(true) - $tStart) * 1000;
 }
 
 function validateResult($sieveSize): ?int
