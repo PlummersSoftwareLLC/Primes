@@ -28,28 +28,28 @@ docker-compose run --rm primes
 The results are:
 
 ```
-Iteration 01: Passes: 4015 Time: 5.000000 Avg: 0.001245 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 02: Passes: 4268 Time: 5.000000 Avg: 0.001172 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 03: Passes: 4265 Time: 5.000000 Avg: 0.001172 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 04: Passes: 4230 Time: 5.000000 Avg: 0.001182 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 05: Passes: 4169 Time: 5.000000 Avg: 0.001199 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 06: Passes: 4254 Time: 5.000000 Avg: 0.001175 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 07: Passes: 4221 Time: 5.000000 Avg: 0.001185 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 08: Passes: 4182 Time: 5.000000 Avg: 0.001196 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 09: Passes: 4211 Time: 5.000000 Avg: 0.001187 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 10: Passes: 4214 Time: 5.000000 Avg: 0.001187 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 11: Passes: 4249 Time: 5.000000 Avg: 0.001177 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 12: Passes: 4253 Time: 5.000000 Avg: 0.001176 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 13: Passes: 4191 Time: 5.000000 Avg: 0.001193 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 14: Passes: 4192 Time: 5.000000 Avg: 0.001193 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 15: Passes: 4239 Time: 5.000000 Avg: 0.001180 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 16: Passes: 4207 Time: 5.000000 Avg: 0.001188 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 17: Passes: 4229 Time: 5.000000 Avg: 0.001182 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 18: Passes: 4227 Time: 5.000000 Avg: 0.001183 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 19: Passes: 4195 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 20: Passes: 4250 Time: 5.000000 Avg: 0.001176 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 01: Passes: 3713 Time: 5.000000 Avg: 0.001347 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 02: Passes: 4430 Time: 5.000000 Avg: 0.001129 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 03: Passes: 4418 Time: 5.000000 Avg: 0.001132 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 04: Passes: 4434 Time: 5.000000 Avg: 0.001128 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 05: Passes: 4435 Time: 5.000000 Avg: 0.001127 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 06: Passes: 4432 Time: 5.000000 Avg: 0.001128 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 07: Passes: 4431 Time: 5.000000 Avg: 0.001128 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 08: Passes: 4411 Time: 5.000000 Avg: 0.001134 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 09: Passes: 4388 Time: 5.000000 Avg: 0.001139 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 10: Passes: 4395 Time: 5.000000 Avg: 0.001138 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 11: Passes: 4391 Time: 5.000000 Avg: 0.001139 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 12: Passes: 4398 Time: 5.000000 Avg: 0.001137 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 13: Passes: 4395 Time: 5.000000 Avg: 0.001138 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 14: Passes: 4392 Time: 5.000000 Avg: 0.001138 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 15: Passes: 4396 Time: 5.000000 Avg: 0.001137 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 16: Passes: 4391 Time: 5.000000 Avg: 0.001139 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 17: Passes: 4404 Time: 5.000000 Avg: 0.001135 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 18: Passes: 4403 Time: 5.000000 Avg: 0.001136 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 19: Passes: 4408 Time: 5.000000 Avg: 0.001134 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 20: Passes: 4387 Time: 5.000000 Avg: 0.001140 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
 -----
-Best result is: 4268
+Best result is: 4435
 ```
 
 Running it under Rosetta 2 is as easy as:
@@ -61,28 +61,28 @@ Running it under Rosetta 2 is as easy as:
 And here are the results:
 
 ```
-Iteration 01: Passes: 3378 Time: 5.000000 Avg: 0.001480 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 02: Passes: 3935 Time: 5.000000 Avg: 0.001271 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 03: Passes: 3927 Time: 5.000000 Avg: 0.001273 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 04: Passes: 3927 Time: 5.000000 Avg: 0.001273 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 05: Passes: 3914 Time: 5.000000 Avg: 0.001277 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 06: Passes: 3917 Time: 5.000000 Avg: 0.001276 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 07: Passes: 3924 Time: 5.000000 Avg: 0.001274 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 08: Passes: 3879 Time: 5.000000 Avg: 0.001289 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 09: Passes: 3907 Time: 5.000000 Avg: 0.001280 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 10: Passes: 3927 Time: 5.000000 Avg: 0.001273 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 11: Passes: 3893 Time: 5.000000 Avg: 0.001284 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 12: Passes: 3907 Time: 5.000000 Avg: 0.001280 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 13: Passes: 3899 Time: 5.000000 Avg: 0.001282 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 14: Passes: 3911 Time: 5.000000 Avg: 0.001278 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 15: Passes: 3913 Time: 5.000000 Avg: 0.001278 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 16: Passes: 3911 Time: 5.000000 Avg: 0.001278 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 17: Passes: 3912 Time: 5.000000 Avg: 0.001278 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 18: Passes: 3908 Time: 5.000000 Avg: 0.001279 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 19: Passes: 3911 Time: 5.000000 Avg: 0.001278 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 20: Passes: 3915 Time: 5.000000 Avg: 0.001277 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 01: Passes: 3780 Time: 5.000000 Avg: 0.001323 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 02: Passes: 4193 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 03: Passes: 4162 Time: 5.000000 Avg: 0.001201 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 04: Passes: 4195 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 05: Passes: 4194 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 06: Passes: 4197 Time: 5.000000 Avg: 0.001191 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 07: Passes: 4197 Time: 5.000000 Avg: 0.001191 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 08: Passes: 4196 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 09: Passes: 4198 Time: 5.000000 Avg: 0.001191 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 10: Passes: 4197 Time: 5.000000 Avg: 0.001191 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 11: Passes: 4195 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 12: Passes: 4196 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 13: Passes: 4196 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 14: Passes: 4197 Time: 5.000000 Avg: 0.001191 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 15: Passes: 4197 Time: 5.000000 Avg: 0.001191 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 16: Passes: 4196 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 17: Passes: 4187 Time: 5.000000 Avg: 0.001194 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 18: Passes: 4194 Time: 5.000000 Avg: 0.001192 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 19: Passes: 4197 Time: 5.000000 Avg: 0.001191 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
+Iteration 20: Passes: 4191 Time: 5.000000 Avg: 0.001193 Limit: 1000000 Count1: 78498 Count2: 421503 Valid: false
 -----
-Best result is: 3935
+Best result is: 4198
 ```
 
 ## Running under Intel

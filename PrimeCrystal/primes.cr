@@ -1,6 +1,8 @@
-class PrimeSieve
+require "bit_array"
+
+struct PrimeSieve
   getter sieve_size = 0_u64
-  getter bits : Array(Bool)
+  getter bits : BitArray
   getter my_dict : Hash(UInt64, Int32) = {
              10_u64 => 4,
             100_u64 => 25,
@@ -15,7 +17,7 @@ class PrimeSieve
   }
 
   def initialize(@sieve_size)
-    @bits = Array(Bool).new(@sieve_size, true)
+    @bits = BitArray.new(@sieve_size.to_i32)
   end
 
   def run_sieve
@@ -23,7 +25,7 @@ class PrimeSieve
     while factor <= Math.sqrt(@sieve_size)
       num = factor
       while num < @sieve_size
-        if (@bits[num])
+        if !@bits[num]
           factor = num
           break
         end
@@ -32,7 +34,7 @@ class PrimeSieve
 
       num2 = factor ** 2
       while num2 < @sieve_size
-        @bits[num2] = false
+        @bits[num2] = true
         num2 += factor * 2
       end
 
@@ -45,7 +47,7 @@ class PrimeSieve
 
     count = 1
     (3..@sieve_size).step(2).each do |v|
-      if @bits[v]
+      if !@bits[v]
         printf("%d", v) if show_results
         count += 1
       end
