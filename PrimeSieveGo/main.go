@@ -88,16 +88,29 @@ func (s Sieve) Results(showResults bool, duration time.Duration, passes int) {
 		s.countPrimes(), /* countPrimes() */
 		s.Validate() /* validateResults*/)
 }
+
+func memsetRepeat(a []bool, b bool) {
+	if len(a) == 0 {
+		return
+	}
+
+	a[0] = b
+	for bp := 1; bp < len(a); bp *= 2 {
+		copy(a[bp:], a[:bp])
+	}
+}
+
 func main() {
 
 	passes := 0
 	startClock := time.Now()
 
 	initBitArray := make([]bool, 1e6)
+	for i := range initBitArray {
+		initBitArray[i] = true
+	}
 	for {
-		for i := range initBitArray {
-			initBitArray[i] = true
-		}
+		memsetRepeat(initBitArray, true)
 		sieve := Sieve{bitArray: initBitArray, sieveSize: 1e6}
 		sieve.runSieve()
 		passes++
