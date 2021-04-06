@@ -25,7 +25,6 @@ type
 		FBitArray: array of ByteBool; //ByteBool: 4644. WordBool: 4232. LongBool: 3673
 
 		function GetBit(Index: Integer): Boolean; inline;
-		procedure InitializeBits;
 	public
 		constructor Create(Size: Integer);
 		destructor Destroy; override;
@@ -51,7 +50,7 @@ begin
 	// and FBitArray[4] is if 5 is prime
 	//GetBit and SetBit do the work of "div 2"
 	SetLength(FBitArray, (FSieveSize+1) div 2);
-	InitializeBits;
+	FillChar(FBitArray[0], Length(FBitArray), 1); //initialize bits
 end;
 
 destructor TPrimeSieve.Destroy;
@@ -107,43 +106,6 @@ begin
 
 //	Result := FBitArray[Index div 2]
 	Result := FBitArray[Index shr 1];
-end;
-
-procedure TPrimeSieve.InitializeBits;
-var
-	i: Integer;
-	remaining: Integer;
-begin
-	remaining := Length(FBitArray);
-	i := 0;
-	while remaining >= 16 do
-	begin
-		FBitArray[i   ] := True;
-		FBitArray[i+ 1] := True;
-		FBitArray[i+ 2] := True;
-		FBitArray[i+ 3] := True;
-		FBitArray[i+ 4] := True;
-		FBitArray[i+ 5] := True;
-		FBitArray[i+ 6] := True;
-		FBitArray[i+ 7] := True;
-		FBitArray[i+ 8] := True;
-		FBitArray[i+ 9] := True;
-		FBitArray[i+$A] := True;
-		FBitArray[i+$B] := True;
-		FBitArray[i+$C] := True;
-		FBitArray[i+$D] := True;
-		FBitArray[i+$E] := True;
-		FBitArray[i+$F] := True;
-
-		Inc(i, 16);
-		Dec(remaining, 16);
-	end;
-	while remaining > 0 do
-	begin
-		FBitArray[i] := True;
-		Inc(i);
-		Dec(remaining);
-	end;
 end;
 
 procedure TPrimeSieve.RunSieve;
