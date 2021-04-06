@@ -5,9 +5,9 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
+    
   workflow_dispatch:
-
+  
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,13 +15,18 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        solution: [ "name1", "name2" ]
+        solution: [ "PrimeCrystal" ]
     
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v2
         
-      - name: "Run job"
+      - name: "Build container image"
         continue-on-error: true
         run: |
-          "echo ${{ matrix.solution }}"
+          cd "${{ matrix.solution }}"
+          docker build -t "${{ matrix.solution }}" .
+      
+      - name: "Run tests"
+        continue-on-error: true
+        run: docker run --rm "${{ matrix.solution }}"
