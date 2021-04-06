@@ -1,5 +1,5 @@
-﻿// ---------------------------------------------------------------------------
-// PrimeCS.cs : Dave's Garage Prime Sieve in C++
+// ---------------------------------------------------------------------------
+// PrimeCS.cs : Dave's Garage Prime Sieve in C#
 // ---------------------------------------------------------------------------
 
 using System;
@@ -10,75 +10,74 @@ namespace PrimeSieveCS
 {
     class PrimeCS
     {
-        class prime_sieve
-        {
-            private int sieveSize = 0;
-            private BitArray bitArray;
-            private Dictionary<int, int> myDict = new Dictionary<int, int> 
+        #region Test parameters
+        const long SieveSize = (long)1e6;
+#if DEBUG
+        const double Duration = 1;
+#else
+        const double Duration = 5;
+#endif
+        #endregion
+
+        class PrimeSieve {
+            /// <summary> Contains historical data for validation purposes. </summary>
+            private static readonly Dictionary<long, int> historicalData = new () 
             { 
-                { 10 , 1 },                 // Historical data for validating our results - the number of primes
-                { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
-                { 1000 , 168 },
-                { 10000 , 1229 },
-                { 100000 , 9592 },
-                { 1000000 , 78498 },
-                { 10000000 , 664579 },
-                { 100000000 , 5761455 } 
+                [(long)1e1] = 1,
+                [(long)1e2] = 25,
+                [(long)1e3] = 168,
+                [(long)1e4] = 1229,
+                [(long)1e5] = 9592,
+                [(long)1e6] = 78498,
+                [(long)1e7] = 664579,
+                [(long)1e8] = 5761455
             };
 
-            public prime_sieve(int size) 
+            /// <summary> Keeps track of the numbers that have been marked us not-primes. </summary>
+            private readonly bool[] nonPrime;
+            private readonly long sieveSize = 0;
+
+            public PrimeSieve(long size) 
             {
                 sieveSize = size;
-                bitArray = new BitArray((int)((this.sieveSize + 1) / 2), true);
+                nonPrime = new bool[size+1];
             }
 
-            public int countPrimes()
-            {
-                int count = 0;
-                for (int i = 0; i < this.bitArray.Count; i++)
-                    if (bitArray[i])
-                        count++;
-                return count;
+            int _primesCount = -1;
+            public int PrimesCount {
+                get {
+                    if (this._primesCount > -1) return this._primesCount;
+
+                    int count = 1; // counting the 2.
+                    for (int i = 3; i < this.nonPrime.Length; i+=2) {
+                        // if it is not marked as a non-prime, it should be a prime.
+                        if (!nonPrime[i]) {
+                            count++;
+                        }
+                    }
+                    return this._primesCount = count;
+                }
             }
 
-            public bool validateResults()
+            /// <summary> Compares the count of the resulted primes to historical data. </summary>
+            public bool ValidateResults()
             {
-                if (myDict.ContainsKey(this.sieveSize))
-                    return this.myDict[this.sieveSize] == this.countPrimes();
+                if (historicalData.TryGetValue(this.sieveSize, out int expected))
+                    return expected == this.PrimesCount;
                 return false;
             }
 
-            private bool GetBit(int index)
-            {
-                if (index % 2 == 0)
-                    return false;
-                return bitArray[index / 2];
-            }
-
-            private void ClearBit(int index)
-            {
-                if (index % 2 == 0)
-                {
-                    Console.WriteLine("You are setting even bits, which is sub-optimal");
-                    return;
-                }
-                bitArray[index / 2] = false;      
-            }
-
-            // primeSieve
-            // 
-            // Calculate the primes up to the specified limit
-
-            public void runSieve()
+            /// <summary> Calculate the primes up to the specified limit. </summary>
+            public void RunSieve()
             {
                 int factor = 3;
                 int q = (int) Math.Sqrt(this.sieveSize);
 
                 while (factor < q)
                 {
-                    for (int num = factor; num <= this.sieveSize; num++)
+                    for (int num = factor; num <= this.sieveSize; num+=2)
                     {
-                        if (GetBit(num))
+                        if (!this.nonPrime[num])
                         {
                             factor = num;
                             break;
@@ -87,51 +86,46 @@ namespace PrimeSieveCS
 
                     // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
                     // We can then step by factor * 2 because every second one is going to be even by definition
-
-                    for (int num = factor * 3; num <= this.sieveSize; num += factor * 2)
-                        ClearBit(num);
+                    for (int num = factor * factor; num <= this.sieveSize; num += factor * 2)
+                        this.nonPrime[num] = true;
 
                     factor += 2;
                 }
             }
 
-            public void printResults(bool showResults, double duration, int passes)
-            {
+            public void PrintResults(bool showResults, double duration, int passes) {
                 if (showResults)
                     Console.Write("2, ");
 
                 int count = 1;
-                for (int num = 3; num <= this.sieveSize; num++)
-                {
-                    if (GetBit(num))
-                    {
+                for (int num = 3; num <= this.sieveSize; num++) {
+                    if (!nonPrime[num]) {
                         if (showResults)
                             Console.Write(num + ", ");
                         count++;
                     }
                 }
-                if (showResults)
-                    Console.WriteLine("");
-                Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + this.sieveSize + ", Count: " + count + ", Valid: " + validateResults());
+                if (showResults) Console.WriteLine();
+                Console.WriteLine($"Passes: {passes}, Time: {duration:0.0000}s, Avg: {passes/duration:n} passes/s, Limit: {this.sieveSize}, Count: {count}, Valid: {ValidateResults()}");
             }
         }
 
-        static void Main(string[] args)
+        static void Main()
         {
             var tStart = DateTime.UtcNow;
             var passes = 0;
-            prime_sieve sieve = null;
+            PrimeSieve sieve = null;
 
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 10)
+            while ((DateTime.UtcNow - tStart).TotalSeconds < Duration)
             {
-                sieve = new prime_sieve(1000000);
-                sieve.runSieve();
+                sieve = new PrimeSieve(SieveSize);
+                sieve.RunSieve();
                 passes++;
             }
 
             var tD = DateTime.UtcNow - tStart;
             if (sieve != null)
-                sieve.printResults(false, tD.TotalSeconds, passes);
+                sieve.PrintResults(false, tD.TotalSeconds, passes);
         }
     }
 }
