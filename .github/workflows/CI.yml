@@ -55,4 +55,4 @@ jobs:
         uses: actions/download-artifact@v2
       
       - name: "List all artifacts"
-        run: ls -R
+        run: tree
