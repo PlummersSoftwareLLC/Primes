@@ -59,17 +59,18 @@ class PrimeSieve:
         """Return the count of bits that are still set in the sieve.
         Assumes you've already called run_sieve, of course!"""
 
-        return sum(self._bits)
+        return self._bits.count(b"\x01") if self._size > 1 else 0
 
     def print_results(self, show_results, duration, passes):
 
         """Displays the primes found (or just the total count,
         depending on what you ask for)"""
 
-        if show_results:  # Since we auto-filter evens, we have to special case the number 2 which is prime
+        count = 1 if self._size > 1 else 0
+
+        if show_results and count:  # Since we auto-filter evens, we have to special case the number 2 which is prime
             print("2, ", end="")
 
-        count = 1
         for num, is_prime in enumerate(self._bits):  # Count (and optionally dump) the primes that were found below the limit
             if num and is_prime:
                 if show_results:
