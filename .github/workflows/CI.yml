@@ -20,13 +20,19 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v2
+
+      - name: "Normalize container name"
+        id: container_name
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: ${{ matrix.solution }}
         
       - name: "Build container image"
         continue-on-error: true
         run: |
           cd "${{ matrix.solution }}"
-          docker build -t "${{ matrix.solution }}" .
+          docker build -t "${{ steps.container_name.outputs.lowercase }}" .
       
       - name: "Run tests"
         continue-on-error: true
-        run: docker run --rm "${{ matrix.solution }}"
+        run: docker run --rm "${{ steps.container_name.outputs.lowercase }}"
