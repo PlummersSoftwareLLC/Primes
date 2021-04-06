@@ -15,7 +15,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        solutions: [ "name1", "name2" ]
+        solution: [ "name1", "name2" ]
     
     steps:
       - name: Checkout code
@@ -23,4 +23,5 @@ jobs:
         
       - name: "Run job"
         continue-on-error: true
-        run: "echo ${{ matrix.name }}"
+        run: |
+          "echo ${{ matrix.solution }}"
