@@ -44,16 +44,17 @@ public class PrimeSieveJava
 	// Naming hasn't changed for comparison of the methods but removing the if statement for a branchless comparison
 	// and inverting the statement due to not initializing the dataSet to true results in a boost too.
 	// Also rather interesting: checking index % 2 != 0 is slower than index % 2 == 1
+	// More interesting: checking (index & 1) seems to be roughly 20% faster than index % 2
 	private boolean getBit(int index)
 	{
-		return index % 2 == 1 && !dataSet[index >> 1];
+		return (index & 1) == 1 && !dataSet[index >> 1];
 	}
 	
 	// Again instead of checking if index is even we just update the array at that index equivalent to that check
 	// to boost performance
 	private void clearBit(int index)
 	{
-		dataSet[index >> 1] = index % 2 == 1;
+		dataSet[index >> 1] = (index & 1) == 1;
 	}
 	
 	public void runSieve()
