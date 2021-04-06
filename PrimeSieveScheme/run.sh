@@ -5,8 +5,7 @@
 
 
 # uncomment for Guile Scheme
-# echo "(use-modules (srfi srfi-19) (srfi srfi-28))" | cat - prime.scm > prime-sieve.scm
-# guile prime-sieve.scm
+# guile --use-srfi=19,28 prime.scm
 
 # uncomment for Chez Scheme
 # echo "(define time-monotonic 'time-monotonic)"     | cat - prime.scm > prime-sieve.scm

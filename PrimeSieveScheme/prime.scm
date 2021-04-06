@@ -9,68 +9,73 @@
     (100000000 . 5761455)))
 
 
-(define (find-first vector start stop)
-  (let finder ((i start))
-    (cond
-     ((> i stop) start)
-     ((even? i) (finder (+ 1 i)))
-     ((vector-ref vector (quotient i 2)) i)
-     (else (finder (+ 1 i))))))
+(define (count-primes bit-array)
+  (do ((i 0 (+ i 1))
+       (count 0))
+      ((= i (vector-length bit-array)) count)
+    (when (vector-ref bit-array i)
+      (set! count (+ 1 count)))))
+  
 
-
-(define (update vector start stop)
-  (do ((i (* start 3) (+ i (* start 2))))
-      ((> i stop))
-    (when (even? i) (display "You are setting even bits, which is sub-optimal"))
-    (vector-set! vector (quotient i 2) #f)))
-
-
-(define (prime-sieve size)
-  (let ((bits (make-vector (quotient (+ size 1) 2) #t))
-        (q (sqrt size)))
-    (let run-sieve ((factor 3))
-      (if (>= factor q)
-          bits
-          (let ((new-factor (find-first bits factor size)))
-            (update bits new-factor size)
-            (run-sieve (+ new-factor 2)))))))
-
-
-(define (bit-count vector)
-  (let loop ((count 0)
-             (i 0))
-    (cond
-     ((= i (vector-length vector)) count)
-     ((vector-ref vector i) (loop (+ 1 count) (+ 1 i)))
-     (else (loop count (+ 1 i))))))
-
-
-(define (validate-results result size)
+(define (validate-results bit-array size)
   (let loop ((correct-counts correct-counts))
     (cond
      ((null? correct-counts) #f)
-     ((= (caar correct-counts) size) (= (bit-count result)
+     ((= (caar correct-counts) size) (= (count-primes bit-array)
                                         (cdar correct-counts)))
      (else (loop (cdr correct-counts))))))
+
+
+(define (get-bit bit-array index)
+  (if (even? index)
+      #f
+      (vector-ref bit-array (quotient index 2))))
+
+
+(define (clear-bit bit-array index)
+  (when (even? index) (display "You are setting even bits, which is sub-optimal"))
+  (vector-set! bit-array (quotient index 2) #f))
+
+
+(define (run-sieve sieve-size)
+  (let ((bit-array (make-vector (quotient (+ sieve-size 1) 2) #t))
+        (q (sqrt sieve-size)))
+    
+    (do ((factor 3 (+ factor 2)))
+        ((>= factor q) bit-array)
+      
+      (do ((num factor (+ num 1)))
+          ((or (> num sieve-size) (get-bit bit-array num)) (set! factor num)))
+      
+      (do ((num (* factor 3) (+ num (* factor 2))))
+          ((> num sieve-size))
+        (clear-bit bit-array num)))))
+  
+
+(define (print-results duration passes sieve-size bit-array)
+  (display
+   (format "Passes: ~a, Time: ~a, Avg: ~a, Limit: ~a, Count: ~a, Valid: ~a~%"
+           passes
+           (exact->inexact duration)
+           (exact->inexact (/ duration passes))
+           sieve-size
+           (count-primes bit-array)
+           (validate-results bit-array sieve-size))))
 
 
 (define (precise-time t)
   (+ (time-second t) (/ (time-nanosecond t) 1000000000)))
 
-(define (run-timer size seconds)
+(define (main size seconds)
   (do ((start (current-time time-monotonic))
-       (curr (current-time time-monotonic) (current-time time-monotonic))
-       (bit-result (prime-sieve size) (prime-sieve size))
-       (count 0 (+ 1 count)))
-      ((>= (- (precise-time curr) (precise-time start)) seconds)
-       (display
-        (format "Passes: ~a, Time: ~a, Avg: ~a, Limit: ~a, Count: ~a, Valid: ~a~%"
-                count
-                (exact->inexact (- (precise-time curr) (precise-time start)))
-                (exact->inexact (/ (- (precise-time curr) (precise-time start)) count))
-                size
-                (bit-count bit-result)
-                (validate-results bit-result size))))))
-
-(run-timer 1000000 10)
+       (now (current-time time-monotonic) (current-time time-monotonic))
+       (bit-array (run-sieve size) (run-sieve size))
+       (passes 0 (+ 1 passes)))
+      ((>= (- (precise-time now) (precise-time start)) seconds)
+       (print-results (- (precise-time now) (precise-time start))
+                      passes
+                      size
+                      bit-array))))
+       
+(main 1000000 10)
 
