@@ -16,7 +16,7 @@ jobs:
       max-parallel: 1
       matrix:
         solution: [ "PrimeCrystal" ]
-        os: ["macos-10.15", "ubuntu-20.04"]
+        os: ["ubuntu-20.04"]
     
     steps:
       - name: "Checkout code"
