@@ -43,3 +43,13 @@ jobs:
         with:
           name: ${{ matrix.solution }}
           path: "${{ matrix.solution }}.txt"
+
+  report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Download artifacts"
+        uses: actions/download-artifact@v2
+      
+      - name: "List all artifacts"
+        run: ls -R
