@@ -1,0 +1,17 @@
+name:                PrimeSieveHaskell
+version:             0.1.0.0
+
+dependencies:
+- base >= 4.7 && < 5
+- clock
+- vector
+
+executables:
+  PrimeSieveHaskell-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -Wall
+    - -Werror
+    # Comment out if LLVM is not available
+    - -fllvm
