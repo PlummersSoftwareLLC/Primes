@@ -47,6 +47,9 @@ jobs:
   report:
     runs-on: ubuntu-latest
 
+    needs: 
+      - test
+
     steps:
       - name: "Download artifacts"
         uses: actions/download-artifact@v2
