@@ -5,13 +5,52 @@ dependencies:
 - base >= 4.7 && < 5
 - clock
 - vector
+- primitive
+
+library:
+  source-dirs: src
 
 executables:
-  PrimeSieveHaskell-exe:
+  VectorBool:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         app/vector
     ghc-options:
     - -Wall
     - -Werror
     # Comment out if LLVM is not available
     - -fllvm
+    dependencies:
+    - PrimeSieveHaskell
+
+  VectorBoolUnchecked:
+    main:                Main.hs
+    source-dirs:         app/vector-unchecked
+    ghc-options:
+    - -Wall
+    - -Werror
+    # Comment out if LLVM is not available
+    - -fllvm
+    dependencies:
+    - PrimeSieveHaskell
+
+  BitSet:
+    main:                Main.hs
+    source-dirs:         app/bitset
+    ghc-options:
+    - -Wall
+    - -Werror
+    # Comment out if LLVM is not available
+    - -fllvm
+    dependencies:
+    - PrimeSieveHaskell
+
+  BitSetUnchecked:
+    main:                Main.hs
+    source-dirs:         app/bitset-unchecked
+    ghc-options:
+    - -Wall
+    - -Werror
+    # Comment out if LLVM is not available
+    - -fllvm
+    dependencies:
+    - PrimeSieveHaskell
