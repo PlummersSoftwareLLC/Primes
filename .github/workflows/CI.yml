@@ -10,12 +10,13 @@ on:
   
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: "${{ matrix.os }}"
 
     strategy:
       max-parallel: 1
       matrix:
         solution: [ "PrimeCrystal" ]
+        os: ["macos-10.15", "ubuntu-20.04"]
     
     steps:
       - name: "Checkout code"
@@ -36,13 +37,13 @@ jobs:
       - name: "Run tests"
         continue-on-error: true
         run: |
-          docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${{ matrix.solution }}.txt"
+          docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${{ matrix.solution }}-${{ matrix.os }}.txt"
       
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.solution }}
-          path: "${{ matrix.solution }}.txt"
+          path: "${{ matrix.solution }}-${{ matrix.os }}.txt"
 
   report:
     runs-on: ubuntu-latest
