@@ -99,7 +99,6 @@ end;
 
 function TPrimeSieve.GetBit(Index: Integer): Boolean;
 begin
-//	if (Index mod 2 = 0) then //6494
 	if (Index and 1) = 0 then //7213
 	begin
 		Result := False;
@@ -117,18 +116,27 @@ var
 begin
 	remaining := Length(FBitArray);
 	i := 0;
-	while remaining >= 8 do
+	while remaining >= 16 do
 	begin
-		FBitArray[i]   := True;
-		FBitArray[i+1] := True;
-		FBitArray[i+2] := True;
-		FBitArray[i+3] := True;
-		FBitArray[i+4] := True;
-		FBitArray[i+5] := True;
-		FBitArray[i+6] := True;
-		FBitArray[i+7] := True;
-		Inc(i, 8);
-		Dec(remaining, 8);
+		FBitArray[i   ] := True;
+		FBitArray[i+ 1] := True;
+		FBitArray[i+ 2] := True;
+		FBitArray[i+ 3] := True;
+		FBitArray[i+ 4] := True;
+		FBitArray[i+ 5] := True;
+		FBitArray[i+ 6] := True;
+		FBitArray[i+ 7] := True;
+		FBitArray[i+ 8] := True;
+		FBitArray[i+ 9] := True;
+		FBitArray[i+$A] := True;
+		FBitArray[i+$B] := True;
+		FBitArray[i+$C] := True;
+		FBitArray[i+$D] := True;
+		FBitArray[i+$E] := True;
+		FBitArray[i+$F] := True;
+
+		Inc(i, 16);
+		Dec(remaining, 16);
 	end;
 	while remaining > 0 do
 	begin
