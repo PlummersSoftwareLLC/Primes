@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        solutions: [ "name1", "name2" ]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: "Run job"
+        continue-on-error: true
+        run: "echo ${{ matrix.name }}"
