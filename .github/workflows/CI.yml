@@ -29,13 +29,11 @@ jobs:
           string: ${{ matrix.solution }}
         
       - name: "Build container image"
-        continue-on-error: true
         run: |
           cd "${{ matrix.solution }}"
           docker build -t "${{ steps.container_name.outputs.lowercase }}" .
       
       - name: "Run tests"
-        continue-on-error: true
         run: |
           docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${{ matrix.solution }}-${{ matrix.os }}.txt"
       
