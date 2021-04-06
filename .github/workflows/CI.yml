@@ -35,4 +35,11 @@ jobs:
       
       - name: "Run tests"
         continue-on-error: true
-        run: docker run --rm "${{ steps.container_name.outputs.lowercase }}"
+        run: |
+          docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${{ matrix.solution }}.txt"
+      
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.solution }}
+          path: "${{ matrix.solution }}.txt"
