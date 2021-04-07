@@ -8,10 +8,10 @@ const primeCounts = Dict( 10 => 1,
                           100000000 => 5761455 )
 
 struct prime_sieve
-	sieveSize::Int64
-	rawbits::BitArray{1}
+	sieveSize::Int
+	rawbits::BitVector
 
-	prime_sieve(limit::Int64) = new(  limit, trues( fld(limit+1,2) )  )
+	prime_sieve(limit::Int64) = new(  limit, trues( div(limit+1,2) )  )
 end
 
 function validateResults(sieve::prime_sieve)
@@ -23,19 +23,19 @@ function validateResults(sieve::prime_sieve)
 end
 
 function runSieve!(sieve::prime_sieve)
-	factor::Int64 = 3
-	q::Float64 = sqrt(sieve.sieveSize)
+	factor = 3
+	q = sqrt(sieve.sieveSize)
 
 	while factor <= q
 		for num in factor:sieve.sieveSize
-			if num % 2 == 0 ? false : sieve.rawbits[fld(num+1,2)]
+			if num % 2 == 0 ? false : sieve.rawbits[div(num+1,2)]
 				factor = num
 				break
 			end
 		end
 
 		for num in factor*3:factor*2:sieve.sieveSize
-			sieve.rawbits[fld(num+1,2)] = false
+			sieve.rawbits[div(num+1,2)] = false
 		end
 
 		factor += 2
@@ -54,7 +54,7 @@ function printResults(sieve::prime_sieve, showResults::Bool, duration::Number, p
 	count = 1
 
 	for num in 3:2:sieve.sieveSize
-		if sieve.rawbits[fld(num+1,2)]
+		if sieve.rawbits[div(num+1,2)]
 			showResults && print("$num" * ", ")
 
 			count += 1
@@ -71,7 +71,7 @@ function main()
 
 	local sieve
 
-	while (time()-t0) < 5
+	while (time()-t0) < 10
 		sieve = prime_sieve(1000000)
 		runSieve!(sieve)
 		passes += 1
