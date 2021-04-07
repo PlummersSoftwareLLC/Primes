@@ -83,7 +83,6 @@ class PrimeSieve:
             if show_results:
                 print("%s, " % num, end="")
 
-        assert(count == self.count_primes())
         if show_results:
             print()
         print("Passes: %s, Time: %s, Avg: %s, Limit: %s, Count: %s, Valid: %s" % (passes, duration, duration/passes, self._size, count, self.validate_results()))
