@@ -48,7 +48,7 @@ class prime_sieve(object):
         if (index % 2 == 0): # even numbers are automaticallty returned as non-prime
             return False
         else:
-            return this.rawbits[int(index/2)]
+            return this.rawbits[index // 2]
 
     # ClearBit
     #
@@ -61,7 +61,7 @@ class prime_sieve(object):
             assert("If you're setting even bits, you're sub-optimal for some reason!")
             return False
         else:
-            this.rawbits[int(index/2)] = False
+            this.rawbits[index // 2] = False
 
     # primeSieve
     # 
