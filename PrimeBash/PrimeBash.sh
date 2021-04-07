@@ -1,30 +1,35 @@
 ﻿#!/bin/bash
 
-// ---------------------------------------------------------------------------
-// PrimeBash.sh : Minecraftchet1's Prime Sieve in Bash
-// Based off of PrimeCS.cs
-// ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# PrimeBash.sh : Minecraftchet1's Prime Sieve in Bash
+# Based off of PrimeCS.cs
+# ---------------------------------------------------------------------------
 
-namespace PrimeSieveCS
-{
-    class PrimeCS
-    {
-        class prime_sieve
-        {
-            private int sieveSize = 0;
+#namespace PrimeSieveCS
+#{
+#    class PrimeCS
+#    {
+#        class prime_sieve
+#        {
+#            private int sieveSize = 0;
+            local sieveSize = 0;             
 
-            private BitArray bitArray;
-            private Dictionary<int, int> myDict = new Dictionary<int, int> 
-            { 
-                { 10 , 1 },                 // Historical data for validating our results - the number of primes
-                { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
-                { 1000 , 168 },
-                { 10000 , 1229 },
-                { 100000 , 9592 },
-                { 1000000 , 78498 },
-                { 10000000 , 664579 },
-                { 100000000 , 5761455 } 
-            };
+#            private BitArray bitArray;
+            local bitArray
+#            private Dictionary<int, int> myDict = new Dictionary<int, int> 
+#            { 
+#                { 10 , 1 },                 // Historical data for validating our results - the number of primes
+#                { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
+#                { 1000 , 168 },
+#                { 10000 , 1229 },
+#                { 100000 , 9592 },
+#                { 1000000 , 78498 },
+#                { 10000000 , 664579 },
+#                { 100000000 , 5761455 } 
+#            };
+
+##############################################
+
 
             public prime_sieve(int size) 
             {
