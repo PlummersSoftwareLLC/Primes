@@ -71,18 +71,21 @@ class prime_sieve(object):
 
         factor = 3
         q = sqrt(this.sieveSize)
+        sieveSize = this.sieveSize
+        GetBit = this.GetBit
+        ClearBit = this.ClearBit
 
         while (factor < q):
-            for num in range (factor, this.sieveSize):
-                if (this.GetBit(num) == True):
+            for num in range (factor, sieveSize):
+                if (GetBit(num) == True):
                     factor = num
                     break
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
 
-            for num in range (factor * 3, this.sieveSize, factor * 2): 
-                this.ClearBit(num)
+            for num in range (factor * 3, sieveSize, factor * 2): 
+                ClearBit(num)
 
             factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
 
