@@ -61,21 +61,27 @@ class PrimeSieve:
 
         return self._bits.count(b"\x01") if self._size > 1 else 0
 
+    def get_primes(self):
+
+        """Returns a generator to iterate over the found prime numbers.
+        Requires a prior run_sieve call"""
+
+        if self._size > 1:
+            yield 2  # Since we auto-filter evens, we have to special case the number 2 which is prime
+        for num, is_prime in enumerate(self._bits):
+            if is_prime and num:
+                yield num * 2 + 1
+
     def print_results(self, show_results, duration, passes):
 
         """Displays the primes found (or just the total count,
         depending on what you ask for)"""
 
-        count = 1 if self._size > 1 else 0
-
-        if show_results and count:  # Since we auto-filter evens, we have to special case the number 2 which is prime
-            print("2, ", end="")
-
-        for num, is_prime in enumerate(self._bits):  # Count (and optionally dump) the primes that were found below the limit
-            if num and is_prime:
-                if show_results:
-                    print(str(num * 2 + 1) + ", ", end="")
-                count += 1
+        count = 0
+        for num in self.get_primes():  # Count (and optionally dump) the primes that were found below the limit
+            count += 1
+            if show_results:
+                print("%s, " % num, end="")
 
         assert(count == self.count_primes())
         if show_results:
