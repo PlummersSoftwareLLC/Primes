@@ -1,3 +1,6 @@
-# Dave's Garage - Drag Race Demos
+# Primes | A Software Drag Race
 
-This is the companion source code for Dave's [Software Drag Racing: C++ vs C# vs Python - Which Will Win?](https://www.youtube.com/watch?v=D3h62rgewZM) video.
+Source code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video
+benchmarking the same prime number sieve in Python, C#, and C++.
+
+[![Software Drag Racing | Dave's Garage](https://img.youtube.com/vi/D3h62rgewZM/0.jpg)](https://youtu.be/D3h62rgewZM)
