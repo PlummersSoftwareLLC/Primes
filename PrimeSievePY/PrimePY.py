@@ -72,12 +72,12 @@ class prime_sieve(object):
         factor = 3
         q = sqrt(this.sieveSize)
         sieveSize = this.sieveSize
-        GetBit = this.GetBit
-        ClearBit = this.ClearBit
+#         GetBit = this.GetBit
+#         ClearBit = this.ClearBit
 
         while (factor < q):
             for num in range (factor, sieveSize):
-                if (GetBit(num) == True):
+                if num % 2 and rawbits[num // 2]:
                     factor = num
                     break
 
@@ -85,7 +85,11 @@ class prime_sieve(object):
             # We can then step by factor * 2 because every second one is going to be even by definition
 
             for num in range (factor * 3, sieveSize, factor * 2): 
-                ClearBit(num)
+                if num % 2 == 0:
+                    assert "If you're setting even bits, you're sub-optimal for some reason!"
+                    return
+                else:
+                    this.rawbits[num // 2] = False
 
             factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
 
