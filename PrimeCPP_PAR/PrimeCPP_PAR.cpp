@@ -139,7 +139,7 @@ class prime_sieve
           if (showResults)
               printf("\n");
           
-          printf("Passes: %d, Threads: %d, Time: %lf, Avg: %lf, Limit:  %lld, Count1: %d, Count2: %d, Valid: %d\n",
+          printf("Passes: %d, Threads: %d, Time: %lf, Avg: %lf, Limit:  %lu, Count1: %d, Count2: %d, Valid: %d\n",
                  passes, 
                  threads,
                  duration, 
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
     auto cThreads     = (cThreadsRequested ? cThreadsRequested : thread::hardware_concurrency());
     auto llUpperLimit = (ullLimitRequested  ? ullLimitRequested  : 1000000);
 
-    printf("Computing primes to %lld on %d thread%s for %d second%s.\n", 
+    printf("Computing primes to %llu on %d thread%s for %d second%s.\n", 
            llUpperLimit,
            cThreads,
            cThreads == 1 ? "" : "s",
