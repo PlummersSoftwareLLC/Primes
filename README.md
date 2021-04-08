@@ -13,23 +13,38 @@ benchmarking the same prime number sieve in Python, C#, and C++; forked to add R
 In my AMD 3900XT machine here are the results:
 
 ```
-make run
-echo "C++:"
-C++:
-g++ -O3 -flto -march=native PrimeCPP/PrimeCPP.cpp && ./a.out
-Passes: 9506, Time: 5.000000, Avg: 0.000526, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
-echo "C#:"
-C#:
+$ make run
+touch result.json
+make cpp
+make[1]: Entering directory '/home/bruce3434/proj/gh/Primes'
+clang++ -O3 -flto -march=native PrimeCPP/PrimeCPP.cpp && ./a.out 
+Passes: 922, Time: 5.000000, Avg: 0.005423, Limit: 10000000, Count1: 664579, Count2: 664579, Valid: 1
+make[1]: Leaving directory '/home/bruce3434/proj/gh/Primes'
+make rust
+make[1]: Entering directory '/home/bruce3434/proj/gh/Primes'
+cd PrimeRs && cargo run -q --release -- -C target-cpu=native 
+Passes: 1093, Time: 5.000063, Avg: 0.004574623, Limit: 10000000, Count1: 664579, Count2: 664579, Valid: true
+make[1]: Leaving directory '/home/bruce3434/proj/gh/Primes'
+make nim
+make[1]: Entering directory '/home/bruce3434/proj/gh/Primes'
+cd PrimeNim && nimble build --d:danger --passC:-flto --passC:-march=native --silent && ./PrimeNim 
+Passes: 974, Time: 5 seconds, 1 millisecond, 154 microseconds, and 997 nanoseconds, Avg: 5134656.0, Limit: 10000000, Count1: 664579, Count2: 664579, Valid: true
+make[1]: Leaving directory '/home/bruce3434/proj/gh/Primes'
+make d
+make[1]: Entering directory '/home/bruce3434/proj/gh/Primes'
+cd PrimeD && dub build -b release-nobounds -q --compiler=ldc2 && ./primed 
+Passes: 764, Time: 5000, Avg: 6.5445, Limit: 10000000, Count1: 664579, Count2: 664579, Valid: true
+make[1]: Leaving directory '/home/bruce3434/proj/gh/Primes'
+make dotnet
+make[1]: Entering directory '/home/bruce3434/proj/gh/Primes'
 cd PrimeCS && dotnet run --configuration Release
-Passes: 4105, Time: 10.0015522, Avg: 0.0024364317174177834, Limit: 1000000, Count: 78498, Valid: True
-echo "Rust:"
-Rust:
-cd PrimeRs && cargo run -q --release -- -C target-cpu=native
-Passes: 15560, Time: 5.000209, Avg: 0.00032135018, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-echo "Python:"
-Python:
+Passes: 182, Time: 5.0035962, Avg: 0.02749228681318681, Limit: 10000000, Count: 664579, Valid: True
+make[1]: Leaving directory '/home/bruce3434/proj/gh/Primes'
+make python
+make[1]: Entering directory '/home/bruce3434/proj/gh/Primes'
 python3 PrimeSievePY/PrimePY.py
-Passes: 67, Time: 10.142712171000312, Avg: 0.15138376374627333, Limit: 1000000, Count: 78498, Valid: True
+Passes: 3, Time: 5.586517693000133, Avg: 1.8621725643333775, Limit: 10000000, Count: 664579, Valid: True
+make[1]: Leaving directory '/home/bruce3434/proj/gh/Primes'
 ```
 
 
@@ -42,9 +57,16 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 dotnet --version
-5.0.201
+5.0.202
 rustc --version
 rustc 1.51.0 (2fd73fabe 2021-03-23)
 python3 --version
 Python 3.8.6
+nim --version
+Nim Compiler Version 1.4.4 [Linux: amd64]
+Compiled at 2021-02-23
+Copyright (c) 2006-2020 by Andreas Rumpf
+
+git hash: 2ff517462bf8609b30e6134c9665
+active boot switches: -d:release
 ```
