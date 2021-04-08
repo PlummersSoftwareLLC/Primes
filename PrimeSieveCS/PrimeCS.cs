@@ -29,7 +29,7 @@ namespace PrimeSieveCS
             public prime_sieve(int size) 
             {
                 sieveSize = size;
-                bitArray = new BitArray((int)((this.sieveSize + 1) / 2), true);
+                bitArray = new BitArray((int)((this.sieveSize) / 2), true);
             }
 
             public int countPrimes()
@@ -50,19 +50,21 @@ namespace PrimeSieveCS
 
             private bool GetBit(int index)
             {
-                if (index % 2 == 0)
+                if ((index&1) == 0)
                     return false;
-                return bitArray[index / 2];
+                return bitArray[index >> 1 ];
             }
 
             private void ClearBit(int index)
             {
+#if DEBUG
                 if (index % 2 == 0)
                 {
                     Console.WriteLine("You are setting even bits, which is sub-optimal");
                     return;
                 }
-                bitArray[index / 2] = false;      
+#endif
+                bitArray[index >> 1] = false;      
             }
 
             // primeSieve
@@ -76,7 +78,7 @@ namespace PrimeSieveCS
 
                 while (factor < q)
                 {
-                    for (int num = factor; num <= this.sieveSize; num++)
+                    for (int num = factor; num < this.sieveSize; num++)
                     {
                         if (GetBit(num))
                         {
@@ -101,7 +103,7 @@ namespace PrimeSieveCS
                     Console.Write("2, ");
 
                 int count = 1;
-                for (int num = 3; num <= this.sieveSize; num++)
+                for (int num = 3; num < this.sieveSize; num++)
                 {
                     if (GetBit(num))
                     {
@@ -122,7 +124,7 @@ namespace PrimeSieveCS
             var passes = 0;
             prime_sieve sieve = null;
 
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 10)
+            while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
             {
                 sieve = new prime_sieve(1000000);
                 sieve.runSieve();
