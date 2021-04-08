@@ -1,0 +1,2 @@
+# Compilation and execution on Git-Bash (GNU C Compiler)
+gcc -Ofast sieve.c -o sieve
