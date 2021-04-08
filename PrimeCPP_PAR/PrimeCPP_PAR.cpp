@@ -137,17 +137,16 @@ class prime_sieve
           }
 
           if (showResults)
-              printf("\n");
+              count << endl;
           
-          printf("Passes: %lu, Threads: %lu, Time: %lf, Avg: %lf, Limit:  %lu, Count1: %lu, Count2: %lu, Valid: %d\n",
-                 passes, 
-                 threads,
-                 duration, 
-                 duration / passes, 
-                 Bits.size(),
-                 count,
-                 countPrimes(), 
-                 validateResults());
+          cout << "Passes: " << passes << ", "
+               << "Threads: " << threads << ", "
+               << "Time: " << duration << ", " 
+               << "Average: " << duration/passes << ", "
+               << "Limit: " << Bits.size() << ", "
+               << "Counts: " << count << "/" << countPrimes() << ", "
+               << "Valid : " << (validateResults() ? "Pass" : "FAIL!") \
+               << endl;                
       }
 };
 
