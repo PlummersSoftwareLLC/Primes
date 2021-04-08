@@ -68,9 +68,11 @@ class PrimeSieve:
 
         if self._size > 1:
             yield 2  # Since we auto-filter evens, we have to special case the number 2 which is prime
-        for num, is_prime in enumerate(self._bits):
-            if is_prime and num:
+        if self._size > 2:
+            num = 1
+            while num > 0:
                 yield num * 2 + 1
+                num = self._bits.find(1, num + 1)
 
     def print_results(self, show_results, duration, passes):
 
