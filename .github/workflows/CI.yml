@@ -15,7 +15,8 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        solution: [ "PrimeCrystal" ]
+        solution:
+          - PrimeCrystal/stl-faithful/marghidanu
         os: ["ubuntu-20.04"]
     
     steps:
