@@ -123,7 +123,7 @@ class prime_sieve
       void printResults(bool showResults, double duration, size_t passes, size_t threads) const
       {
           if (showResults)
-              printf("2, ");
+              cout << "2, ";
 
           size_t count = (Bits.size() >= 2);                   // Count 2 as prime if in range
           for (uint64_t num = 3; num <= Bits.size(); num+=2)
@@ -131,13 +131,13 @@ class prime_sieve
               if (Bits[num])
               {
                   if (showResults)
-                      printf("%llu, ", num);
+                      cout << num << ", ";
                   count++;
               }
           }
 
           if (showResults)
-              count << endl;
+              cout << "\n";
           
           cout << "Passes: " << passes << ", "
                << "Threads: " << threads << ", "
@@ -145,8 +145,8 @@ class prime_sieve
                << "Average: " << duration/passes << ", "
                << "Limit: " << Bits.size() << ", "
                << "Counts: " << count << "/" << countPrimes() << ", "
-               << "Valid : " << (validateResults() ? "Pass" : "FAIL!") \
-               << endl;                
+               << "Valid : " << (validateResults() ? "Pass" : "FAIL!") 
+               << "\n";
       }
 };
 
