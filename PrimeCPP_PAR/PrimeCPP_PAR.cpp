@@ -16,7 +16,7 @@
 using namespace std;
 using namespace std::chrono;
 
-#define UPPER_LIMIT 1'000'000LL
+const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
 // prime_sieve
 //
@@ -46,8 +46,8 @@ class prime_sieve
 
       void runSieve()
       {
-          long long factor = 3;
-          long long q = (int) sqrt(Bits.size());
+          uint64_t factor = 3;
+          uint64_t q = (int) sqrt(Bits.size());
 
           while (factor <= q)
           {
@@ -70,9 +70,9 @@ class prime_sieve
       //
       // Can be called after runSieve to determine how many primes were found in total
 
-      int countPrimes() const
+      size_t countPrimes() const
       {
-          int count = (Bits.size() >= 2);                   // Count 2 as prime if within range
+          size_t count = (Bits.size() >= 2);                   // Count 2 as prime if within range
           for (int i = 3; i < Bits.size(); i+=2)
               if (Bits[i])
                   count++;
@@ -83,7 +83,7 @@ class prime_sieve
       // 
       // Can be called after runSieve to determine whether a given number is prime. 
 
-      bool isPrime(long long n) const
+      bool isPrime(uint64_t n) const
       {
           if (n & 1)
               return Bits[n];
@@ -98,18 +98,18 @@ class prime_sieve
 
       bool validateResults() const
       {
-          const std::map<const long long, const int> resultsDictionary =
+          const std::map<const uint64_t, const int> resultsDictionary =
           {
-                {             10LL, 4         },               // Historical data for validating our results - the number of primes
-                {            100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
-                {          1'000LL, 168       },
-                {         10'000LL, 1229      },
-                {        100'000LL, 9592      },
-                {      1'000'000LL, 78498     },
-                {     10'000'000LL, 664579    },
-                {    100'000'000LL, 5761455   },
-                {  1'000'000'000LL, 50847534  },
-                { 10'000'000'000LL, 455052511 },
+                {             10LLU, 4         },               // Historical data for validating our results - the number of primes
+                {            100LLU, 25        },               // to be found under some limit, such as 168 primes under 1000
+                {          1'000LLU, 168       },
+                {         10'000LLU, 1229      },
+                {        100'000LLU, 9592      },
+                {      1'000'000LLU, 78498     },
+                {     10'000'000LLU, 664579    },
+                {    100'000'000LLU, 5761455   },
+                {  1'000'000'000LLU, 50847534  },
+                { 10'000'000'000LLU, 455052511 },
           };
           if (resultsDictionary.end() == resultsDictionary.find(Bits.size()))
               return false;
@@ -120,18 +120,18 @@ class prime_sieve
       //
       // Displays stats about what was found as well as (optionally) the primes themselves
 
-      void printResults(bool showResults, double duration, int passes, int threads) const
+      void printResults(bool showResults, double duration, size_t passes, size_t threads) const
       {
           if (showResults)
               printf("2, ");
 
-          int count = (Bits.size() >= 2);                   // Count 2 as prime if in range
-          for (int num = 3; num <= Bits.size(); num+=2)
+          size_t count = (Bits.size() >= 2);                   // Count 2 as prime if in range
+          for (uint64_t num = 3; num <= Bits.size(); num+=2)
           {
               if (Bits[num])
               {
                   if (showResults)
-                      printf("%d, ", num);
+                      printf("%llu, ", num);
                   count++;
               }
           }
@@ -139,7 +139,7 @@ class prime_sieve
           if (showResults)
               printf("\n");
           
-          printf("Passes: %d, Threads: %d, Time: %lf, Avg: %lf, Limit:  %lu, Count1: %d, Count2: %d, Valid: %d\n",
+          printf("Passes: %lu, Threads: %lu, Time: %lf, Avg: %lf, Limit:  %lu, Count1: %lu, Count2: %lu, Valid: %d\n",
                  passes, 
                  threads,
                  duration, 
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
     auto cPasses      = 0;
     auto cSeconds     = (cSecondsRequested ? cSecondsRequested : 5);
     auto cThreads     = (cThreadsRequested ? cThreadsRequested : thread::hardware_concurrency());
-    auto llUpperLimit = (ullLimitRequested  ? ullLimitRequested  : 1000000);
+    auto llUpperLimit = (ullLimitRequested ? ullLimitRequested : DEFAULT_UPPER_LIMIT);
 
     printf("Computing primes to %llu on %d thread%s for %d second%s.\n", 
            llUpperLimit,
@@ -258,7 +258,7 @@ int main(int argc, char **argv)
 
     prime_sieve checkSieve(llUpperLimit);
     checkSieve.runSieve();
-    checkSieve.printResults(bPrintPrimes, duration_cast<microseconds>(tEnd).count() / 1000000.0, cPasses, cThreads);
+    checkSieve.printResults(bPrintPrimes, duration_cast<microseconds>(tEnd).count() / (double) llUpperLimit, cPasses, cThreads);
 
     // On success return the count of primes found; on failure, return 0
 
