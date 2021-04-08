@@ -120,7 +120,7 @@ class prime_sieve
       //
       // Displays stats about what was found as well as (optionally) the primes themselves
 
-      void printResults(bool showResults, double duration, int passes) const
+      void printResults(bool showResults, double duration, int passes, int threads) const
       {
           if (showResults)
               printf("2, ");
@@ -141,7 +141,7 @@ class prime_sieve
           
           printf("Passes: %d, Threads: %d, Time: %lf, Avg: %lf, Limit:  %lld, Count1: %d, Count2: %d, Valid: %d\n",
                  passes, 
-                 thread::hardware_concurrency(),
+                 threads,
                  duration, 
                  duration / passes, 
                  Bits.size(),
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
     
     prime_sieve checkSieve(llUpperLimit);
     checkSieve.runSieve();
-    checkSieve.printResults(false, duration_cast<microseconds>(tEnd).count() / 1000000.0, cPasses);
+    checkSieve.printResults(false, duration_cast<microseconds>(tEnd).count() / 1000000.0, cPasses, cThreads);
 
     // On success return the count of primes found; on failure, return 0
 
