@@ -31,7 +31,7 @@ class prime_sieve
 
    public:
 
-      prime_sieve(unsigned long long n) : Bits(n, true)                  // Initialize all to true (potential primes)
+      prime_sieve(uint64_t n) : Bits(n, true)                  // Initialize all to true (potential primes)
       {
       }
 
@@ -51,7 +51,7 @@ class prime_sieve
 
           while (factor <= q)
           {
-              for (unsigned long long num = factor; num < Bits.size(); num += 2)
+              for (uint64_t num = factor; num < Bits.size(); num += 2)
               {
                   if (Bits[num])
                   {
@@ -59,7 +59,7 @@ class prime_sieve
                       break;
                   }
               }
-              for (unsigned long long num = factor * factor; num < Bits.size(); num += factor * 2)
+              for (uint64_t num = factor * factor; num < Bits.size(); num += factor * 2)
                   Bits[num] = false;
 
               factor += 2;            
@@ -120,7 +120,7 @@ class prime_sieve
       //
       // Displays stats about what was found as well as (optionally) the primes themselves
 
-      void printResults(bool showResults, double duration, int passes) const
+      void printResults(bool showResults, double duration, int passes, int threads) const
       {
           if (showResults)
               printf("2, ");
@@ -141,7 +141,7 @@ class prime_sieve
           
           printf("Passes: %d, Threads: %d, Time: %lf, Avg: %lf, Limit:  %lu, Count1: %d, Count2: %d, Valid: %d\n",
                  passes, 
-                 thread::hardware_concurrency(),
+                 threads,
                  duration, 
                  duration / passes, 
                  Bits.size(),
@@ -154,10 +154,11 @@ class prime_sieve
 int main(int argc, char **argv)
 {
     vector<string> args(argv + 1, argv + argc);
-    unsigned long long ullLimitRequested = 0;
+    uint64_t ullLimitRequested = 0;
     auto cThreadsRequested = 0;
     auto cSecondsRequested = 0;
     auto bPrintPrimes      = false;
+    auto bOneshot          = false;
 
     // Process command-line args
 
@@ -167,33 +168,51 @@ int main(int argc, char **argv)
     for (auto i = args.begin(); i != args.end(); ++i) 
     {
         if (*i == "-h" || *i == "--help") {
-              cout << "Syntax: " << argv[0] << " [-t,--threads threads] [-s,--seconds seconds] [-l,--limit limit] [-h] " << endl;
+              cout << "Syntax: " << argv[0] << " [-t,--threads threads] [-s,--seconds seconds] [-l,--limit limit] [-1,--oneshot] [-h] " << endl;
             return 0;
         }
-        else if (*i == "-t" || *i == "--threads") {
+        else if (*i == "-t" || *i == "--threads") 
+        {
             i++;
-            cThreadsRequested = (i == args.end()) ? 0 : atoi(i->c_str());
+            cThreadsRequested = (i == args.end()) ? 0 : min(1, atoi(i->c_str()));
         }
-        else if (*i == "-s" || *i == "--seconds") {
+        else if (*i == "-s" || *i == "--seconds") 
+        {
             i++;
-            cSecondsRequested = (i == args.end()) ? 0 : atoi(i->c_str());
+            cSecondsRequested = (i == args.end()) ? 0 : min(1, atoi(i->c_str()));
+            return 0;
         }
-        else if (*i == "-l" || *i == "--limit") {
+        else if (*i == "-l" || *i == "--limit") 
+        {
             i++;
-            ullLimitRequested = (i == args.end()) ? 0LL : atoll(i->c_str());
+            ullLimitRequested = (i == args.end()) ? 0LL : min((long long)1, atoll(i->c_str()));
         }
-        else if (*i == "-p" || *i == "--print") {
+        else if (*i == "-1" || *i == "--oneshot") 
+        {
+            i++;
+            bOneshot = true;
+            cThreadsRequested = 1;
+        }
+        else if (*i == "-p" || *i == "--print") 
+        {
              bPrintPrimes = true;
         }
-        else {
+        else 
+        {
             fprintf(stderr, "Unknown argument: %s", i->c_str());
-            return 0;
         }
+    }
 
+    if (bOneshot)
+        cout << "Oneshot is on" << endl;
+
+    if (bOneshot && (cSecondsRequested > 0 || cThreadsRequested > 1))   
+    {
+        cout << "Oneshot option cannot be mixed with second count or thread count." << endl;
+        return 0;
     }
 
     auto cPasses      = 0;
-    auto tStart       = steady_clock::now();
     auto cSeconds     = (cSecondsRequested ? cSecondsRequested : 5);
     auto cThreads     = (cThreadsRequested ? cThreadsRequested : thread::hardware_concurrency());
     auto llUpperLimit = (ullLimitRequested  ? ullLimitRequested  : 1000000);
@@ -206,30 +225,40 @@ int main(int argc, char **argv)
            cSeconds == 1 ? "" : "s"
     );
 
-    while (duration_cast<seconds>(steady_clock::now() - tStart).count() < cSeconds)
+    auto tStart       = steady_clock::now();
+
+    if (!bOneshot)
     {
-        vector<thread> threadPool;
-        
-        // We create N threads and give them each the job of runing the 'runSieve' method on a sieve
-        // that we create on the heap, rather than the stack, due to their possible enormity.  By using
-        // a unique_ptr it will automatically free resources as soon as its torn down.
+        while (duration_cast<seconds>(steady_clock::now() - tStart).count() < cSeconds)
+        {
+            vector<thread> threadPool;
+            
+            // We create N threads and give them each the job of runing the 'runSieve' method on a sieve
+            // that we create on the heap, rather than the stack, due to their possible enormity.  By using
+            // a unique_ptr it will automatically free resources as soon as its torn down.
 
-        for (unsigned int i = 0; i < cThreads; i++)
-            threadPool.push_back(thread([llUpperLimit] { make_unique<prime_sieve>(llUpperLimit)->runSieve(); }));
+            for (unsigned int i = 0; i < cThreads; i++)
+                threadPool.push_back(thread([llUpperLimit] { make_unique<prime_sieve>(llUpperLimit)->runSieve(); }));
 
-        // Now we wait for all of the threads to finish before we repeat
+            // Now we wait for all of the threads to finish before we repeat
 
-        for (auto &th : threadPool) 
-            th.join();
+            for (auto &th : threadPool) 
+                th.join();
 
-        // Credit us with one pass for each of the threads we did work on
-        cPasses += cThreads;
+            // Credit us with one pass for each of the threads we did work on
+            cPasses += cThreads;
+        }
     }
+    else
+    {
+        cPasses++;
+    }
+
     auto tEnd = steady_clock::now() - tStart;
-    
+
     prime_sieve checkSieve(llUpperLimit);
     checkSieve.runSieve();
-    checkSieve.printResults(bPrintPrimes, duration_cast<microseconds>(tEnd).count() / 1000000.0, cPasses);
+    checkSieve.printResults(bPrintPrimes, duration_cast<microseconds>(tEnd).count() / 1000000.0, cPasses, cThreads);
 
     // On success return the count of primes found; on failure, return 0
 
