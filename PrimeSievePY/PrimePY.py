@@ -42,7 +42,7 @@ class PrimeSieve:
         q = self._size**0.5 / 2
         bitslen = len(self._bits)
 
-        while (factor <= q):
+        while factor <= q:
             factor = self._bits.index(b"\x01", factor)
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
