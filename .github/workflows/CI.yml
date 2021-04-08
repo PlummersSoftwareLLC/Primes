@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ drag-race ]
   pull_request:
-    branches: [ main ]
+    branches: [ drag-race ]
     
   workflow_dispatch:
   
