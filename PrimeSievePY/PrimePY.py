@@ -5,6 +5,9 @@ MyFirstPython Program (tm) Dave Plummer 8/9/2018
 Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 """
 
+from math import sqrt
+
+
 class PrimeSieve:
 
     """This is the main PrimeSieve class. Call it with the number you wish as
@@ -39,7 +42,9 @@ class PrimeSieve:
         """Calculate the primes up to the specified limit"""
 
         factor = 1
-        q = self._size**0.5 / 2
+        # sqrt doesn't seem to make any difference in CPython,
+        # but works much faster than "x**.5" in Pypy
+        q = sqrt(self._size) / 2
         bitslen = len(self._bits)
 
         while factor <= q:
