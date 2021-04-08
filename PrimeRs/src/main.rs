@@ -19,6 +19,7 @@ impl PrimeCS {
             (1000000, 78498),
             (10000000, 664579),
             (100000000, 5761455),
+            (1000000000, 50847534),
             (10000000000, 455052511),
         ]
         .iter()
@@ -111,7 +112,7 @@ fn main() {
     let mut passes = 0;
     let t_start = Instant::now();
     loop {
-        let mut sieve = PrimeCS::new(1000000);
+        let mut sieve = PrimeCS::new(10000000);
         sieve.run_sieve();
         passes += 1;
         let elapsed = t_start.elapsed();

@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/primed
+primed.so
+primed.dylib
+primed.dll
+primed.a
+primed.lib
+primed-test-*
+*.exe
+*.o
+*.obj
+*.lst
+
+dub_*
