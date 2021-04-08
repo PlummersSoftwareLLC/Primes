@@ -16,7 +16,7 @@
 using namespace std;
 using namespace std::chrono;
 
-#define UPPER_LIMIT 1000000LL
+#define UPPER_LIMIT 1'000'000LL
 
 // prime_sieve
 //
@@ -100,16 +100,16 @@ class prime_sieve
       {
           const std::map<const long long, const int> resultsDictionary =
           {
-                {          10LL, 4         },               // Historical data for validating our results - the number of primes
-                {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
-                {        1000LL, 168       },
-                {       10000LL, 1229      },
-                {      100000LL, 9592      },
-                {     1000000LL, 78498     },
-                {    10000000LL, 664579    },
-                {   100000000LL, 5761455   },
-                {  1000000000LL, 50847534  },
-                { 10000000000LL, 455052511 },
+                {             10LL, 4         },               // Historical data for validating our results - the number of primes
+                {            100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
+                {          1'000LL, 168       },
+                {         10'000LL, 1229      },
+                {        100'000LL, 9592      },
+                {      1'000'000LL, 78498     },
+                {     10'000'000LL, 664579    },
+                {    100'000'000LL, 5761455   },
+                {  1'000'000'000LL, 50847534  },
+                { 10'000'000'000LL, 455052511 },
           };
           if (resultsDictionary.end() == resultsDictionary.find(Bits.size()))
               return false;
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
             ullLimitRequested = (i == args.end()) ? 0LL : atoll(i->c_str());
         }
         else if (*i == "-p" || *i == "--print") {
-             bPrintPrimes ;
+             bPrintPrimes = true;
         }
         else {
             fprintf(stderr, "Unknown argument: %s", i->c_str());
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
     
     prime_sieve checkSieve(llUpperLimit);
     checkSieve.runSieve();
-    checkSieve.printResults(false, duration_cast<microseconds>(tEnd).count() / 1000000.0, cPasses);
+    checkSieve.printResults(bPrintPrimes, duration_cast<microseconds>(tEnd).count() / 1000000.0, cPasses);
 
     // On success return the count of primes found; on failure, return 0
 
