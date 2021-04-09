@@ -139,52 +139,49 @@ class prime_sieve
           if (showResults)
               cout << "\n";
           
-          cout << "Passes: " << passes << ", "
+          cout << "Passes: "  << passes << ", "
                << "Threads: " << threads << ", "
-               << "Time: " << duration << ", " 
+               << "Time: "    << duration << ", " 
                << "Average: " << duration/passes << ", "
-               << "Limit: " << Bits.size() << ", "
-               << "Counts: " << count << "/" << countPrimes() << ", "
-               << "Valid : " << (validateResults() ? "Pass" : "FAIL!") 
+               << "Limit: "   << Bits.size() << ", "
+               << "Counts: "  << count << "/" << countPrimes() << ", "
+               << "Valid : "  << (validateResults() ? "Pass" : "FAIL!") 
                << "\n";
       }
 };
 
 int main(int argc, char **argv)
 {
-    vector<string> args(argv + 1, argv + argc);
+    vector<string> args(argv + 1, argv + argc);         // From first to last argument in the argv array
     uint64_t ullLimitRequested = 0;
     auto cThreadsRequested = 0;
     auto cSecondsRequested = 0;
     auto bPrintPrimes      = false;
     auto bOneshot          = false;
+    auto bQuiet            = false;
 
     // Process command-line args
-
-    cout << "Primes Benchmark (c) 2021 Dave's Garage - http://github.com/davepl/primes" << endl;
-    cout << "-------------------------------------------------------------------------" << endl;
 
     for (auto i = args.begin(); i != args.end(); ++i) 
     {
         if (*i == "-h" || *i == "--help") {
-              cout << "Syntax: " << argv[0] << " [-t,--threads threads] [-s,--seconds seconds] [-l,--limit limit] [-1,--oneshot] [-h] " << endl;
+              cout << "Syntax: " << argv[0] << " [-t,--threads threads] [-s,--seconds seconds] [-l,--limit limit] [-1,--oneshot] [-q,--quiet] [-h] " << endl;
             return 0;
         }
         else if (*i == "-t" || *i == "--threads") 
         {
             i++;
-            cThreadsRequested = (i == args.end()) ? 0 : min(1, atoi(i->c_str()));
+            cThreadsRequested = (i == args.end()) ? 0 : max(1, atoi(i->c_str()));
         }
         else if (*i == "-s" || *i == "--seconds") 
         {
             i++;
-            cSecondsRequested = (i == args.end()) ? 0 : min(1, atoi(i->c_str()));
-            return 0;
+            cSecondsRequested = (i == args.end()) ? 0 : max(1, atoi(i->c_str()));
         }
         else if (*i == "-l" || *i == "--limit") 
         {
             i++;
-            ullLimitRequested = (i == args.end()) ? 0LL : min((long long)1, atoll(i->c_str()));
+            ullLimitRequested = (i == args.end()) ? 0LL : max((long long)1, atoll(i->c_str()));
         }
         else if (*i == "-1" || *i == "--oneshot") 
         {
@@ -196,10 +193,21 @@ int main(int argc, char **argv)
         {
              bPrintPrimes = true;
         }
+        else if (*i == "-q" || *i == "--quiet") 
+        {
+             bQuiet = true;
+        }        
         else 
         {
             fprintf(stderr, "Unknown argument: %s", i->c_str());
+            return 0;
         }
+    }
+
+    if (!bQuiet)
+    {
+        cout << "Primes Benchmark (c) 2021 Dave's Garage - http://github.com/davepl/primes" << endl;
+        cout << "-------------------------------------------------------------------------" << endl;
     }
 
     if (bOneshot)
@@ -216,14 +224,16 @@ int main(int argc, char **argv)
     auto cThreads     = (cThreadsRequested ? cThreadsRequested : thread::hardware_concurrency());
     auto llUpperLimit = (ullLimitRequested ? ullLimitRequested : DEFAULT_UPPER_LIMIT);
 
-    printf("Computing primes to %llu on %d thread%s for %d second%s.\n", 
-           llUpperLimit,
-           cThreads,
-           cThreads == 1 ? "" : "s",
-           cSeconds,
-           cSeconds == 1 ? "" : "s"
-    );
-
+    if (!bQuiet)
+    {
+        printf("Computing primes to %llu on %d thread%s for %d second%s.\n", 
+            llUpperLimit,
+            cThreads,
+            cThreads == 1 ? "" : "s",
+            cSeconds,
+            cSeconds == 1 ? "" : "s"
+        );
+    }
     auto tStart       = steady_clock::now();
 
     if (!bOneshot)
@@ -237,7 +247,10 @@ int main(int argc, char **argv)
             // a unique_ptr it will automatically free resources as soon as its torn down.
 
             for (unsigned int i = 0; i < cThreads; i++)
-                threadPool.push_back(thread([llUpperLimit] { make_unique<prime_sieve>(llUpperLimit)->runSieve(); }));
+                threadPool.push_back(thread([llUpperLimit] 
+                { 
+                    std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve(); 
+                }));
 
             // Now we wait for all of the threads to finish before we repeat
 
@@ -254,12 +267,18 @@ int main(int argc, char **argv)
     }
 
     auto tEnd = steady_clock::now() - tStart;
-
+    auto duration = duration_cast<microseconds>(tEnd).count()/1000000.0;
+    
     prime_sieve checkSieve(llUpperLimit);
     checkSieve.runSieve();
-    checkSieve.printResults(bPrintPrimes, duration_cast<microseconds>(tEnd).count() / (double) llUpperLimit, cPasses, cThreads);
+    auto result = checkSieve.validateResults() ? checkSieve.countPrimes() : 0;
+  
+    if (!bQuiet)
+        checkSieve.printResults(bPrintPrimes, duration , cPasses, cThreads);
+    else
+        cout << cPasses << ", " << duration / cPasses << endl;
 
     // On success return the count of primes found; on failure, return 0
 
-    return checkSieve.validateResults() ? checkSieve.countPrimes() : 0;
+    return (int) result;
 }
