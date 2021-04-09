@@ -1,3 +1,5 @@
+c:
+	- clang -O3 -flto -march=native PrimeC/main.c && ./a.out
 cpp:
 	- clang++ -O3 -flto -march=native PrimeCPP/PrimeCPP.cpp && ./a.out 
 rust:
@@ -14,6 +16,7 @@ python:
 run:
 	- pip install graph-cli --q
 	- echo "impl,primes" > primes.csv
+	- make c
 	- make cpp
 	- make rust
 	- make nim
@@ -26,6 +29,7 @@ clean:
 	- rm a.out PrimeRs/target* PrimeCS/obj/ PrimeNim/PrimeNim PrimeD/primed PrimeD/dub_*  -rf 
 
 print_versions:
+	- clang --version
 	- clang++ --version
 	- dotnet --version
 	- rustc --version
