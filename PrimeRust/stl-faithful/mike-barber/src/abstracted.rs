@@ -57,13 +57,12 @@ pub mod primes {
     }
 
     /// Storage using a simple vector of bytes.
-    /// Doing the same with bools is equivalent, as bools are currently 
-    /// represented as bytes in Rust. However, this is not guaranteed to 
-    /// remain so for all time. To ensure consistent memory use in the future, 
+    /// Doing the same with bools is equivalent, as bools are currently
+    /// represented as bytes in Rust. However, this is not guaranteed to
+    /// remain so for all time. To ensure consistent memory use in the future,
     /// we're explicitly using bytes (u8) here.
     pub struct FlagStorageByteVector(Vec<u8>);
-    impl FlagStorage for FlagStorageByteVector
-    {
+    impl FlagStorage for FlagStorageByteVector {
         fn create_true(size: usize) -> Self {
             FlagStorageByteVector(vec![1; size])
         }
@@ -209,19 +208,22 @@ pub mod primes {
 }
 
 fn main() {
-    print!("Bit storage:   ");
-    run_implementation::<FlagStorageBitVector>();
+    let duration = Duration::from_secs(5);
+    println!("Running for {} seconds...", duration.as_secs());
+    println!();
 
     print!("Byte storage:  ");
-    run_implementation::<FlagStorageByteVector>();
+    run_implementation::<FlagStorageByteVector>(duration);
+
+    print!("Bit storage:   ");
+    run_implementation::<FlagStorageBitVector>(duration);
 }
 
-fn run_implementation<T: FlagStorage>() {
+fn run_implementation<T: FlagStorage>(run_duration: Duration) {
     let mut passes = 0;
     let mut prime_sieve = None;
 
     let start_time = Instant::now();
-    let run_duration = Duration::from_secs(10);
     while (Instant::now() - start_time) < run_duration {
         let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(1000000);
         sieve.run_sieve();

@@ -156,8 +156,11 @@ fn main() {
     let mut passes = 0;
     let mut prime_sieve = None;
 
+    let run_duration = Duration::from_secs(5);
+    println!("Running for {} seconds...", run_duration.as_secs());
+    println!();
+
     let start_time = Instant::now();
-    let run_duration = Duration::from_secs(10);
     while (Instant::now() - start_time) < run_duration {
         let mut sieve = primes::PrimeSieve::new(1000000);
         sieve.run_sieve();
