@@ -54,7 +54,7 @@
             )
         )
         (loop for num from 
-            (* factor 3) to sieveSize by 
+            (* factor factor) to sieveSize by 
             (* factor 2) do 
             (clear-bit num))
         (setq factor 
