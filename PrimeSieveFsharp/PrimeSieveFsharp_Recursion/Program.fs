@@ -24,23 +24,29 @@ let validateResults primeCounts sieveSize primes =
     | Some expected -> expected = countPrimes primes
     | None -> false
 
-let runSieve sieveSize (bitArray: byref<bool[]>) =
-    let mutable factor = 3
-    let mutable num = 0
+let runSieve sieveSize (bitArray: bool[]) =
     let q = sieveSize |> float |> sqrt |> int
 
-    while factor <= q do
-        num <- factor
-        while not (Array.get bitArray num) && num < sieveSize do
-            num <- num + 2
-        factor <- num
+    let rec findNext num =
+        if Array.get bitArray num
+        then num
+        else findNext (num + 2)
 
-        num <- factor * factor
-        while num < sieveSize do
-            Array.set bitArray num false
-            num <- num + factor * 2
-
-        factor <- factor + 2
+    let eliminate factor =
+        let rec loop num =
+            if num < sieveSize then
+                Array.set bitArray num false
+                loop (num + factor * 2)
+            else ()
+        loop (factor * factor)
+      
+    let rec run factor =
+        if factor <= q then
+            let factor = findNext factor
+            eliminate factor
+            run (factor +  2)
+        else ()
+    run 3
 
 let printResults showResults duration passes sieveSize bitArray =
     let primes = bitArray |> filterPrimes 
@@ -58,14 +64,14 @@ let printResults showResults duration passes sieveSize bitArray =
 let main _ =
     let mutable passes = 0
     let sieveSize = 1_000_000
-    let mutable sieve = initPrimeSieve sieveSize
     let tStart = DateTime.UtcNow
 
     while (DateTime.UtcNow - tStart).TotalSeconds < 5. do
-        sieve <- initPrimeSieve sieveSize
-        runSieve sieveSize &sieve
+        initPrimeSieve sieveSize |> runSieve sieveSize
         passes <- passes + 1
 
     let tD = DateTime.UtcNow - tStart
-    sieve |> printResults false tD.TotalSeconds passes sieveSize
+    let checkBitArray = initPrimeSieve sieveSize
+    runSieve sieveSize checkBitArray
+    printResults false tD.TotalSeconds passes sieveSize checkBitArray
     0 // return an integer exit code
