@@ -80,3 +80,11 @@ Alternately, in the directory containing this README file,
 It'll take a little while to compile the first time.
 
 To play with the code, the simplest approach is to use *Visual Studio Code* and install the `rust-analyzer` plugin.
+
+## Docker
+
+You can also run the solution using Docker, without installing Rust. This will run the `abstracted` variant.
+
+```
+./run-docker.sh
+```
