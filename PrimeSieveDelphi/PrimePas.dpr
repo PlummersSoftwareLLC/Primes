@@ -177,9 +177,13 @@ begin
 			end;
 		end;
 
-		// If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
+		// If marking factor 3, you wouldn't mark 6 (it's a mult of 2).
+		// Similarly, if marking factor 5, you wouldn't mark 10 (it's a mult of 2), 15 (it's a mult of 3), or 20 (it's a mult of 2).
+		// For any factor X, any of it's multiples below the smallest prime number that we haven't yet found,
+		// which happens to be itself, will already be marked.
+		// So start with the square of this factor.
 		// We can then step by factor * 2 because every second one is going to be even by definition
-		num := factor*3;
+		num := factor*factor;
 		while num <= FSieveSize do
 		begin
 			ClearBit(num);
