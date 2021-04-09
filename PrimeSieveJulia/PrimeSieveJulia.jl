@@ -34,7 +34,7 @@ function runSieve!(sieve::prime_sieve)
 			end
 		end
 
-		for num in factor*3:factor*2:sieve.sieveSize
+		for num in factor*factor:factor*2:sieve.sieveSize
 			sieve.rawbits[Int((num+1)/2)] = false
 		end
 
