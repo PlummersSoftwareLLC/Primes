@@ -21,16 +21,17 @@ I'm compiling on a 64-bit machine and 64 bit executable).
 This is the output on my machine as of April 2021:
 
 ```
+Compiling with flags: -Ofast -march=native -mtune=native -funroll-all-loops
 Calculate primes up to 1000000.
 Timer resolution: 1000 ticks per second.
 Word size: 32 bits.
 
-      Byte-map - 1 of 2 tested:  6146 passes completed in 5 seconds (0.814 ms per pass).
-       Bit-map - 1 of 2 tested:  8400 passes completed in 5 seconds (0.595 ms per pass).
-       Bit-map - 2 of 6 tested: 10572 passes completed in 5 seconds (0.473 ms per pass).
-      Bit-map - 8 of 30 tested: 12349 passes completed in 5 seconds (0.405 ms per pass).
-                   1/2 Bit-map:  7656 passes completed in 5 seconds (0.653 ms per pass).
-                   1/3 Bit-map:  6746 passes completed in 5 seconds (0.741 ms per pass).
+      Byte-map - 1 of 2 tested:  6616 passes completed in 5 seconds (0.756 ms per pass).
+       Bit-map - 1 of 2 tested: 11310 passes completed in 5 seconds (0.442 ms per pass).
+       Bit-map - 2 of 6 tested: 14694 passes completed in 5 seconds (0.340 ms per pass).
+      Bit-map - 8 of 30 tested: 17192 passes completed in 5 seconds (0.291 ms per pass).
+                   1/2 Bit-map:  9985 passes completed in 5 seconds (0.501 ms per pass).
+                   1/3 Bit-map:  7211 passes completed in 5 seconds (0.693 ms per pass).
 ```
 
 ## The Algorithms

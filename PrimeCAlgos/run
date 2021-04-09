@@ -1,2 +1,15 @@
 # Compilation and execution on Git-Bash (GNU C Compiler)
-gcc -Ofast sieve.c -o sieve && ./sieve
+set -e
+
+# Use --test to cut measurement interval to 1 second (from 5 as is used
+# in Dave's standard benchmark) and set some compile warnings.
+if [[ $1 == "--test" ]]; then
+    DFLAGS="-DMEASUREMENT_SECS=1"
+    TFLAGS="-Wall"
+fi
+
+OFLAGS="-Ofast -march=native -mtune=native -funroll-all-loops"
+
+echo Compiling with flags: $OFLAGS
+
+gcc $DFLAGS $TFLAGS $OFLAGS sieve.c -o sieve && ./sieve

@@ -9,18 +9,20 @@ by Mike Koss (mike@mckoss.com)
 #include <stdlib.h>     // calloc
 #include <assert.h>     // assert
 #include <math.h>       // sqrt
+#include <stdint.h>     // uint32_t
 
 #define MEASUREMENT_SECS (5)
 #define TRUE (1)
 #define FALSE (0)
 
-#define WORD unsigned long
-#define BITS_PER_WORD (sizeof(WORD) * 8)
+// 32-bit words seem to yield the highest performance for bit-masking ops
+#define WORD uint32_t
+#define BITS_PER_WORD (int) (sizeof(WORD) * 8)
 #define BYTE unsigned char
 
 // Primes to one million.
-#define MAX_NUMBER 1000000L
-#define EXPECTED_PRIMES 78498L
+#define MAX_NUMBER 1000000
+#define EXPECTED_PRIMES 78498
 
 //
 // Simple prime number sieve - one byte per number.
@@ -208,12 +210,6 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
 
    // Only numbers congruent to candidates mod 30 can be prime.
    unsigned int candidates[8] = {1, 7, 11, 13, 17, 19, 23, 29};
-
-   // Build a quick-lookup map.
-   unsigned int isModCandidate[30] = {FALSE};
-   for (int i = 0; i < 8; i++) {
-      isModCandidate[i] = TRUE;
-   }
 
    // Build a stepping map.
    unsigned int steps[8];
@@ -412,7 +408,7 @@ void timedTest(int primeFinder(int, int), char *title) {
    // Check first for accuracy.
    int primeCount = primeFinder(MAX_NUMBER, TRUE);
    if (primeCount != EXPECTED_PRIMES) {
-      printf("%s Expected %ld primes - but found %ld!\n",
+      printf("%s Expected %d primes - but found %d!\n",
                title, EXPECTED_PRIMES, primeCount);
       assert(FALSE);
    }
