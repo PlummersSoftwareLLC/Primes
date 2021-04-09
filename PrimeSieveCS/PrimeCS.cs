@@ -112,7 +112,8 @@ namespace PrimeSieveCS
                 }
                 if (showResults)
                     Console.WriteLine("");
-                Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + this.sieveSize + ", Count: " + count + ", Valid: " + validateResults());
+                Console.WriteLine($"Passes: {passes}, Time: {duration:n8}, Avg: {(duration / passes):n8}, Limit: {this.sieveSize}, Count: {count}, Valid: {validateResults()}");
+
             }
         }
 
