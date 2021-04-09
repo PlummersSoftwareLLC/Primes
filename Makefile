@@ -12,19 +12,21 @@ python:
 	- python3 PrimeSievePY/PrimePY.py
 
 run:
-	- touch result.json
+	- pip install graph-cli --q
+	- echo "impl,primes" > primes.csv
 	- make cpp
 	- make rust
 	- make nim
 	- make d
 	- make dotnet
 	- make python
-
+	- graph primes.csv -o primes.png --bar
+	
 clean:
-	- rm PrimeCPP/a.out PrimeRs/target* PrimeCS/obj/* PrimeNim/PrimeNim -rf
+	- rm a.out PrimeRs/target* PrimeCS/obj/ PrimeNim/PrimeNim PrimeD/primed PrimeD/dub_*  -rf 
 
 print_versions:
-	- g++ --version
+	- clang++ --version
 	- dotnet --version
 	- rustc --version
 	- python3 --version

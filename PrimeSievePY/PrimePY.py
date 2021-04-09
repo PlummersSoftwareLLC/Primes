@@ -128,7 +128,7 @@ while (timeit.default_timer() - tStart < 5):            #  Run until more than 5
 tD = timeit.default_timer() - tStart                    #  After the "at least 5 seconds", get the actual elapsed
 
 sieve.printResults(False, tD, passes)                   #  Display outcome
-
+open("primes.csv", "a").write("Python 3," + str(passes) + "\n")
 
 
 

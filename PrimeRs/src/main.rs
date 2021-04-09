@@ -118,6 +118,15 @@ fn main() {
         let elapsed = t_start.elapsed();
         if elapsed >= Duration::from_secs(5) {
             sieve.print_results(false, elapsed, passes);
+            use std::io::prelude::*;
+            std::fs::OpenOptions::new()
+                .append(true)
+                .open("../primes.csv")
+                .map(|mut f| {
+                    f.write_fmt(format_args!("Rust,{}\n", passes))
+                        .expect("File write failed")
+                })
+                .expect("Opening file failed");
             break;
         }
     }

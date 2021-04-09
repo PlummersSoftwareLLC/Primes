@@ -109,6 +109,8 @@ void main()
 		if (elapsed >= 5000)
 		{
 			sieve.printResult(false, elapsed, passes);
+			import std.stdio: File, writefln;
+			File("../primes.csv", "a").writefln!"D,%s"(passes);
 			break;
 		}
 

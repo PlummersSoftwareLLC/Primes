@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -126,8 +127,13 @@ namespace PrimeCS
             }
 
             var tD = DateTime.UtcNow - tStart;
-            if (sieve != null)
+            if (sieve != null) {
                 sieve.printResults(false, tD.TotalSeconds, passes);
+                using (StreamWriter sw = File.AppendText("../primes.csv")) 
+                {
+                    sw.WriteLine($"C#,{passes}");
+                }
+            }
         }
     }
 }

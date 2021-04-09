@@ -10,6 +10,7 @@
 #include <cstring>
 #include <cmath>
 #include <vector>
+#include <fstream>
 
 using namespace std;
 using namespace std::chrono;
@@ -125,6 +126,9 @@ int main()
         if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
         {
             sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000, passes);
+            std::ofstream outfile{"primes.csv", std::ios_base::app};
+            outfile << "C++," << passes << std::endl;
+            outfile.close();
             break;
         }
     }

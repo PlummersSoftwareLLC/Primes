@@ -80,6 +80,7 @@ proc main() =
     let elapsed = getTime() - tStart
     if elapsed >= initDuration(seconds = 5):
       sieve.printResults(false, elapsed, passes)
+      open("../primes.csv", fmAppend).writeLine("Nim,", passes)
       break
 
 main()
