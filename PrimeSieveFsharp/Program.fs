@@ -24,7 +24,7 @@ let validateResults primeCounts sieveSize primes =
     | Some expected -> expected = countPrimes primes
     | None -> false
 
-let runSieve sieveSize (bitArray: bool[]) =
+let runSieve sieveSize (bitArray: byref<bool[]>) =
     let mutable factor = 3
     let mutable num = 0
     let q = sieveSize |> float |> sqrt |> int
@@ -41,7 +41,6 @@ let runSieve sieveSize (bitArray: bool[]) =
             num <- num + factor * 2
 
         factor <- factor + 2
-    bitArray
 
 let printResults showResults duration passes sieveSize bitArray =
     let primes = bitArray |> filterPrimes 
@@ -56,10 +55,11 @@ let printResults showResults duration passes sieveSize bitArray =
         (validateResults primeCounts sieveSize primes)
 
 [<EntryPoint>]
-let main argv =
+let main _ =
     let mutable passes = 0
     let sieveSize = 1_000_000
-    let runSieve() = initPrimeSieve sieveSize |> runSieve sieveSize
+    let mutable sieve = initPrimeSieve sieveSize
+    let runSieve() = runSieve sieveSize &sieve
     let tStart = DateTime.UtcNow
 
     while (DateTime.UtcNow - tStart).TotalSeconds < 5. do
@@ -67,5 +67,5 @@ let main argv =
         passes <- passes + 1
 
     let tD = DateTime.UtcNow - tStart
-    runSieve() |> printResults false tD.TotalSeconds passes sieveSize
+    sieve |> printResults false tD.TotalSeconds passes sieveSize
     0 // return an integer exit code
