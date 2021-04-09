@@ -61,7 +61,7 @@ class PrimeSieve
                 }
             }
 
-            for ($i = $factor * 3; $i <= $this->sieveSize; $i += $factor * 2) {
+            for ($i = $factor * $factor; $i <= $this->sieveSize; $i += $factor * 2) {
                 $this->clearBit($i);
             }
 
