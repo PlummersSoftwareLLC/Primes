@@ -11,7 +11,9 @@ by Mike Koss (mike@mckoss.com)
 #include <math.h>       // sqrt
 #include <stdint.h>     // uint32_t
 
+#ifndef MEASUREMENT_SECS
 #define MEASUREMENT_SECS (5)
+#endif
 #define TRUE (1)
 #define FALSE (0)
 
