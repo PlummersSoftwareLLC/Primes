@@ -22,6 +22,10 @@ by Mike Koss (mike@mckoss.com)
 #define BITS_PER_WORD (int) (sizeof(WORD) * 8)
 #define BYTE unsigned char
 
+#define indexOf(n) ((n) / BITS_PER_WORD)
+#define maskOf(n) (WORD) 1 << n % BITS_PER_WORD
+#define allocOf(n) indexOf(n) + 1
+
 // Primes to one million.
 #define MAX_NUMBER 1000000
 #define EXPECTED_PRIMES 78498
@@ -85,9 +89,6 @@ int countPrimesBytes(int maxNumber, int fNeedCount) {
 //   0: Prime
 //   1: Composite
 //
-#define indexOf(n) n / BITS_PER_WORD
-#define maskOf(n) (WORD) 1 << n % BITS_PER_WORD
-#define allocOf(n) indexOf(n) + 1
 int countPrimes(int maxNumber, int fNeedCount) {
    // Starts off zero-initialized.
    WORD *buffer = (WORD *) calloc(allocOf(maxNumber), sizeof(WORD));
@@ -140,9 +141,6 @@ int countPrimes(int maxNumber, int fNeedCount) {
 //
 // maxNumber - find all primes strictly LESS than this number.
 //
-#define indexOf(n) n / BITS_PER_WORD
-#define maskOf(n) (WORD) 1 << n % BITS_PER_WORD
-#define allocOf(n) indexOf(n) + 1
 int countPrimes2of6(int maxNumber, int fNeedCount) {
    // Starts off zero-initialized.
    WORD *buffer = (WORD *) calloc(allocOf(maxNumber), sizeof(WORD));
@@ -202,9 +200,6 @@ int countPrimes2of6(int maxNumber, int fNeedCount) {
 //
 // maxNumber - find all primes strictly LESS than this number.
 //
-#define indexOf(n) n / BITS_PER_WORD
-#define maskOf(n) (WORD) 1 << n % BITS_PER_WORD
-#define allocOf(n) indexOf(n) + 1
 int countPrimes8of30(int maxNumber, int fNeedCount) {
    // Starts off zero-initialized.
    WORD *buffer = (WORD *) calloc(allocOf(maxNumber), sizeof(WORD));
@@ -212,6 +207,10 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
 
    // Only numbers congruent to candidates mod 30 can be prime.
    unsigned int candidates[8] = {1, 7, 11, 13, 17, 19, 23, 29};
+
+   // Cached bitmaps and index offsets for bit twiddling loop.
+   WORD masks[BITS_PER_WORD / 2];
+   unsigned int offsets[BITS_PER_WORD / 2];
 
    // Build a stepping map.
    unsigned int steps[8];
@@ -239,8 +238,39 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
       // The following loop is the hotspot for this algorithm.
       // No need to start less than p^2 since all those
       // multiples have already been marked.
-      for (unsigned int m = p * p; m < maxNumber; m += 2 * p) {
-         buffer[indexOf(m)] |= maskOf(m);
+
+      // Performance optimization: since the bit mask we or
+      // into the word (and the index offset added to the base)
+      // RECUR every 16 iterations of this loop (for 32-bit words), we
+      // can precalculate them and use them over and over until the end
+      // of the sieve array.
+
+      unsigned int base = indexOf(p * p);
+      unsigned int cumOffset = 0;
+
+      for (int i = 0, m = p * p; i < BITS_PER_WORD / 2; i++, m += 2 * p) {
+         masks[i] = maskOf(m);
+         offsets[i] = indexOf(m + 2 * p) - indexOf(m);
+         cumOffset += offsets[i];
+         // printf("%d %d %d: %08x\n", m, i, offsets[i], masks[i]);
+      }
+
+      // Now just rip through the array or-ing in these masks in an
+      // identical pattern.
+      unsigned int iStop = indexOf(maxNumber);
+      unsigned int i = base;
+      for (; i < iStop - cumOffset;) {
+         // Do even multiple of 16 with no array bound check.
+         for (int j = 0; j < BITS_PER_WORD / 2; j++) {
+            buffer[i] |= masks[j];
+            i = i + offsets[j];
+         }
+      }
+
+      // Finish last few words being careful about array bounds.
+      for (int j = 0; j < BITS_PER_WORD / 2 && i <= iStop; j++) {
+         buffer[i] |= masks[j];
+         i = i + offsets[j];
       }
    }
 
