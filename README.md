@@ -34,3 +34,12 @@ Copyright (c) 2006-2020 by Andreas Rumpf
 git hash: 2ff517462bf8609b30e6134c9665
 active boot switches: -d:release
 ```
+
+---
+## Building:
+
+Consult the makefile. Use `make run`.
+
+## Contributing 
+
+Consult the `CONTRIBUTING.md`.
