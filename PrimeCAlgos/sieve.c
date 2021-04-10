@@ -233,7 +233,7 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
       }
 
       count++;
-      // printf("%d, ", p);
+      // if (p < 1000) printf("%d, ", p);
 
       // The following loop is the hotspot for this algorithm.
       // No need to start less than p^2 since all those
@@ -248,12 +248,32 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
       unsigned int base = indexOf(p * p);
       unsigned int cumOffset = 0;
 
-      for (int i = 0, m = p * p; i < BITS_PER_WORD / 2; i++, m += 2 * p) {
-         masks[i] = maskOf(m);
-         offsets[i] = indexOf(m + 2 * p) - indexOf(m);
-         cumOffset += offsets[i];
-         // printf("%d %d %d: %08x\n", m, i, offsets[i], masks[i]);
+      for (int i = 0; i < BITS_PER_WORD / 2; i++) {
+         masks[i] = 0;
       }
+
+      int iUsed = 0;
+      int offset = 0;
+
+      for (int i = 0, m = p * p; i < BITS_PER_WORD / 2; i++, m += 2 * p) {
+         masks[iUsed] |= maskOf(m);
+         offset = indexOf(m + 2 * p) - indexOf(m);
+         // Don't advance to a new word unless the next
+         // bit is in the same word!
+         if (offset != 0) {
+            offsets[iUsed] = offset;
+            iUsed++;
+            cumOffset += offset;
+         }
+      }
+
+      // In this case, the bits in the last word can just
+      // be merged to the first.
+      if (offset == 0) {
+         masks[0] |= masks[iUsed];
+      }
+
+      // In all cases, iUsed will be 1 BEYOND the last mask used.
 
       // Now just rip through the array or-ing in these masks in an
       // identical pattern.
@@ -261,14 +281,14 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
       unsigned int i = base;
       for (; i < iStop - cumOffset;) {
          // Do even multiple of 16 with no array bound check.
-         for (int j = 0; j < BITS_PER_WORD / 2; j++) {
+         for (int j = 0; j < iUsed; j++) {
             buffer[i] |= masks[j];
             i = i + offsets[j];
          }
       }
 
       // Finish last few words being careful about array bounds.
-      for (int j = 0; j < BITS_PER_WORD / 2 && i <= iStop; j++) {
+      for (int j = 0; j < iUsed && i <= iStop; j++) {
          buffer[i] |= masks[j];
          i = i + offsets[j];
       }
@@ -281,7 +301,7 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
             continue;
          }
          count++;
-         // printf("%d, ", p);
+         // if (p < 1000) printf("%d, ", p);
       }
    }
 
