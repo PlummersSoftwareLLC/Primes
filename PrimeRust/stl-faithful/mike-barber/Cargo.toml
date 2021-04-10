@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 num_cpus="1.13"
+structopt = "0.3"
 
 [profile.release]
 opt-level = 3

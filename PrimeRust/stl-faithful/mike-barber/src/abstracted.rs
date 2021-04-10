@@ -1,6 +1,6 @@
-use std::time::{Duration, Instant};
-
 use primes::{print_results, FlagStorage, FlagStorageBitVector, FlagStorageByteVector, PrimeSieve};
+use std::time::{Duration, Instant};
+use structopt::StructOpt;
 
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
@@ -29,11 +29,13 @@ pub mod primes {
         }
     }
     impl PrimeValidator {
-        pub fn is_valid(&self, sieve_size: usize, result: usize) -> bool {
+        // Return Some(true) or Some(false) if we know the answer, or None if we don't have
+        // an entry for the given sieve_size.
+        pub fn is_valid(&self, sieve_size: usize, result: usize) -> Option<bool> {
             if let Some(&expected) = self.0.get(&sieve_size) {
-                result == expected
+                Some(result == expected)
             } else {
-                false
+                None
             }
         }
 
@@ -208,40 +210,94 @@ pub mod primes {
             prime_sieve.sieve_size,
             count,
             match validator.is_valid(prime_sieve.sieve_size, count) {
-                true => "Pass",
-                false => "Fail",
+                Some(true) => "Pass",
+                Some(false) => "Fail",
+                None => "Unknown"
             }
         );
     }
 }
 
+/// Rust program to calculate number of primes under a given limit.
+#[derive(StructOpt, Debug)]
+#[structopt(name = "abstracted")]
+struct CommandLineOptions {
+    /// Number of threads. If not specified, do two runs for both
+    /// single threaded case and maximum concurrency.
+    #[structopt(short, long)]
+    threads: Option<usize>,
+
+    /// Run duration
+    #[structopt(short, long, default_value = "5")]
+    seconds: u64,
+
+    /// Prime sieve limit -- count primes that occur under or equal to this number.
+    /// If you want this compared with known results, pick an order of 10: 10,100,...100000000
+    #[structopt(short, long, default_value = "1000000")]
+    limit: usize,
+
+    /// Number of times to run the experiment
+    #[structopt(short, long, default_value = "3")]
+    repetitions: usize,
+
+    /// Print out all primes found
+    #[structopt(short, long)]
+    print: bool,
+
+    /// Run variant that uses bit-level storage
+    #[structopt(long)]
+    bits: bool,
+
+    /// Run variant that uses byte-level storage
+    #[structopt(long)]
+    bytes: bool,
+}
+
 fn main() {
-    let limit = 1000000;
-    let repetitions = 3;
-    let run_duration = Duration::from_secs(5);
+    // command line options are handled by the `structopt` and `clap` crates, which
+    // makes life very pleasant indeed.
+    let opt = CommandLineOptions::from_args();
 
-    // single thread
-    let threads = 1;
-    print_header(threads, limit, run_duration);
-    for _ in 0..repetitions {
-        run_implementation::<FlagStorageByteVector>("Byte storage", run_duration, threads, limit);
-    }
+    let limit = opt.limit;
+    let repetitions = opt.repetitions;
+    let run_duration = Duration::from_secs(opt.seconds);
 
-    print_header(threads, limit, run_duration);
-    for _ in 0..repetitions {
-        run_implementation::<FlagStorageBitVector>("Bit storage", run_duration, threads, limit);
-    }
+    let thread_options = match opt.threads {
+        Some(t) => vec![t],
+        None => vec![1, num_cpus::get()],
+    };
 
-    // multithread
-    let threads = num_cpus::get();
-    print_header(threads, limit, run_duration);
-    for _ in 0..repetitions {
-        run_implementation::<FlagStorageByteVector>("Byte storage", run_duration, threads, limit);
-    }
+    let (run_bits, run_bytes) = match (opt.bits, opt.bytes) {
+        (false, false) => (true, true),
+        (bits, bytes) => (bits, bytes),
+    };
 
-    print_header(threads, limit, run_duration);
-    for _ in 0..repetitions {
-        run_implementation::<FlagStorageBitVector>("Bit storage", run_duration, threads, limit);
+    for threads in thread_options {
+        if run_bytes {
+            print_header(threads, limit, run_duration);
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageByteVector>(
+                    "Byte storage",
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+        }
+
+        if run_bits {
+            print_header(threads, limit, run_duration);
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVector>(
+                    "Bit storage",
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+        }
     }
 }
 
@@ -268,6 +324,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
     run_duration: Duration,
     num_threads: usize,
     limit: usize,
+    print_primes: bool,
 ) {
     // spin up N threads; each will terminate itself after `run_duration`, returning
     // the last sieve as well as the total number of counts.
@@ -300,7 +357,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
         print_results(
             label,
             &sieve,
-            false,
+            print_primes,
             end_time - start_time,
             total_passes,
             num_threads,
