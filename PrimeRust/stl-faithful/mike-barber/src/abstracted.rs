@@ -220,35 +220,55 @@ fn main() {
     let repetitions = 3;
     let run_duration = Duration::from_secs(5);
 
-    print_header(1, limit, run_duration);
+    // single thread
+    let threads = 1;
+    print_header(threads, limit, run_duration);
     for _ in 0..repetitions {
-        run_implementation::<FlagStorageByteVector>("Byte storage", run_duration, 1, limit);
+        run_implementation::<FlagStorageByteVector>("Byte storage", run_duration, threads, limit);
     }
 
-    println!();
+    print_header(threads, limit, run_duration);
     for _ in 0..repetitions {
-        run_implementation::<FlagStorageBitVector>("Bit storage", run_duration, 1, limit);
+        run_implementation::<FlagStorageBitVector>("Bit storage", run_duration, threads, limit);
+    }
+
+    // multithread
+    let threads = num_cpus::get();
+    print_header(threads, limit, run_duration);
+    for _ in 0..repetitions {
+        run_implementation::<FlagStorageByteVector>("Byte storage", run_duration, threads, limit);
+    }
+
+    print_header(threads, limit, run_duration);
+    for _ in 0..repetitions {
+        run_implementation::<FlagStorageBitVector>("Bit storage", run_duration, threads, limit);
     }
 }
 
 fn print_header(threads: usize, limit: usize, run_duration: Duration) {
     println!();
-    println!("Computing primes to {} on {} thread{} for {} second{}.",
+    println!(
+        "Computing primes to {} on {} thread{} for {} second{}.",
         limit,
         threads,
         match threads {
             1 => "",
-            _ => "s"
+            _ => "s",
         },
         run_duration.as_secs(),
         match run_duration.as_secs() {
             1 => "",
-            _ => "s"
+            _ => "s",
         }
     );
 }
 
-fn run_implementation<T: 'static + FlagStorage + Send>(label: &str, run_duration: Duration, num_threads: usize, limit: usize) {
+fn run_implementation<T: 'static + FlagStorage + Send>(
+    label: &str,
+    run_duration: Duration,
+    num_threads: usize,
+    limit: usize,
+) {
     // spin up N threads; each will terminate itself after `run_duration`, returning
     // the last sieve as well as the total number of counts.
     let start_time = Instant::now();
