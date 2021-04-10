@@ -22,8 +22,8 @@ by Mike Koss (mike@mckoss.com)
 #define BITS_PER_WORD (int) (sizeof(WORD) * 8)
 #define BYTE unsigned char
 
-#define indexOf(n) ((n) / BITS_PER_WORD)
-#define maskOf(n) (WORD) 1 << n % BITS_PER_WORD
+#define indexOf(n) ((n) / 2 / BITS_PER_WORD)
+#define maskOf(n) (WORD) 1 << (n / 2) % BITS_PER_WORD
 #define allocOf(n) indexOf(n) + 1
 
 // Primes to one million.
@@ -209,8 +209,8 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
    unsigned int candidates[8] = {1, 7, 11, 13, 17, 19, 23, 29};
 
    // Cached bitmaps and index offsets for bit twiddling loop.
-   WORD masks[BITS_PER_WORD / 2];
-   unsigned int offsets[BITS_PER_WORD / 2];
+   WORD masks[BITS_PER_WORD];
+   unsigned int offsets[BITS_PER_WORD];
 
    // Build a stepping map.
    unsigned int steps[8];
@@ -248,14 +248,14 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
       unsigned int base = indexOf(p * p);
       unsigned int cumOffset = 0;
 
-      for (int i = 0; i < BITS_PER_WORD / 2; i++) {
+      for (int i = 0; i < BITS_PER_WORD; i++) {
          masks[i] = 0;
       }
 
       int iUsed = 0;
       int offset = 0;
 
-      for (int i = 0, m = p * p; i < BITS_PER_WORD / 2; i++, m += 2 * p) {
+      for (int i = 0, m = p * p; i < BITS_PER_WORD; i++, m += 2 * p) {
          masks[iUsed] |= maskOf(m);
          offset = indexOf(m + 2 * p) - indexOf(m);
          // Don't advance to a new word unless the next
@@ -279,7 +279,7 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
       // identical pattern.
       unsigned int iStop = indexOf(maxNumber);
       unsigned int i = base;
-      for (; i < iStop - cumOffset;) {
+      for (; i <= iStop - cumOffset;) {
          // Do even multiple of 16 with no array bound check.
          for (int j = 0; j < iUsed; j++) {
             buffer[i] |= masks[j];
@@ -307,71 +307,6 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
 
    free(buffer);
    
-   return count;
-}
-
-//
-// Only odd (mod 2) prime number sieve.
-//
-// maxNumber - find all primes strictly LESS than this number.
-//
-// A bitmap where:
-//
-//   0: Prime
-//   1: Composite
-//
-// Bits in lsb order:
-// 1, 3, 5, 7, 9, ... 
-//
-// 1-based - only odd numbers
-// HACK - Remove -1 since integer division ROUNDS DOWN ANYWAY.
-// SPEEDUP BY 5%!
-#define indexOf2(n) (n) / 2 / BITS_PER_WORD
-#define maskOf2(n) (WORD) 1 << ((n) / 2) % BITS_PER_WORD
-#define allocOf2(n) indexOf2(n) + 1
-int countPrimesMod2(int maxNumber, int fNeedCount) {
-   // Starts off zero-initialized.
-   WORD *buffer = (WORD *) calloc(allocOf2(maxNumber), sizeof(WORD));
-   unsigned int maxFactor = sqrt(maxNumber) + 1;
-
-   // We get 2 for "free".
-   int count = 1;
-   unsigned int p;
-
-   // Look for next prime
-   for (p = 3; p <= maxFactor; p += 2) {
-      // A 1 bit means it's composite - keep searching.
-      if (buffer[indexOf2(p)] & maskOf2(p)) {
-         continue;
-      }
-      count++;
-      // printf("%d, ", p);
-
-      // The following loop is the hotspot for this algorithm
-      // executing about 800,000 times for a scan up to 1 million.
-      // I tried pre-calculating masks - but that just slowed
-      // it down.
-
-      // No need to start less than p^2 since all those
-      // multiples have already been marked.
-      for (unsigned int m = p * p; m < maxNumber; m += 2 * p) {
-         buffer[indexOf2(m)] |= maskOf2(m);
-      }
-   }
-
-   // Add all the remaining primes above sqrt(maxNumber)
-   if (fNeedCount) {
-      for (unsigned int q = p; q < maxNumber; q += 2) {
-         if (buffer[indexOf2(q)] & maskOf2(q)) {
-            continue;
-         }
-         count++;
-         // printf("%d, ", q);
-      }
-   }
-
-   free(buffer);
-
    return count;
 }
 
@@ -491,7 +426,6 @@ int main() {
    timedTest(countPrimes, "Bit-map - 1 of 2 tested");
    timedTest(countPrimes2of6, "Bit-map - 2 of 6 tested");
    timedTest(countPrimes8of30, "Bit-map - 8 of 30 tested");
-   timedTest(countPrimesMod2, "1/2 Bit-map");
    timedTest(countPrimesMod6, "1/3 Bit-map");
 
    return(0);
