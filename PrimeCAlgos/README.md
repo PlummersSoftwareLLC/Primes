@@ -18,20 +18,23 @@ For algorithms that use a bit-mask to store the sieve,
 I found a word size of 32 bits was fastest (even though
 I'm compiling on a 64-bit machine and 64 bit executable).
 
+*UPDATE: With the latest optimizations to the 8 of 30 function,
+the 64 bit code is now 7% faster than 32 bit! - mck 4/9/21*
+
 This is the output on my machine as of April 2021:
 
 ```
 Compiling with flags: -Ofast -march=native -mtune=native -funroll-all-loops
 Calculate primes up to 1000000.
 Timer resolution: 1000 ticks per second.
-Word size: 32 bits.
+Word size: 64 bits.
 
-      Byte-map - 1 of 2 tested:  6524 passes completed in 5 seconds (0.766 ms per pass).
-       Bit-map - 1 of 2 tested: 11094 passes completed in 5 seconds (0.451 ms per pass).
-       Bit-map - 2 of 6 tested: 14404 passes completed in 5 seconds (0.347 ms per pass).
-      Bit-map - 8 of 30 tested: 19297 passes completed in 5 seconds (0.259 ms per pass).
-                   1/2 Bit-map:  9911 passes completed in 5 seconds (0.504 ms per pass).
-                   1/3 Bit-map:  7233 passes completed in 5 seconds (0.691 ms per pass).
+      Byte-map - 1 of 2 tested:  6644 passes completed in 5 seconds (0.753 ms per pass).
+       Bit-map - 1 of 2 tested: 10762 passes completed in 5 seconds (0.465 ms per pass).
+       Bit-map - 2 of 6 tested: 14120 passes completed in 5 seconds (0.354 ms per pass).
+      Bit-map - 8 of 30 tested: 20317 passes completed in 5 seconds (0.246 ms per pass).
+                   1/2 Bit-map:  9492 passes completed in 5 seconds (0.527 ms per pass).
+                   1/3 Bit-map:  7417 passes completed in 5 seconds (0.674 ms per pass).
 ```
 
 ## The Algorithms

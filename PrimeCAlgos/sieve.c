@@ -18,7 +18,7 @@ by Mike Koss (mike@mckoss.com)
 #define FALSE (0)
 
 // 32-bit words seem to yield the highest performance for bit-masking ops
-#define WORD uint32_t
+#define WORD uint64_t
 #define BITS_PER_WORD (int) (sizeof(WORD) * 8)
 #define BYTE unsigned char
 
