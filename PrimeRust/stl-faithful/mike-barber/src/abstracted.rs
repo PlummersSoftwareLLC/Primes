@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use primes::{FlagStorage, FlagStorageBitVector, FlagStorageByteVector, PrimeSieve};
+use primes::{print_results, FlagStorage, FlagStorageBitVector, FlagStorageByteVector, PrimeSieve};
 
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
@@ -110,6 +110,7 @@ pub mod primes {
                 // seems to know that we're within bounds, so it yields no performance
                 // benefit.
                 *self.words.get_mut(word_idx).unwrap() &= !(1 << bit_idx);
+                //unsafe { *self.words.get_unchecked_mut(word_idx) &= !(1 << bit_idx); }
                 i += skip;
             }
         }
@@ -176,75 +177,113 @@ pub mod primes {
                 factor += 2;
             }
         }
+    }
 
-        pub fn print_results(
-            &self,
-            show_results: bool,
-            duration: Duration,
-            passes: usize,
-            validator: &PrimeValidator,
-        ) {
-            if show_results {
-                print!("2,");
-                for num in (3..self.sieve_size).filter(|n| self.is_num_flagged(*n)) {
-                    print!("{},", num);
-                }
-                print!("\n");
+    pub fn print_results<T: FlagStorage>(
+        label: &str,
+        prime_sieve: &PrimeSieve<T>,
+        show_results: bool,
+        duration: Duration,
+        passes: usize,
+        threads: usize,
+        validator: &PrimeValidator,
+    ) {
+        if show_results {
+            print!("2,");
+            for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.is_num_flagged(*n)) {
+                print!("{},", num);
             }
-
-            let count = self.count_primes();
-
-            println!(
-                "Passes: {}, Time: {}, Avg: {}, Limit: {}, Count: {}, Valid: {}",
-                passes,
-                duration.as_secs_f32(),
-                duration.as_secs_f32() / passes as f32,
-                self.sieve_size,
-                count,
-                validator.is_valid(self.sieve_size, self.count_primes())
-            );
+            print!("\n");
         }
+
+        let count = prime_sieve.count_primes();
+
+        println!(
+            "{:15} Passes: {}, Threads: {}, Time: {:.10}, Average: {:.10}, Limit: {}, Counts: {}, Valid: {}",
+            label,
+            passes,
+            threads,
+            duration.as_secs_f32(),
+            duration.as_secs_f32() / passes as f32,
+            prime_sieve.sieve_size,
+            count,
+            match validator.is_valid(prime_sieve.sieve_size, count) {
+                true => "Pass",
+                false => "Fail",
+            }
+        );
     }
 }
 
 fn main() {
+    let limit = 1000000;
     let repetitions = 3;
-    let duration = Duration::from_secs(5);
-    
-    println!("Running for {} seconds...", duration.as_secs());
-    println!();
+    let run_duration = Duration::from_secs(5);
 
+    print_header(1, limit, run_duration);
     for _ in 0..repetitions {
-        print!("Byte storage:  ");
-        run_implementation::<FlagStorageByteVector>(duration);
+        run_implementation::<FlagStorageByteVector>("Byte storage", run_duration, 1, limit);
     }
 
     println!();
-
     for _ in 0..repetitions {
-        print!("Bit storage:   ");
-        run_implementation::<FlagStorageBitVector>(duration);
+        run_implementation::<FlagStorageBitVector>("Bit storage", run_duration, 1, limit);
     }
 }
 
-fn run_implementation<T: FlagStorage>(run_duration: Duration) {
-    let mut passes = 0;
-    let mut prime_sieve = None;
+fn print_header(threads: usize, limit: usize, run_duration: Duration) {
+    println!();
+    println!("Computing primes to {} on {} thread{} for {} second{}.",
+        limit,
+        threads,
+        match threads {
+            1 => "",
+            _ => "s"
+        },
+        run_duration.as_secs(),
+        match run_duration.as_secs() {
+            1 => "",
+            _ => "s"
+        }
+    );
+}
 
+fn run_implementation<T: 'static + FlagStorage + Send>(label: &str, run_duration: Duration, num_threads: usize, limit: usize) {
+    // spin up N threads; each will terminate itself after `run_duration`, returning
+    // the last sieve as well as the total number of counts.
     let start_time = Instant::now();
-    while (Instant::now() - start_time) < run_duration {
-        let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(1000000);
-        sieve.run_sieve();
-        prime_sieve.replace(sieve);
-        passes += 1;
-    }
+    let threads: Vec<_> = (0..num_threads)
+        .map(|_| {
+            std::thread::spawn(move || {
+                let mut local_passes = 0;
+                let mut last_sieve = None;
+                while (Instant::now() - start_time) < run_duration {
+                    let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
+                    sieve.run_sieve();
+                    last_sieve.replace(sieve);
+                    local_passes += 1;
+                }
+                // return local pass count and last sieve
+                (local_passes, last_sieve)
+            })
+        })
+        .collect();
+
+    // wait for threads to finish, and record end time
+    let results: Vec<_> = threads.into_iter().map(|t| t.join().unwrap()).collect();
     let end_time = Instant::now();
 
-    if let Some(sieve) = prime_sieve {
-        sieve.print_results(
+    // get totals and print results based on one of the sieves
+    let total_passes = results.iter().map(|r| r.0).sum();
+    let check_sieve = &results.first().unwrap().1;
+    if let Some(sieve) = check_sieve {
+        print_results(
+            label,
+            &sieve,
             false,
             end_time - start_time,
-            passes,
+            total_passes,
+            num_threads,
             &primes::PrimeValidator::default(),
         );
     }
