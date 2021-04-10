@@ -16,6 +16,7 @@ by Mike Koss (mike@mckoss.com)
 #endif
 #define TRUE (1)
 #define FALSE (0)
+#define BOOL int
 
 // 32-bit words seem to yield the highest performance for bit-masking ops
 #define WORD uint64_t
@@ -35,7 +36,7 @@ by Mike Koss (mike@mckoss.com)
 //
 // maxNumber - find all primes strictly LESS than this number.
 //
-int countPrimesBytes(int maxNumber, int fNeedCount) {
+int countPrimesBytes(int maxNumber, BOOL fNeedCount) {
    // Starts off zero-initialized.
    BYTE *buffer = (BYTE *) calloc(maxNumber + 1, 1);
    unsigned int maxFactor = sqrt(maxNumber) + 1;
@@ -89,7 +90,7 @@ int countPrimesBytes(int maxNumber, int fNeedCount) {
 //   0: Prime
 //   1: Composite
 //
-int countPrimes(int maxNumber, int fNeedCount) {
+int countPrimes(int maxNumber, BOOL fNeedCount) {
    // Starts off zero-initialized.
    WORD *buffer = (WORD *) calloc(allocOf(maxNumber), sizeof(WORD));
    unsigned int maxFactor = sqrt(maxNumber) + 1;
@@ -141,7 +142,7 @@ int countPrimes(int maxNumber, int fNeedCount) {
 //
 // maxNumber - find all primes strictly LESS than this number.
 //
-int countPrimes2of6(int maxNumber, int fNeedCount) {
+int countPrimes2of6(int maxNumber, BOOL fNeedCount) {
    // Starts off zero-initialized.
    WORD *buffer = (WORD *) calloc(allocOf(maxNumber), sizeof(WORD));
    unsigned int maxFactor = sqrt(maxNumber) + 1;
@@ -200,7 +201,7 @@ int countPrimes2of6(int maxNumber, int fNeedCount) {
 //
 // maxNumber - find all primes strictly LESS than this number.
 //
-int countPrimes8of30(int maxNumber, int fNeedCount) {
+int countPrimes8of30(int maxNumber, BOOL fNeedCount) {
    // Starts off zero-initialized.
    WORD *buffer = (WORD *) calloc(allocOf(maxNumber), sizeof(WORD));
    unsigned int maxFactor = sqrt(maxNumber) + 1;
@@ -280,7 +281,6 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
       unsigned int iStop = indexOf(maxNumber);
       unsigned int i = base;
       for (; i <= iStop - cumOffset;) {
-         // Do even multiple of 16 with no array bound check.
          for (int j = 0; j < iUsed; j++) {
             buffer[i] |= masks[j];
             i = i + offsets[j];
@@ -332,7 +332,7 @@ int countPrimes8of30(int maxNumber, int fNeedCount) {
 #define indexOf6(n) (n/3) / BITS_PER_WORD
 #define maskOf6(n) (WORD) 1 << (n/3) % BITS_PER_WORD
 #define allocOf6(n) indexOf6(n) + 1
-int countPrimesMod6(int maxNumber, int fNeedCount) {
+int countPrimesMod6(int maxNumber, BOOL fNeedCount) {
    // Starts off zero-initialized.
    WORD *buffer = (WORD *) calloc(allocOf6(maxNumber), sizeof(WORD));
    unsigned int maxFactor = sqrt(maxNumber) + 1;
