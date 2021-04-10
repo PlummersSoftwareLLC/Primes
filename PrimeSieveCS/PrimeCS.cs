@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace PrimeSieveCS
 {
@@ -116,22 +117,23 @@ namespace PrimeSieveCS
             }
         }
 
+        private const long TEN_SECONDS = 10 * 1000;
+
         static void Main(string[] args)
         {
-            var tStart = DateTime.UtcNow;
+            var watch = Stopwatch.StartNew();
             var passes = 0;
             prime_sieve sieve = null;
 
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 10)
+            while (watch.ElapsedMilliseconds < TEN_SECONDS)
             {
                 sieve = new prime_sieve(1000000);
                 sieve.runSieve();
                 passes++;
             }
 
-            var tD = DateTime.UtcNow - tStart;
             if (sieve != null)
-                sieve.printResults(false, tD.TotalSeconds, passes);
+                sieve.printResults(false, watch.ElapsedMilliseconds / 1000.0, passes);
         }
     }
 }
