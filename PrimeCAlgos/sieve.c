@@ -242,7 +242,7 @@ int countPrimes8of30(int maxNumber, BOOL fNeedCount) {
 
       // Performance optimization: since the bit mask we or
       // into the word (and the index offset added to the base)
-      // RECUR every 16 iterations of this loop (for 32-bit words), we
+      // RECUR every 64 iterations of this loop (for 64-bit words), we
       // can precalculate them and use them over and over until the end
       // of the sieve array.
 
