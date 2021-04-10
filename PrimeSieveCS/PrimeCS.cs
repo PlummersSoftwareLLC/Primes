@@ -24,10 +24,10 @@ namespace PrimeSieveCS
                 { 100000 , 9592 },
                 { 1000000 , 78498 },
                 { 10000000 , 664579 },
-                { 100000000 , 5761455 } 
+                { 100000000 , 5761455 },
             };
 
-            public prime_sieve(int size) 
+            public prime_sieve(int size)
             {
                 sieveSize = size;
                 bitArray = new BitArray((int)((this.sieveSize + 1) / 2), true);
@@ -63,17 +63,17 @@ namespace PrimeSieveCS
                     Console.WriteLine("You are setting even bits, which is sub-optimal");
                     return;
                 }
-                bitArray[index / 2] = false;      
+                bitArray[index / 2] = false;
             }
 
             // primeSieve
-            // 
+            //
             // Calculate the primes up to the specified limit
 
             public void runSieve()
             {
                 int factor = 3;
-                int q = (int) Math.Sqrt(this.sieveSize);
+                int q = (int)Math.Sqrt(this.sieveSize);
 
                 while (factor < q)
                 {
