@@ -26,12 +26,12 @@ Calculate primes up to 1000000.
 Timer resolution: 1000 ticks per second.
 Word size: 32 bits.
 
-      Byte-map - 1 of 2 tested:  6437 passes completed in 5 seconds (0.777 ms per pass).
-       Bit-map - 1 of 2 tested: 11124 passes completed in 5 seconds (0.449 ms per pass).
-       Bit-map - 2 of 6 tested: 14335 passes completed in 5 seconds (0.349 ms per pass).
-      Bit-map - 8 of 30 tested: 17669 passes completed in 5 seconds (0.283 ms per pass).
-                   1/2 Bit-map:  9867 passes completed in 5 seconds (0.507 ms per pass).
-                   1/3 Bit-map:  7273 passes completed in 5 seconds (0.687 ms per pass).
+      Byte-map - 1 of 2 tested:  6524 passes completed in 5 seconds (0.766 ms per pass).
+       Bit-map - 1 of 2 tested: 11094 passes completed in 5 seconds (0.451 ms per pass).
+       Bit-map - 2 of 6 tested: 14404 passes completed in 5 seconds (0.347 ms per pass).
+      Bit-map - 8 of 30 tested: 19297 passes completed in 5 seconds (0.259 ms per pass).
+                   1/2 Bit-map:  9911 passes completed in 5 seconds (0.504 ms per pass).
+                   1/3 Bit-map:  7233 passes completed in 5 seconds (0.691 ms per pass).
 ```
 
 ## The Algorithms
