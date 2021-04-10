@@ -153,29 +153,33 @@ mod primes {
 }
 
 fn main() {
-    let mut passes = 0;
-    let mut prime_sieve = None;
+    let repetitions = 3;
 
     let run_duration = Duration::from_secs(5);
     println!("Running for {} seconds...", run_duration.as_secs());
     println!();
 
-    let start_time = Instant::now();
-    while (Instant::now() - start_time) < run_duration {
-        let mut sieve = primes::PrimeSieve::new(1000000);
-        sieve.run_sieve();
-        prime_sieve.replace(sieve);
-        passes += 1;
-    }
-    let end_time = Instant::now();
+    for _ in 0..repetitions {
+        let mut passes = 0;
+        let mut prime_sieve = None;
 
-    if let Some(sieve) = prime_sieve {
-        sieve.print_results(
-            false,
-            end_time - start_time,
-            passes,
-            &primes::PrimeValidator::default(),
-        );
+        let start_time = Instant::now();
+        while (Instant::now() - start_time) < run_duration {
+            let mut sieve = primes::PrimeSieve::new(1000000);
+            sieve.run_sieve();
+            prime_sieve.replace(sieve);
+            passes += 1;
+        }
+        let end_time = Instant::now();
+
+        if let Some(sieve) = prime_sieve {
+            sieve.print_results(
+                false,
+                end_time - start_time,
+                passes,
+                &primes::PrimeValidator::default(),
+            );
+        }
     }
 }
 

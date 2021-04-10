@@ -208,15 +208,23 @@ pub mod primes {
 }
 
 fn main() {
+    let repetitions = 3;
     let duration = Duration::from_secs(5);
+    
     println!("Running for {} seconds...", duration.as_secs());
     println!();
 
-    print!("Byte storage:  ");
-    run_implementation::<FlagStorageByteVector>(duration);
+    for _ in 0..repetitions {
+        print!("Byte storage:  ");
+        run_implementation::<FlagStorageByteVector>(duration);
+    }
 
-    print!("Bit storage:   ");
-    run_implementation::<FlagStorageBitVector>(duration);
+    println!();
+
+    for _ in 0..repetitions {
+        print!("Bit storage:   ");
+        run_implementation::<FlagStorageBitVector>(duration);
+    }
 }
 
 fn run_implementation<T: FlagStorage>(run_duration: Duration) {
