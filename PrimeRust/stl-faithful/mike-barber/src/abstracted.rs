@@ -108,11 +108,12 @@ pub mod primes {
             while i < self.words.len() * U8_BITS {
                 let word_idx = i / U8_BITS;
                 let bit_idx = i % U8_BITS;
-                // unsafe get_mut_unchecked is superfluous here -- the compiler
-                // seems to know that we're within bounds, so it yields no performance
-                // benefit.
-                *self.words.get_mut(word_idx).unwrap() &= !(1 << bit_idx);
-                //unsafe { *self.words.get_unchecked_mut(word_idx) &= !(1 << bit_idx); }
+                // Note: Unsafe usage to ensure that we elide the bounds check reliably.
+                //       It's a bit hit-or-miss otherwise, depending on how stuff is inlined.
+                //       We have ensured that word_index < self.words.len().
+                unsafe {
+                    *self.words.get_unchecked_mut(word_idx) &= !(1 << bit_idx);
+                }
                 i += skip;
             }
         }
