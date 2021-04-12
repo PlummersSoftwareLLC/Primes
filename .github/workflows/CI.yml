@@ -24,28 +24,27 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v2
 
-      - name: "Normalize container name"
-        id: container_name
-        uses: ASzc/change-string-case-action@v1
-        with:
-          string: ${{ matrix.solution }}
-        
+      - name: "Normalize solution name"
+        id: solution-name
+        run: |
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=normalized::${NAME}"
+
       - name: "Build container image"
         continue-on-error: true
         run: |
           cd "${{ matrix.solution }}"
-          docker build -t "${{ steps.container_name.outputs.lowercase }}" .
+          docker build -t "${{ steps.solution-name.outputs.normalized }}" .
       
       - name: "Run tests"
         continue-on-error: true
         run: |
-          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
-          docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${NAME}-${{ matrix.os }}.out"
+          docker run --rm "${{ steps.solution-name.outputs.normalized }}" | tee "${NAME}-${{ matrix.os }}.out"
       
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.solution }}
+          name: ${{ steps.solution-name.outputs.normalized }}
           path: "*.out"
 
   report:
