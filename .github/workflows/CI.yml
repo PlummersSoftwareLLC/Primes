@@ -39,13 +39,14 @@ jobs:
       - name: "Run tests"
         continue-on-error: true
         run: |
-          docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${{ matrix.solution }}-${{ matrix.os }}.txt"
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
+          docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${NAME}-${{ matrix.os }}.out"
       
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.solution }}
-          path: "${{ matrix.solution }}-${{ matrix.os }}.txt"
+          path: "*.out"
 
   report:
     runs-on: ubuntu-latest
