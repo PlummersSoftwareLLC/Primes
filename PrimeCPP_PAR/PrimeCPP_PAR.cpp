@@ -247,10 +247,10 @@ int main(int argc, char **argv)
             // a unique_ptr it will automatically free resources as soon as its torn down.
 
             for (unsigned int i = 0; i < cThreads; i++)
-                threadPool.push_back(thread([llUpperLimit] 
+                threadPool.emplace_back([llUpperLimit]
                 { 
-                    std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve(); 
-                }));
+                    std::make_unique<prime_sieve>(llUpperLimit)->runSieve();
+                });
 
             // Now we wait for all of the threads to finish before we repeat
 
