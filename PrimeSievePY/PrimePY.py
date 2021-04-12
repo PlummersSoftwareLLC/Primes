@@ -119,12 +119,12 @@ class prime_sieve(object):
 tStart = timeit.default_timer()                         # Record our starting time
 passes = 0                                              # We're going to count how many passes we make in fixed window of time
 
-while (timeit.default_timer() - tStart < 10):           # Run until more than 10 seconds have elapsed
+while (timeit.default_timer() - tStart < 5):            # Run until more than 5 seconds have elapsed
     sieve = prime_sieve(1000000)                        #  Calc the primes up to a million
     sieve.runSieve()                                    #  Find the results
     passes = passes + 1                                 #  Count this pass
     
-tD = timeit.default_timer() - tStart                    # After the "at least 10 seconds", get the actual elapsed
+tD = timeit.default_timer() - tStart                    # After the "at least 5 seconds", get the actual elapsed
 
 sieve.printResults(False, tD, passes)                   # Display outcome
 
