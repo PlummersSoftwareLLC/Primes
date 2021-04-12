@@ -39,7 +39,7 @@ jobs:
       - name: "Run tests"
         continue-on-error: true
         run: |
-          docker run --rm "${{ steps.solution-name.outputs.normalized }}" | tee "${NAME}-${{ matrix.os }}.out"
+          docker run --rm "${{ steps.solution-name.outputs.normalized }}" | tee "${{ steps.solution-name.outputs.normalized }}-${{ matrix.os }}.out"
       
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v2
