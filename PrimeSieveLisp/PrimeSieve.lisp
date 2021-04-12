@@ -71,7 +71,7 @@
     (get-universal-time))
 (loop 
     (if 
-        (<= (- (get-universal-time) start) 10)
+        (<= (- (get-universal-time) start) 5)
         (progn
             (prime-sieve 1000000)
             (run-sieve)
