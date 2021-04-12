@@ -85,12 +85,12 @@ class PrimeSieve
 }
 
 //Entry
-$tStart = microtime(true);       //Init time
+$tStart = microtime(true);              //Init time
 $passes = 0;                            //Init passes
 $sieveSize = 1000000;                   //Set sieve size
 $printResults = false;                  //Print the prime numbers that are found
 $rawbitCount = null;                    //Init a rawbitCount to validate the result
-$runTime = 10;                          //The amount of seconds the script should be running for
+$runTime = 5;                           //The amount of seconds the script should be running for
 
 while (getTimeDiffInMs($tStart) < $runTime * 1000) {
     $sieve = new PrimeSieve($sieveSize);
