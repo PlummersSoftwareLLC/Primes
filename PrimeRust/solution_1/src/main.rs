@@ -1,4 +1,7 @@
-use primes::{print_results, FlagStorage, FlagStorageBitVector, FlagStorageByteVector, PrimeSieve};
+use primes::{
+    print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
+    FlagStorageByteVector, PrimeSieve,
+};
 use std::time::{Duration, Instant};
 use structopt::StructOpt;
 
@@ -182,7 +185,8 @@ pub mod primes {
         }
     }
 
-    pub fn print_results<T: FlagStorage>(
+    /// print results to console stderr for good feedback
+    pub fn print_results_stderr<T: FlagStorage>(
         label: &str,
         prime_sieve: &PrimeSieve<T>,
         show_results: bool,
@@ -192,16 +196,16 @@ pub mod primes {
         validator: &PrimeValidator,
     ) {
         if show_results {
-            print!("2,");
+            eprint!("2,");
             for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.is_num_flagged(*n)) {
                 print!("{},", num);
             }
-            print!("\n");
+            eprint!("\n");
         }
 
         let count = prime_sieve.count_primes();
 
-        println!(
+        eprintln!(
             "{:15} Passes: {}, Threads: {}, Time: {:.10}, Average: {:.10}, Limit: {}, Counts: {}, Valid: {}",
             label,
             passes,
@@ -215,6 +219,18 @@ pub mod primes {
                 Some(false) => "Fail",
                 None => "Unknown"
             }
+        );
+    }
+
+    /// print correctly-formatted results to `stderr` as per CONTRIBUTING.md
+    /// - format is <name>;<iterations>;<total_time>;<num_threads>
+    pub fn report_results_stdout(label: &str, duration: Duration, passes: usize, threads: usize) {
+        println!(
+            "{};{};{:.10};{}",
+            label,
+            passes,
+            duration.as_secs_f32(),
+            threads
         );
     }
 }
@@ -238,7 +254,7 @@ struct CommandLineOptions {
     limit: usize,
 
     /// Number of times to run the experiment
-    #[structopt(short, long, default_value = "3")]
+    #[structopt(short, long, default_value = "1")]
     repetitions: usize,
 
     /// Print out all primes found
@@ -278,7 +294,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageByteVector>(
-                    "Byte storage",
+                    "byte-storage",
                     run_duration,
                     threads,
                     limit,
@@ -291,7 +307,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVector>(
-                    "Bit storage",
+                    "bit-storage",
                     run_duration,
                     threads,
                     limit,
@@ -303,8 +319,8 @@ fn main() {
 }
 
 fn print_header(threads: usize, limit: usize, run_duration: Duration) {
-    println!();
-    println!(
+    eprintln!();
+    eprintln!(
         "Computing primes to {} on {} thread{} for {} second{}.",
         limit,
         threads,
@@ -355,15 +371,19 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
     let total_passes = results.iter().map(|r| r.0).sum();
     let check_sieve = &results.first().unwrap().1;
     if let Some(sieve) = check_sieve {
-        print_results(
+        let duration = end_time - start_time;
+        // print results to stderr for convenience
+        print_results_stderr(
             label,
             &sieve,
             print_primes,
-            end_time - start_time,
+            duration,
             total_passes,
             num_threads,
             &primes::PrimeValidator::default(),
         );
+        // and report results to stdout for reporting
+        report_results_stdout(label, duration, total_passes, num_threads);
     }
 }
 

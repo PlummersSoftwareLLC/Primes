@@ -1,26 +1,46 @@
-# Rust implementation
+# Rust solution by @mike-barber
+
+`# category badges will go here`
 
 Contributors:
-
 - Michael Barber @mike-barber https://www.github.com/mike-barber
 
-There are two Rust ports:
-- a very directly-translated version similar to the C++ version that is very easy to compare with it, called `simple-bits`.
-- a slightly more Rust-idiomatic port called `abstracted` that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
-    - `bit storage` is equivalent to the above `simple-bits` case and uses individual bits within a byte to store true/false
-    - `byte storage` has a simple vector of bytes, and just has `0 == false` and `1 == true`. It's a lot faster.
-    - this port still intends to be similar to the C++ implementations so it's easier to compare; it's not fully idiomatic Rust, and is not intended to be.
-    - this version also contains a parallel implementation, similar to the newer C++ version Dave's been working on
+A somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
+    - `bit storage` is equivalent to the above C++ `vector<bool>` case and uses individual bits within a byte to store true/false
+    - `byte storage` has a simple vector of bytes, and just has `0 == false` and `1 == true`. It's a lot faster. But only for small datasets, since it uses more memory.
+    - this version still intends to be similar to the C++ implementations so it's easier to compare; it's not fully idiomatic Rust, and is not intended to be. 
     - it runs both single-thread and multi-thread tests.
 
-The motivation for the second port, supporting bytes/bools, is that many other PR's are doing the same thing. And Dave mentioned in the Pi vs Apple M1 vs ThreadRipper video that he'd probably be testing the same in C++. It's also a nice way to demo some simple traits and generics for those interested in Rust. And also fun because these kinds of abstractions don't cost us anything.
+Note that `vector<bool>` in C++ is a strange specialisation of `vector` that **may** use more efficient storage than using a whole byte for 1 or 0. It's up to the compiler vendor, and is not standardised. Typically it's using individual bits for storage, within bytes or words. So the `bit storage` I have implemented closely resembles this. Rust has no such thing built in, although there are several crates available.
 
+## Run instructions
+
+- using Docker is the easiest way to get started without installing Rust:
+    - `./build-docker.sh`
+    - `./run-docker.sh`
+    - `./run-docker.sh --help` for help with command line options
+- `cargo run --release` if you've got Rust installed
+
+There more notes in the [quick start section][rust_quickstart] below.
+
+## Output
+
+Tested on a Ryzen 3900X, Rust 1.51, running on WSL2.
+
+This is as reported on `stdout`:
+```
+byte-storage;16849;5.0003237724;1
+bit-storage;11171;5.0002226830;1
+byte-storage;157714;5.0008201599;24
+bit-storage;126534;5.0010280609;24
+```
+
+We report more informative metrics to `stderr` too, but these don't go into the report, as recorded below.
 
 ## Performance - **Ryzen 3900X**
 
 Tested on a Ryzen 3900X, Rust 1.51, running on WSL2.
-
-### Results for the `abstracted` implementation
+- Examples are run with `cargo run --release -- --repetitions=3` to get 3 repetitions.
 
 ```
 Computing primes to 1000000 on 1 thread for 5 seconds.
@@ -44,18 +64,11 @@ Bit storage     Passes: 141365, Threads: 24, Time: 5.0008583069, Average: 0.0000
 Bit storage     Passes: 141206, Threads: 24, Time: 5.0008640289, Average: 0.0000354154, Limit: 1000000, Counts: 78498, Valid: Pass
 ```
 
-### Results for the `simple-bits` implementation 
-
-5 second run: 
-```
-Passes: 10285, Time: 5.0003653, Avg: 0.0004861804, Limit: 1000000, Count: 78498, Valid: true
-Passes: 10306, Time: 5.00034, Avg: 0.00048518728, Limit: 1000000, Count: 78498, Valid: true
-Passes: 10260, Time: 5.0000286, Avg: 0.00048733223, Limit: 1000000, Count: 78498, Valid: true
-```
-
 ## Performance - **Raspberri Pi 4**
 
-Tested on a **Raspberry Pi 4**, standard clock with active cooling, running 64-bit Ubuntu Server 20.04. 
+Tested on a **Raspberry Pi 4**, standard clock with active cooling, running 64-bit Ubuntu Server 20.04.
+- Examples are run with `cargo run --release -- --repetitions=3` to get 3 repetitions.
+- Docker works on the Pi too :)
 
 ```
 Computing primes to 1000000 on 1 thread for 5 seconds.
@@ -90,7 +103,7 @@ I've enabled all the optimisation I'm aware of, including:
 - link time optimisation and `codegen-units=1`
 - pay attention to [.cargo/config](.cargo/config) if you want to run it on, say, Mac. 
 
-# Quick start for non-Rust people
+[rust_quickstart]:# Quick start for non-Rust people
 
 Install Rust. It's really easy: https://www.rust-lang.org/learn/get-started. On Linux, it's just `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`; probably the same or similar on Mac. On Windows, just grab the installer from the link.
 
@@ -99,18 +112,17 @@ There is a convenient [run.sh](run.sh) file that runs both variants with default
 Alternately, in the directory containing this README file, 
 - run tests: `cargo test` 
 - build: `cargo build --release`
-- run the abstracted version: `target/release/abstracted`
-    - for help with command line parameters: `target/release/abstracted --help`
+- run: `target/release/prime-sieve-rust`
+    - for help with command line parameters: `target/release/prime-sieve-rust --help`
     - this allows you to specify sieve size, threads, etc.
-- run the simple-bits version: `target/release/simple-bits`
 
-It'll take a little while to compile the first time.
+It'll take a little while to compile the first time. Because Rust. It's doing a fair bit of work :)
 
 To play with the code, the simplest approach is to use *Visual Studio Code* and install the `rust-analyzer` plugin.
 
 ## Docker
 
-You can also run the solution using Docker, without installing Rust. This will run the `abstracted` variant.
+You can also run the solution using Docker, without installing Rust.
 
 ```
 ./build-docker.sh
