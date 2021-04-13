@@ -16,15 +16,15 @@ procedure Main is
    Test_Power    : constant Power_Of_Ten := 6;
    Show_Primes   : constant Boolean      := False; 
 
-   procedure Run_Sieve (Bits : in out Bit_Array; Seive_Size : in Int_64) is
+   procedure Run_Sieve (Bits : in out Bit_Array; Sieve_Size : in Int_64) is
       use Ada.Numerics.Long_Long_Elementary_Functions;
       Factor : Int_64 := 3;
-      Q      : Int_64 := Int_64 (Sqrt (Long_Long_Float (Seive_Size)));
+      Q      : Int_64 := Int_64 (Sqrt (Long_Long_Float (Sieve_Size)));
       Num    : Int_64;
    begin
       while Factor <= Q loop
          Num := Factor;
-         Inner : while Num < Seive_Size loop
+         Inner : while Num < Sieve_Size loop
             if Bits (Num) then
                Factor := Num;
                exit Inner;
@@ -32,7 +32,7 @@ procedure Main is
             Num := Num + 2;
          end loop Inner;
          Num := Factor * Factor;
-         while Num < Seive_Size loop
+         while Num < Sieve_Size loop
             Bits (Num) := False;
             Num        := Num + Factor * 2;
          end loop;
@@ -90,21 +90,21 @@ procedure Main is
        8 => 5_761_455,    -- 10 **  8 =>    100_000_000
        9 => 50_847_534,   -- 10 **  9 =>  1_000_000_000
       10 => 455_052_511); -- 10 ** 10 => 10_000_000_000
-   Seive_Size : constant Int_64 := 10 ** Test_Power;
+   Sieve_Size : constant Int_64 := 10 ** Test_Power;
    Expected   : constant Int_64 := Expected_Array (Test_Power);
 
    Passes   : Int_64 := 0;
-   Bits     : Bit_Array (3 .. Seive_Size);
+   Bits     : Bit_Array (3 .. Sieve_Size);
    Start    : Time := Clock;
    Finish   : Time := Start + Test_Duration;
 begin
 
    while Clock < Finish loop
       Bits := (others => True);
-      Run_Sieve (Bits, Seive_Size);
+      Run_Sieve (Bits, Sieve_Size);
       Passes := Passes + 1;
    end loop;
    
-   Print_Result (Bits, Passes, Seive_Size, Test_Duration, Expected);
+   Print_Result (Bits, Passes, Sieve_Size, Test_Duration, Expected);
    if Show_Primes then Print_Primes (Bits); end if;
 end Main;
