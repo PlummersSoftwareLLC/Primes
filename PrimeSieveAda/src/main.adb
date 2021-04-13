@@ -52,20 +52,21 @@ procedure Main is
    end Count_Primes;
 
    procedure Print_Result (
-      Bits     : in Bit_Array; 
-      Passes   : in Int_64;
       Limit    : in Int_64;
-      Elapsed  : in Time_Span; 
-      Expected : in Int_64) 
+      Elapsed  : in Time_Span;
+      Passes   : in Int_64;
+      Expected : in Int_64;
+      Actual   : in Int_64) 
    is
-      Average : Duration := To_Duration (Elapsed) / Integer (Passes);
+      Elapsed_Duration : Duration := To_Duration (Elapsed);
+      Average          : Duration := Elapsed_Duration / Integer (Passes);
    begin
       Put_Line ("Limit   :" & Limit'Image);
-      Put_Line ("Time    :" & Duration'Image (To_Duration (Elapsed)));
+      Put_Line ("Time    :" & Elapsed_Duration'Image);
       Put_Line ("Passes  :" & Passes'Image);
-      Put_Line ("Average :" & Duration'Image (Average));
+      Put_Line ("Average :" & Average'Image);
       Put_Line ("Expected:" & Expected'Image);
-      Put_Line ("Actual  :" & Int_64'Image (Count_Primes (Bits)));
+      Put_Line ("Actual  :" & Actual'Image);
    end Print_Result;
 
    procedure Print_Primes (Bits : in Bit_Array) is begin
@@ -105,6 +106,6 @@ begin
       Passes := Passes + 1;
    end loop;
    
-   Print_Result (Bits, Passes, Sieve_Size, Test_Duration, Expected);
+   Print_Result (Sieve_Size, Test_Duration, Passes, Expected, Count_Primes (Bits));
    if Show_Primes then Print_Primes (Bits); end if;
 end Main;
