@@ -1,15 +1,59 @@
+#!/bin/bash
 # Compilation and execution on Git-Bash (GNU C Compiler)
 set -e
 
-# Use --test to cut measurement interval to 1 second (from 5 as is used
-# in Dave's standard benchmark) and set some compile warnings.
-if [[ $1 == "--test" ]]; then
-    DFLAGS="-DMEASUREMENT_SECS=1"
-    TFLAGS="-Wall"
-fi
-
 OFLAGS="-Ofast -march=native -mtune=native -funroll-all-loops"
+
+while [[ $1 != "" ]]; do
+    case $1 in
+    --test)
+        # Use --test to cut measurement interval to 1 second (from 5 as is used
+        # in Dave's standard benchmark) and set some compile warnings.
+        DFLAGS="-DMEASUREMENT_SECS=1"
+        TFLAGS="-Wall"
+        TEST=1
+        ;;
+    
+    --debug)
+        OFLAGS="-ggdb"
+        DEBUG=1
+        ;;
+
+    *)
+        echo "Unknown flag: $1"
+        exit 1
+        ;;
+    esac
+
+    shift
+done
 
 echo Compiling with flags: $OFLAGS
 
-gcc $DFLAGS $TFLAGS $OFLAGS sieve.c -o sieve && ./sieve
+gcc $DFLAGS $TFLAGS $OFLAGS -pthread par-sieve.c -o par-sieve
+gcc $DFLAGS $TFLAGS $OFLAGS sieve.c -o sieve
+
+if [[ $DEBUG ]]; then
+    gdb ./par-sieve
+    exit 0
+fi
+
+if [[ $TEST ]]; then
+    for info in "model name" "cpu MHz" "cache size"
+    do
+        grep -m1 "$info" /proc/cpuinfo
+    done
+
+    ./sieve
+    echo
+
+    ./par-sieve --threads 1
+    for threads in {2..16}
+    do
+        ./par-sieve --threads $threads | grep "per pass"
+    done
+else
+    ./sieve
+    echo
+    ./par-sieve
+fi
