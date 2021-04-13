@@ -21,7 +21,7 @@ Note that `vector<bool>` in C++ is a strange specialisation of `vector` that **m
     - `./run-docker.sh --help` for help with command line options
 - `cargo run --release` if you've got Rust installed
 
-There more notes in the [quick start section][rust_quickstart] below.
+There are more notes for getting started with Rust at the bottom, under `Quick start for those interested in Rust`
 
 ## Output
 
@@ -103,22 +103,24 @@ I've enabled all the optimisation I'm aware of, including:
 - link time optimisation and `codegen-units=1`
 - pay attention to [.cargo/config](.cargo/config) if you want to run it on, say, Mac. 
 
-[rust_quickstart]:# Quick start for non-Rust people
+# Quick start for those interested in Rust
 
 Install Rust. It's really easy: https://www.rust-lang.org/learn/get-started. On Linux, it's just `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`; probably the same or similar on Mac. On Windows, just grab the installer from the link.
 
-There is a convenient [run.sh](run.sh) file that runs both variants with defaults.
+There is a convenient [run.sh](run.sh) file that builds and runs the solution.
 
 Alternately, in the directory containing this README file, 
 - run tests: `cargo test` 
 - build: `cargo build --release`
-- run: `target/release/prime-sieve-rust`
+- run: `target/release/prime-sieve-rust` or `cargo run --release`
     - for help with command line parameters: `target/release/prime-sieve-rust --help`
     - this allows you to specify sieve size, threads, etc.
 
 It'll take a little while to compile the first time. Because Rust. It's doing a fair bit of work :)
 
 To play with the code, the simplest approach is to use *Visual Studio Code* and install the `rust-analyzer` plugin.
+
+And if you want to learn more, there are tons of great resources, including a good introductory book, on https://www.rust-lang.org/learn/get-started
 
 ## Docker
 
