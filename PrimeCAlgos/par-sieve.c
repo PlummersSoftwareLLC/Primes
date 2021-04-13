@@ -116,7 +116,7 @@ int countPrimesBytesPar(int maxNumber, BOOL fNeedCount) {
     int totalWork = 0;
 
     for (p = 3; p <= maxPrime; p += 2) {
-        // Will need to mark (max - p^2)/p == max/p - p composites.
+        // Will need to mark (max - p^2)/p/2 == (max/p - p)/2 composites.
         if (buffer[p] == 0) {
             totalWork += (maxNumber / p - p) / 2;
             // printf("%d, ", p);
@@ -125,19 +125,27 @@ int countPrimesBytesPar(int maxNumber, BOOL fNeedCount) {
 
     // printf("\nTotal work: %d\n", totalWork);
 
-    int workRemaining = totalWork;
+    int workRemain = totalWork;
+
+    if (fShowWork && fNeedCount) {
+        printf("Target work per thread: %0.3f M-marks.\n",
+               (float) totalWork / numThreads / 1000000);
+    }
 
     p = 3;
     for (int i = 0; i < numThreads && p <= maxPrime; i++) {
         int work = 0;
+        int threadsRemain = numThreads - i;
+        int targetWork = workRemain / threadsRemain;
+
         vars[i].buffer = buffer;
         vars[i].pStart = p;
 
-        if (i == numThreads - 1) {
+        if (threadsRemain == 1) {
             p = maxPrime;
-            work = workRemaining;
+            work = workRemain;
         } else {
-            while (work < totalWork / numThreads && p <= maxPrime) {
+            while (work < targetWork && p <= maxPrime) {
                 work += (maxNumber / p - p) / 2;
                 p += 2;
                 // Advance to next prime.
@@ -152,7 +160,7 @@ int countPrimesBytesPar(int maxNumber, BOOL fNeedCount) {
                    vars[i].pStart, p - 2, (float)work / 1000000);
         }
 
-        workRemaining -= work;
+        workRemain -= work;
         vars[i].pEnd = p;
 
         // Do the last tranche on the main thread.

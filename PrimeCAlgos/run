@@ -28,8 +28,6 @@ while [[ $1 != "" ]]; do
     shift
 done
 
-echo Compiling with flags: $OFLAGS
-
 gcc $TFLAGS $OFLAGS -pthread par-sieve.c -o par-sieve
 gcc $TFLAGS $OFLAGS sieve.c -o sieve
 
@@ -38,22 +36,19 @@ if [[ $DEBUG ]]; then
     exit 0
 fi
 
-if [[ $TEST ]]; then
-    for info in "model name" "cpu MHz" "cache size"
-    do
-        grep -m1 "$info" /proc/cpuinfo
-    done
+for info in "model name" "cpu MHz" "cache size"
+do
+    grep -m1 "$info" /proc/cpuinfo
+done
+echo
+echo Compiled with flags: $OFLAGS
+echo
 
-    ./sieve $SFLAGS
-    echo
+./sieve $SFLAGS
+echo
 
-    ./par-sieve $SFLAGS --show-work --threads 1
-    for threads in {2..16}
-    do
-        ./par-sieve $SFLAGS --show-work --threads $threads | grep "per pass\|Scan"
-    done
-else
-    ./sieve $SFLAGS
-    echo
-    ./par-sieve $SFLAGS
-fi
+./par-sieve $SFLAGS --threads 1
+for threads in {2..16}
+do
+    ./par-sieve $SFLAGS --threads $threads | grep "per pass"
+done
