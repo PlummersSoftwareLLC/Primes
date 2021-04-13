@@ -229,7 +229,7 @@ void usage(char *name) {
 }
 
 int main(int argc, char *argv[]) {
-    int measureSecs = 5;
+    int secs = 5;
 
     for (int iarg = 1; iarg < argc; iarg++) {
         if (strcmp(argv[iarg], "--help") == 0) {
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
                 usage(argv[0]);
             }
             iarg++;
-            if (sscanf(argv[iarg], "%d", &measureSecs) != 1 || measureSecs < 1) {
+            if (sscanf(argv[iarg], "%d", &secs) != 1 || secs < 1) {
                 fprintf(stderr, "Error: Invalid measurement time: %s\n", argv[iarg]);
                 usage(argv[0]);
             }
@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
     printf("\n");
     fflush(stdout);
 
-    timedTest(measureSecs, countPrimesBytesPar, "Parallel Byte-map - 1 of 2 tested");
+    timedTest(secs, countPrimesBytesPar, "Parallel Byte-map - 1 of 2 tested");
 
     return (0);
 }
