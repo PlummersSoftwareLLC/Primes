@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: "0 20 * * *"
   workflow_dispatch:
-  
+
 jobs:
   test:
     runs-on: "${{ matrix.os }}"
@@ -16,7 +16,7 @@ jobs:
           - PrimeCrystal/stl-faithful/marghidanu
           - PrimeRust/stl-faithful/mike-barber
         os: ["ubuntu-20.04"]
-    
+
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v2
@@ -32,12 +32,12 @@ jobs:
         run: |
           cd "${{ matrix.solution }}"
           docker build -t "${{ steps.solution-name.outputs.normalized }}" .
-      
+
       - name: "Run tests"
         continue-on-error: true
         run: |
           docker run --rm "${{ steps.solution-name.outputs.normalized }}" | tee "${{ steps.solution-name.outputs.normalized }}-${{ matrix.os }}.out"
-      
+
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v2
         with:
@@ -47,12 +47,12 @@ jobs:
   report:
     runs-on: ubuntu-latest
 
-    needs: 
+    needs:
       - test
 
     steps:
       - name: "Download artifacts"
         uses: actions/download-artifact@v2
-      
+
       - name: "List all artifacts"
         run: tree

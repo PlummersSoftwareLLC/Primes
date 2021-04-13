@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [drag-race]
+    branches: ["**"]
   pull_request:
-    branches: [drag-race]
+    branches: ["**"]
 
 jobs:
   build:
