@@ -17,7 +17,7 @@ jobs:
       matrix:
         solution:
           - PrimeCrystal/stl-faithful/marghidanu
-          - PrimeRust/stl-faithful/mike-barber
+          - PrimeRust/solution_1
         os: ["ubuntu-20.04"]
     
     steps:
