@@ -9,7 +9,7 @@ while [[ $1 != "" ]]; do
     --test)
         # Use --test to cut measurement interval to 1 second (from 5 as is used
         # in Dave's standard benchmark) and set some compile warnings.
-        DFLAGS="-DMEASUREMENT_SECS=1"
+        SFLAGS="--secs 1"
         TFLAGS="-Wall"
         TEST=1
         ;;
@@ -30,8 +30,8 @@ done
 
 echo Compiling with flags: $OFLAGS
 
-gcc $DFLAGS $TFLAGS $OFLAGS -pthread par-sieve.c -o par-sieve
-gcc $DFLAGS $TFLAGS $OFLAGS sieve.c -o sieve
+gcc $TFLAGS $OFLAGS -pthread par-sieve.c -o par-sieve
+gcc $TFLAGS $OFLAGS sieve.c -o sieve
 
 if [[ $DEBUG ]]; then
     gdb ./par-sieve
@@ -44,16 +44,16 @@ if [[ $TEST ]]; then
         grep -m1 "$info" /proc/cpuinfo
     done
 
-    ./sieve
+    ./sieve $SFLAGS
     echo
 
-    ./par-sieve --threads 1
+    ./par-sieve $SFLAGS --show-work --threads 1
     for threads in {2..16}
     do
-        ./par-sieve --threads $threads | grep "per pass"
+        ./par-sieve $SFLAGS --show-work --threads $threads | grep "per pass\|Scan"
     done
 else
-    ./sieve
+    ./sieve $SFLAGS
     echo
-    ./par-sieve
+    ./par-sieve $SFLAGS
 fi

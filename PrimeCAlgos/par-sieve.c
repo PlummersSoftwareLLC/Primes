@@ -13,9 +13,6 @@ by Mike Koss (mike@mckoss.com)
 #include <string.h>   // strncmp
 #include <time.h>     // clock, CLOCKS_PER_SEC
 
-#ifndef MEASUREMENT_SECS
-#define MEASUREMENT_SECS (5)
-#endif
 #define TRUE (1)
 #define FALSE (0)
 #define BOOL int
@@ -32,6 +29,8 @@ by Mike Koss (mike@mckoss.com)
 // Primes to ten million.
 #define MAX_NUMBER 10000000
 #define EXPECTED_PRIMES 664579
+
+BOOL fShowWork = FALSE;
 
 int numThreads = 4;
 
@@ -147,7 +146,11 @@ int countPrimesBytesPar(int maxNumber, BOOL fNeedCount) {
                 }
             }
         }
-        // printf("Scan from %d to %d (%d work).\n", vars[i].pStart, p, work);
+
+        if (fShowWork && fNeedCount) {
+            printf("%d. Scan from %d to %d (%0.3f M-marks).\n", i + 1,
+                   vars[i].pStart, p - 2, (float)work / 1000000);
+        }
 
         workRemaining -= work;
         vars[i].pEnd = p;
@@ -184,14 +187,14 @@ int countPrimesBytesPar(int maxNumber, BOOL fNeedCount) {
     return count;
 }
 
-void timedTest(int primeFinder(int, int), char *title) {
+void timedTest(int secs, int primeFinder(int, int), char *title) {
     clock_t startTicks;
     clock_t currentTicks;
     int passes = 1;
 
     startTicks = clock();
 
-    long limitTicks = MEASUREMENT_SECS * CLOCKS_PER_SEC + startTicks;
+    long limitTicks = secs * CLOCKS_PER_SEC + startTicks;
 
     // Check first for accuracy.
     int primeCount = primeFinder(MAX_NUMBER, TRUE);
@@ -214,18 +217,20 @@ void timedTest(int primeFinder(int, int), char *title) {
     }
 
     printf("%30s: %5d passes completed in %d seconds (%0.3f ms per pass) (%d threads).\n",
-           title, passes, MEASUREMENT_SECS,
-           (float)MEASUREMENT_SECS / passes * 1000, numThreads);
+           title, passes, secs,
+           (float)secs / passes * 1000, numThreads);
     // Don't buffer output since there is a lot of delay between tests.
     fflush(stdout);
 }
 
 void usage(char *name) {
-    fprintf(stderr, "Usage: %s --help --numThreads <n>\n", name);
+    fprintf(stderr, "Usage: %s --help --secs <s> --threads <n> --show-work\n", name);
     exit(1);
 }
 
 int main(int argc, char *argv[]) {
+    int measureSecs = 5;
+
     for (int iarg = 1; iarg < argc; iarg++) {
         if (strcmp(argv[iarg], "--help") == 0) {
             usage(argv[0]);
@@ -241,6 +246,18 @@ int main(int argc, char *argv[]) {
                         argv[iarg]);
                 usage(argv[0]);
             }
+        } else if (strcmp(argv[iarg], "--secs") == 0) {
+            if (iarg + 1 == argc) {
+                fprintf(stderr, "Error: Missing number of seconds to measure.\n");
+                usage(argv[0]);
+            }
+            iarg++;
+            if (sscanf(argv[iarg], "%d", &measureSecs) != 1 || measureSecs < 1) {
+                fprintf(stderr, "Error: Invalid measurement time: %s\n", argv[iarg]);
+                usage(argv[0]);
+            }
+        } else if (strcmp(argv[iarg], "--show-work") == 0) {
+            fShowWork = TRUE;
         } else {
             fprintf(stderr, "Error: Unknown argument: %s\n", argv[iarg]);
             usage(argv[0]);
@@ -253,7 +270,7 @@ int main(int argc, char *argv[]) {
     printf("\n");
     fflush(stdout);
 
-    timedTest(countPrimesBytesPar, "Parallel Byte-map - 1 of 2 tested");
+    timedTest(measureSecs, countPrimesBytesPar, "Parallel Byte-map - 1 of 2 tested");
 
     return (0);
 }
