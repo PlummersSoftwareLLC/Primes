@@ -42,7 +42,7 @@ place at least the name of the language in the title.
 
 ### Faithful
 
-* Your solution uses no external dependencies.
+* Your solution uses no external dependencies to calculate the actual sieve.
 * Your solution uses a class to encapsulate the sieve, or an equivalent
    feature in your language. This class must contain the full state of the
    sieve. Each iteration should re-create a new instance of this class.
@@ -51,7 +51,8 @@ place at least the name of the language in the title.
 
 ### Parallel faithful
 
-* Your solution uses no external dependencies (example, `-lpthread` is fine).
+* Your solution uses no external dependencies to calculate the actual sieve
+   (example, `-lpthread` is fine).
 * Your solution uses a class to encapsulate the sieve, or an equivalent
    feature in your language. This class must contain the full state of the
    sieve. Each iteration should re-create a new instance of this class.
@@ -72,7 +73,7 @@ place at least the name of the language in the title.
 * Your solution calculates all the primes up to 1,000,000.
 * The test code outputs the following text to standard output:
    ```
-   <name>;<iterations>;<total_time>
+   <name>;<iterations>;<total_time>;<num_threads>
    ```
    where `name` is **at least** your username, and if you have multiple
    implementations, a short keyword to discriminate each implementation,
@@ -80,6 +81,8 @@ place at least the name of the language in the title.
    and `total_time` is the total time it took to run, which would be sligtly
    more than 5 seconds, in an `en_US` formatted decimal value (so, use `.`
    instead of `,` for the decimal separator).
+   `num_threads` is the amount of threads that were used (so 1 for a
+   single-threaded solution).
 * Your solution adheres to the requirements of the category.
 * You own copyright to all code and are willing to license that code under
    BSD-3 or compatible, or the code is available under BSD-3 or compatible.
