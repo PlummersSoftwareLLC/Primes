@@ -1,5 +1,3 @@
-require "bit_array"
-
 DICT = {
            10_u64 => 4,
           100_u64 => 25,
