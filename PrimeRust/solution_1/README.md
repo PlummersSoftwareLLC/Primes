@@ -1,6 +1,9 @@
 # Rust solution by @mike-barber
 
-`# category badges will go here`
+```
+# category badges will go here
+# note it's both #faithful and #parallel-faithful
+```
 
 Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber
@@ -11,7 +14,7 @@ A somewhat Rust-idiomatic version that has the storage of prime flags abstracted
     - this version still intends to be similar to the C++ implementations so it's easier to compare; it's not fully idiomatic Rust, and is not intended to be. 
     - it runs both single-thread and multi-thread tests.
 
-Note that `vector<bool>` in C++ is a strange specialisation of `vector` that **may** use more efficient storage than using a whole byte for 1 or 0. It's up to the compiler vendor, and is not standardised. Typically it's using individual bits for storage, within bytes or words. So the `bit storage` I have implemented closely resembles this. Rust has no such thing built in, although there are several crates available.
+Note that C++ `vector<bool>` in C++ is a controversial specialisation of `vector` that **may** use more efficient storage than using a whole byte for 1 or 0. It's up to the compiler vendor, and is not standardised. Typically it's using individual bits for storage, within bytes or words. So the `bit storage` I have implemented closely resembles this. Rust has no such thing built in, although there are several crates available. For clarity, it's implemented manually in this solution.
 
 ## Run instructions
 
@@ -101,7 +104,7 @@ I'm expecting the Apple M1 to do a lot better given it has 16MB of cache, but I 
 I've enabled all the optimisation I'm aware of, including:
 - setting `target-cpu=native`
 - link time optimisation and `codegen-units=1`
-- pay attention to [.cargo/config](.cargo/config) if you want to run it on, say, Mac. 
+- pay attention to [.cargo/config](.cargo/config) if you want to run it on, say, Mac. I don't have one.
 
 # Quick start for those interested in Rust
 
