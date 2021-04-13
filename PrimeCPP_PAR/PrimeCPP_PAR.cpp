@@ -11,6 +11,7 @@
 #include <cmath>
 #include <vector>
 #include <thread>
+#include <mutex>
 #include <memory>
 
 using namespace std;
@@ -150,6 +151,35 @@ class prime_sieve
       }
 };
 
+class ThreadParam{
+public:
+    uint cPasses;
+    bool keepRunning;
+    uint64_t n;
+    std::mutex mtx;           // mutex for critical section
+    thread t;
+
+    ThreadParam(){
+        cPasses = 0;
+        keepRunning = true;
+    }
+
+    void treadFunct(){
+        mtx.lock();
+        bool kRun = keepRunning;
+        mtx.unlock();
+
+        do{
+            std::unique_ptr<prime_sieve>(new prime_sieve(n))->runSieve(); 
+            mtx.lock();
+            kRun = keepRunning;
+            cPasses++;
+            mtx.unlock();
+        }
+        while(kRun);
+    }
+};
+
 int main(int argc, char **argv)
 {
     vector<string> args(argv + 1, argv + argc);         // From first to last argument in the argv array
@@ -238,28 +268,31 @@ int main(int argc, char **argv)
 
     if (!bOneshot)
     {
-        while (duration_cast<seconds>(steady_clock::now() - tStart).count() < cSeconds)
-        {
-            vector<thread> threadPool;
-            
-            // We create N threads and give them each the job of runing the 'runSieve' method on a sieve
-            // that we create on the heap, rather than the stack, due to their possible enormity.  By using
-            // a unique_ptr it will automatically free resources as soon as its torn down.
+        ThreadParam * threadPool = new ThreadParam[cThreads];
 
-            for (unsigned int i = 0; i < cThreads; i++)
-                threadPool.push_back(thread([llUpperLimit] 
-                { 
-                    std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve(); 
-                }));
-
-            // Now we wait for all of the threads to finish before we repeat
-
-            for (auto &th : threadPool) 
-                th.join();
-
-            // Credit us with one pass for each of the threads we did work on
-            cPasses += cThreads;
+        // We create N threads and give them each the job of runing the 'runSieve' repeatedly until
+        // the thread is notified to stop when the time is up by setting keepRunning to false
+        for (unsigned int i = 0; i < cThreads; i++){
+            threadPool[i].n = llUpperLimit;
+            threadPool[i].t = thread(&ThreadParam::treadFunct, &threadPool[i]);
         }
+        
+        std::this_thread::sleep_for(std::chrono::seconds(cSeconds));
+
+        // Colect the numper of passes from each thead and ask them to stop
+        // The last uncompleted sieve is not counted
+        for (unsigned int i = 0; i < cThreads; i++){
+            threadPool[i].mtx.lock();
+            cPasses += threadPool[i].cPasses;
+            threadPool[i].keepRunning = false;
+            threadPool[i].mtx.unlock();
+        }
+
+        // Now we wait for all of the threads to finish
+        for (unsigned int i = 0; i < cThreads; i++){
+            threadPool[i].t.join();
+        }
+        delete[](threadPool);
     }
     else
     {
