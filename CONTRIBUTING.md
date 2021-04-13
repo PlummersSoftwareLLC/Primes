@@ -29,7 +29,7 @@ Now make sure to add a `README.md` conforming to at least this template:
 Now look on the `drag-race` branch, and see what the highest numbered
 implementation is for the language you chose, and place your solution
 in the following folder:
-`Prime<Language>/<solution>_<highest+1>/` where highest is the number of the
+`Prime<Language>/solution_<highest+1>/` where highest is the number of the
 highest numbered solution you found.
 Once you've done that, you are kindly requested to add a `Dockerfile` that
 is configured to run your solution and place the result, in the requested
