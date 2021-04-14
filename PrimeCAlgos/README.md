@@ -44,7 +44,7 @@ algorithm - sweeping through the sieve to mark the multiples of each prime.
 
 The overhead of managing the threads overwhelms any benefits on the 1 million number
 sieve, so the following table shows the performance of the various single-thread and
-multi-thread algorithms:
+multi-thread algorithms over a 10 million number sieve.
 
 ```
 model name      : Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz
