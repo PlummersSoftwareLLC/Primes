@@ -13,7 +13,7 @@ Passes: 5718, Time: 10.000857, Avg: 0.0017490132, Limit: 1000000, Count: 78498, 
 
 # HOW TO RUN
 
-Install Rust 1.51.0
+[Install Rust 1.51.0](https://www.rust-lang.org/tools/install)
 
 ```bash 
 $ cargo run --release
