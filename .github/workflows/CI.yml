@@ -2,24 +2,20 @@ name: CI
 
 on:
   push:
-    branches: [ drag-race ]
+    branches: ["**"]
   pull_request:
-    branches: [ drag-race ]
-    
-  workflow_dispatch:
-  
+    branches: ["**"]
+
 jobs:
-  test:
-    runs-on: "${{ matrix.os }}"
+  build:
+    runs-on: ubuntu-20.04
 
     strategy:
-      max-parallel: 1
       matrix:
         solution:
           - PrimeCrystal/stl-faithful/marghidanu
           - PrimeRust/stl-faithful/mike-barber
-        os: ["ubuntu-20.04"]
-    
+
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v2
@@ -31,31 +27,6 @@ jobs:
           echo "::set-output name=normalized::${NAME}"
 
       - name: "Build container image"
-        continue-on-error: true
         run: |
           cd "${{ matrix.solution }}"
           docker build -t "${{ steps.solution-name.outputs.normalized }}" .
-      
-      - name: "Run tests"
-        continue-on-error: true
-        run: |
-          docker run --rm "${{ steps.solution-name.outputs.normalized }}" | tee "${{ steps.solution-name.outputs.normalized }}-${{ matrix.os }}.out"
-      
-      - name: "Upload artifacts"
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ steps.solution-name.outputs.normalized }}
-          path: "*.out"
-
-  report:
-    runs-on: ubuntu-latest
-
-    needs: 
-      - test
-
-    steps:
-      - name: "Download artifacts"
-        uses: actions/download-artifact@v2
-      
-      - name: "List all artifacts"
-        run: tree
