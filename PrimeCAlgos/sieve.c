@@ -12,6 +12,8 @@ by Mike Koss (mike@mckoss.com)
 #include <time.h>    // clock, CLOCKS_PER_SEC
 #include <string.h>  // strcmp
 
+#include "prime-check.h"
+
 #define TRUE (1)
 #define FALSE (0)
 #define BOOL int
@@ -25,9 +27,7 @@ by Mike Koss (mike@mckoss.com)
 #define maskOf(n) (WORD)1 << (n / 2) % BITS_PER_WORD
 #define allocOf(n) indexOf(n) + 1
 
-// Primes to one million.
-#define MAX_NUMBER 1000000
-#define EXPECTED_PRIMES 78498
+int maxNumber = 1e6;
 
 //
 // Simple prime number sieve - one byte per number.
@@ -382,17 +382,22 @@ int countPrimesMod6(int maxNumber, BOOL fNeedCount) {
 }
 
 void timedTest(int secs, int primeFinder(int, int), char *title) {
+    clock_t startTicks = clock();
     clock_t currentTicks;
     int passes = 1;
 
-    clock_t limitTicks = secs * CLOCKS_PER_SEC + clock();
+    clock_t limitTicks = secs * CLOCKS_PER_SEC + startTicks;
 
     // Check first for accuracy.
-    int primeCount = primeFinder(MAX_NUMBER, TRUE);
-    if (primeCount != EXPECTED_PRIMES) {
-        printf("%s Expected %d primes - but found %d!\n", title,
-               EXPECTED_PRIMES, primeCount);
-        assert(FALSE);
+    int primeCount = primeFinder(maxNumber, TRUE);
+    for (int i = 0; i < NUM_CHECKS; i++) {
+        if (primeChecks[i].n == maxNumber) {
+            if (primeCount != primeChecks[i].piN) {
+                printf("%s Expected %d primes - but found %d!\n", title,
+                    primeChecks[i].piN, primeCount);
+                assert(FALSE);
+            }
+        }
     }
 
     while (TRUE) {
@@ -403,17 +408,22 @@ void timedTest(int secs, int primeFinder(int, int), char *title) {
         passes++;
         // Dave's Garage algos did not compute the total count
         // in the timed loop - just implemented the sieve.
-        primeFinder(MAX_NUMBER, FALSE);
+        primeFinder(maxNumber, FALSE);
     }
 
-    printf("%30s: %5d passes completed in %d seconds (%0.3f ms per pass).\n",
-           title, passes, secs, (float) secs / passes * 1000);
+    float elapsed = (float) currentTicks - startTicks;
+
+    printf(
+        "%30s: Found %d primes in %5d passes in %0.1f seconds (%0.3f ms per "
+        "pass).\n",
+        title, primeCount, passes, elapsed / CLOCKS_PER_SEC,
+        elapsed / passes * 1000 / CLOCKS_PER_SEC);
     // Don't buffer output since there is a lot of delay between tests.
     fflush(stdout);
 }
 
 void usage(char *name) {
-    fprintf(stderr, "Usage: %s --help --secs <s>\n", name);
+    fprintf(stderr, "Usage: %s --help --secs <s> --size <N>\n", name);
     exit(1);
 }
 
@@ -435,13 +445,25 @@ int main(int argc, char *argv[]) {
                         argv[iarg]);
                 usage(argv[0]);
             }
+        } else if (strcmp(argv[iarg], "--size") == 0) {
+            if (iarg + 1 == argc) {
+                fprintf(stderr,
+                        "Error: Missing size (range) of sieve.\n");
+                usage(argv[0]);
+            }
+            iarg++;
+            if (sscanf(argv[iarg], "%d", &maxNumber) != 1 || maxNumber < 1000) {
+                fprintf(stderr, "Error: Invalid sieve size: %s\n",
+                        argv[iarg]);
+                usage(argv[0]);
+            }
         } else {
             fprintf(stderr, "Error: Unknown argument: %s\n", argv[iarg]);
             usage(argv[0]);
         }
     }
 
-    printf("Calculate primes up to %d.\n", MAX_NUMBER);
+    printf("Calculate primes up to %d.\n", maxNumber);
     printf("Timer resolution: %d ticks per second.\n", CLOCKS_PER_SEC);
     printf("Word size: %d bits.\n\n", BITS_PER_WORD);
 

@@ -3,6 +3,7 @@
 set -e
 
 OFLAGS="-Ofast -march=native -mtune=native -funroll-all-loops"
+SIZE=1000000
 
 while [[ $1 != "" ]]; do
     case $1 in
@@ -12,6 +13,7 @@ while [[ $1 != "" ]]; do
         SFLAGS="--secs 1"
         TFLAGS="-Wall"
         TEST=1
+        SIZE=10000000
         ;;
     
     --debug)
@@ -44,11 +46,11 @@ echo
 echo Compiled with flags: $OFLAGS
 echo
 
-./sieve $SFLAGS
+./sieve $SFLAGS --size $SIZE
 echo
 
-./par-sieve $SFLAGS --threads 1
-for threads in {2..16}
+./par-sieve $SFLAGS --threads 1 --size $SIZE
+for threads in {2..32}
 do
-    ./par-sieve $SFLAGS --threads $threads | grep "per pass"
+    ./par-sieve $SFLAGS --threads $threads --size $SIZE | grep "per pass"
 done

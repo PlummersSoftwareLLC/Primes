@@ -10,8 +10,10 @@ by Mike Koss (mike@mckoss.com)
 #include <stdint.h>   // uint32_t
 #include <stdio.h>    // printf
 #include <stdlib.h>   // calloc
-#include <string.h>   // strncmp
+#include <string.h>   // strcmp
 #include <time.h>     // clock, CLOCKS_PER_SEC
+
+#include "prime-check.h"
 
 #define TRUE (1)
 #define FALSE (0)
@@ -27,8 +29,7 @@ by Mike Koss (mike@mckoss.com)
 #define allocOf(n) indexOf(n) + 1
 
 // Primes to ten million.
-#define MAX_NUMBER 10000000
-#define EXPECTED_PRIMES 664579
+int maxNumber = 1e7;
 
 BOOL fShowWork = FALSE;
 
@@ -54,7 +55,7 @@ void *sweep(SWEEP_VARS *psweepVars) {
         }
         int count = 0;
         // This is the inner-most loop gating performance.
-        for (unsigned int m = p * p; m < MAX_NUMBER; m += 2 * p) {
+        for (unsigned int m = p * p; m < maxNumber; m += 2 * p) {
             buffer[m] = TRUE;
             count++;
         }
@@ -196,21 +197,22 @@ int countPrimesBytesPar(int maxNumber, BOOL fNeedCount) {
 }
 
 void timedTest(int secs, int primeFinder(int, int), char *title) {
-    clock_t startTicks;
+    clock_t startTicks = clock();
     clock_t currentTicks;
     int passes = 1;
-
-    startTicks = clock();
 
     long limitTicks = secs * CLOCKS_PER_SEC + startTicks;
 
     // Check first for accuracy.
-    int primeCount = primeFinder(MAX_NUMBER, TRUE);
-
-    if (primeCount != EXPECTED_PRIMES) {
-        printf("%s Expected %d primes - but found %d!\n", title,
-               EXPECTED_PRIMES, primeCount);
-        assert(FALSE);
+    int primeCount = primeFinder(maxNumber, TRUE);
+    for (int i = 0; i < NUM_CHECKS; i++) {
+        if (primeChecks[i].n == maxNumber) {
+            if (primeCount != primeChecks[i].piN) {
+                printf("%s Expected %d primes - but found %d!\n", title,
+                       primeChecks[i].piN, primeCount);
+                assert(FALSE);
+            }
+        }
     }
 
     while (TRUE) {
@@ -221,18 +223,22 @@ void timedTest(int secs, int primeFinder(int, int), char *title) {
         passes++;
         // Dave's Garage algos did not compute the total count
         // in the timed loop - just implemented the sieve.
-        primeFinder(MAX_NUMBER, FALSE);
+        primeFinder(maxNumber, FALSE);
     }
 
-    printf("%30s: %5d passes completed in %d seconds (%0.3f ms per pass) (%d threads).\n",
-           title, passes, secs,
-           (float)secs / passes * 1000, numThreads);
+    float elapsed = (float) currentTicks - startTicks;
+
+    printf(
+        "%s: Found %d primes in %5d passes in %0.1f seconds (%0.3f ms per pass) "
+        "(%d threads).\n",
+        title, primeCount, passes, elapsed / CLOCKS_PER_SEC,
+        elapsed / passes * 1000 / CLOCKS_PER_SEC, numThreads);
     // Don't buffer output since there is a lot of delay between tests.
     fflush(stdout);
 }
 
 void usage(char *name) {
-    fprintf(stderr, "Usage: %s --help --secs <s> --threads <n> --show-work\n", name);
+    fprintf(stderr, "Usage: %s --help --secs <s> --size <N> --threads <n> --show-work\n", name);
     exit(1);
 }
 
@@ -264,6 +270,18 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: Invalid measurement time: %s\n", argv[iarg]);
                 usage(argv[0]);
             }
+        } else if (strcmp(argv[iarg], "--size") == 0) {
+            if (iarg + 1 == argc) {
+                fprintf(stderr,
+                        "Error: Missing size (range) of sieve.\n");
+                usage(argv[0]);
+            }
+            iarg++;
+            if (sscanf(argv[iarg], "%d", &maxNumber) != 1 || maxNumber < 1000) {
+                fprintf(stderr, "Error: Invalid sieve size: %s\n",
+                        argv[iarg]);
+                usage(argv[0]);
+            }
         } else if (strcmp(argv[iarg], "--show-work") == 0) {
             fShowWork = TRUE;
         } else {
@@ -272,13 +290,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("Calculate primes up to %d.\n", MAX_NUMBER);
+    printf("Calculate primes up to %d.\n", maxNumber);
     printf("Timer resolution: %d ticks per second.\n", CLOCKS_PER_SEC);
     printf("Word size: %d bits.\n", BITS_PER_WORD);
     printf("\n");
     fflush(stdout);
 
-    timedTest(secs, countPrimesBytesPar, "Parallel Byte-map - 1 of 2 tested");
+    timedTest(secs, countPrimesBytesPar, "Parallel Byte-map");
 
     return (0);
 }
