@@ -1,3 +1,5 @@
+require "bit_array"
+
 DICT = {
            10_u64 => 4,
           100_u64 => 25,
@@ -12,20 +14,17 @@ DICT = {
 }
 
 struct PrimeSieve
-  getter sieve_size = 0_u64
-  getter bits : Array(Bool)
-
-  def initialize(@sieve_size)
-    @bits = Array(Bool).new(@sieve_size, true)
+  def initialize(@sieve_size : UInt64)
+    @bits = BitArray.new(@sieve_size.to_i32)
   end
 
   def run_sieve
-    factor = 3
+    factor = 3_u64
     while factor <= Math.sqrt(@sieve_size)
       num = factor
 
       while num < @sieve_size
-        if @bits[num]
+        if !@bits[num]
           factor = num
           break
         end
@@ -34,7 +33,7 @@ struct PrimeSieve
 
       num2 = factor * factor
       while num2 < @sieve_size
-        @bits[num2] = false
+        @bits[num2] = true
         num2 += factor * 2
       end
 
@@ -47,7 +46,7 @@ struct PrimeSieve
 
     count = 1
     (3..@sieve_size).step(2).each do |v|
-      if @bits[v]
+      if !@bits[v]
         printf("%d", v) if show_results
         count += 1
       end
@@ -67,7 +66,7 @@ struct PrimeSieve
   end
 
   def count_primes
-    ((3..@sieve_size).step(2).select { |v| @bits[v] }).size + 1
+    ((3..@sieve_size).step(2).select { |v| !@bits[v] }).size + 1
   end
 
   def validate_results

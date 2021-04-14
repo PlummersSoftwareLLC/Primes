@@ -17,33 +17,28 @@ Crystal is available for several operating systems. Please follow the installati
 I managed to build a native executable for M1 using Crystal cross-compilation.
 
 ```
-./compile_m1.sh
-NO_COMPILE=1 ./run.sh
-```
-
-```
-Iteration 01: Passes: 3628 Time: 5.000000 Avg: 0.001378 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 02: Passes: 4426 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 03: Passes: 4419 Time: 5.000000 Avg: 0.001131 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 04: Passes: 4425 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 05: Passes: 4424 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 06: Passes: 4405 Time: 5.000000 Avg: 0.001135 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 07: Passes: 4423 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 08: Passes: 4426 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 09: Passes: 4426 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 10: Passes: 4441 Time: 5.000000 Avg: 0.001126 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 11: Passes: 4424 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 12: Passes: 4414 Time: 5.000000 Avg: 0.001133 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 13: Passes: 4420 Time: 5.000000 Avg: 0.001131 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 14: Passes: 4410 Time: 5.000000 Avg: 0.001134 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 15: Passes: 4428 Time: 5.000000 Avg: 0.001129 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 16: Passes: 4423 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 17: Passes: 4425 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 18: Passes: 4424 Time: 5.000000 Avg: 0.001130 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 19: Passes: 4420 Time: 5.000000 Avg: 0.001131 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-Iteration 20: Passes: 4419 Time: 5.000000 Avg: 0.001131 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 01: Passes: 3914 Time: 5.000000 Avg: 0.001277 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 02: Passes: 4741 Time: 5.000000 Avg: 0.001055 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 03: Passes: 4739 Time: 5.000000 Avg: 0.001055 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 04: Passes: 4731 Time: 5.000000 Avg: 0.001057 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 05: Passes: 4737 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 06: Passes: 4732 Time: 5.000000 Avg: 0.001057 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 07: Passes: 4735 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 08: Passes: 4723 Time: 5.000000 Avg: 0.001059 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 09: Passes: 4718 Time: 5.000000 Avg: 0.001060 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 10: Passes: 4732 Time: 5.000000 Avg: 0.001057 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 11: Passes: 4736 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 12: Passes: 4736 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 13: Passes: 4735 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 14: Passes: 4734 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 15: Passes: 4733 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 16: Passes: 4736 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 17: Passes: 4732 Time: 5.000000 Avg: 0.001057 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 18: Passes: 4736 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 19: Passes: 4734 Time: 5.000000 Avg: 0.001056 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Iteration 20: Passes: 4739 Time: 5.000000 Avg: 0.001055 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
 -----
-Best result is: 4441
+Best result is: 4741
 ```
 
 NOTE: The processor seems to be limited as the execution is not spiking on any of the cores.
@@ -56,7 +51,7 @@ Chip Apple M1
 Memory 8GB
 ```
 
-Unfortunately, the Crystal compiler is not ready for the M1 processor. But I've tested it on an M1 Macbook Air inside Docker. The application was compiled under the Alpine Docker image generating an **ARM aarch64** executable:
+I've also tested the implementation on an M1 Macbook Air inside Docker. The application was compiled under the Alpine Docker image generating an **ARM aarch64** executable:
 
 ```
 docker-compose build
