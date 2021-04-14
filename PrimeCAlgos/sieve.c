@@ -3,6 +3,17 @@ Various prime sieve algorithms speed tested.
 
 April 2021
 by Mike Koss (mike@mckoss.com)
+
+Acknowledgements:
+
+@danielspaangberg - For showing me the best gcc optimization flags.
+
+@ednl - Directing me to the very extensive algorithm analysis:
+    https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes#Computational_analysis
+
+@Kinematics - Pointing out how to skip 1 in 3 inner loop composites
+    in the mod 6 variants.
+
 */
 #include <assert.h>  // assert
 #include <math.h>    // sqrt
@@ -166,10 +177,10 @@ int countPrimes2of6(int maxNumber, BOOL fNeedCount) {
 
         // No need to start less than p^2 since all those
         // multiples have already been marked.
-        // Note: we are setting bits we will never test (are not
-        // congruent to 1 or 5 mod 6).  But, the extra check for
-        // mod 6 in the inner loop here would make it slower.
-        for (unsigned int m = p * p; m < maxNumber; m += 2 * p) {
+        // Similarly skip all but those prime multiples that
+        // are not congruent to 1 or 5.
+        unsigned int iStep = step;
+        for (unsigned int m = p * p; m < maxNumber; m += p * iStep, iStep = 6 - iStep) {
             buffer[indexOf(m)] |= maskOf(m);
         }
     }
@@ -318,14 +329,9 @@ int countPrimes8of30(int maxNumber, BOOL fNeedCount) {
 //   0: Prime
 //   1: Composite
 //
-//
 // Bits in lsb order:
 // 1, 5, 7, 11, 13, 17, 19, 23,
 // (2 numbers in every 6, i.e., 1/3 of the numbers stored)
-//
-// Using 32-bit WORDS
-// (n - 1) / 3 / 32 => word address in buffer
-// ((n - 1) / 3) % 32 => bit address in byte
 //
 #define indexOf6(n) (n / 3) / BITS_PER_WORD
 #define maskOf6(n) (WORD)1 << (n / 3) % BITS_PER_WORD
@@ -356,11 +362,11 @@ int countPrimesMod6(int maxNumber, BOOL fNeedCount) {
 
         // No need to start less than p^2 since all those
         // multiples have already been marked.
-        for (unsigned int m = p * p; m < maxNumber; m += 2 * p) {
-            unsigned int mod = m % 6;
-            if (mod == 1 || mod == 5) {
-                buffer[indexOf6(m)] |= maskOf6(m);
-            }
+        // Similarly skip all but those prime multiples that
+        // are not congruent to 1 or 5.
+        unsigned int iStep = step;
+        for (unsigned int m = p * p; m < maxNumber; m += p * iStep, iStep = 6 - iStep) {
+            buffer[indexOf6(m)] |= maskOf6(m);
         }
     }
 

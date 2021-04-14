@@ -46,6 +46,7 @@ echo
 echo Compiled with flags: $OFLAGS
 echo
 
+./sieve $SFLAGS --size 1000000
 ./sieve $SFLAGS --size $SIZE
 echo
 

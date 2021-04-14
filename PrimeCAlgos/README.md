@@ -24,16 +24,21 @@ the 64 bit code is now 7% faster than 32 bit! - mck 4/9/21*
 This is the output on my machine as of April 2021:
 
 ```
-Compiling with flags: -Ofast -march=native -mtune=native -funroll-all-loops
+model name      : Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz
+cpu MHz         : 3700.000
+cache size      : 12288 KB
+
+Compiled with flags: -Ofast -march=native -mtune=native -funroll-all-loops
+
 Calculate primes up to 1000000.
 Timer resolution: 1000 ticks per second.
 Word size: 64 bits.
 
-      Byte-map - 1 of 2 tested:  6552 passes completed in 5 seconds (0.763 ms per pass).
-       Bit-map - 1 of 2 tested:  9523 passes completed in 5 seconds (0.525 ms per pass).
-       Bit-map - 2 of 6 tested: 12607 passes completed in 5 seconds (0.397 ms per pass).
-      Bit-map - 8 of 30 tested: 25517 passes completed in 5 seconds (0.196 ms per pass).
-                   1/3 Bit-map:  7417 passes completed in 5 seconds (0.674 ms per pass).
+      Byte-map - 1 of 2 tested: Found 78498 primes in  1318 passes in 1.0 seconds (0.759 ms per pass).
+       Bit-map - 1 of 2 tested: Found 78498 primes in  1887 passes in 1.0 seconds (0.530 ms per pass).
+       Bit-map - 2 of 6 tested: Found 78498 primes in  2817 passes in 1.0 seconds (0.355 ms per pass).
+      Bit-map - 8 of 30 tested: Found 78498 primes in  5054 passes in 1.0 seconds (0.198 ms per pass).
+                   1/3 Bit-map: Found 78498 primes in  2440 passes in 1.0 seconds (0.410 ms per pass).
 ```
 
 # Parallel computation of Sieve
