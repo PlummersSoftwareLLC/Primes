@@ -176,7 +176,7 @@ pub mod primes {
                     .unwrap();
 
                 // reset flags starting at `start`, every `factor`'th flag
-                let start = factor * 3 / 2;
+                let start = factor * factor / 2;
                 let skip = factor;
                 self.flags.reset_flags(start, skip);
 
