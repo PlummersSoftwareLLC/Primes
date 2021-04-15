@@ -41,7 +41,6 @@ namespace PrimeCSharp
         {
             string versionMessage = runSettings switch
             {
-                { RawParallel: true } => "parallel version",
                 { Original: true } => "original",
                 { BoolArray: true } => "bool array",
                 { InvertedBoolArray: true } => "inverted bool array",
@@ -49,13 +48,14 @@ namespace PrimeCSharp
                 { RawBits: true } => "raw bits",
                 { RawBits32: true } => "raw bits uint",
                 { RawBitsDirect: true } => "raw bits direct",
+                { RawBits2Of6: true } => "raw bits [2 of 6]",
+                { RawParallel: true } => "parallel version",
                 { ArrayPool: true } => "array pool",
                 { ArrayPoolRef: true } => "array pool - ref struct",
                 { ArrayPool2Of6: true } => "array pool [2 of 6]",
+                { ArrayPool6P: true } => "parallel array pool [2 of 6]",
                 { ArrayPool8of30: true } => "array pool [8 of 30]",
                 { ArrayPool8of30M: true } => "array pool [8 of 30] with bitmasking",
-                { RawBits2Of6: true } => "raw bits [2 of 6]",
-                { ArrayPool6P: true } => "parallel array pool [2 of 6]",
                 _ => "standard"
             };
 
