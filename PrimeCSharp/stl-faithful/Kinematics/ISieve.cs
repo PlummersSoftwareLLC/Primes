@@ -9,6 +9,8 @@ namespace PrimeCSharp
         int CountPrimes();
         IEnumerable<int> GetFoundPrimes();
 
+        bool IsParallel => false;
+
         public bool? IsCountValid()
         {
             return PrimeData.IsCountCorrect(SieveSize, CountPrimes());

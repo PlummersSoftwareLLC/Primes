@@ -10,6 +10,7 @@ namespace PrimeCSharp.Sieves
     {
         private readonly long[] data;
         private readonly int threadCount;
+        public bool IsParallel => true;
 
         public PrimeSieveArrayPool6Par(int sieveSize, int threadCount)
         {

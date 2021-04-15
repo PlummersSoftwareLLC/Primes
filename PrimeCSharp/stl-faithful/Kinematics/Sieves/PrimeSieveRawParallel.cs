@@ -12,6 +12,7 @@ namespace PrimeCSharp.Sieves
         private readonly uint[] rawbits;
         private readonly int threadCount;
         private const int elementBits = 32;
+        public bool IsParallel => true;
 
         public PrimeSieveRawParallel(int sieveSize, int threadCount)
         {
