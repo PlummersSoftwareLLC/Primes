@@ -13,7 +13,7 @@ namespace PrimeCSharp
 
         public static void RunSieve(RunSettings runSettings)
         {
-            Console.WriteLine($"Starting ({GetVersionMessage(runSettings)})...");
+            Console.WriteLine($"@Kinematics: Starting ({GetVersionMessage(runSettings)})...");
 
             if (RunStructs(runSettings))
                 return;
@@ -32,7 +32,7 @@ namespace PrimeCSharp
             watch.Stop();
 
             if (sieve is not null)
-                PrintResults(sieve, passes, watch, runSettings.ShowResults);
+                PrintResults(sieve, passes, watch, runSettings);
             else
                 Console.WriteLine("Invalid state after run.");
         }
@@ -132,9 +132,9 @@ namespace PrimeCSharp
         }
 
 
-        private static void PrintResults(ISieve sieve, int passes, Stopwatch watch, bool showResults)
+        private static void PrintResults(ISieve sieve, int passes, Stopwatch watch, RunSettings runSettings)
         {
-            if (showResults)
+            if (runSettings.ShowResults)
             {
                 string listing = sieve.GetFoundPrimes()
                     .Select(a => a.ToString())
@@ -144,12 +144,29 @@ namespace PrimeCSharp
                 Console.WriteLine();
             }
 
+            int threads = 1;
+            if (runSettings.MultiThreaded)
+            {
+                threads = runSettings.ThreadCount == 0 ? Environment.ProcessorCount : runSettings.ThreadCount;
+            }
+
+            int pthreads = 1;
+            if (sieve.IsParallel)
+            {
+                pthreads = runSettings.PThreadCount == 0 ? Environment.ProcessorCount : runSettings.PThreadCount;
+            }
+
             List<string> results = new();
 
             results.Add($"Passes: {passes}");
-            results.Add($"Time: {watch.Elapsed.TotalSeconds:G3}");
-            results.Add($"MS per Loop: {((double)watch.ElapsedMilliseconds / passes):F6}");
+            results.Add($"Time: {watch.Elapsed.TotalSeconds:G6} s");
+            results.Add($"Per Loop: {((double)watch.ElapsedMilliseconds / passes):F6} ms");
             results.Add($"Sieve Size: {sieve.SieveSize}");
+            results.Add($"Thread Count: {threads}");
+            if (sieve.IsParallel)
+            {
+                results.Add($"Parallel Thread Count: {pthreads}");
+            }
             results.Add($"Primes Found: {sieve.CountPrimes()}");
             results.Add($"Valid: {PrimeData.IsCountCorrect(sieve.SieveSize, sieve.CountPrimes())?.ToString() ?? "Unable to determine"}");
 
