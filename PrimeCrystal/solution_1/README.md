@@ -69,7 +69,11 @@ GASP! It looks like the numbers are better under Rosetta!
 **Memory:** 16GB 2133 MHz LPDDR3
 
 ```
-
+Passes: 4580 Time: 5.000000 Avg: 0.001092 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Passes: 4992 Time: 5.000000 Avg: 0.001002 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Passes: 4985 Time: 5.000000 Avg: 0.001003 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Passes: 4822 Time: 5.000000 Avg: 0.001037 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+Passes: 4982 Time: 5.000000 Avg: 0.001004 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
 ```
 
 ### Raspberry PI 
