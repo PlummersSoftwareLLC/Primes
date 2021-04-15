@@ -49,7 +49,7 @@ namespace PrimeCSharp
                 { RawBits32: true } => "raw bits uint",
                 { RawBitsDirect: true } => "raw bits direct",
                 { RawBits2Of6: true } => "raw bits [2 of 6]",
-                { RawParallel: true } => "parallel version",
+                { RawParallel: true } => "raw bits parallel version",
                 { ArrayPool: true } => "array pool",
                 { ArrayPoolRef: true } => "array pool - ref struct",
                 { ArrayPool2Of6: true } => "array pool [2 of 6]",
