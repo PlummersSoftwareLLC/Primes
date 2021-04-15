@@ -57,49 +57,77 @@ If no version is specified, it runs the 'Standard' implementation.
 
 Results that I get, running these on a Ryzen 3700X.
 
+```
 @Kinematics: Starting (original)...
 Passes: 2680, Time: 5.00174 s, Per Loop: 1.866045 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (standard)...
 Passes: 3691, Time: 5.00157 s, Per Loop: 1.354917 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (bool array)...
 Passes: 5207, Time: 5.00002 s, Per Loop: 0.960246 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (inverted bool array)...
 Passes: 6370, Time: 5.00017 s, Per Loop: 0.784929 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (direct access inverted bool array)...
 Passes: 9006, Time: 5.00018 s, Per Loop: 0.555185 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (raw bits)...
 Passes: 6227, Time: 5.00053 s, Per Loop: 0.802955 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (raw bits uint)...
 Passes: 6422, Time: 5.00064 s, Per Loop: 0.778574 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (raw bits direct)...
 Passes: 6188, Time: 5.00076 s, Per Loop: 0.808016 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (array pool)...
 Passes: 6132, Time: 5.00039 s, Per Loop: 0.815395 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (array pool - ref struct)...
 Passes: 6056, Time: 5, MS per Loop: 0.825627, Sieve Size: 1000000, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (array pool [2 of 6])...
 Passes: 9746, Time: 5.0002 s, Per Loop: 0.513031 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (parallel array pool [2 of 6])...
 Passes: 6811, Time: 5.0004 s, Per Loop: 0.734107 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 3, Primes Found: 78498, Valid: True
+```
 
+```
 @Kinematics: Starting (raw bits parallel version)...
 Passes: 4627, Time: 5.00086 s, Per Loop: 1.080614 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 3, Primes Found: 78498, Valid: True
+```
 
 NB: Parallel versions don't start outperforming linear versions until 10,000,000 sieve size.
 
+```
 @Kinematics: Starting (array pool [8 of 30])...
 Passes: 7799, Time: 5.00053 s, Per Loop: 0.641108 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
 
 
 And results of running --benchmark
