@@ -104,15 +104,18 @@ namespace PrimeCSharp.Sieves
             {
                 index /= 2;
 
-                uint raw = GetRawBits(bits, index / elementBits);
                 uint mask = ~(1u << (int)(index % elementBits));
 
-                uint nRaw = raw & mask;
+                GetRawBits(bits, index / elementBits) &= mask;
 
-                while (Interlocked.CompareExchange(ref GetRawBits(bits, index / elementBits), nRaw, raw) != raw)
-                {
-                    raw = GetRawBits(bits, index / elementBits);
-                }
+                // Test Interlocked.CompareExchange penalty
+                //uint raw = GetRawBits(bits, index / elementBits);
+                //uint nRaw = raw & mask;
+
+                //while (Interlocked.CompareExchange(ref GetRawBits(bits, index / elementBits), nRaw, raw) != raw)
+                //{
+                //    raw = GetRawBits(bits, index / elementBits);
+                //}
             }
         }
     }
