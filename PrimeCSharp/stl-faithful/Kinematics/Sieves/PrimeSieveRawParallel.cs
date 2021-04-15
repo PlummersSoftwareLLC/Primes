@@ -80,7 +80,7 @@ namespace PrimeCSharp.Sieves
 
                         int factorStart = mult * factor;
 
-                        for (int num = factorStart; num < rangeEnd; num += factor * 2)
+                        for (int num = factorStart; num <= rangeEnd; num += factor * 2)
                         {
                             ClearBit(rawbits, num);
                         }
