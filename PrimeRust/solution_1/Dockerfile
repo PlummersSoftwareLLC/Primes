@@ -17,5 +17,5 @@ FROM debian:buster-slim AS runtime
 WORKDIR /app
 
 # app and configuration
-COPY --from=builder /app/target/release/abstracted abstracted
-ENTRYPOINT [ "./abstracted" ]
+COPY --from=builder /app/target/release/prime-sieve-rust prime-sieve-rust
+ENTRYPOINT [ "./prime-sieve-rust" ]
