@@ -36,9 +36,9 @@ I'm currently using the built-in `BitArray` implementation for storing boolean v
 
 ### Running under M1
 
-**Machine:** MacBook Air (M1, 2020)
-**Processor:** Chip Apple M1
-**Memory** 8GB
+**Machine:** MacBook Air (M1, 2020)<br/>
+**Processor:** Chip Apple M1<br/>
+**Memory** 8GB<br/>
 
 There's no **Crystal** build for the M1 yet, but I managed to get a native executable by using Crystal's cross-compilation feature. Running the benchmark with five iterations yields the following results:
 
@@ -64,9 +64,9 @@ GASP! It looks like the numbers are better under Rosetta!
 
 ### Running under Intel
 
-**Machine:** MacBook Pro (13-inch, 2018, Four Thunderbolt 3 Ports)
-**Processor:** 2.3 GHz Quad-Core Intel Core i5
-**Memory:** 16GB 2133 MHz LPDDR3
+**Machine:** MacBook Pro (13-inch, 2018, Four Thunderbolt 3 Ports)<br/>
+**Processor:** 2.3 GHz Quad-Core Intel Core i5<br/>
+**Memory:** 16GB 2133 MHz LPDDR3<br/>
 
 ```
 Passes: 4580 Time: 5.000000 Avg: 0.001092 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
@@ -78,9 +78,9 @@ Passes: 4982 Time: 5.000000 Avg: 0.001004 Limit: 1000000 Count1: 78498 Count2: 7
 
 ### Raspberry PI 
 
-**Machine:** Raspberry PI 4B 8GB
-**Processor:** 1.5 GHz Cortex A72 64bit
-**Memory:** 8GB LPDDR4 SDRAM
+**Machine:** Raspberry PI 4B 8GB<br/>
+**Processor:** 1.5 GHz Cortex A72 64bit<br/>
+**Memory:** 8GB LPDDR4 SDRAM<br/>
 
 The Raspberry PI is running Ubuntu 20.10 and is using standard factory settings.
 
