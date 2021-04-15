@@ -102,4 +102,27 @@ Starting (array pool [8 of 30])...
 Passes: 7790, Time: 5, MS per Loop: 0.641849, Sieve Size: 1000000, Primes Found: 78498, Valid: True
 
 
+And results of running --benchmark
+
+```
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
+AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
+.NET Core SDK=5.0.201
+  [Host]     : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
+  DefaultJob : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
+
+
+|             Method | SieveSize |       Mean |    Error |   StdDev | Ratio |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |
+|------------------- |---------- |-----------:|---------:|---------:|------:|---------:|---------:|---------:|----------:|
+|           Original |   1000000 | 1,393.0 us |  6.28 us |  5.57 us |  1.00 |   5.8594 |        - |        - |   62592 B |
+|           Standard |   1000000 | 1,394.2 us |  9.99 us |  8.86 us |  1.00 |   5.8594 |        - |        - |   62592 B |
+|               Bool |   1000000 |   998.0 us | 15.34 us | 14.35 us |  0.72 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+|       InvertedBool |   1000000 |   817.6 us |  9.30 us |  8.24 us |  0.59 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+| DirectInvertedBool |   1000000 |   577.9 us |  8.38 us |  7.84 us |  0.41 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+|            RawBits |   1000000 |   827.2 us |  8.63 us |  8.07 us |  0.59 |  19.5313 |  19.5313 |  19.5313 |   62560 B |
+|     ArrayPoolClass |   1000000 |   816.4 us |  1.86 us |  1.55 us |  0.59 |        - |        - |        - |      32 B |
+|      ArrayPool2Of6 |   1000000 |   505.2 us |  2.05 us |  1.81 us |  0.36 |        - |        - |        - |      32 B |
+|      ArrayPool6Par |   1000000 |   714.5 us |  1.82 us |  1.61 us |  0.51 |  35.1563 |        - |        - |  296369 B |
+```
+
 

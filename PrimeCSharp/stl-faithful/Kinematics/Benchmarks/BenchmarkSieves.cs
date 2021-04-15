@@ -49,13 +49,13 @@ namespace PrimeCSharp.Benchmarks
         }
 
         [Benchmark]
-        public void ArrayPool()
+        public void ArrayPoolClass()
         {
             new PrimeSieveArrayPool(SieveSize).Run();
         }
 
         [Benchmark]
-        public void ArrayPoolClassOf6()
+        public void ArrayPool2Of6()
         {
             new PrimeSieveArrayPool2Of6(SieveSize).Run();
         }
