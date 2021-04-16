@@ -1,6 +1,6 @@
 # MIXAL solution by rbergen
 
-*Category: Unfaithful / Best Possible*
+*Category: Unfaithful / Closest Approximation*
 
 This is an implementation in the assembly language for the MIX computer, described in D.E. Knuth's book series The Art of Computer Programming.
 
@@ -14,7 +14,7 @@ Due to this, the implementation deviates from the basic rules in a number of way
 * The implementation does itself not run for a period of 5 seconds and will in fact keep repeating sieve runs indefinitely. The reason is that MIX has no internal clock that measures actual time. Instruction execution times are measured in "ticks", the duration of which is undefined, by design. In practice, this means that if a timed execution is desired, the starting, timing and stopping of it must be controlled external to the program.
 * The output of the implementation is not sent to the console, but to the (emulated) printer and has a different format than the basic rules specify. The output to printer was chosen because that allows the output of the program to be kept in the printer device file.
 
-These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "Best Possible". 
+These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "Closest Approximation". 
 
 ## Run instructions
 
