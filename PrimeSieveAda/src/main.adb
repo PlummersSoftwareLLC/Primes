@@ -1,28 +1,28 @@
 with Ada.Unchecked_Deallocation;
-with Ada.Text_IO;   use Ada.Text_IO;
-with Ada.Real_Time; use Ada.Real_Time;
+with Ada.Text_IO;       use Ada.Text_IO;
+with Ada.Real_Time;     use Ada.Real_Time;
+with Ada.Strings;       use Ada.Strings;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Numerics.Long_Long_Elementary_Functions;
 use Ada.Numerics.Long_Long_Elementary_Functions;
 
 procedure Main is
 
+   -- Types
    type Int_64 is new Long_Long_Integer;
-   type Bit_Array is array (Int_64 range <>) of Boolean;
-   type Bit_Array_Access is access all Bit_Array;
-
-   procedure Free is new Ada.Unchecked_Deallocation (Bit_Array, Bit_Array_Access);
-
    subtype Power_Of_Ten is Natural range 1 .. 10;
    type Results_Array is array (Power_Of_Ten) of Int_64;
+   type Bit_Array is array (Int_64 range <>) of Boolean;
+   type Bit_Array_Access is access all Bit_Array;
+   procedure Free is new Ada.Unchecked_Deallocation (Bit_Array, Bit_Array_Access);
 
    -- Settings
-
    Test_Duration : constant Time_Span    := Seconds (5);
    Test_Power    : constant Power_Of_Ten := 6;
-   Show_Primes   : constant Boolean      := False; 
+   Show_Official : constant Boolean      := True;
+   Show_Primes   : constant Boolean      := False;
 
    -- Constants
-
    Expected_Array : constant Results_Array := (
        1 => 4,            -- 10 **  1 =>             10
        2 => 25,           -- 10 **  2 =>            100
@@ -38,8 +38,10 @@ procedure Main is
    Expected   : constant Int_64 := Expected_Array (Test_Power);
    Q          : constant Int_64 := Int_64 (Sqrt (Long_Long_Float (Sieve_Size)));
 
+   ---------------
+   -- Run Sieve --
+   ---------------
    procedure Run_Sieve (Bits : in Bit_Array_Access; Sieve_Size : in Int_64) is
-      use Ada.Numerics.Long_Long_Elementary_Functions;
       Factor : Int_64 := 3;
       Num    : Int_64;
    begin
@@ -61,6 +63,9 @@ procedure Main is
       end loop;
    end Run_Sieve;
 
+   ------------------
+   -- Count Primes --
+   ------------------
    function Count_Primes (Bits : in Bit_Array_Access) return Int_64 is
       Count : Int_64 := 1;
    begin
@@ -72,7 +77,32 @@ procedure Main is
       return Count;
    end Count_Primes;
 
-   procedure Print_Result (
+   ----------------------------
+   -- Print Official Results --
+   ----------------------------
+   -- Prints results matching those in the Contributing guide.
+   procedure Print_Official_Result (
+      Name        : in String;
+      Passes      : in Int_64;
+      Elapsed     : in Time_Span;
+      Num_Threads : in Positive)
+   is 
+      Elapsed_Duration    : Duration := To_Duration (Elapsed);
+      Passes_Trimmed      : String   := Trim (Passes'Image, Both);
+      Elapsed_Trimmed     : String   := Trim (Elapsed_Duration'Image, Both);
+      Num_Threads_Trimmed : String   := Trim (Num_Threads'Image, Both);
+   begin
+      Put (Name);            Put (";");
+      Put (Passes_Trimmed);  Put (";");
+      Put (Elapsed_Trimmed); Put (";");
+      Put (Num_Threads_Trimmed);
+   end Print_Official_Result;
+
+   ----------------------------
+   -- Print Original Results --
+   ----------------------------
+   -- Prints results matching those originally in Dave's video and implementation.
+   procedure Print_Original_Result (
       Passes   : in Int_64;
       Elapsed  : in Time_Span;
       Limit    : in Int_64;
@@ -90,8 +120,12 @@ procedure Main is
       Put ("Actual:" & Actual'Image & ", ");
       Put ("Valid: " & Boolean'Image (Expected = Actual));
       New_Line;
-   end Print_Result;
+   end Print_Original_Result;
 
+   ------------------
+   -- Print Primes --
+   ------------------
+   -- Prints the found primes in a JSON array litteral format.
    procedure Print_Primes (Bits : in Bit_Array_Access) is begin
       Put ("[ 2");
       for I in Bits.all'Range loop
@@ -103,13 +137,15 @@ procedure Main is
       New_Line;
    end Print_Primes;
 
+----------
+-- Main --
+----------
+   Start, Target, Finish : Time;
    Passes : Int_64 := 0;
    Bits   : Bit_Array_Access := new Bit_Array(3 .. Sieve_Size);
-   Start  : Time := Clock;
-   Target : Time := Start + Test_Duration;
-   Finish : Time;
 begin
-
+   Start  := Clock;
+   Target := Start + Test_Duration;
    while Clock < Target loop
       Bits.all := (others => True);
       Run_Sieve (Bits, Sieve_Size);
@@ -117,7 +153,8 @@ begin
    end loop;
    Finish := Clock;
    
-   Print_Result (Passes, Finish - Start, Sieve_Size, Expected, Count_Primes (Bits));
-   if Show_Primes then Print_Primes (Bits); end if;
+   if     Show_Official then Print_Official_Result ("Ada", Passes, Finish - Start, 1); end if;
+   if not Show_Official then Print_Original_Result (Passes, Finish - Start, Sieve_Size, Expected, Count_Primes (Bits)); end if;
+   if     Show_Primes   then Print_Primes (Bits); end if;
    Free (Bits);
 end Main;
