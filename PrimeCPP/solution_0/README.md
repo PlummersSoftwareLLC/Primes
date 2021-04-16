@@ -1,10 +1,12 @@
-# C++ solution by davepl
+# C++ solution by @davepl
 
 *TODO: CategoryBadge:faithful*
 
 This is the original solution submitted by @davepl.
 
 ## Run instructions
+
+*TODO: Verify*
 
 ### Windows
 
@@ -21,8 +23,6 @@ Have gcc installed.
 ```
 ./run.sh
 ```
-
-*Describe how to run your application here*
 
 ## Output
 

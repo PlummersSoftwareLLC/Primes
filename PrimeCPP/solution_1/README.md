@@ -1,4 +1,4 @@
-# C++ solution by davepl
+# C++ solution by @davepl
 
 *TODO: CategoryBadge:parallel*
 
