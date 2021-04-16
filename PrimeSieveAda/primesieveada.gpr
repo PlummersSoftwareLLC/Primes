@@ -8,11 +8,28 @@ project PrimeSieveAda is
    for Main use ("main.adb");
 
    package Compiler is
+   
+      -- These are my unscientific observations from testing by 
+      -- removing each option one by one. I've decided to only leave
+      -- the options that seem to have a preceptable difference
+      -- in since though there might be some benefit on some
+      -- other platforms.
+
+      -- first number is before adding the option
+      -- second number is after adding the option
+
+      -- O3                        -> 1800  passes to 12400 passes
+      -- gnatp                     -> 11100 passes to 12400 passes
+      -- gnatn                     -> no preceptable difference
+      -- gnatx                     -> no preceptable difference
+      -- unroll-loops              -> 9800 passes to 12400 passes
+      -- fast-math                 -> no preceptable difference
+      -- unsafe-math-optimizations -> no preceptable difference
+
       for Switches ("ada") use (
-        "-O3",            -- Optimize as much as possible
-        "-gnatn",         -- Inline
-        "-funroll-loops", -- Unroll Loops
-        "-gnatp");        -- Suppress all runtime checks
+        "-O3",             -- Optimize as much as possible
+        "-gnatp",          -- Suppress all runtime checks
+        "-funroll-loops"); -- Unroll Loops      
    end Compiler;
 
 end PrimeSieveAda;
