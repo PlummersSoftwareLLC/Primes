@@ -17,7 +17,7 @@ class prime_sieve(object):
     rawbits = None   # Storage for sieve - since we filter evens, just half as many bits
     sieveSize = 0    # Upper limit, highest prime we'll consider
 
-    primeCounts = { 10 : 1,                 # Historical data for validating our results - the number of primes
+    primeCounts = { 10 : 4,                 # Historical data for validating our results - the number of primes
                     100 : 25,               # to be found under some limit, such as 168 primes under 1000
                     1000 : 168,
                     10000 : 1229,
