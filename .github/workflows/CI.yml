@@ -13,8 +13,8 @@ jobs:
     strategy:
       matrix:
         solution:
-          - PrimeCrystal/stl-faithful/marghidanu
-          - PrimeRust/solution_1
+          - PrimeCrystal/solution_0
+          - PrimeRust/solution_0
         os: ["ubuntu-20.04"]
 
     steps:
