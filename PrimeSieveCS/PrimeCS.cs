@@ -117,15 +117,13 @@ namespace PrimeSieveCS
             }
         }
 
-        private const long TEN_SECONDS = 10 * 1000;
-
         static void Main(string[] args)
         {
             var watch = Stopwatch.StartNew();
             var passes = 0;
             prime_sieve sieve = null;
 
-            while (watch.ElapsedMilliseconds < TEN_SECONDS)
+            while (watch.ElapsedMilliseconds < 5000)
             {
                 sieve = new prime_sieve(1000000);
                 sieve.runSieve();
