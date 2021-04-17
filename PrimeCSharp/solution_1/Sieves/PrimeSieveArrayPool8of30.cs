@@ -10,7 +10,7 @@ namespace PrimeCSharp.Sieves
         public int SieveSize { get; }
 
         // The primes data
-        private readonly long[] data;
+        private readonly ulong[] data;
 
         const int stepsLength = 8;
 
@@ -24,7 +24,7 @@ namespace PrimeCSharp.Sieves
         public PrimeSieveArrayPool8of30(int sieveSize)
         {
             SieveSize = sieveSize;
-            data = ArrayPool<long>.Shared.Rent(SieveSize >> 6);
+            data = ArrayPool<ulong>.Shared.Rent((SieveSize >> 6) + 1);
         }
 
         public int CountPrimes()
@@ -67,8 +67,8 @@ namespace PrimeCSharp.Sieves
         public void Run()
         {
             int q = (int)Math.Sqrt(SieveSize);
-            Span<long> bits = data.AsSpan();
-            bits.Fill(long.MaxValue);
+            Span<ulong> bits = data.AsSpan();
+            bits.Fill(ulong.MaxValue);
 
             // We can skip 2, 3, and 5, and start our checks with 7.
             // This will be index 1 in the steps list.
@@ -81,30 +81,38 @@ namespace PrimeCSharp.Sieves
             {
                 if (GetBit(ref bits, factor))
                 {
-                    int iStep = step;
+                    //int iStep = step;
+                    //int nInc = steps[iStep];
 
                     // This simplified version of the for loop is 5% slower:
                     //for (int num = factor * factor;
                     //    num <= SieveSize;
                     //    num += factor * steps[iStep], iStep = (iStep + 1) % 8)
 
-                    for (int num = factor * factor, nInc = steps[iStep];
-                        num <= SieveSize;
-                        num += factor * nInc, iStep = (iStep + 1) % stepsLength, nInc = steps[iStep])
+                    for (int num = factor * factor, iStep = step, nInc = steps[iStep];
+                        num <= SieveSize;)
                     {
                         ClearBit(ref bits, num);
                         //ClearCount++;
+
+                        num += factor * nInc;
+
+                        // This is 50% faster overall than using the %8 logic:
+                        if (++iStep == 8)
+                            iStep = 0;
+
+                        nInc = steps[iStep];
                     }
                 }
             }
 
-            ArrayPool<long>.Shared.Return(data);
+            ArrayPool<ulong>.Shared.Return(data);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool GetBit(ref Span<long> bits, int index) => (bits[index >> 6] & (1 << (index >> 1))) != 0;
+        private static bool GetBit(ref Span<ulong> bits, int index) => (bits[index >> 6] & (1UL << (index >> 1))) != 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ClearBit(ref Span<long> bits, int index) => bits[index >> 6] &= ~(1 << (index >> 1));
+        private static void ClearBit(ref Span<ulong> bits, int index) => bits[index >> 6] &= ~(1UL << (index >> 1));
     }
 }
