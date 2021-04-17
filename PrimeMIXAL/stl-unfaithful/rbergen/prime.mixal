@@ -39,7 +39,7 @@ LTWDCT  EQU     LTBTCT/LTBPW    Sieve full word count literal
 LTBWCT  EQU     LTWDCT*LTBPW    Sieve bits in full words literal
 LTRBTCT EQU     LTBTCT-LTBWCT   Sieve bits remainder literal
 
-* Runtime variable
+* Runtime variables
 SVSIZE	CON	LTSVSZ          Sieve size variable
 BTPRWRD CON     LTBPW           Bits per word variable
 NUM     CON     0	        Number variable (too big for rI)
@@ -88,7 +88,7 @@ SETFCTR LD2     NUM             Load factor into rI2
 SETLOOP ENTA    0               Prepare rAX for division
         STX     NUM             Hang on to our number
         SRB     1               Divide by 2...
-        DIV     BTPRWRD         ...and then the number of bits per werd
+        DIV     BTPRWRD         ...and then the number of bits per word
         STA     *+1(ADDR)       rA contains the word index, which we...
         ENT3    *               ...load into rI3...
         LDA     BTARR,3         ...so we can then load the correct word into rA
@@ -151,7 +151,7 @@ PRTRSLT LDA     PRMCNT          Load prime count in rA so we can convert
 
 * Start of check loop
 CHKLOOP LDA     CHCKTBL,3       Load sieve size from check table
-        JAN     SVUNKNW         If we sieve size < 0, we have no answer
+        JAN     SVUNKNW         If we have a sieve size < 0, we have no answer
         CMPA    SVSIZE          If check table sieve size equals ours...
         JE      CHKVAL          ...check its value
         INC3    2               Move to next check table record

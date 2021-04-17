@@ -18,7 +18,7 @@ These deviations are part of the implementation out of necessity, but I have mad
 
 ## Run instructions
 
-The program has been tested to work executed using the MixEmul emulator, which can be acquired in source code and binary form from [its GitHub repository](https://github.com/rbergen/MixEmul). Alternative emulators are available, like the [GNU MIX Development Kit (MDK)](https://www.gnu.org/software/mdk/) and those listed on [Donald Knuth's The Art of Computer Programming (TAOCP) webpage](https://www-cs-faculty.stanford.edu/~knuth/taocp.html), under the MIXware section. The emulator that is chosen must implement the JxE, JxO, SLB and SRB instructions.
+The program has been tested to work and executed using the MixEmul emulator, which can be acquired in source code and binary form from [its GitHub repository](https://github.com/rbergen/MixEmul). Alternative emulators are available, like the [GNU MIX Development Kit (MDK)](https://www.gnu.org/software/mdk/) and those listed on [Donald Knuth's The Art of Computer Programming (TAOCP) webpage](https://www-cs-faculty.stanford.edu/~knuth/taocp.html), under the MIXware section. The emulator that is chosen must implement the JxE, JxO, SLB and SRB instructions.
 
 If MixEmul is used, the instructions for running the program are as follows:
 1. Start MixEmul
