@@ -13,7 +13,7 @@ jobs:
       max-parallel: 1
       matrix:
         solution:
-          - PrimeCrystal/stl-faithful/marghidanu
+          - PrimeCrystal/solution_1
           - PrimeRust/solution_1
         os: ["ubuntu-20.04"]
 

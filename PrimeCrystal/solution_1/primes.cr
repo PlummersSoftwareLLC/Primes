@@ -1,59 +1,64 @@
-class PrimeSieve
-  getter sieve_size = 0_u64
-  getter bits : Array(Bool)
-  getter my_dict : Hash(UInt64, Int32) = {
-             10_u64 => 4,
-            100_u64 => 25,
-           1000_u64 => 168,
-          10000_u64 => 1229,
-         100000_u64 => 9592,
-        1000000_u64 => 78498,
-       10000000_u64 => 664579,
-      100000000_u64 => 5761455,
-     1000000000_u64 => 50847534,
-    10000000000_u64 => 455052511,
-  }
+require "bit_array"
 
-  def initialize(@sieve_size)
-    @bits = Array(Bool).new(@sieve_size, true)
+DICT = {
+           10_u64 => 4,
+          100_u64 => 25,
+         1000_u64 => 168,
+        10000_u64 => 1229,
+       100000_u64 => 9592,
+      1000000_u64 => 78498,
+     10000000_u64 => 664579,
+    100000000_u64 => 5761455,
+   1000000000_u64 => 50847534,
+  10000000000_u64 => 455052511,
+}
+
+struct PrimeSieve
+  def initialize(@sieve_size : UInt64)
+    @bits = BitArray.new(@sieve_size.to_i32)
   end
 
   def run_sieve
-    factor = 3
-    q = Math.sqrt(@sieve_size)
+    factor = 3_u64
+    q = Math.sqrt(@sieve_size).to_u64
 
     while factor <= q
       num = factor
+
       while num < @sieve_size
-        if (@bits[num])
+        if !@bits[num]
           factor = num
           break
         end
-        num += 2
+        num += 2_u64
       end
 
-      num2 = factor ** 2
+      num2 = factor * factor
       while num2 < @sieve_size
-        @bits[num2] = false
-        num2 += factor * 2
+        @bits[num2] = true
+        num2 += factor * 2_u64
       end
 
-      factor += 2
+      factor += 2_u64
     end
   end
 
   def print_results(show_results : Bool, duration : Float64, passes : Int32)
-    printf("2, ") if show_results
+    if show_results
+      printf("2, ")
+    end
 
     count = 1
     (3..@sieve_size).step(2).each do |v|
-      if @bits[v]
+      if !@bits[v]
         printf("%d", v) if show_results
         count += 1
       end
     end
 
-    puts if show_results
+    if show_results
+      puts
+    end
 
     printf("Passes: %d Time: %f Avg: %f Limit: %d Count1: %d Count2: %d Valid: %s\n",
       passes,
@@ -67,24 +72,25 @@ class PrimeSieve
   end
 
   def count_primes
-    ((3..@sieve_size).step(2).select { |v| @bits[v] }).size + 1
+    count = (3_u64..@sieve_size).step(2_u64).select { |v| !@bits[v] }
+    count.size + 1
   end
 
   def validate_results
-    @my_dict[@sieve_size] == count_primes()
+    DICT[@sieve_size] == count_primes()
   end
 end
 
 passes = 0
 start_time = Time.utc.to_unix
 
-while true
+loop do
   sieve = PrimeSieve.new(1000000_u64)
   sieve.run_sieve
-  passes += 1
 
+  passes += 1
   duration = (Time.utc.to_unix - start_time).to_f64
-  if duration >= 5
+  if duration >= 5_f64
     sieve.print_results(false, duration, passes)
     break
   end
