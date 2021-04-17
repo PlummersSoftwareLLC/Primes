@@ -19,8 +19,10 @@ These deviations are part of the implementation out of necessity, but I have mad
 
 Towards the top of the prime.mixal file, a number of parameters can be set:
 * `LTSVSZ` (line 13): sieve size that should be used. Note that if the sieve size is changed, the next parameter must also be changed.
-* `SVSQRT` (line 14): square root of the sieve size. It needs to be passed as a paramter because MIX does not include an instruction with which square roots can be calculated. 
-* `RUNCT` (line 15): number of sieve runs that should be executed. If this is set to a number less than 1, the program will repeat sieve runs indefinitely.
+* `SVSQRT` (line 14): square root of the sieve size. It needs to be passed as a parameter because MIX does not include an instruction with which square roots can be calculated. 
+* `RUNCT` (line 15): number of sieve runs that should be executed. If this is set to a number less than 1, the program will run indefinitely.
+* `DOPRTRN` (line 16): set to something other than 0 to print a result line after each run
+* `DOPRTRT` (line 17): set to something other than 0 to print a result line in "drag-race" format when the last run has completed
 
 ## Run instructions
 
@@ -48,39 +50,48 @@ mixvm -r prime
 
 ## Output
 
-When using a sieve size of 200,000 and 27 runs, output is as follows when using MDK:
+When using a sieve size of 200,000 and 27 runs, with both run and end result output enabled, output is as follows when using MDK:
 
 ```
-Program loaded. Start address: 3424
+Program loaded. Start address: 3429
 Running ...
-RUN: 00001, PRIMES: 17984, RESULT: RIGHT
-RUN: 00002, PRIMES: 17984, RESULT: RIGHT
-RUN: 00003, PRIMES: 17984, RESULT: RIGHT
-RUN: 00004, PRIMES: 17984, RESULT: RIGHT
-RUN: 00005, PRIMES: 17984, RESULT: RIGHT
-RUN: 00006, PRIMES: 17984, RESULT: RIGHT
-RUN: 00007, PRIMES: 17984, RESULT: RIGHT
-RUN: 00008, PRIMES: 17984, RESULT: RIGHT
-RUN: 00009, PRIMES: 17984, RESULT: RIGHT
-RUN: 00010, PRIMES: 17984, RESULT: RIGHT
-RUN: 00011, PRIMES: 17984, RESULT: RIGHT
-RUN: 00012, PRIMES: 17984, RESULT: RIGHT
-RUN: 00013, PRIMES: 17984, RESULT: RIGHT
-RUN: 00014, PRIMES: 17984, RESULT: RIGHT
-RUN: 00015, PRIMES: 17984, RESULT: RIGHT
-RUN: 00016, PRIMES: 17984, RESULT: RIGHT
-RUN: 00017, PRIMES: 17984, RESULT: RIGHT
-RUN: 00018, PRIMES: 17984, RESULT: RIGHT
-RUN: 00019, PRIMES: 17984, RESULT: RIGHT
-RUN: 00020, PRIMES: 17984, RESULT: RIGHT
-RUN: 00021, PRIMES: 17984, RESULT: RIGHT
-RUN: 00022, PRIMES: 17984, RESULT: RIGHT
-RUN: 00023, PRIMES: 17984, RESULT: RIGHT
-RUN: 00024, PRIMES: 17984, RESULT: RIGHT
-RUN: 00025, PRIMES: 17984, RESULT: RIGHT
-RUN: 00026, PRIMES: 17984, RESULT: RIGHT
-RUN: 00027, PRIMES: 17984, RESULT: RIGHT
+RUN: 00001, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00002, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00003, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00004, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00005, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00006, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00007, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00008, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00009, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00010, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00011, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00012, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00013, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00014, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00015, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00016, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00017, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00018, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00019, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00020, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00021, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00022, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00023, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00024, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00025, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00026, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00027, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RBERGEN;27;;1
 ... done
 ```
 
-This was the output of a run that took approximately 5 seconds on my machine when using MDK. This is also why 27 is the value for `RUNCT` in the submitted version of this implementation.
+When run result output is disabled, the output is as follows:
+```
+Program loaded. Start address: 3429
+Running ...
+RBERGEN;27;;1
+... done
+```
+
+This was the output of runs that took approximately 5 seconds on my machine when using MDK. This is also why 27 is the value for `RUNCT` in the submitted version of this implementation.
