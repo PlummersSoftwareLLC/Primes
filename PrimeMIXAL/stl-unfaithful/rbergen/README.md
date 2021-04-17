@@ -11,7 +11,7 @@ As a computer, MIX has a number of specific characteristics:
 
 Due to this, the implementation deviates from the basic rules in a number of ways:
 * By default, the sieve size is 200,000 instead of 1,000,000. The reason is that MIX has a total memory capacity of 3,999 words, each 30 bits wide. This does not allow for a bit array of 500,000 entries to be stored. In the practical sense, a sieve size of 200,000 is the maximum.
-* The implementation does itself not run for a period of 5 seconds and will in fact keep repeating sieve runs indefinitely. The reason is that MIX has no internal clock that measures actual time. Instruction execution times are measured in "ticks", the duration of which is undefined, by design. In practice, this means that if a timed execution is desired, the starting, timing and stopping of it must be controlled external to the program.
+* The implementation does itself not run for a period of 5 seconds. Instead, depending on configuration it will either execute a configured number of sieve runs, or keep repeating sieve runs indefinitely. The reason is that MIX has no internal clock that measures actual time. Instruction execution times are measured in "ticks", the duration of which is undefined, by design. In practice, this means that if a timed execution is desired, the starting, timing and stopping of it must be controlled external to the program.
 
 These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "Closest Approximation". 
 
@@ -20,7 +20,7 @@ These deviations are part of the implementation out of necessity, but I have mad
 Towards the top of the prime.mixal file, a number of parameters can be set:
 * `LTSVSZ` (line 13): sieve size that should be used. Note that if the sieve size is changed, the next parameter must also be changed.
 * `SVSQRT` (line 14): square root of the sieve size. It needs to be passed as a paramter because MIX does not include an instruction with which square roots can be calculated. 
-* `RUNCT` (line 15): number of sieve runs that should be executed. If this is set to a number less than 1, the program will run indefinitely.
+* `RUNCT` (line 15): number of sieve runs that should be executed. If this is set to a number less than 1, the program will repeat sieve runs indefinitely.
 
 ## Run instructions
 
@@ -30,6 +30,7 @@ The program has been tested to work and executed using:
 
 Other emulators are available, like those listed on [Donald Knuth's The Art of Computer Programming (TAOCP) webpage](https://www-cs-faculty.stanford.edu/~knuth/taocp.html), under the MIXware section. The emulator that is chosen must implement the JxE, JxO, SLB and SRB instructions.
 
+### MixEmul
 If MixEmul is used, the instructions for running the program are as follows:
 1. Start MixEmul
 2. Load prime.mixal using File -> Open program...
@@ -37,6 +38,13 @@ If MixEmul is used, the instructions for running the program are as follows:
 4. Choose Actions -> Detach, to make program execution run in the background. This step can be skipped if it is desired to visually follow the program's execution. Do note that execution times in Attached mode are significantly longer.
 5. Choose View -> Show Device Editor, and select the Printer tab in the window that appears
 6. Choose Actions -> Run to start the implementation 
+
+### MDK
+Execute the following commands from the implementation directory:
+```
+mixasm prime
+mixvm -r prime
+```
 
 ## Output
 
