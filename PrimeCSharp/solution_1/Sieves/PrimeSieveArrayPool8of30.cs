@@ -7,15 +7,19 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveArrayPool8of30 : ISieve
     {
+        public int SieveSize { get; }
+
         // The primes data
         private readonly long[] data;
 
+        const int stepsLength = 8;
+
         // Only numbers congruent to candidates mod 30 can be prime.
         // Only for informative purposes
-        //int[] candidates = new int[8] { 1, 7, 11, 13, 17, 19, 23, 29 };
+        //int[] candidates = new int[stepsLength] { 1, 7, 11, 13, 17, 19, 23, 29 };
 
         // Steps are the distances to the next candidate
-        readonly int[] steps = new int[8] { 6, 4, 2, 4, 2, 4, 6, 2 };
+        readonly int[] steps = new int[stepsLength] { 6, 4, 2, 4, 2, 4, 6, 2 };
 
         public PrimeSieveArrayPool8of30(int sieveSize)
         {
@@ -23,16 +27,15 @@ namespace PrimeCSharp.Sieves
             data = ArrayPool<long>.Shared.Rent(SieveSize >> 6);
         }
 
-        public int SieveSize { get; }
-
         public int CountPrimes()
         {
             int count = 3;
-            int step = 1;
 
             var bits = data.AsSpan();
 
-            for (int index = 7; index <= SieveSize; index += steps[step], step = (step + 1) % 8)
+            for (int index = 7, step = 1, inc = steps[step];
+                 index <= SieveSize;
+                 index += inc, step = (step + 1) % 8, inc = steps[step])
             {
                 if (GetBit(ref bits, index)) count++;
             }
@@ -43,11 +46,12 @@ namespace PrimeCSharp.Sieves
         public IEnumerable<int> GetFoundPrimes()
         {
             List<int> result = new() { 2, 3, 5 };
-            int step = 1;
 
             var bits = data.AsSpan();
 
-            for (int index = 7; index <= SieveSize; index += steps[step], step = (step + 1) % 8)
+            for (int index = 7, step = 1, inc = steps[step];
+                 index <= SieveSize;
+                 index += inc, step = (step + 1) % 8, inc = steps[step])
             {
                 if (GetBit(ref bits, index))
                 {
@@ -86,7 +90,7 @@ namespace PrimeCSharp.Sieves
 
                     for (int num = factor * factor, nInc = steps[iStep];
                         num <= SieveSize;
-                        num += factor * nInc, iStep = (iStep + 1) % 8, nInc = steps[iStep])
+                        num += factor * nInc, iStep = (iStep + 1) % stepsLength, nInc = steps[iStep])
                     {
                         ClearBit(ref bits, num);
                         //ClearCount++;
