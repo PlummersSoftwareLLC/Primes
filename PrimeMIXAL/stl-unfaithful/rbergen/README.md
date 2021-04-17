@@ -12,13 +12,23 @@ As a computer, MIX has a number of specific characteristics:
 Due to this, the implementation deviates from the basic rules in a number of ways:
 * By default, the sieve size is 200,000 instead of 1,000,000. The reason is that MIX has a total memory capacity of 3,999 words, each 30 bits wide. This does not allow for a bit array of 500,000 entries to be stored. In the practical sense, a sieve size of 200,000 is the maximum.
 * The implementation does itself not run for a period of 5 seconds and will in fact keep repeating sieve runs indefinitely. The reason is that MIX has no internal clock that measures actual time. Instruction execution times are measured in "ticks", the duration of which is undefined, by design. In practice, this means that if a timed execution is desired, the starting, timing and stopping of it must be controlled external to the program.
-* The output of the implementation is not sent to the console, but to the (emulated) printer and has a different format than the basic rules specify. The output to printer was chosen because that allows the output of the program to be kept in the printer device file.
 
 These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "Closest Approximation". 
 
+## Parameters
+
+Towards the top of the prime.mixal file, a number of parameters can be set:
+* `LTSVSZ` (line 13): sieve size that should be used. Note that if the sieve size is changed, the next parameter must also be changed.
+* `SVSQRT` (line 14): square root of the sieve size. It needs to be passed as a paramter because MIX does not include an instruction with which square roots can be calculated. 
+* `RUNCT` (line 15): number of sieve runs that should be executed. If this is set to a number less than 1, the program will run indefinitely.
+
 ## Run instructions
 
-The program has been tested to work and executed using the MixEmul emulator, which can be acquired in source code and binary form from [its GitHub repository](https://github.com/rbergen/MixEmul). Alternative emulators are available, like the [GNU MIX Development Kit (MDK)](https://www.gnu.org/software/mdk/) and those listed on [Donald Knuth's The Art of Computer Programming (TAOCP) webpage](https://www-cs-faculty.stanford.edu/~knuth/taocp.html), under the MIXware section. The emulator that is chosen must implement the JxE, JxO, SLB and SRB instructions.
+The program has been tested to work and executed using:
+* the MixEmul emulator, which can be acquired in source code and binary form from [its GitHub repository](https://github.com/rbergen/MixEmul). 
+* the [GNU MIX Development Kit (MDK)](https://www.gnu.org/software/mdk/)
+
+Other emulators are available, like those listed on [Donald Knuth's The Art of Computer Programming (TAOCP) webpage](https://www-cs-faculty.stanford.edu/~knuth/taocp.html), under the MIXware section. The emulator that is chosen must implement the JxE, JxO, SLB and SRB instructions.
 
 If MixEmul is used, the instructions for running the program are as follows:
 1. Start MixEmul
@@ -28,18 +38,41 @@ If MixEmul is used, the instructions for running the program are as follows:
 5. Choose View -> Show Device Editor, and select the Printer tab in the window that appears
 6. Choose Actions -> Run to start the implementation 
 
-It is possible to modify the sieve size by changing the value of `LTSVSZ` on line 13 of the prime.mixal source file. Do note that the square root of the sieve size in `SVSQRT` on the next line **must** then also be changed accordingly. MIX does not include an instruction with which square roots can be calculated. 
-
 ## Output
 
-When using a sieve size of 200,000 output is as follows:
+When using a sieve size of 200,000 and 27 runs, output is as follows when using MDK:
 
 ```
+Program loaded. Start address: 3424
+Running ...
 RUN: 00001, PRIMES: 17984, RESULT: RIGHT
 RUN: 00002, PRIMES: 17984, RESULT: RIGHT
 RUN: 00003, PRIMES: 17984, RESULT: RIGHT
 RUN: 00004, PRIMES: 17984, RESULT: RIGHT
 RUN: 00005, PRIMES: 17984, RESULT: RIGHT
-...
+RUN: 00006, PRIMES: 17984, RESULT: RIGHT
+RUN: 00007, PRIMES: 17984, RESULT: RIGHT
+RUN: 00008, PRIMES: 17984, RESULT: RIGHT
+RUN: 00009, PRIMES: 17984, RESULT: RIGHT
+RUN: 00010, PRIMES: 17984, RESULT: RIGHT
+RUN: 00011, PRIMES: 17984, RESULT: RIGHT
+RUN: 00012, PRIMES: 17984, RESULT: RIGHT
+RUN: 00013, PRIMES: 17984, RESULT: RIGHT
+RUN: 00014, PRIMES: 17984, RESULT: RIGHT
+RUN: 00015, PRIMES: 17984, RESULT: RIGHT
+RUN: 00016, PRIMES: 17984, RESULT: RIGHT
+RUN: 00017, PRIMES: 17984, RESULT: RIGHT
+RUN: 00018, PRIMES: 17984, RESULT: RIGHT
+RUN: 00019, PRIMES: 17984, RESULT: RIGHT
+RUN: 00020, PRIMES: 17984, RESULT: RIGHT
+RUN: 00021, PRIMES: 17984, RESULT: RIGHT
+RUN: 00022, PRIMES: 17984, RESULT: RIGHT
+RUN: 00023, PRIMES: 17984, RESULT: RIGHT
+RUN: 00024, PRIMES: 17984, RESULT: RIGHT
+RUN: 00025, PRIMES: 17984, RESULT: RIGHT
+RUN: 00026, PRIMES: 17984, RESULT: RIGHT
+RUN: 00027, PRIMES: 17984, RESULT: RIGHT
+... done
 ```
-On my system, a manually timed, detached, single run in a Release build of MixEmul, takes 14 seconds to complete.
+
+This was the output of a run that took approximately 5 seconds on my machine when using MDK. This is also why 27 is the value for `RUNCT` in the submitted version of this implementation.
