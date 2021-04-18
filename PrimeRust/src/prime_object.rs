@@ -4,7 +4,6 @@ pub use std::time::{Duration, Instant};
 pub struct PrimeSieve {
     sieve_size: usize,
     raw_bits: Vec<bool>,
-    prime_counts: HashMap<usize, usize>,
 }
 
 impl PrimeSieve {
@@ -12,21 +11,6 @@ impl PrimeSieve {
         PrimeSieve {
             sieve_size: limit,
             raw_bits: vec![true; limit],
-            prime_counts: [
-                (10, 4),
-                (100, 25),
-                (1000, 168),
-                (10000, 1229),
-                (100000, 9592),
-                (1000000, 78498),
-                (10000000, 664579),
-                (100000000, 5761455),
-                (1000000000, 50847534),
-                (10000000000, 455052511),
-            ]
-            .iter()
-            .cloned()
-            .collect(),
         }
     }
 
@@ -61,8 +45,23 @@ impl PrimeSieve {
     }
 
     fn validate_results(&self) -> bool {
-        if self.prime_counts.contains_key(&self.sieve_size) {
-            return self.prime_counts.get(&self.sieve_size) == Some(&self.count_primes());
+        let historical_data: HashMap<usize, usize> = [
+            (10, 4),
+            (100, 25),
+            (1000, 168),
+            (10000, 1229),
+            (100000, 9592),
+            (1000000, 78498),
+            (10000000, 664579),
+            (100000000, 5761455),
+            (1000000000, 50847534),
+            (10000000000, 455052511),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        if historical_data.contains_key(&self.sieve_size) {
+            return historical_data.get(&self.sieve_size) == Some(&self.count_primes());
         }
         return false;
     }
