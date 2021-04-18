@@ -15,9 +15,13 @@ jobs:
         uses: actions/checkout@v2
       
       - name: "Find Dockerfiles"
+        id: "solutions"
         run: |
           SOLUTIONS=$(find . -type f -name Dockerfile -exec dirname {} \;| sed -e 's|^./||' |jq -R '[.]' | jq -s -c -M 'add')
           echo "::set-output name=solutions::${SOLUTIONS}"
+    
+    outputs:
+      solutions: ${{ steps.solutions.outputs.solutions }}
 
   build:
     runs-on: ubuntu-20.04
@@ -26,9 +30,7 @@ jobs:
 
     strategy:
       matrix:
-        solution:
-          - PrimeCrystal/solution_1
-          - PrimeRust/solution_1
+        solution: ${{ fromJson(needs.collect.outputs.solutions) }}
         os: ["ubuntu-20.04"]
 
     steps:
