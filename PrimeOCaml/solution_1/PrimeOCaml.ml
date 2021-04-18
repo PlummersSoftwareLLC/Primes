@@ -68,9 +68,9 @@ class prime_sieve limit =
 					else total)
 			in
 			if show_results then printf "... \nCount: %d\n" count;
-			printf "gkpotter-faithful;%d;%f;1\n" 
-				passes
-				duration
+				printf "gkpotter-faithful;%d;%f;1\n" 
+					passes
+					duration
 	end
 ;;
 
