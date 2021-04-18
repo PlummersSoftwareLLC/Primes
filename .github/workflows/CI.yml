@@ -16,7 +16,7 @@ jobs:
       
       - name: "Find Dockerfiles"
         run: |
-          $SOLUTIONS=$(find . -type f -name Dockerfile -exec dirname {} \;| sed -e 's|^./||' |jq -R '[.]' | jq -s -c -M 'add')
+          SOLUTIONS=$(find . -type f -name Dockerfile -exec dirname {} \;| sed -e 's|^./||' |jq -R '[.]' | jq -s -c -M 'add')
           echo "::set-output name=solutions::${SOLUTIONS}"
 
   build:
