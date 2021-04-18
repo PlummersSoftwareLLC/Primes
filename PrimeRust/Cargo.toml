@@ -1,5 +1,5 @@
 [package]
-name = "PrimeRust"
+name = "prime_rust"
 version = "0.1.0"
 authors = ["Rafael Lúcio <rafaellucio@pm.me>"]
 edition = "2018"
