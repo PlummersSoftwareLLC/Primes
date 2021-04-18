@@ -3,6 +3,9 @@ name: Benchmark
 on:
   # schedule:
   #   - cron: "0 20 * * *"
+  push:
+    branches: ["**"]
+
   workflow_dispatch:
 
 jobs:
