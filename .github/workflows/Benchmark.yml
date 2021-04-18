@@ -1,20 +1,34 @@
 name: Benchmark
 
 on:
-  schedule:
-    - cron: "0 20 * * *"
+  # schedule:
+  #   - cron: "0 20 * * *"
   workflow_dispatch:
 
 jobs:
+  collect-solutions:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Find Dockerfiles"
+        id: "solutions"
+        run: |
+          SOLUTIONS=$(find . -type f -name Dockerfile -exec dirname {} \;| sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
+          echo "::set-output name=solutions::${SOLUTIONS}"
+
+    outputs:
+      solutions: ${{ steps.solutions.outputs.solutions }}
+
   test:
     runs-on: "${{ matrix.os }}"
 
     strategy:
       max-parallel: 1
       matrix:
-        solution:
-          - PrimeCrystal/solution_1
-          - PrimeRust/solution_1
+        solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
         os: ["ubuntu-20.04"]
 
     steps:
