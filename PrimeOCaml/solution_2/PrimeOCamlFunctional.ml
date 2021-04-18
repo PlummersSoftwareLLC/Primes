@@ -70,9 +70,9 @@ let print_results sieve show_results duration passes =
 			else total)
 	in
 	if show_results then printf "... \nCount: %d\n" count;
-		printf "gkpotter-unfaithful;%d;%f;1\n" 
-			passes
-			duration
+	printf "gkpotter-unfaithful;%d;%f;1\n" 
+		passes
+		duration
 ;;
 
 let create_sieve limit = 
