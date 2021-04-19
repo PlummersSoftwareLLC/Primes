@@ -14,21 +14,26 @@ impl PrimeSieve {
         }
     }
 
-    pub fn run_sieve(&self) {
-        let mut raw_bits: Vec<bool> = vec![true; self.sieve_size];
-
-        let q = (self.sieve_size as f32).sqrt().round() as usize;
+    pub fn run_sieve(&mut self) {
+        let q = (self.sieve_size as f32).sqrt() as usize;
         let mut factor = 3;
 
         while factor < q {
-            for num in factor..self.sieve_size {
-                if raw_bits[num] {
+
+            let mut num = factor;
+            while num < q {
+                if self.raw_bits[num] {
                     factor = num;
                     break;
                 }
+                num += 2;
             }
-            for num in (factor * factor)..self.sieve_size {
-                raw_bits[num] = false;
+
+            num = factor * 3;
+
+            while num < self.sieve_size {
+                self.raw_bits[num] = false;
+                num += factor * 2;
             }
             factor += 2;
         }
