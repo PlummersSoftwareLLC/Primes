@@ -19,7 +19,6 @@ impl PrimeSieve {
         let mut factor = 3;
 
         while factor < q {
-
             let mut num = factor;
             while num < q {
                 if self.raw_bits[num] {
@@ -82,14 +81,28 @@ impl PrimeSieve {
         if show_results {
             print!("2, ");
         }
-        let mut count = 1;
+        let mut count = 0;
+        let mut num = 3;
 
-        for num in 3..self.sieve_size {
-            if self.raw_bits[num] && show_results {
-                print!("{}, ", num);
+        loop {
+            if self.raw_bits[num] {
+                if show_results {
+                    print!("{}, ", num);
+                }
+                count += 1;
             }
-            count += 1;
+
+            num += 2;
+
+            if num >= (self.sieve_size - 1) {
+                break;
+            }
         }
+
+        if show_results {
+            println!("");
+        }
+
         println!("");
         print!("Passes: {}, ", passes);
         print!("Time: {:?}, ", duration);
