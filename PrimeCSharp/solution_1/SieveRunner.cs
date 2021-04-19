@@ -37,6 +37,84 @@ namespace PrimeCSharp
                 Console.WriteLine("Invalid state after run.");
         }
 
+        public static void RunAllSieves(RunSettings options)
+        {
+            RunSettings tmpOptions = options.Copy();
+
+            tmpOptions.Original = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.Standard = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.BoolArray = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.InvertedBoolArray = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.DirectInvertedBoolArray = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.RawBits = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.RawBits32 = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.RawBitsDirect = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.RawBits2Of6 = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.RawParallel = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.ArrayPool = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.ArrayPool2Of6 = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.ArrayPool6P = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.ArrayPool8of30 = true;
+            RunSieve(tmpOptions);
+            Console.WriteLine();
+            tmpOptions = options.Copy();
+
+            tmpOptions.ArrayPool8of30M = true;
+            RunSieve(tmpOptions);
+        }
+
         private static string GetVersionMessage(RunSettings runSettings)
         {
             string versionMessage = runSettings switch

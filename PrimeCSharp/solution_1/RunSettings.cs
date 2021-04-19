@@ -29,6 +29,10 @@ namespace PrimeCSharp
         public int PThreadCount { get; set; }
 
 
+        [Option("all",
+            Default = false, HelpText = "Run all of the sieve algorithms in sequence.")]
+        public bool RunAllSieves { get; set; }
+
         [Option("original",
             Default = false, HelpText = "Run the original version of the sieve.")]
         public bool Original { get; set; }
@@ -102,5 +106,38 @@ namespace PrimeCSharp
         [Option('b', "bench",
             Default = "", HelpText = "A type of benchmark to run. Leaving it blank will run the standard benchmarks. Current options: mod, ref, ofN, par")]
         public string? Bench { get; set; }
+
+
+        public RunSettings Copy()
+        {
+            return new RunSettings()
+            {
+                ArrayPool = this.ArrayPool,
+                ArrayPool2Of6 = this.ArrayPool2Of6,
+                ArrayPool6P = this.ArrayPool6P,
+                ArrayPool8of30 = this.ArrayPool8of30,
+                ArrayPool8of30M = this.ArrayPool8of30M,
+                ArrayPoolRef = this.ArrayPoolRef,
+                Bench = this.Bench,
+                Benchmark = this.Benchmark,
+                BoolArray = this.BoolArray,
+                DirectInvertedBoolArray = this.DirectInvertedBoolArray,
+                InvertedBoolArray = this.InvertedBoolArray,
+                MultiThreaded = this.MultiThreaded,
+                Original = this.Original,
+                PThreadCount = this.PThreadCount,
+                RawParallel = this.RawParallel,
+                RawBits = this.RawBits,
+                RawBits2Of6 = this.RawBits2Of6,
+                RawBits32 = this.RawBits32,
+                RawBitsDirect = this.RawBitsDirect,
+                RunAllSieves = this.RunAllSieves,
+                SecondsToRun = this.SecondsToRun,
+                ShowResults = this.ShowResults,
+                SieveSize = this.SieveSize,
+                Standard = this.Standard,
+                ThreadCount = this.ThreadCount
+            };
+        }
     }
 }
