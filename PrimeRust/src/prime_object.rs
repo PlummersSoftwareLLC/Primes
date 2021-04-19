@@ -39,7 +39,7 @@ impl PrimeSieve {
     }
 
     fn count_primes(&self) -> usize {
-        let mut count: usize = 0;
+        let mut count: usize = 1;
         let mut i = 3;
 
         loop {
@@ -48,7 +48,7 @@ impl PrimeSieve {
             }
             i += 2;
 
-            if i >= (self.sieve_size - 1) {
+            if i > (self.sieve_size) {
                 break;
             }
         }
@@ -71,6 +71,7 @@ impl PrimeSieve {
         .iter()
         .cloned()
         .collect();
+
         if historical_data.contains_key(&self.sieve_size) {
             return historical_data.get(&self.sieve_size) == Some(&self.count_primes());
         }
@@ -81,7 +82,7 @@ impl PrimeSieve {
         if show_results {
             print!("2, ");
         }
-        let mut count = 0;
+        let mut count = 1;
         let mut num = 3;
 
         loop {
@@ -94,7 +95,7 @@ impl PrimeSieve {
 
             num += 2;
 
-            if num >= (self.sieve_size - 1) {
+            if num > (self.sieve_size) {
                 break;
             }
         }
