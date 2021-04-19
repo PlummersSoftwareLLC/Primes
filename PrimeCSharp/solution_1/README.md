@@ -2,30 +2,32 @@
 
 ## C# solution by @Kinematics
 
-## Building
-
 This is a collection of prime sieve algorithms implemented in C#.  It uses .NET 5, and can be compiled using Visual Studio 16.9 or later.
 
-To compile from the commandline, just use `dotnet publish -c Release` from within the solution directory.  The output will be placed in `.\bin\Release\net5.0\publish\`
+## Building
+
+To compile from the commandline, just use `dotnet build -c Release` or `dotnet publish -c Release` from within the solution directory.  The output will be placed in `.bin\x64\Release\net5.0` or `.\bin\Release\net5.0\publish\`, respectively.
 
 ## Run instructions
 
 If you run from Visual Studio, you can put commandline arguments in the debug tab of the project properties. Right-click on the project, select `Properties`, and under `Debug` you can enter the commandline arguments you want to be included when run in the `Application arguments` box.
 
+You can run it without the debugger attaching to the process by hitting Ctrl-F5.
+
 ## Options
 
 Options you can set from the commandline:
 
-* -s, --size: The size of the sieve to run. Must be an int larger than 2.
-* -t, --time: How many seconds to run the process.
-* -v, --verbose: Display the primes that were found once the run is complete.
-* -m, --multi: Run multithreaded, with each thread running its own instance of the sieve.
+* -s, --size: The size of the sieve to run. Must be at least 10. Default: 1000000
+* -t, --time: How many seconds to run the process. Default: 5 seconds
+* -v, --verbose: Display the primes that were found once the run is complete. Defaults to off.
+* -m, --multi: Run multithreaded, with each thread running its own instance of the sieve. Defaults to off.
 * --threads: How many threads to use when running multithreaded. Defaults to the number of processors on the system.
 * --pthreads: How many threads to use when running parallel implementations. No effect on non-parallel versions.
 
 You can also run BenchmarkDotNet benchmarks.  Options for that:
 
-* --benchmark: Run benchmarks.
+* --benchmark: Run benchmarks.  Add a -b value for a specific small benchmark.
 * -b, --bench: Select a subgroup of benchmarks to run. Current sets are:
     * mod: Compare code that uses different operations for determining if a value is even or odd.
     * ref: Compare a ref struct implementation with its class version.
@@ -126,7 +128,12 @@ NB: Parallel versions don't start outperforming linear versions until 10,000,000
 
 ```
 @Kinematics: Starting (array pool [8 of 30])...
-Passes: 7799, Time: 5.00053 s, Per Loop: 0.641108 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+Passes: 12531, Time: 5.00031 s, Per Loop: 0.399010 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
+
+```
+@Kinematics: Starting (array pool [8 of 30] with bitmasking)...
+Passes: 17303, Time: 5.00007 s, Per Loop: 0.288967 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
 ```
 
 
