@@ -41,9 +41,16 @@ impl PrimeSieve {
 
     fn count_primes(&self) -> usize {
         let mut count: usize = 0;
-        for i in &self.raw_bits[3..] {
-            if *i {
+        let mut i = 3;
+
+        loop {
+            if self.raw_bits[i] {
                 count += 1;
+            }
+            i += 2;
+
+            if i >= (self.sieve_size - 1) {
+                break;
             }
         }
         return count;
