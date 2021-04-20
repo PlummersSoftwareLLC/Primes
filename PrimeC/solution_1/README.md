@@ -2,7 +2,7 @@
 
 Single threaded implementation in C of prime number sieve.
 
-Several algorithm optimizations are applie to achieve a fast running time.
+Several algorithm optimizations are applied to achieve a fast running time.
 
 - Not just ignoring even bits in the sieve bitmap, but also skipping higher
   multiples of 3 and 5 as well.
