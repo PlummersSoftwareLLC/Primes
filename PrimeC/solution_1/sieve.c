@@ -38,6 +38,7 @@ Acknowledgements:
 #define allocOf(n) indexOf(n) + 1
 
 int maxNumber = 1e6;
+BOOL fDebug = FALSE;
 
 //
 // Prime number sieve - full bitmapped but ignoring
@@ -48,7 +49,7 @@ int maxNumber = 1e6;
 //
 // maxNumber - find all primes strictly LESS than this number.
 //
-int countPrimes8of30(int maxNumber, BOOL fNeedCount) {
+WORD *primes8of30(int maxNumber) {
     // Starts off zero-initialized.
     WORD *buffer = (WORD *)calloc(allocOf(maxNumber), sizeof(WORD));
     unsigned int maxFactor = sqrt(maxNumber) + 1;
@@ -141,31 +142,67 @@ int countPrimes8of30(int maxNumber, BOOL fNeedCount) {
         }
     }
 
-    // Count all the remaining primes above sqrt(maxNumber)
-    if (fNeedCount) {
-        for (; p < maxNumber; p += steps[step], step = (step + 1) % 8) {
-            if (buffer[indexOf(p)] & maskOf(p)) {
-                continue;
-            }
+    // The wrap-around buffer pattern is expected to overwrite the
+    // 7 and 11 primes as composite, erroneously.
+    buffer[indexOf(7)] &= ~maskOf(7);
+    buffer[indexOf(11)] &= ~maskOf(11);
+
+    return buffer;
+}
+
+int countPrimes(WORD *buffer, int maxNumber) {
+    // 2, 3, and 5 are known prime
+    int count = 3;
+    if (fDebug) {
+        printf("2, 3, 5, ");
+    }
+
+    // Only numbers congruent to candidates mod 30 can be prime.
+    unsigned int candidates[8] = {1, 7, 11, 13, 17, 19, 23, 29};
+
+    // Build a stepping map.
+    unsigned int steps[8];
+    for (int i = 0; i < 8; i++) {
+        steps[i] = (candidates[(i + 1) % 8] - candidates[i] + 30) % 30;
+    }
+
+    // First step is from 7 to 11 (steps[1]).
+    unsigned int step = 1;
+
+    for (unsigned int p = 7; p < maxNumber; p += steps[step], step = (step + 1) % 8) {
+        if ((buffer[indexOf(p)] & maskOf(p)) == 0) {
             count++;
-            // if (p < 1000) printf("%d, ", p);
+            if (fDebug && p < 1000) {
+                printf("%d, ", p);
+            }
         }
     }
 
-    free(buffer);
+    if (fDebug) {
+        printf("...\n");
+    }
 
     return count;
 }
 
-void timedTest(int secs, int primeFinder(int, int), char *title) {
+void timedTest(int secs, WORD *primeFinder(int), char *title) {
     clock_t startTicks = clock();
     clock_t currentTicks;
+
+    // First pass confirms accuracy.
     int passes = 1;
 
     clock_t limitTicks = secs * CLOCKS_PER_SEC + startTicks;
 
     // Check first for accuracy.
-    int primeCount = primeFinder(maxNumber, TRUE);
+    WORD *primes = primeFinder(maxNumber);
+    int primeCount = countPrimes(primes, maxNumber);
+    free(primes);
+
+    if (fDebug) {
+        printf("Found %d primes up to %d.\n\n", primeCount, maxNumber);
+    }
+
     for (int i = 0; i < NUM_CHECKS; i++) {
         if (primeChecks[i].n == maxNumber) {
             if (primeCount != primeChecks[i].piN) {
@@ -176,6 +213,8 @@ void timedTest(int secs, int primeFinder(int, int), char *title) {
         }
     }
 
+    fflush(stdout);
+
     while (TRUE) {
         currentTicks = clock();
         if (currentTicks >= limitTicks) {
@@ -184,7 +223,8 @@ void timedTest(int secs, int primeFinder(int, int), char *title) {
         passes++;
         // Dave's Garage algos did not compute the total count
         // in the timed loop - just implemented the sieve.
-        primeFinder(maxNumber, FALSE);
+        primes = primeFinder(maxNumber);
+        free(primes);
     }
 
     float elapsed = (float) currentTicks - startTicks;
@@ -194,7 +234,7 @@ void timedTest(int secs, int primeFinder(int, int), char *title) {
 }
 
 void usage(char *name) {
-    fprintf(stderr, "Usage: %s --help --secs <s> --size <N>\n", name);
+    fprintf(stderr, "Usage: %s --help --secs <s> --size <N> --debug\n", name);
     exit(1);
 }
 
@@ -204,6 +244,8 @@ int main(int argc, char *argv[]) {
     for (int iarg = 1; iarg < argc; iarg++) {
         if (strcmp(argv[iarg], "--help") == 0) {
             usage(argv[0]);
+        } else if (strcmp(argv[iarg], "--debug") == 0) {
+            fDebug = TRUE;
         } else if (strcmp(argv[iarg], "--secs") == 0) {
             if (iarg + 1 == argc) {
                 fprintf(stderr,
@@ -234,7 +276,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    timedTest(secs, countPrimes8of30, "mckoss-c830");
+    if (fDebug) {
+        printf("Calculate primes up to %d.\n", maxNumber);
+        printf("Timer resolution: %d ticks per second.\n", CLOCKS_PER_SEC);
+        printf("Word size: %d bits.\n", BITS_PER_WORD);
+        printf("\n");
+    }
+
+    timedTest(secs, primes8of30, "mckoss-c830");
 
     return (0);
 }
