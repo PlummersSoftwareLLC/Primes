@@ -1,0 +1,10 @@
+#!/bin/bash
+# Compilation and execution on Git-Bash (GNU C Compiler)
+set -e
+
+OFLAGS="-Ofast -march=native -mtune=native -funroll-all-loops"
+SIZE=1000000
+
+gcc $TFLAGS $OFLAGS sieve.c -o sieve
+
+./sieve $SFLAGS --size 1000000
