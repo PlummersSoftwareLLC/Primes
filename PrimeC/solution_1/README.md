@@ -13,7 +13,7 @@ Several algorithm optimizations are applied to achieve a fast running time.
 Compile with GCC optimizing for fast execution and then running the
 compiled program by executing this script:
 
->> $ ./run
+> $ ./run
 
 ## Output
 
