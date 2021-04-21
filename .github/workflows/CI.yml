@@ -7,14 +7,30 @@ on:
     branches: ["**"]
 
 jobs:
-  build:
+  collect-solutions:
     runs-on: ubuntu-20.04
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Find Dockerfiles"
+        id: "solutions"
+        run: |
+          SOLUTIONS=$(find . -type f -name Dockerfile -exec dirname {} \;| sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
+          echo "::set-output name=solutions::${SOLUTIONS}"
+
+    outputs:
+      solutions: ${{ steps.solutions.outputs.solutions }}
+
+  build:
+    runs-on: "${{ matrix.os }}"
+
+    needs: ["collect-solutions"]
 
     strategy:
       matrix:
-        solution:
-          - PrimeCrystal/stl-faithful/marghidanu
-          - PrimeRust/solution_1
+        solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
         os: ["ubuntu-20.04"]
 
     steps:
