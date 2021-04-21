@@ -1,0 +1,21 @@
+{
+  "name": "primeassemblyscript",
+  "version": "1.0.0",
+  "description": "Prime Sieve Implementation in AssemblyScript",
+  "main": "index.js",
+  "scripts": {
+    "build": "asc -O3",
+    "build:bench": "asc -O3 --shrinkLevel 0 --noAssert --converge",
+    "build:debug": "asc -O3 --debug",
+    "bench": "node --experimental-wasi-unstable-preview1  index.js"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@assemblyscript/loader": "0.18.26"
+  },
+  "devDependencies": {
+    "assemblyscript": "0.18.26"
+  }
+}
