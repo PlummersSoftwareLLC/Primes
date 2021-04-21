@@ -265,7 +265,8 @@ CKTXT   CON     0
 * Chunks
 NAMETXT ALF     "RBERG"
         ALF     "EN;/ "
-TAILTXT ALF     ";;1/ "
+TAILTXT ALF     ";<TIM"
+	ALF	"E>;1/"
 
 * End template
 RSLTTXT ALF     "     "
