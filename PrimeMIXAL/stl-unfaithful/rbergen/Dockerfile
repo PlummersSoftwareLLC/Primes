@@ -7,6 +7,6 @@ WORKDIR /opt/app
 COPY *.mixal .
 
 RUN find . -name *.mixal -exec dos2unix {} \; 
-RUN mixasm primes
+RUN mixasm prime
 
-ENTRYPOINT [ "mixvm", "-r", "/opt/app/primes" ]
+ENTRYPOINT [ "mixvm", "-r", "/opt/app/prime" ]
