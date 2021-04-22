@@ -9,15 +9,25 @@
 #include <omp.h>
 #endif
 
+#ifdef COMPILE_64_BIT
+#define TYPE uint64_t
+#define MASK 0x3FU
+#define SHIFT 6U
+#else
+#define TYPE uint32_t
+#define MASK 0x1FU
+#define SHIFT 5U
+#endif
+
 struct sieve_state {
-  uint64_t *a;
+  TYPE *a;
   unsigned int maxints;
 };
 
 struct sieve_state *create_sieve(int maxints) {
   struct sieve_state *sieve_state=malloc(sizeof *sieve_state);
   // We need to store only odd integers, so only half the number of integers
-  sieve_state->a=calloc(maxints/2/sizeof(uint64_t)+1,sizeof(uint64_t));
+  sieve_state->a=calloc(maxints/2/sizeof(TYPE)+1,sizeof(TYPE));
   sieve_state->maxints=maxints;
   return sieve_state;
 }
@@ -29,7 +39,7 @@ void delete_sieve(struct sieve_state *sieve_state) {
 
 void run_sieve(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   unsigned int maxintsh=maxints>>1U;
   unsigned int factor, q=(int)sqrt(maxints)+1;
   // Only check odd integers
@@ -40,24 +50,24 @@ void run_sieve(struct sieve_state *sieve_state) {
     unsigned int i;
     // If the bit is set we know it is not prime, so continue searching
     for (i=factorh; i<maxintsh; i++)
-      if (!(a[i>>6U]&((uint64_t)1<<(i&0x3fU))))
+      if (!(a[i>>SHIFT]&((TYPE)1<<(i&MASK))))
 	break;
     factor=(i<<1U)+1U;
     // Mask all integer multiples of this prime
     unsigned int f2h=(factor*factor)>>1U;
     for (i=f2h; i<maxintsh; i+=factor)
-      a[i>>6U]|=(uint64_t)1<<(i&0x3fU);
+      a[i>>SHIFT]|=(TYPE)1<<(i&MASK);
     factor+=2U;
   }
 }
 
 int count_primes(struct sieve_state *sieve_state) {
   int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   int ncount=1; // We already have 2
   int maxintsh=maxints>>1;
   for (int i=1; i<maxintsh; i++)
-    if (!(a[i>>6]&(uint64_t)1<<(i&0x3f)))
+    if (!(a[i>>SHIFT]&(TYPE)1<<(i&MASK)))
       ncount++;
   return ncount;
 }

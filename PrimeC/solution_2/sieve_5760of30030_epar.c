@@ -11,6 +11,16 @@
 #include <omp.h>
 #endif
 
+#ifdef COMPILE_64_BIT
+#define TYPE uint64_t
+#define MASK 0x3FU
+#define SHIFT 6U
+#else
+#define TYPE uint32_t
+#define MASK 0x1FU
+#define SHIFT 5U
+#endif
+
 // Steps array for finding the next number not divisible by 2,3,5,7,11,13
 static int steps[5760]={
  16,2,4,6,2,6,4,2,4,6,6,2,6,4,2,6,4,6,8,4,2,4,2,4,14,
@@ -247,14 +257,14 @@ static int steps[5760]={
 };
 
 struct sieve_state {
-  uint64_t *a;
+  TYPE *a;
   unsigned int maxints;
 };
 
 struct sieve_state *create_sieve(int maxints) {
   struct sieve_state *sieve_state=malloc(sizeof *sieve_state);
   // We need to store only odd integers, so only half the number of integers
-  sieve_state->a=calloc(maxints/2/sizeof(uint64_t)+1,sizeof(uint64_t));
+  sieve_state->a=calloc(maxints/2/sizeof(TYPE)+1,sizeof(TYPE));
   sieve_state->maxints=maxints;
   return sieve_state;
 }
@@ -266,7 +276,7 @@ void delete_sieve(struct sieve_state *sieve_state) {
 
 void run_sieve(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   unsigned int factor, q=(unsigned int)sqrt(maxints)+1U;
   unsigned int step=1U; // From 17 to 19
   unsigned int inc=steps[step]; // Next increment in steps array
@@ -274,7 +284,7 @@ void run_sieve(struct sieve_state *sieve_state) {
   factor=17U; // We already have 2, 3, 5, 7, 11, and 13
   while (factor<=q) {
     // Search for next prime
-    if (a[factor>>7U]&((uint64_t)1<<((factor>>1U)&0x3fU))) {
+    if (a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))) {
       factor+=inc;
       if (++step==5760U) step=0U; // End of steps array, start from the beginning
       inc=steps[step];
@@ -284,7 +294,7 @@ void run_sieve(struct sieve_state *sieve_state) {
     unsigned int istep=step;
     unsigned int ninc=steps[istep];
     for (unsigned int i=factor*factor; i<=maxints; ) {
-      a[i>>7U]|=(uint64_t)1<<((i>>1U)&0x3fU);
+      a[i>>(SHIFT+1U)]|=(TYPE)1<<((i>>1U)&MASK);
       i+=factor*ninc;
       if (++istep==5760U) istep=0U;
       ninc=steps[istep];
@@ -297,13 +307,13 @@ void run_sieve(struct sieve_state *sieve_state) {
 
 unsigned int count_primes(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   unsigned int ncount=6; // We already have 2, 3, 5, 7, 11, and 13 ...
   unsigned int factor=17; // ...
   unsigned int step=1; // From 17 to 19
   unsigned int inc=steps[step]; // Next increment in steps array
   while (factor<=maxints) {
-    if (!(a[factor>>7U]&((uint64_t)1<<((factor>>1U)&0x3f))))
+    if (!(a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))))
       ncount++;
     factor+=inc;
     if (++step==5760U) step=0U; // End of steps array, start from the beginning

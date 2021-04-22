@@ -11,6 +11,16 @@
 #include <omp.h>
 #endif
 
+#ifdef COMPILE_64_BIT
+#define TYPE uint64_t
+#define MASK 0x3FU
+#define SHIFT 6U
+#else
+#define TYPE uint32_t
+#define MASK 0x1FU
+#define SHIFT 5U
+#endif
+
 // Steps array for finding the next number not divisible by 2,3,5,7,11
 static unsigned int steps[480]={
 12,4,2,4,6,2,6,4,2,4,6,6,2,6,4,2,6,4,6,8,4,2,4,2,4,
@@ -36,14 +46,14 @@ static unsigned int steps[480]={
 };
 
 struct sieve_state {
-  uint64_t *a;
+  TYPE *a;
   unsigned int maxints;
 };
 
 struct sieve_state *create_sieve(int maxints) {
   struct sieve_state *sieve_state=malloc(sizeof *sieve_state);
   // We need to store only odd integers, so only half the number of integers
-  sieve_state->a=calloc(maxints/2/sizeof(uint64_t)+1,sizeof(uint64_t));
+  sieve_state->a=calloc(maxints/2/sizeof(TYPE)+1,sizeof(TYPE));
   sieve_state->maxints=maxints;
   return sieve_state;
 }
@@ -58,7 +68,7 @@ void run_sieve(struct sieve_state *sieve_state) {
   int numthreads=omp_get_max_threads();
 #endif
   unsigned int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   unsigned int maxintsh=maxints>>1;
   unsigned int factor, q=(unsigned int)sqrt(maxints)+1U;
   unsigned int step=1U; // From 13 to 17
@@ -67,7 +77,7 @@ void run_sieve(struct sieve_state *sieve_state) {
   factor=13U; // We already have 2, 3, 5, 7, and 11
   while (factor<=q) {
     // Search for next prime
-    if (a[factor>>7U]&((uint64_t)1<<((factor>>1U)&0x3fU))) {
+    if (a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))) {
       factor+=inc;
       if (++step==480U) step=0U; // End of steps array, start from the beginning
       inc=steps[step];
@@ -92,8 +102,8 @@ void run_sieve(struct sieve_state *sieve_state) {
 	  if (ithread!=0U) {
 	    while (1) {
 	      unsigned int previous_thread_lastbit=myfirstbit-factor;
-	      unsigned int my_first_word=myfirstbit>>6U;
-	      unsigned int previous_thread_last_word=previous_thread_lastbit>>6U;
+	      unsigned int my_first_word=myfirstbit>>SHIFT;
+	      unsigned int previous_thread_last_word=previous_thread_lastbit>>SHIFT;
 	      if (my_first_word!=previous_thread_last_word)
 		break;
 	      else
@@ -106,8 +116,8 @@ void run_sieve(struct sieve_state *sieve_state) {
 	    // Make sure I continue with more bits until the next cpu can handle the bits
 	    while (1) {
 	      unsigned int next_thread_firstbit=mylastbit+factor;
-	      unsigned int my_last_word=mylastbit>>6U;
-	      unsigned int next_thread_first_word=next_thread_firstbit>>6U;
+	      unsigned int my_last_word=mylastbit>>SHIFT;
+	      unsigned int next_thread_first_word=next_thread_firstbit>>SHIFT;
 	      if (my_last_word!=next_thread_first_word)
 		break;
 	      else
@@ -115,17 +125,17 @@ void run_sieve(struct sieve_state *sieve_state) {
 	    }
 	  }
 	  for (unsigned int m = myfirstbit; m <= mylastbit; m += factor)
-	    a[m>>6U]|=(uint64_t)1<<(m&0x3fU);
+	    a[m>>SHIFT]|=(TYPE)1<<(m&MASK);
 	}
       }
       else {
 	for (unsigned int m = (factor*factor)>>1; m < maxintsh; m += factor)
-	  a[m>>6U]|=(uint64_t)1<<(m&0x3fU);
+	  a[m>>SHIFT]|=(TYPE)1<<(m&MASK);
       }
     }
 #else
     for (unsigned int m = (factor*factor)>>1; m < maxintsh; m += factor)
-      a[m>>6U]|=(uint64_t)1<<(m&0x3fU);
+      a[m>>SHIFT]|=(TYPE)1<<(m&MASK);
 #endif
     factor+=inc;
     if (++step==480U) step=0U; // End of steps array, start from the beginning
@@ -135,13 +145,13 @@ void run_sieve(struct sieve_state *sieve_state) {
 
 unsigned int count_primes(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   unsigned int ncount=5; // We already have 2, 3, 5, 7, and 11 ...
   unsigned int factor=13; // ...
   unsigned int step=1; // From 13 to 17
   unsigned int inc=steps[step]; // Next increment in steps array
   while (factor<=maxints) {
-    if (!(a[factor>>7U]&((uint64_t)1<<((factor>>1U)&0x3f))))
+    if (!(a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))))
       ncount++;
     factor+=inc;
     if (++step==480U) step=0U; // End of steps array, start from the beginning

@@ -9,15 +9,25 @@
 #include <omp.h>
 #endif
 
+#ifdef COMPILE_64_BIT
+#define TYPE uint64_t
+#define MASK 0x3FU
+#define SHIFT 6U
+#else
+#define TYPE uint32_t
+#define MASK 0x1FU
+#define SHIFT 5U
+#endif
+
 struct sieve_state {
-  uint64_t *a;
+  TYPE *a;
   unsigned int maxints;
 };
 
 struct sieve_state *create_sieve(int maxints) {
   struct sieve_state *sieve_state=malloc(sizeof *sieve_state);
   // We need to store only odd integers, so only half the number of integers
-  sieve_state->a=calloc(maxints/2/sizeof(uint64_t)+1,sizeof(uint64_t));
+  sieve_state->a=calloc(maxints/2/sizeof(TYPE)+1,sizeof(TYPE));
   sieve_state->maxints=maxints;
   return sieve_state;
 }
@@ -32,7 +42,7 @@ void run_sieve(struct sieve_state *sieve_state) {
   int numthreads=omp_get_max_threads();
 #endif
   unsigned int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   unsigned int maxintsh=maxints>>1U;
   unsigned int factor, q=(int)sqrt(maxints)+1;
   // Only check odd integers
@@ -43,7 +53,7 @@ void run_sieve(struct sieve_state *sieve_state) {
     unsigned int i;
     // If the bit is set we know it is not prime, so continue searching
     for (i=factorh; i<maxintsh; i++)
-      if (!(a[i>>6U]&((uint64_t)1<<(i&0x3fU))))
+      if (!(a[i>>SHIFT]&((TYPE)1<<(i&MASK))))
 	break;
     factor=(i<<1U)+1U;
     
@@ -66,8 +76,8 @@ void run_sieve(struct sieve_state *sieve_state) {
 	  if (ithread!=0U) {
 	    while (1) {
 	      unsigned int previous_thread_lastbit=myfirstbit-factor;
-	      unsigned int my_first_word=myfirstbit>>6U;
-	      unsigned int previous_thread_last_word=previous_thread_lastbit>>6U;
+	      unsigned int my_first_word=myfirstbit>>SHIFT;
+	      unsigned int previous_thread_last_word=previous_thread_lastbit>>SHIFT;
 	      if (my_first_word!=previous_thread_last_word)
 		break;
 	      else
@@ -80,8 +90,8 @@ void run_sieve(struct sieve_state *sieve_state) {
 	    // Make sure I continue with more bits until the next cpu can handle the bits
 	    while (1) {
 	      unsigned int next_thread_firstbit=mylastbit+factor;
-	      unsigned int my_last_word=mylastbit>>6U;
-	      unsigned int next_thread_first_word=next_thread_firstbit>>6U;
+	      unsigned int my_last_word=mylastbit>>SHIFT;
+	      unsigned int next_thread_first_word=next_thread_firstbit>>SHIFT;
 	      if (my_last_word!=next_thread_first_word)
 		break;
 	      else
@@ -89,17 +99,17 @@ void run_sieve(struct sieve_state *sieve_state) {
 	    }
 	  }
 	  for (unsigned int m = myfirstbit; m <= mylastbit; m += factor)
-	    a[m>>6U]|=(uint64_t)1<<(m&0x3fU);
+	    a[m>>SHIFT]|=(TYPE)1<<(m&MASK);
 	}
       }
       else {
 	for (unsigned int m = (factor*factor)>>1; m < maxintsh; m += factor)
-	  a[m>>6U]|=(uint64_t)1<<(m&0x3fU);
+	  a[m>>SHIFT]|=(TYPE)1<<(m&MASK);
       }
     }
 #else
     for (unsigned int m = (factor*factor)>>1; m < maxintsh; m += factor)
-      a[m>>6U]|=(uint64_t)1<<(m&0x3fU);
+      a[m>>SHIFT]|=(TYPE)1<<(m&MASK);
 #endif
     factor+=2U;
   }
@@ -107,11 +117,11 @@ void run_sieve(struct sieve_state *sieve_state) {
 
 int count_primes(struct sieve_state *sieve_state) {
   int maxints=sieve_state->maxints;
-  uint64_t *a=sieve_state->a;
+  TYPE *a=sieve_state->a;
   int ncount=1; // We already have 2
   int maxintsh=maxints>>1;
   for (int i=1; i<maxintsh; i++)
-    if (!(a[i>>6]&(uint64_t)1<<(i&0x3f)))
+    if (!(a[i>>SHIFT]&(TYPE)1<<(i&MASK)))
       ncount++;
   return ncount;
 }

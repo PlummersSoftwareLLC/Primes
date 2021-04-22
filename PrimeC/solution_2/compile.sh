@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+#CC="gcc -Ofast -march=native -mtune=native -funroll-all-loops -DCOMPILE_64_BIT"
 CC="gcc -Ofast -march=native -mtune=native -funroll-all-loops"
 PAR="-fopenmp"
 for x in sieve_1of2 sieve_8of30 sieve_8of30_only_write_read_bits sieve_48of210 sieve_48of210_only_write_read_bits sieve_480of2310_only_write_read_bits sieve_5760of30030_only_write_read_bits; do
