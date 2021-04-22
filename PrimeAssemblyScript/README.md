@@ -1,6 +1,5 @@
 # AssemblyScript implementation
 
-
 ## Run instructions
 
 ### Running locally
@@ -37,8 +36,6 @@ Currently the docker version almost halves the passes number vs the local versio
 
 ## Benchmarks
 
-### Ryzen 3900x / Node 15 / Windows 10
-
-```
-Passes: 8444, Time: 10.00100040435791, Avg: 0.0011843913234770299, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-```
+| System | Passes | Time | Avg | Limit | Count1 | Count2 | Valid |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Ryzen 3900x / Node 14.16.1 / Windows 10 | 8796 | 10.0010 | 0.0012 | 1000000 | 78498 | 78498 | true |
