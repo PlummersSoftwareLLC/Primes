@@ -8,8 +8,10 @@ COPY compile.sh .
 COPY run.sh .
 COPY *.c ./
 
-RUN /bin/sh ./compile.sh
+RUN chmod +x compile.sh run.sh
 
-ENTRYPOINT [ "/bin/sh","./run.sh" ]
+RUN ./compile.sh
+
+ENTRYPOINT [ "./run.sh" ]
 
 
