@@ -6,7 +6,7 @@ WORKDIR /opt/app
 
 COPY compile.sh .
 COPY run.sh .
-COPY *.c .
+COPY *.c ./
 
 RUN /bin/sh ./compile.sh
 
