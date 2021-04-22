@@ -22,17 +22,18 @@ export class PrimeSieve {
     }
 
     runSieve(): void {
+        const size: i32 = this.sieveSize;
         let factor: i32 = 3;
-        let q: i32 = Math.sqrt(this.sieveSize) as i32;
+        let q: i32 = Math.sqrt(size) as i32;
 
         while (factor <= q) {
-            for (let num: i32 = factor; num < this.sieveSize; num += 2) {
+            for (let num: i32 = factor; num < size; num += 2) {
                 if (!this.Bits[num]) {
                     factor = num;
                     break;
                 }
             }
-            for (let num: i32 = factor * factor; num < this.sieveSize; num += factor * 2)
+            for (let num: i32 = factor * factor; num < size; num += factor * 2)
                 this.Bits[num] = true;
 
             factor += 2;
