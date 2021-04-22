@@ -7,34 +7,74 @@ uses
 
 type
     CheckMap = specialize TFPGMap<Integer, Integer>;
+    PackedBoolArray = packed array of Boolean;
 
     PrimeSieve = class
     private
         SieveSize: Integer;
-        BitArray: packed array of Boolean;
+        PrimeArray: PackedBoolArray;
 
     public
         constructor Create(Size: Integer);
+        function RunSieve(): PackedBoolArray;
         function CountPrimes(): Integer;
         function ValidateResults(var ReferenceResults: CheckMap): Boolean;
-        procedure RunSieve();
 end;
 
 constructor PrimeSieve.Create(Size: Integer);
 begin
     SieveSize := Size;
-    SetLength(BitArray, (Size + 1) Div 2);
+    SetLength(PrimeArray, (Size + 1) Div 2);
 end;
 
-function PrimeSieve.CountPrimes() : Integer;
+function PrimeSieve.RunSieve(): PackedBoolArray;
+var
+    Factor: Integer;
+    Number: Integer;
+    SieveSqrt: Integer;
+
+begin
+    SieveSqrt := Trunc(Sqrt(SieveSize));
+
+    Factor := 3;
+
+    while Factor <= SieveSqrt do
+    begin
+        Number := Factor;
+        while Number <= SieveSqrt do
+        begin
+            if ((Number mod 2) <> 0) and (not PrimeArray[Number div 2]) then
+            begin
+                Factor := Number;
+                break;
+            end;
+
+            Number := Number + 1;
+        end;
+
+        Number := Factor * 3;
+
+        while Number <= SieveSize do
+        begin
+            PrimeArray[Number div 2] := True;
+            Number := Number + (Factor * 2);
+        end;
+
+        Factor := Factor + 2;
+    end;
+
+    RunSieve := PrimeArray;
+end;
+
+function PrimeSieve.CountPrimes(): Integer;
 var
     Count: Integer;
     I: Integer;
 begin
     Count := 0;
-    for I := Low(BitArray) to High(BitArray) do
+    for I := Low(PrimeArray) to High(PrimeArray) do
     begin
-        if not BitArray[I] then Count := Count + 1;
+        if not PrimeArray[I] then Count := Count + 1;
     end;
 
     CountPrimes := Count;
@@ -51,43 +91,6 @@ begin
        ValidateResults := ReferenceValue = CountPrimes()
     else
        ValidateResults := False;
-end;
-
-procedure PrimeSieve.RunSieve();
-var
-    Factor: Integer;
-    Number: Integer;
-    SieveSqrt: Integer;
-
-begin
-    SieveSqrt := Trunc(Sqrt(SieveSize));
-
-    Factor := 3;
-
-    while Factor <= SieveSqrt do
-    begin
-        Number := Factor;
-        while Number <= SieveSqrt do
-        begin
-            if ((Number mod 2) <> 0) and (not BitArray[Number div 2]) then
-            begin
-                Factor := Number;
-                break;
-            end;
-
-            Number := Number + 1;
-        end;
-
-        Number := Factor * 3;
-
-        while Number <= SieveSize do
-        begin
-            BitArray[Number div 2] := True;
-            Number := Number + (Factor * 2);
-        end;
-
-        Factor := Factor + 2;
-    end;
 end;
 
 var
