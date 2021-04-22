@@ -61,7 +61,7 @@ export class PrimeSieve {
     }
 
     countPrimes(): i32 {
-        let count: i32 = (this.sieveSize >= 2);;
+        let count: i32 = (this.sieveSize >= 2);
         for (let i: i32 = 3; i < this.sieveSize; i += 2)
             if (this.Bits[i] == 0)
                 count++;
