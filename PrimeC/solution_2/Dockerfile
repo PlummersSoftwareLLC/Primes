@@ -24,8 +24,8 @@ COPY sieve_5760of30030_epar.c .
 COPY sieve_5760of30030_only_write_read_bits.c .
 COPY sieve_5760of30030_par.c .
 
-RUN ./compile.sh
+RUN /bin/sh ./compile.sh
 
-ENTRYPOINT [ "./run.sh" ]
+ENTRYPOINT [ "/bin/sh","./run.sh" ]
 
 
