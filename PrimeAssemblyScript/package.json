@@ -6,7 +6,7 @@
   "scripts": {
     "build": "asc -O3",
     "build:bench": "asc -O3 --shrinkLevel 0 --noAssert --converge",
-    "build:debug": "asc -O3 --debug",
+    "build:debug": "asc --debug",
     "bench": "node --experimental-wasi-unstable-preview1  index.js"
   },
   "type": "module",
