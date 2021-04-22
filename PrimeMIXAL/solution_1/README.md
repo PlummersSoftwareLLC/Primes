@@ -9,11 +9,18 @@ As a computer, MIX has a number of specific characteristics:
 * It was based on or inspired by more or less typical computer designs in the 1960s.
 * (Even) in the context of the previous point, it includes a number of quirks. I believe these were introduced on purpose by its designer, to make the solution to some of the exercise problems in the book series less straight-forward.
 
-Due to this, the implementation deviates from the basic rules in a number of ways:
+Due to this, the core implementation deviates from the basic rules in two ways:
 * By default, the sieve size is 200,000 instead of 1,000,000. The reason is that MIX has a total memory capacity of 3,999 words, each 30 bits wide. This does not allow for a bit array of 500,000 entries to be stored. In the practical sense, a sieve size of 200,000 is the maximum.
 * The implementation does itself not run for a period of 5 seconds. Instead, depending on configuration it will either execute a configured number of sieve runs, or keep repeating sieve runs indefinitely. The reason is that MIX has no internal clock that measures actual time. Instruction execution times are measured in "ticks", the duration of which is undefined, by design. In practice, this means that if a timed execution is desired, the starting, timing and stopping of it must be controlled external to the program.
 
 These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "Closest Approximation". 
+
+To mitigate the second deviation, the implementation comes with a wrapper shell script that:
+* Times the run of the implementation externally, using the GNU time command
+* Embeds the measured time into the core implementation output, by replacing a placeholder in the latter
+* Turns the upper-case core implementation output into lower case
+
+With these mitigations in place, the output of the implementation + wrapper does conform to the drag-race output format.
 
 ## Parameters
 
@@ -42,15 +49,28 @@ If MixEmul is used, the instructions for running the program are as follows:
 6. Choose Actions -> Run to start the implementation 
 
 ### MDK
+#### Core implementation
 Execute the following commands from the implementation directory:
 ```
 mixasm prime
 mixvm -r prime
 ```
 
+#### Wrapper script
+Execute the following command from the implementation directory:
+```
+. runprime.sh
+```
+
+### Docker
+A Dockerfile has been provided. It creates an image that runs the implementation using the wrapper script.
+
 ## Output
 
-When using a sieve size of 200,000 and 27 runs, with both run and end result output enabled, output is as follows when using MDK:
+The output included below was that of runs that took approximately 5 seconds on my machine when using MDK. This is also why 30 is the value for `RUNCT` in this version of the implementation.
+
+### Core implementation
+When using a sieve size of 200,000 and 30 runs, with both run and end result output enabled, output is as follows when using MDK:
 
 ```
 Program loaded. Start address: 3429
@@ -82,7 +102,10 @@ RUN: 00024, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
 RUN: 00025, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
 RUN: 00026, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
 RUN: 00027, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
-RBERGEN;27;;1
+RUN: 00028, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00029, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RUN: 00030, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
+RBERGEN;30;<TIME>;1
 ... done
 ```
 
@@ -90,8 +113,11 @@ When run result output is disabled, the output is as follows:
 ```
 Program loaded. Start address: 3429
 Running ...
-RBERGEN;27;;1
+RBERGEN;30;<TIME>;1
 ... done
 ```
-
-This was the output of runs that took approximately 5 seconds on my machine when using MDK. This is also why 27 is the value for `RUNCT` in the submitted version of this implementation.
+### Wrapper script
+When using the wrapper script and parameters indicated above, the output is as follows, regardless of whether run result output is enabled or not:
+```
+rbergen;30;5.19;1
+```

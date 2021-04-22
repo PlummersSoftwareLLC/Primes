@@ -12,9 +12,9 @@ BTARR   ORIG	3400            Jump past bit array
 * Parameters
 LTSVSZ	EQU     200000          Sieve size literal. Max is 200000, due to memory size
 SVSQRT	CON     447             Sqrt of sieve size variable
-RUNCT   CON     27              Number of times the sieve will be run
-DOPRTRN CON     0               Print run result (!=0) or not (==0)
-DOPRTRT CON     1               Print end result (!=0) or not (==0)
+RUNCT   CON     30              Number of times the sieve will be run, or a value < 1 to run indefinitely
+DOPRTRN CON     0               Print run result (!= 0) or not (== 0)
+DOPRTRT CON     1               Print end result (!= 0) or not (== 0)
 
 * Table with reference values (sieve size first, prime count second)
 CHCKTBL	CON     10
@@ -72,7 +72,7 @@ NUMLOOP JXE     NXTNUM          If we're looking at an even number, skip it
         ENTA    0               Prepare rAX for division
         STX     NUMBER          Hang on to our number
         SRB     1               Divide by 2...
-        DIV     BTPRWRD         ...and then the number of bits per werd
+        DIV     BTPRWRD         ...and then the number of bits per word
         STA     *+1(ADDR)       rA contains the word index, which we...
         ENT3    *               ...load into rI3...
         LDA     BTARR,3         ...so we can then load the correct word into rA       
@@ -203,14 +203,20 @@ CKRUNCT CMP4    RUNCT           If we've not reached our run count...
 
         LDA     RUNCT           Load run count into rA...
         CHAR    0               ...so we can convert it
-1H      SRC     1               Circle shift rightmost rX byte into leftmost rA byte   
-        CMPX    ZERO(LSTBYT)    If rightmost rX byte != '0'...
-        JNE     1B              ...then continue shifting
+        ENT1    0               Set shift count to 0
+        ENT5    0               Set "found non-zero" flag to false
+1H      SRC     1               Circle shift rightmost rX byte into leftmost rA byte
+        INC1    1               Count our shift
+        CMPX    ZERO(LSTBYT)    If rightmost rX byte == '0'...        
+        JE      2F              ...jump to check if we've seen a nonzero...
+        ENT5    1               ...else set our nonzero flag to true...
+        JMP     1B              ...and continue
+2H      J2Z     1B              If we have a zero and we haven't seen a non-zero yet, then continue shifting
         SLC     1               If we're here, we've right-shifted one character too many, so revert it
 1H      JMP     PUTCH           Put rightmost character of rX in buffer
-        SLC     1               Shift left to next Character
-        CMPX    ZERO(LSTBYT)    If rightmost rX byte != '0'...
-        JNE     1B              ...then continue to print the next digit
+        SLC     1               Shift left to next character
+        DEC1    1               Decrease our shift counter
+        J1P     1B              Continue shifting if we have more characters to go 
 
         ENT2    TAILTXT         Load tail section address in rI2...
         JMP     PUTS            ...so we can put it in output buffer
@@ -265,7 +271,8 @@ CKTXT   CON     0
 * Chunks
 NAMETXT ALF     "RBERG"
         ALF     "EN;/ "
-TAILTXT ALF     ";;1/ "
+TAILTXT ALF     ";<TIM"
+	ALF	"E>;1/"
 
 * End template
 RSLTTXT ALF     "     "

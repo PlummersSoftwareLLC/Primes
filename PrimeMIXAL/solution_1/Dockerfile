@@ -1,12 +1,13 @@
 FROM ubuntu:18.04
 
 RUN apt-get update -qq \
-    && apt-get install -y mdk dos2unix
+    && apt-get install -y mdk time
 
 WORKDIR /opt/app
 COPY *.mixal .
+COPY runprime.sh .
 
-RUN find . -name *.mixal -exec dos2unix {} \; 
 RUN mixasm prime
+RUN chmod a+x runprime.sh
 
-ENTRYPOINT [ "mixvm", "-r", "/opt/app/prime" ]
+ENTRYPOINT [ "/opt/app/runprime.sh" ]
