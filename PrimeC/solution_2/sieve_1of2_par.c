@@ -44,19 +44,19 @@ void run_sieve(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
   TYPE *a=sieve_state->a;
   unsigned int maxintsh=maxints>>1U;
-  unsigned int factor, q=(int)sqrt(maxints)+1;
+  unsigned int q=(int)sqrt(maxints)+1;
   // Only check odd integers
-  factor=3U;
-  while (factor<=q) {
-    unsigned int factorh=factor>>1U;
+  unsigned int factorh=1U;
+  unsigned int qh=q>>1U;
+  while (factorh<=qh) {
     // Search for next prime
-    unsigned int i;
+    unsigned int i, factor;
     // If the bit is set we know it is not prime, so continue searching
     for (i=factorh; i<maxintsh; i++)
       if (!(a[i>>SHIFT]&((TYPE)1<<(i&MASK))))
 	break;
     factor=(i<<1U)+1U;
-    
+    factorh=i+1;
     // Mask all integer multiples of this prime
     // Use as many threads as possible if the workload is large enough
 #ifdef _OPENMP
@@ -111,7 +111,6 @@ void run_sieve(struct sieve_state *sieve_state) {
     for (unsigned int m = (factor*factor)>>1; m < maxintsh; m += factor)
       a[m>>SHIFT]|=(TYPE)1<<(m&MASK);
 #endif
-    factor+=2U;
   }
 }
 
