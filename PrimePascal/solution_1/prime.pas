@@ -12,7 +12,7 @@ type
     PrimeSieve = class
     private
         SieveSize: Integer;
-        PrimeArray: PackedBoolArray;
+        NotPrimeArray: PackedBoolArray;
 
     public
         constructor Create(Size: Integer);
@@ -24,7 +24,7 @@ end;
 constructor PrimeSieve.Create(Size: Integer);
 begin
     SieveSize := Size;
-    SetLength(PrimeArray, (Size + 1) Div 2);
+    SetLength(NotPrimeArray, (Size + 1) Div 2);
 end;
 
 function PrimeSieve.RunSieve(): PackedBoolArray;
@@ -43,7 +43,7 @@ begin
         Number := Factor;
         while Number <= SieveSqrt do
         begin
-            if ((Number mod 2) <> 0) and (not PrimeArray[Number div 2]) then
+            if ((Number mod 2) <> 0) and (not NotPrimeArray[Number div 2]) then
             begin
                 Factor := Number;
                 break;
@@ -52,18 +52,21 @@ begin
             Number := Number + 1;
         end;
 
+        if Number > SieveSqrt then
+            break;
+
         Number := Factor * 3;
 
         while Number <= SieveSize do
         begin
-            PrimeArray[Number div 2] := True;
+            NotPrimeArray[Number div 2] := True;
             Number := Number + (Factor * 2);
         end;
 
         Factor := Factor + 2;
     end;
 
-    RunSieve := PrimeArray;
+    RunSieve := NotPrimeArray;
 end;
 
 function PrimeSieve.CountPrimes(): Integer;
@@ -72,9 +75,10 @@ var
     I: Integer;
 begin
     Count := 0;
-    for I := Low(PrimeArray) to High(PrimeArray) do
+    for I := Low(NotPrimeArray) to High(NotPrimeArray) do
     begin
-        if not PrimeArray[I] then Count := Count + 1;
+        if not NotPrimeArray[I] then 
+            Count := Count + 1;
     end;
 
     CountPrimes := Count;
@@ -116,7 +120,9 @@ begin
 
     while (GetTickCount64() - StartTickCount) <= 5000 do
     begin
-        if Sieve <> nil then Sieve.Free;
+        if Sieve <> nil then 
+            Sieve.Free;
+        
         Sieve := PrimeSieve.Create(1000000);
         Sieve.RunSieve();
         PassCount := PassCount + 1;
