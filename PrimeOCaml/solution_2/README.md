@@ -17,8 +17,8 @@ opam install core
 #### Build and Run
 Build and run using corebuild via:
 ```
-corebuild PrimeOcaml.native
-./PrimeOCaml.native
+corebuild PrimeOcamlFunctional.native
+./PrimeOCamlFunctional.native
 ```
 
 ### Docker
