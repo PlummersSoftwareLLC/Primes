@@ -112,9 +112,11 @@ begin
 
     PassCount := 0;
     StartTickCount := GetTickCount64();
+    Sieve := nil;
 
     while (GetTickCount64() - StartTickCount) <= 5000 do
     begin
+        if Sieve <> nil then Sieve.Free;
         Sieve := PrimeSieve.Create(1000000);
         Sieve.RunSieve();
         PassCount := PassCount + 1;
