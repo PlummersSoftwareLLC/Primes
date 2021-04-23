@@ -10,8 +10,9 @@ A faithful implementation of the prime sieving algorithm in [OCaml](https://ocam
 [OPAM](https://opam.ocaml.org) is the OCaml package manager. For more info on how to install both OCaml and OPAM, check out the OCaml [installation guide](https://ocaml.org/docs/install.html).
 
 #### Install Core
-[Core](https://opensource.janestreet.com/core/) is an alternative standard library for OCaml, which can be installed using OPAM via:
+[OCamlbuild](https://github.com/ocaml/ocamlbuild) is a convenient builder for simple projects, and [Core](https://opensource.janestreet.com/core/) is an alternative standard library for OCaml, which can be installed using OPAM via:
 ```
+opam install ocamlbuild
 opam install core
 ```
 #### Build and Run
