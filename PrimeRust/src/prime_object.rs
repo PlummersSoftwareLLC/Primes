@@ -100,10 +100,6 @@ impl PrimeSieve {
             }
         }
 
-        if show_results {
-            println!("");
-        }
-
         println!("");
         print!("Passes: {}, ", passes);
         print!("Time: {:?}, ", duration);
