@@ -7,7 +7,7 @@ This is an implementation in Ruby.
 ## Run instructions
 
 ### Ruby
-Execute the following commands from the implementation directory:
+Execute the following command from the implementation directory:
 ```
 ruby prime.rb
 ```
