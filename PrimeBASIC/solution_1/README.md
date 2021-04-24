@@ -1,8 +1,8 @@
-# FreeBASIC solution by rbergen
+# FreeBASIC 64-bit-mapped solution by rbergen
 
 *Category: Faithful*
 
-This is an implementation in FreeBASIC.
+This is an implementation in FreeBASIC that maintains the array of (non-)primes in an underlying array of bit-mapped 64-bit unsigned integers.
 
 ## Run instructions
 
@@ -18,5 +18,5 @@ A Dockerfile has been provided. It will run the implementation with the FreeBASI
 
 ## Output
 ```
-rbergen;389;5.001;1
+rbergen_bit64;654;5.005;1
 ```

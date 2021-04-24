@@ -66,12 +66,12 @@ Function BitArray.CountBits() As Uinteger
     Dim LastBitAddress As UlongintBitAddress = UlongintBitAddress(This.BitCount - 1)
     Dim BitNumber As Byte = CByte(LastBitAddress.BitIndex)
     Dim UlongintNumber As Uinteger = LastBitAddress.UlongintIndex
-    Dim BitCount As Uinteger = 0
+    Dim Counter As Uinteger = 0
     Dim CurrentUlongint As Ulongint = This.ValueArray(LastBitAddress.UlongintIndex)
 
     Do
         Do
-            If Bit(CurrentUlongint, BitNumber) Then BitCount = BitCount + 1
+            If Bit(CurrentUlongint, BitNumber) Then Counter = Counter + 1
             BitNumber = BitNumber - 1
         Loop Until BitNumber < 0
 
@@ -82,7 +82,7 @@ Function BitArray.CountBits() As Uinteger
         BitNumber = 63
     Loop
 
-    Return BitCount
+    Return Counter
 End Function
 
 Constructor PrimeSieve(Size As Uinteger)
@@ -167,4 +167,4 @@ If GetReferenceResult(SieveSize) <> Sieve->CountPrimes() Then Print "WARNING: re
 
 Delete Sieve
 
-Print Using "rbergen;&;#.###;1"; PassCount; Duration
+Print Using "rbergen__bit64;&;#.###;1"; PassCount; Duration
