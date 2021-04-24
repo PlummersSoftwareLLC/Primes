@@ -125,7 +125,7 @@ End Function
 Function GetReferenceResult(SieveSize As UInteger) As Integer
     Dim Result as Integer = -1
 
-    Rem The following hurts my eyes, but FreeBASIC doesn't natively support anything resembiling a hash/dictionary type
+    Rem The following hurts my eyes, but FreeBASIC doesn't natively support anything resembling a hash/dictionary type
 
     If SieveSize = 10 Then 
         Result = 4
