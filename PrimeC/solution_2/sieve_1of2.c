@@ -37,23 +37,23 @@ void run_sieve(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
   TYPE *a=sieve_state->a;
   unsigned int maxintsh=maxints>>1U;
-  unsigned int factor, q=(int)sqrt(maxints)+1;
+  unsigned int q=(unsigned int)sqrt(maxints)+1U;
   // Only check odd integers
-  factor=3U;
-  while (factor<=q) {
-    unsigned int factorh=factor>>1U;
+  unsigned int factorh=1U;
+  unsigned int qh=q>>1U;
+  while (factorh<=qh) {
     // Search for next prime
-    unsigned int i;
+    unsigned int i, factor;
     // If the bit is set we know it is not prime, so continue searching
     for (i=factorh; i<maxintsh; i++)
       if (!(a[i>>SHIFT]&((TYPE)1<<(i&MASK))))
 	break;
     factor=(i<<1U)+1U;
+    factorh=i+1;
     // Mask all integer multiples of this prime
-    unsigned int f2h=(factor*factor)>>1U;
-    for (i=f2h; i<maxintsh; i+=factor)
+    i=(factor*factor)>>1U;
+    for (; i<maxintsh; i+=factor)
       a[i>>SHIFT]|=(TYPE)1<<(i&MASK);
-    factor+=2U;
   }
 }
 
