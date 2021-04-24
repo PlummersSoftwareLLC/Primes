@@ -1,3 +1,4 @@
+import sys.net.Host;
 import haxe.ValueException;
 import haxe.exceptions.ArgumentException;
 import haxe.ds.List;
@@ -87,6 +88,16 @@ class Main {
             passes += 1;
         }
         var tD:Float = Sys.time() - tStart;
-        sieve.printResults(false,tD,passes);
+        //sieve.printResults(false,tD,passes);
+        #if interp
+           var language = 'HaxeEval';
+        #elseif cpp
+            var language = "C++";
+        #elseif python
+            var language = "Python";
+        #else 
+            var language = "UnknownTarget";
+        #end
+        Sys.println("TayIorRobinson_Haxe_" + language + ";" + Std.string(passes) + ";" + Std.string(tD) + ";1");
     }
 }

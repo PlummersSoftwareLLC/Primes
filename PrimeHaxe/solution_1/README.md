@@ -1,4 +1,6 @@
-# PrimeSiveHaxe
+# Haxe solution by [Taylor Robinson](https://github.com/tayiorrobinson)
+
+`[faithful]`
 
 An implementation of a Prime Sieve in Haxe.
 
@@ -8,9 +10,13 @@ See: https://haxe.org/
 
 Haxe is a programming language that while it does have it's own interpreter, can also be cross-compiled to other languages such as C++, Python, C# & more.
 
-## Running the Prime Sieve
+## Run Instructions
+
 
 1. Make sure you have a working [Haxe](https://haxe.org/) installation.
+   - Make sure you have setup HaxeLib by typing `haxelib setup`
+   
+For simplicity, you can run `bash compile_and_run_all.sh` to complete all the steps with 1 command. 
 
 ### Haxe Interpreter
 
@@ -27,12 +33,12 @@ Haxe is a programming language that while it does have it's own interpreter, can
    1. If you get a `Error: Library hxcpp is not installed`, run `haxelib install hxcpp`
 3. `./bin/cpp/Main`
 
-## My personal results.
+## Output
 
-Take these with a grain of salt. My machine is a MacBook Pro 2020 (M1, 8GB RAM) running macOS Big Sur.
+My machine is a MacBook Pro 2020 (M1, 8GB RAM) running macOS Big Sur.
 
-**Haxe Interpreter**: `Passes: 48, Time 10.0865981578826904, Avg: 0.21013746162255606, Limit: 1000000, Count: 78499, Valid: false`
-
-**C++**: `Passes: 2071, Time 10.0035741329193, Avg: 0.00483031102506968, Limit: 1000000, Count: 78499, Valid: false`
-
-**Python**: `Passes: 27, Time 10.352768182754517, Avg: 0.38343585862053764, Limit: 1000000, Count: 78499, Valid: false`
+```
+TayIorRobinson_Haxe_C++;2052;10.0021259784698;1
+TayIorRobinson_Haxe_HaxeEval;49;10.1027731895446777;1
+TayIorRobinson_Haxe_Python;26;10.114451885223389;1
+```
