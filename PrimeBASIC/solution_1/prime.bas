@@ -163,7 +163,7 @@ Loop Until (Timer - StartTime) > 5.0
 
 Duration = Timer - StartTime
 
-If GetReferenceResult(SieveSize) <> Sieve->CountPrimes() Then Print "WARNING: Result is incorrect!"
+If GetReferenceResult(SieveSize) <> Sieve->CountPrimes() Then Print "WARNING: result is incorrect!"
 
 Delete Sieve
 
