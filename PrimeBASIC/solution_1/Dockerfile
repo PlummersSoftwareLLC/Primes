@@ -12,7 +12,9 @@ WORKDIR /
 RUN rm -rf /fbc-install
 
 WORKDIR /opt/app
+COPY runprimes.sh .
+RUN chmod a+x runprimes.sh
 COPY *.bas .
-RUN fbc prime.bas
+RUN find . -name 'prime_*.bas' -exec fbc {} \;
 
-ENTRYPOINT [ "/opt/app/prime" ]
+ENTRYPOINT [ "/opt/app/runprimes.sh" ]
