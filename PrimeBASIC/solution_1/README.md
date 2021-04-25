@@ -18,7 +18,7 @@ find . -name 'prime_*.bas' -exec fbc {} \;
 ```
 
 ### Docker
-A Dockerfile has been provided. It will run the implementations with the FreeBASIC version provided with the solution. The reason is that Linux distros don't tend to supply FreeBASIC as a package.
+A Dockerfile has been provided.
 
 ## Output
 ```
