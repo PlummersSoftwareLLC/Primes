@@ -2,10 +2,11 @@
 
 *Category: Faithful*
 
-This is a collection of implementations in FreeBASIC that maintain the array of (non-)primes in an underlying array of:
-1. bit-mapped 32-bit unsigned integers
-2. bit-mapped 64-bit unsigned integers
-3. booleans
+This is a collection of implementations in FreeBASIC, of which:
+1. one is effectively a FreeBASIC copy of the "8 of 30" implementation that [mckoss](https://github.com/mckoss) has written in C
+2. one is a "naive" implementation that maintains the array of (non-)primes in an underlying array of bit-mapped 32-bit unsigned integers
+3. one is a "naive" implementation that maintains the array of (non-)primes in an underlying array of bit-mapped 64-bit unsigned integers
+4. one is a "naive" implementation that maintains the array of (non-)primes in an underlying array of booleans
 
 ## Run instructions
 
@@ -21,7 +22,8 @@ A Dockerfile has been provided. It will run the implementations with the FreeBAS
 
 ## Output
 ```
-rbergen_bit32;730;5.000;1
-rbergen_bit64;664;5.006;1
-rbergen_boolean;1711;5.002;1
+rbergen_8of30;4197;5.001;1
+rbergen_bit32;720;5.000;1
+rbergen_bit64;661;5.000;1
+rbergen_boolean;1720;5.001;1
 ```
