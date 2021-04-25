@@ -28,7 +28,7 @@ impl PrimeSieve {
                 num += 2;
             }
 
-            num = factor * 3;
+            num = factor * factor;
 
             while num < self.sieve_size {
                 self.raw_bits[num] = false;
