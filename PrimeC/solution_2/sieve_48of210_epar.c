@@ -22,13 +22,12 @@
 #endif
 
 // Steps array for finding the next number not divisible by 2,3,5,7
+// Prehalved for inner loops
 static unsigned int steps[48]={
-10,2,4,2,4,6,2,6,4,2,
- 4,6,6,2,6,4,2,6,4,6,
- 8,4,2,4,2,4,8,6,4,6,
- 2,4,6,2,6,6,4,2,4,6,
- 2,6,4,2,4,2,10,2
+5,1,2,1,2,3,1,3,2,1,2,3,3,1,3,2,1,3,2,3,4,2,1,2,1,
+ 2,4,3,2,3,1,2,3,1,3,3,2,1,2,3,1,3,2,1,2,1,5,1
 };
+
 struct sieve_state {
   TYPE *a;
   unsigned int maxints;
@@ -49,16 +48,18 @@ void delete_sieve(struct sieve_state *sieve_state) {
 
 void run_sieve(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
+  unsigned int maxintsh=maxints>>1U;
   TYPE *a=sieve_state->a;
-  unsigned int factor, q=(unsigned int)sqrt(maxints)+1U;
+  unsigned int q=(unsigned int)sqrt(maxints)+1U;
   unsigned int step=1U; // From 11 to 13
   unsigned int inc=steps[step]; // Next increment in steps array
   // Only check integers not divisible by 2, 3, 5, or 7
-  factor=11U; // We already have 2, 3, 5, and 7
-  while (factor<=q) {
+  unsigned int factorh=11U>>1U; // We already have 2, 3, 5, and 7
+  unsigned int qh=q>>1U;
+  while (factorh<=qh) {
     // Search for next prime
-    if (a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))) {
-      factor+=inc;
+    if (a[factorh>>SHIFT]&((TYPE)1<<(factorh&MASK))) {
+      factorh+=inc;
       if (++step==48U) step=0U; // End of steps array, start from the beginning
       inc=steps[step];
       continue;
@@ -66,13 +67,14 @@ void run_sieve(struct sieve_state *sieve_state) {
     // Mask all integer multiples of this prime, but only the bits we will ever read again
     unsigned int istep=step;
     unsigned int ninc=steps[istep];
-    for (unsigned int i=factor*factor; i<=maxints; ) {
-      a[i>>(SHIFT+1U)]|=(TYPE)1<<((i>>1U)&MASK);
+    unsigned int factor=(factorh<<1U)+1U;
+    for (unsigned int i=(factor*factor)>>1U; i<=maxintsh; ) {
+      a[i>>SHIFT]|=(TYPE)1<<(i&MASK);
       i+=factor*ninc;
       if (++istep==48U) istep=0U;
       ninc=steps[istep];
     }
-    factor+=inc;
+    factorh+=inc;
     if (++step==48U) step=0U; // End of steps array, start from the beginning
     inc=steps[step];
   }
@@ -84,13 +86,13 @@ unsigned int count_primes(struct sieve_state *sieve_state) {
   unsigned int ncount=4; // We already have 2, 3, 5, and 7 ...
   unsigned int factor=11; // ...
   unsigned int step=1; // From 11 to 13
-  unsigned int inc=steps[step]; // Next increment in steps array
+  unsigned int inc=steps[step]<<1U; // Next increment in steps array
   while (factor<=maxints) {
     if (!(a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))))
       ncount++;
     factor+=inc;
     if (++step==48U) step=0U; // End of steps array, start from the beginning
-    inc=steps[step];
+    inc=steps[step]<<1U;
   }
   return ncount;
 }

@@ -23,21 +23,37 @@ Also, running the sieves in parallel in different threads in an embarrassingly p
 
 
 1of2 - Implementation close to the original implementation of Dave.
+
 8of30 - Implementation writing bits in style (1) above
+
 8of30_owrb - Implementation writing bits in style (2)
+
 48of210 - Implementation writing bits in style (1)
+
 48of210_owrb - Implementation writing bits in style (2)
+
 480of2310_owrb - Implementation writing bits in style (2)
+
 5760of30030_owrb - Implementation writing bits in style (2)
+
 1of2_par - Implementation writing bits in style (3)
+
 8of30_par - Implementation writing bits in style (3)
+
 48of210_par - Implementation writing bits in style (3)
+
 480of2310_par - Implementation writing bits in style (3)
+
 5760of30030_par - Implementation writing bits in style (3)
+
 1of2_epar - Implementation writing bits in style (1), embarrassingly parallel
+
 8of30_epar - Implementation writing bits in style (2), embarrassingly parallel
+
 48of210_epar - Implementation writing bits in style (2), embarrassingly parallel
+
 480of2310_epar - Implementation writing bits in style (2), embarrassingly parallel
+
 5760of30030_epar - Implementation writing bits in style (2), embarrassingly parallel
 
 
@@ -52,63 +68,63 @@ Then run the code using the run.sh script. (You can change the number of threads
 
 On i5-9400 (WSL2, no docker):
 ```
-danielspaangberg_1of2;9404;5.000237;1
-danielspaangberg_8of30;15865;5.000086;1
-danielspaangberg_8of30_owrb;15765;5.000077;1
-danielspaangberg_48of210;18394;5.000217;1
-danielspaangberg_48of210_owrb;20996;5.000030;1
-danielspaangberg_480of2310_owrb;20492;5.000061;1
-danielspaangberg_5760of30030_owrb;30024;5.000047;1
-danielspaangberg_1of2_par;19701;5.000116;4
-danielspaangberg_8of30_par;25429;5.000175;4
-danielspaangberg_48of210_par;26872;5.000039;4
-danielspaangberg_480of2310_par;28288;5.000120;4
-danielspaangberg_5760of30030_par;29071;5.000140;4
-danielspaangberg_1of2_epar;50995;5.000814;6
-danielspaangberg_8of30_epar;74803;5.003918;6
-danielspaangberg_48of210_epar;98369;5.007262;6
-danielspaangberg_480of2310_epar;139872;5.001439;6
-danielspaangberg_5760of30030_epar;171797;5.000457;6
+danielspaangberg_1of2;10000;5.000305;1
+danielspaangberg_8of30;15852;5.000120;1
+danielspaangberg_8of30_owrb;17487;5.000032;1
+danielspaangberg_48of210;18425;5.000031;1
+danielspaangberg_48of210_owrb;23344;5.000077;1
+danielspaangberg_480of2310_owrb;27994;5.000026;1
+danielspaangberg_5760of30030_owrb;32872;5.000085;1
+danielspaangberg_1of2_par;20197;5.000203;4
+danielspaangberg_8of30_par;24297;5.000176;4
+danielspaangberg_48of210_par;27088;5.000170;4
+danielspaangberg_480of2310_par;28164;5.000065;4
+danielspaangberg_5760of30030_par;29089;5.000059;4
+danielspaangberg_1of2_epar;54939;5.000779;6
+danielspaangberg_8of30_epar;99934;5.000653;6
+danielspaangberg_48of210_epar;132728;5.001278;6
+danielspaangberg_480of2310_epar;159456;5.000567;6
+danielspaangberg_5760of30030_epar;187042;5.002346;6
 ```
 
 On i5-9400 (Docker / WSL2):
 ```
-danielspaangberg_1of2;9356;5.000167;1
-danielspaangberg_8of30;14837;5.000084;1
-danielspaangberg_8of30_owrb;9724;5.000396;1
-danielspaangberg_48of210;17078;5.000122;1
-danielspaangberg_48of210_owrb;12584;5.000924;1
-danielspaangberg_480of2310_owrb;14966;5.000126;1
-danielspaangberg_5760of30030_owrb;17565;5.000154;1
-danielspaangberg_1of2_par;9075;5.000343;4
-danielspaangberg_8of30_par;10068;5.000063;4
-danielspaangberg_48of210_par;10411;5.000016;4
-danielspaangberg_480of2310_par;10707;5.000258;4
-danielspaangberg_5760of30030_par;10925;5.000231;4
-danielspaangberg_1of2_epar;52399;5.002040;6
-danielspaangberg_8of30_epar;53852;5.003019;6
-danielspaangberg_48of210_epar;65535;5.002571;6
-danielspaangberg_480of2310_epar;81808;5.002424;6
-danielspaangberg_5760of30030_epar;94400;5.001967;6
+danielspaangberg_1of2;9692;5.000474;1
+danielspaangberg_8of30;14777;5.000164;1
+danielspaangberg_8of30_owrb;9639;5.000136;1
+danielspaangberg_48of210;17084;5.000198;1
+danielspaangberg_48of210_owrb;12707;5.000190;1
+danielspaangberg_480of2310_owrb;15219;5.000246;1
+danielspaangberg_5760of30030_owrb;17836;5.000029;1
+danielspaangberg_1of2_par;9024;5.000498;4
+danielspaangberg_8of30_par;10109;5.000448;4
+danielspaangberg_48of210_par;10598;5.000019;4
+danielspaangberg_480of2310_par;10817;5.000096;4
+danielspaangberg_5760of30030_par;11009;5.000264;4
+danielspaangberg_1of2_epar;54120;5.002285;6
+danielspaangberg_8of30_epar;53375;5.002453;6
+danielspaangberg_48of210_epar;69328;5.010508;6
+danielspaangberg_480of2310_epar;81199;5.003292;6
+danielspaangberg_5760of30030_epar;90976;5.002068;6
 ```
 
 On Raspberry Pi 4b (2GHz, ARM64):
 ```
-danielspaangberg_1of2;3194;5.001091;1
-danielspaangberg_8of30;4895;5.000483;1
-danielspaangberg_8of30_owrb;5541;5.000325;1
-danielspaangberg_48of210;5561;5.000758;1
-danielspaangberg_48of210_owrb;6863;5.000571;1
-danielspaangberg_480of2310_owrb;8399;5.000213;1
-danielspaangberg_5760of30030_owrb;9404;5.000325;1
-danielspaangberg_1of2_par;6846;5.000116;4
-danielspaangberg_8of30_par;8616;5.000388;4
-danielspaangberg_48of210_par;9328;5.000425;4
-danielspaangberg_480of2310_par;9608;5.000004;4
-danielspaangberg_5760of30030_par;9914;5.000242;4
-danielspaangberg_1of2_epar;11058;5.002297;4
-danielspaangberg_8of30_epar;16689;5.001790;4
-danielspaangberg_48of210_epar;17549;5.001936;4
-danielspaangberg_480of2310_epar;18734;5.001499;4
-danielspaangberg_5760of30030_epar;18355;5.001650;4
+danielspaangberg_1of2;3150;5.000062;1
+danielspaangberg_8of30;4711;5.000430;1
+danielspaangberg_8of30_owrb;6348;5.000481;1
+danielspaangberg_48of210;5550;5.000757;1
+danielspaangberg_48of210_owrb;7761;5.000091;1
+danielspaangberg_480of2310_owrb;9065;5.000311;1
+danielspaangberg_5760of30030_owrb;10191;5.000020;1
+danielspaangberg_1of2_par;6907;5.000622;4
+danielspaangberg_8of30_par;7629;5.000126;4
+danielspaangberg_48of210_par;8654;5.000219;4
+danielspaangberg_480of2310_par;9420;5.000243;4
+danielspaangberg_5760of30030_par;9434;5.000104;4
+danielspaangberg_1of2_epar;10524;5.002370;4
+danielspaangberg_8of30_epar;16896;5.001638;4
+danielspaangberg_48of210_epar;19032;5.001211;4
+danielspaangberg_480of2310_epar;19070;5.001330;4
+danielspaangberg_5760of30030_epar;19314;5.001127;4
 ```
