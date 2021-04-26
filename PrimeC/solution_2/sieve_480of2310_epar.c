@@ -22,27 +22,28 @@
 #endif
 
 // Steps array for finding the next number not divisible by 2,3,5,7,11
+// Pre halved
 static unsigned int steps[480]={
-12,4,2,4,6,2,6,4,2,4,6,6,2,6,4,2,6,4,6,8,4,2,4,2,4,
- 14,4,6,2,10,2,6,6,4,2,4,6,2,10,2,4,2,12,10,2,4,2,4,6,2,
- 6,4,6,6,6,2,6,4,2,6,4,6,8,4,2,4,6,8,6,10,2,4,6,2,6,
- 6,4,2,4,6,2,6,4,2,6,10,2,10,2,4,2,4,6,8,4,2,4,12,2,6,
- 4,2,6,4,6,12,2,4,2,4,8,6,4,6,2,4,6,2,6,10,2,4,6,2,6,
- 4,2,4,2,10,2,10,2,4,6,6,2,6,6,4,6,6,2,6,4,2,6,4,6,8,
- 4,2,6,4,8,6,4,6,2,4,6,8,6,4,2,10,2,6,4,2,4,2,10,2,10,
- 2,4,2,4,8,6,4,2,4,6,6,2,6,4,8,4,6,8,4,2,4,2,4,8,6,
- 4,6,6,6,2,6,6,4,2,4,6,2,6,4,2,4,2,10,2,10,2,6,4,6,2,
- 6,4,2,4,6,6,8,4,2,6,10,8,4,2,4,2,4,8,10,6,2,4,8,6,6,
- 4,2,4,6,2,6,4,6,2,10,2,10,2,4,2,4,6,2,6,4,2,4,6,6,2,
- 6,6,6,4,6,8,4,2,4,2,4,8,6,4,8,4,6,2,6,6,4,2,4,6,8,
- 4,2,4,2,10,2,10,2,4,2,4,6,2,10,2,4,6,8,6,4,2,6,4,6,8,
- 4,6,2,4,8,6,4,6,2,4,6,2,6,6,4,6,6,2,6,6,4,2,10,2,10,
- 2,4,2,4,6,2,6,4,2,10,6,2,6,4,2,6,4,6,8,4,2,4,2,12,6,
- 4,6,2,4,6,2,12,4,2,4,8,6,4,2,4,2,10,2,10,6,2,4,6,2,6,
- 4,2,4,6,6,2,6,4,2,10,6,8,6,4,2,4,8,6,4,6,2,4,6,2,6,
- 6,6,4,6,2,6,4,2,4,2,10,12,2,4,2,10,2,6,4,2,4,6,6,2,10,
- 2,6,4,14,4,2,4,2,4,8,6,4,6,2,4,6,2,6,6,4,2,4,6,2,6,
- 4,2,4,12,2
+6,2,1,2,3,1,3,2,1,2,3,3,1,3,2,1,3,2,3,4,2,1,2,1,2,
+ 7,2,3,1,5,1,3,3,2,1,2,3,1,5,1,2,1,6,5,1,2,1,2,3,1,
+ 3,2,3,3,3,1,3,2,1,3,2,3,4,2,1,2,3,4,3,5,1,2,3,1,3,
+ 3,2,1,2,3,1,3,2,1,3,5,1,5,1,2,1,2,3,4,2,1,2,6,1,3,
+ 2,1,3,2,3,6,1,2,1,2,4,3,2,3,1,2,3,1,3,5,1,2,3,1,3,
+ 2,1,2,1,5,1,5,1,2,3,3,1,3,3,2,3,3,1,3,2,1,3,2,3,4,
+ 2,1,3,2,4,3,2,3,1,2,3,4,3,2,1,5,1,3,2,1,2,1,5,1,5,
+ 1,2,1,2,4,3,2,1,2,3,3,1,3,2,4,2,3,4,2,1,2,1,2,4,3,
+ 2,3,3,3,1,3,3,2,1,2,3,1,3,2,1,2,1,5,1,5,1,3,2,3,1,
+ 3,2,1,2,3,3,4,2,1,3,5,4,2,1,2,1,2,4,5,3,1,2,4,3,3,
+ 2,1,2,3,1,3,2,3,1,5,1,5,1,2,1,2,3,1,3,2,1,2,3,3,1,
+ 3,3,3,2,3,4,2,1,2,1,2,4,3,2,4,2,3,1,3,3,2,1,2,3,4,
+ 2,1,2,1,5,1,5,1,2,1,2,3,1,5,1,2,3,4,3,2,1,3,2,3,4,
+ 2,3,1,2,4,3,2,3,1,2,3,1,3,3,2,3,3,1,3,3,2,1,5,1,5,
+ 1,2,1,2,3,1,3,2,1,5,3,1,3,2,1,3,2,3,4,2,1,2,1,6,3,
+ 2,3,1,2,3,1,6,2,1,2,4,3,2,1,2,1,5,1,5,3,1,2,3,1,3,
+ 2,1,2,3,3,1,3,2,1,5,3,4,3,2,1,2,4,3,2,3,1,2,3,1,3,
+ 3,3,2,3,1,3,2,1,2,1,5,6,1,2,1,5,1,3,2,1,2,3,3,1,5,
+ 1,3,2,7,2,1,2,1,2,4,3,2,3,1,2,3,1,3,3,2,1,2,3,1,3,
+ 2,1,2,6,1
 };
 
 struct sieve_state {
@@ -65,16 +66,18 @@ void delete_sieve(struct sieve_state *sieve_state) {
 
 void run_sieve(struct sieve_state *sieve_state) {
   unsigned int maxints=sieve_state->maxints;
+  unsigned int maxintsh=maxints>>1U;
   TYPE *a=sieve_state->a;
-  unsigned int factor, q=(unsigned int)sqrt(maxints)+1U;
+  unsigned int q=(unsigned int)sqrt(maxints)+1U;
   unsigned int step=1U; // From 13 to 17
   unsigned int inc=steps[step]; // Next increment in steps array
   // Only check integers not divisible by 2, 3, 5, 7, or 11
-  factor=13U; // We already have 2, 3, 5, 7, and 11
-  while (factor<=q) {
+  unsigned int factorh=13U>>1U; // We already have 2, 3, 5, 7, and 11
+  unsigned int qh=q>>1U;
+  while (factorh<=qh) {
     // Search for next prime
-    if (a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))) {
-      factor+=inc;
+    if (a[factorh>>SHIFT]&((TYPE)1<<(factorh&MASK))) {
+      factorh+=inc;
       if (++step==480U) step=0U; // End of steps array, start from the beginning
       inc=steps[step];
       continue;
@@ -82,13 +85,14 @@ void run_sieve(struct sieve_state *sieve_state) {
     // Mask all integer multiples of this prime, but only the bits we will ever read again
     unsigned int istep=step;
     unsigned int ninc=steps[istep];
-    for (unsigned int i=factor*factor; i<=maxints; ) {
-      a[i>>(SHIFT+1U)]|=(TYPE)1<<((i>>1U)&MASK);
+    unsigned int factor=(factorh<<1U)+1U;
+    for (unsigned int i=(factor*factor)>>1U; i<=maxintsh; ) {
+      a[i>>SHIFT]|=(TYPE)1<<(i&MASK);
       i+=factor*ninc;
       if (++istep==480U) istep=0U;
       ninc=steps[istep];
     }
-    factor+=inc;
+    factorh+=inc;
     if (++step==480U) step=0U; // End of steps array, start from the beginning
     inc=steps[step];
   }
@@ -100,13 +104,13 @@ unsigned int count_primes(struct sieve_state *sieve_state) {
   unsigned int ncount=5; // We already have 2, 3, 5, 7, and 11 ...
   unsigned int factor=13; // ...
   unsigned int step=1; // From 13 to 17
-  unsigned int inc=steps[step]; // Next increment in steps array
+  unsigned int inc=steps[step]<<1U; // Next increment in steps array
   while (factor<=maxints) {
     if (!(a[factor>>(SHIFT+1U)]&((TYPE)1<<((factor>>1U)&MASK))))
       ncount++;
     factor+=inc;
     if (++step==480U) step=0U; // End of steps array, start from the beginning
-    inc=steps[step];
+    inc=steps[step]<<1U;
   }
   return ncount;
 }
