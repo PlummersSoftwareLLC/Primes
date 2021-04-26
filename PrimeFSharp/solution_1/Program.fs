@@ -66,7 +66,7 @@ let main _argv =
     let mutable passCount = 0
     let mutable sieve = null
 
-    while ((DateTime.UtcNow - start).TotalSeconds <= 5.0) do
+    while (DateTime.UtcNow - start).TotalSeconds <= 5.0 do
       sieve <- PrimeSieve(sieveSize)
       sieve.RunSieve |> ignore
       passCount <- passCount + 1
@@ -76,7 +76,7 @@ let main _argv =
   let sieveSize = 1000000
   let (sieve, passCount, duration) = TimedRun sieveSize
 
-  if (sieve.CountPrimes <> referenceResults.[sieveSize]) then
+  if sieve.CountPrimes <> referenceResults.[sieveSize] then
     printfn "WARNING: result is incorrect!"
 
   printfn $"rbergen;{ passCount };{ duration };1"
