@@ -1,4 +1,4 @@
-FROM rfvanbergen/freebasic:latest
+FROM rfvanbergen/freebasic:1.07.3
 
 WORKDIR /opt/app
 COPY runprimes.sh .
