@@ -1,0 +1,6 @@
+.vs/*
+bin/*
+obj/*
+PrimeFSharp/*
+.fake
+.ionide

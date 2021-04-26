@@ -43,13 +43,13 @@ begin
         Number := Factor;
         while Number <= SieveSqrt do
         begin
-            if ((Number mod 2) <> 0) and (not NotPrimeArray[Number div 2]) then
+            if not NotPrimeArray[Number div 2] then
             begin
                 Factor := Number;
                 break;
             end;
 
-            Number := Number + 1;
+            Number := Number + 2;
         end;
 
         if Number > SieveSqrt then
