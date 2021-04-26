@@ -13,11 +13,26 @@ This requires rust to be installed.
 
 This will compile and run the program.
 
-The executable can afterwards be found in `/target/release/`.
+The executable can afterwards be found and executed in `/target/release/`.
 
 ## Output
 
 This was run on a Windows Machine with AMD Ryzen 5 1600 Six-Core Processor 3.20 GHz.
 
-std out: ```Blui42; 4092; 5.000449; 1```
-std err: ```78498```
+```
+Author; Passes; Time; Threads
+Blui42; 4085; 5.0007594; 1
+816.88 Passes per second
+For Validation: 78498 Primes were found
+```
+
+On wsl:
+
+```
+Author; Passes; Time; Threads
+Blui42; 4032; 5.000549; 1
+806.31 Passes per second
+For Validation: 78498 Primes were found
+```
+
+Only line 2 is on standard output, the rest is on standard Error.

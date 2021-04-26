@@ -19,14 +19,15 @@ impl PrimeSieve{
                 factor +=2;
             }
             for num in (factor*factor..=self.size).step_by(factor*2){
-                self.bits[num] = false;
+                self.bits[num] = false;  // mark all multiples of this number as not prime
             }
             factor += 2;
         }
     }
     pub(crate) fn print_results(&self, duration: f64, passes: u32){
-
-        println!("Blui42; {}; {}; 1", passes, duration) // print required output to standard out
+        eprintln!("Author; Passes; Time; Threads");  
+        println!("Blui42; {}; {}; 1", passes, duration);  // print required output to standard out
+        eprintln!("{} Passes per second", (100.0*(passes as f64)/duration).round()/ 100.0);
     }
     #[allow(dead_code)]
     pub(crate) fn eprint_detailed(&self){
@@ -59,7 +60,7 @@ fn main() {
         if Instant::now().duration_since(start_time).as_secs() >= 5 {
             sieve.print_results(Instant::now().duration_since(start_time).as_secs_f64(), passes);
             // sieve.eprint_detailed();  // comment this out, it takes forever to finish
-            eprintln!("{}", sieve.count_primes());
+            eprintln!("For Validation: {} Primes were found", sieve.count_primes());
             return
         }
     }
