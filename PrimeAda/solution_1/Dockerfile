@@ -1,5 +1,3 @@
-# Dockerfile provided by rbergen
-
 FROM ubuntu:18.04 AS build
 
 RUN apt-get update -qq \

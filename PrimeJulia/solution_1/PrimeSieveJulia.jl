@@ -63,6 +63,11 @@ function printResults(sieve::prime_sieve, showResults::Bool, duration::Number, p
 
 	println(count == countPrimes(sieve))
 	println("Passes: $passes, Time: $duration, Avg: $(duration/passes), Limit: $(sieve.sieveSize), Count: $count, Valid: $(validateResults(sieve))")
+
+	# Following 2 lines added by rbergen to conform to drag race output format
+	println()
+	println("dcbi;$passes;$duration;1")
+
 end
 
 function main()

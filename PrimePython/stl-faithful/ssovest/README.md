@@ -1,4 +1,6 @@
-# Python Prime Sieve
+# Python Prime Sieve by ssovest
+
+![Category](https://img.shields.io/badge/Category-faithful-green)
 
 ## Running with Python
 

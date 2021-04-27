@@ -68,10 +68,13 @@
 
 (defparameter passes 0)
 (defparameter start 
-    (get-universal-time))
+    (get-internal-real-time))
+(defparameter runtime 
+    (* internal-time-units-per-second 10))
+
 (loop 
     (if 
-        (<= (- (get-universal-time) start) 10)
+        (<= (- (get-internal-real-time) start) runtime)
         (progn
             (prime-sieve 1000000)
             (run-sieve)
@@ -82,6 +85,9 @@
 )
 
 (defparameter duration 
-    (- (get-universal-time) start))
+    (/ (- (get-internal-real-time) start) internal-time-units-per-second))
 (defparameter avg (/ duration passes))
-(print (list "Passes:" passes "Time:" (- (get-universal-time) start) "Avg" avg "Count" (count-primes)))
+(print (list "Passes:" passes "Time:" duration "Avg" avg "Count" (count-primes)))
+
+;; Following line added by rbergen to conform to drag race output format
+(format t "~%~%mikehw;~d;~f;1~%" passes duration)

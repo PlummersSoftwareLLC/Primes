@@ -111,16 +111,20 @@ $tD = getTimeDiffInMs($tStart);     //Get to total time passed
 printf(
     "Passes: %d, Time: %dms, Avg: %dms, Limit: %d, Count: %d, Valid: %s",
     $passes,
-    $tD,
+    (int)$tD,
     $tD / $passes,
     $sieveSize,
     $rawbitCount,
     (validateResult($sieveSize) === $rawbitCount) ? 'True' : 'False'
 );
 
-function getTimeDiffInMs(float $tStart): int
+// Following 2 lines added by rbergen to conform to drag race output format
+echo "\n\n";
+printf("DennisdeBest;%d;%f;1\n", $passes, ((float)$tD) / 1000);
+
+function getTimeDiffInMs(float $tStart): float
 {
-    return (int)(microtime(true) - $tStart) * 1000;
+    return (microtime(true) - $tStart) * 1000;
 }
 
 function validateResult($sieveSize): ?int

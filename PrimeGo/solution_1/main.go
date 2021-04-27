@@ -86,7 +86,12 @@ func (s Sieve) Results(showResults bool, duration time.Duration, passes int) {
 		count,           /* count */
 		s.countPrimes(), /* countPrimes() */
 		s.Validate() /* validateResults*/)
+
+	// Following 2 lines added by rbergen to conform to drag race output format
+	fmt.Println()
+	fmt.Printf("bundgaard;%d;%f;1\n", passes, duration.Seconds())
 }
+
 func main() {
 
 	passes := 0
