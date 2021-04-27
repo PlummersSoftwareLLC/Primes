@@ -55,7 +55,7 @@ begin
         if Number > SieveSqrt then
             break;
 
-        Number := Factor * 3;
+        Number := Factor * Factor;
 
         while Number <= SieveSize do
         begin

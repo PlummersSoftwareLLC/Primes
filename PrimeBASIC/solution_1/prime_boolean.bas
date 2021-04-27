@@ -79,7 +79,7 @@ Function PrimeSieve.RunSieve() As BitArray Ptr
 
         If (Number > SieveSqrt) Then Exit For
 
-        For Number = Factor * 3 To SieveSize Step Factor * 2
+        For Number = Factor * Factor To SieveSize Step Factor * 2
             This.NotPrimeArray->SetBit(Number \ 2)
         Next
     Next

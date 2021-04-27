@@ -22,7 +22,7 @@ class PrimeSieve
             break unless number <= sieve_sqrt
 
             factor = number
-            number = factor * 3
+            number = factor * factor
 
             while number < @sieve_size
                 @prime_array[number / 2] = false
