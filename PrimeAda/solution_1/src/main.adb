@@ -106,7 +106,7 @@ procedure Main is
          Validate_Results'Image);
 
 -- Following 2 lines added by rbergen to conform to drag race output format
-      Put_Line ("")        
+      Put_Line ("");        
       Put_Line ("boopbeepboopbeep;" & Passes'Image & ";" & Dur'Image & ";1");
 
    end Print_Result;
