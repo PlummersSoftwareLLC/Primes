@@ -102,12 +102,12 @@ procedure Main is
       Put_Line
         ("Passes:" & Passes'Image & ", Time:" & Dur'Image & ", Avg: " &
          Avg'Image & ", Limit :" & Sieve_Size'Image & ", Count1 :" &
-         count'Image & ", Count2:" & Count_Primes'Image & ", Valid :" &
-         Validate_Results'Image);
+         count'Image & ", Count2:" & Long_Long_Integer'Image(Count_Primes) & ", Valid :" &
+         Boolean'Image(Validate_Results));
 
 -- Following 2 lines added by rbergen to conform to drag race output format
-      Put_Line ("");        
-      Put_Line ("boopbeepboopbeep;" & Passes'Image & ";" & Dur'Image & ";1");
+      Put_Line ("");
+      Put_Line ("BoopBeepBoopBeep;" & Passes'Image & ";" & Dur'Image & ";1");
 
    end Print_Result;
    Passes     : Integer := 0;
