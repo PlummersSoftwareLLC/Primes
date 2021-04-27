@@ -15,6 +15,24 @@ compiled program by executing this script:
 
 > $ ./run
 
+Alternatively, you can use docker to run this code from a container.
+
+```
+$ docker build -t drag-race .
+$ docker run drag-race
+```
+
+or as a one-liner:
+
+```
+$ docker run $(docker build -q .)
+mckoss-c830;14196;5.0;1
+```
+
+*For some reason - I get 1/2 the performance running `sieve` on the same hardware by running this
+in a Docker container as I do running natively in Windows or even in Linux running in a VM
+on Windows.*
+
 ## Output
 
 ```

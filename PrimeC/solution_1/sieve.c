@@ -16,7 +16,6 @@ Acknowledgements:
 
 */
 #include <assert.h>  // assert
-#include <math.h>    // sqrt
 #include <stdint.h>  // uint32_t
 #include <stdio.h>   // printf
 #include <stdlib.h>  // calloc
@@ -40,6 +39,21 @@ Acknowledgements:
 int maxNumber = 1e6;
 BOOL fDebug = FALSE;
 
+unsigned int usqrt(int n)
+{
+    unsigned int x;
+    unsigned int xLast;
+
+    xLast = 0;
+    x = n / 2;
+
+    while (x != xLast) {
+        xLast = x;
+        x = (x + n / x) / 2;
+    }
+    return x;
+}
+
 //
 // Prime number sieve - full bitmapped but ignoring
 // multiples of 2, 3, and 5.  Only testing numbers
@@ -52,7 +66,7 @@ BOOL fDebug = FALSE;
 WORD *primes8of30(int maxNumber) {
     // Starts off zero-initialized.
     WORD *buffer = (WORD *)calloc(allocOf(maxNumber), sizeof(WORD));
-    unsigned int maxFactor = sqrt(maxNumber) + 1;
+    unsigned int maxFactor = usqrt(maxNumber) + 1;
 
     // Only numbers congruent to candidates mod 30 can be prime.
     unsigned int candidates[8] = {1, 7, 11, 13, 17, 19, 23, 29};
@@ -229,7 +243,7 @@ void timedTest(int secs, WORD *primeFinder(int), char *title) {
 
     float elapsed = (float) currentTicks - startTicks;
 
-    printf("%s;%d;%0.1f;1", title, passes, elapsed / CLOCKS_PER_SEC);
+    printf("%s;%d;%0.1f;1\n", title, passes, elapsed / CLOCKS_PER_SEC);
     fflush(stdout);
 }
 
@@ -278,7 +292,7 @@ int main(int argc, char *argv[]) {
 
     if (fDebug) {
         printf("Calculate primes up to %d.\n", maxNumber);
-        printf("Timer resolution: %d ticks per second.\n", CLOCKS_PER_SEC);
+        printf("Timer resolution: %d ticks per second.\n", (int) CLOCKS_PER_SEC);
         printf("Word size: %d bits.\n", BITS_PER_WORD);
         printf("\n");
     }
