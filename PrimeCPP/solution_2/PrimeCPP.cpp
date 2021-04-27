@@ -106,6 +106,9 @@ class prime_sieve
           if (showResults)
               printf("\n");
           
+          if (!validateResults())
+            printf("WARNING: result is incorrect!");
+
           printf("Passes: %d, Threads: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
                  passes, 
                  thread::hardware_concurrency(),
@@ -115,6 +118,10 @@ class prime_sieve
                  count,
                  countPrimes(), 
                  validateResults());
+          
+          // Following 2 lines added by rbergen to conform to drag race output format
+          printf("\n");
+          printf("davepl_par;%d;%f;%d\n", passes, duration, thread::hardware_concurrency());
       }
 };
 

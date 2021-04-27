@@ -87,6 +87,30 @@ namespace PrimeCSharp
             };
         }
 
+        // Below added by repo maintainers to conform to drag race output format
+        private static string GetSieveTag(RunSettings runSettings)
+        {
+            return runSettings switch
+            {
+                { Original: true } => "original",
+                { BoolArray: true } => "bool",
+                { InvertedBoolArray: true } => "ibool",
+                { DirectInvertedBoolArray: true } => "dbool",
+                { RawBits: true } => "raw",
+                { RawBits32: true } => "raw32",
+                { RawBitsDirect: true } => "rawdirect",
+                { RawBits2Of6: true } => "raw6",
+                { RawParallel: true } => "rawp",
+                { ArrayPool: true } => "pool",
+                { ArrayPoolRef: true } => "ref",
+                { ArrayPool2Of6: true } => "pool6",
+                { ArrayPool6P: true } => "pool6p",
+                { ArrayPool8of30: true } => "pool30",
+                { ArrayPool8of30M: true } => "pool30m",
+                _ => "standard"
+            };
+        }
+
 
         private static (ISieve? sieve, int passes) RunSingleThread(Func<ISieve> create, Stopwatch watch, long durationLimit)
         {
@@ -134,16 +158,6 @@ namespace PrimeCSharp
 
         private static void PrintResults(ISieve sieve, int passes, Stopwatch watch, RunSettings runSettings)
         {
-            if (runSettings.ShowResults)
-            {
-                string listing = sieve.GetFoundPrimes()
-                    .Select(a => a.ToString())
-                    .Aggregate((a, b) => $"{a}, {b}");
-
-                Console.WriteLine(listing);
-                Console.WriteLine();
-            }
-
             int threads = 1;
             if (runSettings.MultiThreaded)
             {
@@ -154,6 +168,23 @@ namespace PrimeCSharp
             if (sieve.IsParallel)
             {
                 pthreads = runSettings.PThreadCount == 0 ? Environment.ProcessorCount : runSettings.PThreadCount;
+            }
+
+            // Below added by repo maintainers to conform to drag race output format
+            if (runSettings.Dragrace) 
+            {
+                Console.WriteLine($"kinematics2_{GetSieveTag(runSettings)};{passes};{watch.Elapsed.TotalSeconds:G6};{pthreads}");
+                return;
+            }
+
+            if (runSettings.ShowResults)
+            {
+                string listing = sieve.GetFoundPrimes()
+                    .Select(a => a.ToString())
+                    .Aggregate((a, b) => $"{a}, {b}");
+
+                Console.WriteLine(listing);
+                Console.WriteLine();
             }
 
             List<string> results = new();

@@ -1,7 +1,7 @@
 # C language solution by Daniel Spångberg
 
-faithful 
-parallel-faithful
+![Category](https://img.shields.io/badge/Category-faithful-green)
+![Category](https://img.shields.io/badge/Category-faithful%2Cparallel-green)
 
 All these implementations are written in C.
 The state of the sieve is stored in a C struct (closest to a class in C). 

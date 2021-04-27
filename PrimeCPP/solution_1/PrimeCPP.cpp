@@ -103,6 +103,10 @@ class prime_sieve
                  count,
                  countPrimes(),
                  validateResults());
+
+          // Following 2 lines added by rbergen to conform to drag race output format
+          printf("\n");       
+          printf("davepl;%d;%f;1\n", passes, duration);
       }
 
       int countPrimes()

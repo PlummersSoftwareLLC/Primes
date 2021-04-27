@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace PrimeSieveCS
 {
@@ -112,7 +113,14 @@ namespace PrimeSieveCS
                 }
                 if (showResults)
                     Console.WriteLine("");
+
+                CultureInfo.CurrentCulture = new CultureInfo("en_US", false);
+
                 Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + this.sieveSize + ", Count: " + count + ", Valid: " + validateResults());
+            
+                // Following 2 lines added by rbergen to conform to drag race output format
+                Console.WriteLine();
+                Console.WriteLine($"davepl;{passes};{duration:G6};1");
             }
         }
 
