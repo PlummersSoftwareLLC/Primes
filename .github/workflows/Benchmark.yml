@@ -31,7 +31,7 @@ jobs:
     needs: ["collect-solutions"]
 
     strategy:
-      max-parallel: 1
+      # max-parallel: 1
       matrix:
         solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
         os: ["ubuntu-20.04"]
@@ -73,7 +73,10 @@ jobs:
       - name: "Download artifacts"
         uses: actions/download-artifact@v2
 
-      - name: "List all artifacts"
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Generate report"
         run: |
           pip3 install _tools/requirements.txt
           python3 _tools/bin/report.py -d .
