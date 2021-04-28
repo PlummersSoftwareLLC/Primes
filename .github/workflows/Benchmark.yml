@@ -4,7 +4,9 @@ on:
   # schedule:
   #   - cron: "0 20 * * *"
   push:
-    branches: ["tools-report"]
+    branches: 
+      - drag-race
+      - tools-report
 
   workflow_dispatch:
 
@@ -78,7 +80,6 @@ jobs:
 
       - name: "Generate report"
         run: |
-          tree .
           pip3 install -r _tools/requirements.txt
           python3 _tools/bin/report.py -d $PWD
       
