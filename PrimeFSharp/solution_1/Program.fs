@@ -27,7 +27,7 @@ type PrimeSieve (size) =
       (number, number <= maxFactor)
 
     let MarkNonPrimes factor = 
-      let mutable number = factor * 3
+      let mutable number = factor * factor
 
       while number <= sieveSize do
         primesArray.[number / 2] <- false

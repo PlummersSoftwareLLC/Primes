@@ -89,7 +89,7 @@ NXTNUM  INCX    2               Bump rX to next odd number
 * Found next factor
 SETFCTR LD2     NUMBER          Load factor into rI2
         LDA     NUMBER          Load factor into rA...
-        MUL     =3=             ...so we can start at factor * 3
+        MUL     NUMBER          ...so we can start at factor * factor
 
 * Start of loop to set bits for factor multiples
 SETLOOP ENTA    0               Prepare rAX for division
