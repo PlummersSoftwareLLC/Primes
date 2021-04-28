@@ -70,13 +70,14 @@ jobs:
       - test
 
     steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+      
       - name: "Download artifacts"
         uses: actions/download-artifact@v2
 
-      - name: "Checkout code"
-        uses: actions/checkout@v2
-
       - name: "Generate report"
         run: |
+          tree .
           pip3 install -r _tools/requirements.txt
-          python3 _tools/bin/report.py -d .
+          python3 _tools/bin/report.py -d $PWD
