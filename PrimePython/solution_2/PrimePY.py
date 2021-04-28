@@ -94,6 +94,11 @@ class PrimeSieve:
             print()
         print("Passes: %s, Time: %s, Avg: %s, Limit: %s, Count: %s, Valid: %s" % (passes, duration, duration/passes, self._size, count, self.validate_results()))
 
+        # Following 2 lines added by rbergen to conform to drag race output format
+        print();
+        print("ssovest; %s;%s;1" % (passes, duration));
+
+
 # MAIN Entry
 if __name__ == "__main__":
     from argparse import ArgumentParser

@@ -113,7 +113,12 @@ class prime_sieve(object):
         assert(count == this.countPrimes())
         stdout.write("\n");
         print("Passes: " + str(passes) + ", Time: " + str(duration) + ", Avg: " + str(duration/passes) + ", Limit: " + str(this.sieveSize) + ", Count: " + str(count) + ", Valid: " + str(this.validateResults()))
-  
+
+        # Following 2 lines added by rbergen to conform to drag race output format
+        stdout.write("\n");
+        print("davepl;" + str(passes) + ";" + str(duration) + ";1");
+
+
 # MAIN Entry
 
 tStart = timeit.default_timer()                         # Record our starting time

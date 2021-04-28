@@ -25,4 +25,8 @@ pub fn main() anyerror!void {
         elapsed / @intToFloat(f32, passes),
         size,
     });
+
+    // Following 2 lines added by rbergen to conform to drag race output format
+    print("\n", .{});
+    print("devblok;{};{d:.5};1\n", .{ passes, elapsed });
 }

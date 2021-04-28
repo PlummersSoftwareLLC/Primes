@@ -89,5 +89,6 @@
 (defparameter avg (/ duration passes))
 (print (list "Passes:" passes "Time:" duration "Avg" avg "Count" (count-primes)))
 
-;; Following line added by rbergen to conform to drag race output format
-(format t "~%~%mikehw;~d;~f;1~%" passes duration)
+;; Following 2 lines added by rbergen to conform to drag race output format
+(terpri)
+(format t "~%mikehw;~d;~f;1~%" passes duration)

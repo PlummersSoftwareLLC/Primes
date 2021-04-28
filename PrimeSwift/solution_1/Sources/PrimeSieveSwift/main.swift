@@ -111,6 +111,10 @@ extension PrimeSieveSwift {
         assert(count == countPrimes())
 
         print("\nPasses: \(passes), Time: \(duration), Avg: \(duration/Double(passes)), Limit: \(sieveSize), Count: \(count), Valid: \(validateResults())")
+        
+        /// Following 2 lines added by rbergen to conform to drag race output format
+        print()
+        print("j-f1;\(passes);\(duration);1\n")
     }
 }
 
