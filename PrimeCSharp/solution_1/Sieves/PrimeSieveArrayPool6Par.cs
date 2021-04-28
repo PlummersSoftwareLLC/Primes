@@ -8,6 +8,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveArrayPool6Par : ISieve
     {
+        public string QuickName => "pool6p";
+        public string Name => "Array Pool, 2 of 6, parallel";
+
         private readonly long[] data;
         private readonly int threadCount;
         public bool IsParallel => true;

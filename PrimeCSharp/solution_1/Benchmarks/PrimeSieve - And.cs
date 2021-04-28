@@ -7,7 +7,11 @@ namespace PrimeCSharp
 {
     class PrimeSieveAnd : ISieve
     {
+        public string QuickName => "bench+and";
+        public string Name => "Benchmark BitArray 'and'";
+
         public int SieveSize { get; }
+
         private readonly BitArray bitArray;
 
         public PrimeSieveAnd(int sieveSize)

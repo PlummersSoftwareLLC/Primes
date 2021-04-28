@@ -7,6 +7,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveArrayPool2Of6 : ISieve
     {
+        public string QuickName => "pool2of6";
+        public string Name => "Array Pool, 2 of 6";
+
         private readonly long[] data;
 
         public PrimeSieveArrayPool2Of6(int sieveSize)

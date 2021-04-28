@@ -7,6 +7,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveArrayPool8of30 : ISieve
     {
+        public string QuickName => "pool30";
+        public string Name => "Array Pool, 8 of 30";
+
         public int SieveSize { get; }
 
         // The primes data

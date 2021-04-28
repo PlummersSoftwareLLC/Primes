@@ -254,6 +254,11 @@ namespace PrimeCSharp
             }
 
             Console.WriteLine(results.Aggregate((a, b) => $"{a}, {b}"));
+
+            // official syntax:
+            // kinematics_<sieve_tag>;<pass_count>;<runtime>;<pthread_count>
+
+            Console.WriteLine($"kinematics_{sieve.QuickName};{passes};{watch.Elapsed.TotalSeconds:G6};{threads}");
         }
 
         #region Code for running struct versions.

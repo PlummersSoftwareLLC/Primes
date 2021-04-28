@@ -4,6 +4,9 @@ namespace PrimeCSharp
 {
     public interface ISieve
     {
+        string QuickName { get; }
+        string Name { get; }
+
         int SieveSize { get; }
         void Run();
         int CountPrimes();

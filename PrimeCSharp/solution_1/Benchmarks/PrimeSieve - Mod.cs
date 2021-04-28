@@ -7,6 +7,9 @@ namespace PrimeCSharp
 {
     class PrimeSieveMod : ISieve
     {
+        public string QuickName => "bench+mod";
+        public string Name => "Benchmark BitArray 'mod'";
+
         public int SieveSize { get; }
         private readonly BitArray bitArray;
 
