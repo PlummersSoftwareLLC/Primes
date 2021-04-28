@@ -78,5 +78,5 @@ jobs:
 
       - name: "Generate report"
         run: |
-          pip3 install _tools/requirements.txt
+          pip3 install -r _tools/requirements.txt
           python3 _tools/bin/report.py -d .
