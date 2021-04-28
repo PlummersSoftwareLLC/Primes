@@ -1,3 +1,5 @@
+.dockerignore
+.gitignore
 .env
 target/
 tests/

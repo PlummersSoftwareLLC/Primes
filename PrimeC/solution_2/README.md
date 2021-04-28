@@ -1,6 +1,7 @@
 # C language solution by Daniel Spångberg
 
 ![Category](https://img.shields.io/badge/Category-faithful-green)
+
 ![Category](https://img.shields.io/badge/Category-faithful%2Cparallel-green)
 
 All these implementations are written in C.
