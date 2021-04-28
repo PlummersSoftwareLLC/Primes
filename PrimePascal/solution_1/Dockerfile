@@ -8,4 +8,4 @@ COPY *.pas .
 
 RUN fpc prime
 
-ENTRYPOINT [ "/opt/app/prime" ]
+ENTRYPOINT [ "./prime" ]

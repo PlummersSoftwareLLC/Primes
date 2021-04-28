@@ -102,5 +102,11 @@ namespace PrimeCSharp
         [Option('b', "bench",
             Default = "", HelpText = "A type of benchmark to run. Leaving it blank will run the standard benchmarks. Current options: mod, ref, ofN, par")]
         public string? Bench { get; set; }
+
+        // Below added by repo maintainers to conform to drag race output format
+        [Option('d', "dragrace",
+            Default = "", HelpText = "Make output conform to dragrace format. This option only works with individual sieve runs (i.e., not with benchmarks)")]
+        public bool Dragrace { get; set; }
+
     }
 }

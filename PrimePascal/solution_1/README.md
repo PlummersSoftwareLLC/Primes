@@ -1,6 +1,6 @@
 # Object Pascal solution by rbergen
 
-*Category: Faithful*
+![Category](https://img.shields.io/badge/Category-faithful-green)
 
 This is an implementation in Object Pascal, or Free Pascal "ObjFPC mode" to be exact.
 

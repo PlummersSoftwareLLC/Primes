@@ -1,5 +1,8 @@
 # MIXAL solution by rbergen
 
+![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
+![Category](https://img.shields.io/badge/Category-approximation-blue)
+
 *Category: Unfaithful / Closest Approximation*
 
 This is an implementation in the assembly language for the MIX computer, described in D.E. Knuth's book series The Art of Computer Programming.
@@ -13,7 +16,7 @@ Due to this, the core implementation deviates from the basic rules in two ways:
 * By default, the sieve size is 200,000 instead of 1,000,000. The reason is that MIX has a total memory capacity of 3,999 words, each 30 bits wide. This does not allow for a bit array of 500,000 entries to be stored. In the practical sense, a sieve size of 200,000 is the maximum.
 * The implementation does itself not run for a period of 5 seconds. Instead, depending on configuration it will either execute a configured number of sieve runs, or keep repeating sieve runs indefinitely. The reason is that MIX has no internal clock that measures actual time. Instruction execution times are measured in "ticks", the duration of which is undefined, by design. In practice, this means that if a timed execution is desired, the starting, timing and stopping of it must be controlled external to the program.
 
-These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "Closest Approximation". 
+These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "approximation". 
 
 To mitigate the second deviation, the implementation comes with a wrapper shell script that:
 * Times the run of the implementation externally, using the GNU time command

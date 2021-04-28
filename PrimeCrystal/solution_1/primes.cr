@@ -69,6 +69,11 @@ struct PrimeSieve
       count_primes(),
       validate_results(),
     )
+
+    # Following 2 lines added by rbergen to conform to drag race output format
+    puts
+    printf("marghidanu;%d;%f;1", passes, duration)
+
   end
 
   def count_primes

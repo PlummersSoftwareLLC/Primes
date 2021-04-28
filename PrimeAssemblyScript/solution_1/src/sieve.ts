@@ -58,6 +58,11 @@ export class PrimeSieve {
             ", Count1: " + count.toString() +
             ", Count2: " + this.countPrimes().toString() +
             ", Valid: " + this.validateResults().toString());
+
+        // Following 2 lines added by rbergen to conform to drag race output format
+        console.log("");
+        console.log("donmahallem;" + passes.toString() + ";" + duration.toString() + ";1");
+
     }
 
     countPrimes(): i32 {
