@@ -4,7 +4,7 @@ on:
   # schedule:
   #   - cron: "0 20 * * *"
   push:
-    branches: ["**"]
+    branches: ["drag-race"]
 
   workflow_dispatch:
 
@@ -43,7 +43,7 @@ jobs:
       - name: "Normalize solution name"
         id: solution-name
         run: |
-          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]')
           echo "::set-output name=normalized::${NAME}"
 
       - name: "Build container image"
@@ -74,4 +74,6 @@ jobs:
         uses: actions/download-artifact@v2
 
       - name: "List all artifacts"
-        run: tree
+        run: |
+          pip3 install _tools/requirements.txt
+          python3 _tools/bin/report.py -d .
