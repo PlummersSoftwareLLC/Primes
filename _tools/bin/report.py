@@ -26,6 +26,14 @@ RULES = [
 ]
 
 
+def save_report(df, title, name):
+    log.info(f"Generating: {title}")
+
+    data = df.sort_values(by=["passes", "duration"], ascending=False)
+    profile = pp.ProfileReport(data, title=title, explorative=True)
+    profile.to_file(name)
+
+
 def main(directory):
     df = pd.DataFrame(
         columns=[
@@ -88,12 +96,19 @@ def main(directory):
             "threads": int,
         }
     )
-    df.sort_values(by=["passes", "duration"], ascending=False, inplace=True)
-    print(df.to_string())
 
-    # Generate report
-    profile = pp.ProfileReport(df, title="Software Drag Race", explorative=True)
-    profile.to_file(f"dr-{time.time()}.html")
+    # Generate reports
+    now = time.time()
+    save_report(
+        df.loc[df["threads"] == 1],
+        "Software Drag Race (single-threaded)",
+        f"dr-st-{now}.html",
+    )
+    save_report(
+        df.loc[df["threads"] > 1],
+        "Software Drag Race (multi-threaded)",
+        f"dr-mt-{now}.html",
+    )
 
 
 if __name__ == "__main__":
