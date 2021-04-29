@@ -1,6 +1,6 @@
 # FreeBASIC solutions by rbergen
 
-*Category: Faithful*
+![Category](https://img.shields.io/badge/Category-faithful-green)
 
 This is a collection of implementations in FreeBASIC, of which:
 1. one is effectively a FreeBASIC copy of the "8 of 30" implementation that [mckoss](https://github.com/mckoss) has written in C

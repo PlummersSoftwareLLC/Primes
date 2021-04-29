@@ -1,9 +1,6 @@
-FROM ubuntu:18.04
-
-RUN apt-get update -qq \
-    && apt-get install -y ruby
+FROM ruby:3.0-alpine3.13
 
 WORKDIR /opt/app
 COPY *.rb .
 
-ENTRYPOINT [ "ruby", "/opt/app/prime.rb" ]
+ENTRYPOINT [ "ruby", "prime.rb" ]
