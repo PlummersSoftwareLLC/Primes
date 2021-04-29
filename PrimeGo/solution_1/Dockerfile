@@ -5,4 +5,6 @@ WORKDIR /opt/app
 COPY go.mod .
 COPY main.go .
 
-ENTRYPOINT [ "go", "run", "main.go" ]
+RUN go build main.go
+
+ENTRYPOINT [ "./main" ]
