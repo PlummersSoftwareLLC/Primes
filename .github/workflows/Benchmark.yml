@@ -77,11 +77,13 @@ jobs:
       
       - name: "Download artifacts"
         uses: actions/download-artifact@v2
+        with:
+          path: _output
 
       - name: "Generate report"
         run: |
           pip3 install -r _tools/requirements.txt
-          python3 _tools/bin/report.py -d $PWD
+          python3 _tools/bin/report.py -d _output
       
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v2
