@@ -26,12 +26,15 @@ RULES = [
 ]
 
 
-def save_report(df, title, name):
+def generate_reports(df, title, name, session):
     log.info(f"Generating: {title}")
 
     data = df.sort_values(by=["passes", "duration"], ascending=False)
     profile = pp.ProfileReport(data, title=title, explorative=True)
-    profile.to_file(name)
+    profile.to_file(f"report-profile-{name}-{session}.html")
+
+    with open(f"report-top-{name}-{session}.html", "w") as xxx:
+        xxx.write(data.to_html())
 
 
 def main(directory):
@@ -97,17 +100,19 @@ def main(directory):
         }
     )
 
-    # Generate reports
+    # Generate single/multi threaded reports
     now = time.time()
-    save_report(
+    generate_reports(
         df.loc[df["threads"] == 1],
         "Software Drag Race (single-threaded)",
-        f"dr-st-{now}.html",
+        "st",
+        now,
     )
-    save_report(
+    generate_reports(
         df.loc[df["threads"] > 1],
         "Software Drag Race (multi-threaded)",
-        f"dr-mt-{now}.html",
+        "mt",
+        now,
     )
 
 
@@ -125,6 +130,6 @@ if __name__ == "__main__":
 
     try:
         main(**args.__dict__)
-    except Exception as e:
-        log.error(e)
-        exit(1)
+    except Exception as exc:
+        log.error(exc)
+        sys.exit(1)
