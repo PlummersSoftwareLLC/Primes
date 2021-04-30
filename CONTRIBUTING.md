@@ -32,7 +32,7 @@ Now make sure to add a `README.md` that contains at least the following:
 
 Concerning the category badge(s):
 * The category badges for the various categories are specified in [their respective sections](#Categories).
-* If your solution includes multiple implementations that fall under different categories, include one category batch for each category.
+* If your solution includes multiple implementations that fall under different categories, include one category badge for each category.
 * If your solution deviates from the basic [rules](#Rules), add an additional category badge, using the following template:
   ```
   ![Category](https://img.shields.io/badge/Category-<name>-blue)
