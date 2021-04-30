@@ -90,12 +90,3 @@ jobs:
         with:
           name: report
           path: "*.html"
-
-      - uses: LouisBrunner/checks-action@v1.1.1
-        if: always()
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: Test Summary
-          conclusion: ${{ job.status }}
-          output: |
-            {"summary": "Some summary"}

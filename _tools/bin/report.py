@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
-import glob
 import logging
 import os
 import re
 import sys
-import time
+from pathlib import Path
 
 import pandas as pd
-import pandas_profiling as pp
 
 # Setup Python logging to print messages to stdout
 log = logging.getLogger()
@@ -20,24 +18,28 @@ handler.setFormatter(formatter)
 log.addHandler(handler)
 
 # Line parsing rules
+# pylint: disable=line-too-long
 RULES = [
     r"^(?P<label>.+)\s*;\s*(?P<passes>\d+)\s*;\s*(?P<duration>\d+([.]\d+)?)\s*;\s*(?P<threads>\d)$",
     r"^Passes:\s+(?P<passes>\d+),?\s+Time:\s+(?P<duration>\d+[.]\d+),?\s+Avg:\s+(\d+[.]\d+),?\s+Limit:\s+(\d+),?\s+Count1:\s+(\d+),?\s+Count2:\s+(\d+),?\s+Valid:\s+(true|false|1|0|Yes|No)$",
 ]
 
 
-def generate_reports(df, title, name, session):
-    log.info(f"Generating: {title}")
+def generate_reports(df, title):
+    """Generate report"""
 
-    data = df.sort_values(by=["passes", "duration"], ascending=False)
-    profile = pp.ProfileReport(data, title=title, explorative=True)
-    profile.to_file(f"report-profile-{name}-{session}.html")
+    log.info("Generating %s", title)
 
-    with open(f"report-top-{name}-{session}.html", "w") as xxx:
-        xxx.write(data.to_html())
+    data = df.sort_values(by=["passes_per_second"], ascending=False)
+    data.reset_index(drop=True, inplace=True)
+    data.index += 1
+
+    print(data.to_string())
 
 
 def main(directory):
+    """Main function"""
+
     df = pd.DataFrame(
         columns=[
             "implementation",
@@ -50,21 +52,16 @@ def main(directory):
         ]
     )
 
-    directory = os.path.abspath(directory)
-    files = glob.glob(f"{directory}/**/*.out")
-    if not len(files):
-        raise Exception("No output files found!")
-
-    for file in files:
+    for file in Path(os.path.abspath(directory)).rglob("*.out"):
         if os.stat(file).st_size == 0:
-            log.warning(f"File '{file}' appears to be empty. Skipping...")
+            log.warning("File '%s' appears to be empty. Skipping...", file)
             continue
 
         # Extracting additional information from the file name.
         name = os.path.splitext(os.path.basename(file))[0]
         metadata = name.split("-", 2)
 
-        log.info(f"Processing {name} ...")
+        log.info("Processing %s", name)
         with open(file, "r") as handle:
             for line in handle.readlines():
                 for rule in RULES:
@@ -86,6 +83,9 @@ def main(directory):
                         )
                         break
 
+    if df.empty:
+        raise Exception("No data was found!")
+
     # Making sure the dataframe has the correct column types.
     # Unfortunately these cannot be specified during creation.
     df = df.astype(
@@ -100,20 +100,11 @@ def main(directory):
         }
     )
 
+    df["passes_per_second"] = df["passes"] / df["duration"] / df["threads"]
+
     # Generate single/multi threaded reports
-    now = time.time()
-    generate_reports(
-        df.loc[df["threads"] == 1],
-        "Software Drag Race (single-threaded)",
-        "st",
-        now,
-    )
-    generate_reports(
-        df.loc[df["threads"] > 1],
-        "Software Drag Race (multi-threaded)",
-        "mt",
-        now,
-    )
+    generate_reports(df.loc[df["threads"] == 1], "Software Drag Race (single-threaded)")
+    generate_reports(df.loc[df["threads"] > 1], "Software Drag Race (multi-threaded)")
 
 
 if __name__ == "__main__":
@@ -130,6 +121,7 @@ if __name__ == "__main__":
 
     try:
         main(**args.__dict__)
+    # pylint: disable=broad-except
     except Exception as exc:
         log.error(exc)
         sys.exit(1)
