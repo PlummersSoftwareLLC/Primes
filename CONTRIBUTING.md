@@ -3,7 +3,7 @@
 ## Introduction
 Please follow the guidelines in this document if you want to submit a solution/implementation for inclusion in the drag race.
 
-These guidelines have been drafted to facilitate a "fair" comparison between solutions, and to allow results to be processed and reported on, automatically. **Submissions that do not conform to these guidelines will, in principle, not be merged.**
+These guidelines have been drafted to facilitate a "fair" comparison between solutions, and to allow results to be processed and reported on, automatically. **Submissions that do not conform to these guidelines will, in principle, not be accepted.**
 
 ## Guide
 
@@ -31,7 +31,7 @@ Now make sure to add a `README.md` that contains at least the following:
 ```
 
 Concerning the category badge(s):
-* The category badges for the various categories are included in [their respective sections](#Categories).
+* The category badges for the various categories are specified in [their respective sections](#Categories).
 * If your solution includes multiple implementations that fall under different categories, include one category batch for each category.
 * If your solution deviates from the basic [rules](#Rules), add an additional category badge, using the following template:
   ```
@@ -56,7 +56,7 @@ When composing the Dockerfile, please use the following as a reference for selec
 
 Also:
 * If the solution requires a significantly larger number of packages/files to build than it does to run, please define an `AS build` image for the build stage.
-* Do not include binary dependencies (executables, archives, etc) in your solution. If these are needed, create a base image on Docker Hub, preferably backed by a public GitHub repo under your account.
+* Do not include binary dependencies (executables, archives, etc) in your solution submission. If these are needed, create a base image on Docker Hub, preferably backed by a public GitHub repo under your account.
 
 ### Pull request
 Finally, submit a pull request **targeting the branch `drag-race`**, and place at least the name of the language in the title. Make sure to verify and check the contributing requirements that are summarized in the pull request template.
@@ -92,10 +92,8 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
 
 #### Requirements:
 
-* Your solution uses no external dependencies to calculate the actual sieve (example, `-lpthread` is fine).
-* Your solution uses a class to encapsulate the sieve, or an equivalent
-   feature in your language. This class must contain the full state of the
-   sieve. Each iteration should re-create a new instance of this class.
+* Your solution uses no external dependencies to calculate the actual sieve (for example, `-lpthread` is fine).
+* Your solution uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
 * Your solution conforms to the base [rules](#Rules).
 
 #### Category badge:
@@ -111,7 +109,7 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
 ### Unfaithful
 
 #### Requirements:
-* Your solution conforms to the base [rules](#Rules).
+* Your solution is not faithful, but conforms to the base [rules](#Rules).
 
 #### Category badge:
 
@@ -134,11 +132,9 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
    <name>;<iterations>;<total_time>;<num_threads>
    ```
    where:
-   * `name` is **at least** your username, and if you have multiple
-   implementations, a short keyword to discriminate each implementation,
-   * `iterations` is the amount of times your code ran in the allotted time,
-   * `total_time` is the total time it took to run, which would be sligtly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator).
-   * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations`(so 1 for a single-threaded solution).
+   * `name` is **at least** your username, and if you have multiple implementations, a short keyword to discriminate each implementation
+   * `iterations` is the amount of times your code ran in the allotted time
+   * `total_time` is the total time it took to run, which would be sligtly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator)
+   * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations`(so 1 for a single-threaded solution)
 * Your solution adheres to the requirements of the category.
 * You own copyright to all code and are willing to license that code under BSD-3 or compatible, or the code is available under BSD-3 or compatible.
-
