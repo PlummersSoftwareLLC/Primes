@@ -1,5 +1,5 @@
 /*
-Various prime sieve algorithms speed tested.
+Drag-race entry for pure C version of prime sieve.
 
 April 2021
 by Mike Koss (mike@mckoss.com)
@@ -39,6 +39,11 @@ Acknowledgements:
 int maxNumber = 1e6;
 BOOL fDebug = FALSE;
 
+typedef struct {
+    int maxNumber;
+    WORD *buffer;
+} SIEVE;
+
 unsigned int usqrt(int n)
 {
     unsigned int x;
@@ -63,10 +68,15 @@ unsigned int usqrt(int n)
 //
 // maxNumber - find all primes strictly LESS than this number.
 //
-WORD *primes8of30(int maxNumber) {
+SIEVE *primes8of30(int maxNumber) {
     // Starts off zero-initialized.
     WORD *buffer = (WORD *)calloc(allocOf(maxNumber), sizeof(WORD));
     unsigned int maxFactor = usqrt(maxNumber) + 1;
+
+    // Allocate sieve "object"
+    SIEVE *psieve = calloc(1, sizeof(SIEVE));
+    psieve->buffer = buffer;
+    psieve->maxNumber = maxNumber;
 
     // Only numbers congruent to candidates mod 30 can be prime.
     unsigned int candidates[8] = {1, 7, 11, 13, 17, 19, 23, 29};
@@ -161,10 +171,13 @@ WORD *primes8of30(int maxNumber) {
     buffer[indexOf(7)] &= ~maskOf(7);
     buffer[indexOf(11)] &= ~maskOf(11);
 
-    return buffer;
+    return psieve;
 }
 
-int countPrimes(WORD *buffer, int maxNumber) {
+int countPrimes(SIEVE *psieve) {
+    WORD *buffer = psieve->buffer;
+    int maxNumber = psieve->maxNumber;
+
     // 2, 3, and 5 are known prime
     int count = 3;
     if (fDebug) {
@@ -199,19 +212,25 @@ int countPrimes(WORD *buffer, int maxNumber) {
     return count;
 }
 
-void timedTest(int secs, WORD *primeFinder(int), char *title) {
+// Free up resources for sieve object
+void freeSieve(SIEVE *psieve) {
+    free(psieve->buffer);
+    free(psieve);
+}
+
+void timedTest(int secs, SIEVE *primeFinder(int), char *title) {
     clock_t startTicks = clock();
     clock_t currentTicks;
 
-    // First pass confirms accuracy.
+    // One pass confirms accuracy.
     int passes = 1;
 
     clock_t limitTicks = secs * CLOCKS_PER_SEC + startTicks;
 
-    // Check first for accuracy.
-    WORD *primes = primeFinder(maxNumber);
-    int primeCount = countPrimes(primes, maxNumber);
-    free(primes);
+    // Check first for accuracy against known values.
+    SIEVE *psieve = primeFinder(maxNumber);
+    int primeCount = countPrimes(psieve);
+    freeSieve(psieve);
 
     if (fDebug) {
         printf("Found %d primes up to %d.\n\n", primeCount, maxNumber);
@@ -235,10 +254,8 @@ void timedTest(int secs, WORD *primeFinder(int), char *title) {
             break;
         }
         passes++;
-        // Dave's Garage algos did not compute the total count
-        // in the timed loop - just implemented the sieve.
-        primes = primeFinder(maxNumber);
-        free(primes);
+        psieve = primeFinder(maxNumber);
+        freeSieve(psieve);
     }
 
     float elapsed = (float) currentTicks - startTicks;

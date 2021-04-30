@@ -1,5 +1,7 @@
 # C solution by mckoss
 
+![Category](https://img.shields.io/badge/Category-faithful-green)
+
 Single threaded implementation in C of prime number sieve.
 
 Several algorithm optimizations are applied to achieve a fast running time.
