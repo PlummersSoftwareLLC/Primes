@@ -25,7 +25,7 @@ $ docker run drag-race
 or as a one-liner:
 
 ```
-$ docker run $(docker build -q .)
+$ docker run --rm $(docker build -q .)
 mckoss-c830;14196;5.0;1
 ```
 
