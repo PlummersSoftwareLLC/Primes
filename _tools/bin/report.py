@@ -21,7 +21,6 @@ log.addHandler(handler)
 # pylint: disable=line-too-long
 RULES = [
     r"^(?P<label>.+)\s*;\s*(?P<passes>\d+)\s*;\s*(?P<duration>\d+([.]\d+)?)\s*;\s*(?P<threads>\d)$",
-    r"^Passes:\s+(?P<passes>\d+),?\s+Time:\s+(?P<duration>\d+[.]\d+),?\s+Avg:\s+(\d+[.]\d+),?\s+Limit:\s+(\d+),?\s+Count1:\s+(\d+),?\s+Count2:\s+(\d+),?\s+Valid:\s+(true|false|1|0|Yes|No)$",
 ]
 
 
