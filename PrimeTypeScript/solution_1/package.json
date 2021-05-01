@@ -1,0 +1,23 @@
+{
+  "name": "solution_1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf ./build",
+    "start": "node ./build/index.js",
+    "dev": "tsc && node ./build/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/moment": "^2.13.0",
+    "@types/node": "^15.0.1",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "moment": "^2.29.1"
+  }
+}
