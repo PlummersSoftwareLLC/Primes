@@ -65,5 +65,17 @@ namespace PrimeCSharp.Benchmarks
         {
             new PrimeSieveArrayPool6Par(SieveSize, 3).Run();
         }
+
+        [Benchmark]
+        public void ArrayPool8of30()
+        {
+            new PrimeSieveArrayPool8of30(SieveSize).Run();
+        }
+
+        [Benchmark]
+        public void ArrayPool8of30M()
+        {
+            new PrimeSieveArrayPool8of30M(SieveSize).Run();
+        }
     }
 }
