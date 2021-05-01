@@ -134,7 +134,7 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
    where:
    * `name` is **at least** your username, and if you have multiple implementations, a short keyword to discriminate each implementation
    * `iterations` is the amount of times your code ran in the allotted time
-   * `total_time` is the total time it took to run, which would be sligtly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator)
+   * `total_time` is the total time it took to run, which would be slightly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator)
    * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations`(so 1 for a single-threaded solution)
-* Your solution adheres to the requirements of the category.
+* Your solution adheres to the requirements of the category/categories you put it under.
 * You own copyright to all code and are willing to license that code under BSD-3 or compatible, or the code is available under BSD-3 or compatible.
