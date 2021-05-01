@@ -2,7 +2,7 @@ FROM node:14-alpine AS build
 
 WORKDIR /opt/app
 
-COPY package*.json .
+COPY package*.json ./
 RUN npm ci
 
 COPY tsconfig.json .
