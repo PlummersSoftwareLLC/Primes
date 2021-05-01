@@ -139,5 +139,18 @@ namespace PrimeCSharp
                 ThreadCount = this.ThreadCount
             };
         }
+
+        public RunSettings CopyOptions()
+        {
+            return new RunSettings()
+            {
+                MultiThreaded = this.MultiThreaded,
+                PThreadCount = this.PThreadCount,
+                SecondsToRun = this.SecondsToRun,
+                ShowResults = this.ShowResults,
+                SieveSize = this.SieveSize,
+                ThreadCount = this.ThreadCount
+            };
+        }
     }
 }

@@ -39,77 +39,77 @@ namespace PrimeCSharp
 
         public static void RunAllSieves(RunSettings options)
         {
-            RunSettings tmpOptions = options.Copy();
+            RunSettings tmpOptions = options.CopyOptions();
 
             tmpOptions.Original = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.Standard = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.BoolArray = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.InvertedBoolArray = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.DirectInvertedBoolArray = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.RawBits = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.RawBits32 = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.RawBitsDirect = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.RawBits2Of6 = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.RawParallel = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.ArrayPool = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.ArrayPool2Of6 = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.ArrayPool6P = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.ArrayPool8of30 = true;
             RunSieve(tmpOptions);
             Console.WriteLine();
-            tmpOptions = options.Copy();
+            tmpOptions = options.CopyOptions();
 
             tmpOptions.ArrayPool8of30M = true;
             RunSieve(tmpOptions);
