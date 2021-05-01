@@ -14,7 +14,7 @@ FROM node:14-alpine
 
 WORKDIR /opt/app
 
-COPY --from=build /opt/app/package*.json .
+COPY --from=build /opt/app/package*.json ./
 COPY --from=build /opt/app/node_modules ./node_modules
 COPY --from=build /opt/app/build ./build
 
