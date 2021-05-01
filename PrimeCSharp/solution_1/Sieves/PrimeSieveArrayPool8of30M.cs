@@ -80,6 +80,7 @@ namespace PrimeCSharp.Sieves
         public void Run()
         {
             Span<ulong> bits = data.AsSpan();
+            bits.Fill(0);
 
             int q = (int)Math.Sqrt(SieveSize);
 
