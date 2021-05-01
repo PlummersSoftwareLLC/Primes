@@ -89,7 +89,7 @@ while (true) {
   sieve.runSieve();
 
   passes++;
-  const duration = Math.floor((Date.now() - startTime) / 1000);
+  const duration = (Date.now() - startTime) / 1000;
   if (duration >= 5) {
     sieve.printResults(false, duration, passes);
     break;
