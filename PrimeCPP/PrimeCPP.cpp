@@ -127,7 +127,7 @@ int main()
         passes++;
         if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
         {
-            sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000, passes);
+            sieve.printResults(false, static_cast<double>(duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000), passes);
             break;
         }
     } 
