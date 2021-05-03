@@ -4,7 +4,9 @@ on:
   # schedule:
   #   - cron: "0 20 * * *"
   push:
-    branches: ["**"]
+    branches: 
+      - drag-race
+      - tools-report
 
   workflow_dispatch:
 
@@ -31,7 +33,7 @@ jobs:
     needs: ["collect-solutions"]
 
     strategy:
-      max-parallel: 1
+      # max-parallel: 1
       matrix:
         solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
         os: ["ubuntu-20.04"]
@@ -43,7 +45,7 @@ jobs:
       - name: "Normalize solution name"
         id: solution-name
         run: |
-          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]')
           echo "::set-output name=normalized::${NAME}"
 
       - name: "Build container image"
@@ -70,8 +72,21 @@ jobs:
       - test
 
     steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+      
       - name: "Download artifacts"
         uses: actions/download-artifact@v2
+        with:
+          path: _output
 
-      - name: "List all artifacts"
-        run: tree
+      - name: "Generate report"
+        run: |
+          pip3 install -r _tools/requirements.txt
+          python3 _tools/bin/report.py -d _output
+      
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v2
+        with:
+          name: report
+          path: "*.html"
