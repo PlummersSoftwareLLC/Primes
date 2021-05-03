@@ -56,9 +56,7 @@ class PrimeSieve(sieveSize: Int) {
 
   def printResults(showResults: Boolean, duration: Long, passes: Int): Unit = {
     //    Displays the primes found (or just the total count, depending on what you ask for)
-    if (
-      showResults
-    ) // Since we auto-filter evens, we have to special case the number 2 which is prime
+    if (showResults) // Since we auto-filter evens, we have to special case the number 2 which is prime
       print("2, ")
 
     var count = 1
@@ -69,31 +67,25 @@ class PrimeSieve(sieveSize: Int) {
         count += 1
       }
     }
-    if (count != countPrimes()) throw new Exception("Invalid number of primes")
-    println()
 
-    println(
-      f"Passes: $passes, Time: $duration, Avg: ${duration / passes}, Limit: $sieveSize, Count: $count, Valid: ${validateResults()}"
-    )
+    if (showResults) println(s"rom1dep;$passes;$duration;1")
 
   }
 }
 
 object Sieve extends App {
-  println("Hello Scala (-Native, -JVM) World!")
-
   val tStart = System.currentTimeMillis // Record our starting time
   // We're going to count how many passes we make in fixed window of time
   var passes = 0
 
   var sieve: PrimeSieve = null
-  while (System.currentTimeMillis() - tStart < 10000) { // Run until more than 10 seconds have elapsed
+  while (System.currentTimeMillis() - tStart < 5000) {  // Run until more than 5 seconds have elapsed
     sieve = new PrimeSieve(1000000)                     //  Calc the primes up to a million
     sieve.runSieve()                                    //  Find the results
     passes += 1                                         //  Count this pass
   }
 
-  // After the "at least 10 seconds", get the actual elapsed
+  // After the "at least 5 seconds", get the actual elapsed
   val tD = System.currentTimeMillis() - tStart
 
   sieve.printResults(false, tD, passes) // Display outcome
