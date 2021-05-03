@@ -72,7 +72,7 @@ public class PrimeSieveJava
 				}
 			}
 			
-			for (int num = factor * 3; num <= sieveSize; num += factor * 2)
+			for (int num = factor * factor; num <= sieveSize; num += factor * 2)
 				clearBit(num);
 			
 			factor += 2;
