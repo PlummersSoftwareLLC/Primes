@@ -26,7 +26,7 @@ impl PrimeSieve{
     }
     pub(crate) fn print_results(&self, duration: f64, passes: u32){
         eprintln!("Author; Passes; Time; Threads");  
-        println!("Blui42; {}; {}; 1", passes, duration);  // print required output to standard out
+        println!("Blui42;{};{};1", passes, duration);  // print required output to standard out
         eprintln!("{} Passes per second", (100.0*(passes as f64)/duration).round()/ 100.0);
     }
     #[allow(dead_code)]
@@ -65,4 +65,3 @@ fn main() {
         }
     }
 }
-
