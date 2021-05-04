@@ -68,8 +68,9 @@ class PrimeSieve(sieveSize: Int) {
       }
     }
 
-    if (showResults) println(s"rom1dep;$passes;$duration;1")
+    if (showResults) println()
 
+    println(s"rom1dep;$passes;$duration;1")
   }
 }
 
