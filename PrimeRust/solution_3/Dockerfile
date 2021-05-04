@@ -15,5 +15,5 @@ FROM debian:buster-slim AS runtime
 WORKDIR /app
 
 # app and configuration
-COPY --from=builder /app/target/release/prime_rust prime_rust
-ENTRYPOINT [ "./prime_rust" ]
+COPY --from=builder /app/target/release/prime prime
+ENTRYPOINT [ "./prime" ]
