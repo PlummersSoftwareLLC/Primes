@@ -185,7 +185,6 @@ int main(int argc, char **argv)
         }
         else if (*i == "-1" || *i == "--oneshot") 
         {
-            i++;
             bOneshot = true;
             cThreadsRequested = 1;
         }
@@ -211,7 +210,7 @@ int main(int argc, char **argv)
     }
 
     if (bOneshot)
-        cout << "Oneshot is on" << endl;
+        cout << "Oneshot is on.  A single pass will be used to simulate a 5 second run." << endl;
 
     if (bOneshot && (cSecondsRequested > 0 || cThreadsRequested > 1))   
     {
@@ -236,7 +235,11 @@ int main(int argc, char **argv)
     }
     auto tStart       = steady_clock::now();
 
-    if (!bOneshot)
+    if (bOneshot)
+    {
+        std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve();
+    }
+    else
     {
         while (duration_cast<seconds>(steady_clock::now() - tStart).count() < cSeconds)
         {
@@ -261,14 +264,16 @@ int main(int argc, char **argv)
             cPasses += cThreads;
         }
     }
-    else
-    {
-        cPasses++;
-    }
 
     auto tEnd = steady_clock::now() - tStart;
     auto duration = duration_cast<microseconds>(tEnd).count()/1000000.0;
-    
+
+    if (bOneshot)
+    {
+        cPasses = 1.0 / duration * 5;
+        duration = 5.0;
+    }
+
     prime_sieve checkSieve(llUpperLimit);
     checkSieve.runSieve();
     auto result = checkSieve.validateResults() ? checkSieve.countPrimes() : 0;
