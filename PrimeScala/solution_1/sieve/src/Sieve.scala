@@ -54,7 +54,7 @@ class PrimeSieve(sieveSize: Int) {
     //Return the count of bits that are still set in the sieve. Assumes you've already called runSieve, of course!
     rawBits.count(_ == true)
 
-  def printResults(showResults: Boolean, duration: Long, passes: Int): Unit = {
+  def printResults(showResults: Boolean, duration: Double, passes: Int): Unit = {
     //    Displays the primes found (or just the total count, depending on what you ask for)
     if (showResults) // Since we auto-filter evens, we have to special case the number 2 which is prime
       print("2, ")
@@ -89,6 +89,6 @@ object Sieve extends App {
   // After the "at least 5 seconds", get the actual elapsed
   val tD = System.currentTimeMillis() - tStart
 
-  sieve.printResults(false, tD, passes) // Display outcome
+  sieve.printResults(false, tD/1000d, passes) // Display outcome
 
 }

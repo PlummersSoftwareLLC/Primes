@@ -22,4 +22,4 @@ Note: this may take a while with the default compile options (ReleaseFull) with 
 
 Should print something like:
 
-`rom1dep;2424;5000;1`
+`rom1dep;2424;5.002;1`
