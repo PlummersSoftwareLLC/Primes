@@ -1,6 +1,6 @@
 # Rust solution by Blui42
 
-Faithful
+![Category](https://img.shields.io/badge/Category-faithful-green) 
 
 This is mostly a 1:1 implementation of the C++ code in rust.
 Uncomment line 61 for an output of all the primes.
