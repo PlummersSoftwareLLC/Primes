@@ -42,9 +42,6 @@ fn build_prime_sieve (sieve_size: usize) -> PrimeSieve {
 
 impl PrimeSieve {
 
-    
-
-    // Validates the prime sieve's results
     fn validate_results(&self) -> bool {
         let _num_primes: usize;
         match self.results_dictionary.get(&self.sieve_size) {
