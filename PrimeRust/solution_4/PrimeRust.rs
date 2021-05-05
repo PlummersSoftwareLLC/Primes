@@ -106,9 +106,9 @@ impl PrimeSieve {
             print!("2, ");
         }
 
-        let mut count = 0;
+        let mut _count = 0;
         if self.sieve_size >= 2{
-            count = 1;
+            _count = 1;
         }
         let mut num = 3;
         loop {
@@ -116,7 +116,7 @@ impl PrimeSieve {
                 if show_results{
                     print!("{}, ",num);
                 }
-                count+=1;
+                _count+=1;
             }
 
             num +=2;
@@ -128,14 +128,9 @@ impl PrimeSieve {
         if show_results {
             println!("");
         }
-        println!("Passes: {}, Time: {:?}, Avg: {:?}, Limit: {}, Count1: {}, Count2: {}, Valid: {}",
+        println!("joshallen64;{};{:?};1",
                 passes,
-                duration,
-                duration / passes as u32,
-                self.sieve_size,
-                count,
-                self.count_primes(),
-                self.validate_results()
+                duration
             
             )
     
