@@ -7,6 +7,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveArrayPool8of30M : ISieve
     {
+        public string QuickName => "pool30m";
+        public string Name => "Array Pool, 8 of 30, Bitmasking";
+
         public int SieveSize { get; }
 
         // The primes data
@@ -37,17 +40,14 @@ namespace PrimeCSharp.Sieves
 
         public int CountPrimes()
         {
-            // Manually account for 2, 3, 5, 7, and 11, because the mask logic will lose those values
-            int count = 4;
-
-            if (SieveSize > 10)
-                count++;
+            // Get 2, 3, and 5 for free
+            int count = 3;
 
             var bits = data.AsSpan();
 
-            for (int index = 13, step = 3, inc = steps[step];
+            for (int index = 7, step = 1, inc = steps[step];
                  index <= SieveSize;
-                 index += inc, step = (step + 1) % steps.Length, inc = steps[step])
+                 index += inc, step = (step + 1) % 8, inc = steps[step])
             {
                 if (GetBit(ref bits, index) == false) count++;
             }
@@ -57,14 +57,12 @@ namespace PrimeCSharp.Sieves
 
         public IEnumerable<int> GetFoundPrimes()
         {
-            List<int> result = new() { 2, 3, 5, 7 };
-
-            if (SieveSize > 10)
-                result.Add(11);
+            // Get 2, 3, and 5 for free
+            List<int> result = new() { 2, 3, 5 };
 
             var bits = data.AsSpan();
 
-            for (int index = 13, step = 3, inc = steps[step];
+            for (int index = 7, step = 1, inc = steps[step];
                  index <= SieveSize;
                  index += inc, step = (step + 1) % 8, inc = steps[step])
             {
@@ -82,6 +80,7 @@ namespace PrimeCSharp.Sieves
         public void Run()
         {
             Span<ulong> bits = data.AsSpan();
+            bits.Fill(0);
 
             int q = (int)Math.Sqrt(SieveSize);
 
@@ -164,6 +163,9 @@ namespace PrimeCSharp.Sieves
                     bits[i] |= masks[j];
                     i += offsets[j];
                 }
+
+
+                ClearBit(ref bits, factor);
             }
 
             ArrayPool<ulong>.Shared.Return(data);
@@ -178,5 +180,8 @@ namespace PrimeCSharp.Sieves
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool GetBit(ref Span<ulong> bits, int index) => (bits[index >> IndexScale] & (1UL << (index >> MaskScale))) != 0;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ClearBit(ref Span<ulong> bits, int index) => bits[index >> IndexScale] &= ~(1UL << (index >> MaskScale));
     }
 }

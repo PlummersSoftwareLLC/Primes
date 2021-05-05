@@ -5,6 +5,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveInvBoolB : ISieve
     {
+        public string QuickName => "dbool";
+        public string Name => "Inverted Bool Array, Direct";
+
         public int SieveSize { get; }
         private readonly bool[] boolArray;
 

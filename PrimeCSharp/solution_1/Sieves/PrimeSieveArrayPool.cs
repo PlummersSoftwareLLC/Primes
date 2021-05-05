@@ -11,6 +11,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveArrayPool : ISieve
     {
+        public string QuickName => "pool";
+        public string Name => "Array Pool";
+
         private readonly Int64[] data;
 
         public PrimeSieveArrayPool(int sieveSize)

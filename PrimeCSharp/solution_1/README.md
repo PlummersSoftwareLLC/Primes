@@ -2,30 +2,32 @@
 
 ## C# solution by @Kinematics
 
-## Building
-
 This is a collection of prime sieve algorithms implemented in C#.  It uses .NET 5, and can be compiled using Visual Studio 16.9 or later.
 
-To compile from the commandline, just use `dotnet publish -c Release` from within the solution directory.  The output will be placed in `.\bin\Release\net5.0\publish\`
+## Building
+
+To compile from the commandline, just use `dotnet build -c Release` or `dotnet publish -c Release` from within the solution directory.  The output will be placed in `.bin\x64\Release\net5.0` or `.\bin\Release\net5.0\publish\`, respectively.
 
 ## Run instructions
 
 If you run from Visual Studio, you can put commandline arguments in the debug tab of the project properties. Right-click on the project, select `Properties`, and under `Debug` you can enter the commandline arguments you want to be included when run in the `Application arguments` box.
 
+You can run it without the debugger attaching to the process by hitting Ctrl-F5.
+
 ## Options
 
 Options you can set from the commandline:
 
-* -s, --size: The size of the sieve to run. Must be an int larger than 2.
-* -t, --time: How many seconds to run the process.
-* -v, --verbose: Display the primes that were found once the run is complete.
-* -m, --multi: Run multithreaded, with each thread running its own instance of the sieve.
+* -s, --size: The size of the sieve to run. Must be at least 10. Default: 1000000
+* -t, --time: How many seconds to run the process. Default: 5 seconds
+* -v, --verbose: Display the primes that were found once the run is complete. Defaults to off.
+* -m, --multi: Run multithreaded, with each thread running its own instance of the sieve. Defaults to off.
 * --threads: How many threads to use when running multithreaded. Defaults to the number of processors on the system.
 * --pthreads: How many threads to use when running parallel implementations. No effect on non-parallel versions.
 
 You can also run BenchmarkDotNet benchmarks.  Options for that:
 
-* --benchmark: Run benchmarks.
+* --benchmark: Run benchmarks.  Add a -b value for a specific small benchmark.
 * -b, --bench: Select a subgroup of benchmarks to run. Current sets are:
     * mod: Compare code that uses different operations for determining if a value is even or odd.
     * ref: Compare a ref struct implementation with its class version.
@@ -59,75 +61,67 @@ Results that I get, running these on a Ryzen 3700X.
 
 ```
 @Kinematics: Starting (original)...
-Passes: 2680, Time: 5.00174 s, Per Loop: 1.866045 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 2919, Time: 5.00151 s, Per Loop: 1.713258 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_original;2919;5.00151;1
 
-```
 @Kinematics: Starting (standard)...
-Passes: 3691, Time: 5.00157 s, Per Loop: 1.354917 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 3678, Time: 5.00021 s, Per Loop: 1.359434 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_standard;3678;5.00021;1
 
-```
 @Kinematics: Starting (bool array)...
-Passes: 5207, Time: 5.00002 s, Per Loop: 0.960246 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 5102, Time: 5.00011 s, Per Loop: 0.980008 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_bool;5102;5.00011;1
 
-```
 @Kinematics: Starting (inverted bool array)...
-Passes: 6370, Time: 5.00017 s, Per Loop: 0.784929 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 6313, Time: 5.00056 s, Per Loop: 0.792016 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_ibool;6313;5.00056;1
 
-```
 @Kinematics: Starting (direct access inverted bool array)...
-Passes: 9006, Time: 5.00018 s, Per Loop: 0.555185 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 8964, Time: 5.00047 s, Per Loop: 0.557787 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_dbool;8964;5.00047;1
 
-```
 @Kinematics: Starting (raw bits)...
-Passes: 6227, Time: 5.00053 s, Per Loop: 0.802955 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 6187, Time: 5.00047 s, Per Loop: 0.808146 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_raw;6187;5.00047;1
 
-```
 @Kinematics: Starting (raw bits uint)...
-Passes: 6422, Time: 5.00064 s, Per Loop: 0.778574 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 6366, Time: 5.00003 s, Per Loop: 0.785423 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_raw32;6366;5.00003;1
 
-```
 @Kinematics: Starting (raw bits direct)...
-Passes: 6188, Time: 5.00076 s, Per Loop: 0.808016 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+Passes: 6416, Time: 5.00043 s, Per Loop: 0.779302 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_rawd;6416;5.00043;1
 
-```
-@Kinematics: Starting (array pool)...
-Passes: 6132, Time: 5.00039 s, Per Loop: 0.815395 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
+@Kinematics: Starting (raw bits [2 of 6])...
+Passes: 6103, Time: 5.00023 s, Per Loop: 0.819269 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_raw6;6103;5.00023;1
 
-```
-@Kinematics: Starting (array pool - ref struct)...
-Passes: 6056, Time: 5, MS per Loop: 0.825627, Sieve Size: 1000000, Primes Found: 78498, Valid: True
-```
-
-```
-@Kinematics: Starting (array pool [2 of 6])...
-Passes: 9746, Time: 5.0002 s, Per Loop: 0.513031 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
-
-```
-@Kinematics: Starting (parallel array pool [2 of 6])...
-Passes: 6811, Time: 5.0004 s, Per Loop: 0.734107 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 3, Primes Found: 78498, Valid: True
-```
-
-```
 @Kinematics: Starting (raw bits parallel version)...
-Passes: 4627, Time: 5.00086 s, Per Loop: 1.080614 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 3, Primes Found: 78498, Valid: True
+Passes: 4207, Time: 5.00048 s, Per Loop: 1.188495 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
+kinematics_rawp;4207;5.00048;16
+
+@Kinematics: Starting (array pool)...
+Passes: 6084, Time: 5.00053 s, Per Loop: 0.821828 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_pool;6084;5.00053;1
+
+@Kinematics: Starting (array pool [2 of 6])...
+Passes: 9670, Time: 5.00003 s, Per Loop: 0.517063 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_pool2of6;9670;5.00003;1
+
+@Kinematics: Starting (parallel array pool [2 of 6])...
+Passes: 5467, Time: 5.00014 s, Per Loop: 0.914578 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
+kinematics_pool6p;5467;5.00014;16
+
+@Kinematics: Starting (array pool [8 of 30])...
+Passes: 12467, Time: 5.00035 s, Per Loop: 0.401059 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_pool30;12467;5.00035;1
+
+@Kinematics: Starting (array pool [8 of 30] with bitmasking)...
+Passes: 15611, Time: 5.00008 s, Per Loop: 0.320287 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_pool30m;15611;5.00008;1
 ```
 
 NB: Parallel versions don't start outperforming linear versions until 10,000,000 sieve size.
-
-```
-@Kinematics: Starting (array pool [8 of 30])...
-Passes: 7799, Time: 5.00053 s, Per Loop: 0.641108 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-```
 
 
 And results of running --benchmark
@@ -140,17 +134,19 @@ AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
   DefaultJob : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
 
 
-|             Method | SieveSize |       Mean |    Error |   StdDev | Ratio |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |
-|------------------- |---------- |-----------:|---------:|---------:|------:|---------:|---------:|---------:|----------:|
-|           Original |   1000000 | 1,393.0 us |  6.28 us |  5.57 us |  1.00 |   5.8594 |        - |        - |   62592 B |
-|           Standard |   1000000 | 1,394.2 us |  9.99 us |  8.86 us |  1.00 |   5.8594 |        - |        - |   62592 B |
-|               Bool |   1000000 |   998.0 us | 15.34 us | 14.35 us |  0.72 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
-|       InvertedBool |   1000000 |   817.6 us |  9.30 us |  8.24 us |  0.59 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
-| DirectInvertedBool |   1000000 |   577.9 us |  8.38 us |  7.84 us |  0.41 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
-|            RawBits |   1000000 |   827.2 us |  8.63 us |  8.07 us |  0.59 |  19.5313 |  19.5313 |  19.5313 |   62560 B |
-|     ArrayPoolClass |   1000000 |   816.4 us |  1.86 us |  1.55 us |  0.59 |        - |        - |        - |      32 B |
-|      ArrayPool2Of6 |   1000000 |   505.2 us |  2.05 us |  1.81 us |  0.36 |        - |        - |        - |      32 B |
-|      ArrayPool6Par |   1000000 |   714.5 us |  1.82 us |  1.61 us |  0.51 |  35.1563 |        - |        - |  296369 B |
+|             Method | SieveSize |       Mean |   Error |  StdDev | Ratio |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |
+|------------------- |---------- |-----------:|--------:|--------:|------:|---------:|---------:|---------:|----------:|
+|           Original |   1000000 | 1,381.3 us | 2.37 us | 2.10 us |  1.01 |   5.8594 |        - |        - |   62592 B |
+|           Standard |   1000000 | 1,361.7 us | 4.89 us | 4.57 us |  1.00 |   5.8594 |        - |        - |   62592 B |
+|               Bool |   1000000 |   988.7 us | 7.98 us | 7.47 us |  0.73 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+|       InvertedBool |   1000000 |   794.6 us | 4.71 us | 4.41 us |  0.58 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+| DirectInvertedBool |   1000000 |   565.9 us | 2.02 us | 1.79 us |  0.42 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+|            RawBits |   1000000 |   806.8 us | 2.69 us | 2.39 us |  0.59 |  19.5313 |  19.5313 |  19.5313 |   62560 B |
+|     ArrayPoolClass |   1000000 |   821.6 us | 2.67 us | 2.50 us |  0.60 |        - |        - |        - |      32 B |
+|      ArrayPool2Of6 |   1000000 |   519.0 us | 3.33 us | 2.78 us |  0.38 |        - |        - |        - |      32 B |
+|      ArrayPool6Par |   1000000 |   722.8 us | 4.36 us | 3.87 us |  0.53 |  35.1563 |        - |        - |  295840 B |
+|     ArrayPool8of30 |   1000000 |   398.9 us | 1.98 us | 1.86 us |  0.29 |        - |        - |        - |      96 B |
+|    ArrayPool8of30M |   1000000 |   320.7 us | 0.81 us | 0.67 us |  0.24 |        - |        - |        - |     912 B |
 ```
 
 

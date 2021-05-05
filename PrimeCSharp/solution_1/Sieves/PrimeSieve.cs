@@ -6,6 +6,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieve : ISieve
     {
+        public string QuickName => "standard";
+        public string Name => "Standard";
+
         public int SieveSize { get; }
         private readonly BitArray bitArray;
 
