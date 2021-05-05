@@ -128,9 +128,9 @@ impl PrimeSieve {
         if show_results {
             println!("");
         }
-        println!("joshallen64;{};{:?};1",
+        println!("joshallen64;{};{:.};1",
                 passes,
-                duration
+                duration.as_secs_f32()
             
             )
     

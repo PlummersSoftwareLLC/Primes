@@ -30,6 +30,6 @@ with docker:
 Windows 10 Intel i7 8700 base clock of 3.19 GHz but the tests were run at the boost clock of 4.28 GHz
 
 ```
-    joshallen64;6645;5.000622s;1
+    joshallen64;6645;5.000622;1
 ```
 
