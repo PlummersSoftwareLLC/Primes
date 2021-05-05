@@ -2,59 +2,48 @@ name: CI
 
 on:
   push:
-    branches: [ drag-race ]
+    branches: ["**"]
   pull_request:
-    branches: [ drag-race ]
-    
-  workflow_dispatch:
-  
-jobs:
-  test:
-    runs-on: "${{ matrix.os }}"
+    branches: ["**"]
 
-    strategy:
-      max-parallel: 1
-      matrix:
-        solution:
-          - PrimeCrystal/stl-faithful/marghidanu
-        os: ["ubuntu-20.04"]
-    
+jobs:
+  collect-solutions:
+    runs-on: ubuntu-20.04
+
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v2
 
-      - name: "Normalize container name"
-        id: container_name
-        uses: ASzc/change-string-case-action@v1
-        with:
-          string: ${{ matrix.solution }}
-        
-      - name: "Build container image"
-        continue-on-error: true
+      - name: "Find Dockerfiles"
+        id: "solutions"
         run: |
-          cd "${{ matrix.solution }}"
-          docker build -t "${{ steps.container_name.outputs.lowercase }}" .
-      
-      - name: "Run tests"
-        continue-on-error: true
-        run: |
-          docker run --rm "${{ steps.container_name.outputs.lowercase }}" | tee "${{ matrix.solution }}-${{ matrix.os }}.txt"
-      
-      - name: "Upload artifacts"
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.solution }}
-          path: "${{ matrix.solution }}-${{ matrix.os }}.txt"
+          SOLUTIONS=$(find . -type f -name Dockerfile -exec dirname {} \;| sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
+          echo "::set-output name=solutions::${SOLUTIONS}"
 
-  report:
-    runs-on: ubuntu-latest
+    outputs:
+      solutions: ${{ steps.solutions.outputs.solutions }}
 
-    needs: 
-      - test
+  build:
+    runs-on: "${{ matrix.os }}"
+
+    needs: ["collect-solutions"]
+
+    strategy:
+      matrix:
+        solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
+        os: ["ubuntu-20.04"]
 
     steps:
-      - name: "Download artifacts"
-        uses: actions/download-artifact@v2
-      
-      - name: "List all artifacts"
-        run: tree
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Normalize solution name"
+        id: solution-name
+        run: |
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=normalized::${NAME}"
+
+      - name: "Build container image"
+        run: |
+          cd "${{ matrix.solution }}"
+          docker build -t "${{ steps.solution-name.outputs.normalized }}" .

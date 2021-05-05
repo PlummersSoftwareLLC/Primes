@@ -1,0 +1,92 @@
+name: Benchmark
+
+on:
+  # schedule:
+  #   - cron: "0 20 * * *"
+  push:
+    branches: 
+      - drag-race
+      - tools-report
+
+  workflow_dispatch:
+
+jobs:
+  collect-solutions:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Find Dockerfiles"
+        id: "solutions"
+        run: |
+          SOLUTIONS=$(find . -type f -name Dockerfile -exec dirname {} \;| sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
+          echo "::set-output name=solutions::${SOLUTIONS}"
+
+    outputs:
+      solutions: ${{ steps.solutions.outputs.solutions }}
+
+  test:
+    runs-on: "${{ matrix.os }}"
+
+    needs: ["collect-solutions"]
+
+    strategy:
+      # max-parallel: 1
+      matrix:
+        solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
+        os: ["ubuntu-20.04"]
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Normalize solution name"
+        id: solution-name
+        run: |
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=normalized::${NAME}"
+
+      - name: "Build container image"
+        continue-on-error: true
+        run: |
+          cd "${{ matrix.solution }}"
+          docker build -t "${{ steps.solution-name.outputs.normalized }}" .
+
+      - name: "Run tests"
+        continue-on-error: true
+        run: |
+          docker run --rm "${{ steps.solution-name.outputs.normalized }}" | tee "${{ steps.solution-name.outputs.normalized }}-${{ matrix.os }}.out"
+
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.solution-name.outputs.normalized }}
+          path: "*.out"
+
+  report:
+    runs-on: ubuntu-latest
+
+    needs:
+      - test
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+      
+      - name: "Download artifacts"
+        uses: actions/download-artifact@v2
+        with:
+          path: _output
+
+      - name: "Generate report"
+        run: |
+          pip3 install -r _tools/requirements.txt
+          python3 _tools/bin/report.py -d _output
+      
+      - name: "Upload artifacts"
+        uses: actions/upload-artifact@v2
+        with:
+          name: report
+          path: "*.html"
