@@ -2,7 +2,7 @@
 ; It can be used for sieve sizes up to 100,000,000; beyond that some register widths used will become too narrow for
 ; (first) the sqrt of the size, and then the size itself.
 
-global _start
+global main
 extern printf
 
 struc time
@@ -48,7 +48,7 @@ refResults:
                 dd      0
 
 ; format string for output
-outputFmt:      db      'rbergen_x64uff', SEMICOLON, '%d', SEMICOLON, '%d,%03d', SEMICOLON, '1', 10, 0   
+outputFmt:      db      'rbergen_x64uff', SEMICOLON, '%d', SEMICOLON, '%d.%03d', SEMICOLON, '1', 10, 0   
 ; incorrect result warning message
 incorrect:      db      'WARNING: result is incorrect!', 10
 ; length of previous
@@ -62,7 +62,7 @@ bPrimes:        resb    ARRAY_SIZE                  ; array with prime candidate
 
 section .text
 
-_start:
+main:
 
 ; registers:
 ; * r12d: run count, throughout program
@@ -79,9 +79,9 @@ _start:
 runLoop:
 
 ; registers:
-; * bx: factor
+; * ebx: factor
 ; * ecx: number
-; * r8w: sizeSqrt
+; * r8d: sizeSqrt
 ; * r9d: arrayIndex
 ; * r12d: runCount
 
@@ -102,16 +102,12 @@ initLoop:
     inc         r8d                                 ; sizeSqrt++, for safety 
 
 ; run the sieve
-    mov         bx, 3                                ; factor = 3
+    mov         ebx, 3                              ; factor = 3
 
 sieveLoop:
-    mov         ax, bx                              ; dx:ax = ...
-    mul         bx                                  ; ... factor * factor
-
-; number = dx:ax
-    mov         cx, dx                              ; get 2 higher bytes of number (dx)...
-    shl         ecx, 16                             ; ...shift them left...
-    mov         cx, ax                              ; and add lower bytes (ax)
+    mov         eax, ebx                            ; eax = ...
+    mul         ebx                                 ; ... factor * factor
+    mov         ecx, eax                            ; number = eax
 
 ; clear multiples of factor
 unsetLoop:
@@ -125,10 +121,11 @@ unsetLoop:
 
 ; find next factor
 factorLoop:
-    add         bx, 2                               ; factor += 2
-    cmp         bx, r8w                             ; if factor > sizeSqrt...
+    add         ebx, 2                              ; factor += 2
+    cmp         ebx, r8d                            ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
-    cmp         byte [bPrimes+bx], TRUE             ; if bPrimes[factor]...
+    
+    cmp         byte [bPrimes+ebx], TRUE             ; if bPrimes[factor]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking
 
@@ -146,28 +143,26 @@ endRun:
 
     mov         rax, qword [duration+time.sec]      ; rax = duration.seconds
     sub         rax, qword [startTime+time.sec]     ; rax -= startTime.seconds
-    mov         bx, ax                              ; numSeconds = ax
+    mov         rbx, rax                            ; numSeconds = ax
 
     mov         rax, qword [duration+time.fract]    ; numNanoseconds = duration.fraction    
     sub         rax, qword [startTime+time.fract]   ; numNanoseconds -= startTime.fraction
     jns         checkTime                           ; if numNanoseconds >= 0 then check the duration...
-    dec         bx                                  ; ...else numSeconds--...
+    dec         rbx                                 ; ...else numSeconds--...
     add         rax, BILLION                        ; ...and numNanoseconds += 1,000,000,000
 
 checkTime:
     inc         r12d                                ; runCount++
-    cmp         bx, RUNTIME                         ; if numSeconds < 5...
+    cmp         rbx, RUNTIME                        ; if numSeconds < 5...
     jl          runLoop                             ; ...perform another sieve run
 
 ; we're past the 5 second mark, so it's time to store the exact duration of our runs
-    movzx       qword [duration+time.sec], bx       ; duration.seconds = numSeconds
+    mov         qword [duration+time.sec], rbx      ; duration.seconds = numSeconds
 
-    mov         rdx, rax                            ; rdx = numNanoseconds
-    shr         rdx, 32                             ; shift rdx's upper 4 bytes into edx
     mov         ecx, MILLION                        ; ecx = 1,000,000
-    div         ecx                                 ; edx:eax /= ecx, so eax contains numMilliseconds
+    div         ecx                                 ; eax /= ecx, so eax contains numMilliseconds
 
-    movzx       qword [duration+time.fract], eax    ; duration.fraction = numMilliseconds
+    mov         qword [duration+time.fract], rax    ; duration.fraction = numMilliseconds
 
 ; let's count our primes
 
@@ -218,19 +213,18 @@ printWarning:
     syscall
 
 printResults:
-    push        rbp                                 ; align stack to 16 (SysV ABI requirement)
+    push        rbp
                                                     ; parameters for call to printf:
     mov         rdi, outputFmt                      ; * format string
-    movzx       rsi, r12d                           ; * runCount
+    xor         rsi, rsi                            
+    mov         esi, r12d                           ; * runCount
     mov         rdx, qword [duration+time.sec]      ; * duration.seconds
     mov         rcx, qword [duration+time.fract]    ; * duration.fraction (milliseconds)
     xor         eax, eax                            ; eax = 0 (no argv)
     call        printf                              
 
-    pop         rbp                                 ; restore stack
+    pop         rbp
 
-    mov         rax, EXIT                           ; syscall to make, parameters:
-    mov         rdi, 0                              ; * exit code = 0
-    syscall
+    xor         rax,rax
 
-; done!
+    ret                                             ; done!
