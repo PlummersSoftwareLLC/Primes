@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 nasm -felf64 primes_uff.asm -o primes_uff.o
 nasm -felf64 primes_ff.asm -o primes_ff.o

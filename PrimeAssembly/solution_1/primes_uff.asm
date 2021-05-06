@@ -78,7 +78,7 @@ main:
 
 ; get start time
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
-    mov         rdi, CLOCK_MONOTONIC                ; * ask for real time
+    mov         rdi, CLOCK_MONOTONIC                ; * ask for monotonic time
     lea         rsi, [startTime]                    ; * struct to store result in
     syscall
 
@@ -229,7 +229,7 @@ printResults:
     mov         rdx, qword [duration+time.sec]      ; * duration.seconds
     mov         rcx, qword [duration+time.fract]    ; * duration.fraction (milliseconds)
     xor         eax, eax                            ; eax = 0 (no argv)
-    call        printf                              
+    call        printf wrt ..plt                             
 
     pop         rbp                                 ; restore stack
 
