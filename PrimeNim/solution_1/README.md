@@ -26,24 +26,24 @@ I had to use the official Alpine images, which for now, have no support for ARM6
 
 ## Benchmarks
 
-Running locally on my M1 MacbookAir, I get some astounding numbers:
+Running locally on my M1 MacBook Air, I get some astounding numbers:
 
 ```
-Passes: 8912, Time: 5.000054121017456, Avg: 0.0005610473654642567, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8890, Time: 5.000402927398682, Avg: 0.0005624750199548573, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8833, Time: 5.000484943389893, Avg: 0.0005661139978931158, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8830, Time: 5.000242948532104, Avg: 0.0005662789296185848, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8696, Time: 5.000200986862183, Avg: 0.0005750001134846116, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8704, Time: 5.000247955322266, Avg: 0.0005744770169258118, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8826, Time: 5.000135898590088, Avg: 0.0005665234419431326, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8897, Time: 5.000159978866577, Avg: 0.000562005167906775, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8666, Time: 5.000056982040405, Avg: 0.0005769740343919231, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 8756, Time: 5.000047922134399, Avg: 0.0005710424762602101, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 8979, Time: 5.000272035598755, Avg: 0.0005568851804876662, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 9424, Time: 5.000049114227295, Avg: 0.0005305654832584142, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 9040, Time: 5.000542879104614, Avg: 0.0005531573981310413, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 9057, Time: 5.000289916992188, Avg: 0.000552091191011614, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 8979, Time: 5.000046014785767, Avg: 0.0005568600083289639, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 9309, Time: 5.000034093856812, Avg: 0.0005371182827217544, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 9126, Time: 5.000533103942871, Avg: 0.0005479435792179346, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 9135, Time: 5.000319004058838, Avg: 0.0005473802960108197, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 8687, Time: 5.000458955764771, Avg: 0.0005756255273126246, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 8541, Time: 5.000423908233643, Avg: 0.0005854611764703948, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 ```
 
 ## Notes
 
-I don't know about this language, some parts I like, some I dislike—overall it shows good performance on my machine.
+I somehow feel that this is the type of language I would have a love-hate relationship.
 
 ## Author
 
