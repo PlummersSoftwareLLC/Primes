@@ -3,7 +3,9 @@
 ; (first) the sqrt of the size, and then the size itself.
 
 global main
+
 extern printf
+
 default rel
 
 struc time
@@ -70,20 +72,20 @@ main:
 ; registers:
 ; * r12d: run count, throughout program
 
-    xor         r12d,r12d
+    xor         r12d, r12d
 
 ; registers: all except r12d operational
 
 ; get start time
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC                ; * ask for real time
-    mov         rsi, startTime                      ; * struct to store result in
+    lea         rsi, [startTime]                    ; * struct to store result in
     syscall
 
 ; calculate square root of sieve size
     mov         eax, SIEVE_SIZE                     ; eax = sieve size
     cvtsi2sd    xmm0, eax                           ; xmm0 = eax
-    sqrtsd      xmm0,xmm0                           ; xmm0 = sqrt(xmm0)
+    sqrtsd      xmm0, xmm0                          ; xmm0 = sqrt(xmm0)
     cvttsd2si   r8d, xmm0                           ; sizeSqrt = xmm0 
     inc         r8d                                 ; sizeSqrt++, for safety 
 
@@ -129,9 +131,9 @@ factorLoop:
     cmp         ebx, r8d                            ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
     
-    mov         ecx, ebx
-    shr         ecx, 1
-    cmp         byte [bPrimes+ecx], TRUE            ; if bPrimes[factor]...
+    mov         ecx, ebx                            ; arrayIndex = factor
+    shr         ecx, 1                              ; arrayIndex /= 2
+    cmp         byte [bPrimes+ecx], TRUE            ; if bPrimes[arrayIndex]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking
 
@@ -144,7 +146,7 @@ endRun:
 
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC                ; * ask for monotonic time
-    mov         rsi, duration                       ; * struct to store result in
+    lea         rsi, [duration]                     ; * struct to store result in
     syscall
 
     mov         rbx, qword [duration+time.sec]      ; rbx = duration.seconds
@@ -214,22 +216,22 @@ printWarning:
 
     mov         rax, WRITE                          ; syscall to make, parameters:
     mov         rdi, STDOUT                         ; * write to stdout
-    mov         rsi, incorrect                      ; * message is warning
+    lea         rsi, [incorrect]                    ; * message is warning
     movzx       rdx, byte [incorrectLen]            ; * length of message
     syscall
 
 printResults:
-    push        rbp
+    push        rbp                                 ; align stack (SysV ABI requirement)
                                                     ; parameters for call to printf:
-    mov         rdi, outputFmt                      ; * format string
-    xor         rsi, rsi                            
-    mov         esi, r12d                           ; * runCount
+    lea         rdi, [outputFmt]                    ; * format string
+    xor         rsi, rsi                            ; * clear and pass..
+    mov         esi, r12d                           ; ...runCount
     mov         rdx, qword [duration+time.sec]      ; * duration.seconds
     mov         rcx, qword [duration+time.fract]    ; * duration.fraction (milliseconds)
     xor         eax, eax                            ; eax = 0 (no argv)
     call        printf                              
 
-    pop         rbp
+    pop         rbp                                 ; restore stack
 
     xor         rax,rax
 
