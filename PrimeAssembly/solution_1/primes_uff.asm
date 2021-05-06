@@ -4,6 +4,7 @@
 
 global main
 extern printf
+default rel
 
 struc time
     .sec:       resq    1
@@ -15,13 +16,15 @@ section .data
 SIEVE_SIZE      equ     1000000                     ; sieve size
 RUNTIME         equ     5                           ; target run time in seconds
 ARRAY_SIZE      equ     (SIEVE_SIZE/2)+1            ; prime candidate array size
+BLOCK_COUNT     equ     (ARRAY_SIZE/8)+1            ; 8-byte block size
 TRUE            equ     1                           ; true constant
 FALSE           equ     0                           ; false constant
 SEMICOLON       equ     59                          ; semicolon ascii
+INIT_BLOCK      equ     0101010101010101h           ; init block for prime array            
 
 CLOCK_GETTIME   equ     228                         ; syscall number for clock_gettime
-CLOCK_REALTIME  equ     0                           ; CLOCK_REALTIME
-WRITE           equ     4                           ; syscall number for write
+CLOCK_MONOTONIC equ     1                           ; CLOCK_MONOTONIC
+WRITE           equ     1                           ; syscall number for write
 STDOUT          equ     1                           ; file descriptor of stdout
 EXIT            equ     60                          ; syscall number for exit
 
@@ -73,26 +76,9 @@ main:
 
 ; get start time
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
-    mov         rdi, CLOCK_REALTIME                 ; * ask for real time
+    mov         rdi, CLOCK_MONOTONIC                ; * ask for real time
     mov         rsi, startTime                      ; * struct to store result in
     syscall
-runLoop:
-
-; registers:
-; * ebx: factor
-; * ecx: number
-; * r8d: sizeSqrt
-; * r9d: arrayIndex
-; * r12d: runCount
-
-; initialize prime array   
-    mov         r9d, 1                              ; arrayIndex = 1                       
-
-initLoop:
-    mov         byte [bPrimes+r9d], TRUE            ; bPrimes[arrayIndex] = true
-    inc         r9d                                 ; arrayIndex++
-    cmp         r9d, ARRAY_SIZE                     ; if arrayIndex <= array size...
-    jbe         initLoop                            ; ...continue initialization
 
 ; calculate square root of sieve size
     mov         eax, SIEVE_SIZE                     ; eax = sieve size
@@ -101,22 +87,40 @@ initLoop:
     cvttsd2si   r8d, xmm0                           ; sizeSqrt = xmm0 
     inc         r8d                                 ; sizeSqrt++, for safety 
 
+runLoop:
+
+; initialize prime array   
+    mov         ecx, 0                              ; arrayIndex = 0                       
+    mov         rax, INIT_BLOCK
+
+initLoop:
+    mov         qword [bPrimes+8*ecx], rax          ; bPrimes[arrayIndex..(arrayIndex + 7)] = true
+    inc         ecx                                 ; arrayIndex++
+    cmp         ecx, BLOCK_COUNT                    ; if arrayIndex < array size...
+    jb          initLoop                            ; ...continue initialization
+
 ; run the sieve
+
+; registers:
+; * eax: number
+; * ebx: factor
+; * ecx: arrayIndex
+; * r8d: sizeSqrt
+; * r12d: runCount
+
     mov         ebx, 3                              ; factor = 3
 
 sieveLoop:
     mov         eax, ebx                            ; eax = ...
     mul         ebx                                 ; ... factor * factor
-    mov         ecx, eax                            ; number = eax
 
 ; clear multiples of factor
 unsetLoop:
-    mov         r9d, ecx                            ; arrayIndex = number                         
-    shr         r9d, 1                              ; arrayIndex /= 2
-    mov         byte [bPrimes+r9d], FALSE           ; bPrimes[arrayIndex] = false
-    add         ecx, ebx                            ; number += factor
-    add         ecx, ebx                            ; number += factor
-    cmp         ecx, SIEVE_SIZE                     ; if number <= sieve size...
+    mov         ecx, eax                            ; arrayIndex = number                         
+    shr         ecx, 1                              ; arrayIndex /= 2
+    mov         byte [bPrimes+ecx], FALSE           ; bPrimes[arrayIndex] = false
+    lea         eax, [eax, 2*ebx]                   ; number += 2*factor
+    cmp         eax, SIEVE_SIZE                     ; if number <= sieve size...
     jbe         unsetLoop                           ; ...continue marking non-primes
 
 ; find next factor
@@ -125,25 +129,26 @@ factorLoop:
     cmp         ebx, r8d                            ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
     
-    cmp         byte [bPrimes+ebx], TRUE             ; if bPrimes[factor]...
+    mov         ecx, ebx
+    shr         ecx, 1
+    cmp         byte [bPrimes+ecx], TRUE            ; if bPrimes[factor]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking
 
 endRun:
 
 ; registers: 
-; * (r/e)ax: numNanoseconds/numMilliseconds
-; * (r/e)bx: numSeconds
+; * rax: numNanoseconds/numMilliseconds
+; * rbx: numSeconds
 ; * r12d: runCount
 
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
-    mov         rdi, CLOCK_REALTIME                 ; * ask for real time
+    mov         rdi, CLOCK_MONOTONIC                ; * ask for monotonic time
     mov         rsi, duration                       ; * struct to store result in
     syscall
 
-    mov         rax, qword [duration+time.sec]      ; rax = duration.seconds
-    sub         rax, qword [startTime+time.sec]     ; rax -= startTime.seconds
-    mov         rbx, rax                            ; numSeconds = ax
+    mov         rbx, qword [duration+time.sec]      ; rbx = duration.seconds
+    sub         rbx, qword [startTime+time.sec]     ; rbx -= startTime.seconds
 
     mov         rax, qword [duration+time.fract]    ; numNanoseconds = duration.fraction    
     sub         rax, qword [startTime+time.fract]   ; numNanoseconds -= startTime.fraction
@@ -206,6 +211,7 @@ checkValue:
 
 ; if we're here, something's amiss with our outcome
 printWarning:
+
     mov         rax, WRITE                          ; syscall to make, parameters:
     mov         rdi, STDOUT                         ; * write to stdout
     mov         rsi, incorrect                      ; * message is warning
