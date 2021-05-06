@@ -8,6 +8,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveRawParallel : ISieve
     {
+        public string QuickName => "rawp";
+        public string Name => "Raw Allocation, Parallel";
+
         public int SieveSize { get; }
         private readonly uint[] rawbits;
         private readonly int threadCount;

@@ -20,6 +20,10 @@ namespace PrimeCSharp
             {
                 Benchmarker.RunBenchmark(options.Bench);
             }
+            else if (options.RunAllSieves)
+            {
+                SieveRunner.RunAllSieves(options);
+            }
             else
             {
                 SieveRunner.RunSieve(options);

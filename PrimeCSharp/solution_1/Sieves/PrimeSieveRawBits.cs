@@ -6,6 +6,9 @@ namespace PrimeCSharp.Sieves
 {
     class PrimeSieveRawBits : ISieve
     {
+        public string QuickName => "raw";
+        public string Name => "Raw Allocation";
+
         public int SieveSize { get; }
         private readonly byte[] rawbits;
         private const int elementBits = 8;

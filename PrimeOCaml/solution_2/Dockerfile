@@ -1,22 +1,15 @@
-FROM ocaml/opam:alpine AS Build
+FROM boord/ocaml:4.12-r1 AS build
 
-WORKDIR primeocaml
+WORKDIR /home/opam/primeocaml
 
-RUN sudo apk add linux-headers
-
-RUN opam install ocamlbuild
-RUN opam install core
-
-ENV PATH="/home/opam/.opam/4.12/bin:${PATH}"
-
-ADD . .
+COPY *.ml ./
 
 RUN sudo chown -R opam:nogroup .
 RUN corebuild PrimeOCamlFunctional.native
 
-FROM alpine
+FROM alpine:3.13
 
 WORKDIR /app
 COPY --from=build /home/opam/primeocaml/PrimeOCamlFunctional.native PrimeOCamlFunctional.native
 
-CMD ./PrimeOCamlFunctional.native
+ENTRYPOINT [ "./PrimeOCamlFunctional.native" ]
