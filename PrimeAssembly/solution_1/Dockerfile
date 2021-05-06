@@ -4,8 +4,8 @@ RUN apk add --update build-base nasm
 
 WORKDIR /opt/app
 
-COPY *.sh .
-COPY *.asm .
+COPY *.sh ./
+COPY *.asm ./
 
 RUN chmod a+x *.sh
 
