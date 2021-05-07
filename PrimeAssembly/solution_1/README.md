@@ -4,7 +4,7 @@
 ![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
 
 
-This solution contains two implementations in x86-64 assembly, of which one is faithull (x64ff) and one is not (x64uff). The basic algorithm used is that of the original C#/C++ implementations.
+This solution contains two implementations in x86-64 assembly, of which one is faithul (x64ff) and one is not (x64uff). The basic algorithm used is that of the original C#/C++ implementations.
 
 ## Run instructions
 

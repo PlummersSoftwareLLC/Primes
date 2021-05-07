@@ -78,7 +78,7 @@ main:
 
 ; registers (global variables):
 ; * r14d: runCount
-; * r15: sievePtr
+; * r15: sievePtr (&sieve)
 
     xor         r14d, r14d
 
@@ -88,9 +88,6 @@ main:
     cvttsd2si   eax, xmm0                           ; sizeSqrt = xmm0 
     inc         eax                                 ; sizeSqrt++, for safety 
     mov         dword [sizeSqrt], eax               ; save sizeSqrt
-
-; registers:
-; * rcx: sievePtr
 
 ; get start time
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
@@ -119,7 +116,7 @@ createSieve:
 ; registers: 
 ; * rax: numNanoseconds/numMilliseconds
 ; * rbx: numSeconds
-; * rcx: sievePtr
+; * r15: sievePtr (&sieve)
 
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC                ; * ask for monotonic time
@@ -213,10 +210,10 @@ newSieve:
     mov         dword [rax+sieve.arraySize], r12d   ; sieve.arraySize = array_size
 
 ; registers:
-; * rax = &sieve.primes[0]
+; * rax = primesPtr (&sieve.primes[0])
 ; * ecx = initBlockIndex
 ; * rdx = init_block
-; * r12 = sievePtr
+; * r12 = sievePtr (&sieve)
 ; * r13d = initBlockCount
 
     mov         r12, rax                            ; sievePtr = &sieve
@@ -229,7 +226,7 @@ newSieve:
 
     mov         qword [r12+sieve.primes], rax       ; sieve.primes = rax
 
-    ; initialize prime array   
+; initialize prime array   
     xor         rcx, rcx                            ; initBlockIndex = 0                       
     mov         rdx, INIT_BLOCK                     ; rax = &init_block
 
@@ -244,7 +241,7 @@ initLoop:
     ret                                             ; end of newSieve
 
 ; parameters:
-; * rdi: sievePtr
+; * rdi: sievePtr (&sieve)
 deleteSieve:
     mov         r12, rdi                            ; keep sievePtr, we'll need it later
 
@@ -257,14 +254,14 @@ deleteSieve:
     ret                                             ; end of deleteSieve
 
 ; parameters:
-; * rdi: sievePtr
+; * rdi: sievePtr (&sieve)
 ; returns:
 ; * &sieve.primes[0]
 runSieve:
 
 ; registers:
 ; * eax: number
-; * rbx: primesPtr
+; * rbx: primesPtr (&sieve.primes[0])
 ; * ecx: factor
 ; * edx: arrayIndex
 ; * r13d: sizeSqrt (global)
@@ -306,14 +303,14 @@ endRun:
 
 
 ; parameters:
-; * rdi: sievePtr
+; * rdi: sievePtr (&sieve)
 ; returns:
 ; * primeCount
 countPrimes:
 
 ; registers:
 ; * eax: primeCount
-; * rbx: primesPtr
+; * rbx: primesPtr (&sieve.primes[0])
 ; * ecx: arrayIndex
 
     mov         rbx, [rdi+sieve.primes]             ; primesPtr = &sieve.primes[0]

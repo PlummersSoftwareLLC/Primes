@@ -233,6 +233,6 @@ printResults:
 
     pop         rbp                                 ; restore stack
 
-    xor         rax,rax
+    xor         rax, rax
 
     ret                                             ; done!
