@@ -35,28 +35,19 @@ CLOCK_GETTIME   equ     228                         ; syscall number for clock_g
 CLOCK_MONOTONIC equ     1                           ; CLOCK_MONOTONIC
 WRITE           equ     1                           ; syscall number for write
 STDOUT          equ     1                           ; file descriptor of stdout
-EXIT            equ     60                          ; syscall number for exit
 
 MILLION         equ     1000000
 BILLION         equ     1000000000
 
 refResults:
-                dd      10
-                dd      4
-                dd      100
-                dd      25
-                dd      1000
-                dd      168
-                dd      10000
-                dd      1229
-                dd      100000
-                dd      9592
-                dd      1000000
-                dd      78498
-                dd      10000000
-                dd      664579
-                dd      100000000
-                dd      5761455
+                dd      10, 4
+                dd      100, 25
+                dd      1000, 168
+                dd      10000, 1229
+                dd      100000, 9592
+                dd      1000000, 78498
+                dd      10000000 ,664579
+                dd      100000000, 5761455
                 dd      0
 
 ; format string for output
@@ -108,7 +99,7 @@ createSieve:
     mov         rdi, SIEVE_SIZE                     ; pass sieve size
     call        newSieve                            ; rax = &sieve
 
-    mov         r15, rax                            ; sievPtr = rax
+    mov         r15, rax                            ; sievePtr = rax
 
     mov         rdi, r15                            ; pass sievePtr
     call        runSieve                            ; run sieve
@@ -116,6 +107,7 @@ createSieve:
 ; registers: 
 ; * rax: numNanoseconds/numMilliseconds
 ; * rbx: numSeconds
+; * r14d: runCount
 ; * r15: sievePtr (&sieve)
 
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
@@ -123,8 +115,8 @@ createSieve:
     lea         rsi, [duration]                     ; * struct to store result in
     syscall
 
-    mov         rbx, qword [duration+time.sec]      ; rbx = duration.seconds
-    sub         rbx, qword [startTime+time.sec]     ; rbx -= startTime.seconds
+    mov         rbx, qword [duration+time.sec]      ; numSeconds = duration.seconds
+    sub         rbx, qword [startTime+time.sec]     ; numSeconds -= startTime.seconds
 
     mov         rax, qword [duration+time.fract]    ; numNanoseconds = duration.fraction    
     sub         rax, qword [startTime+time.fract]   ; numNanoseconds -= startTime.fraction
@@ -160,7 +152,7 @@ checkLoop:
     je          printWarning                        ; ...warn about incorrect result
     cmp         dword [rcx], SIEVE_SIZE             ; if *refResults == sieve size...
     je          checkValue                          ; ...check the reference result value...
-    add         rcx, 8                              ; ...else refResults += 2 
+    add         rcx, 8                              ; ...else refResultsPtr += 2 
     jmp         checkLoop                           ; keep looking for sieve size
 
 checkValue:
@@ -292,7 +284,7 @@ factorLoop:
     
     mov         edx, ecx                            ; arrayIndex = factor
     shr         edx, 1                              ; arrayIndex /= 2
-    cmp         byte [rbx+rdx], TRUE                ; if bPrimes[factor]...
+    cmp         byte [rbx+rdx], TRUE                ; if sieve.primes[arrayIndex]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking
 
