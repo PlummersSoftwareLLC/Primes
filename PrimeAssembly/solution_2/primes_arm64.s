@@ -322,8 +322,12 @@ countLoop:
 
     ret                                         // end of countPrimes
 
+.align              4
+
 outputFmt:                                      // format string for output
 .asciz              "rbergen_arm64//%d//%d.%03d//1\n"   
+
+.align              4
 
 incorrect:                                      // incorrect result warning message
 .asciz              "WARNING: result is incorrect!\n"
@@ -331,6 +335,8 @@ incorrect:                                      // incorrect result warning mess
 .equ                incorrectLen, . - incorrect // length of previous
 
 .data
+
+.align              4
 
 refResults:
 .word               10, 4
@@ -343,8 +349,12 @@ refResults:
 .word               100000000, 5761455
 .word               0
 
+.align              4
+
 startTime:                              // start time of sieve run
 .skip               time_size                           
+
+.align              4
 
 duration:                               // duration
 .skip               time_size                           
