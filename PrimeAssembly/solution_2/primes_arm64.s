@@ -26,21 +26,19 @@ sieve_primes:
             .struct     sieve_primes + 8
 sieve_size:
 
-.equ        sieve_size      16
+.equ        SIEVE_SIZE,     1000000     // sieve size
+.equ        RUNTIME,        5           // target run time in seconds
+.equ        FALSE,          0           // false constant
+.equ        NULL,           0           // null pointer
+.equ        INIT_PATTERN,   0x0101      // init pattern for prime array            
 
-.equ        SIEVE_SIZE      1000000     // sieve size
-.equ        RUNTIME         5           // target run time in seconds
-.equ        FALSE           0           // false constant
-.equ        NULL            0           // null pointer
-.equ        INIT_PATTERN    0x0101      // init pattern for prime array            
+.equ        CLOCK_GETTIME,  108         // syscall number for clock_gettime
+.equ        CLOCK_MONOTONIC,1           // CLOCK_MONOTONIC
+.equ        WRITE,          64          // syscall number for write
+.equ        STDOUT,         1           // file descriptor of stdout
 
-.equ        CLOCK_GETTIME   108         // syscall number for clock_gettime
-.equ        CLOCK_MONOTONIC 1           // CLOCK_MONOTONIC
-.equ        WRITE           64          // syscall number for write
-.equ        STDOUT          1           // file descriptor of stdout
-
-.equ        MILLION         1000000
-.equ        BILLION         1000000000
+.equ        MILLION,        1000000
+.equ        BILLION,        1000000000
 
 .text
 
