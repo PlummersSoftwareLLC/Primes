@@ -10,13 +10,22 @@
 .extern malloc
 .extern free
 
-#define     time.sec        0
-#define     time.fract      8
-.equ        time_size       16
+            .struct     0
+time_sec:   
+            .struct     time_sec + 8
+time_fract: 
+            .struct     time_fract + 8
+time_size:
 
-#define     sieve.limit     0
-#define     sieve.arraySize 4
-#define     sieve.primes    8
+            .struct     0
+sieve_limit:
+            .struct     sieve_limit + 4
+sieve_arraySize: 
+            .struct     sieve_arraySize + 4
+sieve_primes:
+            .struct     sieve_primes + 8
+sieve_size:
+
 .equ        sieve_size      16
 
 .equ        SIEVE_SIZE      1000000     // sieve size
@@ -102,12 +111,12 @@ createSieve:
     ldr     x2, startTime               // startTimePtr = &startTime
     ldr     x23, duration               // durationPtr = &duration
 
-    ldr     x0, [x23, #time.sec]        // numDurationSeconds = duration.seconds
-    ldr     x3, [x2, #time.sec]         // numStartTimeseconds = startTime.seconds
+    ldr     x0, [x23, #time_sec]        // numDurationSeconds = duration.seconds
+    ldr     x3, [x2, #time_sec]         // numStartTimeseconds = starttime_seconds
     sub     x0, x0, x3                  // numDurationSeconds -= numStartTimeseconds
 
-    ldr     x1, [x23, #time.fract]      // numDurationNanoseconds = duration.fraction
-    ldr     x3, [x2, #time.fract]       // numStartTimeNanoseconds = startTime.fract
+    ldr     x1, [x23, #time_fract]      // numDurationNanoseconds = duration.fraction
+    ldr     x3, [x2, #time_fract]       // numStartTimeNanoseconds = starttime_fract
     subs    x1, x1, x3                  // numDurationNanoseconds -= numStartTimeNanoseconds
 
     bmi     checkTime                   // if numNanoseconds >= 0 then check the duration...
@@ -120,12 +129,12 @@ checkTime:
     bls     runLoop                     // ...perform another sieve run
 
 // we're past the 5 second mark, so it's time to store the exact duration of our runs
-    str     x0, [x23, #time.sec]        // duration.seconds = numSeconds
+    str     x0, [x23, #time_sec]        // duration.seconds = numSeconds
 
     ldr     x2, =MILLION                // x2 = 1,000,000
     div     x1, x1, x2                  // x1 /= x2, so x1 contains numMilliseconds
 
-    str     x1, [x23, #time.fract]      // duration.fraction = numMilliseconds
+    str     x1, [x23, #time_fract]      // duration.fraction = numMilliseconds
 
 // let's count our primes
     mov     x0, x26                     // pass sievePtr
@@ -166,8 +175,8 @@ printResults:
                                         // parameters for call to printf:
     ldr     x0, outputFmt               // * format string
     mov     w1, w25                     // * runCount
-    ldr     x2, [x23, #time.sec]        // * duration.seconds
-    ldr     x3, [x23, #time.fract]      // * duration.fraction (milliseconds)
+    ldr     x2, [x23, #time_sec]        // * duration.seconds
+    ldr     x3, [x23, #time_fract]      // * duration.fraction (milliseconds)
     bl      printf                             
 
     mov     x0, #0                      // return 0
@@ -190,10 +199,10 @@ newSieve:
 
     mov     x20, x0                     // sievePtr = x0
 
-    str     w19, [x0, #sieve.limit]     // sieve.limit = sieve size (limit)
-    lsr     w19, #1                     // array_size = sieve.limit / 2
+    str     w19, [x0, #sieve_limit]     // sieve_limit = sieve size (limit)
+    lsr     w19, #1                     // array_size = sieve_limit / 2
     add     w19, w19, #1                // array_size++
-    str     w19, [x0, #sieve.arraySize] // sieve.arraySize = array_size
+    str     w19, [x0, #sieve_arraySize] // sieve_arraySize = array_size
 
 // registers:
 // * x0 = initBlockBytes
@@ -211,13 +220,13 @@ newSieve:
     lsl     w0, #3                      // initBlockBytes *= 8
     bl      malloc                      // x0 = &array[0]
 
-    str     x0, [x20, #sieve.primes]    // sieve.primes = x0
+    str     x0, [x20, #sieve_primes]    // sieve_primes = x0
 
 // initialize prime array   
     mov     x1, #0                      // initBlockIndex = 0                       
 
 initLoop:
-    str     x28, [x0, x1, lsl 3]        // sieve.primes[initBlockIndex*8..(initBlockIndex*8 + 7)] = true
+    str     x28, [x0, x1, lsl 3]        // sieve_primes[initBlockIndex*8..(initBlockIndex*8 + 7)] = true
     add     x1, x1, #1                  // initBlockIndex++
     cmp     w1, w19                     // if initBlockIndex < initBlockCount...
     bls     initLoop                    // ...continue initialization
@@ -229,7 +238,7 @@ initLoop:
 deleteSieve:
     mov     x19, x0                     // keep sievePtr, we'll need it later
 
-    ldr     x0, [x19, #sieve.primes]    // ask to free sieve.primes
+    ldr     x0, [x19, #sieve_primes]    // ask to free sieve_primes
     bl      free
 
     mov     x0, x19                     // ask to free sieve
@@ -240,26 +249,26 @@ deleteSieve:
 // parameters:
 // * x0: sievePtr (&sieve)
 // returns:
-// * &sieve.primes[0]
+// * &sieve_primes[0]
 runSieve:
 
 // registers:
-// * x1: primesPtr (&sieve.primes[0])
+// * x1: primesPtr (&sieve_primes[0])
 // * w2: number
 // * w3: factor
 // * w4: arrayIndex
 // * w5: false
 // * w6: 2
 // * w7: sieveLimit
-// * w8: curPrime (sieve.primes[arrayIndex])
+// * w8: curPrime (sieve_primes[arrayIndex])
 // * w27: sizeSqrt (global)
 
-    ldr     x1, [x0, #sieve.primes]     // primesPtr = &sieve.primes[0]
+    ldr     x1, [x0, #sieve_primes]     // primesPtr = &sieve_primes[0]
     mov     w3, #3                      // factor = 3
     mov     w4, #0                      // arrayIndex = 0
     mov     w5, FALSE                   // false = FALSE
     mov     w6, #2                      // w6 = 2
-    mov     w7, [x0, #sieve.limit]      // sieveLimit = sieve.limit   
+    mov     w7, [x0, #sieve_limit]      // sieveLimit = sieve_limit   
 
 sieveLoop:
     mul     w2, w3, w3                  // number = factor * factor
@@ -269,7 +278,7 @@ unsetLoop:
     mov     w4, w2                      // arrayIndex = number                         
     lsr     w4, #1                      // arrayIndex /= 2
 
-    strb    w5, [x1, w4]    	        // sieve.primes[arrayIndex] = false
+    strb    w5, [x1, w4]    	        // sieve_primes[arrayIndex] = false
     madd    w2, w3, w6, w2              // number += 2*factor
     cmp     w2, w7                      // if number <= sieveLimit...
     bls     unsetLoop                   // ...continue marking non-primes
@@ -283,12 +292,12 @@ factorLoop:
     mov     w4, w3                      // arrayIndex = factor
     lsr     w4, #1                      // arrayIndex /= 2
 
-    ldrb    w8, [x1, w4]                // curPrime = sieve.primes[arrayIndex]
+    ldrb    w8, [x1, w4]                // curPrime = sieve_primes[arrayIndex]
     cbnz    w8, sieveLoop               // if curPrime then continue run
     b       factorLoop                  // continue looking
 
 endRun:
-    mov     x0, x0                      // return &sieve.primes[0]
+    mov     x0, x0                      // return &sieve_primes[0]
 
     ret                                 // end of runSieve
 
@@ -301,19 +310,19 @@ countPrimes:
 
 // registers:
 // * w1: arraySize
-// * x2: primesPtr (&sieve.primes[0])
+// * x2: primesPtr (&sieve_primes[0])
 // * w3: primeCount
 // * w4: arrayIndex
-// * w5: curPrime (sieve.primes[arrayIndex])
+// * w5: curPrime (sieve_primes[arrayIndex])
 
-    ldr     w1, [x0, #sieve.arraySize]  // arraySize = sieve.arraySize
-    ldr     x2, [x0, #sieve.primes]     // primesPtr = &sieve.primes[0]
+    ldr     w1, [x0, #sieve_arraySize]  // arraySize = sieve_arraySize
+    ldr     x2, [x0, #sieve_primes]     // primesPtr = &sieve_primes[0]
     mov     w3, #0                      // primeCount = 0
     mov     w4, #2                      // arrayIndex = 2
     
 
 countLoop:    
-    ldrb    w5, [x1, w3]                // curPrime = sieve.primes[arrayIndex]
+    ldrb    w5, [x1, w3]                // curPrime = sieve_primes[arrayIndex]
     cmp     w5, FALSE                   // if !curPrime...
     cinc    w3, w3, eq                  // ...primeCount++
     add     w4, w4, #1                  // arrayIndex++
