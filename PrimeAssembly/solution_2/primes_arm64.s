@@ -2,7 +2,7 @@
 // It can be used for sieve sizes up to 100,000,000// beyond that some register widths used will become too narrow for
 // (first) the sqrt of the size, and then the size itself.
 
-.arch armv8-a
+.arch armv8-a+simd
 
 .global main
 
