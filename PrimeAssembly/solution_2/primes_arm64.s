@@ -58,11 +58,9 @@ main:
 
     ldr             x24, =SIEVE_SIZE            // sieveSize = sieve size
 
-    vmov            s0, x24
-    vcvt.f32.u32    s0, s0                     // s0 = sieveSize
+    ucvtf           s0, x24
     fsqrt           s0, s0                      // s0 = sqrt(s0)
-    vcvt.u32.f32    s0, s0                     // sizeSqrt = s0 
-    vmov            x27, s0
+    fcvtau          x27, s0                     // sizeSqrt = s0 
     add             w27, w27, #1                // sizeSqrt++, for safety 
 
 // get start time
@@ -236,7 +234,7 @@ deleteSieve:
     bl              free
 
     mov             x0, x19                     // ask to free sieve
-    call            free
+    bl              free
 
     ret                                         // end of deleteSieve
 
@@ -248,50 +246,50 @@ runSieve:
 
 // registers:
 // * x1: primesPtr (&sieve_primes[0])
-// * w2: number
-// * w3: factor
-// * w4: arrayIndex
+// * x2: number
+// * x3: factor
+// * x4: arrayIndex
 // * w5: false
-// * w6: 2
-// * w7: sieveLimit
+// * x6: 2
+// * x7: sieveLimit
 // * w8: curPrime (sieve_primes[arrayIndex])
 // * w27: sizeSqrt (global)
 
     ldr             x1, [x0, #sieve_primes]     // primesPtr = &sieve_primes[0]
-    mov             w3, #3                      // factor = 3
-    mov             w4, #0                      // arrayIndex = 0
+    mov             x3, #3                      // factor = 3
+    mov             x4, #0                      // arrayIndex = 0
     mov             w5, FALSE                   // false = FALSE
-    mov             w6, #2                      // w6 = 2
-    mov             w7, [x0, #sieve_limit]      // sieveLimit = sieve_limit   
+    mov             x6, #2                      // w6 = 2
+    ldr             x7, [x0, #sieve_limit]      // sieveLimit = sieve_limit   
 
 sieveLoop:
-    mul             w2, w3, w3                  // number = factor * factor
+    mul             x2, x3, x3                  // number = factor * factor
 
 // clear multiples of factor
 unsetLoop:
-    mov             w4, w2                      // arrayIndex = number                         
-    lsr             w4, w4, #1                  // arrayIndex /= 2
+    mov             x4, x2                      // arrayIndex = number                         
+    lsr             x4, x4, #1                  // arrayIndex /= 2
 
-    strb            w5, [x1, w4]    	        // sieve_primes[arrayIndex] = false
-    madd            w2, w3, w6, w2              // number += 2*factor
-    cmp             w2, w7                      // if number <= sieveLimit...
+    strb            w5, [x1, x4]    	        // sieve_primes[arrayIndex] = false
+    madd            x2, x3, x6, x2              // number += 2*factor
+    cmp             x2, x7                      // if number <= sieveLimit...
     bls             unsetLoop                   // ...continue marking non-primes
 
 // find next factor
 factorLoop:
-    add             w3, w3, #2                  // factor += 2
+    add             x3, x3, #2                  // factor += 2
     cmp             w3, w27                     // if factor > sizeSqrt...
     bhi             endRun                      // ...end this run
     
-    mov             w4, w3                      // arrayIndex = factor
-    lsr             w4, w4, #1                  // arrayIndex /= 2
+    mov             x4, x3                      // arrayIndex = factor
+    lsr             x4, x4, #1                  // arrayIndex /= 2
 
-    ldrb            w8, [x1, w4]                // curPrime = sieve_primes[arrayIndex]
+    ldrb            w8, [x1, x4]                // curPrime = sieve_primes[arrayIndex]
     cbnz            w8, sieveLoop               // if curPrime then continue run
     b               factorLoop                  // continue looking
 
 endRun:
-    mov             x0, x0                      // return &sieve_primes[0]
+    mov             x0, x1                      // return &sieve_primes[0]
 
     ret                                         // end of runSieve
 
@@ -303,23 +301,23 @@ endRun:
 countPrimes:
 
 // registers:
-// * w1: arraySize
+// * x1: arraySize
 // * x2: primesPtr (&sieve_primes[0])
 // * w3: primeCount
-// * w4: arrayIndex
+// * x4: arrayIndex
 // * w5: curPrime (sieve_primes[arrayIndex])
 
-    ldr             w1, [x0, #sieve_arraySize]  // arraySize = sieve_arraySize
+    ldr             x1, [x0, #sieve_arraySize]  // arraySize = sieve_arraySize
     ldr             x2, [x0, #sieve_primes]     // primesPtr = &sieve_primes[0]
     mov             w3, #0                      // primeCount = 0
-    mov             w4, #2                      // arrayIndex = 2
+    mov             x4, #2                      // arrayIndex = 2
 
 countLoop:    
-    ldrb            w5, [x1, w3]                // curPrime = sieve_primes[arrayIndex]
+    ldrb            w5, [x1, x3]                // curPrime = sieve_primes[arrayIndex]
     cmp             w5, FALSE                   // if !curPrime...
     cinc            w3, w3, eq                  // ...primeCount++
-    add             w4, w4, #1                  // arrayIndex++
-    cmp             w4, w1                      // if arrayIndex <= arraySize...
+    add             x4, x4, #1                  // arrayIndex++
+    cmp             x4, x1                      // if arrayIndex <= arraySize...
     bls             countLoop                   // ...continue counting
 
     ret                                         // end of countPrimes
