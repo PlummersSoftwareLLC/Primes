@@ -208,7 +208,7 @@ newSieve:
     add             w19, w19, #1                // initBlockCount++
     
     mov             x0, #0                      // initBlockBytes = 0
-    ldr             w0, w19                     // initBlockBytes = initBlockCount
+    mov             w0, w19                     // initBlockBytes = initBlockCount
     lsl             w0, w0, #3                  // initBlockBytes *= 8
     bl              malloc                      // x0 = &array[0]
 
