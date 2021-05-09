@@ -58,9 +58,11 @@ main:
 
     ldr             x24, =SIEVE_SIZE            // sieveSize = sieve size
 
-    vcvt.f32.u32    s0, x24                     // s0 = sieveSize
+    vmov            s0, x24
+    vcvt.f32.u32    s0, s0                     // s0 = sieveSize
     fsqrt           s0, s0                      // s0 = sqrt(s0)
-    vcvt.u32.f32    x27, s0                     // sizeSqrt = s0 
+    vcvt.u32.f32    s0, s0                     // sizeSqrt = s0 
+    vmov            x27, s0
     add             w27, w27, #1                // sizeSqrt++, for safety 
 
 // get start time
