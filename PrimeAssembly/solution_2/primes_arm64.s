@@ -1,6 +1,5 @@
-// This implementation is a faithful implementation in arn64 assembly.
-// It can be used for sieve sizes up to 100,000,000// beyond that some register widths used will become too narrow for
-// (first) the sqrt of the size, and then the size itself.
+// This implementation is a faithful implementation in arm64 assembly.
+// It can be used for sieve sizes up to 100,000,000; beyond that some register widths used will become too narrow.
 
 .arch armv8-a+simd
 
@@ -210,7 +209,7 @@ printResults:
 .balign     4
 
 outputFmt:                              // format string for output
-.asciz      "rbergen_arm64//%d//%d.%03d//1\n"   
+.asciz      "rbergen_arm64;%d;%d.%03d;1\n"   
 
 .balign     4
 
@@ -367,7 +366,7 @@ countLoop:
     cmp     x4, w1, uxtx                // if arrayIndex < arraySize...
     blo     countLoop                   // ...continue counting
 
-    mov     w0, w3
+    mov     w0, w3                      // return prime count
 
     ret                                 // end of countPrimes
 
