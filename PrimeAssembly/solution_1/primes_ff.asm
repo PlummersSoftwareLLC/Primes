@@ -269,9 +269,12 @@ sieveLoop:
 ; clear multiples of factor
 unsetLoop:
     mov         byte [rbx+rdx], FALSE               ; sieve.primes[arrayIndex] = false
-    add         edx, ecx                            ; number += 2*factor
-    cmp         eax, [rdi+sieve.arraySize]          ; if number <= sieve.limit...
+    add         edx, ecx                            ; arrayIndex += factor
+    cmp         eax, [rdi+sieve.arraySize]          ; if arrayIndex <= sieve.limit...
     jbe         unsetLoop                           ; ...continue marking non-primes
+
+    mov         edx, ecx                            ; arrayIndex = factor
+    shr         edx, 1                              ; arrayIndex /= 2
 
 ; find next factor
 factorLoop:
@@ -279,8 +282,7 @@ factorLoop:
     cmp         ecx, dword [sizeSqrt]               ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
     
-    mov         edx, ecx                            ; arrayIndex = factor
-    shr         edx, 1                              ; arrayIndex /= 2
+    inc         edx                                 ; arrayIndex++
     cmp         byte [rbx+rdx], TRUE                ; if sieve.primes[arrayIndex]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking

@@ -104,7 +104,7 @@ initLoop:
     mov         ebx, 3                              ; factor = 3
 
 sieveLoop:
-    mov         eax, ebx                            ; eax = ...
+    mov         eax, ebx                            ; number = ...
     mul         ebx                                 ; ... factor * factor
     mov         ecx, eax                            ; arrayIndex = number                         
     shr         ecx, 1                              ; arrayIndex /= 2
@@ -116,14 +116,17 @@ unsetLoop:
     cmp         eax, ARRAY_SIZE                     ; if number <= array size...
     jbe         unsetLoop                           ; ...continue marking non-primes
 
+
+    mov         ecx, ebx                            ; arrayIndex = factor
+    shr         ecx, 1                              ; arrayIndex /= 2
+
 ; find next factor
 factorLoop:
     add         ebx, 2                              ; factor += 2
     cmp         ebx, r8d                            ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
     
-    mov         ecx, ebx                            ; arrayIndex = factor
-    shr         ecx, 1                              ; arrayIndex /= 2
+    inc         ecx                                 ; arrayIndex++
     cmp         byte [bPrimes+ecx], TRUE            ; if bPrimes[arrayIndex]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking

@@ -313,16 +313,18 @@ runSieve:
 
 sieveLoop:
     mul     x2, x3, x3                  // number = factor * factor
-
-// clear multiples of factor
-unsetLoop:
     mov     x4, x2                      // arrayIndex = number                         
     lsr     x4, x4, #1                  // arrayIndex /= 2
 
+// clear multiples of factor
+unsetLoop:
     strb    w5, [x1, x4]    	        // sieve.primes[arrayIndex] = false
     add     x4, x4, x3                  // arrayIndex += factor
     cmp     x4, w6, uxtx                // if arrayIndex <= arraySize...
     bls     unsetLoop                   // ...continue marking non-primes
+
+    mov     x4, x3                      // arrayIndex = factor
+    lsr     x4, x4, #1                  // arrayIndex /= 2
 
 // find next factor
 factorLoop:
@@ -330,8 +332,7 @@ factorLoop:
     cmp     w3, w27                     // if factor > sizeSqrt...
     bhi     endRun                      // ...end this run
     
-    mov     x4, x3                      // arrayIndex = factor
-    lsr     x4, x4, #1                  // arrayIndex /= 2
+    add     x4, x4, #1                  // arrayIndex++
 
     ldrb    w7, [x1, x4]                // curPrime = sieve.primes[arrayIndex]
     cbnz    w7, sieveLoop               // if curPrime then continue run
