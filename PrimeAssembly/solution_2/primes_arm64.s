@@ -237,8 +237,8 @@ newSieve:
 
     mov     x20, x0                     // sievePtr = x0
 
-    lsr     w19, w19, #1                // array_size = sieve limit / 2
-    add     w19, w19, #1                // array_size++
+    add     w19, w19, #1                // array_size = sieve limit + 1
+    lsr     w19, w19, #1                // array_size++
     str     w19, [x0, #sieve_arraySize] // sieve.arraySize = array_size
 
 // registers:
@@ -317,8 +317,8 @@ sieveLoop:
 unsetLoop:
     strb    w4, [x1, x2]    	        // sieve.primes[arrayIndex] = false
     add     x2, x2, x3                  // arrayIndex += factor
-    cmp     x2, w5, uxtx                // if arrayIndex <= arraySize...
-    bls     unsetLoop                   // ...continue marking non-primes
+    cmp     x2, w5, uxtx                // if arrayIndex < arraySize...
+    blo     unsetLoop                   // ...continue marking non-primes
 
     mov     x2, x3                      // arrayIndex = factor
     lsr     x2, x2, #1                  // arrayIndex /= 2
@@ -356,16 +356,16 @@ countPrimes:
 
     ldr     x1, [x0, #sieve_arraySize]  // arraySize = sieve.arraySize
     ldr     x2, [x0, #sieve_primes]     // primesPtr = &sieve.primes[0]
-    mov     w3, #0                      // primeCount = 0
-    mov     x4, #2                      // arrayIndex = 2
+    mov     w3, #1                      // primeCount = 1
+    mov     x4, #1                      // arrayIndex = 1
 
 countLoop:    
     ldrb    w5, [x1, x3]                // curPrime = sieve.primes[arrayIndex]
     cmp     w5, FALSE                   // if !curPrime...
     cinc    w3, w3, eq                  // ...primeCount++
     add     x4, x4, #1                  // arrayIndex++
-    cmp     x4, x1                      // if arrayIndex <= arraySize...
-    bls     countLoop                   // ...continue counting
+    cmp     x4, x1                      // if arrayIndex < arraySize...
+    blo     countLoop                   // ...continue counting
 
     ret                                 // end of countPrimes
 

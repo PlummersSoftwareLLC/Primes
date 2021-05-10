@@ -17,7 +17,7 @@ section .data
 
 SIEVE_SIZE      equ     1000000                     ; sieve size
 RUNTIME         equ     5                           ; target run time in seconds
-ARRAY_SIZE      equ     (SIEVE_SIZE/2)+1            ; prime candidate array size
+ARRAY_SIZE      equ     (SIEVE_SIZE+1)/2            ; prime candidate array size
 BLOCK_COUNT     equ     (ARRAY_SIZE/8)+1            ; 8-byte block size
 TRUE            equ     1                           ; true constant
 FALSE           equ     0                           ; false constant
@@ -111,8 +111,8 @@ sieveLoop:
 unsetLoop:
     mov         byte [bPrimes+eax], FALSE           ; bPrimes[arrayIndex] = false
     add         eax, ebx                            ; arrayIndex += factor
-    cmp         eax, ARRAY_SIZE                     ; if number <= array size...
-    jbe         unsetLoop                           ; ...continue marking non-primes
+    cmp         eax, ARRAY_SIZE                     ; if arrayIndex < array size...
+    jb          unsetLoop                           ; ...continue marking non-primes
 
 
     mov         eax, ebx                            ; arrayIndex = factor
@@ -170,8 +170,8 @@ checkTime:
 ; * ecx: arrayIndex
 ; * r12d: runCount
 
-    xor         ebx, ebx                            ; primeCount = 0
-    mov         ecx, 2                              ; arrayIndex = 2
+    mov         ebx, 1                              ; primeCount = 1 
+    mov         ecx, 1                              ; arrayIndex = 1
     
 countLoop:    
     cmp         byte [bPrimes+ecx], TRUE            ; if !bPrimes[cx]...
@@ -181,7 +181,7 @@ countLoop:
 nextItem:
     inc         ecx                                 ; arrayIndex++
     cmp         ecx, ARRAY_SIZE                     ; if arrayIndex <= array size...
-    jbe         countLoop                           ; ...continue counting
+    jb          countLoop                           ; ...continue counting
 
 ; we're done counting, let's check our result
 

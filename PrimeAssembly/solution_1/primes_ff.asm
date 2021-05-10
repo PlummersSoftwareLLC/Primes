@@ -195,8 +195,8 @@ newSieve:
     mov         rdi, sieve_size                     ; ask for sieve_size bytes
     call        malloc wrt ..plt                    ; rax = &sieve
 
-    shr         r12d, 1                             ; array_size = sieve limit / 2
-    inc         r12d                                ; array_size++
+    inc         r12d                                ; array_size = sieve limit + 1
+    shr         r12d, 1                             ; array_size /= 2
     mov         dword [rax+sieve.arraySize], r12d   ; sieve.arraySize = array_size
 
 ; registers:
@@ -267,8 +267,8 @@ sieveLoop:
 unsetLoop:
     mov         byte [rbx+rax], FALSE               ; sieve.primes[arrayIndex] = false
     add         eax, ecx                            ; arrayIndex += factor
-    cmp         eax, [rdi+sieve.arraySize]          ; if arrayIndex <= sieve.arraySize...
-    jbe         unsetLoop                           ; ...continue marking non-primes
+    cmp         eax, [rdi+sieve.arraySize]          ; if arrayIndex < sieve.arraySize...
+    jb          unsetLoop                           ; ...continue marking non-primes
 
     mov         eax, ecx                            ; arrayIndex = factor
     shr         eax, 1                              ; arrayIndex /= 2
@@ -302,8 +302,8 @@ countPrimes:
 ; * ecx: arrayIndex
 
     mov         rbx, [rdi+sieve.primes]             ; primesPtr = &sieve.primes[0]
-    xor         eax, eax                            ; primeCount = 0
-    mov         rcx, 2                              ; arrayIndex = 2
+    xor         eax, eax                            ; primeCount = 1
+    mov         rcx, 1                              ; arrayIndex = 1
     
 countLoop:    
     cmp         byte [rbx+rcx], TRUE                ; if !sieve.primes[arrayIndex]...
@@ -312,7 +312,7 @@ countLoop:
 
 nextItem:
     inc         ecx                                 ; arrayIndex++
-    cmp         ecx, dword [rdi+sieve.arraySize]    ; if arrayIndex <= array size...
-    jbe         countLoop                           ; ...continue counting
+    cmp         ecx, dword [rdi+sieve.arraySize]    ; if arrayIndex < array size...
+    jb          countLoop                           ; ...continue counting
 
     ret                                             ; end of countPrimes
