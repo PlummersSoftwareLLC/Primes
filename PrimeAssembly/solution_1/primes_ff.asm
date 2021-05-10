@@ -302,7 +302,7 @@ countPrimes:
 ; * ecx: arrayIndex
 
     mov         rbx, [rdi+sieve.primes]             ; primesPtr = &sieve.primes[0]
-    xor         eax, eax                            ; primeCount = 1
+    mov         eax, 1                              ; primeCount = 1
     mov         rcx, 1                              ; arrayIndex = 1
     
 countLoop:    
