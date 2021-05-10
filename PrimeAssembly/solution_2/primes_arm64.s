@@ -41,7 +41,7 @@ sieve_size:
 
 .data
 
-.balign     4
+.balign     8
 
 refResults:
 .word       10, 4
@@ -166,7 +166,7 @@ checkTime:
 // registers:
 // * x0: primeCount
 // * x1: refResultPtr
-// * x2: curSieveSize/curResult
+// * w2: curSieveSize/curResult
 // * x23: durationPtr
 // * x24: sieveSize
 // * w25: runCount
