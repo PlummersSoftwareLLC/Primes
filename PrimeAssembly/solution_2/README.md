@@ -8,7 +8,7 @@ This is an implementations in arm64 assembly. The basic algorithm used is that o
 ## Run instructions
 
 ### gcc
-Execute the following command from the implementation directory, after NASM and gcc have been installed:
+Execute the following command from the implementation directory, after gcc (with supporting build tools, including as) has been installed:
 ```
 gcc primes_arm64.s -o primes_arm64
 ./primes_arm64
