@@ -27,7 +27,7 @@ sieve_size:
 .equ                NULL,           0           // null pointer
 .equ                INIT_PATTERN,   0x0101      // init pattern for prime array            
 
-.equ                CLOCK_GETTIME,  108         // syscall number for clock_gettime
+.equ                CLOCK_GETTIME,  113         // syscall number for clock_gettime
 .equ                CLOCK_MONOTONIC,1           // CLOCK_MONOTONIC
 .equ                WRITE,          64          // syscall number for write
 .equ                STDOUT,         1           // file descriptor of stdout
