@@ -321,7 +321,7 @@ unsetLoop:
 
     strb    w5, [x1, x4]    	        // sieve.primes[arrayIndex] = false
     add     x4, x4, x3                  // arrayIndex += factor
-    cmp     x4, w6                      // if arrayIndex <= arraySize...
+    cmp     x4, w6, uxtx                // if arrayIndex <= arraySize...
     bls     unsetLoop                   // ...continue marking non-primes
 
 // find next factor
