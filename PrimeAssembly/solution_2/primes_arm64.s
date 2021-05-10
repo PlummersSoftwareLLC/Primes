@@ -362,7 +362,7 @@ countPrimes:
 countLoop:    
     ldrb    w5, [x2, x4]                // curPrime = sieve.primes[arrayIndex]
     cmp     w5, FALSE                   // if !curPrime...
-    cinc    w3, w3, eq                  // ...primeCount++
+    cinc    w3, w3, ne                  // ...primeCount++
     add     x4, x4, #1                  // arrayIndex++
     cmp     x4, x1                      // if arrayIndex < arraySize...
     blo     countLoop                   // ...continue counting
