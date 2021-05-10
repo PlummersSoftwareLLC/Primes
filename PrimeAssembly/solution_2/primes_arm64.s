@@ -297,34 +297,31 @@ runSieve:
 
 // registers:
 // * x1: primesPtr (&sieve_primes[0])
-// * x2: number
+// * x2: arrayIndex
 // * x3: factor
-// * x4: arrayIndex
-// * w5: false
-// * w6: arraySize
-// * w7: curPrime (sieve_primes[arrayIndex])
+// * w4: false
+// * w5: arraySize
+// * w6: curPrime (sieve_primes[arrayIndex])
 // * w27: sizeSqrt (global)
 
     ldr     x1, [x0, #sieve_primes]     // primesPtr = &sieve.primes[0]
     mov     x3, #3                      // factor = 3
-    mov     x4, #0                      // arrayIndex = 0
-    mov     w5, FALSE                   // false = FALSE
-    ldr     w6, [x0, #sieve_arraySize]  // arraySize = sieve.arraySize   
+    mov     w4, FALSE                   // false = FALSE
+    ldr     w5, [x0, #sieve_arraySize]  // arraySize = sieve.arraySize   
 
 sieveLoop:
-    mul     x2, x3, x3                  // number = factor * factor
-    mov     x4, x2                      // arrayIndex = number                         
-    lsr     x4, x4, #1                  // arrayIndex /= 2
+    mul     x2, x3, x3                  // arrayIndex = factor * factor
+    lsr     x2, x2, #1                  // arrayIndex /= 2
 
 // clear multiples of factor
 unsetLoop:
-    strb    w5, [x1, x4]    	        // sieve.primes[arrayIndex] = false
-    add     x4, x4, x3                  // arrayIndex += factor
-    cmp     x4, w6, uxtx                // if arrayIndex <= arraySize...
+    strb    w4, [x1, x2]    	        // sieve.primes[arrayIndex] = false
+    add     x2, x2, x3                  // arrayIndex += factor
+    cmp     x2, w5, uxtx                // if arrayIndex <= arraySize...
     bls     unsetLoop                   // ...continue marking non-primes
 
-    mov     x4, x3                      // arrayIndex = factor
-    lsr     x4, x4, #1                  // arrayIndex /= 2
+    mov     x2, x3                      // arrayIndex = factor
+    lsr     x2, x2, #1                  // arrayIndex /= 2
 
 // find next factor
 factorLoop:
@@ -332,10 +329,10 @@ factorLoop:
     cmp     x3, w27, uxtx               // if factor > sizeSqrt...
     bhi     endRun                      // ...end this run
     
-    add     x4, x4, #1                  // arrayIndex++
+    add     x2, x2, #1                  // arrayIndex++
 
-    ldrb    w7, [x1, x4]                // curPrime = sieve.primes[arrayIndex]
-    cbnz    w7, sieveLoop               // if curPrime then continue run
+    ldrb    w6 [x1, x2]                // curPrime = sieve.primes[arrayIndex]
+    cbnz    w6, sieveLoop               // if curPrime then continue run
     b       factorLoop                  // continue looking
 
 endRun:

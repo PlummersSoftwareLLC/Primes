@@ -67,18 +67,18 @@ main:
 
 ; registers: all except r12d operational
 
-; get start time
-    mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
-    mov         rdi, CLOCK_MONOTONIC                ; * ask for monotonic time
-    lea         rsi, [startTime]                    ; * struct to store result in
-    syscall
-
 ; calculate square root of sieve size
     mov         eax, SIEVE_SIZE                     ; eax = sieve size
     cvtsi2sd    xmm0, eax                           ; xmm0 = eax
     sqrtsd      xmm0, xmm0                          ; xmm0 = sqrt(xmm0)
     cvttsd2si   r8d, xmm0                           ; sizeSqrt = xmm0 
     inc         r8d                                 ; sizeSqrt++, for safety 
+
+; get start time
+    mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
+    mov         rdi, CLOCK_MONOTONIC                ; * ask for monotonic time
+    lea         rsi, [startTime]                    ; * struct to store result in
+    syscall
 
 runLoop:
 
@@ -95,30 +95,28 @@ initLoop:
 ; run the sieve
 
 ; registers:
-; * eax: number
+; * eax: arrayIndex
 ; * ebx: factor
-; * ecx: arrayIndex
 ; * r8d: sizeSqrt
 ; * r12d: runCount
 
     mov         ebx, 3                              ; factor = 3
 
 sieveLoop:
-    mov         eax, ebx                            ; number = ...
-    mul         ebx                                 ; ... factor * factor
-    mov         ecx, eax                            ; arrayIndex = number                         
-    shr         ecx, 1                              ; arrayIndex /= 2
+    mov         eax, ebx                            ; arrayIndex = factor...
+    mul         ebx                                 ; ... * factor
+    shr         eax, 1                              ; arrayIndex /= 2
 
 ; clear multiples of factor
 unsetLoop:
-    mov         byte [bPrimes+ecx], FALSE           ; bPrimes[arrayIndex] = false
-    add         ecx, ebx                            ; arrayIndex += factor
+    mov         byte [bPrimes+eax], FALSE           ; bPrimes[arrayIndex] = false
+    add         eax, ebx                            ; arrayIndex += factor
     cmp         eax, ARRAY_SIZE                     ; if number <= array size...
     jbe         unsetLoop                           ; ...continue marking non-primes
 
 
-    mov         ecx, ebx                            ; arrayIndex = factor
-    shr         ecx, 1                              ; arrayIndex /= 2
+    mov         eax, ebx                            ; arrayIndex = factor
+    shr         eax, 1                              ; arrayIndex /= 2
 
 ; find next factor
 factorLoop:
@@ -126,8 +124,8 @@ factorLoop:
     cmp         ebx, r8d                            ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
     
-    inc         ecx                                 ; arrayIndex++
-    cmp         byte [bPrimes+ecx], TRUE            ; if bPrimes[arrayIndex]...
+    inc         eax                                 ; arrayIndex++
+    cmp         byte [bPrimes+eax], TRUE            ; if bPrimes[arrayIndex]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking
 

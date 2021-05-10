@@ -250,31 +250,28 @@ deleteSieve:
 runSieve:
 
 ; registers:
-; * eax: number
+; * eax: arrayIndex
 ; * rbx: primesPtr (&sieve.primes[0])
 ; * ecx: factor
-; * edx: arrayIndex
 ; * r13d: sizeSqrt (global)
 
     mov         rbx, [rdi+sieve.primes]             ; primesPtr = &sieve.primes[0]
     mov         ecx, 3                              ; factor = 3
-    xor         rdx, rdx                            ; arrayIndex = 0
 
 sieveLoop:
-    mov         eax, ecx                            ; number = ...
-    mul         ecx                                 ; ... factor * factor
-    mov         edx, eax                            ; arrayIndex = number                         
-    shr         edx, 1                              ; arrayIndex /= 2
+    mov         eax, ecx                            ; arrayIndex = factor...
+    mul         ecx                                 ; ... * factor
+    shr         eax, 1                              ; arrayIndex /= 2
 
 ; clear multiples of factor
 unsetLoop:
-    mov         byte [rbx+rdx], FALSE               ; sieve.primes[arrayIndex] = false
-    add         edx, ecx                            ; arrayIndex += factor
-    cmp         eax, [rdi+sieve.arraySize]          ; if arrayIndex <= sieve.limit...
+    mov         byte [rbx+rax], FALSE               ; sieve.primes[arrayIndex] = false
+    add         eax, ecx                            ; arrayIndex += factor
+    cmp         eax, [rdi+sieve.arraySize]          ; if arrayIndex <= sieve.arraySize...
     jbe         unsetLoop                           ; ...continue marking non-primes
 
-    mov         edx, ecx                            ; arrayIndex = factor
-    shr         edx, 1                              ; arrayIndex /= 2
+    mov         eax, ecx                            ; arrayIndex = factor
+    shr         eax, 1                              ; arrayIndex /= 2
 
 ; find next factor
 factorLoop:
@@ -282,8 +279,8 @@ factorLoop:
     cmp         ecx, dword [sizeSqrt]               ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
     
-    inc         edx                                 ; arrayIndex++
-    cmp         byte [rbx+rdx], TRUE                ; if sieve.primes[arrayIndex]...
+    inc         eax                                 ; arrayIndex++
+    cmp         byte [rbx+rax], TRUE                ; if sieve.primes[arrayIndex]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking
 
