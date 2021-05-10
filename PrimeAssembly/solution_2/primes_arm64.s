@@ -314,7 +314,7 @@ runSieve:
     mov     x4, #0                      // arrayIndex = 0
     mov     w5, FALSE                   // false = FALSE
     mov     x6, #2                      // w6 = 2
-    ldr     x7, [x0, #sieve_limit]      // sieveLimit = sieve_limit   
+    ldr     w7, [x0, #sieve_limit]      // sieveLimit = sieve_limit   
 
 sieveLoop:
     mul     x2, x3, x3                  // number = factor * factor
