@@ -185,7 +185,7 @@ printResults:
     ret                                             ; end of main
 
 ; parameters:
-; * rdi: sieve size
+; * rdi: sieve limit
 ; returns:
 ; * rax: &sieve
 newSieve:
@@ -195,7 +195,7 @@ newSieve:
     mov         rdi, sieve_size                     ; ask for sieve_size bytes
     call        malloc wrt ..plt                    ; rax = &sieve
 
-    shr         r12d, 1                             ; array_size = sieve size / 2
+    shr         r12d, 1                             ; array_size = sieve limit / 2
     inc         r12d                                ; array_size++
     mov         dword [rax+sieve.arraySize], r12d   ; sieve.arraySize = array_size
 
