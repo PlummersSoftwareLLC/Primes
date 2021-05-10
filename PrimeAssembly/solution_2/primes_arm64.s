@@ -354,7 +354,7 @@ countPrimes:
 // * x4: arrayIndex
 // * w5: curPrime (sieve_primes[arrayIndex])
 
-    ldr     x1, [x0, #sieve_arraySize]  // arraySize = sieve.arraySize
+    ldr     w1, [x0, #sieve_arraySize]  // arraySize = sieve.arraySize
     ldr     x2, [x0, #sieve_primes]     // primesPtr = &sieve.primes[0]
     mov     w3, #1                      // primeCount = 1
     mov     x4, #1                      // arrayIndex = 1
@@ -364,7 +364,7 @@ countLoop:
     cmp     w5, FALSE                   // if !curPrime...
     cinc    w3, w3, ne                  // ...primeCount++
     add     x4, x4, #1                  // arrayIndex++
-    cmp     x4, x1                      // if arrayIndex < arraySize...
+    cmp     x4, w1, uxtx                // if arrayIndex < arraySize...
     blo     countLoop                   // ...continue counting
 
     ret                                 // end of countPrimes
