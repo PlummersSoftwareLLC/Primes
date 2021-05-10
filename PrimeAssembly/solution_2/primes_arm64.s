@@ -131,8 +131,8 @@ createSieve:
     adr     x1, duration                // * struct to store result in
     svc     #0
 
-    ldr     x2, startTime               // startTimePtr = &startTime
-    ldr     x23, duration               // durationPtr = &duration
+    adr     x2, startTime               // startTimePtr = &startTime
+    adr     x23, duration               // durationPtr = &duration
 
     ldr     x0, [x23, #time_sec]        // numDurationSeconds = duration.seconds
     ldr     x3, [x2, #time_sec]         // numStartTimeseconds = starttime_seconds
@@ -331,7 +331,7 @@ factorLoop:
     
     add     x2, x2, #1                  // arrayIndex++
 
-    ldrb    w6, [x1, x2]                 // curPrime = sieve.primes[arrayIndex]
+    ldrb    w6, [x1, x2]                // curPrime = sieve.primes[arrayIndex]
     cbnz    w6, sieveLoop               // if curPrime then continue run
     b       factorLoop                  // continue looking
 
