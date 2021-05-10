@@ -213,7 +213,7 @@ incorrect:                                      // incorrect result warning mess
 
 .equ                incorrectLen, . - incorrect // length of previous
 
-
+.align              4 
 // parameters:
 // * x0: sieve size
 // returns:
