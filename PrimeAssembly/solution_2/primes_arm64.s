@@ -35,6 +35,32 @@ sieve_size:
 .equ                MILLION,        1000000
 .equ                BILLION,        1000000000
 
+
+.data
+
+.align              4
+
+refResults:
+.word               10, 4
+.word               100, 25
+.word               1000, 168
+.word               10000, 1229
+.word               100000, 9592
+.word               1000000, 78498
+.word               10000000, 664579
+.word               100000000, 5761455
+.word               0
+
+.align              4
+
+startTime:                              // start time of sieve run
+.skip               time_size                           
+
+.align              4
+
+duration:                               // duration
+.skip               time_size                           
+
 .text
 
 main:
@@ -66,7 +92,7 @@ main:
 // get start time
     mov             x8, CLOCK_GETTIME           // syscall to make, parameters:
     mov             x0, CLOCK_MONOTONIC         // * ask for monotonic time
-    ldr             x1, startTime               // * struct to store result in
+    adr             x1, startTime               // * struct to store result in
     svc             #0
 
     mov             x26, #0                     // sievePtr = null
@@ -98,7 +124,7 @@ createSieve:
 
     mov             x8, CLOCK_GETTIME           // syscall to make, parameters:
     mov             x0, CLOCK_MONOTONIC         // * ask for monotonic time
-    ldr             x1, duration                // * struct to store result in
+    adr             x1, duration                // * struct to store result in
     svc             #0
 
     ldr             x2, startTime               // startTimePtr = &startTime
@@ -140,7 +166,7 @@ checkTime:
 // * x24: sieveSize
 // * w25: runCount
 
-    ldr             x1, refResults              // refResultPtr = (int *)&refResults
+    adr             x1, refResults              // refResultPtr = (int *)&refResults
 
 checkLoop:
     ldr             x2, [x1]                    // curSieveSize = *refResultPtr
@@ -159,13 +185,13 @@ checkValue:
 printWarning:
     mov             x8, WRITE                   // syscall to make, parameters:
     mov             x0, STDOUT                  // * write to stdout
-    ldr             x1, incorrect               // * message is warning
+    adr             x1, incorrect               // * message is warning
     mov             x2, incorrectLen            // * length of message
     svc             #0
 
 printResults:
                                                 // parameters for call to printf:
-    ldr             x0, outputFmt               // * format string
+    adr             x0, outputFmt               // * format string
     mov             w1, w25                     // * runCount
     ldr             x2, [x23, #time_sec]        // * duration.seconds
     ldr             x3, [x23, #time_fract]      // * duration.fraction (milliseconds)
@@ -174,6 +200,19 @@ printResults:
     mov             x0, #0                      // return 0
 
     ret                                         // end of main
+
+.align              4
+
+outputFmt:                                      // format string for output
+.asciz              "rbergen_arm64//%d//%d.%03d//1\n"   
+
+.align              4
+
+incorrect:                                      // incorrect result warning message
+.asciz              "WARNING: result is incorrect!\n"
+
+.equ                incorrectLen, . - incorrect // length of previous
+
 
 // parameters:
 // * x0: sieve size
@@ -322,39 +361,3 @@ countLoop:
 
     ret                                         // end of countPrimes
 
-.align              4
-
-outputFmt:                                      // format string for output
-.asciz              "rbergen_arm64//%d//%d.%03d//1\n"   
-
-.align              4
-
-incorrect:                                      // incorrect result warning message
-.asciz              "WARNING: result is incorrect!\n"
-
-.equ                incorrectLen, . - incorrect // length of previous
-
-.data
-
-.align              4
-
-refResults:
-.word               10, 4
-.word               100, 25
-.word               1000, 168
-.word               10000, 1229
-.word               100000, 9592
-.word               1000000, 78498
-.word               10000000, 664579
-.word               100000000, 5761455
-.word               0
-
-.align              4
-
-startTime:                              // start time of sieve run
-.skip               time_size                           
-
-.align              4
-
-duration:                               // duration
-.skip               time_size                           
