@@ -149,7 +149,7 @@ createSieve:
 checkTime:
     add     w25, w25, #1                // runCount++
     cmp     x0, RUNTIME                 // if numSeconds < 5...
-    bls     runLoop                     // ...perform another sieve run
+    blo     runLoop                     // ...perform another sieve run
 
 // we're past the 5 second mark, so it's time to store the exact duration of our runs
     str     x0, [x23, #time_sec]        // duration.seconds = numSeconds
