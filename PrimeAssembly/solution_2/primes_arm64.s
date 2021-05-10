@@ -331,7 +331,7 @@ factorLoop:
     
     add     x2, x2, #1                  // arrayIndex++
 
-    ldrb    w6 [x1, x2]                // curPrime = sieve.primes[arrayIndex]
+    ldrb    w6, [x1, x2]                 // curPrime = sieve.primes[arrayIndex]
     cbnz    w6, sieveLoop               // if curPrime then continue run
     b       factorLoop                  // continue looking
 
