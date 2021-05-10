@@ -174,15 +174,15 @@ checkTime:
     adr     x1, refResults              // refResultPtr = (int *)&refResults
 
 checkLoop:
-    ldr     x2, [x1]                    // curSieveSize = *refResultPtr
-    cbz     x2, printWarning            // if curSieveSize == 0 then we didn't find our sieve size, so warn about incorrect result
-    cmp     x2, x24                     // if curSieveSize == sieveSize...
+    ldr     w2, [x1]                    // curSieveSize = *refResultPtr
+    cbz     w2, printWarning            // if curSieveSize == 0 then we didn't find our sieve size, so warn about incorrect result
+    cmp     w2, w24                     // if curSieveSize == sieveSize...
     beq     checkValue                  // ...check the reference result value...
     add     x1, x1, #8                  // ...else refResultsPtr += 2 
     b       checkLoop                   // keep looking for sieve size
 
 checkValue:
-    ldr     x2, [x1, #4]                // curResult = *(refResultPtr + 1)
+    ldr     w2, [x1, #4]                // curResult = *(refResultPtr + 1)
     cmp     w2, w0                      // if curResult == primeCount... 
     beq     printResults                // ...print result
 
