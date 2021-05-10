@@ -144,7 +144,7 @@ createSieve:
 
     bpl     checkTime                   // if numNanoseconds >= 0 then check the duration...
     sub     x0, x0, #1                  // ...else numSeconds--...
-    add     x1, x1, x22                 // ...xw and numNanoseconds += billion
+    add     x1, x1, x22                 // ...and numNanoseconds += billion
 
 checkTime:
     add     w25, w25, #1                // runCount++
@@ -360,7 +360,7 @@ countPrimes:
     mov     x4, #1                      // arrayIndex = 1
 
 countLoop:    
-    ldrb    w5, [x1, x3]                // curPrime = sieve.primes[arrayIndex]
+    ldrb    w5, [x2, x4]                // curPrime = sieve.primes[arrayIndex]
     cmp     w5, FALSE                   // if !curPrime...
     cinc    w3, w3, eq                  // ...primeCount++
     add     x4, x4, #1                  // arrayIndex++
