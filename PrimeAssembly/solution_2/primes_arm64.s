@@ -18,8 +18,6 @@ time_fract:
 time_size:
 
             .struct     0
-sieve_limit:        
-            .struct     sieve_limit + 4
 sieve_arraySize:    
             .struct     sieve_arraySize + 4
 sieve_primes:       
@@ -113,7 +111,7 @@ createSieve:
     mov     x0, x24                     // pass sieve size
     bl      newSieve                    // x0 = &sieve
 
-    mov     x26, x0                     // sievePtr = rax
+    mov     x26, x0                     // sievePtr = x0
 
     bl      runSieve                    // run sieve
 
@@ -239,7 +237,6 @@ newSieve:
 
     mov     x20, x0                     // sievePtr = x0
 
-    str     w19, [x0, #sieve_limit]     // sieve_limit = sieve size (limit)
     lsr     w19, w19, #1                // array_size = sieve_limit / 2
     add     w19, w19, #1                // array_size++
     str     w19, [x0, #sieve_arraySize] // sieve_arraySize = array_size
@@ -304,17 +301,15 @@ runSieve:
 // * x3: factor
 // * x4: arrayIndex
 // * w5: false
-// * x6: 2
-// * x7: sieveLimit
-// * w8: curPrime (sieve_primes[arrayIndex])
+// * w6: arraySize
+// * w7: curPrime (sieve_primes[arrayIndex])
 // * w27: sizeSqrt (global)
 
-    ldr     x1, [x0, #sieve_primes]     // primesPtr = &sieve_primes[0]
+    ldr     x1, [x0, #sieve_primes]     // primesPtr = &sieve.primes[0]
     mov     x3, #3                      // factor = 3
     mov     x4, #0                      // arrayIndex = 0
     mov     w5, FALSE                   // false = FALSE
-    mov     x6, #2                      // w6 = 2
-    ldr     w7, [x0, #sieve_limit]      // sieveLimit = sieve_limit   
+    ldr     w6, [x0, #sieve_arraySize]  // arraySize = sieve.arraySize   
 
 sieveLoop:
     mul     x2, x3, x3                  // number = factor * factor
@@ -324,9 +319,9 @@ unsetLoop:
     mov     x4, x2                      // arrayIndex = number                         
     lsr     x4, x4, #1                  // arrayIndex /= 2
 
-    strb    w5, [x1, x4]    	        // sieve_primes[arrayIndex] = false
-    madd    x2, x3, x6, x2              // number += 2*factor
-    cmp     x2, x7                      // if number <= sieveLimit...
+    strb    w5, [x1, x4]    	        // sieve.primes[arrayIndex] = false
+    add     x4, x4, x3                  // arrayIndex += factor
+    cmp     x4, w6                      // if arrayIndex <= arraySize...
     bls     unsetLoop                   // ...continue marking non-primes
 
 // find next factor
@@ -338,8 +333,8 @@ factorLoop:
     mov     x4, x3                      // arrayIndex = factor
     lsr     x4, x4, #1                  // arrayIndex /= 2
 
-    ldrb    w8, [x1, x4]                // curPrime = sieve_primes[arrayIndex]
-    cbnz    w8, sieveLoop               // if curPrime then continue run
+    ldrb    w7, [x1, x4]                // curPrime = sieve_primes[arrayIndex]
+    cbnz    w7, sieveLoop               // if curPrime then continue run
     b       factorLoop                  // continue looking
 
 endRun:

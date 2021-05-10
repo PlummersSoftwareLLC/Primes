@@ -16,7 +16,6 @@ struc time
 endstruc
 
 struc sieve
-    .limit:     resd    1
     .arraySize: resd    1
     .primes:    resq    1
 endstruc
@@ -196,8 +195,7 @@ newSieve:
     mov         rdi, sieve_size                     ; ask for sieve_size bytes
     call        malloc wrt ..plt                    ; rax = &sieve
 
-    mov         dword [rax+sieve.limit], r12d       ; sieve.limit = save sieve size (limit)
-    shr         r12d, 1                             ; array_size = sieve.limit / 2
+    shr         r12d, 1                             ; array_size = sieve size / 2
     inc         r12d                                ; array_size++
     mov         dword [rax+sieve.arraySize], r12d   ; sieve.arraySize = array_size
 
@@ -265,15 +263,14 @@ runSieve:
 sieveLoop:
     mov         eax, ecx                            ; number = ...
     mul         ecx                                 ; ... factor * factor
-
-; clear multiples of factor
-unsetLoop:
     mov         edx, eax                            ; arrayIndex = number                         
     shr         edx, 1                              ; arrayIndex /= 2
 
+; clear multiples of factor
+unsetLoop:
     mov         byte [rbx+rdx], FALSE               ; sieve.primes[arrayIndex] = false
-    lea         eax, [eax, 2*ecx]                   ; number += 2*factor
-    cmp         eax, [rdi+sieve.limit]              ; if number <= sieve.limit...
+    add         edx, ecx                            ; number += 2*factor
+    cmp         eax, [rdi+sieve.arraySize]          ; if number <= sieve.limit...
     jbe         unsetLoop                           ; ...continue marking non-primes
 
 ; find next factor

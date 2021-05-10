@@ -106,14 +106,14 @@ initLoop:
 sieveLoop:
     mov         eax, ebx                            ; eax = ...
     mul         ebx                                 ; ... factor * factor
+    mov         ecx, eax                            ; arrayIndex = number                         
+    shr         ecx, 1                              ; arrayIndex /= 2
 
 ; clear multiples of factor
 unsetLoop:
-    mov         ecx, eax                            ; arrayIndex = number                         
-    shr         ecx, 1                              ; arrayIndex /= 2
     mov         byte [bPrimes+ecx], FALSE           ; bPrimes[arrayIndex] = false
-    lea         eax, [eax, 2*ebx]                   ; number += 2*factor
-    cmp         eax, SIEVE_SIZE                     ; if number <= sieve size...
+    add         ecx, ebx                            ; arrayIndex += factor
+    cmp         eax, ARRAY_SIZE                     ; if number <= array size...
     jbe         unsetLoop                           ; ...continue marking non-primes
 
 ; find next factor
