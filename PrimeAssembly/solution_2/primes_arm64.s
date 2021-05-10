@@ -147,7 +147,7 @@ createSieve:
     add     x1, x1, x22                 // ...xw and numNanoseconds += billion
 
 checkTime:
-    add     w25, w26, #1                // runCount++
+    add     w25, w25, #1                // runCount++
     cmp     x0, RUNTIME                 // if numSeconds < 5...
     bls     runLoop                     // ...perform another sieve run
 
