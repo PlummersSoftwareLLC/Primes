@@ -367,5 +367,7 @@ countLoop:
     cmp     x4, w1, uxtx                // if arrayIndex < arraySize...
     blo     countLoop                   // ...continue counting
 
+    mov     w0, w3
+
     ret                                 // end of countPrimes
 
