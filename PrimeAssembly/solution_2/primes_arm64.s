@@ -329,7 +329,7 @@ unsetLoop:
 // find next factor
 factorLoop:
     add     x3, x3, #2                  // factor += 2
-    cmp     w3, w27                     // if factor > sizeSqrt...
+    cmp     x3, w27, uxtx               // if factor > sizeSqrt...
     bhi     endRun                      // ...end this run
     
     add     x4, x4, #1                  // arrayIndex++
