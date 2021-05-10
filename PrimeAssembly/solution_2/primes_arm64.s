@@ -90,7 +90,7 @@ main:
 
     ldr     x24, =SIEVE_LIMIT           // sieveSize = sieve size
 
-    ucvtf   0, x24
+    ucvtf   s0, x24                     // s0 = sieveSize
     fsqrt   s0, s0                      // s0 = sqrt(s0)
     fcvtau  x27, s0                     // sizeSqrt = s0 
     add     w27, w27, #1                // sizeSqrt++, for safety 
