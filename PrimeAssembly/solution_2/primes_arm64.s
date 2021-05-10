@@ -266,7 +266,7 @@ initLoop:
     str     x28, [x0, x1, lsl 3]        // sieve.primes[initBlockIndex*8..(initBlockIndex*8 + 7)] = true
     add     x1, x1, #1                  // initBlockIndex++
     cmp     w1, w19                     // if initBlockIndex < initBlockCount...
-    bls     initLoop                    // ...continue initialization
+    blo     initLoop                    // ...continue initialization
 
     mov     x0, x20                     // return sievePtr
 
