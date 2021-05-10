@@ -70,9 +70,9 @@ platform, but Dart will generate a standard ELF binary on *nix systems.
 ### Docker Results
 
 ```
-Passes: 834, Time: 5.001026, Avg: 0.005996434052757794, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
+Passes: 1051, Time: 5.00003, Avg: 0.004757402473834443, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
 
-eagerestwolf;834;5.001026;1
+eagerestwolf;1051;5.00003;1
 ```
 
 ### Dart SDK
