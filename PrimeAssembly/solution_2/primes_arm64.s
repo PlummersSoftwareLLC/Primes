@@ -271,6 +271,8 @@ initLoop:
     cmp     w1, w19                     // if initBlockIndex < initBlockCount...
     bls     initLoop                    // ...continue initialization
 
+    mov     x0, x20                     // return sievePtr
+
     ldp     x29, x30, [sp], #16         // pop x29 and x30 from stack
     ret                                 // end of newSieve
 
