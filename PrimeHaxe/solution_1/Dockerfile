@@ -6,9 +6,8 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
 WORKDIR /opt/app
 COPY . .
 
-RUN haxelib install hxcpp
+COPY *.sh ./
+RUN chmod a+x *.sh
+RUN ./compile.sh
 
-COPY compile_and_run_all.sh .
-RUN chmod a+x compile_and_run_all.sh
-
-ENTRYPOINT [ "/opt/app/compile_and_run_all.sh" ]
+ENTRYPOINT [ "./run.sh" ]
