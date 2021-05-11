@@ -17,7 +17,7 @@ jobs:
       - name: "Find Dockerfiles"
         id: "solutions"
         run: |
-          SOLUTIONS=$(find Primes* -type f -name Dockerfile -exec dirname {} \; | sort | sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
+          SOLUTIONS=$(find Prime* -type f -name Dockerfile -exec dirname {} \; | sort | sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
           echo "::set-output name=solutions::${SOLUTIONS}"
 
     outputs:
