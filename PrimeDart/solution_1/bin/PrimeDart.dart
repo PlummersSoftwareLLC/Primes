@@ -150,7 +150,7 @@ class PrimeSieve {
   /// information.
   void printResults(bool showResults, double duration, int passes) {
     if (showResults) {
-      stdout.write('2, ');
+      stderr.write('2, ');
     }
 
     // Dart doesn't support interpreting booleans as intergers, unlike many
@@ -158,14 +158,14 @@ class PrimeSieve {
     // is greater than or equal to 2. If it is, then the initial count is set to
     // 1 because 2 is prime. Otherwise, the count is set to 0 because there are
     // no primes less than 2.
-    int count = (_sieveSize >= 2) ? 1 : 0;
+    var count = (_sieveSize >= 2) ? 1 : 0;
 
     for (var num = 3; num <= _sieveSize; num += 2) {
       if (_bits[num]) {
         if (showResults) {
           // In Dart, using the dollar sign "$" in the stdout.write method will
           // print a variable of the same name to the console.
-          stdout.write('$num, ');
+          stderr.write('$num, ');
         }
 
         count++;
@@ -174,24 +174,24 @@ class PrimeSieve {
 
     if (showResults) {
       // Print a new line after the results if the results are shown.
-      stdout.write('\n');
+      stderr.write('\n');
     }
 
     // This is just for code readability. Since stdout.write doesn't print a new
     // line at the end of the string, we can split a large string across a few
     // print requests to keep the code to under 80 columns (personal preference).
-    stdout.write('Passes: $passes, Time: $duration, ');
-    stdout.write('Avg: ${duration / passes}, Limit: $_sieveSize, ');
-    stdout.write('Count1: $count, Count2: ${countPrimes()}, ');
-    stdout.write('Valid: ${_validateResults()}\n');
+    stderr.write('Passes: $passes, Time: $duration, ');
+    stderr.write('Avg: ${duration / passes}, Limit: $_sieveSize, ');
+    stderr.write('Count1: $count, Count2: ${countPrimes()}, ');
+    stderr.write('Valid: ${_validateResults()}\n');
 
     // These 2 lines are for the drag race format
-    stdout.write('\n');
-    stderr.write('eagerestwolf;$passes;$duration;1\n');
+    stderr.write('\n');
+    stdout.write('eagerestwolf;$passes;$duration;1\n');
   }
 
   int countPrimes() {
-    int count = (_sieveSize >= 2) ? 1 : 0;
+    var count = (_sieveSize >= 2) ? 1 : 0;
 
     for (var i = 3; i < _sieveSize; i += 2) {
       if (_bits[i]) {
