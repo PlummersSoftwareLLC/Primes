@@ -10,11 +10,11 @@ The Fortran language does not contain a bitfiled element, but allows the bitwise
 of integers. Therefore 64-bit integers are used as store for the bitfield.
 
 It is an unfaithful implementation as the sieve is not encapsulated within 
-an object.However, Fortran 2003 (or later) in principle allows for a object 
+an object. However, Fortran 2003 (or later) in principle allows for a object 
 oriented approach to the problem (I may implement it later).
 
 
-##Run instructions 
+## Run instructions 
 The source code should be able to be compiled with every compiler
 conforming to the Fortran 2003 standard. 
 One example is gfortran, which is part of the GCC Compiler Collection
@@ -45,14 +45,13 @@ For the output of the results the switch `.false.` in the call of
 (Note: In Fortran the periods before and after `true` and `false`
 are part of the boolean constants and must not be omitted.)
 
-###Dockerfile
+## Dockerfile
 
 A Dockerfile is provided.
 
+## Output 
 
-
-##Output 
-johandweber_fortran;2739;5.002;1
+`johandweber_fortran;2739;5.002;1`
 
 The results seem to be strongly dependent on the optimizer.
 The results are for gfortran 7.5. For the same options gfortran 9.3 has almost
