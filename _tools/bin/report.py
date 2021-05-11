@@ -43,7 +43,6 @@ def main(directory):
         columns=[
             "implementation",
             "solution",
-            "os",
             "label",
             "passes",
             "duration",
@@ -58,7 +57,7 @@ def main(directory):
 
         # Extracting additional information from the file name.
         name = os.path.splitext(os.path.basename(file))[0]
-        metadata = name.split("-", 2)
+        metadata = name.split("-")
 
         log.info("Processing %s", name)
         with open(file, "r") as handle:
@@ -72,7 +71,6 @@ def main(directory):
                             {
                                 "implementation": metadata[0],
                                 "solution": metadata[1],
-                                "os": metadata[2],
                                 "label": data.get("label", metadata[0]),
                                 "passes": data.get("passes"),
                                 "duration": data.get("duration"),
@@ -91,7 +89,6 @@ def main(directory):
         {
             "implementation": "string",
             "solution": "string",
-            "os": "string",
             "label": "string",
             "passes": int,
             "duration": float,
