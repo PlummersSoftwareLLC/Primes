@@ -1,8 +1,5 @@
 # Primes | A Software Drag Race
 
-**Note:** You're currently looking at the community contribution branch of this repo, which is now the default. The original branch can be found [here](https://github.com/davepl/Primes/tree/original). 
-<br/>
-<br/>
 Source code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video
 benchmarking the same prime number sieve in Python, C#, and C++.
 
@@ -10,4 +7,6 @@ benchmarking the same prime number sieve in Python, C#, and C++.
 
 ## Community contributions
 
-Community contributions, fixes and improvements are accepted on this branch. If you want to add your own solution, please read [CONTRIBUTING.md](CONTRIBUTING.md).
+For community contributions, see the [drag-race](https://github.com/davepl/Primes/tree/drag-race) branch.
+
+If you want to add your own solution, please read [CONTRIBUTING.md](CONTRIBUTING.md).
