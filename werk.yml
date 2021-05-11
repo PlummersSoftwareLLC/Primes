@@ -2,7 +2,7 @@ jobs:
   build:tools:
     executor: local
     commands:
-      - docker build -t tools _tools/
+      - docker build -q -t tools _tools/
 
   benchmark:
     executor: local
