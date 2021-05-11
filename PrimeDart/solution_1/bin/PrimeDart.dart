@@ -51,7 +51,7 @@ class PrimeSieve {
   /// The list here is marked as late to let the Dart SDK know we will
   /// initialize the list in our constructor. Similar to using defer on a
   /// Promise in TypeScript or JavaScript.
-  late List<bool> _bits;
+  List<bool> _bits;
 
   /// This field contains the results we would expect to find for any given
   /// [sieveSize].
@@ -166,8 +166,9 @@ class PrimeSieve {
           // In Dart, using the dollar sign "$" in the stdout.write method will
           // print a variable of the same name to the console.
           stdout.write('$num, ');
-          count++;
         }
+
+        count++;
       }
     }
 

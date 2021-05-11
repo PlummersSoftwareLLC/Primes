@@ -12,9 +12,6 @@ learning a new language, so I think this is a good opportunity to teach others
 a bit about Dart. So feel free to open that source file and take a read for
 yourself!
 
-Please note, there is an existing bug that I am not 100% sure the cause of or
-how to fix. `Count1` will always display `1`. Again, I have no idea why.
-
 ## Run instructions
 
 **NOTE**: Owners of an Apple Silicon Mac *must* use the Dart SDK method. The
