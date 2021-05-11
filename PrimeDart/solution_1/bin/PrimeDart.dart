@@ -8,7 +8,7 @@ import 'dart:math';
 
 /// This class defines all the funcationality of the Prime Sieve itself, just as
 /// Dave's original implementation does.
-/// 
+///
 /// Some things to note, before proceeeding. First, you may notice there are
 /// multiple types of comments in this file. Double slash comments "//" denote
 /// single line comments like most languages. Triple slash comments "///" denote
@@ -17,7 +17,7 @@ import 'dart:math';
 /// You may notice there are no traditional multiline comments "/* */" or
 /// JavaDoc style comments "/** */", these are also supported, it's honestly
 /// down to developer preference.
-/// 
+///
 /// A few comments about the structure of Dart itself. In Dart classes contain
 /// fields and methods. .NET developers will find this terminology quite
 /// familiar, but other developers may not. Fields are simply the properties
@@ -30,7 +30,7 @@ import 'dart:math';
 /// member and is not accessible outside the class.
 class PrimeSieve {
   /// This field contains the size of the sieve.
-  /// 
+  ///
   /// A quick note about numbers in Dart. Dart is an interpreted language, much
   /// like Java. As a result, Dart doesn't support specifying the integer size
   /// like a compiled language would. Therefore, Dart uses the system's
@@ -40,21 +40,25 @@ class PrimeSieve {
   int _sieveSize = 0;
 
   /// This field contains the bits we are tracking
-  /// 
+  ///
   /// Dart doesn't have Vectors like C++ does, or arrays like many other
   /// languages. Instead, in Dart we have Lists as our generic data structure.
-  /// 
+  ///
   /// Also, as stated previously, Dart doesn't have a way to specify an integer
   /// size, so we use bools which are the smallest way we can store a 1 or 0
   /// value, although there is still some other data in the bool object.
-  List<bool> _bits;
+  ///
+  /// The list here is marked as late to let the Dart SDK know we will
+  /// initialize the list in our constructor. Similar to using defer on a
+  /// Promise in TypeScript or JavaScript.
+  late List<bool> _bits;
 
   /// This field contains the results we would expect to find for any given
   /// [sieveSize].
-  /// 
+  ///
   /// NOTE: This will probably cause the code to crash on 32-bit systems because
   /// the numbers in this Map are too large to fit in a 32-bit integer.
-  /// 
+  ///
   /// Couple of Dart notes here. First, a map allows us store a list of linked
   /// values. In other words, if we request the value 10 from this map, it will
   /// always correlate to the value 4. Second, the final keyword tells the Dart
@@ -90,7 +94,7 @@ class PrimeSieve {
       // developers, but if we are in the class we are referencing, the "this"
       // keyword is optional, and per Google's specs should be omitted.
       result = _resultsDictionary.entries
-        .singleWhere((element) => element.key == _sieveSize);
+          .singleWhere((element) => element.key == _sieveSize);
     } catch (e) {
       // We are catching all errors, but we should really be filtering for a
       // StateError. However, a StateError is the only error the singleWhere
@@ -182,7 +186,7 @@ class PrimeSieve {
 
     // These 2 lines are for the drag race format
     stdout.write('\n');
-    stdout.write('eagerestwolf;$passes;$duration;1\n');
+    stderr.write('eagerestwolf;$passes;$duration;1\n');
   }
 
   int countPrimes() {
