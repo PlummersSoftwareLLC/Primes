@@ -17,10 +17,10 @@ jobs:
           NAME=$(echo "${SOLUTION}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]')
           
           echo "[*] Building: ${NAME}"
-          docker build -q -t "${NAME}" "${SOLUTION}" || continue
+          docker build -q -t "${NAME}" "${SOLUTION}"
 
           echo "[*] Running: ${NAME}"
-          docker run --rm "${NAME}" > "${SESSION}/${NAME}.out" || continue
+          docker run --rm "${NAME}" | tee "${SESSION}/${NAME}.out"
         done
 
   report:
