@@ -52,11 +52,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           image: "${{ steps.solution-name.outputs.normalized }}:latest"
-          push: false
           context: ${{ matrix.solution }}
           platforms: linux/amd64
-
-      - uses: Azure/container-scan@v0
-        with:
-          image-name: "${{ steps.solution-name.outputs.normalized }}:latest"
-      
+          push: false
