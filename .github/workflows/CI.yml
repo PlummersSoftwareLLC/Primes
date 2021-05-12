@@ -53,13 +53,10 @@ jobs:
         with:
           image: "${{ steps.solution-name.outputs.normalized }}:latest"
           push: false
-          load: true
           context: ${{ matrix.solution }}
           platforms: linux/amd64
-      
-      - name: Scan image
-        uses: anchore/scan-action@v2
+
+      - uses: Azure/container-scan@v0
         with:
-          image: "${{ steps.solution-name.outputs.normalized }}:latest"
-          severity-cutoff: critical
-          # fail-build: true
+          image-name: "${{ steps.solution-name.outputs.normalized }}:latest"
+      
