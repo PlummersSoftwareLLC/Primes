@@ -62,4 +62,4 @@ jobs:
         with:
           image: ${{ steps.solution-name.outputs.normalized }}
           severity-cutoff: critical
-          fail-build: true
+          # fail-build: true
