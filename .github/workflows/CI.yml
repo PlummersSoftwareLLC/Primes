@@ -51,7 +51,7 @@ jobs:
       - name: Build amd64
         uses: docker/build-push-action@v2
         with:
-          image: ${{ steps.solution-name.outputs.normalized }}
+          image: "${{ steps.solution-name.outputs.normalized }}:latest"
           push: false
           load: true
           context: ${{ matrix.solution }}
@@ -60,7 +60,6 @@ jobs:
       - name: Scan image
         uses: anchore/scan-action@v2
         with:
-          path: ${{ matrix.solution }}
-          # image: ${{ steps.solution-name.outputs.normalized }}
+          image: "${{ steps.solution-name.outputs.normalized }}:latest"
           severity-cutoff: critical
           # fail-build: true
