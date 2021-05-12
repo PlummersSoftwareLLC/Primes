@@ -60,6 +60,7 @@ jobs:
       - name: Scan image
         uses: anchore/scan-action@v2
         with:
-          image: ${{ steps.solution-name.outputs.normalized }}
+          path: ${{ matrix.solution }}
+          # image: ${{ steps.solution-name.outputs.normalized }}
           severity-cutoff: critical
           # fail-build: true
