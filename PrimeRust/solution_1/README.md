@@ -1,9 +1,7 @@
 # Rust solution by @mike-barber
 
-```
-# category badges will go here
-# note it's both #faithful and #parallel-faithful
-```
+![Category](https://img.shields.io/badge/Category-faithful-green)
+![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
 
 Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber
@@ -33,10 +31,10 @@ Tested on a Ryzen 3900X, Rust 1.51, running on WSL2.
 
 This is as reported on `stdout`:
 ```
-byte-storage;18177;5.0000672340;1
-bit-storage;11954;5.0003018379;1
-byte-storage;169690;5.0010256767;24
-bit-storage;151787;5.0007596016;24
+mike-barber_byte-storage;18177;5.0000672340;1
+mike-barber_bit-storage;11954;5.0003018379;1
+mike-barber_byte-storage;169690;5.0010256767;24
+mike-barber_bit-storage;151787;5.0007596016;24
 ```
 
 We report more informative metrics to `stderr` too, but these don't go into the report, as recorded below.
