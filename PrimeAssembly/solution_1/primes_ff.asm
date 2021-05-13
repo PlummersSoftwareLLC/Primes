@@ -16,6 +16,7 @@ struc time
 endstruc
 
 struc sieve
+    .limit:     resd    1
     .arraySize: resd    1
     .primes:    resq    1
 endstruc
@@ -34,19 +35,28 @@ CLOCK_GETTIME   equ     228                         ; syscall number for clock_g
 CLOCK_MONOTONIC equ     1                           ; CLOCK_MONOTONIC
 WRITE           equ     1                           ; syscall number for write
 STDOUT          equ     1                           ; file descriptor of stdout
+EXIT            equ     60                          ; syscall number for exit
 
 MILLION         equ     1000000
 BILLION         equ     1000000000
 
 refResults:
-                dd      10, 4
-                dd      100, 25
-                dd      1000, 168
-                dd      10000, 1229
-                dd      100000, 9592
-                dd      1000000, 78498
-                dd      10000000 ,664579
-                dd      100000000, 5761455
+                dd      10
+                dd      4
+                dd      100
+                dd      25
+                dd      1000
+                dd      168
+                dd      10000
+                dd      1229
+                dd      100000
+                dd      9592
+                dd      1000000
+                dd      78498
+                dd      10000000
+                dd      664579
+                dd      100000000
+                dd      5761455
                 dd      0
 
 ; format string for output
@@ -98,7 +108,7 @@ createSieve:
     mov         rdi, SIEVE_SIZE                     ; pass sieve size
     call        newSieve                            ; rax = &sieve
 
-    mov         r15, rax                            ; sievePtr = rax
+    mov         r15, rax                            ; sievPtr = rax
 
     mov         rdi, r15                            ; pass sievePtr
     call        runSieve                            ; run sieve
@@ -106,7 +116,6 @@ createSieve:
 ; registers: 
 ; * rax: numNanoseconds/numMilliseconds
 ; * rbx: numSeconds
-; * r14d: runCount
 ; * r15: sievePtr (&sieve)
 
     mov         rax, CLOCK_GETTIME                  ; syscall to make, parameters:
@@ -114,8 +123,8 @@ createSieve:
     lea         rsi, [duration]                     ; * struct to store result in
     syscall
 
-    mov         rbx, qword [duration+time.sec]      ; numSeconds = duration.seconds
-    sub         rbx, qword [startTime+time.sec]     ; numSeconds -= startTime.seconds
+    mov         rbx, qword [duration+time.sec]      ; rbx = duration.seconds
+    sub         rbx, qword [startTime+time.sec]     ; rbx -= startTime.seconds
 
     mov         rax, qword [duration+time.fract]    ; numNanoseconds = duration.fraction    
     sub         rax, qword [startTime+time.fract]   ; numNanoseconds -= startTime.fraction
@@ -151,7 +160,7 @@ checkLoop:
     je          printWarning                        ; ...warn about incorrect result
     cmp         dword [rcx], SIEVE_SIZE             ; if *refResults == sieve size...
     je          checkValue                          ; ...check the reference result value...
-    add         rcx, 8                              ; ...else refResultsPtr += 2 
+    add         rcx, 8                              ; ...else refResults += 2 
     jmp         checkLoop                           ; keep looking for sieve size
 
 checkValue:
@@ -185,7 +194,7 @@ printResults:
     ret                                             ; end of main
 
 ; parameters:
-; * rdi: sieve limit
+; * rdi: sieve size
 ; returns:
 ; * rax: &sieve
 newSieve:
@@ -195,8 +204,9 @@ newSieve:
     mov         rdi, sieve_size                     ; ask for sieve_size bytes
     call        malloc wrt ..plt                    ; rax = &sieve
 
-    inc         r12d                                ; array_size = sieve limit + 1
-    shr         r12d, 1                             ; array_size /= 2
+    mov         dword [rax+sieve.limit], r12d       ; sieve.limit = save sieve size (limit)
+    shr         r12d, 1                             ; array_size = sieve.limit / 2
+    inc         r12d                                ; array_size++
     mov         dword [rax+sieve.arraySize], r12d   ; sieve.arraySize = array_size
 
 ; registers:
@@ -250,28 +260,29 @@ deleteSieve:
 runSieve:
 
 ; registers:
-; * eax: arrayIndex
+; * eax: number
 ; * rbx: primesPtr (&sieve.primes[0])
 ; * ecx: factor
+; * edx: arrayIndex
 ; * r13d: sizeSqrt (global)
 
     mov         rbx, [rdi+sieve.primes]             ; primesPtr = &sieve.primes[0]
     mov         ecx, 3                              ; factor = 3
+    xor         rdx, rdx                            ; arrayIndex = 0
 
 sieveLoop:
-    mov         eax, ecx                            ; arrayIndex = factor...
-    mul         ecx                                 ; ... * factor
-    shr         eax, 1                              ; arrayIndex /= 2
+    mov         eax, ecx                            ; number = ...
+    mul         ecx                                 ; ... factor * factor
 
 ; clear multiples of factor
 unsetLoop:
-    mov         byte [rbx+rax], FALSE               ; sieve.primes[arrayIndex] = false
-    add         eax, ecx                            ; arrayIndex += factor
-    cmp         eax, [rdi+sieve.arraySize]          ; if arrayIndex < sieve.arraySize...
-    jb          unsetLoop                           ; ...continue marking non-primes
+    mov         edx, eax                            ; arrayIndex = number                         
+    shr         edx, 1                              ; arrayIndex /= 2
 
-    mov         eax, ecx                            ; arrayIndex = factor
-    shr         eax, 1                              ; arrayIndex /= 2
+    mov         byte [rbx+rdx], FALSE               ; sieve.primes[arrayIndex] = false
+    lea         eax, [eax, 2*ecx]                   ; number += 2*factor
+    cmp         eax, [rdi+sieve.limit]              ; if number <= sieve.limit...
+    jbe         unsetLoop                           ; ...continue marking non-primes
 
 ; find next factor
 factorLoop:
@@ -279,8 +290,9 @@ factorLoop:
     cmp         ecx, dword [sizeSqrt]               ; if factor > sizeSqrt...
     ja          endRun                              ; ...end this run
     
-    inc         eax                                 ; arrayIndex++
-    cmp         byte [rbx+rax], TRUE                ; if sieve.primes[arrayIndex]...
+    mov         edx, ecx                            ; arrayIndex = factor
+    shr         edx, 1                              ; arrayIndex /= 2
+    cmp         byte [rbx+rdx], TRUE                ; if bPrimes[factor]...
     je          sieveLoop                           ; ...continue run
     jmp         factorLoop                          ; continue looking
 
@@ -302,8 +314,8 @@ countPrimes:
 ; * ecx: arrayIndex
 
     mov         rbx, [rdi+sieve.primes]             ; primesPtr = &sieve.primes[0]
-    mov         eax, 1                              ; primeCount = 1
-    mov         rcx, 1                              ; arrayIndex = 1
+    xor         eax, eax                            ; primeCount = 0
+    mov         rcx, 2                              ; arrayIndex = 2
     
 countLoop:    
     cmp         byte [rbx+rcx], TRUE                ; if !sieve.primes[arrayIndex]...
@@ -312,7 +324,7 @@ countLoop:
 
 nextItem:
     inc         ecx                                 ; arrayIndex++
-    cmp         ecx, dword [rdi+sieve.arraySize]    ; if arrayIndex < array size...
-    jb          countLoop                           ; ...continue counting
+    cmp         ecx, dword [rdi+sieve.arraySize]    ; if arrayIndex <= array size...
+    jbe         countLoop                           ; ...continue counting
 
     ret                                             ; end of countPrimes
