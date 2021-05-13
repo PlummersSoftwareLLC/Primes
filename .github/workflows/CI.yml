@@ -48,15 +48,19 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Select arm64 build for specific solutions
+      - name: Select arm64 build for solutions with arm64 flag file
         id: arch-arm64
-        if: matrix.solution == 'PrimeAssembly/solution_2'
-        run: echo "::set-output name=build::true"  
+        run: |
+          if [[ -f "${{ matrix.solution }}/arch-arm64" ]]; then 
+          echo "::set-output name=build::true"
+          fi
 
-      - name: Select amd64 build for other solutions
+      - name: Select amd64 build for solutions with amd64 or no flag file
         id: arch-amd64
-        if: "!steps.arch-arm64.outputs.build"
-        run: echo "::set-output name=build::true"  
+        run: |
+          if [[ -f "${{ matrix.solution }}/arch-amd64" || ! -f "${{ matrix.solution }}/arch-arm64" ]]; then 
+          echo "::set-output name=build::true"
+          fi
 
       - name: Build arm64
         if: steps.arch-arm64.outputs.build
