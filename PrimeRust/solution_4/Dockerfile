@@ -1,7 +1,13 @@
-FROM rust:1.51
+FROM rfvanbergen/rust AS build
 
 WORKDIR /app
 COPY . .
 
 RUN rustc -C opt-level=3 PrimeRust.rs
-CMD ["./PrimeRust"]
+
+FROM alpine:3.13
+WORKDIR /app
+
+# app and configuration
+COPY --from=build /app/PrimeRust PrimeRust
+ENTRYPOINT [ "./PrimeRust" ]
