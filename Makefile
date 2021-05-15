@@ -1,7 +1,7 @@
 .ONESHELL:
 
-SOLUTIONS  = $(shell find Prime* -type f -name Dockerfile -exec dirname {} \; | sed -e 's|^./||' | sort)
-OUTPUT_DIR = $(shell mktemp -d)
+SOLUTIONS  := $(shell find Prime* -type f -name Dockerfile -exec dirname {} \; | sed -e 's|^./||' | sort)
+OUTPUT_DIR := $(shell mktemp -d)
 
 benchmark: $(SOLUTIONS)
 	@for s in $(SOLUTIONS); do \
