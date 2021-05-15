@@ -1,6 +1,6 @@
 # Primes | A Software Drag Race
 
-**Note:** You're currently looking at the community contribution branch of this repo, which is now the default. The original branch can be found [here](https://github.com/davepl/Primes/tree/original). 
+**Note:** You're currently looking at the community contribution branch of this repo, which is now the default. The original branch can be found [here](https://github.com/plummerssoftwarellc/Primes/tree/original). 
 <br/>
 <br/>
 Source code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video
