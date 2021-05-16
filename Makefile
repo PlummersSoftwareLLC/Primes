@@ -14,4 +14,4 @@ benchmark: $(SOLUTIONS)
 	done
 
 report: benchmark
-	@docker run --rm -v "$(OUTPUT_DIR)":/opt/session $$(docker build -q _tools) report.py -d /opt/session
+	@docker run --rm -v "$(OUTPUT_DIR)":/opt/session $$(docker build -q tools) report.py -d /opt/session
