@@ -34,8 +34,9 @@ def report(directory):
         # Extracting additional information from the file name.
         name = os.path.splitext(os.path.basename(file))[0]
         metadata = name.split("-")
+        found = 0
 
-        click.echo(f"Processing {name}",)
+        click.echo(f"Processing {name}")
         with open(file, "r") as handle:
             for line in handle.readlines():
                 for rule in RULES:
@@ -54,7 +55,11 @@ def report(directory):
                             },
                             ignore_index=True,
                         )
+                        found += 1
                         break
+        
+        if found == 0:
+            click.echo(f"No valid output: {file}")
 
     if df.empty:
         raise Exception("No data was found!")
@@ -81,7 +86,7 @@ def report(directory):
 def generate_reports(df, title):
     """Generate report"""
 
-    click.echo(f"Generating {title}",)
+    click.echo(f"Generating {title}")
 
     data = df.sort_values(by=["passes_per_second"], ascending=False)
     data.reset_index(drop=True, inplace=True)
