@@ -13,7 +13,7 @@ RULES = [
 ]
 
 @click.command()
-@click.option("-d", "--directory", type=str, default=os.getcwd(), help="Output files directory")
+@click.option("-d", "--directory", default=os.getcwd(), help="Output files directory")
 def report(directory):
     df = pd.DataFrame(
         columns=[
