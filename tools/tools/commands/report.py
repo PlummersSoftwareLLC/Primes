@@ -1,6 +1,5 @@
 import re
 import os
-import sys
 from pathlib import Path
 
 import click
@@ -15,7 +14,7 @@ RULES = [
 @click.command()
 @click.option("-d", "--directory", default=os.getcwd(), help="Output files directory")
 def report(directory):
-    df = pd.DataFrame(
+    frame = pd.DataFrame(
         columns=[
             "implementation",
             "solution",
@@ -44,7 +43,7 @@ def report(directory):
 
                     if match:
                         data = match.groupdict()
-                        df = df.append(
+                        frame = frame.append(
                             {
                                 "implementation": metadata[0],
                                 "solution": metadata[1],
@@ -57,16 +56,16 @@ def report(directory):
                         )
                         found += 1
                         break
-        
+
         if found == 0:
             click.echo(f"No valid output: {file}")
 
-    if df.empty:
+    if frame.empty:
         raise Exception("No data was found!")
 
     # Making sure the dataframe has the correct column types.
     # Unfortunately these cannot be specified during creation.
-    df = df.astype(
+    frame = frame.astype(
         {
             "implementation": "string",
             "solution": "string",
@@ -77,18 +76,18 @@ def report(directory):
         }
     )
 
-    df["passes_per_second"] = df["passes"] / df["duration"] / df["threads"]
+    frame["passes_per_second"] = frame["passes"] / frame["duration"] / frame["threads"]
 
     # Generate single/multi threaded reports
-    generate_reports(df.loc[df["threads"] == 1], "Software Drag Race (single-threaded)")
-    generate_reports(df.loc[df["threads"] > 1], "Software Drag Race (multi-threaded)")
+    generate_reports(frame.loc[frame["threads"] == 1], "Software Drag Race (single-threaded)")
+    generate_reports(frame.loc[frame["threads"] > 1], "Software Drag Race (multi-threaded)")
 
-def generate_reports(df, title):
+def generate_reports(frame, title):
     """Generate report"""
 
     click.echo(f"Generating {title}")
 
-    data = df.sort_values(by=["passes_per_second"], ascending=False)
+    data = frame.sort_values(by=["passes_per_second"], ascending=False)
     data.reset_index(drop=True, inplace=True)
     data.index += 1
 
