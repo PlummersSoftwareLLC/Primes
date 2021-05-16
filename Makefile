@@ -12,7 +12,7 @@ all: report
 benchmark: $(SOLUTIONS)
 	@for s in $(SOLUTIONS); do \
 		NAME=$$(echo "$${s}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]'); \
-		ls $${s}/arch-* > /dev/null 2>&1 ; \
+		ls $${s}/arch-* > /dev/null 2>&1; \
 		if [[ -z "$${s}/$(ARCH_FILE)" || -f "$${s}/$(ARCH_FILE)" || "$$?" -ne 0 ]]; then \
 			OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
 			echo "[*] Running $${NAME}" && docker run --rm $$(docker build -q $$s) | tee "$${OUTPUT}"; \
