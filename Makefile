@@ -17,7 +17,7 @@ benchmark: $(SOLUTIONS)
 			OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
 			echo "[*] Running $${NAME}" && docker run --rm $$(docker build -q $$s) | tee "$${OUTPUT}"; \
 		else \
-			echo "$$?: [*] Skipping $${NAME} due to architecture mismatch"; \
+			echo "[*] Skipping $${NAME} due to architecture mismatch"; \
 		fi; \
 	done
 
