@@ -81,7 +81,7 @@ def report(directory):
 def generate_reports(df, title):
     """Generate report"""
 
-    click.echo("Generating %s", title)
+    click.echo(f"Generating {title}",)
 
     data = df.sort_values(by=["passes_per_second"], ascending=False)
     data.reset_index(drop=True, inplace=True)
