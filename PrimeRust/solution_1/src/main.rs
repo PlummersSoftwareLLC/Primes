@@ -226,7 +226,7 @@ pub mod primes {
     /// - format is <name>;<iterations>;<total_time>;<num_threads>
     pub fn report_results_stdout(label: &str, duration: Duration, passes: usize, threads: usize) {
         println!(
-            "{};{};{:.10};{}",
+            "mike-barber_{};{};{:.10};{}",
             label,
             passes,
             duration.as_secs_f32(),
