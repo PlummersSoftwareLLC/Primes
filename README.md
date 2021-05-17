@@ -7,6 +7,8 @@ benchmarking the same prime number sieve in Python, C#, and C++.
 
 ## Community contributions
 
-For community contributions, see the [drag-race](https://github.com/davepl/Primes/tree/drag-race) branch.
-If you want to add your own solution, please read [CONTRIBUTING.md](CONTRIBUTING.md).
+Community contributions, including fixes and improvements, are welcome on the [drag-race](https://github.com/plummerssoftwarellc/Primes/tree/drag-race) branch. More information, including the [contributing guidelines](https://github.com/plummerssoftwarellc/Primes/blob/drag-race/CONTRIBUTING.md), can be found there.
+
+**Note:** you're now viewing the original branch of this repo. Community contributions, fixes or improvements are **not** accepted on this branch. That means that pull requests that are opened on this branch will **not** be merged.
+
 
