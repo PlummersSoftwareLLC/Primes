@@ -1,49 +1,23 @@
-#!/usr/bin/env python3
-
-import argparse
-import logging
-import os
 import re
-import sys
+import os
 from pathlib import Path
 
+import click
 import pandas as pd
-
-# Setup Python logging to print messages to stdout
-log = logging.getLogger()
-log.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter("%(levelname)s: %(message)s")
-handler.setFormatter(formatter)
-log.addHandler(handler)
 
 # Line parsing rules
 # pylint: disable=line-too-long
 RULES = [
-    r"^(?P<label>.+)\s*;\s*(?P<passes>\d+)\s*;\s*(?P<duration>\d+([.]\d+)?)\s*;\s*(?P<threads>\d)$",
+    r"^(?P<label>.+)\s*;\s*(?P<passes>\d+)\s*;\s*(?P<duration>\d+([.]\d+)?)\s*;\s*(?P<threads>\d+)$",
 ]
 
-
-def generate_reports(df, title):
-    """Generate report"""
-
-    log.info("Generating %s", title)
-
-    data = df.sort_values(by=["passes_per_second"], ascending=False)
-    data.reset_index(drop=True, inplace=True)
-    data.index += 1
-
-    print(data.to_string())
-
-
-def main(directory):
-    """Main function"""
-
-    df = pd.DataFrame(
+@click.command()
+@click.option("-d", "--directory", default=os.getcwd(), help="Output files directory")
+def report(directory):
+    frame = pd.DataFrame(
         columns=[
             "implementation",
             "solution",
-            "os",
             "label",
             "passes",
             "duration",
@@ -53,14 +27,15 @@ def main(directory):
 
     for file in Path(os.path.abspath(directory)).rglob("*.out"):
         if os.stat(file).st_size == 0:
-            log.warning("File '%s' appears to be empty. Skipping...", file)
+            click.echo(f"File '{file}' appears to be empty. Skipping...")
             continue
 
         # Extracting additional information from the file name.
         name = os.path.splitext(os.path.basename(file))[0]
-        metadata = name.split("-", 2)
+        metadata = name.split("-")
+        found = 0
 
-        log.info("Processing %s", name)
+        click.echo(f"Processing {name}")
         with open(file, "r") as handle:
             for line in handle.readlines():
                 for rule in RULES:
@@ -68,11 +43,10 @@ def main(directory):
 
                     if match:
                         data = match.groupdict()
-                        df = df.append(
+                        frame = frame.append(
                             {
                                 "implementation": metadata[0],
                                 "solution": metadata[1],
-                                "os": metadata[2],
                                 "label": data.get("label", metadata[0]),
                                 "passes": data.get("passes"),
                                 "duration": data.get("duration"),
@@ -80,18 +54,21 @@ def main(directory):
                             },
                             ignore_index=True,
                         )
+                        found += 1
                         break
 
-    if df.empty:
+        if found == 0:
+            click.echo(f"No valid output: {file}")
+
+    if frame.empty:
         raise Exception("No data was found!")
 
     # Making sure the dataframe has the correct column types.
     # Unfortunately these cannot be specified during creation.
-    df = df.astype(
+    frame = frame.astype(
         {
             "implementation": "string",
             "solution": "string",
-            "os": "string",
             "label": "string",
             "passes": int,
             "duration": float,
@@ -99,28 +76,19 @@ def main(directory):
         }
     )
 
-    df["passes_per_second"] = df["passes"] / df["duration"] / df["threads"]
+    frame["passes_per_second"] = frame["passes"] / frame["duration"] / frame["threads"]
 
     # Generate single/multi threaded reports
-    generate_reports(df.loc[df["threads"] == 1], "Software Drag Race (single-threaded)")
-    generate_reports(df.loc[df["threads"] > 1], "Software Drag Race (multi-threaded)")
+    generate_reports(frame.loc[frame["threads"] == 1], "Software Drag Race (single-threaded)")
+    generate_reports(frame.loc[frame["threads"] > 1], "Software Drag Race (multi-threaded)")
 
+def generate_reports(frame, title):
+    """Generate report"""
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="")
-    parser.add_argument(
-        "-d",
-        "--directory",
-        type=str,
-        default=os.getcwd(),
-        help="Root directory",
-        required=False,
-    )
-    args = parser.parse_args()
+    click.echo(f"Generating {title}")
 
-    try:
-        main(**args.__dict__)
-    # pylint: disable=broad-except
-    except Exception as exc:
-        log.error(exc)
-        sys.exit(1)
+    data = frame.sort_values(by=["passes_per_second"], ascending=False)
+    data.reset_index(drop=True, inplace=True)
+    data.index += 1
+
+    click.echo(data.to_string())

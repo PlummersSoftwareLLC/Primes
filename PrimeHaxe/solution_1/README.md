@@ -1,6 +1,6 @@
 # Haxe solution by [Taylor Robinson](https://github.com/tayiorrobinson)
 
-`[faithful]`
+![Category](https://img.shields.io/badge/Category-faithful-green)
 
 An implementation of a Prime Sieve in Haxe.
 
@@ -16,7 +16,11 @@ Haxe is a programming language that while it does have it's own interpreter, can
 1. Make sure you have a working [Haxe](https://haxe.org/) installation.
    - Make sure you have setup HaxeLib by typing `haxelib setup`
    
-For simplicity, you can run `bash compile_and_run_all.sh` to complete all the steps with 1 command. 
+For simplicity, you can run the following commands from a bash shell to compile and run all implementations:
+```
+./compile.sh
+./run.sh
+``` 
 
 ### Haxe Interpreter
 

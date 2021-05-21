@@ -1,7 +1,7 @@
 # 1. builder stage
 #   - build executable
 #
-FROM rust:latest AS builder
+FROM rfvanbergen/rust AS build
 
 WORKDIR /app
 COPY . .
@@ -11,9 +11,9 @@ RUN cargo build --release
 #   - start from clean debian container
 #   - copy built executable
 #
-FROM debian:buster-slim AS runtime
+FROM alpine:3.13
 WORKDIR /app
 
 # app and configuration
-COPY --from=builder /app/target/release/primes primes
+COPY --from=build /app/target/release/primes primes
 ENTRYPOINT [ "./primes" ]

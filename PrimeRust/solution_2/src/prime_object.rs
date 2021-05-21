@@ -108,5 +108,9 @@ impl PrimeSieve {
         print!("Count1: {}, ", count);
         print!("Count2: {}, ", self.count_primes());
         println!("Valid: {}", self.validate_results());
+
+        // Following 2 lines added by rbergen to conform to drag race output format
+        println!("");
+        println!("Azgrom;{};{:?};1", passes, duration.as_secs_f32());
     }
 }
