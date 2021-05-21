@@ -147,7 +147,12 @@ class prime_sieve
                << "Counts: "  << count << "/" << countPrimes() << ", "
                << "Valid : "  << (validateResults() ? "Pass" : "FAIL!") 
                << "\n";
-      }
+
+          // Following 2 lines added by rbergen to conform to drag race output format
+          cout << "\n";
+          cout << "davepl_par;" << passes << ";" << duration << ";" << threads << "\n";
+      }               
+  
 };
 
 int main(int argc, char **argv)
