@@ -287,6 +287,29 @@ where:
 * `iterations` is the amount of times your code ran in the allotted time.
 * `total_time` is the total time it took to run, which would be slightly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator).
 * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations` (so 1 for a single-threaded solution).
-* `labels` is an optional collection of key/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). If you don't output labels, then the semicolon (`;`) between `num_threads` and `labels` should also not be written. Do note that default values are used for all labels that are not included.
+* `labels` is an optional collection of name/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). They are discussed in more detail, below.
 
 Any other output should be directed to standard error, if possible. 
+
+### Labels
+
+If you choose to include labels, then:
+* they must conform to what's indicated in the [characteristics](#characteristics) section. 
+* specificy each label as `<name>=<value>`
+* If multiple lables are included in your output, separate them with commas (`,`). 
+* Don't use spaces between names, values, or name/value pairs
+* If you don't output labels, then the semicolon (`;`) between `num_threads` and `labels` should also not be written. 
+
+Do note that default values are used for all labels that are not included.
+
+### Examples
+
+An example of a line of output with labels is:
+```
+rbergen;1234;5.005678;1;algorithm=base,faithful=no,bits=1
+```
+
+A line of output without labels could look like this:
+```
+rbergen;1234;5.005678;1
+```
