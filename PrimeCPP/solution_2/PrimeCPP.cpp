@@ -150,7 +150,8 @@ int main()
     
     prime_sieve checkSieve(UPPER_LIMIT);
     checkSieve.runSieve();
-    checkSieve.printResults(false, duration_cast<microseconds>(tEnd).count() / 1000000.0, passes);
+    std::chrono::duration<double, std::micro> tEnd_micro = tEnd;
+    checkSieve.printResults(false, tEnd_micro.count() / 1000000.0, passes);
 
     return checkSieve.validateResults();
 }

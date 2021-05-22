@@ -129,9 +129,11 @@ int main()
         prime_sieve sieve(1000000L);
         sieve.runSieve();
         passes++;
-        if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
+	auto tEnd = steady_clock::now() - tStart;
+        if (duration_cast<seconds>(tEnd).count() >= 5)
         {
-            sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000, passes);
+  	    std::chrono::duration<double, std::micro> tEnd_micro = tEnd;
+            sieve.printResults(false, tEnd_micro.count() / 1000000, passes);
             break;
         }
     } 
