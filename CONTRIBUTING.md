@@ -84,8 +84,6 @@ The collection of solutions in this repository have come to use different approa
 | [parallelism](#parallelism) | If the implementation uses any type of multi-threaded processing/calculation. |
 | [storage](#flag-storage) | The number of bits used to indicate if a number in the sieve is a prime number, or not. |
 
-<br/>
-
 These characteristics are discussed in more detail in the following sections.
 
 ### Algorithm
@@ -100,8 +98,6 @@ We currently consider the following algorithms to be "known" algorithms:
 | base | This is the algorithm that was used by @davepl in the YouTube video that spawned this repository. It is described in more detail, [below](#base-algorithm). |
 | wheel | Algorithms rooted in the principle of [wheel factorization](https://en.wikipedia.org/wiki/Wheel_factorization). These tend to translate to having a (pre)calculated set of prime numbers within a certain base number range, that are then sequentially projected onto the sieve. |
 | **other** | All algorithms that do not fall in the values already mentioned. This is used as the default if no algorithm is specified. |
-
-<br/>
 
 **Note:** All implementations **must** use a form of [the Sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) as the fundamental algorithm, as indicated in the basic [rules](#rules).
 
@@ -234,8 +230,6 @@ Common bit counts are:
 | 8 | Common implementations that occupy 8 bits per flag store the flags in a "byte" variable. | 
 | 32 | Common implementations that occupy 32 bits per flag store the flags in a "regular" integer variable. | 
 | 64 | Common implementations that occupy 32 bits per flag store the flags in a "long" integer variable. | 
-
-<br/>
 
 It's possible that the number of bits per flag is unknown. For example, this can be the case if an implementation uses a "boolean" basic type provided by the language, and the language does not define how booleans are logically stored in memory.
 
