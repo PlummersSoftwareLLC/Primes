@@ -7,9 +7,8 @@ These guidelines have been drafted to facilitate a "fair" comparison between sol
 
 ## Guide
 
-### Determining the category/categories
-Once you've written the solution, make a determination on whether it is faithful to the original implementation, and whether it is parallel or not.
-You can do this by referring to [the category descriptions](#Categories) mentioned below.
+### Determining the implementation characteristics
+Once you've written the solution, make sure it complies with the basic [rules](#rules) and determine what are the relevant characteristics of your implementation(s). You can do this by referring to [the descriptions of relevant characteristics](#characteristics) included below.
 
 ### README.md
 Now make sure to add a `README.md` that contains at least the following:
@@ -17,7 +16,7 @@ Now make sure to add a `README.md` that contains at least the following:
 ```
 # <Language> solution by <YourUserName>
 
-<CategoryBadge(s)>
+(Optional) <Badges>
 
 *Give a short description of your implementation*
 
@@ -30,14 +29,14 @@ Now make sure to add a `README.md` that contains at least the following:
 *Show the output you got on your machine(s) here, in code blocks*
 ```
 
-Concerning the category badge(s):
-* The category badges for the various categories are specified in [their respective sections](#Categories).
-* If your solution includes multiple implementations that fall under different categories, include one category badge for each category.
-* If your solution deviates from the basic [rules](#Rules), add an additional category badge, using the following template:
+With the introduction of labels in the [output format](#output), badges are now optional in the `README.md` _if labels are used in the solution output_. If you do choose to add badges to your `README.md`, then:
+* They need to comply with what is described in [the characteristics section](#characteristics). 
+* If your solution includes multiple implementations that have different characteristics, then add all appropriate badges, once.
+* If your solution deviates from the basic [rules](#rules), add an additional badge, using the following template:
   ```
-  ![Category](https://img.shields.io/badge/Category-<name>-blue)
+  ![Deviation](https://img.shields.io/badge/Deviation-<name>-blue)
   ```
-  Choose an appropriate name, and include an explanation in your README.md.
+  Choose an appropriate name, and include an explanation in your `README.md`.
 
 ### Folder/directory
 In the  `drag-race` branch, see what the highest numbered solution is for the language you chose, and place your solution in the following folder:
@@ -46,7 +45,7 @@ In the  `drag-race` branch, see what the highest numbered solution is for the la
 If no solution yet exists for the language you're submitting, put yours in `Prime<Language>/solution_1/`
 
 ### Dockerfile
-Please add a `Dockerfile` that is configured to build and run your solution. It should output the run result to standard output (stdout), using the format specified in the basic [rules](#Rules). Any "auxiliary" output should be directed to standard error (stderr), if the language and toolkit you chose allows.
+Please add a `Dockerfile` that is configured to build and run your solution. It should output the run result to standard output (stdout), using the format described under [output](#output). As indicated there, any "auxiliary" output should be directed to standard error (stderr), if the language and toolkit you chose allows.
 
 When composing the Dockerfile, please use the following as a reference for selecting the base image:
 * If an official image exists on [Docker Hub](https://hub.docker.com/) for the language you chose, use that. If multiple images are available with different underlying Linux distributions, select the one to use in accordance with the next steps in this list.
@@ -67,74 +66,227 @@ Finally, submit a pull request **targeting the branch `drag-race`**, and place a
 If you need assistance with conforming to any of the guidelines mentioned above, then please clearly indicate this in your pull request and be specific in what you need help with. 
 Note that we cannot guarantee that we can help make your solution mergeable if it doesn't conform to the guidelines, but we will do our best to help where we can. 
 
-## Categories
-
-### Faithful
-
-#### Requirements:
-
-* Your solution uses no external dependencies to calculate the actual sieve.
-* Your solution uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
-* Your solution does not use multi-threading or multi-processing.
-* Your solution conforms to the base [rules](#Rules).
-
-#### Category badge:
-
-![Category](https://img.shields.io/badge/Category-faithful-green)
-
-#### Category badge markdown:
-
-```
-![Category](https://img.shields.io/badge/Category-faithful-green)
-```
-
-### Parallel faithful
-
-#### Requirements:
-
-* Your solution uses no external dependencies to calculate the actual sieve (for example, `-lpthread` is fine).
-* Your solution uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
-* Your solution conforms to the base [rules](#Rules).
-
-#### Category badge:
-
-![Category](https://img.shields.io/badge/Category-faithful%2Cparallel-green)
-
-#### Category badge markdown:
-
-```
-![Category](https://img.shields.io/badge/Category-faithful%2Cparallel-green)
-```
-
-### Unfaithful
-
-#### Requirements:
-* Your solution is not faithful, but conforms to the base [rules](#Rules).
-
-#### Category badge:
-
-![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
-
-#### Category badge markdown:
-
-```
-![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
-```
-
 ## Rules
 
 * Your solution uses the sieve of Erastosthenes.
 * Your benchmarked code returns either a list of primes or the `is_prime` array, containing the result of the sieve.
 * Your solution runs for at least 5 seconds, and stops as quickly as possible after that.
 * Your solution calculates all the primes up to 1,000,000.
-* The test code outputs the following text to standard output:
-   ```
-   <name>;<iterations>;<total_time>;<num_threads>
-   ```
-   where:
-   * `name` is **at least** your username, and if you have multiple implementations, a short keyword to discriminate each implementation
-   * `iterations` is the amount of times your code ran in the allotted time
-   * `total_time` is the total time it took to run, which would be slightly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator)
-   * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations`(so 1 for a single-threaded solution)
-* Your solution adheres to the requirements of the category/categories you put it under.
 * You own copyright to all code and are willing to license that code under BSD-3 or compatible, or the code is available under BSD-3 or compatible.
+
+## Characteristics
+
+The collection of solutions in this repository have come to use different approaches to implementing the prime number sieve. A number of characteristics have been defined as being relevant for an equal comparison between implementations. These are:
+| Name | Description |
+|-|-|
+| [algorithm](#algorithm) | The algorithm used to find the primes in the prime number sieve. |
+| [faithfulness](#faitfhulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
+| [parallelism](#parallelism) | If the implementation uses any type of multi-threaded processing/calculation. |
+| [storage](#flag-storage) | The number of bits used to indicate if a number in the sieve is a prime number, or not. |
+
+<br/>
+
+These characteristics are discussed in more detail in the following sections.
+
+### Algorithm
+
+This defines the algorithm(s) used by your implementation(s). 
+
+#### Known algorithms
+
+We currently consider the following algorithms to be "known" algorithms:
+| Name | Description |
+|-|-|
+| base | This is the algorithm that was used by @davepl in the YouTube video that spawned this repository. It is described in more detail, [below](#base-algorithm). |
+| wheel | Algorithms rooted in the principle of [wheel factorization](https://en.wikipedia.org/wiki/Wheel_factorization). These tend to translate to having a (pre)calculated set of prime numbers within a certain base number range, that are then sequentially projected onto the sieve. |
+| **other** | All algorithms that do not fall in the values already mentioned. This is used as the default if no algorithm is specified. |
+
+<br/>
+
+**Note:** All implementations **must** use a form of [the Sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) as the fundamental algorithm, as indicated in the basic [rules](#rules).
+
+#### Base algorithm
+
+The base algorithm is defined as follows:
+* The algorithm uses an outer loop, in which two operations are performed:
+  1. searching for the next prime in the sieve, and 
+  2. clearing this prime's multiples in the sieve. 
+  
+  In order to allow for idiomatic code, it is permissible to perform these steps in either order, provided the results are correct.
+
+* When seeking factors (the first operation), the algorithm sequentially checks all odd numbers, starting at 3.
+
+* When clearing non-primes in the sieve (the second operation), the algorithm clears all non-primes individually, increasing the number with 2 * factor on each cycle.
+
+* Not seeking factors beyond the square root of the sieve size is permissible.
+
+* Inverted prime marking logic (marking primes as zero/false and non-primes as one/true) is permissible.
+
+* Starting the clearing loop at factor * factor (instead of 3 * factor, as done in the original implementation) is permissible.
+
+If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
+
+#### Label
+
+The [output label](#output) for the algorithm is `algorithm`. Recognized values are those listed under [known algorithms](#known-algorithms). If an implementation doesn't write an `algorithm` label to output, it is considered to be an `other` algorithm.
+
+#### Badge
+
+If you choose to include badges in your `README.md`, then: 
+* if the base algorithm is used, the badge to use is:
+
+  ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+
+  The corresponding markdown is:
+
+  ```
+  ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+  ```
+
+* if a different algorithm is used (either wheel or other), then the badge template to use is:
+
+  ![Algorithm](https://img.shields.io/badge/Algorithm-<algorithm>-yellowgreen)
+
+  The corresponding markdown is:
+
+  ```
+  ![Algorithm](https://img.shields.io/badge/Algorithm-<algorithm>-yellowgreen)
+  ```
+
+### Faithfulness
+
+At a technical level, an implementation is considered faithful if it complies with the following:
+
+* It uses no external dependencies to calculate the actual sieve.
+* It uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
+* It conforms to the base [rules](#Rules).
+
+All other implementations are considered unfaithful. Note that they still need to conform to the base [rules](#Rules). 
+
+If the faithfulness of an implementation is not specified, it is assumed to be unfaithful.
+
+#### Label
+
+The [output label](#output) to express faithfulness is `faithful`. Recognized values are `yes` for faithful implementations, and `no` for unfaithful implementations. If an implementation doesn't write a `faithful` label to output, it is considered to be an unfaithful algorithm.
+
+#### Badge
+
+If you choose to include badges in your `README.md`, then: 
+* if the implementation is faithful, the badge to use is:
+
+  ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+
+  The corresponding markdown is:
+
+  ```
+  ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+  ```
+
+* if the implementation is unfaithful, the badge to use is: 
+
+  ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+
+  The corresponding markdown is:
+
+  ```
+  ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+  ```
+
+### Parallelism
+
+This indicates if the implementation uses any form of parallelism. In this context, an implementation is considered to do so if more than 1 thread is involved with running the sieve, i.e. identifying the primes in it.
+
+#### Label
+
+As the [output](#output) of implementations specify how many threads are used, it is not needed to use a label to specify if an implementation is multi-threaded.
+
+#### Badge
+
+If you choose to include badges in your `README.md`, then: 
+* if the implementation is single-threaded, the badge to use is:
+
+  ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+
+  The corresponding markdown is:
+
+  ```
+  ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+  ```
+
+* if the implementation is multi-threaded, the badge to use is:
+
+  ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+
+  The corresponding markdown is:
+
+  ```
+  ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+  ```
+
+### Flag storage
+
+This characteristic specifies how many bits the implementation uses to store the indication (flag) if a number in the sieve is a prime number, or not.  
+
+Common bit counts are:
+| Number | Used when |
+|-|-|
+| 1 | Each prime number flag occupies one bit. Common implementations of this type use a bit array or bit masking on wider data types to get and set individual flags. |
+| 8 | Common implementations that occupy 8 bits per flag store the flags in a "byte" variable. | 
+| 32 | Common implementations that occupy 32 bits per flag store the flags in a "regular" integer variable. | 
+| 64 | Common implementations that occupy 32 bits per flag store the flags in a "long" integer variable. | 
+
+<br/>
+
+It's possible that the number of bits per flag is unknown. For example, this can be the case if an implementation uses a "boolean" basic type provided by the language, and the language does not define how booleans are logically stored in memory.
+
+#### Label
+
+The [output label](#output) for the flag size is `bits`. The value should reflect the exact number of bits that are occupied by each prime number flag. If an implementation doesn't write a `bits` label to output, the bit count per label is considered to be unknown.
+
+#### Badge
+
+If you choose to include badges in your `README.md`, then: 
+* if the implementation's flag size is known to be 1 bit, the badge to use is:
+
+  ![Bit count](https://img.shields.io/badge/Bits-1-green)
+
+  The corresponding markdown is:
+
+  ```
+  ![Bit count](https://img.shields.io/badge/Bits-1-green)
+  ```
+
+* if the implementation's flag size is known but larger than 1 bit, the badge template to use is:
+
+  ![Bit count](https://img.shields.io/badge/Bits-<count>-yellowgreen)
+
+  The corresponding markdown is:
+
+  ```
+  ![Bit count](https://img.shields.io/badge/Bits-<count>-yellowgreen)
+  ```
+
+* if the implementation's flag size is unknown, the badge to use is: 
+
+  ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+
+  The corresponding markdown is:
+
+  ```
+  ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+  ```
+
+## Output
+
+Your solution should write the following text to standard output for each implementation that it runs:
+```
+<name>;<iterations>;<total_time>;<num_threads>;<labels>
+```
+where:
+* `name` is **at least** your username, and if you have multiple implementations for a specific language, a short keyword to discriminate each implementation.
+* `iterations` is the amount of times your code ran in the allotted time.
+* `total_time` is the total time it took to run, which would be slightly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator).
+* `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations` (so 1 for a single-threaded solution).
+* `labels` is an optional collection of key/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). If you don't output labels, then the semicolon (`;`) between `num_threads` and `labels` should also not be written. Do note that default values are used for all labels that are not included.
+
+Any other output should be directed to standard error, if possible. 
