@@ -5,9 +5,9 @@ RUN apt-get update -qq \
 
 COPY *.cpp /opt/app/
 WORKDIR /opt/app
-RUN clang++ -Ofast -std=c++17 PrimeCPP.cpp -pthread -oPrimeCPP
+RUN clang++ -pthread -Ofast -std=c++17 PrimeCPP_PAR.cpp -oprimes_par
 
 FROM ubuntu:18.04
-COPY --from=build /opt/app/PrimeCPP /usr/local/bin
+COPY --from=build /opt/app/primes_par /usr/local/bin
 
-ENTRYPOINT [ "PrimeCPP" ]
+ENTRYPOINT [ "primes_par", "-l", "1000000" ]

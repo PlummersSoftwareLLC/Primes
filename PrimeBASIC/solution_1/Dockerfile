@@ -1,4 +1,4 @@
-FROM rfvanbergen/freebasic:1.07.3 AS build
+FROM primeimages/freebasic:1.07.3 AS build
 
 WORKDIR /opt/app
 COPY runprimes.sh .

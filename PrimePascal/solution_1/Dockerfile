@@ -1,11 +1,11 @@
-FROM ubuntu:18.04
-
-RUN apt-get update -qq \
-    && apt-get install -y fpc
+FROM primeimages/freepascal:3.2.0 AS build
 
 WORKDIR /opt/app
 COPY *.pas .
 
 RUN fpc prime
 
-ENTRYPOINT [ "./prime" ]
+FROM ubuntu:20.04
+COPY --from=build /opt/app/prime /opt/app/
+
+ENTRYPOINT [ "/opt/app/prime" ]
