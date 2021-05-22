@@ -29,7 +29,7 @@ Now make sure to add a `README.md` that contains at least the following:
 *Show the output you got on your machine(s) here, in code blocks*
 ```
 
-With the introduction of labels in the [output format](#output), badges are now optional in the `README.md` _if labels are used in the solution output_. If you do choose to add badges to your `README.md`, then:
+With the introduction of [labels](#labels) in the [output format](#output), badges are now optional in the `README.md`, _provided that labels are indeed used in the solution output_. If you do choose to add badges to your `README.md`, then:
 * They need to comply with what is described in [the characteristics section](#characteristics). 
 * If your solution includes multiple implementations that have different characteristics, then add all appropriate badges, once.
 * If your solution deviates from the basic [rules](#rules), add an additional badge, using the following template:
@@ -194,7 +194,7 @@ This indicates if the implementation uses any form of parallelism. In this conte
 
 #### Label
 
-As the [output](#output) of implementations specify how many threads are used, it is not needed to use a label to specify if an implementation is multi-threaded.
+As the [output](#output) of implementations specifies how many threads are used, it is not needed to use a label to indicate if an implementation is multi-threaded. That is, if the thread count that is written to output is 1, then the implementation is considered to be single-threaded. If the output includes a higher thread count, then it is marked as a multi-threaded implementation.
 
 #### Badge
 
@@ -281,7 +281,7 @@ where:
 * `iterations` is the amount of times your code ran in the allotted time.
 * `total_time` is the total time it took to run, which would be slightly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator).
 * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations` (so 1 for a single-threaded solution).
-* `labels` is an optional collection of name/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). They are discussed in more detail, below.
+* `labels` is an optional collection of name/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). They are discussed in more detail, [below](#labels).
 
 Any other output should be directed to standard error, if possible. 
 
@@ -292,9 +292,10 @@ If you choose to include labels, then:
 * specificy each label as `<name>=<value>`
 * If multiple lables are included in your output, separate them with commas (`,`). 
 * Don't use spaces between names, values, or name/value pairs
-* If you don't output labels, then the semicolon (`;`) between `num_threads` and `labels` should also not be written. 
 
-Do note that default values are used for all labels that are not included.
+If you don't output labels, then the semicolon (`;`) between `num_threads` and `labels` should also not be written. 
+
+Do note that default values are used for all labels that are not included, as mentioned under [characteristics](#characteristics).
 
 ### Examples
 
