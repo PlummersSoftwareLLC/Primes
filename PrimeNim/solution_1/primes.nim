@@ -1,7 +1,4 @@
-import times
-import math
-import strformat
-import tables
+import std/[times, math, strformat, tables]
 
 const DICT = {
     10'u64: 4,
@@ -16,71 +13,65 @@ const DICT = {
     10000000000'u64: 455052511,
 }.toTable()
 
-type PrimeSieve = ref object of RootObj
-    sieveSize: uint64
-    bits: seq[bool]
+type PrimeSieve[size: static uint64] =  array[size, bool]
 
-method runSieve(this: PrimeSieve) {.base.} =
+proc runSieve(this: var PrimeSieve) =
     var factor = 3'u64
-    let q = uint64(math.sqrt(float64(this.sieveSize)))
+    let q = uint64(sqrt(float64(this.size)))
 
     while factor <= q:
-        for num in countup(factor, this.sieveSize, 2'u64):
-            if not this.bits[num]:
+        for num in countup(factor, this.size, 2'u64):
+            if not this[num]:
                 factor = num
                 break
 
         var num2 = factor * factor
-        while num2 < this.sieveSize:
-            this.bits[num2] = true
+        while num2 < this.size:
+            this[num2] = true
             num2 += (factor * 2'u64)
 
         factor += 2'u64
 
-method countPrimes(this: PrimeSieve): uint64 {.base.} =
-    var count = 1'u64
+proc countPrimes(this: var PrimeSieve): uint64 =
+    result = 1
 
-    for num in countup(3'u64, this.sieveSize, 2'u64):
-        if not this.bits[num]:
-            count += 1'u64
+    for num in countup(3'u64, this.size, 2'u64):
+        if not this[num]:
+          inc result
 
-    return count
-
-method printResults(this: PrimeSieve, showResults: bool, duration: float64, passes: int) {.base.} =
+proc printResults(this: var PrimeSieve, showResults: bool, duration: float64, passes: int) =
     if showResults:
         stdout.write("2, ")
 
     var count = 1'u64
-    for num in countup(3'u64, this.sieveSize, 2'u64):
-        if not this.bits[num]:
+    for num in countup(3'u64, this.size, 2'u64):
+        if not this[num]:
             if showResults:
                 stdout.write(&"{num}")
-            count += 1'u64
+            inc count
 
     if showResults:
         echo ""
 
     let
         countPrimes = this.countPrimes()
-        isValid = (countPrimes == uint64(DICT[this.sieveSize]))
+        isValid = (countPrimes == uint64(DICT[this.size]))
 
-    stderr.writeLine(&"Passes: {passes}, Time: {duration}, Avg: {(duration / float64(passes))}, Limit: {this.sieveSize}, Count1: {count}, Count2: {countPrimes}, Valid: {isValid}")
+    stderr.writeLine(&"Passes: {passes}, Time: {duration}, Avg: {(duration / float64(passes))}, Limit: {this.size}, Count1: {count}, Count2: {countPrimes}, Valid: {isValid}")
     echo &"marghidanu;{passes};{duration};1"
 
-proc newPrimeSieve(sieveSize: uint64): PrimeSieve =
-    PrimeSieve(sieveSize: sieveSize, bits: newSeq[bool](sieveSize))
+proc initPrimeSieve[S: static uint64](): PrimeSieve[S] = discard # Nim 0-inits
 
 # --- Main block
 var passes = 0
-let startTime = times.epochTime()
+let startTime = epochTime()
 
 while true:
-    var sieve = newPrimeSieve(1000000'u64)
+    var sieve = initPrimeSieve[1000000]()
     sieve.runSieve()
 
     passes += 1
-    var duration = times.epochTime() - startTime
+    var duration = epochTime() - startTime
     if duration >= 5:
         sieve.printResults(false, duration, passes)
         break
-
