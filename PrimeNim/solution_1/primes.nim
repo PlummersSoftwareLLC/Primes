@@ -60,14 +60,12 @@ proc printResults(this: var PrimeSieve, showResults: bool, duration: float64, pa
     stderr.writeLine(&"Passes: {passes}, Time: {duration}, Avg: {(duration / float64(passes))}, Limit: {this.size}, Count1: {count}, Count2: {countPrimes}, Valid: {isValid}")
     echo &"marghidanu;{passes};{duration};1"
 
-proc initPrimeSieve[S: static uint64](): PrimeSieve[S] = discard # Nim 0-inits
-
 # --- Main block
 var passes = 0
 let startTime = epochTime()
 
 while true:
-    var sieve = initPrimeSieve[1000000]()
+    var sieve: PrimeSieve[1000000]
     sieve.runSieve()
 
     passes += 1
