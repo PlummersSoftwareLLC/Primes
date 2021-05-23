@@ -9,7 +9,7 @@
 Nim is available via package manager under the popular systems. The following command should get you started:
 
 ```
-nim c -d:danger -r primes.nim
+nim c -d:danger --passC:"-march=native" -d:lto -r primes.nim
 ```
 
 ### Docker
@@ -22,7 +22,7 @@ docker run --rm primes
 ```
 
 ## Benchmarks
-Gains around 10% performance from `solution_1` with just `-d:release`, doing `-d:danger` it becomes ~35% faster here.
+Gains around 10% performance from `solution_1` with just `-d:release`. With added flags around 50% faster.
 
 ## Output
 ```
