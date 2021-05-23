@@ -22,7 +22,7 @@ docker run --rm primes
 ```
 
 ## Benchmarks
-Gains around 10% performance from `solution_1` with just `-d:release`, doing `-d:danger` it becomes ~135% faster here.
+Gains around 10% performance from `solution_1` with just `-d:release`, doing `-d:danger` it becomes ~35% faster here.
 
 ## Output
 ```
