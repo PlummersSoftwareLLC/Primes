@@ -1,7 +1,7 @@
 # PowerShell solution by Christoph Müller (crowbar27)
 ![Category](https://img.shields.io/badge/Category-faithful-green)
 
-This PowerShell implementation of the sieve of Erastosthenes is derived from crowbar27's PowerShell solution #1. It addresses the fact that function calls extremely slow down PowerShell. Therefore, the calls to `Get-Bit` and `Clear-Bit` have been replaced by inline code.
+This PowerShell implementation of the sieve of Erastosthenes is derived from crowbar27's PowerShell solution #1. It addresses the fact that function calls extremely slow down PowerShell. Therefore, the calls to `Get-Bit` and `Clear-Bit` have been replaced by inline code. Note that this only optimises one run of the sieve and there is further potential for optimisation by "inlining" the call to a single run as well.
 
 The implementation differs in the naming of some functions, which have been renamed to use [approved verbs for PowerShell commands](https://docs.microsoft.com/en-gb/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7.1) instead of the method names used by davepl. As PowerShell does not support integer division and the results would have to be rounded using `[System.Math]::Floor`, the access to the bit array (`$Index / 2`) has been replaced with shifts (`$Index -shr 1`).
 
