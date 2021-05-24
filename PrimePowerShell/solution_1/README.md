@@ -11,7 +11,7 @@ Furthermore, the implementation returns the results of the run as a `PsObject` t
 Run `.\PrimePowerShell.ps1` in a PowerShell. In order to suppress the pipeline output and only have the results written to the console in the standard output format, use `.\PrimePowerShell.ps1 | Out-Null`.
 
 ## Output
-Intel Core i7-9700K on Windows 10 Professional 21H1 with PowerShell 5.1.19041.906:
+Intel Core i7-9700K on Windows 10 Professional 21H1 with PowerShell 5.1.19041.906 for a sieve size of 10, 100, 1000, 10000, 100000 and 1000000:
 
 ```
 crowbar27_ps1;27439;5,00012;1
