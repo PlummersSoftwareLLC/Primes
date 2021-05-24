@@ -28,13 +28,9 @@ benchmarking.
 
 .DESCRIPTION
 This is a PowerShell implementation of davepl's sieve of Erastosthenes for
-benchmarking programming languages and CPUs. It is based on the original
-C# version posted by davepl and follows this implementation as closely
-as possible. There are, however, two notable differences: First, the access
-to the bit array uses shifts instead of divisions, because PowerShell would
-not truncate the result, and second, several functions have been
-renamed to match the list of allowed/recommended verbs for PowerShell
-commands.
+benchmarking programming languages and CPUs. It is based on crowbar27's
+PowerShell solution #1, but inlies the Get-Bit and Clear-Bit functions, which
+greatly improves performance.
 
 The implementation computes primes up to a given maximum number (1000000 by
 default) and repeats this process until a user-specified minimum time
@@ -151,30 +147,6 @@ function Test-Results([PsObject] $Sieve) {
 }
 
 
-# Retrieves the bit at the specified index.
-function Get-Bit([PsObject] $Sieve, [int] $Index) {
-    if (($Index % 2) -eq 0) {
-        return $false
-    } else {
-        # Note: On PowerShell, the following division would not truncate.
-        #return $Sieve.BitArray[$Index / 2]
-        return $Sieve.BitArray[$Index -shr 1]
-    }
-}
-
-
-# Clears the bit at the specified index.
-function Clear-Bit([PsObject] $Sieve, [int] $Index) {
-    if (($Index % 2) -eq 0) {
-        Write-Warning "You are clearing even bits, which is sub-optimal."
-    } else {
-        # Note: On PowerShell, the following division would not truncate.
-        #$Sieve.BitArray[$Index / 2] = $false;
-        $Sieve.BitArray[$Index -shr 1] = $false;
-    }
-}
-
-
 # Computes the primes up to the specified limit. Note this is the original
 # 'runSieve' method, which has been renamed to conform with standard PS verbs.
 function Invoke-Sieve([PsObject] $Sieve) {
@@ -183,7 +155,7 @@ function Invoke-Sieve([PsObject] $Sieve) {
 
     while ($factor -lt $q) {
         for ($i = $factor; $i -le $Sieve.SieveSize; ++$i) {
-            if (Get-Bit $Sieve $i) {
+            if (($i -band 1) -or $Sieve.BitArray[$i -shr 1]) {
                 $factor = $i
                 break;
             }
@@ -191,7 +163,9 @@ function Invoke-Sieve([PsObject] $Sieve) {
         
         $step = 2 * $factor
         for ($i = $factor * 3; $i -le $Sieve.SieveSize; $i += $step) {
-            Clear-Bit $Sieve $i
+            if ($i -band 1) {
+                $Sieve.BitArray[$i -shr 1] = $false;
+            }
         }
 
         $factor += 2
@@ -210,7 +184,7 @@ function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
     $retval.Add(2)
     
     for ($i = 3; $i -le $Sieve.SieveSize; ++$i) {
-        if (Get-Bit $Sieve $i) {
+        if (($i -band 1) -or $Sieve.BitArray[$i -shr 1]) {
             ++$count
             $retval.Add($i)
         }
@@ -224,7 +198,7 @@ function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
     #Write-Host "Passes: $Passes, Time: $Duration, Avg: $($Duration / $Passes), Limit: $($Sieve.SieveSize), Count: $count, Valid: $(Test-Results $Sieve)"
     #Write-Host ""
 
-    Write-Host "crowbar27_ps1;$Passes;$($Duration.ToString("G6"));1"
+    Write-Host "crowbar27_ps2;$Passes;$($Duration.ToString("G6"));1"
 
     return $retval.ToArray()
 }
