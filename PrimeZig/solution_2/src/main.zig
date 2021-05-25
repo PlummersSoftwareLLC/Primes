@@ -10,25 +10,22 @@ pub fn main() anyerror!void {
 
     comptime const configs = .{
         .{ bool, false, true },
-        .{ u1, 0, 1 },
+        // .{ u1, 0, 1 },
         .{ u8, 0, 1 },
-        .{ usize, 0, 1 },
+        // .{ usize, 0, 1 },
         .{ bool, true, false },
-        .{ u1, 1, 0 },
+        // .{ u1, 1, 0 },
         .{ u8, 1, 0 },
-        .{ usize, 1, 0 },
-        .{ u16, 0, 1 },
-        .{ u32, 0, 1 },
-        .{ u64, 0, 1 },
+        // .{ usize, 1, 0 },
+        // .{ u16, 0, 1 },
+        // .{ u32, 0, 1 },
+        // .{ u64, 0, 1 },
     };
 
     try runSieveBitTest(size, run_for);
     try runItyonemoTest(size, run_for);
     inline for (configs) |run| {
         try runSieveTest(run[0], run[1], run[2], size, run_for);
-    }
-    inline for (configs) |run| {
-        try runUnrolledSieveTest(run[0], run[1], run[2], size, run_for);
     }
 }
 
@@ -64,7 +61,7 @@ fn runSieveTest(
     const timer = try time.Timer.start();
     var passes: u64 = 0;
     while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        const field = [_]Type{trueVal} ** size;
+        const field = [_]Type{trueVal} ** (size >> 1);
         prime.Sieve(Type, trueVal, falseVal, size).init(field).run();
     }
     const elapsed = timer.read();
@@ -83,7 +80,7 @@ fn runUnrolledSieveTest(
     const timer = try time.Timer.start();
     var passes: u64 = 0;
     while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        const field = [_]Type{trueVal} ** size;
+        const field = [_]Type{trueVal} ** (size >> 1);
         prime.UnrolledSieve(Type, trueVal, falseVal, size).init(field).run();
     }
     const elapsed = timer.read();
