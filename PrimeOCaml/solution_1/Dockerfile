@@ -1,4 +1,4 @@
-FROM boord/ocaml:4.12-r1 AS build
+FROM primeimages/ocaml:4.12-r1 AS build
 
 WORKDIR /home/opam/primeocaml
 
