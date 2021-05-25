@@ -14,10 +14,10 @@ Run `.\PrimePowerShell.ps1` in a PowerShell. In order to suppress the pipeline o
 Intel Core i7-9700K on Windows 10 Professional 21H1 with PowerShell 5.1.19041.906 for a sieve size of 10, 100, 1000, 10000, 100000 and 1000000:
 
 ```
-crowbar27_ps2;26417;5,00008;1
-crowbar27_ps2;22469;5,00012;1
-crowbar27_ps2;7454;5,0001;1
-crowbar27_ps2;727;5,00507;1
-crowbar27_ps2;58;5,00451;1
-crowbar27_ps2;5;5,21867;1
+crowbar27_ps2;26417;5.00008;1
+crowbar27_ps2;22469;5.00012;1
+crowbar27_ps2;7454;5.0001;1
+crowbar27_ps2;727;5.00507;1
+crowbar27_ps2;58;5.00451;1
+crowbar27_ps2;5;5.21867;1
 ```

@@ -220,6 +220,11 @@ function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
         Write-Host $retval
     }
 
+    # Force current session to 'en-US' for subsequent output.
+    $culture = [System.Globalization.CultureInfo]::GetCultureInfo('en-US')
+    [System.Threading.Thread]::CurrentThread.CurrentUICulture = $culture
+    [System.Threading.Thread]::CurrentThread.CurrentCulture = $culture       
+
     # Note: Omit original output to conform with output requirements.
     #Write-Host "Passes: $Passes, Time: $Duration, Avg: $($Duration / $Passes), Limit: $($Sieve.SieveSize), Count: $count, Valid: $(Test-Results $Sieve)"
     #Write-Host ""
