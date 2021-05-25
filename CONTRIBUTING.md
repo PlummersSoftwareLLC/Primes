@@ -57,6 +57,13 @@ Also:
 * If the solution requires a significantly larger number of packages/files to build than it does to run, please define an `AS build` image for the build stage.
 * Do not include binary dependencies (executables, archives, etc) in your solution submission. If these are needed, create a base image on Docker Hub, preferably backed by a public GitHub repo under your account.
 
+#### Support for hardware architectures
+We encourage solutions and therefore Docker images to support both amd64/x86_64 and arm64/aarch64 hardware architecture.
+
+If your solution fundamentally supports only one architecture, you can use a "flag file" to indicate what architecture that is. Currently, examples of architecture-specific builds are the assembly builds for amd64 and arm64, respectively.
+
+A flag file is an empty file in the solution directory that tells the CI and benchmark implementations to build and run the solution only for/on the architecture indicated. The flag file for arm64 builds is `arch-arm64`, for amd64 builds it is `arch-amd64`. 
+
 ### Pull request
 Finally, submit a pull request **targeting the branch `drag-race`**, and place at least the name of the language in the title. Make sure to verify and check the contributing requirements that are summarized in the pull request template.
 
@@ -68,11 +75,11 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
 
 ## Rules
 
-* Your solution uses the sieve of Erastosthenes.
+* Your solution uses the [sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes).
 * Your benchmarked code returns either a list of primes or the `is_prime` array, containing the result of the sieve.
 * Your solution runs for at least 5 seconds, and stops as quickly as possible after that.
 * Your solution calculates all the primes up to 1,000,000.
-* You own copyright to all code and are willing to license that code under BSD-3 or compatible, or the code is available under BSD-3 or compatible.
+* You own copyright to all code and are willing to license that code under BSD-new/BSD-3 or a more permissive license, or the code is available under BSD-new/BSD-3 or a more permissive license.
 
 ## Characteristics
 
@@ -96,10 +103,10 @@ We currently consider the following algorithms to be "known" algorithms:
 | Name | Description |
 |-|-|
 | base | This is the algorithm that was used by @davepl in the YouTube video that spawned this repository. It is described in more detail, [below](#base-algorithm). |
-| wheel | Algorithms rooted in the principle of [wheel factorization](https://en.wikipedia.org/wiki/Wheel_factorization). These tend to translate to having a (pre)calculated set of prime numbers within a certain base number range, that are then sequentially projected onto the sieve. |
+| wheel | Algorithms rooted in the principle of [wheel factorization](https://en.wikipedia.org/wiki/Wheel_factorization). These tend to take a (pre)calculated set of prime numbers within a certain base number range, that are then sequentially projected onto the sieve. |
 | **other** | All algorithms that do not fall in the values already mentioned. This is used as the default if no algorithm is specified. |
 
-**Note:** All implementations **must** use a form of [the Sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) as the fundamental algorithm, as indicated in the basic [rules](#rules).
+**Note:** All implementations **must** use a form of the [sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) as the fundamental algorithm, as indicated in the base [rules](#rules).
 
 #### Base algorithm
 
@@ -229,7 +236,7 @@ Common bit counts are:
 | 1 | Each prime number flag occupies one bit. Common implementations of this type use a bit array or bit masking on wider data types to get and set individual flags. |
 | 8 | Common implementations that occupy 8 bits per flag store the flags in a "byte" variable. | 
 | 32 | Common implementations that occupy 32 bits per flag store the flags in a "regular" integer variable. | 
-| 64 | Common implementations that occupy 32 bits per flag store the flags in a "long" integer variable. | 
+| 64 | Common implementations that occupy 64 bits per flag store the flags in a "long" integer variable. | 
 
 It's possible that the number of bits per flag is unknown. For example, this can be the case if an implementation uses a "boolean" basic type provided by the language, and the language does not define how booleans are logically stored in memory.
 
