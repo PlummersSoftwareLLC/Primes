@@ -5,10 +5,10 @@
 
 
 This solution contains four implementations in x86-64 assembly, of which:
-* one (x64ff_bit) is faithul and uses bits to store prime flags 
-* one (x64ff_byte) is faithul and uses bytes to store prime flags 
-* one (x64uff_bit) is unfaithul and uses bits to store prime flags 
-* one (x64uff_byte) is unfaithul and uses bytes to store prime flags 
+* one (x64ff_bit) is faithful and uses bits to store prime number flags 
+* one (x64ff_byte) is faithful and uses bytes to store prime number flags 
+* one (x64uff_bit) is unfaithful and uses bits to store prime number flags 
+* one (x64uff_byte) is unfaithful and uses bytes to store prime number flags 
 
 The basic algorithm used in all of these is that of the original C#/C++ implementations.
 
