@@ -69,26 +69,6 @@ fn runSieveTest(
     printResults("Regular Sieve Type: " ++ @typeName(Type), passes, elapsed, size);
 }
 
-
-fn runUnrolledSieveTest(
-    comptime Type: type,
-    comptime trueVal: Type,
-    comptime falseVal: Type,
-    size: comptime_int,
-    run_for: comptime_int,
-) anyerror!void {
-    const timer = try time.Timer.start();
-    var passes: u64 = 0;
-    while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        const field = [_]Type{trueVal} ** (size >> 1);
-        prime.UnrolledSieve(Type, trueVal, falseVal, size).init(field).run();
-    }
-    const elapsed = timer.read();
-
-    printResults("Unrolled Sieve Type: " ++ @typeName(Type), passes, elapsed, size);
-}
-
-
 fn runSieveBitTest(comptime size: comptime_int, run_for: comptime_int) anyerror!void {
     // @compileLog(@typeInfo(std));
     const timer = try time.Timer.start();
