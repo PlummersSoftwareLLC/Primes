@@ -15,7 +15,7 @@ Global parameters, set by command line parameters
 var showResult      = false;
 var isHelp          = false;
 var isVerbose       = false;
-var timeLimit       = 10;
+var timeLimit       = 5;
 var limit           = 1000000;
 var maxNrOfPasses   = -1;
 
@@ -242,7 +242,7 @@ class PrimeSieve {
 
         // Following 2 lines are to conform to drag race output format
         console.log();
-        console.log("fvbakelnodejs; %i;%f;1",  passes, duration);
+        console.log("fvbakelnodejs;%i;%f;1", passes, duration);
     }
 
 
