@@ -50,7 +50,7 @@ refResults:
                 dd      0
 
 ; format string for output
-outputFmt:      db      'rbergen_x64ff', SEMICOLON, '%d', SEMICOLON, '%d.%03d', SEMICOLON, '1', 10, 0   
+outputFmt:      db      'rbergen_x64ff_byte', SEMICOLON, '%d', SEMICOLON, '%d.%03d', SEMICOLON, '1', 10, 0   
 ; incorrect result warning message
 incorrect:      db      'WARNING: result is incorrect!', 10
 ; length of previous

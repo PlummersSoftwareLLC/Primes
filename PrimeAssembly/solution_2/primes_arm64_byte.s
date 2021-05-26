@@ -209,7 +209,7 @@ printResults:
 .balign     4
 
 outputFmt:                              // format string for output
-.asciz      "rbergen_arm64;%d;%d.%03d;1\n"   
+.asciz      "rbergen_arm64_byte;%d;%d.%03d;1\n"   
 
 .balign     4
 
@@ -347,26 +347,24 @@ endRun:
 countPrimes:
 
 // registers:
+// * w0: primeCount
 // * x1: arraySize
 // * x2: primesPtr (&sieve_primes[0])
-// * w3: primeCount
-// * x4: arrayIndex
-// * w5: curPrime (sieve_primes[arrayIndex])
+// * x3: arrayIndex
+// * w4: curPrime (sieve_primes[arrayIndex])
 
     ldr     w1, [x0, #sieve_arraySize]  // arraySize = sieve.arraySize
     ldr     x2, [x0, #sieve_primes]     // primesPtr = &sieve.primes[0]
-    mov     w3, #1                      // primeCount = 1
-    mov     x4, #1                      // arrayIndex = 1
+    mov     w0, #1                      // primeCount = 1
+    mov     x3, #1                      // arrayIndex = 1
 
 countLoop:    
-    ldrb    w5, [x2, x4]                // curPrime = sieve.primes[arrayIndex]
-    cmp     w5, FALSE                   // if !curPrime...
-    cinc    w3, w3, ne                  // ...primeCount++
-    add     x4, x4, #1                  // arrayIndex++
-    cmp     x4, w1, uxtx                // if arrayIndex < arraySize...
+    ldrb    w4, [x2, x3]                // curPrime = sieve.primes[arrayIndex]
+    cmp     w4, FALSE                   // if !curPrime...
+    cinc    w0, w0, ne                  // ...primeCount++
+    add     x3, x3, #1                  // arrayIndex++
+    cmp     x3, w1, uxtx                // if arrayIndex < arraySize...
     blo     countLoop                   // ...continue counting
-
-    mov     w0, w3                      // return prime count
 
     ret                                 // end of countPrimes
 
