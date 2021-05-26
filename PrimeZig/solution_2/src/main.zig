@@ -26,9 +26,6 @@ pub fn main() anyerror!void {
     inline for (configs) |run| {
         try runSieveTest(run[0], run[1], run[2], size, run_for);
     }
-    inline for (configs) |run| {
-        try runNewSieveTest(run[0], run[1], run[2], size, run_for);
-    }
 }
 
 fn runSieveTest(
