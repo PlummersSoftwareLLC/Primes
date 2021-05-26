@@ -165,10 +165,10 @@ class PrimeSieve {
             var step  = factor * 2 + 1;
             var i;
             for (i=start;i<this.bits.size;i=i+step) {
-                this.bits.setBit(i,0);
+                this.bits.setBit(i,false);
             }
 
-            factor = this.bits.searchNextBit(factor,1);
+            factor = this.bits.searchNextBit(factor,true);
             if (isNaN(factor)) {
                 break;
             }
@@ -201,7 +201,7 @@ class PrimeSieve {
             var num = 1;
             while (!isNaN(num)) {
                 nrFound = primes.push( num * 2 + 1);
-                num = this.bits.searchNextBit(num,1);
+                num = this.bits.searchNextBit(num,true);
                 if (nrFound == maxNr ) {
                     break;
                 }
