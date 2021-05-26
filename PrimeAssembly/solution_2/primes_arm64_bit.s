@@ -28,7 +28,6 @@ sieve_size:
 .equ        FALSE,          0           // false constant
 .equ        NULL,           0           // null pointer
 .equ        INIT_PATTERN,   0xffff      // init pattern for prime array
-.equ        WORD_MASK,      0x31        // mask to retain last 5 bits of bit index
 
 .equ        CLOCK_GETTIME,  113         // syscall number for clock_gettime
 .equ        CLOCK_MONOTONIC,1           // CLOCK_MONOTONIC
