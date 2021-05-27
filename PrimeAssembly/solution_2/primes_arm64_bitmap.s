@@ -209,7 +209,7 @@ printResults:
 .balign     4
 
 outputFmt:                              // format string for output
-.asciz      "rbergen_arm64_bit;%d;%d.%03d;1\n"   
+.asciz      "rbergen_arm64_bitmap;%d;%d.%03d;1\n"   
 
 .balign     4
 
@@ -323,7 +323,6 @@ sieveLoop:
 // clear multiples of factor
 unsetLoop:
 // This implementation uses bit selector constants between 2^0 and 2^31 to AND NOT out bits that need to be cleared.
-// The reason is that I have not been able to find a bit shift instruction that is register-controlled.
 
     lsr     x2, x0, #5                  // clrWordIndex = clrBitIndex / 32
     ldr     w3, [x10, x2, lsl #2]       // clrCurWord = sieve.primes[clrWordIndex * 4]
