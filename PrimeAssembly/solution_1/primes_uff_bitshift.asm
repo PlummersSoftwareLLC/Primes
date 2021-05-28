@@ -17,13 +17,13 @@ section .data
 
 SIEVE_SIZE      equ     1000000             ; sieve size
 RUNTIME         equ     5                   ; target run time in seconds
-ARRAY_SIZE      equ     (SIEVE_SIZE+1)/2    ; prime candidate array size
-BLOCK_COUNT     equ     (ARRAY_SIZE/8)+1    ; 8-byte block size
+BIT_SIZE        equ     (SIEVE_SIZE+1)/2    ; prime candidate bit count
+BLOCK_COUNT     equ     (BIT_SIZE/64)+1     ; 8-byte block size
 BYTE_SIZE       equ     BLOCK_COUNT*8       ; bytes needed
 TRUE            equ     1                   ; true constant
 FALSE           equ     0                   ; false constant
 SEMICOLON       equ     59                  ; semicolon ascii
-INIT_BLOCK      equ     0101010101010101h   ; init block for prime array            
+INIT_BLOCK      equ     0ffffffffffffffffh  ; init block for prime array            
 
 CLOCK_GETTIME   equ     228                 ; syscall number for clock_gettime
 CLOCK_MONOTONIC equ     1                   ; CLOCK_MONOTONIC
@@ -45,7 +45,7 @@ refResults:
                 dd      0
 
 ; format string for output
-outputFmt:      db      'rbergen_x64uff_byte', SEMICOLON, '%d', SEMICOLON, '%d.%03d', SEMICOLON, '1', 10, 0   
+outputFmt:      db      'rbergen_x64uff_bitshift', SEMICOLON, '%d', SEMICOLON, '%d.%03d', SEMICOLON, '1', 10, 0   
 ; incorrect result warning message
 incorrect:      db      'WARNING: result is incorrect!', 10
 ; length of previous
@@ -72,8 +72,8 @@ main:
     mov         eax, SIEVE_SIZE             ; eax = sieve size
     cvtsi2sd    xmm0, eax                   ; xmm0 = eax
     sqrtsd      xmm0, xmm0                  ; xmm0 = sqrt(xmm0)
-    cvttsd2si   r8d, xmm0                   ; sizeSqrt = xmm0 
-    inc         r8d                         ; sizeSqrt++, for safety 
+    cvttsd2si   r13d, xmm0                  ; sizeSqrt = xmm0 
+    inc         r13d                        ; sizeSqrt++, for safety 
 
 ; get start time
     mov         rax, CLOCK_GETTIME          ; syscall to make, parameters:
@@ -88,7 +88,7 @@ runLoop:
     mov         rax, INIT_BLOCK
 
 initLoop:
-    mov         [bPrimes+8*ecx], rax        ; bPrimes[arrayIndex..(arrayIndex + 7)] = true
+    mov         [bPrimes+8*ecx], rax        ; bPrimes[arrayIndex*8][0..63] = true
     inc         ecx                         ; arrayIndex++
     cmp         ecx, BLOCK_COUNT            ; if arrayIndex < array size...
     jb          initLoop                    ; ...continue initialization
@@ -96,39 +96,65 @@ initLoop:
 ; run the sieve
 
 ; registers:
-; * eax: arrayIndex
+; * eax: number
 ; * ebx: factor
-; * r8d: sizeSqrt
+; * rcx: clrBitNumber/clrCurWord
+; * rdx: clrBitSelect
+; * r8: clrWordIndex
+; * r9: fctWordIndex
+; * r10: fctBitSelect
+; * r11: fctCurWord
 ; * r12d: runCount
+; * r13d: sizeSqrt
 
-    mov         ebx, 3                      ; factor = 3
+    mov         rbx, 3                      ; factor = 3
+    mov         r9, 0                       ; fctWordIndex = 0
+    mov         r10, 2                      ; fctBitSelect = 0b00000010
 
 sieveLoop:
-    mov         eax, ebx                    ; arrayIndex = factor...
+    mov         rax, rbx                    ; number = factor...
     mul         ebx                         ; ... * factor
-    shr         eax, 1                      ; arrayIndex /= 2
+    shr         eax, 1                      ; number /= 2
 
 ; clear multiples of factor
 unsetLoop:
-    mov         byte [bPrimes+eax], FALSE   ; bPrimes[arrayIndex] = false
-    add         eax, ebx                    ; arrayIndex += factor
-    cmp         eax, ARRAY_SIZE             ; if arrayIndex < array size...
+    mov         rcx, rax                    ; clrBitNumber = number
+    and         rcx, 63                     ; clrBitNumber &= 0b00111111
+    mov         rdx, 1                      ; clrBitSelect = 1
+    shl         rdx, cl                     ; clrBitSelect <<= clrBitNumber
+    mov         r8, rax                     ; clrWordIndex = number
+    shr         r8, 6                       ; clrWordIndex /= 64
+    mov         rcx, [bPrimes+8*r8]         ; clrCurWord = (long)bPrimes[clrWordIndex * 8]
+    not         rdx                         ; clrBitSelect = ~clrBitSelect
+    and         rcx, rdx                    ; clrCurWord &= clrBitSelect
+    mov         [bPrimes+8*r8], rcx         ; (long)bPrimes[clrWordIndex * 8] = clrCurWord
+    add         eax, ebx                    ; number += factor
+    cmp         eax, BIT_SIZE               ; if number < bit count...
     jb          unsetLoop                   ; ...continue marking non-primes
 
-
-    mov         eax, ebx                    ; arrayIndex = factor
-    shr         eax, 1                      ; arrayIndex /= 2
+; if the factor <= sqrt 129 then we (re)load the first qword of bits, because it was changed by the marking of non-primes 
+    cmp         ebx, 11                     ; if factor > 11...
+    ja          factorLoop                  ; ...we can start looking for the next factor...
+    mov         r11, qword [bPrimes]        ; ...else fctCurWord = (long)bPrimes[0]
 
 ; find next factor
 factorLoop:
     add         ebx, 2                      ; factor += 2
-    cmp         ebx, r8d                    ; if factor > sizeSqrt...
+    cmp         ebx, r13d                   ; if factor > sizeSqrt...
     ja          endRun                      ; ...end this run
-    
-    inc         eax                         ; arrayIndex++
-    cmp         byte [bPrimes+eax], TRUE    ; if bPrimes[arrayIndex]...
-    je          sieveLoop                   ; ...continue run
-    jmp         factorLoop                  ; continue looking
+
+    shl         r10, 1                      ; fctBitSelect <<= 1
+    jnz         checkBit                    ; if fctBitSelect != 0 then check bit
+
+; we just shifted the select bit out of the register, so we need to move on the next word
+    inc         r9                          ; fctWordIndex++
+    mov         r10, 1                      ; fctBitSelect = 1
+    mov         r11, [bPrimes+8*r9]         ; fctCurWord = (long)bPrimes[8 * fctWordIndex]
+
+checkBit:
+    test        r11, r10                    ; if fctCurWord & fctBitSelect != 0...
+    jnz         sieveLoop                   ; ...continue this run
+    jmp         factorLoop                  ; keep looking for next factor
 
 endRun:
 
@@ -160,6 +186,7 @@ checkTime:
     mov         [duration+time.sec], rbx    ; duration.seconds = numSeconds
 
     mov         ecx, MILLION                ; ecx = 1,000,000
+    xor         rdx, rdx                    ; clear rdx
     div         ecx                         ; eax /= ecx, so eax contains numMilliseconds
 
     mov         [duration+time.fract], rax  ; duration.fraction = numMilliseconds
@@ -168,20 +195,23 @@ checkTime:
 
 ; registers:
 ; * ebx: primeCount
-; * ecx: arrayIndex
+; * ecx: bitIndex
 ; * r12d: runCount
 
+; This code could definitely be made faster by loading (q)words and shifting bits. As the counting of the 
+; primes is not included in the timed part of the implementation and executed just once, I just didn't bother.
+
     mov         ebx, 1                      ; primeCount = 1 
-    mov         ecx, 1                      ; arrayIndex = 1
+    mov         ecx, 1                      ; bitIndex = 1
     
 countLoop:    
-    cmp         byte [bPrimes+ecx], TRUE    ; if !bPrimes[cx]...
-    jne         nextItem                    ; ...move on to next array member
+    bt          [bPrimes], ecx              ; if !bPrimes[0][bitIndex]...
+    jnc         nextItem                    ; ...move on to next array member
     inc         ebx                         ; ...else primeCount++
 
 nextItem:
-    inc         ecx                         ; arrayIndex++
-    cmp         ecx, ARRAY_SIZE             ; if arrayIndex <= array size...
+    inc         ecx                         ; bitIndex++
+    cmp         ecx, BIT_SIZE               ; if bitIndex <= bit count...
     jb          countLoop                   ; ...continue counting
 
 ; we're done counting, let's check our result
