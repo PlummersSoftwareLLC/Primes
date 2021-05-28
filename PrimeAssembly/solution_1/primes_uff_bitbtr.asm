@@ -45,7 +45,7 @@ refResults:
                 dd      0
 
 ; format string for output
-outputFmt:      db      'rbergen_x64uff_bit', SEMICOLON, '%d', SEMICOLON, '%d.%03d', SEMICOLON, '1', 10, 0   
+outputFmt:      db      'rbergen_x64uff_bitbtr', SEMICOLON, '%d', SEMICOLON, '%d.%03d', SEMICOLON, '1', 10, 0   
 ; incorrect result warning message
 incorrect:      db      'WARNING: result is incorrect!', 10
 ; length of previous
@@ -115,10 +115,6 @@ sieveLoop:
 
 ; clear multiples of factor
 unsetLoop:
-; This code uses btr to clear bits directly in memory. It's an expensive instruction to use, but my guess is that the 
-; CPU microcode to perform byte address and bit number calculation, memory read, AND NOT and memory write is faster 
-; than an implementation of the same that I could write myself. That's different When we look for the next factor,
-; because then we're effectively sequentially checking bits.  
     btr         dword [bPrimes], eax                ; bPrimes[0][number] = false
     add         eax, ebx                            ; number += factor
     cmp         eax, BIT_SIZE                       ; if number < bit count...
@@ -127,7 +123,7 @@ unsetLoop:
 ; if the factor <= sqrt 129 then we (re)load the first qword of bits, because it was changed by the marking of non-primes 
     cmp         ebx, 11                             ; if factor > 11...
     ja          factorLoop                          ; ...we can start looking for the next factor...
-    mov         r9, qword [bPrimes]                 ; ...else curWord = bPrimes[0..7]
+    mov         r9, qword [bPrimes]                 ; ...else curWord = (long)bPrimes[0]
 
 ; find next factor
 factorLoop:
@@ -141,7 +137,7 @@ factorLoop:
 ; we just shifted the select bit out of the register, so we need to move on the next word
     inc         ecx                                 ; wordIndex++
     mov         r10, 1                              ; bitSelect = 1
-    mov         r9, qword [bPrimes+8*ecx]           ; curWord = bPrimes[(8 * wordIndex)..(8 * wordIndex + 7)]
+    mov         r9, qword [bPrimes+8*ecx]           ; curWord = (long)bPrimes[8 * wordIndex]
 
 checkBit:
     test        r9, r10                             ; if curWord & bitSelect != 0...

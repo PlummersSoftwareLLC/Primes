@@ -3,12 +3,13 @@
 ![Category](https://img.shields.io/badge/Category-faithful-green)
 ![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
 
-
-This solution contains four implementations in x86-64 assembly, of which:
-* one (x64ff_bit) is faithful and uses bits to store prime number flags 
-* one (x64ff_byte) is faithful and uses bytes to store prime number flags 
-* one (x64uff_bit) is unfaithful and uses bits to store prime number flags 
-* one (x64uff_byte) is unfaithful and uses bytes to store prime number flags 
+This solution contains six implementations in x86-64 assembly, of which:
+* x64ff_bitbtr is faithful, uses bits to store prime number flags and clears them using the btr instruction
+* x64ff_bitshift is faithful, uses bits to store prime number flags and clears them using manual bit shifting
+* x64ff_byte is faithful and uses bytes to store prime number flags 
+* x64uff_bitbtr is unfaithful, uses bits to store prime number flags and clears them using the btr instruction
+* x64uff_bitshift is unfaithful, uses bits to store prime number flags and clears them using manual bit shifting
+* x64uff_byte is unfaithful and uses bytes to store prime number flags 
 
 The basic algorithm used in all of these is that of the original C#/C++ implementations.
 
