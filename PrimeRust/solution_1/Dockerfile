@@ -2,7 +2,7 @@
 #   - run unit tests 
 #   - build executable
 #
-FROM rfvanbergen/rust AS build
+FROM primeimages/rust:1.52.1 AS build
 
 WORKDIR /app
 COPY . .
