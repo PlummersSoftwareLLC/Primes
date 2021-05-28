@@ -27,8 +27,10 @@ A Dockerfile has been provided.
 
 ## Output
 ```
-rbergen_x64ff_byte;8255;5.000;1
-rbergen_x64uff_byte;7248;5.000;1
-rbergen_x64ff_bit;4151;5.000;1
-rbergen_x64uff_bit;4179;5.000;1
+rbergen_x64uff_byte;7334;5.000;1
+rbergen_x64ff_byte;8302;5.000;1
+rbergen_x64uff_bitbtr;4179;5.000;1
+rbergen_x64ff_bitbtr;4177;5.000;1
+rbergen_x64uff_bitshift;6269;5.000;1
+rbergen_x64ff_bitshift;4600;5.000;1
 ```
