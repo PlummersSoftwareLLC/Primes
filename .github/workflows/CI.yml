@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  collect-solutions:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Find Dockerfiles"
+        id: "solutions"
+        run: |
+          SOLUTIONS=$(find Prime* -type f -name Dockerfile -exec dirname {} \; | sort | sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
+          echo "::set-output name=solutions::${SOLUTIONS}"
+
+    outputs:
+      solutions: ${{ steps.solutions.outputs.solutions }}
+
+  build:
+    runs-on: "ubuntu-20.04"
+
+    needs: ["collect-solutions"]
+
+    strategy:
+      matrix:
+        solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+      
+      - name: "Normalize solution name"
+        id: solution-name
+        run: |
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=normalized::${NAME}"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Select arm64 build for solutions with arm64 flag file
+        id: arch-arm64
+        run: |
+          if [[ -f "${{ matrix.solution }}/arch-arm64" ]]; then 
+          echo "::set-output name=build::true"
+          fi
+
+      - name: Select amd64 build for solutions with amd64 or no flag file
+        id: arch-amd64
+        run: |
+          if [[ -f "${{ matrix.solution }}/arch-amd64" || ! -f "${{ matrix.solution }}/arch-arm64" ]]; then 
+          echo "::set-output name=build::true"
+          fi
+
+      - name: Build arm64
+        if: steps.arch-arm64.outputs.build
+        uses: docker/build-push-action@v2
+        with:
+          tags: ${{ steps.solution-name.outputs.normalized }}
+          context: ${{ matrix.solution }}
+          platforms: linux/arm64
+          push: false
+          load: true
+
+      - name: Build amd64
+        if: steps.arch-amd64.outputs.build
+        uses: docker/build-push-action@v2
+        with:
+          tags: ${{ steps.solution-name.outputs.normalized }}
+          context: ${{ matrix.solution }}
+          platforms: linux/amd64
+          push: false
+          load: true
+      
+      - name: Scan image
+        uses: anchore/scan-action@v2
+        with:
+          image: ${{ steps.solution-name.outputs.normalized }}
+          severity-cutoff: critical
+          
