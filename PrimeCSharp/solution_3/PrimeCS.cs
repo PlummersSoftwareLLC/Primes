@@ -137,6 +137,9 @@ namespace PrimeSieveCS
                 if (showResults)
                     Console.WriteLine();
                 Console.WriteLine($"Passes: {passes}, Time: {duration}, Avg: {duration / passes}, Limit: {sieveSize}, Count: {countPrimes()}, Valid: {validateResults()}");
+
+                Console.WriteLine();
+                Console.WriteLine($"tannergooding;{passes};{duration};1", passes, duration);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

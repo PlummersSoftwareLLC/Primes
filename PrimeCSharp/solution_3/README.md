@@ -9,4 +9,8 @@
 
 ## Output
 
-Passes: 7877, Time: 5.0005804, Avg: 0.0006348331090516694, Limit: 1000000, Count: 78498, Valid: True
+```
+Passes: 7883, Time: 5.0001565, Avg: 0.0006342961436001523, Limit: 1000000, Count: 78498, Valid: True
+
+tannergooding;7883;5.0001565;1
+```
