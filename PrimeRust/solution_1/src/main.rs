@@ -224,13 +224,14 @@ pub mod primes {
 
     /// print correctly-formatted results to `stderr` as per CONTRIBUTING.md
     /// - format is <name>;<iterations>;<total_time>;<num_threads>
-    pub fn report_results_stdout(label: &str, duration: Duration, passes: usize, threads: usize) {
+    pub fn report_results_stdout(label: &str, bits_per_prime: usize, duration: Duration, passes: usize, threads: usize) {
         println!(
-            "mike-barber_{};{};{:.10};{}",
+            "mike-barber_{};{};{:.10};{};algorithm=base,faithful=yes,bits={}",
             label,
             passes,
             duration.as_secs_f32(),
-            threads
+            threads,
+            bits_per_prime
         );
     }
 }
@@ -295,6 +296,7 @@ fn main() {
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageByteVector>(
                     "byte-storage",
+                    8,
                     run_duration,
                     threads,
                     limit,
@@ -308,6 +310,7 @@ fn main() {
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVector>(
                     "bit-storage",
+                    1,
                     run_duration,
                     threads,
                     limit,
@@ -338,6 +341,7 @@ fn print_header(threads: usize, limit: usize, run_duration: Duration) {
 
 fn run_implementation<T: 'static + FlagStorage + Send>(
     label: &str,
+    bits_per_prime: usize,
     run_duration: Duration,
     num_threads: usize,
     limit: usize,
@@ -383,7 +387,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
             &primes::PrimeValidator::default(),
         );
         // and report results to stdout for reporting
-        report_results_stdout(label, duration, total_passes, num_threads);
+        report_results_stdout(label, bits_per_prime, duration, total_passes, num_threads);
     }
 }
 

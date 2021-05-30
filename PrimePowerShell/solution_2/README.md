@@ -1,5 +1,9 @@
 # PowerShell solution by Christoph Müller (crowbar27)
-![Category](https://img.shields.io/badge/Category-faithful-green)
+
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This PowerShell implementation of the sieve of Erastosthenes is derived from crowbar27's PowerShell solution #1. It addresses the fact that function calls extremely slow down PowerShell. Therefore, the calls to `Get-Bit` and `Clear-Bit` have been replaced by inline code. Note that this only optimises one run of the sieve and there is further potential for optimisation by "inlining" the call to a single run as well.
 
@@ -14,10 +18,10 @@ Run `.\PrimePowerShell.ps1` in a PowerShell. In order to suppress the pipeline o
 Intel Core i7-9700K on Windows 10 Professional 21H1 with PowerShell 5.1.19041.906 for a sieve size of 10, 100, 1000, 10000, 100000 and 1000000:
 
 ```
-crowbar27_ps2;26417;5.00008;1
-crowbar27_ps2;22469;5.00012;1
-crowbar27_ps2;7454;5.0001;1
-crowbar27_ps2;727;5.00507;1
-crowbar27_ps2;58;5.00451;1
-crowbar27_ps2;5;5.21867;1
+crowbar27_ps2;26417;5.00008;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps2;22469;5.00012;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps2;7454;5.0001;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps2;727;5.00507;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps2;58;5.00451;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps2;5;5.21867;1;algorithm=base,faithful=yes,bits=1
 ```

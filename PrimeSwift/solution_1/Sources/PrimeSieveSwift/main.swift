@@ -114,7 +114,7 @@ extension PrimeSieveSwift {
         
         /// Following 2 lines added by rbergen to conform to drag race output format
         print()
-        print("j-f1;\(passes);\(duration);1\n")
+        print("j-f1;\(passes);\(duration);1\n;algorithm=base,faithful=yes")
     }
 }
 

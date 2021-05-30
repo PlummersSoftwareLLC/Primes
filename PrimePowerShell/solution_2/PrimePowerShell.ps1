@@ -203,7 +203,7 @@ function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
     #Write-Host "Passes: $Passes, Time: $Duration, Avg: $($Duration / $Passes), Limit: $($Sieve.SieveSize), Count: $count, Valid: $(Test-Results $Sieve)"
     #Write-Host ""
 
-    Write-Host "crowbar27_ps2;$Passes;$($Duration.ToString("G6"));1"
+    Write-Host "crowbar27_ps2;$Passes;$($Duration.ToString("G6"));1;algorithm=base,faithful=yes,bits=1"
 
     return $retval.ToArray()
 }

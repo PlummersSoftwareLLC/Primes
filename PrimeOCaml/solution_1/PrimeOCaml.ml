@@ -12,7 +12,7 @@ class prime_sieve limit =
 		val sieve_size = limit
 		val raw_bits = Array.init ((limit+1)/2) ~f:(fun _ -> true)
 		val prime_counts = (Map.of_alist_exn (module Int)
-			[ (10, 1);
+			[ (10, 4);
 				(100, 25);              
 				(1000, 168);
 				(10000, 1229);
@@ -68,7 +68,7 @@ class prime_sieve limit =
 					else total)
 			in
 			if show_results then printf "... \nCount: %d\n" count;
-			printf "gkpotter-faithful;%d;%f;1\n" 
+			printf "gkpotter-faithful;%d;%f;1;algorithm=base,faithful=yes\n" 
 				passes
 				duration
 	end

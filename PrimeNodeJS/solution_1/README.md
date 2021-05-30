@@ -1,6 +1,9 @@
 # NodeJS solution by fvbakel
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 First implementation in nodeJS, with a 32 bit integer array as buffer
 for the bit array. This implementation is based on the logic from:
@@ -44,7 +47,7 @@ Below is an example of the output on my machine, running with Docker.
 docker run --rm -it  nodesolution1:latest 
 Passes: 1573, Time: 10.001, Avg: 0.00635791, Limit: 1000000, Count: 78498, Valid: true
 
-fvbakelnodejs; 1573;10.001;1
+fvbakelnodejs; 1573;10.001;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Command line arguments
