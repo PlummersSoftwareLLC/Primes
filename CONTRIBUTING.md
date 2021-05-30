@@ -58,9 +58,9 @@ Also:
 * Do not include binary dependencies (executables, archives, etc) in your solution submission. If these are needed, create a base image on Docker Hub, preferably backed by a public GitHub repo under your account.
 
 #### Support for hardware architectures
-We encourage solutions and therefore Docker images to support both amd64/x86_64 and arm64/aarch64 hardware architecture.
+We encourage solutions and therefore Docker images to support both amd64/x86_64 and arm64/aarch64 hardware architectures.
 
-If your solution fundamentally supports only one architecture, you can use a "flag file" to indicate what architecture that is. Currently, examples of architecture-specific builds are the assembly builds for amd64 and arm64, respectively.
+If your solution fundamentally supports only one architecture, you can use a "flag file" to indicate what architecture that is. Currently, examples of architecture-specific builds are the assembly builds for amd64 and arm64.
 
 A flag file is an empty file in the solution directory that tells the CI and benchmark implementations to build and run the solution only for/on the architecture indicated. The flag file for arm64 builds is `arch-arm64`, for amd64 builds it is `arch-amd64`. 
 
@@ -104,7 +104,7 @@ We currently consider the following algorithms to be "known" algorithms:
 |-|-|
 | base | This is the algorithm that was used by @davepl in the YouTube video that spawned this repository. It is described in more detail, [below](#base-algorithm). |
 | wheel | Algorithms rooted in the principle of [wheel factorization](https://en.wikipedia.org/wiki/Wheel_factorization). These tend to take a (pre)calculated set of prime numbers within a certain base number range, that are then sequentially projected onto the sieve. |
-| **other** | All algorithms that do not fall in the values already mentioned. This is used as the default if no algorithm is specified. |
+| other | All algorithms that do not fall in the values already mentioned. This is used as the default if no algorithm is specified. |
 
 **Note:** All implementations **must** use a form of the [sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) as the fundamental algorithm, as indicated in the base [rules](#rules).
 
