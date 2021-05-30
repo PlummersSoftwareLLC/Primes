@@ -1,12 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
-
 import glob from "glob";
-import moment from "moment";
 import * as si from "systeminformation";
 
 import { Command } from "commander";
-import { Table } from "console-table-printer";
+import Docker from "dockerode";
 
 interface IResult {
   implementation: string;
@@ -15,26 +13,6 @@ interface IResult {
   passes: number;
   duration: number;
   threads: number;
-}
-
-function generateReport(title: string, data: Array<IResult>) {
-  const table = new Table({ title });
-
-  table.addRows(
-    data
-      .map((value) => {
-        return {
-          ...value,
-          passesPerSecond: value.passes / value.duration / value.threads,
-        };
-      })
-      .sort((a, b) => b.passesPerSecond - a.passesPerSecond)
-      .map((value, index) => {
-        return { index: index + 1, ...value };
-      })
-  );
-
-  table.printTable();
 }
 
 export const command = new Command("report")
@@ -64,12 +42,12 @@ export const command = new Command("report")
 
           return match
             ? ({
-                implementation,
-                solution,
+                implementation: implementation.replace("prime", ""),
+                solution: solution.replace("solution_", ""),
                 label: match.groups!["label"],
-                passes: parseInt(match.groups!["passes"], 10),
-                duration: parseFloat(match.groups!["duration"]),
-                threads: parseInt(match.groups!["threads"], 10),
+                passes: +match.groups!["passes"],
+                duration: +match.groups!["duration"],
+                threads: +match.groups!["threads"],
               } as IResult)
             : undefined;
         })
@@ -95,18 +73,46 @@ export const command = new Command("report")
       results.filter((result) => result.threads > 1)
     );
 
+    const docker = new Docker();
+    const dockerInfo = await docker.info();
+
     const report = {
       version: "1",
       metadata: {
-        date: moment().unix(),
+        date: Math.floor(new Date().getTime() / 1000),
       },
       machine: {
         cpu: await si.cpu(),
         os: await si.osInfo(),
         system: await si.system(),
+        docker: {
+          kernelVersion: dockerInfo["KernelVersion"],
+          operatingSystem: dockerInfo["OperatingSystem"],
+          osVersion: dockerInfo["OSVersion"],
+          osType: dockerInfo["OSType"],
+          architecture: dockerInfo["Architecture"],
+          ncpu: dockerInfo["NCPU"],
+          memTotal: dockerInfo["MemTotal"],
+          serverVersion: dockerInfo["ServerVersion"],
+        },
       },
       results,
     };
 
-    // console.log(JSON.stringify(report, undefined, 4));
+    console.log(JSON.stringify(report, undefined, 4));
   });
+
+function generateReport(title: string, data: Array<IResult>) {
+  console.log(`\n${title}`);
+  console.table(
+    data
+      .map((value) => {
+        return {
+          ...value,
+          passesPerSecond: value.passes / value.duration / value.threads,
+        };
+      })
+      .sort((a, b) => b.passesPerSecond - a.passesPerSecond)
+  );
+  console.log("");
+}

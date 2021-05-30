@@ -19,10 +19,8 @@
   },
   "dependencies": {
     "commander": "^7.2.0",
-    "console-table-printer": "^2.9.0",
     "dockerode": "^3.3.0",
     "glob": "^7.1.7",
-    "moment": "^2.29.1",
     "systeminformation": "^5.7.4",
     "ts-node": "^10.0.0"
   }
