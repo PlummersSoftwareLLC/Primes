@@ -22,45 +22,59 @@ pub fn main() anyerror!void {
         // .{ u64, 0, 1 },
     };
 
-    try runSieveBitTest(size, run_for);
     inline for (configs) |run| {
         try runSieveTest(run[0], run[1], run[2], size, run_for);
+    }
+
+    inline for (configs) |run| {
+        try runAmdahlTest(run[0], run[1], run[2], size, run_for);
     }
 }
 
 fn runSieveTest(
     comptime Type: type,
-    comptime trueVal: Type,
-    comptime falseVal: Type,
+    comptime true_val: Type,
+    comptime false_val: Type,
     size: comptime_int,
     run_for: comptime_int,
 ) anyerror!void {
     const timer = try time.Timer.start();
     var passes: u64 = 0;
     while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        const field = [_]Type{trueVal} ** (size >> 1);
-        prime.Sieve(Type, trueVal, falseVal, size).init(field).run();
+        const field = [_]Type{true_val} ** (size >> 1);
+        prime.Sieve(Type, true_val, false_val, size).init(field).run();
     }
     const elapsed = timer.read();
 
     try printResults("ManDeJan&ityonemo-zig-byte-sieve-type-" ++ @typeName(Type), passes, elapsed, size);
 }
 
-fn runSieveBitTest(comptime size: comptime_int, run_for: comptime_int) anyerror!void {
-    // @compileLog(@typeInfo(std));
+fn runAmdahlTest(
+    comptime Type: type,
+    comptime true_val: Type,
+    comptime false_val: Type,
+    size: comptime_int,
+    run_for: comptime_int,
+) anyerror!void {
     const timer = try time.Timer.start();
     var passes: u64 = 0;
+
+    var sieve = prime.ParallelAmdahlSieve(Type, true_val, false_val, size){};
+    try sieve.parallelInit();
+
     while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        prime.BitSieve(size).init().run();
+        const field = [_]Type{true_val} ** (size >> 1);
+        sieve.init(field).mainLoop();
     }
+
     const elapsed = timer.read();
-    try printResults("ManDeJan&ityonemo-zig-bit-sieve", passes, elapsed, size);
+    try printResults("ManDeJan&ityonemo-zig-amdahl-parallel-sieve", passes, elapsed, size);
 }
 
 fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, limit: usize) !void {
     const elapsed = @intToFloat(f32, elapsed_ns) / @intToFloat(f32, time.ns_per_s);
     const stdout = std.io.getStdOut().writer();
     try stdout.print("{s};{};{d:.5};1\n", .{
-        backing, passes, elapsed
+        backing, passes, elapsed,
     });
 }
