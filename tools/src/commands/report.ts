@@ -47,7 +47,7 @@ export const command = new Command("report")
       return;
     }
 
-    const results = glob.sync(path.join(directory, "*.out")).map((file) => {
+    const results = glob.sync(path.join(directory, "*.out")).flatMap((file) => {
       const [implementation, solution] = path
         .basename(file, ".out")
         .split("-", 2);
@@ -78,7 +78,7 @@ export const command = new Command("report")
       if (localResults.length === 0) console.warn(`No valid output: ${file}`);
 
       return localResults;
-    }).flat();
+    });
 
     if (results.length === 0) {
       console.error("No data was found!");
