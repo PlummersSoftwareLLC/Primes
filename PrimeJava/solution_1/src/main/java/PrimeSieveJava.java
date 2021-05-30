@@ -109,7 +109,7 @@ public class PrimeSieveJava
 
         // Following 2 lines added by rbergen to conform to drag race output format
 		System.out.println();
-		System.out.printf("MansenC;%d;%f;1\n", passes, duration);
+		System.out.printf("MansenC;%d;%f;1;algorithm=base,faithful=yes\n", passes, duration);
 		
 	}
 	
@@ -136,7 +136,7 @@ public class PrimeSieveJava
 	static
 	{
 		VALIDATION_DATA = new HashMap<>();
-		VALIDATION_DATA.put(10, 1);
+		VALIDATION_DATA.put(10, 4);
 		VALIDATION_DATA.put(100, 25);
 		VALIDATION_DATA.put(1000, 168);
 		VALIDATION_DATA.put(10000, 1229);

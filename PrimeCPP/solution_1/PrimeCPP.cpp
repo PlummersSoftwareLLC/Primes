@@ -106,7 +106,7 @@ class prime_sieve
 
           // Following 2 lines added by rbergen to conform to drag race output format
           printf("\n");       
-          printf("davepl;%d;%f;1\n", passes, duration);
+          printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
       }
 
       int countPrimes()
