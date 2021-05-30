@@ -1,6 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
+
 import glob from "glob";
+import moment from "moment";
+import * as si from "systeminformation";
 
 import { Command } from "commander";
 import { Table } from "console-table-printer";
@@ -36,7 +39,8 @@ function generateReport(title: string, data: Array<IResult>) {
 
 export const command = new Command("report")
   .requiredOption("-d, --directory <directory>", "Results directory")
-  .action((args) => {
+  // .requiredOption("-o, --output <output_directory>", "Reports output directory")
+  .action(async (args) => {
     const directory = path.resolve(args.directory as string);
     if (!fs.existsSync(directory)) {
       console.error(`Directory ${directory} does not exist!`);
@@ -90,4 +94,19 @@ export const command = new Command("report")
       "Software Drag Race (multi-threaded)",
       results.filter((result) => result.threads > 1)
     );
+
+    const report = {
+      version: "1",
+      metadata: {
+        date: moment().unix(),
+      },
+      machine: {
+        cpu: await si.cpu(),
+        os: await si.osInfo(),
+        system: await si.system(),
+      },
+      results,
+    };
+
+    // console.log(JSON.stringify(report, undefined, 4));
   });
