@@ -55,8 +55,8 @@ pub fn Sieve(
 }
 
 const Mutex = std.Thread.Mutex.AtomicMutex;
-var threadSlots: [255] *std.Thread = undefined;
-var workerPool: [] *std.Thread = undefined;
+var workerSlots: [255]*std.Thread = undefined;
+var workerPool: []*std.Thread = undefined;
 var workerStarted: [255]bool = undefined;
 var workerFinished: [255]bool = undefined;
 var initMutex: Mutex = Mutex{};
@@ -74,18 +74,19 @@ pub fn ParallelAmdahlSieve(
         const field_size = sieve_size >> 1;
         const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
 
-        const ThreadInfo = struct {sieve: *Self, index: usize};
+        const ThreadInfo = struct { sieve: *Self, index: usize };
 
-        const Job = struct {factor: usize};
+        const Job = struct { factor: usize };
         jobMutex: Mutex = Mutex{},
         currentJob: ?Job = null,
+        finished: bool = false,
 
         field: [field_size]Type align(std.mem.page_size) = undefined,
 
         /// from the main thread, launches all of child threads for parallel computation
         pub fn parallelInit(self: *Self) !void {
-            var totalThreads: usize = std.math.min(try std.Thread.cpuCount(), 256);
-            workerPool = threadSlots[0..totalThreads - 1];
+            var totalWorkers: usize = std.math.min(try std.Thread.cpuCount(), 256) - 1;
+            workerPool = workerSlots[0 .. totalWorkers];
 
             initHold = initMutex.acquire();
 
@@ -93,22 +94,26 @@ pub fn ParallelAmdahlSieve(
             for (workerPool) |*thread_ptr, index| {
                 // NB as of zig 0.8.0 (~June 4 2021), std.Thread.Spawn will take params
                 // (func, context) instead of (context, func)
-                thread_ptr.* = try std.Thread.spawn(ThreadInfo{.sieve = self, .index = index}, workerLoop);
+                thread_ptr.* = try std.Thread.spawn(ThreadInfo{ .sieve = self, .index = index }, workerLoop);
             }
         }
 
         pub fn init(self: *Self, field: [field_size]Type) *Self {
-            if (initHold) |_hold| {} else {initHold = initMutex.acquire();}
+            if (initHold) |_hold| {} else {
+                initHold = initMutex.acquire();
+            }
             defer initHold.?.release();
 
             self.field = field;
-            for (self.field) |*item| {item.* = true_val;}
+            for (self.field) |*item| {
+                item.* = true_val;
+            }
             for (workerPool) |_, index| {
                 workerStarted[index] = false;
                 workerFinished[index] = false;
             }
 
-            self.currentJob = Job{.factor = 3};
+            self.currentJob = Job{ .factor = 3 };
             return self;
         }
 
@@ -122,8 +127,8 @@ pub fn ParallelAmdahlSieve(
         }
 
         fn workerLoop(info: ThreadInfo) void {
-            while (true) {
-                if (fetchJob(info.sieve)) | job | {
+            while (! @atomicLoad(bool, &info.sieve.finished, .Monotonic)) {
+                if (fetchJob(info.sieve)) |job| {
                     // ensure that the state is "started"
                     workerStarted[info.index] = true;
                     sieveJob(info.sieve, job);
@@ -140,7 +145,7 @@ pub fn ParallelAmdahlSieve(
             const hold = initMutex.acquire();
             defer hold.release();
 
-            for (workerPool) | _, index | {
+            for (workerPool) |_, index| {
                 // xor operation:  Must be (unstarted AND unfinished) OR (started AND finished)
                 if (workerStarted[index] != workerFinished[index]) return true;
             }
@@ -149,7 +154,7 @@ pub fn ParallelAmdahlSieve(
 
         pub fn mainLoop(self: *Self) void {
             var maybe_job = self.fetchJob();
-            while (maybe_job) | job | {
+            while (maybe_job) |job| {
                 self.sieveJob(job);
                 maybe_job = self.fetchJob();
             }
@@ -163,16 +168,20 @@ pub fn ParallelAmdahlSieve(
             const hold = self.jobMutex.acquire();
             defer hold.release();
 
-            if (self.currentJob) | currentJob | {
+            if (self.currentJob) |currentJob| {
                 // set up the next job
                 var num: u64 = currentJob.factor + 2;
                 while (num < stop) : (num += 2) {
-                    if (self.field[num >> 1]) { break; }
+                    if (self.field[num >> 1]) {
+                        break;
+                    }
                 }
 
-                self.currentJob = if (num <= stop) Job{.factor = num} else null;
+                self.currentJob = if (num <= stop) Job{ .factor = num } else null;
                 return currentJob;
-            } else { return null; }
+            } else {
+                return null;
+            }
         }
 
         /// runs the sieve on one job.
@@ -181,6 +190,11 @@ pub fn ParallelAmdahlSieve(
             while (num < field_size) : (num += job.factor) {
                 self.field[num] = false_val;
             }
+        }
+
+        pub fn parallelCleanup(self: *Self) void {
+            @atomicStore(bool, &self.finished, true, .Monotonic);
+            for (workerPool) | worker |  {worker.wait(); }
         }
 
         pub fn primeCount(self: *Self) usize {
@@ -196,14 +210,68 @@ pub fn ParallelAmdahlSieve(
     };
 }
 
+/// embarassing parallism
+pub fn ParallelGustafsonSieve(
+    comptime Type: type,
+    comptime true_val: Type,
+    comptime false_val: Type,
+    sieve_size: comptime_int,
+    run_for: comptime_int,
+) type {
+    return struct {
+        const Self = @This();
+        const field_size = sieve_size >> 1;
+
+        const ThreadInfo = struct {
+            field: [field_size]Type,
+            passes: *u64,
+            finished: *bool
+        };
+
+        pub fn parallelInit(passes: *u64, finished: *bool) !void {
+            var totalWorkers: usize = std.math.min(try std.Thread.cpuCount(), 256) - 1;
+            workerPool = workerSlots[0..totalWorkers];
+
+            for (workerPool) |*worker| {
+                var worker_field_slice: []Type = try std.heap.page_allocator.alloc(Type, field_size);
+                var info = ThreadInfo{ .field = worker_field_slice[0..field_size].*, .passes = passes, .finished = finished };
+                worker.* = try std.Thread.spawn(info, workerRun);
+            }
+        }
+
+        pub fn mainRun(passes: *u64, finished: *bool) !u64 {
+            const timer = try std.time.Timer.start();
+            while (timer.read() < run_for * std.time.ns_per_s) {
+                const field = [_]Type{true_val} ** (sieve_size >> 1);
+                Sieve(Type, true_val, false_val, sieve_size).init(field).run();
+                _ = @atomicRmw(u64, passes, .Add, 1, .Monotonic);
+            }
+            @atomicStore(bool, finished, true, .Monotonic);
+            // wait till all of the workers have finished.
+            for (workerPool) |worker| { worker.wait(); }
+
+            return timer.read();
+        }
+
+        fn workerRun(info: ThreadInfo) !void {
+            var sieve = Sieve(Type, true_val, false_val, sieve_size).init(info.field).run();
+
+            while (! @atomicLoad(bool, info.finished, .Monotonic)) {
+                Sieve(Type, true_val, false_val, sieve_size).init(info.field).run();
+                _ = @atomicRmw(u64, info.passes, .Add, 1, .Monotonic);
+            }
+        }
+    };
+}
+
 test "Test byte sieve" {
     const expected_results = .{
-        .{             10,         4 },
-        .{            100,        25 },
-        .{          1_000,       168 },
-        .{         10_000,      1229 },
-        .{        100_000,      9592 },
-        .{      1_000_000,     78498 },
+        .{ 10, 4 },
+        .{ 100, 25 },
+        .{ 1_000, 168 },
+        .{ 10_000, 1229 },
+        .{ 100_000, 9592 },
+        .{ 1_000_000, 78498 },
         // Uncommenting the following tests make my compiler crash ¯\_(ツ)_/¯ Probably cause it's allocating huge memory sizes at compile time
         // .{     10_000_000,    664579 },
         // .{    100_000_000,   5761455 },
@@ -225,12 +293,12 @@ test "Test byte sieve" {
 
 test "Test parallel-amdahl sieve" {
     const expected_results = .{
-        .{             10,         4 },
-        .{            100,        25 },
-        .{          1_000,       168 },
-        .{         10_000,      1229 },
-        .{        100_000,      9592 },
-        .{      1_000_000,     78498 },
+        .{ 10, 4 },
+        .{ 100, 25 },
+        .{ 1_000, 168 },
+        .{ 10_000, 1229 },
+        .{ 100_000, 9592 },
+        .{ 1_000_000, 78498 },
         // Uncommenting the following tests make my compiler crash ¯\_(ツ)_/¯ Probably cause it's allocating huge memory sizes at compile time
         // .{     10_000_000,    664579 },
         // .{    100_000_000,   5761455 },
@@ -246,12 +314,7 @@ test "Test parallel-amdahl sieve" {
         var sieve = ParallelAmdahlSieve(bool, true, false, size){};
 
         try sieve.parallelInit();
-
         sieve.init(field).mainLoop();
         std.testing.expectEqual(@as(usize, count), sieve.primeCount());
-
-        //try sieve.mainLoop();
-        //std.testing.expectEqual(@as(usize, count), sieve.primeCount());
     }
 }
-

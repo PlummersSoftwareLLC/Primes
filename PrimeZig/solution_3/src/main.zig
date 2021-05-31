@@ -29,6 +29,10 @@ pub fn main() anyerror!void {
     inline for (configs) |run| {
         try runAmdahlTest(run[0], run[1], run[2], size, run_for);
     }
+
+    inline for (configs) |run| {
+        try runGustafsonTest(run[0], run[1], run[2], size, run_for);
+    }
 }
 
 fn runSieveTest(
@@ -67,8 +71,26 @@ fn runAmdahlTest(
         sieve.init(field).mainLoop();
     }
 
+    sieve.parallelCleanup();
+
     const elapsed = timer.read();
     try printResults("ManDeJan&ityonemo-zig-amdahl-parallel-sieve", passes, elapsed, size);
+}
+
+fn runGustafsonTest(
+    comptime Type: type,
+    comptime true_val: Type,
+    comptime false_val: Type,
+    size: comptime_int,
+    run_for: comptime_int,
+) anyerror!void {
+    var passes: u64 = 0;
+    var finished: bool = false;
+
+    try prime.ParallelGustafsonSieve(Type, true_val, false_val, size, run_for).parallelInit(&passes, &finished);
+    var elapsed = try prime.ParallelGustafsonSieve(Type, true_val, false_val, size, run_for).mainRun(&passes, &finished);
+
+    try printResults("ManDeJan&ityonemo-zig-gustafson-parallel-sieve", passes, elapsed, size);
 }
 
 fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, limit: usize) !void {
