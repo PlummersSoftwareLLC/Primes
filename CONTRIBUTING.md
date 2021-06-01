@@ -29,7 +29,7 @@ Now make sure to add a `README.md` that contains at least the following:
 *Show the output you got on your machine(s) here, in code blocks*
 ```
 
-With the introduction of [labels](#labels) in the [output format](#output), badges are now optional in the `README.md`, _provided that labels are indeed used in the solution output_. If you do choose to add badges to your `README.md`, then:
+With the introduction of [tags](#tags) in the [output format](#output), badges are now optional in the `README.md`, _provided that tags are indeed used in the solution output_. If you do choose to add badges to your `README.md`, then:
 * They need to comply with what is described in [the characteristics section](#characteristics). 
 * If your solution includes multiple implementations that have different characteristics, then add all appropriate badges, once.
 * If your solution deviates from the basic [rules](#rules), add an additional badge, using the following template:
@@ -129,9 +129,9 @@ The base algorithm is defined as follows:
 
 If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
 
-#### Label
+#### Tag
 
-The [output label](#output) for the algorithm is `algorithm`. Recognized values are those listed under [known algorithms](#known-algorithms). If an implementation doesn't write an `algorithm` label to output, it is considered to be an `other` algorithm.
+The [output tag](#output) for the algorithm is `algorithm`. Recognized values are those listed under [known algorithms](#known-algorithms). If an implementation doesn't write an `algorithm` tag to output, it is considered to be an `other` algorithm.
 
 #### Badge
 
@@ -168,9 +168,9 @@ All other implementations are considered unfaithful. Note that they still need t
 
 If the faithfulness of an implementation is not specified, it is assumed to be unfaithful.
 
-#### Label
+#### Tag
 
-The [output label](#output) to express faithfulness is `faithful`. Recognized values are `yes` for faithful implementations, and `no` for unfaithful implementations. If an implementation doesn't write a `faithful` label to output, it is considered to be an unfaithful algorithm.
+The [output tag](#output) to express faithfulness is `faithful`. Recognized values are `yes` for faithful implementations, and `no` for unfaithful implementations. If an implementation doesn't write a `faithful` tag to output, it is considered to be an unfaithful algorithm.
 
 #### Badge
 
@@ -199,9 +199,9 @@ If you choose to include badges in your `README.md`, then:
 
 This indicates if the implementation uses any form of parallelism. In this context, an implementation is considered to do so if more than 1 thread is involved with running the sieve, i.e. identifying the primes in it.
 
-#### Label
+#### Tag
 
-As the [output](#output) of implementations specifies how many threads are used, it is not needed to use a label to indicate if an implementation is multi-threaded. That is, if the thread count that is written to output is 1, then the implementation is considered to be single-threaded. If the output includes a higher thread count, then it is marked as a multi-threaded implementation.
+As the [output](#output) of implementations specifies how many threads are used, it is not needed to use a tag to indicate if an implementation is multi-threaded. That is, if the thread count that is written to output is 1, then the implementation is considered to be single-threaded. If the output includes a higher thread count, then it is marked as a multi-threaded implementation.
 
 #### Badge
 
@@ -240,9 +240,9 @@ Common bit counts are:
 
 It's possible that the number of bits per flag is unknown. For example, this can be the case if an implementation uses a "boolean" basic type provided by the language, and the language does not define how booleans are logically stored in memory.
 
-#### Label
+#### Tag
 
-The [output label](#output) for the flag size is `bits`. The value should reflect the exact number of bits that are occupied by each prime number flag. If an implementation doesn't write a `bits` label to output, the bit count per label is considered to be unknown.
+The [output tag](#output) for the flag size is `bits`. The value should reflect the exact number of bits that are occupied by each prime number flag. If an implementation doesn't write a `bits` tag to output, the bit count per tag is considered to be unknown.
 
 #### Badge
 
@@ -281,37 +281,37 @@ If you choose to include badges in your `README.md`, then:
 
 Your solution should write the following text to standard output for each implementation that it runs:
 ```
-<name>;<iterations>;<total_time>;<num_threads>;<labels>
+<label>;<iterations>;<total_time>;<num_threads>;<tags>
 ```
 where:
-* `name` is **at least** your username, and if you have multiple implementations for a specific language, a short keyword to discriminate each implementation.
+* `label` is **at least** your username, and if you have multiple implementations for a specific language, a short keyword to discriminate each implementation.
 * `iterations` is the amount of times your code ran in the allotted time.
 * `total_time` is the total time it took to run, which would be slightly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator).
 * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations` (so 1 for a single-threaded solution).
-* `labels` is an optional collection of name/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). They are discussed in more detail, [below](#labels).
+* `tags` is an optional collection of name/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). They are discussed in more detail, [below](#tags).
 
 Any other output should be directed to standard error, if possible. 
 
-### Labels
+### Tags
 
-If you choose to include labels, then:
+If you choose to include tags, then:
 * they must conform to what's indicated in the [characteristics](#characteristics) section. 
-* specificy each label as `<name>=<value>`
+* specificy each tag as `<name>=<value>`
 * If multiple lables are included in your output, separate them with commas (`,`). 
 * Don't use spaces between names, values, or name/value pairs
 
-If you don't output labels, then the semicolon (`;`) between `num_threads` and `labels` should also not be written. 
+If you don't output tags, then the semicolon (`;`) between `num_threads` and `tags` should also not be written. 
 
-Do note that default values are used for all labels that are not included, as mentioned under [characteristics](#characteristics).
+Do note that default values are used for all tags that are not included, as mentioned under [characteristics](#characteristics).
 
 ### Examples
 
-An example of a line of output with labels is:
+An example of a line of output with tags is:
 ```
 rbergen;1234;5.005678;1;algorithm=base,faithful=no,bits=1
 ```
 
-A line of output without labels could look like this:
+A line of output without tags could look like this:
 ```
 rbergen;1234;5.005678;1
 ```
