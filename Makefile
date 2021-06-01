@@ -24,4 +24,4 @@ benchmark: $(SOLUTIONS)
 
 report: benchmark
 	@cd tools/; \
-	npm install && npm run start -- report -d "$(OUTPUT_DIR)"
+	npm ci && npm run start -- report -d "$(OUTPUT_DIR)"
