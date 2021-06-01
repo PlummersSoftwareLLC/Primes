@@ -87,7 +87,20 @@ sudo dnf git
 
 #### **Docker for Linux**
 
-For the installation of Docker follow the instuctions as described in <https://docs.docker.com/engine/install/>.
+For the installation of Docker first follow the instructions as described in <https://docs.docker.com/engine/install/>.
+
+After the installation you need to enable docker as non-root user. Take the following steps:
+
+1. ```sudo groupadd docker```
+2. ```sudo usermod -aG docker $USER```
+3. Log out and log back in so that your group membership is re-evaluated.
+4. Verify that you can run docker:
+
+   ```bash
+   docker run hello-world
+   ```
+
+ The docker website describes more [post-installation steps for linux](https://docs.docker.com/engine/install/linux-postinstall/). These additional steps are optional for running the benchmarks.
 
 ## Windows
 
@@ -98,7 +111,7 @@ The preferred method to run the benchmark is with native Linux. Running the benc
 Take the following steps to run all benchmarks:
 
 1. Make sure you have installed the [required software](#windows-installation-and-prerequisites)
-2. Open a **bash** terminal.
+2. Open an **Ubuntu** terminal (  Start --> Ubuntu 18.04 LTS )
 3. ```git clone https://github.com/PlummersSoftwareLLC/Primes.git```
 4. ```cd Primes```
 5. ```make```
@@ -109,27 +122,44 @@ Take the following steps to run all benchmarks:
 
 The following software must be installed:
 
-- Windows Subsystem for Linux 2 (WSL2)
+- Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 18.04 LST distribution
 - make
-- git
-- Docker Desktop
+- Docker Desktop for Windows
+
+WSL2 has special [hardware requirements](https://docs.microsoft.com/en-us/windows-server/virtualization/hyper-v/system-requirements-for-hyper-v-on-windows).
 
 #### **Install WSL2**
 
-Windows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 18.04 as the default distribution to use.
+Windows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL2 follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 18.04 LTS as the default distribution to use. Start the Ubuntu app once to create a user, as described in the above instructions.
 
-#### **Install make and git for Windows**
+#### **Install make inside the Ubuntu distribution**
 
-Take the following steps to install make for Windows inside the Ubuntu distribution:
+Take the following steps to install make inside the Ubuntu distribution:
 
-1. Open a bash terminal
+1. Open an Ubuntu terminal
 2. ```sudo apt-get install make```
-3. ```sudo apt-get install git```
 
 #### **Docker Desktop for Windows**
 
-Make sure WSL2 is installed before you start with the installation of Docker.
-For the installation of Docker follow the instuctions as described in <https://docs.docker.com/docker-for-windows/install/>.
+Take the following steps to install Docker Desktop for Windows with the WSL2 backend:
+
+1. Make sure [WSL2 is installed](#install-wsl2) with the Ubuntu 18.04 LST before you start with the installation of Docker.
+2. For the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-windows/install/#install-docker-desktop-on-windows>. At step 2 select **install required Windows components for WSl2**.
+3. Once Docker is installed, start Docker Desktop
+4. In Docker Desktop navigate to **Settings --> Resources --> WSL Integration**
+5. Check Ubuntu 18.04 and click Apply & Restart
+6. Open an **Ubuntu** terminal (  Start --> Ubuntu 18.04 LTS )
+7. ```sudo groupadd docker```
+8. ```sudo usermod -aG docker $USER```
+9. Close the Ubuntu window
+10. Open an **Ubuntu** terminal (  Start --> Ubuntu 18.04 LTS )
+11. Verify that you can run docker inside the Ubuntu WSL2 container:
+
+   ```bash
+   docker run hello-world
+   ```
+
+   This command downloads a test image and runs it in a container. When the container runs, it prints an informational message and exits.
 
 ## macOS
 
@@ -137,7 +167,7 @@ For the installation of Docker follow the instuctions as described in <https://d
 
 Take the following steps to run all benchmarks:
 
-1. Make sure you have installed the [required software](#mac-os-installation-and-prerequisites)
+1. Make sure you have installed the [required software](#macos-installation-and-prerequisites)
 2. Open a terminal.
 3. ```git clone https://github.com/PlummersSoftwareLLC/Primes.git```
 4. ```cd Primes```
@@ -150,7 +180,7 @@ Take the following steps to run all benchmarks:
 The following software must be installed:
 
 - xcode-select (make and git)
-- Docker Desktop
+- Docker Desktop for macOS
 
 The details for each required software are described below.
 
@@ -166,7 +196,7 @@ Take the following steps to install make and git on macOS:
 
 #### **Docker Desktop for macOS**
 
-For the installation of Docker follow the instuctions as described in <https://docs.docker.com/docker-for-mac/install/>.
+For the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-mac/install/>.
 
 ## Example output
 
