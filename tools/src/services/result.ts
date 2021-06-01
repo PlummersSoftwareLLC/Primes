@@ -1,25 +1,25 @@
-import { Result } from "../models";
+import { Result } from '../models';
 
-import { Table } from "console-table-printer";
+import { Table } from 'console-table-printer';
 
 export default class ResultService {
-  public printResults(title: string, data: Result[]) {
+  public printResults(title: string, data: Result[]): void {
     const table = new Table({
       title,
       columns: [
-        { name: "index", title: "Index", alignment: "center", color: "blue" },
-        { name: "implementation", title: "Implementation", alignment: "left" },
-        { name: "solution", title: "Solution", alignment: "left" },
-        { name: "label", title: "Label", alignment: "left" },
-        { name: "passes", title: "Passes", alignment: "center" },
-        { name: "duration", title: "Duration", alignment: "center" },
-        { name: "threads", title: "Threads", alignment: "center" },
+        { name: 'index', title: 'Index', alignment: 'center', color: 'blue' },
+        { name: 'implementation', title: 'Implementation', alignment: 'left' },
+        { name: 'solution', title: 'Solution', alignment: 'left' },
+        { name: 'label', title: 'Label', alignment: 'left' },
+        { name: 'passes', title: 'Passes', alignment: 'center' },
+        { name: 'duration', title: 'Duration', alignment: 'center' },
+        { name: 'threads', title: 'Threads', alignment: 'center' },
         {
-          name: "passesPerSecond",
-          title: "Passes/Second",
-          alignment: "center",
-        },
-      ],
+          name: 'passesPerSecond',
+          title: 'Passes/Second',
+          alignment: 'center'
+        }
+      ]
     });
 
     table.addRows(
@@ -27,7 +27,7 @@ export default class ResultService {
         .map((value) => {
           return {
             ...value,
-            passesPerSecond: value.passes / value.duration / value.threads,
+            passesPerSecond: value.passes / value.duration / value.threads
           };
         })
         .sort((a, b) => b.passesPerSecond - a.passesPerSecond)
@@ -40,7 +40,7 @@ export default class ResultService {
             passes: value.passes,
             duration: value.duration.toFixed(5),
             threads: value.threads,
-            passesPerSecond: value.passesPerSecond.toFixed(5),
+            passesPerSecond: value.passesPerSecond.toFixed(5)
           };
         })
     );

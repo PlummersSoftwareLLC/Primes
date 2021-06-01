@@ -1,33 +1,37 @@
-import fs from "fs";
-import path from "path";
-import glob from "glob";
+import fs from 'fs';
+import path from 'path';
+import glob from 'glob';
 
-import { Command } from "commander";
+import { Command } from 'commander';
 
-import { Result } from "../models";
-import ReportService from "../services/report";
-import ResultService from "../services/result";
+import { Result } from '../models';
+import ReportService from '../services/report';
+import ResultService from '../services/result';
 
 const reportService = new ReportService();
 const resultService = new ResultService();
 
-export const command = new Command("report")
-  .requiredOption("-d, --directory <directory>", "Results directory")
+export const command = new Command('report')
+  .requiredOption('-d, --directory <directory>', 'Results directory')
+  .option('--json', 'Output JSON report')
   .action(async (args) => {
     const directory = path.resolve(args.directory as string);
 
+    // Making sure the outputs directory exists
     if (!fs.existsSync(directory)) {
       console.error(`Directory ${directory} does not exist!`);
       return;
     }
 
-    const results = glob.sync(path.join(directory, "*.out")).flatMap((file) => {
+    // Iterating over the files and extracting metadata from name
+    const results = glob.sync(path.join(directory, '*.out')).flatMap((file) => {
       const [implementation, solution] = path
-        .basename(file, ".out")
-        .split("-", 2);
+        .basename(file, '.out')
+        .split('-', 2);
 
+      // Parsing lines from output
       const localResults = new Array<Result>();
-      fs.readFileSync(file, "utf-8")
+      fs.readFileSync(file, 'utf-8')
         .split(/\r?\n/)
         .forEach((line) => {
           const match = line
@@ -41,24 +45,29 @@ export const command = new Command("report")
 
           // Extract tags into an object and add it to the result.
           const tags: { [key: string]: string } = {};
-          if (match.groups!["extra"]) {
+          if (match.groups?.['extra']) {
             const tagsRegex =
-              /(?<key>[a-zA-Z0-9\-_]+)=(?<value>[a-zA-Z0-9_\-\+\."':]+)/gim;
+              /(?<key>[a-zA-Z0-9\-_]+)=(?<value>[a-zA-Z0-9_\-+."':]+)/gim;
 
             let tagMatch;
-            while ((tagMatch = tagsRegex.exec(match.groups!["extra"]))) {
-              tags[tagMatch.groups!["key"]] = tagMatch.groups!["value"];
+            while ((tagMatch = tagsRegex.exec(match.groups?.['extra']))) {
+              if (!tagMatch.groups?.['key']) continue;
+              tags[tagMatch.groups?.['key']] = tagMatch.groups?.['value'] || '';
             }
           }
 
           localResults.push({
-            implementation: implementation.replace("prime", ""),
-            solution: solution.replace("solution_", ""),
-            label: match.groups!["label"],
-            passes: +match.groups!["passes"],
-            duration: +match.groups!["duration"],
-            threads: +match.groups!["threads"],
-            tags,
+            implementation: implementation.replace('prime', ''),
+            solution: solution.replace('solution_', ''),
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            label: match.groups!['label'],
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            passes: +match.groups!['passes'],
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            duration: +match.groups!['duration'],
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            threads: +match.groups!['threads'],
+            tags
           } as Result);
         });
 
@@ -69,22 +78,26 @@ export const command = new Command("report")
     });
 
     if (!results.length) {
-      console.error("No data was collected!");
+      console.error('No data was collected!');
       return;
     }
 
-    console.log("");
+    if (args.json) {
+      const report = await reportService.createReport(results);
+      console.log(JSON.stringify(report, undefined, 4));
+
+      return;
+    }
+
+    console.log('');
     resultService.printResults(
-      "Single-threaded",
+      'Single-threaded',
       results.filter((value) => value.threads === 1)
     );
 
-    console.log("");
+    console.log('');
     resultService.printResults(
-      "Multi-threaded",
+      'Multi-threaded',
       results.filter((result) => result.threads > 1)
     );
-
-    const report = await reportService.createReport(results);
-    console.log(JSON.stringify(report, undefined, 4));
   });
