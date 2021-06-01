@@ -1,18 +1,18 @@
 # Benchmarks
 
-This document describes how to run all benchmarks (solutions) for different operating systems.
+This document describes how to build and run all benchmarks (solutions) for different operating systems.
 
 ## Table of contents
 
 1. [General working mechanism](#general-working-mechanism)
 2. [Linux](#linux)
 3. [Windows](#windows)
-4. [macOS](#mac-os)
+4. [macOS](#macos)
 5. [Example output](#example-output)
 
 ## What operating system to use?
 
-A Unix-like operating system is the prefered operating system to run this benchmark. Linux and macOS are Unix-like operating systems. This will result in the best performance because the benchmark is based on Unix technologies. Running with Windows or other operating systems is possible but will always require some extra layer of virtualization that impact the performance. Running the benchmark with Windows can have a significant impact on the performance, up to 50%.
+A Unix-like operating system is the preferred operating system to run this benchmark. Linux and macOS are Unix-like operating systems. This will result in the best performance because the benchmark is based on Unix technologies. Running with Windows or other operating systems is possible but will always require some extra layer of virtualization that impact the performance. Running the benchmark with Windows can have a significant impact on the performance, up to 50%.
 
 ## General working mechanism
 
@@ -91,7 +91,7 @@ For the installation of Docker follow the instuctions as described in <https://d
 
 ## Windows
 
-The prefered method to run the benchmark is with native Linux. Running the benchmark with Windows can have a significant impact on the performance, up to 50%.
+The preferred method to run the benchmark is with native Linux. Running the benchmark with Windows can have a significant impact on the performance, up to 50%.
 
 ### Windows run instructions
 
@@ -102,7 +102,7 @@ Take the following steps to run all benchmarks:
 3. ```git clone https://github.com/PlummersSoftwareLLC/Primes.git```
 4. ```cd Primes```
 5. ```make```
-6. The build and run of all benchmarks will now start. Note that this will take a while, so please wait untill this task is complete.
+6. The build and run of all benchmarks will now start. Note that this will take a while, so please wait until this task is complete.
 7. Once complete a report is written to the terminal, see [example output](#example-output).
 
 ### Windows installation and prerequisites
@@ -114,7 +114,7 @@ The following software must be installed:
 - git
 - Docker Desktop
 
-#### **Install WSL**
+#### **Install WSL2**
 
 Windows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 18.04 as the default distribution to use.
 
@@ -142,20 +142,19 @@ Take the following steps to run all benchmarks:
 3. ```git clone https://github.com/PlummersSoftwareLLC/Primes.git```
 4. ```cd Primes```
 5. ```make```
-6. The build and run of all benchmarks will now start. Note that this will take a while, so please wait untill this task is complete.
+6. The build and run of all benchmarks will now start. Note that this will take a while, so please wait until this task is complete.
 7. Once complete a report is written to the terminal, see [example output](#example-output).
 
 ### macOS installation and prerequisites
 
 The following software must be installed:
 
-- make
-- git
+- xcode-select (make and git)
 - Docker Desktop
 
 The details for each required software are described below.
 
-#### **make and git install for macOS**
+#### **xcode-select (make and git) for macOS**
 
 Take the following steps to install make and git on macOS:
 
@@ -163,7 +162,7 @@ Take the following steps to install make and git on macOS:
 2. ```xcode-select --install```
 3. A popup window appears, select install
 4. In the next window accept the terms
-5. The installation now starts, wait unil it completes
+5. The installation now starts, wait until it completes
 
 #### **Docker Desktop for macOS**
 
