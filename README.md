@@ -14,4 +14,4 @@ Community contributions, fixes and improvements are accepted on this branch. If 
 
 ## Running all benchmarks
 
-All benchmarks (solutions) in this repository can be build and run with one makefile. This is described in [BENCHMARK.md](BENCHMARK.md).
+All benchmarks (solutions) in this repository can be built and run with one Makefile. This is described in [BENCHMARK.md](BENCHMARK.md).
