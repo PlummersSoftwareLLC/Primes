@@ -4,19 +4,21 @@ const std = @import("std");
 /// at compile time. So that switching between them would be easy.
 pub fn Sieve(
     comptime Type: type,
-    comptime true_val: Type,
-    comptime false_val: Type,
     sieve_size: comptime_int,
 ) type {
     return struct {
+        const TRUE = if (Type == bool) true else 1;
+        const FALSE = if (Type == bool) false else 0;
+
         const Self = @This();
         const field_size = sieve_size >> 1;
 
         field: [field_size]Type align(std.mem.page_size),
 
-        pub fn init(field: [field_size]Type) Self {
+        pub fn init(field: *[field_size]Type) Self {
+            for (field.*) | *number | { number.* = true; }
             return .{
-                .field = field,
+                .field = field.*,
             };
         }
 
@@ -28,7 +30,7 @@ pub fn Sieve(
             while (factor <= q) : (factor += 2) {
                 var num: usize = factor;
                 factorSet: while (num < field_size) : (num += 2) {
-                    if (self.field[num >> 1] == true_val) {
+                    if (self.field[num >> 1] == TRUE) {
                         factor = num;
                         break :factorSet;
                     }
@@ -36,7 +38,7 @@ pub fn Sieve(
 
                 num = (factor * factor) >> 1;
                 while (num < field_size) : (num += factor) {
-                    self.field[num] = false_val;
+                    self.field[num] = FALSE;
                 }
             }
         }
@@ -46,7 +48,7 @@ pub fn Sieve(
             var idx: usize = 0;
 
             while (idx < field_size) : (idx += 1) {
-                count += @boolToInt(self.field[idx] == true_val);
+                count += @boolToInt(self.field[idx] == TRUE);
             }
 
             return count;
@@ -264,6 +266,23 @@ pub fn ParallelGustafsonSieve(
     };
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// TESTS
+
+const allocator = std.testing.allocator;
+
+fn byte_sieve(size: comptime_int, count: comptime_int) void {
+    const field_size = size >> 1;
+
+    // allocate the memory into arrays.
+    var field: *[field_size]bool = (try allocator.alloc(bool, field_size))[0..field_size];
+    defer allocator.free(field);
+
+    var sieve = Sieve(bool, size).init(field);
+    sieve.run();
+    std.testing.expectEqual(@as(usize, count), sieve.primeCount());
+}
+
 test "Test byte sieve" {
     const expected_results = .{
         .{ 10, 4 },
@@ -272,49 +291,42 @@ test "Test byte sieve" {
         .{ 10_000, 1229 },
         .{ 100_000, 9592 },
         .{ 1_000_000, 78498 },
-        // Uncommenting the following tests make my compiler crash ¯\_(ツ)_/¯ Probably cause it's allocating huge memory sizes at compile time
-        // .{     10_000_000,    664579 },
-        // .{    100_000_000,   5761455 },
-        // .{  1_000_000_000,  50847534 },
-        // .{ 10_000_000_000, 455052511 },
+        .{ 10_000_000, 664579 },
+        .{ 100_000_000, 5761455 },
+        .{ 1_000_000_000, 50847534 },
+        .{ 10_000_000_000, 455052511 },
     };
 
     inline for (expected_results) |result| {
         const size = result[0];
         const count = result[1];
-
-        var field = [_]bool{true} ** (size >> 1);
-        var sieve = Sieve(bool, true, false, size).init(field);
-
-        sieve.run();
-        std.testing.expectEqual(@as(usize, count), sieve.primeCount());
     }
 }
 
-test "Test parallel-amdahl sieve" {
-    const expected_results = .{
-        .{ 10, 4 },
-        .{ 100, 25 },
-        .{ 1_000, 168 },
-        .{ 10_000, 1229 },
-        .{ 100_000, 9592 },
-        .{ 1_000_000, 78498 },
-        // Uncommenting the following tests make my compiler crash ¯\_(ツ)_/¯ Probably cause it's allocating huge memory sizes at compile time
-        // .{     10_000_000,    664579 },
-        // .{    100_000_000,   5761455 },
-        // .{  1_000_000_000,  50847534 },
-        // .{ 10_000_000_000, 455052511 },
-    };
-
-    inline for (expected_results) |result| {
-        const size = result[0];
-        const count = result[1];
-
-        var field = [_]bool{true} ** (size >> 1);
-        var sieve = ParallelAmdahlSieve(bool, true, false, size){};
-
-        try sieve.parallelInit();
-        sieve.init(field).mainLoop();
-        std.testing.expectEqual(@as(usize, count), sieve.primeCount());
-    }
-}
+//test "Test parallel-amdahl sieve" {
+//    const expected_results = .{
+//        .{ 10, 4 },
+//        .{ 100, 25 },
+//        .{ 1_000, 168 },
+//        .{ 10_000, 1229 },
+//        .{ 100_000, 9592 },
+//        .{ 1_000_000, 78498 },
+//        // Uncommenting the following tests make my compiler crash ¯\_(ツ)_/¯ Probably cause it's allocating huge memory sizes at compile time
+//        // .{     10_000_000,    664579 },
+//        // .{    100_000_000,   5761455 },
+//        // .{  1_000_000_000,  50847534 },
+//        // .{ 10_000_000_000, 455052511 },
+//    };
+//
+//    inline for (expected_results) |result| {
+//        const size = result[0];
+//        const count = result[1];
+//
+//        var field = [_]bool{true} ** (size >> 1);
+//        var sieve = ParallelAmdahlSieve(bool, true, false, size){};
+//
+//        try sieve.parallelInit();
+//        sieve.init(field).mainLoop();
+//        std.testing.expectEqual(@as(usize, count), sieve.primeCount());
+//    }
+//}
