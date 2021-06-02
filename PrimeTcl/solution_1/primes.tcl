@@ -8,13 +8,14 @@
 # Based on:
 # - https://wiki.tcl-lang.org/page/Bit+vectors
 # - PrimeCPP.cpp : Dave's Garage Prime Sieve in C++
+# - Python Prime Sieve: recuces the bit array size by using it only for the odd numbers
 
 set time_limit 5
 set limit 1000000
-
 # 0=off, 1=on
 set show_results 0
 
+# Dictionary of known number of primes, used in validation
 dict set knownPrimeCounts 10 4
 dict set knownPrimeCounts 100 25
 dict set knownPrimeCounts 1000 168
@@ -46,53 +47,87 @@ proc bit {varName pos {bitval {}}} {
     expr {($word & $bitpos) != 0}
 }
 
-
-proc bits bitvec {
+ proc bits bitvec {
     set res {}
     set pos 0
     foreach word $bitvec {
         for {set i 0} {$i<32} {incr i} {
-            if {$word & 1<<$i} {
-                lappend res $pos
-            }
+            if {$word & 1<<$i} {lappend res $pos}
             incr pos
         }
     }
+    set res
+ }
+
+proc bits_to_primes bitvec {
+    set res {}
+    set pos 1
+
+    lappend res 2
+    set i 0    
+    foreach bit_index [bits $bitvec] {
+        if {$i!=0} {
+        lappend res [expr {($bit_index * 2) + 1}]
+        }
+        incr i
+    }
+
     set res
 }
 
 proc run_sieve max {
     set maxroot [expr {sqrt($max)}]
-    set primes [string repeat " 0xFFFFFFFF" [expr {($max+31)/32}]]
-    bit primes 0 0; bit primes 1 0
-    for {set i [expr $max+1]} {$i<=(($max+31)/32)*32} {incr i} {
-        bit primes $i 0 ;# mask out excess bits
+    set size [expr {$max/2}]
+    if {[expr ($max%2)]} {
+        # uneven, add one to the size
+        incr size 
     }
-    for {set i 2} {$i<=$maxroot} {incr i} {
-       if {[bit primes $i]} {
-           for {set j [expr $i<<1]} {$j<=$max} {incr j $i} {
-               bit primes $j 0
-           }
-       }
+    set primes [string repeat " 0xFFFFFFFF" [expr {($size+31)/32}]]
+
+    # mask out excess bits at the end
+    for {set i [expr $size]} {$i<=(($size+31)/32)*32} {incr i} {
+        bit primes $i 0 ;
     }
-    #bits $primes
+    
+    set factor 1
+    while {$factor<$maxroot} {
+        set start [expr ($factor * 3) + 1]
+        set step [expr ($factor * 2) + 1]
+        set i $start
+        while {$i<=$size} {
+            bit primes $i 0
+            incr i $step
+        }
+        # search next bit set to 1
+        for {set i [expr {$factor + 1}]} {$i<=$size} {incr i} {
+            if {[bit primes $i]} {
+                set factor $i
+                break
+            }
+        }
+
+    }
+    set tmp [bits $primes]
     set primes
 }
 
 proc check_valid {limit count} {
     global knownPrimeCounts
     set res "false"
-    set known_value [dict get $knownPrimeCounts $limit]
-    puts "known_value=$known_value"
-    if {$known_value==$count } {
-        set res "true"
-    }
+    if {[dict exists $knownPrimeCounts $limit]} { 
+        set known_value [dict get $knownPrimeCounts $limit]
+        if {$known_value==$count } {
+            set res "true"
+        } 
+    } else {
+            set res "unknown"
+        }
     set res
 }
 
 proc print_results {primes limit show_results duration passes} {
     #upvar 1 $primes_name primes
-    set prime_nrs [bits $primes]
+    set prime_nrs [bits_to_primes $primes]
 
     if {$show_results==1} {
         puts "Primes found:"
@@ -109,10 +144,7 @@ proc print_results {primes limit show_results duration passes} {
 
 }
 
-
 proc main {time_limit limit show_results} {
-#time {set res [run_sieve $limit]}
-#puts $res
     set stop_after_ms [expr {$time_limit * 1000} ]
     set passes 0
     set start [clock milliseconds]
@@ -121,7 +153,8 @@ proc main {time_limit limit show_results} {
         set primes [run_sieve $limit]
         set now [clock milliseconds]
         set duration_ms [expr {$now -$start}]
-        set duration_sec [expr {$duration_ms /1000}]
+        set duration_sec [expr {double($duration_ms) /1000}]
+
         if {$duration_ms > $stop_after_ms} {
             print_results $primes $limit $show_results $duration_sec $passes
             break
