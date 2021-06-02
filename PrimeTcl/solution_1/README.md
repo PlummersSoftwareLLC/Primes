@@ -2,8 +2,8 @@
 
 ![Category](https://img.shields.io/badge/Category-faithful-green)
 
-Implementation in Tcl, with a 32 bit string array as buffer
-for the bit array. Native Tcl does not have objects, so this implementation uses an variable for the bit array. This implementation is based on the logic from:
+This is an implementation in Tcl, with a 32 bit string array as buffer
+for the bit array. Native Tcl does not have objects, so this implementation uses a variable (`primes`) for the bit array. This variable is passed as a parameter to the `run_sieve` procedure to be as faithful as possible to the original and the rules. This implementation is based on the logic from:
 
 - Python/solution_2, by ssovest
 - PrimeCPP,          by Dave Plummer

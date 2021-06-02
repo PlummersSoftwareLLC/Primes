@@ -83,7 +83,9 @@ proc bits_to_primes bitvec {
 
 #
 # Calculate the bit array
-proc run_sieve max {
+proc run_sieve {primesName max} {
+    upvar 1 $primesName primes
+
     set maxroot [expr {sqrt($max)}]
     set size [expr {$max/2}]
     if {[expr ($max%2)]} {
@@ -94,7 +96,7 @@ proc run_sieve max {
 
     # mask out excess bits at the end
     for {set i [expr $size]} {$i<=(($size+31)/32)*32} {incr i} {
-        bit primes $i 0 ;
+        bit primes $i 0
     }
     
     set factor 1
@@ -113,9 +115,7 @@ proc run_sieve max {
                 break
             }
         }
-
     }
-    return $primes
 }
 
 #
@@ -137,8 +137,9 @@ proc check_valid {limit count} {
 
 #
 # Write the results to the output
-proc print_results {primes limit show_results duration passes} {
-    #upvar 1 $primes_name primes
+proc print_results {primesName limit show_results duration passes} {
+    upvar 1 $primesName primes
+    
     set prime_nrs [bits_to_primes $primes]
 
     if {$show_results==1} {
@@ -164,13 +165,16 @@ proc main {time_limit limit show_results} {
     set start [clock milliseconds]
     while {1} {
         incr passes
-        set primes [run_sieve $limit]
+        set primes  {}
+
+        run_sieve primes $limit
+
         set now [clock milliseconds]
         set duration_ms [expr {$now -$start}]
         set duration_sec [expr {double($duration_ms) /1000}]
 
         if {$duration_ms > $stop_after_ms} {
-            print_results $primes $limit $show_results $duration_sec $passes
+            print_results primes $limit $show_results $duration_sec $passes
             break
         }
     }
