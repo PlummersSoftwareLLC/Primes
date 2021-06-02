@@ -2,8 +2,8 @@
 
 ![Category](https://img.shields.io/badge/Category-faithful-green)
 
-First implementation in Tcl, with a 32 bit string array as buffer
-for the bit array. This implementation is based on the logic from:
+Implementation in Tcl, with a 32 bit string array as buffer
+for the bit array. Native Tcl does not have objects, so this implementation uses an variable for the bit array. This implementation is based on the logic from:
 
 - Python/solution_2, by ssovest
 - PrimeCPP,          by Dave Plummer
@@ -13,14 +13,14 @@ for the bit array. This implementation is based on the logic from:
 
 ### Run native
 
-To run this solution you need tcl. The tcl shell (`tclsh`) is included in most Linux distributions.
+To run this solution you need Tcl. The Tcl shell (`tclsh`) is included in most Linux distributions.
 
 ```bash
 cd path/to/sieve
 tclsh primes.tcl
 ```
 
-### Run with docker
+### Run with Docker
 
 To run with Docker take the following steps:
 
@@ -50,6 +50,6 @@ fvbakeltcl;4;6.137;1
 
 These results are with the following conditions:
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
-- tcl: 8.6
+- tcl: 8.6.11
 - running in Docker container alpine:3.13
 - Docker version 20.10.2, build 20.10.2-0ubuntu2

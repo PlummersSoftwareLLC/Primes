@@ -25,6 +25,8 @@ dict set knownPrimeCounts 1000000 78498
 dict set knownPrimeCounts 10000000 664579
 dict set knownPrimeCounts 100000000 5761455
 
+#
+# set the value of a bit at the given position to the given value
 proc bit {varName pos {bitval {}}} {
     upvar 1 $varName var
     if {![info exist var]} {
@@ -47,7 +49,9 @@ proc bit {varName pos {bitval {}}} {
     expr {($word & $bitpos) != 0}
 }
 
- proc bits bitvec {
+#
+# Convert the bit array to an array of index numbers
+proc bits bitvec {
     set res {}
     set pos 0
     foreach word $bitvec {
@@ -56,9 +60,11 @@ proc bit {varName pos {bitval {}}} {
             incr pos
         }
     }
-    set res
+    return $res
  }
 
+#
+# Convert an array of index numbers to prime numbers
 proc bits_to_primes bitvec {
     set res {}
     set pos 1
@@ -72,9 +78,11 @@ proc bits_to_primes bitvec {
         incr i
     }
 
-    set res
+    return $res
 }
 
+#
+# Calculate the bit array
 proc run_sieve max {
     set maxroot [expr {sqrt($max)}]
     set size [expr {$max/2}]
@@ -107,10 +115,12 @@ proc run_sieve max {
         }
 
     }
-    set tmp [bits $primes]
-    set primes
+    return $primes
 }
 
+#
+# Check if the number of found primes matches the 
+# known number of primes for the given limit
 proc check_valid {limit count} {
     global knownPrimeCounts
     set res "false"
@@ -122,9 +132,11 @@ proc check_valid {limit count} {
     } else {
             set res "unknown"
         }
-    set res
+    return $res
 }
 
+#
+# Write the results to the output
 proc print_results {primes limit show_results duration passes} {
     #upvar 1 $primes_name primes
     set prime_nrs [bits_to_primes $primes]
@@ -144,6 +156,8 @@ proc print_results {primes limit show_results duration passes} {
 
 }
 
+#
+# The entry point
 proc main {time_limit limit show_results} {
     set stop_after_ms [expr {$time_limit * 1000} ]
     set passes 0
@@ -162,4 +176,5 @@ proc main {time_limit limit show_results} {
     }
 }
 
+# run main, pass the contants defined at the top
 main $time_limit $limit $show_results
