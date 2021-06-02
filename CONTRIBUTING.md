@@ -295,9 +295,10 @@ Any other output should be directed to standard error, if possible.
 ### Tags
 
 If you choose to include tags, then:
-* they must conform to what's indicated in the [characteristics](#characteristics) section. 
-* specificy each tag as `<name>=<value>`
-* If multiple lables are included in your output, separate them with commas (`,`). 
+* They must conform to what's indicated in the [characteristics](#characteristics) section. 
+* Specificy each tag as `<name>=<value>`
+* Make sure that `<name>` and `<value>` each don't exceed 32 characters in length
+* If multiple lables are included in your output, separate them with commas (`,`)
 * Don't use spaces between names, values, or name/value pairs
 
 If you don't output tags, then the semicolon (`;`) between `num_threads` and `tags` should also not be written. 
