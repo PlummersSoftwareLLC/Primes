@@ -14,6 +14,9 @@ export default class ResultService {
         { name: 'passes', title: 'Passes', alignment: 'center' },
         { name: 'duration', title: 'Duration', alignment: 'center' },
         { name: 'threads', title: 'Threads', alignment: 'center' },
+        { name: 'algorithm', title: 'Algorithm', alignment: 'center' },
+        { name: 'faithful', title: 'Faithful', alignment: 'center' },
+        { name: 'bits', title: 'Bits', alignment: 'left' },
         {
           name: 'passesPerSecond',
           title: 'Passes/Second',
@@ -40,6 +43,9 @@ export default class ResultService {
             passes: value.passes,
             duration: value.duration.toFixed(5),
             threads: value.threads,
+            algorithm: value.tags['algorithm'],
+            faithful: value.tags['faithful'],
+            bits: value.tags['bits'],
             passesPerSecond: value.passesPerSecond.toFixed(5)
           };
         })
