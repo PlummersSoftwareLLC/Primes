@@ -51,6 +51,15 @@
     bits $primes
  }
 
+dict set knownPrimeCounts 10 4, 
+dict set knownPrimeCounts 100 25,                
+dict set knownPrimeCounts 1000 168,
+dict set knownPrimeCounts 10000 1229,
+dict set knownPrimeCounts 100000 9592,
+dict set knownPrimeCounts 1000000 78498,
+dict set knownPrimeCounts 10000000 664579,
+dict set knownPrimeCounts 100000000 5761455
+
 set timeLimit 5
 #set limit 1000000
 set limit 100
