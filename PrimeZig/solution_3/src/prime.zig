@@ -15,8 +15,13 @@ pub fn Sieve(
 
         field: [field_size]Type align(std.mem.page_size),
 
+        pub fn DataType() type { return Type; }
+        pub fn size() comptime_int { return sieve_size; }
+
         pub fn init(field: *[field_size]Type) Self {
-            for (field.*) | *number | { number.* = true; }
+            for (field.*) |*number| {
+                number.* = true;
+            }
             return .{
                 .field = field.*,
             };
@@ -88,7 +93,7 @@ pub fn ParallelAmdahlSieve(
         /// from the main thread, launches all of child threads for parallel computation
         pub fn parallelInit(self: *Self) !void {
             var totalWorkers: usize = std.math.min(try std.Thread.cpuCount(), 256) - 1;
-            workerPool = workerSlots[0 .. totalWorkers];
+            workerPool = workerSlots[0..totalWorkers];
 
             initHold = initMutex.acquire();
 
@@ -129,7 +134,7 @@ pub fn ParallelAmdahlSieve(
         }
 
         fn workerLoop(info: ThreadInfo) void {
-            while (! @atomicLoad(bool, &info.sieve.finished, .Monotonic)) {
+            while (!@atomicLoad(bool, &info.sieve.finished, .Monotonic)) {
                 if (fetchJob(info.sieve)) |job| {
                     // ensure that the state is "started"
                     workerStarted[info.index] = true;
@@ -196,7 +201,9 @@ pub fn ParallelAmdahlSieve(
 
         pub fn parallelCleanup(self: *Self) void {
             @atomicStore(bool, &self.finished, true, .Monotonic);
-            for (workerPool) | worker |  {worker.wait(); }
+            for (workerPool) |worker| {
+                worker.wait();
+            }
         }
 
         pub fn primeCount(self: *Self) usize {
@@ -225,9 +232,7 @@ pub fn ParallelGustafsonSieve(
         const field_size = sieve_size >> 1;
 
         const ThreadInfo = struct {
-            field: [field_size]Type,
-            passes: *u64,
-            finished: *bool
+            field: [field_size]Type, passes: *u64, finished: *bool
         };
 
         pub fn parallelInit(passes: *u64, finished: *bool) !void {
@@ -250,7 +255,9 @@ pub fn ParallelGustafsonSieve(
             }
             @atomicStore(bool, finished, true, .Monotonic);
             // wait till all of the workers have finished.
-            for (workerPool) |worker| { worker.wait(); }
+            for (workerPool) |worker| {
+                worker.wait();
+            }
 
             return timer.read();
         }
@@ -258,7 +265,7 @@ pub fn ParallelGustafsonSieve(
         fn workerRun(info: ThreadInfo) !void {
             var sieve = Sieve(Type, true_val, false_val, sieve_size).init(info.field).run();
 
-            while (! @atomicLoad(bool, info.finished, .Monotonic)) {
+            while (!@atomicLoad(bool, info.finished, .Monotonic)) {
                 Sieve(Type, true_val, false_val, sieve_size).init(info.field).run();
                 _ = @atomicRmw(u64, info.passes, .Add, 1, .Monotonic);
             }
@@ -271,34 +278,36 @@ pub fn ParallelGustafsonSieve(
 
 const allocator = std.testing.allocator;
 
-fn byte_sieve(comptime size: usize, comptime count: usize) !void {
+fn run_sieve(comptime SieveType: type, comptime count: usize) !void {
+    const Type = SieveType.DataType();
+    const size = SieveType.size();
     const field_size = size >> 1;
 
     // allocate the memory into arrays.
-    var field: *[field_size]bool = (try allocator.alloc(bool, field_size))[0..field_size];
+    var field: *[field_size]Type = (try allocator.alloc(Type, field_size))[0..field_size];
     defer allocator.free(field);
 
-    var sieve = Sieve(bool, size).init(field);
+    var sieve = SieveType.init(field);
     sieve.run();
     std.testing.expectEqual(@as(usize, count), sieve.primeCount());
 }
 
-test "Test byte sieve" {
-    const expected_results = .{
-        .{ 10, 4 },
-        .{ 100, 25 },
-        .{ 1_000, 168 },
-        .{ 10_000, 1229 },
-        .{ 100_000, 9592 },
-        .{ 1_000_000, 78498 },
-        .{ 10_000_000, 664579 }
-    };
+const expected_results = .{
+    .{ 10, 4 },
+    .{ 100, 25 },
+    .{ 1_000, 168 },
+    .{ 10_000, 1229 },
+    .{ 100_000, 9592 },
+    .{ 1_000_000, 78498 },
+    .{ 10_000_000, 664579 },
+};
 
+test "Test byte sieve" {
     inline for (expected_results) |result| {
         const size = result[0];
-        const count = result[1];
+        const expected_count = result[1];
 
-        try byte_sieve(size, count);
+        try run_sieve(Sieve(bool, size), expected_count);
     }
 }
 
