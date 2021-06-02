@@ -271,7 +271,7 @@ pub fn ParallelGustafsonSieve(
 
 const allocator = std.testing.allocator;
 
-fn byte_sieve(size: comptime_int, count: comptime_int) void {
+fn byte_sieve(comptime size: usize, comptime count: usize) !void {
     const field_size = size >> 1;
 
     // allocate the memory into arrays.
@@ -291,15 +291,14 @@ test "Test byte sieve" {
         .{ 10_000, 1229 },
         .{ 100_000, 9592 },
         .{ 1_000_000, 78498 },
-        .{ 10_000_000, 664579 },
-        .{ 100_000_000, 5761455 },
-        .{ 1_000_000_000, 50847534 },
-        .{ 10_000_000_000, 455052511 },
+        .{ 10_000_000, 664579 }
     };
 
     inline for (expected_results) |result| {
         const size = result[0];
         const count = result[1];
+
+        try byte_sieve(size, count);
     }
 }
 
