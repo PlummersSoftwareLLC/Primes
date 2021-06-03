@@ -47,7 +47,7 @@ export const command = new Command('report')
           const tags: { [key: string]: string } = {};
           if (match.groups?.['extra']) {
             const tagsRegex =
-              /(?<key>[a-zA-Z0-9\-_]+)=(?<value>[a-zA-Z0-9_\-+."':]+)/gim;
+              /(?<key>[a-zA-Z0-9\-_]{1,32})=(?<value>[a-zA-Z0-9_\-+."':]{1,32})/gim;
 
             let tagMatch;
             while ((tagMatch = tagsRegex.exec(match.groups?.['extra']))) {
