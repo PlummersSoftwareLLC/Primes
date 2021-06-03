@@ -72,7 +72,7 @@ struct PrimeSieve
 
     # Following 2 lines added by rbergen to conform to drag race output format
     puts
-    printf("marghidanu;%d;%f;1;algorithm=base,faithful=yes,bits=1", passes, duration)
+    printf("marghidanu;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration)
 
   end
 

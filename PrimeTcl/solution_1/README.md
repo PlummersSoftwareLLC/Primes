@@ -1,6 +1,9 @@
 # Tcl solution by fvbakel
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This is an implementation in Tcl, with a 32 bit string array as buffer
 for the bit array. Native Tcl does not have objects, so this implementation uses a variable (`primes`) for the bit array. This variable is passed as a parameter to the `run_sieve` procedure to be as faithful as possible to the original and the rules. This implementation is based on the logic from:
@@ -45,7 +48,7 @@ Below is an example of the output on my machine, running with Docker.
 docker run --rm -it  tclsolution1:latest 
 Passes: 4, Time: 6.137, Avg: 1.53425 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-fvbakeltcl;4;6.137;1
+fvbakeltcl;4;6.137;1;algorithm=base,faithful=yes,bits=1
 ```
 
 These results are with the following conditions:

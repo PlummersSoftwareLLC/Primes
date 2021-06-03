@@ -1,6 +1,9 @@
 # C# solution by tannergooding
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 ## Run instructions
 
@@ -12,5 +15,5 @@
 ```
 Passes: 7883, Time: 5.0001565, Avg: 0.0006342961436001523, Limit: 1000000, Count: 78498, Valid: True
 
-tannergooding;7883;5.0001565;1
+tannergooding;7883;5.0001565;1;algorithm=base,faithful=yes,bits=1
 ```

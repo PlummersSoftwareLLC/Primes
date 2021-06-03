@@ -153,7 +153,7 @@ proc print_results {primesName limit show_results duration passes} {
     puts "Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid"
     # Following 2 lines are to conform to drag race output format
     puts ""
-    puts "fvbakeltcl;$passes;$duration;1"
+    puts "fvbakeltcl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1"
 
 }
 

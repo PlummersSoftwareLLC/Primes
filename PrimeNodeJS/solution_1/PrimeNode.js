@@ -242,11 +242,7 @@ class PrimeSieve {
 
         // Following 2 lines are to conform to drag race output format
         console.log();
-        console.log("fvbakelnodejs;%i;%f;1![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
-![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
-;algorithm=base,faithful=yes,bits=1", passes, duration);
+        console.log("fvbakelnodejs;%i;%f;1;algorithm=base,faithful=yes,bits=1", passes, duration);
     }
 
 
