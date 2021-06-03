@@ -1,5 +1,9 @@
 # PowerShell solution by Christoph Müller (crowbar27)
-![Category](https://img.shields.io/badge/Category-faithful-green)
+
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This PowerShell implementation of the sieve of Erastosthenes is derived from davepl's C# implementation and follows this implementation as closely as possible. Most notably, a .NET `BitArray` is used as in the original implementation.
 
@@ -14,10 +18,10 @@ Run `.\PrimePowerShell.ps1` in a PowerShell. In order to suppress the pipeline o
 Intel Core i7-9700K on Windows 10 Professional 21H1 with PowerShell 5.1.19041.906 for a sieve size of 10, 100, 1000, 10000, 100000 and 1000000:
 
 ```
-crowbar27_ps1;27439;5.00012;1
-crowbar27_ps1;4070;5.00044;1
-crowbar27_ps1;373;5.00387;1
-crowbar27_ps1;31;5.01757;1
-crowbar27_ps1;3;5.52281;1
-crowbar27_ps1;1;20.5757;1
+crowbar27_ps1;27439;5.00012;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps1;4070;5.00044;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps1;373;5.00387;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps1;31;5.01757;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps1;3;5.52281;1;algorithm=base,faithful=yes,bits=1
+crowbar27_ps1;1;20.5757;1;algorithm=base,faithful=yes,bits=1
 ```

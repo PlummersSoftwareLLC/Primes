@@ -1,6 +1,9 @@
 # Nim implementation #2
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 ## Run
 
@@ -26,6 +29,6 @@ Gains around 10% performance from `solution_1` with just `-d:release`. With adde
 
 ## Output
 ```
-beef331;5398;5.00043797492981;1
+beef331;5398;5.00043797492981;1;algorithm=base,faithful=yes,bits=1
 ```
 

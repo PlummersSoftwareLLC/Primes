@@ -139,7 +139,7 @@ namespace PrimeSieveCS
                 Console.WriteLine($"Passes: {passes}, Time: {duration}, Avg: {duration / passes}, Limit: {sieveSize}, Count: {countPrimes()}, Valid: {validateResults()}");
 
                 Console.WriteLine();
-                Console.WriteLine($"tannergooding;{passes};{duration};1", passes, duration);
+                Console.WriteLine($"tannergooding;{passes};{duration};1;algorithm=base,faithful=yes,bits=1", passes, duration);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

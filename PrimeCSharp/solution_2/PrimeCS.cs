@@ -17,7 +17,7 @@ namespace PrimeSieveCS
             private BitArray bitArray;
             private Dictionary<int, int> myDict = new Dictionary<int, int> 
             { 
-                { 10 , 1 },                 // Historical data for validating our results - the number of primes
+                { 10 , 4 },                 // Historical data for validating our results - the number of primes
                 { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
                 { 1000 , 168 },
                 { 10000 , 1229 },
@@ -120,12 +120,14 @@ namespace PrimeSieveCS
             
                 // Following 2 lines added by rbergen to conform to drag race output format
                 Console.WriteLine();
-                Console.WriteLine($"davepl;{passes};{duration:G6};1");
+                Console.WriteLine($"davepl;{passes};{duration:G6};1;algorithm=base,faithful=yes,bits=1");
             }
         }
 
         static void Main(string[] args)
         {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
+
             var tStart = DateTime.UtcNow;
             var passes = 0;
             prime_sieve sieve = null;

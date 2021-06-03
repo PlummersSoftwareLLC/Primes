@@ -7,7 +7,7 @@ class PrimeSieve {
     var sieveSize:Int;
     var rawbits:Array<Bool>;
     var primeCounts:Map<Int,Int> = [
-        10 => 1,
+        10 => 4,
         100 => 25,
         1000 => 168,
         10000 => 1229,
@@ -98,6 +98,6 @@ class Main {
         #else 
             var language = "UnknownTarget";
         #end
-        Sys.println("TayIorRobinson_Haxe_" + language + ";" + Std.string(passes) + ";" + Std.string(tD) + ";1");
+        Sys.println("TayIorRobinson_Haxe_" + language + ";" + Std.string(passes) + ";" + Std.string(tD) + ";1;algorithm=base,faithful=yes");
     }
 }
