@@ -298,8 +298,8 @@ If you choose to include tags, then:
 * They must conform to what's indicated in the [characteristics](#characteristics) section. 
 * Specificy each tag as `<name>=<value>`
 * Make sure that `<name>` and `<value>` each don't exceed 32 characters in length
-* If multiple lables are included in your output, separate them with commas (`,`)
-* Don't use spaces between names, values, or name/value pairs
+* If multiple tags are included in your output, separate them with commas (`,`)
+* Don't use spaces anywhere in or between names, values, or name/value pairs
 
 If you don't output tags, then the semicolon (`;`) between `num_threads` and `tags` should also not be written. 
 
