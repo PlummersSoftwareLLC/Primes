@@ -9,6 +9,7 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "pool2of6";
         public string Name => "Array Pool, 2 of 6";
+        public int? BitsPerPrime => 1;
 
         private readonly long[] data;
 
