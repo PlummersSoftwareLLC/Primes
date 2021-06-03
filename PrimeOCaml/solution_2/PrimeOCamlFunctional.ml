@@ -13,7 +13,7 @@ type prime_sieve = {
 }
 
 let  prime_counts = Map.of_alist_exn (module Int)
-	[ (10,1);
+	[ (10,4);
 		(100, 25);              
 		(1000, 168);
 		(10000, 1229);
@@ -70,7 +70,7 @@ let print_results sieve show_results duration passes =
 			else total)
 	in
 	if show_results then printf "... \nCount: %d\n" count;
-	printf "gkpotter-unfaithful;%d;%f;1\n" 
+	printf "gkpotter-unfaithful;%d;%f;1;algorithm=base,faithful=no\n" 
 		passes
 		duration
 ;;

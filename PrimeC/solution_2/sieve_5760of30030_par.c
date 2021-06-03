@@ -425,7 +425,7 @@ int main(int argc, char **argv) {
       // Count the number of primes and validate the result
       int nprimes=count_primes(sieve_state);
       //printf("valid=%d ",(nprimes==valid_primes));
-      printf("danielspaangberg_5760of30030_par;%d;%f;%d\n", passes,elapsed_time,omp_get_max_threads() );
+      printf("danielspaangberg_5760of30030_par;%d;%f;%d;algorithm=wheel,faithful=yes,bits=1\n", passes,elapsed_time,omp_get_max_threads() );
       break;
     }
     delete_sieve(sieve_state);

@@ -71,7 +71,7 @@ fn (sieve Sieve) print_results(show_results bool, duration time.Duration, passes
 	valid := (count_primes == get_dict_value(sieve.sieve_size.str()))
 	eprintln('Passes: $passes, Time: $duration, Avg: $avg, Limit: $sieve.sieve_size, Count1: $count, Count2: $count_primes, Valid: $valid')
 
-	println('marghidanu;$passes;$duration;1')
+	println('marghidanu;$passes;$duration;1;algorithm=base,faithful=yes')
 }
 
 fn (sieve Sieve) count_primes() u64 {
