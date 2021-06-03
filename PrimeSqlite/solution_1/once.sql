@@ -1,59 +1,122 @@
 -- based on https://stackoverflow.com/questions/7370761/sqlite-loop-statements
 -- and https://blog.devart.com/increasing-sqlite-performance.html
 
+-- pragma settings have little to no impact on Linux
+-- might have more impact on windows
 PRAGMA TEMP_STORE = 2;
 PRAGMA JOURNAL_MODE = OFF;
 PRAGMA SYNCHRONOUS = 0;
 PRAGMA LOCKING_MODE = EXCLUSIVE;
 
-
+-- starting a transaction makes no difference in performance
 --begin transaction;
 
 drop table if exists naturals;
-create table naturals
-( n integer unique primary key asc,
-  isprime bool);
- -- factor integer);
+create table naturals (
+    n integer unique primary key asc,
+    isprime bool
+--    debug_info
+);
 
+-- only include 2 and the odd numbers in the table
+-- not much impact on the performance compared to
+-- adding the even numbers too
+insert into naturals values(2, 1);
 with recursive
   nn (n)
 as (
-  select 2
+  select 3
   union all
-  select n+1 as newn from nn
-  where newn <= 25
+  select n+2 as newn from nn
+  where newn <= 1000000
 )
 insert into naturals
---select n, 1, null from nn;
+--select n, 1, null from nn; -- debug
 select n, 1 from nn;
 
+-- adding the index makes the program twice as fast!
+create unique index naturals_i on naturals(n);
+
+/*
+  The recursive statement delivers a virtual table
+  with two columns n, not prime.
+  This is done for all number that are smaller than the squareroot of the size.
+
+  The logic works in multiple stages due to the recursive nature. This is what happens:
+  in the first run the virtual table is filled with
+  n,not_prime
+  2,4
+  3,9
+  5,25
+  7,49
+  9,81 
+  etc
+
+  note that 9 is not prime, but is still added
+
+  Then in the second run of the recursive statement the second part 
+  of the union becomes effective.
+  Each new row of the previous statement is processed. The following will be added
+  n,not_prime
+  2,8
+  3,15
+  5,35
+  7,63
+  9,99
+  etc
+
+  This continues recursive for all entries in the virual table, 
+  until the max is reached for the non_prime value
+*/
 insert or replace into naturals
   with recursive
-    product (prime,not_prime)
+    product (num,not_prime)
   as (
+    -- n*n is the start.
+    -- so if prime number is 3 we start at 9 with crossing off
+    -- for prime 5 we start at 25
+    -- what about 15 then in this case? 15 is already crossed of by
+    -- the processing of prime 3
+    -- downside of the approach below is that we are also crossing off for multiplications 
+    -- of not primes
     select n, n*n as sqr
       from naturals
-      where sqr <= (select max(n) from naturals)
-    union all
-    select prime, not_prime+prime as prod
+      where 
+            sqr <= (select max(n) from naturals)
+        and n !=2 -- this filters out all the recursive calls for evennumbers!
+    union all -- all because we know there is no overlap between the two sets, is a bit faster than just union
+    select 
+      num, 
+      not_prime+2*num as prod --2*num because we know that every other number must be even
     from
       product
     where
       prod <= (select max(n) from naturals)
   )
---select n, 0, prime
+--select n, 0,(select count(*) from product where not_prime=18)
 select n, 0
 from product join naturals
   on (product.not_prime = naturals.n)
 ;
-
 --commit;
 
 -- output
-select * --count(n) 
+select count(*)  
 from 
-    naturals;
-    /*
+    naturals
 where 
     isprime =1
-;*/
+;
+
+/*
+select *
+from 
+    naturals
+;
+*/
+/*
+(select not_prime
+                from product 
+                group by not_prime
+                having count(*)>1)
+*/
