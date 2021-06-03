@@ -288,6 +288,7 @@ fn run_sieve(comptime SieveType: type, comptime count: usize) !void {
     defer allocator.free(field);
 
     var sieve = SieveType.init(field);
+    sieve.clear();
     sieve.run();
     std.testing.expectEqual(@as(usize, count), sieve.primeCount());
 }
