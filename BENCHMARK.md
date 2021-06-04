@@ -243,11 +243,6 @@ Take the following steps to install Node.js on macOS:
 8. The installation now starts
 9. Close the installer
 
-
-10. Unzip the downloaded file: `tar -xf /path/to/downloaded/file.xz>`
-   For example: `tar -xf ~/Downloads/node-v14.17.0-linux-x64.tar.xz`
-11. The Node.js binaries are now extracted to a directory. This directory is refereed to as `/path/to/node` in the run instructions.
-
 #### Docker Desktop for macOS
 
 For the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-mac/install/>.
