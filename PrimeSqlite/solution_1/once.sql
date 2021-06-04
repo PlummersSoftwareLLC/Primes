@@ -9,15 +9,26 @@ PRAGMA SYNCHRONOUS = 0;
 PRAGMA LOCKING_MODE = EXCLUSIVE;
 
 -- starting a transaction makes no difference in performance
---begin transaction;
+begin transaction;
+
+select "start=", julianday("now");
 
 drop table if exists naturals;
 create table naturals (
-    n integer unique primary key asc,
+  -- not using a unique key improvess the peformance by 30% because the inserts are faster
+  -- the index is created after the insers
+  -- n integer unique primary key asc,
+    n integer,
     isprime bool
 --    debug_info
 );
 
+drop table if exists not_primes;
+create table not_primes (
+    n integer
+);
+
+select "before init fill=", julianday("now");
 -- only include 2 and the odd numbers in the table
 -- not much impact on the performance compared to
 -- adding the even numbers too
@@ -34,9 +45,11 @@ insert into naturals
 --select n, 1, null from nn; -- debug
 select n, 1 from nn;
 
+select "before index1=", julianday("now");
 -- adding the index makes the program twice as fast!
 create unique index naturals_i on naturals(n);
 
+select "before main calculation=", julianday("now");
 /*
   The recursive statement delivers a virtual table
   with two columns n, not prime.
@@ -68,7 +81,7 @@ create unique index naturals_i on naturals(n);
   This continues recursive for all entries in the virual table, 
   until the max is reached for the non_prime value
 */
-insert or replace into naturals
+--insert or replace into naturals
   with recursive
     product (num,not_prime)
   as (
@@ -86,19 +99,35 @@ insert or replace into naturals
         and n !=2 -- this filters out all the recursive calls for evennumbers!
     union all -- all because we know there is no overlap between the two sets, is a bit faster than just union
     select 
-      num, 
+      num, -- because recursive does not allow to reuse n
       not_prime+2*num as prod --2*num because we know that every other number must be even
     from
       product
     where
       prod <= (select max(n) from naturals)
   )
---select n, 0,(select count(*) from product where not_prime=18)
-select n, 0
-from product join naturals
-  on (product.not_prime = naturals.n)
+insert into not_primes
+select distinct not_prime from product;
+
+select "before index2=", julianday("now");
+create unique index not_primes_i on not_primes(n);
+
+select "before join=", julianday("now");
+insert or replace into naturals
+select naturals.n, 0 
+from not_primes
+join naturals
+  on (not_primes.n = naturals.n)
 ;
+
+--select n, 0,(select count(*) from product where not_prime=18)
+--select n, 0
+--from product join naturals
+--  on (product.not_prime = naturals.n)
+--;
 --commit;
+select "end=", julianday("now");
+
 
 -- output
 select count(*)  
@@ -107,16 +136,3 @@ from
 where 
     isprime =1
 ;
-
-/*
-select *
-from 
-    naturals
-;
-*/
-/*
-(select not_prime
-                from product 
-                group by not_prime
-                having count(*)>1)
-*/
