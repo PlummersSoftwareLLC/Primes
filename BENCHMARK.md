@@ -32,11 +32,13 @@ Take the following steps to run all benchmarks:
 
 1. Make sure you have installed the [required software](#linux-installation-and-prerequisites)
 2. Open a terminal.
-3. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
-4. `cd Primes`
-5. `make`
-6. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
-7. Once complete a report is written to the terminal, see [example output](#example-output).
+3. Make sure Node.js is added to the path. `PATH=/path/to/node/bin:$PATH`.
+   For example: `PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
+4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
+5. `cd Primes`
+6. `make`
+7. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
+8. Once complete a report is written to the terminal, see [example output](#example-output).
 
 ### Linux installation and prerequisites
 
@@ -45,7 +47,8 @@ The following software must be installed:
 - /bin/bash
 - make
 - git
-- docker
+- Node.js
+- Docker
 
 The details for each required software are described below.
 
@@ -85,6 +88,18 @@ Fedora based distributions:
 sudo dnf git
 ```
 
+#### Node.js for Linux
+
+The benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that are included in many OS-provided package managers are too old. This means that it will generally be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.
+
+Take the following steps to install Node.js on Linux:
+
+1. Navigate to <https://nodejs.org/en/download/>
+2. Download the Linux Binaries, depending on your CPU architecture
+3. Unzip the downloaded file: `tar -xf /path/to/downloaded/file.xz>`
+   For example: `tar -xf ~/Downloads/node-v14.17.0-linux-x64.tar.xz`
+4. The Node.js binaries are now extracted to a directory. This directory is refereed to as `/path/to/node` in the run instructions.
+
 #### Docker for Linux
 
 For the installation of Docker first follow the instructions as described in <https://docs.docker.com/engine/install/>.
@@ -111,12 +126,14 @@ The preferred method to run the benchmark is with native Linux. Running the benc
 Take the following steps to run all benchmarks:
 
 1. Make sure you have installed the [required software](#windows-installation-and-prerequisites)
-2. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
-3. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
-4. `cd Primes`
-5. `make`
-6. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
-7. Once complete a report is written to the terminal, see [example output](#example-output).
+2. Make sure Node.js is added to the path. `PATH=/path/to/node/bin:$PATH`.
+   For example: `PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
+3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
+5. `cd Primes`
+6. `make`
+7. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
+8. Once complete a report is written to the terminal, see [example output](#example-output).
 
 ### Windows installation and prerequisites
 
@@ -124,6 +141,7 @@ The following software must be installed:
 
 - Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 20.04 LST distribution
 - make
+- Node.js
 - Docker Desktop for Windows
 
 WSL2 has special [hardware requirements](https://docs.microsoft.com/en-us/windows-server/virtualization/hyper-v/system-requirements-for-hyper-v-on-windows).
@@ -138,6 +156,20 @@ Take the following steps to install make inside the Ubuntu distribution:
 
 1. Open an Ubuntu terminal
 2. `sudo apt-get install make`
+
+#### Install Node.js inside the Ubuntu distribution
+
+The benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that is included in Ubuntu 20.04 is too old. This means that it will be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.
+
+Take the following steps to install Node.js inside the Ubuntu distribution:
+
+1. Navigate to <https://nodejs.org/en/download/>
+2. Download the Linux Binaries, depending on your CPU architecture
+3. Copy the downloaded file inside the Ubuntu distribution home directory. For example:
+   `\\wsl$\Ubuntu-20.04\home\user`
+4. Open an Ubuntu terminal
+5. Unzip the downloaded file: `tar -xf ~/file.xz>`. For example: `tar -xf ~/node-v14.17.0-linux-x64.tar.xz`
+6. The Node.js binaries are now extracted to a directory. This directory is refereed to as `/path/to/node` in the run instructions.
 
 #### Docker Desktop for Windows
 
@@ -180,6 +212,7 @@ Take the following steps to run all benchmarks:
 The following software must be installed:
 
 - xcode-select (make and git)
+- nodejs
 - Docker Desktop for macOS
 
 The details for each required software are described below.
@@ -194,6 +227,27 @@ Take the following steps to install make and git on macOS:
 4. In the next window accept the terms
 5. The installation now starts, wait until it completes
 
+#### Node.js for macOs
+
+The benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that are included in many OS-provided package managers are too old. This means that it will generally be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.
+
+Take the following steps to install Node.js on macOS:
+
+1. Navigate to <https://nodejs.org/en/download/>
+2. Download the macOS Installer (.pkg)
+3. Start the installer
+4. Click Continue
+5. Click Continue, accept the licence agreement
+6. Click Install
+7. Provide your password to confirm
+8. The installation now starts
+9. Close the installer
+
+
+10. Unzip the downloaded file: `tar -xf /path/to/downloaded/file.xz>`
+   For example: `tar -xf ~/Downloads/node-v14.17.0-linux-x64.tar.xz`
+11. The Node.js binaries are now extracted to a directory. This directory is refereed to as `/path/to/node` in the run instructions.
+
 #### Docker Desktop for macOS
 
 For the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-mac/install/>.
@@ -203,19 +257,33 @@ For the installation of Docker follow the instructions as described in <https://
 Below is an example of the benchmark output.
 
 ```bash
-Generating Software Drag Race (single-threaded)
-         implementation    solution                              label  passes    duration  threads  passes_per_second
-1                primec  solution_2  danielspaangberg_5760of30030_owrb   13471    5.014557        1        2686.378877
-2                primec  solution_2    danielspaangberg_480of2310_owrb   11037    5.016852        1        2199.985170
-3                primec  solution_1                        mckoss-c830   10716    5.000000        1        2143.200000
-... etc
+                                                                   Single-threaded                                                                    
+┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬───────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration  │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼───────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ c              │ 2        │ danielspaangberg_5760of30030_owrb │ 12451  │  5.00006  │    1    │   wheel   │   yes    │ 1    │  2490.17012   │
+│   2   │ c              │ 1        │ mckoss-c830                       │  9774  │  5.00000  │    1    │   wheel   │   yes    │ 1    │  1954.80000   │
+│   3   │ c              │ 2        │ danielspaangberg_480of2310_owrb   │  9458  │  5.00015  │    1    │   wheel   │   yes    │ 1    │  1891.54325   │
 
-Generating Software Drag Race (multi-threaded)
-   implementation    solution                              label  passes  duration  threads  passes_per_second
-1          primec  solution_2  danielspaangberg_5760of30030_epar   30572  5.015792        4        1523.787270
-2          primec  solution_2    danielspaangberg_480of2310_epar   28214  5.030535        4        1402.137148
-3          primec  solution_2      danielspaangberg_48of210_epar   20572  5.001535        4        1028.284317
-... etc
+etc
 
-Output files available in /tmp/tmp.kXe95aYI6R
+│  72   │ powershell     │ 2        │ crowbar27_ps2                     │   3    │  5.78784  │    1    │   base    │   yes    │ 1    │    0.51833    │
+│  73   │ haxe           │ 1        │ TayIorRobinson_Haxe_Python        │   4    │ 12.33397  │    1    │   base    │   yes    │      │    0.32431    │
+│  74   │ powershell     │ 1        │ crowbar27_ps1                     │   1    │ 150.03900 │    1    │   base    │   yes    │ 1    │    0.00666    │
+└───────┴────────────────┴──────────┴───────────────────────────────────┴────────┴───────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+
+                                                                   Multi-threaded                                                                    
+┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ c              │ 2        │ danielspaangberg_5760of30030_epar │ 24298  │ 5.00118  │    4    │   wheel   │   yes    │ 1    │  1214.61335   │
+│   2   │ c              │ 2        │ danielspaangberg_480of2310_epar   │ 21729  │ 5.00549  │    4    │   wheel   │   yes    │ 1    │  1085.25774   │
+│   3   │ c              │ 2        │ danielspaangberg_48of210_epar     │ 17161  │ 5.00735  │    4    │   wheel   │   yes    │ 1    │   856.78966   │
+
+etc
+
+│  13   │ c              │ 2        │ danielspaangberg_1of2_par         │  2943  │ 5.00040  │    4    │   base    │   yes    │ 1    │   147.13829   │
+│  14   │ csharp         │ 1        │ kinematics_pool6p                 │  2510  │ 5.00935  │    4    │           │          │      │   125.26575   │
+│  15   │ csharp         │ 1        │ kinematics_rawp                   │  1840  │ 5.00896  │    4    │           │          │      │   91.83543    │
+└───────┴────────────────┴──────────┴───────────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
