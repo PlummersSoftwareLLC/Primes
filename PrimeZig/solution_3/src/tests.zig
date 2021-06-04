@@ -9,6 +9,7 @@ const allocator = std.testing.allocator;
 
 fn run_sieve(comptime Runner: type, comptime expected_primes: usize) !void {
     var sieve = try Runner.init(allocator);
+    defer Runner.deinit(allocator, &sieve);
 
     sieve.reset();
     Runner.run(&sieve);

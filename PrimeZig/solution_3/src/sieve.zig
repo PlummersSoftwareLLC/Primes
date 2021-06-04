@@ -4,8 +4,11 @@ const Allocator = std.mem.Allocator;
 pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
     return struct {
         // values
+        pub const Type = T;
+        pub const size = sieve_size;
         pub const TRUE = if (T == bool) true else 1;
         pub const FALSE = if (T == bool) false else 0;
+
         const Self = @This();
         const field_size = sieve_size >> 1;
 
@@ -13,9 +16,6 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
         field: *[field_size]T align(std.mem.page_size),
 
         // member functions
-
-        pub fn Type() type { return T; }
-        pub fn size() comptime_int { return sieve_size; }
 
         pub fn reset(self: *Self) void {
             for (self.field.*) |*number| {
@@ -41,8 +41,8 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
 }
 
 pub fn SingleThreadedRunner(comptime SieveType: type) type {
-    const Type = SieveType.Type();
-    const sieve_size = SieveType.size();
+    const Type = SieveType.Type;
+    const sieve_size = SieveType.size;
     const field_size = sieve_size >> 1;
 
     return struct{
@@ -52,20 +52,20 @@ pub fn SingleThreadedRunner(comptime SieveType: type) type {
             return SieveType{.field = field};
         }
 
-        pub fn deinit(allocator: *const Allocator, sieve: *SieveType) void {
-            allocator.free(sieve.field.*);
+        pub fn deinit(allocator: *Allocator, sieve: *SieveType) void {
+            allocator.free(sieve.field.*[0..]);
         }
 
         pub fn run(sieve: *SieveType) void {
             @setAlignStack(256);
             comptime const q = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
             var factor: usize = 3;
-            var field = sieve.field.*;
+            var field = sieve.field;
 
             while (factor <= q) : (factor += 2) {
                 var num: usize = factor;
                 factorSet: while (num < field_size) : (num += 2) {
-                    if (field[num >> 1] == SieveType.TRUE) {
+                    if (field.*[num >> 1] == SieveType.TRUE) {
                         factor = num;
                         break :factorSet;
                     }
@@ -73,7 +73,7 @@ pub fn SingleThreadedRunner(comptime SieveType: type) type {
 
                 num = (factor * factor) >> 1;
                 while (num < field_size) : (num += factor) {
-                    field[num] = SieveType.FALSE;
+                    field.*[num] = SieveType.FALSE;
                 }
             }
         }
