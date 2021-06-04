@@ -16,7 +16,7 @@ A Unix-like operating system is the preferred operating system to run this bench
 
 ## General working mechanism
 
-The main directory contains a file named "`Makefile`". This Makefile is a linux shell script written in bash. This script has the following basic flow:
+The main directory contains a file named "`Makefile`". This Makefile implements the following basic flow:
 
 - A temp directory is created to write the output of the benchmarks to
 - All solution directories that have a Dockerfile are processed one by one
