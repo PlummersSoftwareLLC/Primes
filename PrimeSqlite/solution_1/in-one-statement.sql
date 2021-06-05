@@ -1,22 +1,21 @@
 with recursive 
+-- configure the limit here
+    max_limit(max_nr) as (
+        select 1000000
+),
     naturals(n)
--- init of the array
+-- init of the narural numbers 2,3,5,7,...
 as (
     select 2
     union all
         select n+1 from naturals where n=2
     union all
-        select n+2 from naturals where n>2 and n+2<=1000000
+        select n+2 from naturals where n>2 and n+2<=(select max_nr from max_limit)
 ),
+--
+-- in the recursive call below we are calculating everything that can not be prime
     product (num,not_prime)
 as (
-    -- n*n is the start.
-    -- so if prime number is 3 we start at 9 with crossing off
-    -- for prime 5 we start at 25
-    -- what about 15 then in this case? 15 is already crossed of by
-    -- the processing of prime 3
-    -- downside of the approach below is that we are also crossing off for multiplications 
-    -- of not primes
     select n, n*n as sqr
       from naturals
       where 
@@ -31,7 +30,12 @@ as (
     where
       prod <= (select max(n) from naturals)
   )
-select count(*) from (
+select 
+    'fvbakel_sqlite1' as sol_name,
+    (select max_nr from max_limit) as max_nr,
+    count(*) as nr_of_primes,
+    'algorithm=other,faithful=no,bits=8'
+    from (
     select 
         n,
         case
