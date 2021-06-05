@@ -18,20 +18,19 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
 
         // member functions
 
-        pub fn init(allocator: *Allocator) !Self {
+        pub fn create(allocator: *Allocator) !Self {
             // allocates an array of data.
             var field: *[field_size]Type = try allocator.create([field_size]Type);
+            for (field) |*number| { number.* = TRUE; }
             return Self{.field = field, .allocator = allocator};
         }
 
-        pub fn deinit(self: *Self) void {
+        pub fn destroy(self: *Self) void {
             self.allocator.destroy(self.field);
         }
 
         pub fn reset(self: *Self) void {
-            for (self.field.*) |*number| {
-                number.* = TRUE;
-            }
+            for (self.field.*) |*number| { number.* = TRUE; }
         }
 
         pub fn primeCount(self: *Self) usize {
@@ -58,13 +57,13 @@ pub fn SingleThreadedRunner(comptime SieveType: type) type {
 
     return struct{
         const Self = @This();
-        sieve: SieveType,
+        sieve: SieveType = undefined,
 
-        pub fn init(allocator: *Allocator) !Self {
-            return Self{.sieve = try SieveType.init(allocator)};
+        pub fn init(self: *Self, allocator: *Allocator) !void {
+            self.sieve = try SieveType.create(allocator);
         }
 
-        pub fn deinit(self: *Self) void { self.sieve.deinit(); }
+        pub fn deinit(self: *Self) void { self.sieve.destroy(); }
 
         pub fn reset(self: *Self) void { self.sieve.reset(); }
 
