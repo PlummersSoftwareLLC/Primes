@@ -14,8 +14,19 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
 
         // storage
         field: *[field_size]T align(std.mem.page_size),
+        allocator: *Allocator,
 
         // member functions
+
+        pub fn init(allocator: *Allocator) !Self {
+            // allocates an array of data.
+            var field: *[field_size]Type = try allocator.create([field_size]Type);
+            return Self{.field = field, .allocator = allocator};
+        }
+
+        pub fn deinit(self: *Self) void {
+            self.allocator.destroy(self.field);
+        }
 
         pub fn reset(self: *Self) void {
             for (self.field.*) |*number| {
@@ -46,23 +57,24 @@ pub fn SingleThreadedRunner(comptime SieveType: type) type {
     const field_size = sieve_size >> 1;
 
     return struct{
-        pub fn init(allocator: *Allocator) !SieveType {
-            // allocate the memory and save as array
-            var field: *[field_size]Type = (try allocator.alloc(Type, field_size))[0..field_size];
-            return SieveType{.field = field};
+        const Self = @This();
+        sieve: SieveType,
+
+        pub fn init(allocator: *Allocator) !Self {
+            return Self{.sieve = try SieveType.init(allocator)};
         }
 
-        pub fn deinit(allocator: *Allocator, sieve: *SieveType) void {
-            allocator.free(sieve.field.*[0..]);
-        }
+        pub fn deinit(self: *Self) void { self.sieve.deinit(); }
 
-        pub fn run(sieve: *SieveType) void {
+        pub fn reset(self: *Self) void { self.sieve.reset(); }
+
+        pub fn run(self: *Self) void {
             @setAlignStack(256);
-            comptime const q = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+            comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
             var factor: usize = 3;
-            var field = sieve.field;
+            var field = self.sieve.field;
 
-            while (factor <= q) : (factor += 2) {
+            while (factor <= stop) : (factor += 2) {
                 var num: usize = factor;
                 factorSet: while (num < field_size) : (num += 2) {
                     if (field.*[num >> 1] == SieveType.TRUE) {
