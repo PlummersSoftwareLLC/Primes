@@ -4,10 +4,13 @@ RUN apk add --update build-base
 
 WORKDIR /opt/app
 
+COPY *.sh ./
 COPY *.s ./
 
-RUN gcc primes_arm64.s -o primes_arm64
+RUN chmod a+x *.sh
 
-ENTRYPOINT [ "./primes_arm64" ]
+RUN ./build.sh
+
+ENTRYPOINT [ "./run.sh" ]
 
 

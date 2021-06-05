@@ -179,7 +179,7 @@ class PrimeSieve {
       validateResults());
 
     fprintf(stderr, "\n");       
-    printf("eagerestwolf;%d;%f;1\n", passes, duration);
+    printf("eagerestwolf;%d;%f;1;algorithm=base,faithful=yes,bits=8\n", passes, duration);
   }
 
   /**

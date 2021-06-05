@@ -272,7 +272,14 @@ CKTXT   CON     0
 NAMETXT ALF     "RBERG"
         ALF     "EN;/ "
 TAILTXT ALF     ";<TIM"
-	ALF	"E>;1/"
+	ALF	"E>;1;"
+        ALF     "ALGOR"
+        ALF     "ITHM="
+        ALF     "BASE,"
+        ALF     "FAITH"
+        ALF     "FUL=N"
+        ALF     "O,BIT"
+        ALF     "S=1/ "
 
 * End template
 RSLTTXT ALF     "     "

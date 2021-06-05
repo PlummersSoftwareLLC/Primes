@@ -116,7 +116,7 @@ class prime_sieve(object):
 
         # Following 2 lines added by rbergen to conform to drag race output format
         stdout.write("\n");
-        print("davepl;" + str(passes) + ";" + str(duration) + ";1");
+        print("davepl;" + str(passes) + ";" + str(duration) + ";1;algorithm=base,faithful=yes");
 
 
 # MAIN Entry

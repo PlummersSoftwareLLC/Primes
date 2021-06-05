@@ -260,7 +260,7 @@ void timedTest(int secs, SIEVE *primeFinder(int), char *title) {
 
     float elapsed = (float) currentTicks - startTicks;
 
-    printf("%s;%d;%0.1f;1\n", title, passes, elapsed / CLOCKS_PER_SEC);
+    printf("%s;%d;%0.1f;1;algorithm=wheel,faithful=yes,bits=1\n", title, passes, elapsed / CLOCKS_PER_SEC);
     fflush(stdout);
 }
 

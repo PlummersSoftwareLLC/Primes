@@ -137,5 +137,5 @@ begin
     Write(PassCount);
     Write(';');
     Write((DurationTickCount / 1000):4:2);
-    WriteLn(';1');
+    WriteLn(';1;algorithm=base,faithful=yes');
 end.
