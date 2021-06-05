@@ -50,15 +50,16 @@ let runSieve sieveSize (bitArray: bool[]) =
 
 let printResults showResults duration passes sieveSize bitArray =
     let primes = bitArray |> filterPrimes 
+    let isValid = validateResults primeCounts sieveSize primes
+
     if showResults then printfn "2, %s" (String.Join(", ", primes))
 
-    printfn "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %b"
-        passes
-        duration
-        (duration / (float passes))
-        sieveSize
-        (countPrimes primes)
-        (validateResults primeCounts sieveSize primes)
+    printfn $"Passes: %d{passes}, Time: %f{duration}, Avg: %f{duration / (float passes)}, Limit: %d{sieveSize}, Count: %d{countPrimes primes}, Valid: %b{isValid}\n"
+
+    if isValid then
+        printfn $"dmannock_fsharp_recursion;%d{passes};%f{duration};1;algorithm=base,faithful=yes,bits=1"
+    else
+        printfn "ERROR: invalid results"
 
 [<EntryPoint>]
 let main _ =
@@ -70,8 +71,8 @@ let main _ =
         initPrimeSieve sieveSize |> runSieve sieveSize
         passes <- passes + 1
 
-    let tD = DateTime.UtcNow - tStart
+    let duration = (DateTime.UtcNow - tStart).TotalSeconds
     let checkBitArray = initPrimeSieve sieveSize
     runSieve sieveSize checkBitArray
-    printResults false tD.TotalSeconds passes sieveSize checkBitArray
+    printResults false duration passes sieveSize checkBitArray
     0 // return an integer exit code

@@ -41,18 +41,19 @@ let runSieve sieveSize (bitArray: byref<bool[]>) =
             num <- num + factor * 2
 
         factor <- factor + 2
-
+ 
 let printResults showResults duration passes sieveSize bitArray =
     let primes = bitArray |> filterPrimes 
+    let isValid = validateResults primeCounts sieveSize primes
+
     if showResults then printfn "2, %s" (String.Join(", ", primes))
 
-    printfn "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %b"
-        passes
-        duration
-        (duration / (float passes))
-        sieveSize
-        (countPrimes primes)
-        (validateResults primeCounts sieveSize primes)
+    printfn $"Passes: %d{passes}, Time: %f{duration}, Avg: %f{duration / (float passes)}, Limit: %d{sieveSize}, Count: %d{countPrimes primes}, Valid: %b{isValid}\n"
+
+    if isValid then
+        printfn $"dmannock_fsharp_port;%d{passes};%f{duration};1;algorithm=base,faithful=yes,bits=1"
+    else
+        printfn "ERROR: invalid results"
 
 [<EntryPoint>]
 let main _ =
@@ -66,6 +67,6 @@ let main _ =
         runSieve sieveSize &sieve
         passes <- passes + 1
 
-    let tD = DateTime.UtcNow - tStart
-    sieve |> printResults false tD.TotalSeconds passes sieveSize
+    let duration = (DateTime.UtcNow - tStart).TotalSeconds
+    printResults false duration passes sieveSize sieve
     0 // return an integer exit code
