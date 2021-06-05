@@ -2,95 +2,54 @@ const std = @import("std");
 const heap = std.heap;
 const print = std.debug.print;
 const time = std.time;
-const prime = @import("./prime.zig");
+const Sieve = @import("./sieve.zig").Sieve;
+const SingleThreadedRunner = @import("./sieve.zig").SingleThreadedRunner;
+const ParallelAmdahlRunner = @import("./parallel.zig").AmdahlRunner;
+const Allocator = @import("alloc.zig").SnappyAllocator;
+
+const SIZE = 1_000_000;
+
+var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
 
 pub fn main() anyerror!void {
-    const size = 1_000_000;
     const run_for = 5; // Seconds
+    var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
 
-    comptime const configs = .{
-        .{ bool, false, true },
-        // .{ u8, 0, 1 },
-        // .{ u1, 0, 1 },
-        // .{ usize, 0, 1 },
-        // .{ bool, true, false },
-        // .{ u1, 1, 0 },
-        // .{ u8, 1, 0 },
-        // .{ usize, 1, 0 },
-        // .{ u16, 0, 1 },
-        // .{ u32, 0, 1 },
-        // .{ u64, 0, 1 },
-    };
+    comptime const DataTypes = .{bool, u1, u8, u16, u32, u64, usize};
+    comptime const Runners = .{SingleThreadedRunner, ParallelAmdahlRunner};
+    comptime const names = .{"single", "amdahl"};
 
-    inline for (configs) |run| {
-        try runSieveTest(run[0], run[1], run[2], size, run_for);
-    }
-
-    inline for (configs) |run| {
-        try runAmdahlTest(run[0], run[1], run[2], size, run_for);
-    }
-
-    inline for (configs) |run| {
-        try runGustafsonTest(run[0], run[1], run[2], size, run_for);
+    inline for (Runners) | Runner, runner_index | {
+        inline for (DataTypes) |Type| {
+            comptime const SieveType = Sieve(Type, SIZE);
+            comptime const name = names[runner_index] ++ "-" ++ @typeName(Type);
+            try runSieveTest(Runner(SieveType), name, SIZE, run_for, allocator);
+        }
     }
 }
 
 fn runSieveTest(
-    comptime Type: type,
-    comptime true_val: Type,
-    comptime false_val: Type,
+    comptime Runner: type,
+    comptime name: anytype,
     size: comptime_int,
     run_for: comptime_int,
+    allocator: *std.mem.Allocator,
 ) anyerror!void {
     const timer = try time.Timer.start();
     var passes: u64 = 0;
-    while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        const field = [_]Type{true_val} ** (size >> 1);
-        prime.Sieve(Type, true_val, false_val, size).init(field).run();
-    }
-    const elapsed = timer.read();
+    var runner = Runner{};
 
-    try printResults("ManDeJan&ityonemo-zig-byte-sieve-type-" ++ @typeName(Type), passes, elapsed, size);
-}
-
-fn runAmdahlTest(
-    comptime Type: type,
-    comptime true_val: Type,
-    comptime false_val: Type,
-    size: comptime_int,
-    run_for: comptime_int,
-) anyerror!void {
-    const timer = try time.Timer.start();
-    var passes: u64 = 0;
-
-    var sieve = prime.ParallelAmdahlSieve(Type, true_val, false_val, size){};
-    try sieve.parallelInit();
+    try runner.init(allocator);
+    defer runner.deinit();
 
     while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        const field = [_]Type{true_val} ** (size >> 1);
-        sieve.init(field).mainLoop();
+        runner.reset();
+        runner.run(&passes);
     }
 
-    sieve.parallelCleanup();
-
     const elapsed = timer.read();
-    try printResults("ManDeJan&ityonemo-zig-amdahl-parallel-sieve", passes, elapsed, size);
-}
 
-fn runGustafsonTest(
-    comptime Type: type,
-    comptime true_val: Type,
-    comptime false_val: Type,
-    size: comptime_int,
-    run_for: comptime_int,
-) anyerror!void {
-    var passes: u64 = 0;
-    var finished: bool = false;
-
-    try prime.ParallelGustafsonSieve(Type, true_val, false_val, size, run_for).parallelInit(&passes, &finished);
-    var elapsed = try prime.ParallelGustafsonSieve(Type, true_val, false_val, size, run_for).mainRun(&passes, &finished);
-
-    try printResults("ManDeJan&ityonemo-zig-gustafson-parallel-sieve", passes, elapsed, size);
+    try printResults("ManDeJan&ityonemo-zig-" ++ name, passes, elapsed, size);
 }
 
 fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, limit: usize) !void {

@@ -14,7 +14,7 @@ pub fn SnappyAllocator(comptime size: usize) type {
     return struct {
         allocator: Allocator,
         backing_allocator: *Allocator,
-        mutex: Mutex = Mutex{},
+        mutex: Mutex,
         root_block: *[size]u8,
         root_block_available: bool = true,
 
@@ -24,7 +24,8 @@ pub fn SnappyAllocator(comptime size: usize) type {
             return Self{
                 .allocator = Allocator{.allocFn = alloc, .resizeFn = resize},
                 .root_block = root_block,
-                .backing_allocator = a
+                .backing_allocator = a,
+                .mutex = Mutex{}
             };
         }
 

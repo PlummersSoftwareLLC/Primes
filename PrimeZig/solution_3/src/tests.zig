@@ -14,16 +14,19 @@ fn run_sieve(comptime Runner: type, comptime expected_primes: usize) !void {
     try runner.init(allocator);
     var initial_count: usize = @TypeOf(runner.sieve).size >> 1;
     defer runner.deinit();
+    var passes: u64 = 0;
 
     runner.reset();
     std.testing.expectEqual(@as(usize, initial_count), runner.sieve.primeCount());
-    runner.run();
+    runner.run(&passes);
     std.testing.expectEqual(@as(usize, expected_primes), runner.sieve.primeCount());
 
     runner.reset();
     std.testing.expectEqual(@as(usize, initial_count), runner.sieve.primeCount());
-    runner.run();
+    runner.run(&passes);
     std.testing.expectEqual(@as(usize, expected_primes), runner.sieve.primeCount());
+
+    std.testing.expectEqual(@as(u64, 2), passes);
 }
 
 const expected_results = .{
@@ -40,15 +43,15 @@ const expected_results = .{
 //    .{ 10_000_000_000, 455_052_511 },
 };
 
-//test "Test single threaded" {
-//    inline for (expected_results) |result| {
-//        const count = result[0];
-//        const expected_primes = result[1];
-//        const SieveType = Sieve(bool, count);
-//
-//        try run_sieve(SingleThreadedRunner(SieveType), expected_primes);
-//    }
-//}
+test "Test single threaded" {
+    inline for (expected_results) |result| {
+        const count = result[0];
+        const expected_primes = result[1];
+        const SieveType = Sieve(bool, count);
+
+        try run_sieve(SingleThreadedRunner(SieveType), expected_primes);
+    }
+}
 
 test "Test multithreaded-Amdahl" {
     inline for (expected_results) |result| {

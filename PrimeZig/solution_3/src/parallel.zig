@@ -31,7 +31,7 @@ pub fn AmdahlRunner(comptime SieveType: type) type {
 
         pub fn init(self: *Self, allocator: *Allocator) !void {
             // set up the global worker pool, by abstracting a slice out of the available slots.
-            var totalWorkers: usize = std.math.min(try std.Thread.cpuCount(), 256) - 1;
+            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> 1) - 1;
             worker_pool = worker_slots[0..totalWorkers];
 
             // lock all of the workers before launching.
@@ -62,7 +62,7 @@ pub fn AmdahlRunner(comptime SieveType: type) type {
             self.sieve.destroy();
         }
 
-        pub fn run(self: *Self) void {
+        pub fn run(self: *Self, passes: *u64) void {
             // the main loop.
             init_hold.?.release();
             init_hold = null;
@@ -78,6 +78,8 @@ pub fn AmdahlRunner(comptime SieveType: type) type {
             while (threadsAreRunning()) {
                 std.time.sleep(100);
             }
+
+            passes.* += 1;
         }
 
         fn workerLoop(info: ThreadInfo) void {
@@ -124,8 +126,10 @@ pub fn AmdahlRunner(comptime SieveType: type) type {
                 // set up the next job
                 var num: u64 = current_job.factor + 2;
                 while (num < stop) : (num += 2) {
-                    if (field.*[num >> 1]) {
-                        break;
+                    if (SieveType.Type == bool) {
+                        if (field.*[num >> 1]) { break; }
+                    } else {
+                        if (field.*[num >> 1] == SieveType.TRUE) { break; }
                     }
                 }
 

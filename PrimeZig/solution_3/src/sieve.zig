@@ -67,7 +67,7 @@ pub fn SingleThreadedRunner(comptime SieveType: type) type {
 
         pub fn reset(self: *Self) void { self.sieve.reset(); }
 
-        pub fn run(self: *Self) void {
+        pub fn run(self: *Self, passes: *u64) void {
             @setAlignStack(256);
             comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
             var factor: usize = 3;
@@ -76,9 +76,16 @@ pub fn SingleThreadedRunner(comptime SieveType: type) type {
             while (factor <= stop) : (factor += 2) {
                 var num: usize = factor;
                 factorSet: while (num < field_size) : (num += 2) {
-                    if (field.*[num >> 1] == SieveType.TRUE) {
-                        factor = num;
-                        break :factorSet;
+                    if (SieveType.Type == bool) {
+                        if (field.*[num >> 1]) {
+                            factor = num;
+                            break :factorSet;
+                        }
+                    } else {
+                        if (field.*[num >> 1] == SieveType.TRUE) {
+                            factor = num;
+                            break :factorSet;
+                        }
                     }
                 }
 
@@ -87,6 +94,8 @@ pub fn SingleThreadedRunner(comptime SieveType: type) type {
                     field.*[num] = SieveType.FALSE;
                 }
             }
+            // increment the number of passes.
+            passes.* += 1;
         }
     };
 }
