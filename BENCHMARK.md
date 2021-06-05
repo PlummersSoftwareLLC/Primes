@@ -32,8 +32,8 @@ Take the following steps to run all benchmarks:
 
 1. Make sure you have installed the [required software](#linux-installation-and-prerequisites)
 2. Open a terminal.
-3. Make sure Node.js is added to the path. `PATH=/path/to/node/bin:$PATH`.
-   For example: `PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
+3. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.
+   For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
 4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
 5. `cd Primes`
 6. `make`
@@ -98,7 +98,7 @@ Take the following steps to install Node.js on Linux:
 2. Download the Linux Binaries, depending on your CPU architecture
 3. Unzip the downloaded file: `tar -xf /path/to/downloaded/file.xz>`
    For example: `tar -xf ~/Downloads/node-v14.17.0-linux-x64.tar.xz`
-4. The Node.js binaries are now extracted to a directory. This directory is refereed to as `/path/to/node` in the run instructions.
+4. The Node.js binaries are now extracted to a directory. This directory is referred to as `/path/to/node` in the run instructions.
 
 #### Docker for Linux
 
@@ -126,8 +126,8 @@ The preferred method to run the benchmark is with native Linux. Running the benc
 Take the following steps to run all benchmarks:
 
 1. Make sure you have installed the [required software](#windows-installation-and-prerequisites)
-2. Make sure Node.js is added to the path. `PATH=/path/to/node/bin:$PATH`.
-   For example: `PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
+2. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.
+   For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
 3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
 4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
 5. `cd Primes`
@@ -169,7 +169,7 @@ Take the following steps to install Node.js inside the Ubuntu distribution:
    `\\wsl$\Ubuntu-20.04\home\user`
 4. Open an Ubuntu terminal
 5. Unzip the downloaded file: `tar -xf ~/file.xz>`. For example: `tar -xf ~/node-v14.17.0-linux-x64.tar.xz`
-6. The Node.js binaries are now extracted to a directory. This directory is refereed to as `/path/to/node` in the run instructions.
+6. The Node.js binaries are now extracted to a directory. This directory is referred to as `/path/to/node` in the run instructions.
 
 #### Docker Desktop for Windows
 
