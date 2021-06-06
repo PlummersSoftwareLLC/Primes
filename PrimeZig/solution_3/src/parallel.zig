@@ -16,11 +16,18 @@ fn blockOnInit() void {
     hold.release();
 }
 
+const ParallelismOpts = struct {
+    // should we apply a thread count reduction assuming that the system is hyperthreading
+    // and we should only spawn half as many cores.
+    no_ht: bool = false
+};
+
 /// job sharing parallelism.
-pub fn AmdahlRunner(comptime SieveType: type) type {
+pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) type {
     const Type = SieveType.Type;
     const sieve_size = SieveType.size;
     const field_size = sieve_size >> 1;
+    const ht_reduction = if (opt.no_ht) 1 else 0;
 
     return struct {
         // PRIVATE TYPES
@@ -37,7 +44,7 @@ pub fn AmdahlRunner(comptime SieveType: type) type {
 
         pub fn init(self: *Self, allocator: *Allocator) !void {
             // set up the global worker pool, by abstracting a slice out of the available slots.
-            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> 1) - 1;
+            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction) - 1;
             worker_pool = worker_slots[0..totalWorkers];
 
             // lock all of the workers before launching.
@@ -179,12 +186,11 @@ pub fn AmdahlRunner(comptime SieveType: type) type {
 }
 
 /// embarassing parallism
-pub fn GustafsonRunner(
-    comptime SieveType: type
-) type {
+pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) type {
     const Type = SieveType.Type;
     const sieve_size = SieveType.size;
     const field_size = sieve_size >> 1;
+    const ht_reduction = if (opt.no_ht) 1 else 0;
 
     return struct {
         const Self = @This();
@@ -198,7 +204,7 @@ pub fn GustafsonRunner(
 
         pub fn init(self: *Self, allocator: *Allocator) !void {
             // set up the global worker pool, by abstracting a slice out of the available slots.
-            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> 1) - 1;
+            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction) - 1;
             worker_pool = worker_slots[0..totalWorkers];
 
             // lock all of the workers before launching.

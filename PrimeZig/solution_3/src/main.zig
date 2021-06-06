@@ -17,14 +17,22 @@ pub fn main() anyerror!void {
     var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
 
     comptime const DataTypes = .{bool, u1, u8, u16, u32, u64, usize};
-    comptime const Runners = .{SingleThreadedRunner, ParallelAmdahlRunner, ParallelGustafsonRunner};
-    comptime const names = .{"single", "amdahl", "gustafson"};
+    comptime const runner_specs = .{
+        .{SingleThreadedRunner, .{}},
+        .{ParallelAmdahlRunner, .{}},
+        .{ParallelGustafsonRunner, .{}},
+        .{ParallelAmdahlRunner, .{.no_ht = true}},
+        .{ParallelGustafsonRunner, .{.no_ht = true}}
+    };
+    comptime const names = .{"single", "amdahl-ht", "gustafson-ht", "amdahl-(no ht)", "gustafson-(no ht)"};
 
-    inline for (Runners) | Runner, runner_index | {
+    inline for (runner_specs) | runner_spec, runner_index | {
+        comptime const Runner = runner_spec[0];
+        comptime const runner_opt = runner_spec[1];
         inline for (DataTypes) |Type| {
             comptime const SieveType = Sieve(Type, SIZE);
             comptime const name = names[runner_index] ++ "-" ++ @typeName(Type);
-            try runSieveTest(Runner(SieveType), name, SIZE, run_for, allocator);
+            try runSieveTest(Runner(SieveType, runner_opt), name, SIZE, run_for, allocator);
         }
     }
 }
