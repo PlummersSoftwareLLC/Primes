@@ -248,6 +248,7 @@ pub fn GustafsonRunner(
             defer sieve.destroy();
 
             while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
+                sieve.reset();
                 runSieve(sieve);
 
                 // increment the number of passes.
