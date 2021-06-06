@@ -2,14 +2,16 @@
 //! TESTS
 
 const std = @import("std");
-const Sieve = @import("sieve.zig").Sieve;
-const SingleThreadedRunner = @import("sieve.zig").SingleThreadedRunner;
-const ParallelAmdahlRunner = @import("parallel.zig").AmdahlRunner;
-//const ParallelGustafsonRunner = parallel.GustafsonRunner;
+const sieve = @import("sieve.zig");
+const parallel = @import("parallel.zig");
+const Sieve = sieve.Sieve;
+const SingleThreadedRunner = sieve.SingleThreadedRunner;
+const ParallelAmdahlRunner = parallel.AmdahlRunner;
+const ParallelGustafsonRunner = parallel.GustafsonRunner;
 
 const allocator = std.testing.allocator;
 
-fn run_sieve(comptime Runner: type, comptime expected_primes: usize) !void {
+fn run_sieve(comptime Runner: type, comptime expected_primes: usize) !u64 {
     var runner = Runner{};
     try runner.init(allocator);
     var initial_count: usize = @TypeOf(runner.sieve).size >> 1;
@@ -26,7 +28,7 @@ fn run_sieve(comptime Runner: type, comptime expected_primes: usize) !void {
     runner.run(&passes);
     std.testing.expectEqual(@as(usize, expected_primes), runner.sieve.primeCount());
 
-    std.testing.expectEqual(@as(u64, 2), passes);
+    return passes;
 }
 
 const expected_results = .{
@@ -49,16 +51,28 @@ test "Test single threaded" {
         const expected_primes = result[1];
         const SieveType = Sieve(bool, count);
 
-        try run_sieve(SingleThreadedRunner(SieveType), expected_primes);
+        var passes = try run_sieve(SingleThreadedRunner(SieveType), expected_primes);
+        std.testing.expectEqual(@as(u64, 2), passes);
     }
 }
 
-test "Test multithreaded-Amdahl" {
+test "Test multithreaded-amdahl" {
     inline for (expected_results) |result| {
         const count = result[0];
         const expected_primes = result[1];
         const SieveType = Sieve(bool, count);
 
-        try run_sieve(ParallelAmdahlRunner(SieveType), expected_primes);
+        var passes = try run_sieve(ParallelAmdahlRunner(SieveType), expected_primes);
+        std.testing.expectEqual(@as(u64, 2), passes);
+    }
+}
+
+test "Test mulithreaded-gustafson" {
+    inline for (expected_results) | result | {
+        const count = result[0];
+        const expected_primes = result[1];
+        const SieveType = Sieve(bool, count);
+
+        _ = try run_sieve(ParallelGustafsonRunner(SieveType), expected_primes);
     }
 }

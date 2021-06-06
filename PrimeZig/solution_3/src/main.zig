@@ -5,6 +5,7 @@ const time = std.time;
 const Sieve = @import("./sieve.zig").Sieve;
 const SingleThreadedRunner = @import("./sieve.zig").SingleThreadedRunner;
 const ParallelAmdahlRunner = @import("./parallel.zig").AmdahlRunner;
+const ParallelGustafsonRunner = @import("./parallel.zig").GustafsonRunner;
 const Allocator = @import("alloc.zig").SnappyAllocator;
 
 const SIZE = 1_000_000;
@@ -16,8 +17,8 @@ pub fn main() anyerror!void {
     var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
 
     comptime const DataTypes = .{bool, u1, u8, u16, u32, u64, usize};
-    comptime const Runners = .{SingleThreadedRunner, ParallelAmdahlRunner};
-    comptime const names = .{"single", "amdahl"};
+    comptime const Runners = .{SingleThreadedRunner, ParallelAmdahlRunner, ParallelGustafsonRunner};
+    comptime const names = .{"single", "amdahl", "gustafson"};
 
     inline for (Runners) | Runner, runner_index | {
         inline for (DataTypes) |Type| {

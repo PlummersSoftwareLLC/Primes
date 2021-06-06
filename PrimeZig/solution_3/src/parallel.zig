@@ -10,6 +10,12 @@ var worker_finished: [255]bool = undefined;
 var init_mutex: Mutex = Mutex{};
 var init_hold: ?Mutex.Held = null;
 
+// utility functions
+fn blockOnInit() void {
+    var hold = init_mutex.acquire();
+    hold.release();
+}
+
 /// job sharing parallelism.
 pub fn AmdahlRunner(comptime SieveType: type) type {
     const Type = SieveType.Type;
@@ -169,161 +175,119 @@ pub fn AmdahlRunner(comptime SieveType: type) type {
             }
             return false;
         }
-
-        fn blockOnInit() void {
-            var hold = init_mutex.acquire();
-            hold.release();
-        }
     };
 }
 
-//pub fn ParallelAmdahlSieve(
-//    comptime Type: type,
-//    sieve_size: comptime_int,
-//) type {
-//    return struct {
-//        const TRUE = if (Type == bool) true else 1;
-//        const FALSE = if (Type == bool) false else 0;
-//
-//        const Self = @This();
-//        const field_size = sieve_size >> 1;
-//        const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
-//
-//        const ThreadInfo = struct { sieve: *Self, index: usize };
-//
-//        const Job = struct { factor: usize };
-//        job_mutex: Mutex = Mutex{},
-//        current_job: ?Job = null,
-//        finished: bool = false,
-//
-//        field: [field_size]Type align(std.mem.page_size) = undefined,
-//
-//        pub fn DataType() type { return Type; }
-//        pub fn size() comptime_int { return sieve_size; }
-//
-//        /// from the main thread, launches all of child threads for parallel computation
-//        pub fn init(field: *[field_size]Type) !Self {
-//
-//            return .{};
-//        }
-//
-//        //pub fn init(self: *Self, field: [field_size]Type) *Self {
-//        //    if (init_hold) |_hold| {} else {
-//        //        init_hold = init_mutex.acquire();
-//        //    }
-//        //    defer init_hold.?.release();
-////
-//        //    self.field = field;
-//        //    for (self.field) |*item| {
-//        //        item.* = true_val;
-//        //    }
-//        //    for (worker_pool) |_, index| {
-//        //        worker_started[index] = false;
-//        //        worker_finished[index] = false;
-//        //    }
-////
-//        //    self.current_job = Job{ .factor = 3 };
-//        //    return self;
-//        //}
-//
-//        fn setFinished(index: usize) void {
-//            const hold = init_mutex.acquire();
-//            defer hold.release();
-//
-//            if (worker_started[index]) {
-//                worker_finished[index] = true;
-//            }
-//        }
-//
-//        fn unfinished() bool {
-//            const hold = init_mutex.acquire();
-//            defer hold.release();
-//
-//            for (worker_pool) |_, index| {
-//                // xor operation:  Must be (unstarted AND unfinished) OR (started AND finished)
-//                if (worker_started[index] != worker_finished[index]) return true;
-//            }
-//            return false;
-//        }
-//
-//
-//        fn fetchJob(self: *Self) ?Job {
-//            const hold = self.job_mutex.acquire();
-//            defer hold.release();
-//
-//            if (self.current_job) |current_job| {
-//                // set up the next job
-//                var num: u64 = current_job.factor + 2;
-//                while (num < stop) : (num += 2) {
-//                    if (self.field[num >> 1]) {
-//                        break;
-//                    }
-//                }
-//
-//                self.current_job = if (num <= stop) Job{ .factor = num } else null;
-//                return current_job;
-//            } else {
-//                return null;
-//            }
-//        }
-//
-//        /// runs the sieve on one job.
-//        fn sieveJob(self: *Self, job: Job) void {
+/// embarassing parallism
+pub fn GustafsonRunner(
+    comptime SieveType: type
+) type {
+    const Type = SieveType.Type;
+    const sieve_size = SieveType.size;
+    const field_size = sieve_size >> 1;
 
-//        }
-//    };
-//}
-//
-///// embarassing parallism
-//pub fn ParallelGustafsonSieve(
-//    comptime Type: type,
-//    comptime true_val: Type,
-//    comptime false_val: Type,
-//    sieve_size: comptime_int,
-//    run_for: comptime_int,
-//) type {
-//    return struct {
-//        const Self = @This();
-//        const field_size = sieve_size >> 1;
-//
-//        const ThreadInfo = struct {
-//            field: [field_size]Type, passes: *u64, finished: *bool
-//        };
-//
-//        pub fn parallelInit(passes: *u64, finished: *bool) !void {
-//            var totalWorkers: usize = std.math.min(try std.Thread.cpuCount(), 256) - 1;
-//            worker_pool = worker_slots[0..totalWorkers];
-//
-//            for (worker_pool) |*worker| {
-//                var worker_field_slice: []Type = try std.heap.page_allocator.alloc(Type, field_size);
-//                var info = ThreadInfo{ .field = worker_field_slice[0..field_size].*, .passes = passes, .finished = finished };
-//                worker.* = try std.Thread.spawn(info, workerRun);
-//            }
-//        }
-//
-//        pub fn mainRun(passes: *u64, finished: *bool) !u64 {
-//            const timer = try std.time.Timer.start();
-//            while (timer.read() < run_for * std.time.ns_per_s) {
-//                const field = [_]Type{true_val} ** (sieve_size >> 1);
-//                Sieve(Type, true_val, false_val, sieve_size).init(field).run();
-//                _ = @atomicRmw(u64, passes, .Add, 1, .Monotonic);
-//            }
-//            @atomicStore(bool, finished, true, .Monotonic);
-//            // wait till all of the workers have finished.
-//            for (worker_pool) |worker| {
-//                worker.wait();
-//            }
-//
-//            return timer.read();
-//        }
-//
-//        fn workerRun(info: ThreadInfo) !void {
-//            var sieve = Sieve(Type, true_val, false_val, sieve_size).init(info.field).run();
-//
-//            while (!@atomicLoad(bool, info.finished, .Monotonic)) {
-//                Sieve(Type, true_val, false_val, sieve_size).init(info.field).run();
-//                _ = @atomicRmw(u64, info.passes, .Add, 1, .Monotonic);
-//            }
-//        }
-//    };
-//}
+    return struct {
+        const Self = @This();
+        const field_size = sieve_size >> 1;
+
+        allocator: *Allocator = undefined,
+        passes: *u64 = undefined,
+        started: bool = false,
+        finished: bool = false,
+        sieve: SieveType = undefined,
+
+        pub fn init(self: *Self, allocator: *Allocator) !void {
+            // set up the global worker pool, by abstracting a slice out of the available slots.
+            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> 1) - 1;
+            worker_pool = worker_slots[0..totalWorkers];
+
+            // lock all of the workers before launching.
+            init_hold = init_mutex.acquire();
+
+            // create the main thread's sieve and initialize the threadpool
+            var sieve = try SieveType.create(allocator);
+            errdefer sieve.destroy();
+            self.sieve = sieve;
+            self.allocator = allocator;
+
+            for (worker_pool) |*thread_ptr, index| {
+                // NB as of zig 0.8.0 (~June 4 2021), std.Thread.Spawn will take params
+                // (func, context) instead of (context, func)
+                thread_ptr.* = try std.Thread.spawn(self, workerLoop);
+            }
+        }
+
+        pub fn deinit(self: *Self) void {
+            // first, set the "finished flag to true"
+            @atomicStore(bool, &self.finished, true, .Monotonic);
+            // join all of the threads.
+            for (worker_pool) | thread_ptr, index | {
+                thread_ptr.wait();
+            }
+            // destroy the main thread's sieve
+            self.sieve.destroy();
+        }
+
+        pub fn run(self: *Self, passes: *u64) void {
+            if (!self.started) {
+                init_hold.?.release();
+                self.passes = passes;
+                self.started = true;
+                init_hold = null;
+            }
+
+            runSieve(self.sieve);
+
+            // increment the number of passes.
+            _ = @atomicRmw(u64, passes, .Add, 1, .Monotonic);
+        }
+
+        pub fn workerLoop(runner: *Self) void {
+            blockOnInit();
+            var sieve = SieveType.create(runner.allocator) catch unreachable;
+            defer sieve.destroy();
+
+            while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
+                runSieve(sieve);
+
+                // increment the number of passes.
+                _ = @atomicRmw(u64, runner.passes, .Add, 1, .Monotonic);
+            }
+        }
+
+        // NB only resets the main thread.
+        pub fn reset(self: *Self) void { self.sieve.reset(); }
+
+        // utility functions
+
+        fn runSieve(sieve: SieveType) void {
+            @setAlignStack(256);
+            comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+
+            var factor: usize = 3;
+            var field = sieve.field;
+
+            while (factor <= stop) : (factor += 2) {
+                var num: usize = factor;
+                factorSet: while (num < field_size) : (num += 2) {
+                    if (Type == bool) {
+                        if (field.*[num >> 1]) {
+                            factor = num;
+                            break :factorSet;
+                        }
+                    } else {
+                        if (field.*[num >> 1] == SieveType.TRUE) {
+                            factor = num;
+                            break :factorSet;
+                        }
+                    }
+                }
+
+                num = (factor * factor) >> 1;
+                while (num < field_size) : (num += factor) {
+                    field.*[num] = SieveType.FALSE;
+                }
+            }
+        }
+    };
+}
