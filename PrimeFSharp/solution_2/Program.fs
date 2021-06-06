@@ -1,7 +1,8 @@
 open System
+open System.Globalization
 
 let primeCounts = Map.ofList([ 
-    10, 1               // Historical data for validating our results - the number of prim)
+    10, 4               // Historical data for validating our results - the number of prim)
     100, 25            // to be found under some limit, such as 168 primes under 10)
     1000, 168
     10000, 1229
@@ -24,30 +25,24 @@ let validateResults primeCounts sieveSize primes =
     | Some expected -> expected = countPrimes primes
     | None -> false
 
-let runSieve sieveSize (bitArray: bool[]) =
+let runSieve sieveSize (bitArray: byref<bool[]>) =
+    let mutable factor = 3
+    let mutable num = 0
     let q = sieveSize |> float |> sqrt |> int
 
-    let rec findNext num =
-        if Array.get bitArray num
-        then num
-        else findNext (num + 2)
+    while factor <= q do
+        num <- factor
+        while not (Array.get bitArray num) && num < sieveSize do
+            num <- num + 2
+        factor <- num
 
-    let eliminate factor =
-        let rec loop num =
-            if num < sieveSize then
-                Array.set bitArray num false
-                loop (num + factor * 2)
-            else ()
-        loop (factor * factor)
-      
-    let rec run factor =
-        if factor <= q then
-            let factor = findNext factor
-            eliminate factor
-            run (factor +  2)
-        else ()
-    run 3
+        num <- factor * factor
+        while num < sieveSize do
+            Array.set bitArray num false
+            num <- num + factor * 2
 
+        factor <- factor + 2
+ 
 let printResults showResults duration passes sieveSize bitArray =
     let primes = bitArray |> filterPrimes 
     let isValid = validateResults primeCounts sieveSize primes
@@ -57,22 +52,23 @@ let printResults showResults duration passes sieveSize bitArray =
     printfn $"Passes: %d{passes}, Time: %f{duration}, Avg: %f{duration / (float passes)}, Limit: %d{sieveSize}, Count: %d{countPrimes primes}, Valid: %b{isValid}\n"
 
     if isValid then
-        printfn $"dmannock_fsharp_recursion;%d{passes};%f{duration};1;algorithm=base,faithful=yes,bits=1"
+        printfn $"dmannock_fsharp_port;%d{passes};%f{duration};1;algorithm=base,faithful=yes,bits=1"
     else
         printfn "ERROR: invalid results"
 
 [<EntryPoint>]
 let main _ =
+    CultureInfo.CurrentCulture <- CultureInfo("en-GB", false)
     let mutable passes = 0
     let sieveSize = 1_000_000
+    let mutable sieve = initPrimeSieve sieveSize
     let tStart = DateTime.UtcNow
 
     while (DateTime.UtcNow - tStart).TotalSeconds < 5. do
-        initPrimeSieve sieveSize |> runSieve sieveSize
+        sieve <- initPrimeSieve sieveSize
+        runSieve sieveSize &sieve
         passes <- passes + 1
 
     let duration = (DateTime.UtcNow - tStart).TotalSeconds
-    let checkBitArray = initPrimeSieve sieveSize
-    runSieve sieveSize checkBitArray
-    printResults false duration passes sieveSize checkBitArray
+    printResults false duration passes sieveSize sieve
     0 // return an integer exit code
