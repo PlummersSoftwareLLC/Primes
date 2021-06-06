@@ -4,7 +4,6 @@ const Allocator = std.mem.Allocator;
 pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
     return struct {
         // values
-        pub const Type = T;
         pub const size = sieve_size;
         pub const TRUE = if (T == bool) true else 1;
         pub const FALSE = if (T == bool) false else 0;
@@ -20,8 +19,8 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
 
         pub fn create(allocator: *Allocator) !Self {
             // allocates an array of data.
-            var field: *[field_size]Type = try allocator.create([field_size]Type);
-            return Self{.field = field, .allocator = allocator};
+            var field: *[field_size]T = try allocator.create([field_size]T);
+            return Self{ .field = field, .allocator = allocator };
         }
 
         pub fn destroy(self: *Self) void {
@@ -29,14 +28,16 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
         }
 
         pub fn reset(self: *Self) void {
-            for (self.field.*) |*number| { number.* = TRUE; }
+            for (self.field.*) |*number| {
+                number.* = TRUE;
+            }
         }
 
         pub fn primeCount(self: *Self) usize {
             var count: usize = 0;
             var idx: usize = 0;
 
-            for (self.field.*) | value | {
+            for (self.field.*) |value| {
                 if (T == bool) {
                     count += @boolToInt(value);
                 } else {
@@ -51,10 +52,14 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
             const field = self.field;
             var num = factor + 2;
             while (num < field_size) : (num += 2) {
-                if (Type == bool) {
-                    if (field.*[num >> 1]) { return num; }
+                if (T == bool) {
+                    if (field.*[num >> 1]) {
+                        return num;
+                    }
                 } else {
-                    if (field.*[num >> 1] == TRUE) { return num; }
+                    if (field.*[num >> 1] == TRUE) {
+                        return num;
+                    }
                 }
             }
             return num;
@@ -67,13 +72,13 @@ pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
                 field.*[num] = FALSE;
             }
         }
+        pub const name = "sieve-" ++ @typeName(T);
     };
 }
 
 pub fn BitSieve(comptime T: type, sieve_size: comptime_int) type {
     return struct {
         // values
-        pub const Type = T;
         pub const size = sieve_size;
         const bit_width = @bitSizeOf(T);
         const bit_shift = @floatToInt(u6, @log2(@intToFloat(f64, bit_width)));
@@ -91,8 +96,8 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int) type {
 
         pub fn create(allocator: *Allocator) !Self {
             // allocates an array of data.
-            var field: *[field_units]Type = try allocator.create([field_units]Type);
-            return Self{.field = field, .allocator = allocator};
+            var field: *[field_units]T = try allocator.create([field_units]T);
+            return Self{ .field = field, .allocator = allocator };
         }
 
         pub fn destroy(self: *Self) void {
@@ -101,16 +106,20 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int) type {
 
         pub fn reset(self: *Self) void {
             comptime const finalmask = (1 << (field_size % bit_width)) - 1;
-            for (self.field.*) |*number| { number.* = @as(Type, 0) -% 1; }
-            self.field.*[field_units - 1] = finalmask;
+            for (self.field.*) |*number| {
+                number.* = @as(T, 0) -% 1;
+            }
+            if (needs_pad) {
+                self.field.*[field_units - 1] = finalmask;
+            }
         }
 
         pub fn primeCount(self: *Self) usize {
             var count: usize = 0;
             var idx: usize = 0;
 
-            for (self.field.*) | value | {
-                count += @popCount(Type, value);
+            for (self.field.*) |value| {
+                count += @popCount(T, value);
             }
 
             return count;
@@ -124,13 +133,19 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int) type {
         pub fn findNextFactor(self: *Self, factor: usize) usize {
             comptime const masks = trailing_masks();
             const field = self.field;
-            var num = factor + 2;
+            var num = (factor + 2) >> 1;
             var index = num >> bit_shift;
             var slot = field.*[index] & masks[num & residue_mask];
-            while ((slot != 0) and index <= field.len) : (index += 1) {
-                slot = field.*[index];
+            if (slot == 0) {
+                for (field.*[index + 1 ..]) |s| {
+                    index += 1;
+                    slot = s;
+                    if (s != 0) {
+                        break;
+                    }
+                }
             }
-            return (index << bit_shift) + @ctz(Type, slot);
+            return (((index << bit_shift) + @ctz(T, slot)) << 1) + 1;
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
@@ -138,37 +153,45 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int) type {
             const field = self.field;
             var num = (factor * factor) >> 1;
             while (num < field_size) : (num += factor) {
-                var index = factor >> bit_shift;
-                field.*[index] |= masks[num & residue_mask];
+                var index = num >> bit_shift;
+                field.*[index] &= masks[num & residue_mask];
             }
         }
 
-        const shift_t = switch (Type) {u8 => u3, u16 => u4, u32 => u5, u64 => u6, else => unreachable};
+        const shift_t = switch (T) {
+            u8 => u3,
+            u16 => u4,
+            u32 => u5,
+            u64 => u6,
+            else => unreachable,
+        };
 
-        fn trailing_masks() comptime [bit_width]Type {
-            var masks = std.mem.zeroes([bit_width]Type);
-            for (masks) | *value, index | {
-                value.* = @as(Type, 0) -% (@as(Type, 1) << @intCast(shift_t, index));
+        fn trailing_masks() comptime [bit_width]T {
+            var masks = std.mem.zeroes([bit_width]T);
+            for (masks) |*value, index| {
+                value.* = @as(T, 0) -% (@as(T, 1) << @intCast(shift_t, index));
+            }
+            return masks;
+        }
+
+        fn bit_masks() comptime [bit_width]T {
+            var masks = std.mem.zeroes([bit_width]T);
+            for (masks) |*value, index| {
+                value.* = (@as(T, 1) << @intCast(shift_t, index));
+                value.* ^= (@as(T, 0) -% @as(T, 1));
             }
             return masks;
         }
 
-        fn bit_masks() comptime [bit_width]Type{
-            var masks = std.mem.zeroes([bit_width]Type);
-            for (masks) | *value, index | {
-                value.* = (@as(Type, 1) << @intCast(shift_t, index));
-            }
-            return masks;
-        }
+        pub const name = "bitSieve-" ++ @typeName(T);
     };
 }
 
 pub fn SingleThreadedRunner(comptime SieveType: type, comptime _opt: anytype) type {
-    const Type = SieveType.Type;
     const sieve_size = SieveType.size;
     const field_size = sieve_size >> 1;
 
-    return struct{
+    return struct {
         const Self = @This();
         sieve: SieveType = undefined,
 
@@ -176,9 +199,13 @@ pub fn SingleThreadedRunner(comptime SieveType: type, comptime _opt: anytype) ty
             self.sieve = try SieveType.create(allocator);
         }
 
-        pub fn deinit(self: *Self) void { self.sieve.destroy(); }
+        pub fn deinit(self: *Self) void {
+            self.sieve.destroy();
+        }
 
-        pub fn reset(self: *Self) void { self.sieve.reset(); }
+        pub fn reset(self: *Self) void {
+            self.sieve.reset();
+        }
 
         pub fn run(self: *Self, passes: *u64) void {
             @setAlignStack(256);
@@ -191,5 +218,7 @@ pub fn SingleThreadedRunner(comptime SieveType: type, comptime _opt: anytype) ty
             // increment the number of passes.
             passes.* += 1;
         }
+
+        pub const name = "single-" ++ SieveType.name;
     };
 }

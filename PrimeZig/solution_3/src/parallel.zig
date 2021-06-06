@@ -17,14 +17,13 @@ fn blockOnInit() void {
 }
 
 const ParallelismOpts = struct {
-    // should we apply a thread count reduction assuming that the system is hyperthreading
-    // and we should only spawn half as many cores.
+// should we apply a thread count reduction assuming that the system is hyperthreading
+// and we should only spawn half as many cores.
     no_ht: bool = false
 };
 
 /// job sharing parallelism.
 pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) type {
-    const Type = SieveType.Type;
     const sieve_size = SieveType.size;
     const field_size = sieve_size >> 1;
     const ht_reduction = if (opt.no_ht) 1 else 0;
@@ -33,9 +32,9 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
         // PRIVATE TYPES
         const Self = @This();
         // information passed into the running thread.
-        const ThreadInfo = struct {self: *Self, index: usize};
+        const ThreadInfo = struct { self: *Self, index: usize };
         // the job stores relevant information about what to be run.
-        const Job = struct {factor: usize};
+        const Job = struct { factor: usize };
 
         // struct state
         sieve: SieveType = undefined,
@@ -58,9 +57,7 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
             for (worker_pool) |*thread_ptr, index| {
                 // NB as of zig 0.8.0 (~June 4 2021), std.Thread.Spawn will take params
                 // (func, context) instead of (context, func)
-                thread_ptr.* = try std.Thread.spawn(
-                    ThreadInfo{ .self = self, .index = index},
-                    workerLoop);
+                thread_ptr.* = try std.Thread.spawn(ThreadInfo{ .self = self, .index = index }, workerLoop);
             }
         }
 
@@ -68,7 +65,7 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
             // first, set the "finished flag to true"
             @atomicStore(bool, &self.finished, true, .Monotonic);
             // join all of the threads.
-            for (worker_pool) | thread_ptr, index | {
+            for (worker_pool) |thread_ptr, index| {
                 thread_ptr.wait();
             }
             // deinit the sieve.
@@ -111,7 +108,7 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
         }
 
         pub fn reset(self: *Self) void {
-            init_hold = if (init_hold) | hold| hold else init_mutex.acquire();
+            init_hold = if (init_hold) |hold| hold else init_mutex.acquire();
 
             // reset all of the workers.
             for (worker_pool) |_, index| {
@@ -137,16 +134,9 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
 
             if (self.current_job) |current_job| {
                 // set up the next job
-                var num: u64 = current_job.factor + 2;
-                while (num < stop) : (num += 2) {
-                    if (SieveType.Type == bool) {
-                        if (field.*[num >> 1]) { break; }
-                    } else {
-                        if (field.*[num >> 1] == SieveType.TRUE) { break; }
-                    }
-                }
+                var next_factor = self.sieve.findNextFactor(current_job.factor);
 
-                var next_job = if (num <= stop) Job{ .factor = num } else null;
+                var next_job = if (next_factor <= stop) Job{ .factor = next_factor } else null;
                 self.current_job = next_job;
 
                 return current_job;
@@ -156,11 +146,7 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
         }
 
         fn runJob(self: *Self, job: Job) void {
-            var num: usize = (job.factor * job.factor) >> 1;
-            var field = self.sieve.field;
-            while (num < field_size) : (num += job.factor) {
-                field.*[num] = @TypeOf(self.sieve).FALSE;
-            }
+            self.sieve.runFactor(job.factor);
         }
 
         fn setFinished(index: usize) void {
@@ -182,12 +168,14 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
             }
             return false;
         }
+
+        const uses_ht = if (opt.no_ht) "noht-" else "";
+        pub const name = "parallel-amdahl-" ++ uses_ht ++ SieveType.name;
     };
 }
 
 /// embarassing parallism
 pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) type {
-    const Type = SieveType.Type;
     const sieve_size = SieveType.size;
     const field_size = sieve_size >> 1;
     const ht_reduction = if (opt.no_ht) 1 else 0;
@@ -227,7 +215,7 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
             // first, set the "finished flag to true"
             @atomicStore(bool, &self.finished, true, .Monotonic);
             // join all of the threads.
-            for (worker_pool) | thread_ptr, index | {
+            for (worker_pool) |thread_ptr, index| {
                 thread_ptr.wait();
             }
             // destroy the main thread's sieve
@@ -242,7 +230,7 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
                 init_hold = null;
             }
 
-            runSieve(self.sieve);
+            runSieve(&self.sieve);
 
             // increment the number of passes.
             _ = @atomicRmw(u64, passes, .Add, 1, .Monotonic);
@@ -255,7 +243,7 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
 
             while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
                 sieve.reset();
-                runSieve(sieve);
+                runSieve(&sieve);
 
                 // increment the number of passes.
                 _ = @atomicRmw(u64, runner.passes, .Add, 1, .Monotonic);
@@ -263,38 +251,25 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
         }
 
         // NB only resets the main thread.
-        pub fn reset(self: *Self) void { self.sieve.reset(); }
+        pub fn reset(self: *Self) void {
+            self.sieve.reset();
+        }
 
         // utility functions
 
-        fn runSieve(sieve: SieveType) void {
+        fn runSieve(sieve: *SieveType) void {
             @setAlignStack(256);
             comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
 
             var factor: usize = 3;
             var field = sieve.field;
 
-            while (factor <= stop) : (factor += 2) {
-                var num: usize = factor;
-                factorSet: while (num < field_size) : (num += 2) {
-                    if (Type == bool) {
-                        if (field.*[num >> 1]) {
-                            factor = num;
-                            break :factorSet;
-                        }
-                    } else {
-                        if (field.*[num >> 1] == SieveType.TRUE) {
-                            factor = num;
-                            break :factorSet;
-                        }
-                    }
-                }
-
-                num = (factor * factor) >> 1;
-                while (num < field_size) : (num += factor) {
-                    field.*[num] = SieveType.FALSE;
-                }
+            while (factor <= stop) : (factor = sieve.findNextFactor(factor)) {
+                sieve.runFactor(factor);
             }
         }
+
+        const uses_ht = if (opt.no_ht) "noht-" else "";
+        pub const name = "parallel-gustafson-" ++ uses_ht ++ SieveType.name;
     };
 }

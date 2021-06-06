@@ -3,6 +3,7 @@ const heap = std.heap;
 const print = std.debug.print;
 const time = std.time;
 const Sieve = @import("./sieve.zig").Sieve;
+const BitSieve = @import("./sieve.zig").BitSieve;
 const SingleThreadedRunner = @import("./sieve.zig").SingleThreadedRunner;
 const ParallelAmdahlRunner = @import("./parallel.zig").AmdahlRunner;
 const ParallelGustafsonRunner = @import("./parallel.zig").GustafsonRunner;
@@ -16,23 +17,35 @@ pub fn main() anyerror!void {
     const run_for = 5; // Seconds
     var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
 
-    comptime const DataTypes = .{bool, u1, u8, u16, u32, u64, usize};
-    comptime const runner_specs = .{
-        .{SingleThreadedRunner, .{}},
-        .{ParallelAmdahlRunner, .{}},
-        .{ParallelGustafsonRunner, .{}},
-        .{ParallelAmdahlRunner, .{.no_ht = true}},
-        .{ParallelGustafsonRunner, .{.no_ht = true}}
-    };
-    comptime const names = .{"single", "amdahl-ht", "gustafson-ht", "amdahl-(no ht)", "gustafson-(no ht)"};
+    comptime const AllDataTypes = .{ bool, u1, u8, u16, u32, u64, usize };
+    comptime const BitSieveDataTypes = .{u8, u16, u32, u64};
 
-    inline for (runner_specs) | runner_spec, runner_index | {
-        comptime const Runner = runner_spec[0];
-        comptime const runner_opt = runner_spec[1];
+    comptime const runner_specs = .{
+        .{ SingleThreadedRunner, Sieve, .{} },
+        .{ ParallelAmdahlRunner, Sieve, .{} },
+        .{ ParallelGustafsonRunner, Sieve, .{} },
+        .{ ParallelAmdahlRunner, Sieve, .{ .no_ht = true } },
+        .{ ParallelGustafsonRunner, Sieve, .{ .no_ht = true } },
+        .{ SingleThreadedRunner, BitSieve, .{} },
+        .{ ParallelGustafsonRunner, BitSieve, .{ } },
+        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true } },
+    };
+
+    inline for (runner_specs) |runner_spec, runner_index| {
+        comptime const RunnerFn = runner_spec[0];
+        comptime const SieveFn = runner_spec[1];
+        comptime const runner_opt = runner_spec[2];
+
+        comptime const DataTypes = switch (SieveFn) {
+            Sieve => AllDataTypes,
+            BitSieve => BitSieveDataTypes,
+            else => unreachable,
+        };
+
         inline for (DataTypes) |Type| {
-            comptime const SieveType = Sieve(Type, SIZE);
-            comptime const name = names[runner_index] ++ "-" ++ @typeName(Type);
-            try runSieveTest(Runner(SieveType, runner_opt), name, SIZE, run_for, allocator);
+            comptime const SieveType = SieveFn(Type, SIZE);
+            comptime const Runner = RunnerFn(SieveType, runner_opt);
+            try runSieveTest(Runner, Runner.name, SIZE, run_for, allocator);
         }
     }
 }

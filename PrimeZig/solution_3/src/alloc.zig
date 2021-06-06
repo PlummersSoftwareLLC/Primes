@@ -22,10 +22,10 @@ pub fn SnappyAllocator(comptime size: usize) type {
 
         pub fn init(a: *Allocator, root_block: *[size]u8) Self {
             return Self{
-                .allocator = Allocator{.allocFn = alloc, .resizeFn = resize},
+                .allocator = Allocator{ .allocFn = alloc, .resizeFn = resize },
                 .root_block = root_block,
                 .backing_allocator = a,
-                .mutex = Mutex{}
+                .mutex = Mutex{},
             };
         }
 
