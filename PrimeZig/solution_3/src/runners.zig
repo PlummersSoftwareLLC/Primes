@@ -2,6 +2,42 @@ const std = @import("std");
 const Mutex = std.Thread.Mutex.AtomicMutex;
 const Allocator = std.mem.Allocator;
 
+pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
+    const sieve_size = Sieve.size;
+    const field_size = sieve_size >> 1;
+
+    return struct {
+        const Self = @This();
+        sieve: Sieve = undefined,
+
+        pub fn init(self: *Self, allocator: *Allocator) !void {
+            self.sieve = try Sieve.create(allocator);
+        }
+
+        pub fn deinit(self: *Self) void {
+            self.sieve.destroy();
+        }
+
+        pub fn reset(self: *Self) void {
+            self.sieve.reset();
+        }
+
+        pub fn run(self: *Self, passes: *u64) void {
+            @setAlignStack(256);
+            comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+            var factor: usize = 3;
+
+            while (factor <= stop) : (factor = self.sieve.findNextFactor(factor)) {
+                self.sieve.runFactor(factor);
+            }
+            // increment the number of passes.
+            passes.* += 1;
+        }
+
+        pub const name = "single-" ++ Sieve.name;
+    };
+}
+
 // global sorts of things that can be shared across parallel implementations
 var worker_slots: [255]*std.Thread = undefined;
 var worker_pool: []*std.Thread = undefined;
@@ -23,8 +59,8 @@ const ParallelismOpts = struct {
 };
 
 /// job sharing parallelism.
-pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) type {
-    const sieve_size = SieveType.size;
+pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
+    const sieve_size = Sieve.size;
     const field_size = sieve_size >> 1;
     const ht_reduction = if (opt.no_ht) 1 else 0;
 
@@ -37,7 +73,7 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
         const Job = struct { factor: usize };
 
         // struct state
-        sieve: SieveType = undefined,
+        sieve: Sieve = undefined,
         current_job: ?Job = null,
         finished: bool = false,
 
@@ -50,7 +86,7 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
             init_hold = init_mutex.acquire();
 
             // create the sieve and initialize the threadPool
-            var sieve = try SieveType.create(allocator);
+            var sieve = try Sieve.create(allocator);
             errdefer sieve.destroy();
             self.sieve = sieve;
 
@@ -170,13 +206,13 @@ pub fn AmdahlRunner(comptime SieveType: type, comptime opt: ParallelismOpts) typ
         }
 
         const uses_ht = if (opt.no_ht) "noht-" else "";
-        pub const name = "parallel-amdahl-" ++ uses_ht ++ SieveType.name;
+        pub const name = "parallel-amdahl-" ++ uses_ht ++ Sieve.name;
     };
 }
 
 /// embarassing parallism
-pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) type {
-    const sieve_size = SieveType.size;
+pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
+    const sieve_size = Sieve.size;
     const field_size = sieve_size >> 1;
     const ht_reduction = if (opt.no_ht) 1 else 0;
 
@@ -188,7 +224,7 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
         passes: *u64 = undefined,
         started: bool = false,
         finished: bool = false,
-        sieve: SieveType = undefined,
+        sieve: Sieve = undefined,
 
         pub fn init(self: *Self, allocator: *Allocator) !void {
             // set up the global worker pool, by abstracting a slice out of the available slots.
@@ -199,7 +235,7 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
             init_hold = init_mutex.acquire();
 
             // create the main thread's sieve and initialize the threadpool
-            var sieve = try SieveType.create(allocator);
+            var sieve = try Sieve.create(allocator);
             errdefer sieve.destroy();
             self.sieve = sieve;
             self.allocator = allocator;
@@ -238,7 +274,7 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
 
         pub fn workerLoop(runner: *Self) void {
             blockOnInit();
-            var sieve = SieveType.create(runner.allocator) catch unreachable;
+            var sieve = Sieve.create(runner.allocator) catch unreachable;
             defer sieve.destroy();
 
             while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
@@ -257,7 +293,7 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
 
         // utility functions
 
-        fn runSieve(sieve: *SieveType) void {
+        fn runSieve(sieve: *Sieve) void {
             @setAlignStack(256);
             comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
 
@@ -270,6 +306,6 @@ pub fn GustafsonRunner(comptime SieveType: type, comptime opt: ParallelismOpts) 
         }
 
         const uses_ht = if (opt.no_ht) "noht-" else "";
-        pub const name = "parallel-gustafson-" ++ uses_ht ++ SieveType.name;
+        pub const name = "parallel-gustafson-" ++ uses_ht ++ Sieve.name;
     };
 }

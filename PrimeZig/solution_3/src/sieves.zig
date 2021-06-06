@@ -1,7 +1,7 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-pub fn Sieve(comptime T: type, sieve_size: comptime_int) type {
+pub fn IntSieve(comptime T: type, sieve_size: comptime_int) type {
     return struct {
         // values
         pub const size = sieve_size;
@@ -187,38 +187,3 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int) type {
     };
 }
 
-pub fn SingleThreadedRunner(comptime SieveType: type, comptime _opt: anytype) type {
-    const sieve_size = SieveType.size;
-    const field_size = sieve_size >> 1;
-
-    return struct {
-        const Self = @This();
-        sieve: SieveType = undefined,
-
-        pub fn init(self: *Self, allocator: *Allocator) !void {
-            self.sieve = try SieveType.create(allocator);
-        }
-
-        pub fn deinit(self: *Self) void {
-            self.sieve.destroy();
-        }
-
-        pub fn reset(self: *Self) void {
-            self.sieve.reset();
-        }
-
-        pub fn run(self: *Self, passes: *u64) void {
-            @setAlignStack(256);
-            comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
-            var factor: usize = 3;
-
-            while (factor <= stop) : (factor = self.sieve.findNextFactor(factor)) {
-                self.sieve.runFactor(factor);
-            }
-            // increment the number of passes.
-            passes.* += 1;
-        }
-
-        pub const name = "single-" ++ SieveType.name;
-    };
-}
