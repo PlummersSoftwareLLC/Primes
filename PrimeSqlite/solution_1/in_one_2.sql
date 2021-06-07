@@ -1,3 +1,8 @@
+PRAGMA TEMP_STORE = 2;
+PRAGMA JOURNAL_MODE = OFF;
+PRAGMA SYNCHRONOUS = 0;
+PRAGMA LOCKING_MODE = EXCLUSIVE;
+
 drop table if exists timing;
 create table timing (
     what,
@@ -8,6 +13,8 @@ create table timing (
 -- first entry
 insert into timing values ("start",julianday("now"),0);
 
+drop table if exists primes_table;
+CREATE TABLE primes_table AS
 with recursive 
 -- configure the limit here
     max_limit(max_nr) as (
@@ -51,7 +58,7 @@ as (
       except
       select product.not_prime from product
   )
-select count(*) from primes
+select n from primes
 ;
 
 -- end
@@ -65,3 +72,7 @@ select  "End",
         (ts.time_stamp - ts.previous_ts ) *100000
 from ts
 ;
+
+attach "results.db" as db_results;
+insert into db_results.results
+select "in_one_2",(select count(*) from primes_table),* from timing;

@@ -1,3 +1,8 @@
+PRAGMA TEMP_STORE = 2;
+PRAGMA JOURNAL_MODE = OFF;
+PRAGMA SYNCHRONOUS = 0;
+PRAGMA LOCKING_MODE = EXCLUSIVE;
+
 drop table if exists timing;
 create table timing (
     what,
@@ -70,8 +75,8 @@ from ts
 ;
 
 -- second run
-drop table if exists primes;
-CREATE TABLE primes AS
+drop table if exists primes_table;
+CREATE TABLE primes_table AS
 with recursive 
 -- configure the limit here
     start_at(n) as (
@@ -130,3 +135,7 @@ from ts
 
 -- outputs
 select count(*) from primes_table;
+
+attach "results.db" as db_results;
+insert into db_results.results
+select "in_one_4",(select count(*) from primes_table),* from timing;

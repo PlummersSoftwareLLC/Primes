@@ -33,5 +33,4 @@ select  "End",
 from ts
 ;
 
-
 select * from timing;

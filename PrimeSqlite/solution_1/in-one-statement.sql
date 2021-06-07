@@ -1,3 +1,8 @@
+PRAGMA TEMP_STORE = 2;
+PRAGMA JOURNAL_MODE = OFF;
+PRAGMA SYNCHRONOUS = 0;
+PRAGMA LOCKING_MODE = EXCLUSIVE;
+
 with recursive 
 -- configure the limit here
     max_limit(max_nr) as (

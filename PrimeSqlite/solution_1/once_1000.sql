@@ -196,7 +196,7 @@ with
     select julianday("now"), (select min(time_stamp_jday) from timing)
   )
 insert into timing 
-select  "total",
+select  "End",
         ts.time_stamp,
         (ts.time_stamp - ts.previous_ts ) *100000
 from ts
@@ -209,3 +209,7 @@ from
 where 
     isprime =1
 ;
+
+attach "results.db" as db_results;
+insert into db_results.results
+select "once_1000",(select count(*) from naturals where isPrime = 1),* from timing;

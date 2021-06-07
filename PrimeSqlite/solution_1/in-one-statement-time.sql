@@ -1,13 +1,20 @@
+PRAGMA TEMP_STORE = 2;
+PRAGMA JOURNAL_MODE = OFF;
+PRAGMA SYNCHRONOUS = 0;
+PRAGMA LOCKING_MODE = EXCLUSIVE;
+
 drop table if exists timing;
 create table timing (
     what,
-    time_stamp_ms,
+    time_stamp_jday,
     duration
 );
 
 -- first entry
 insert into timing values ("start",julianday("now"),0);
 
+drop table if exists primes_table;
+CREATE TABLE primes_table AS
 with recursive 
 -- configure the limit here
     max_limit(max_nr) as (
@@ -41,30 +48,20 @@ as (
       prod <= (select max(n) from naturals)
   )
 select 
-    'fvbakel_sqlite1' as sol_name,
-    (select max_nr from max_limit) as max_nr,
-    count(*) as nr_of_primes,
-    'algorithm=other,faithful=no,bits=8'
-    from (
-    select 
-        n,
-        case
-            when not_prime is null then 1
-        else 0
-        end as isPrime
-    from naturals
-    left join (select distinct not_prime from product) unique_list on (
-        naturals.n = unique_list.not_prime
-    )
-) sieve
-where
-    sieve.isPrime = 1
-;
+    n,
+    case
+        when not_prime is null then 1
+    else 0
+    end as isPrime
+from naturals
+left join (select distinct not_prime from product) unique_list on (
+    naturals.n = unique_list.not_prime
+);
 
 -- end
 with
   ts(time_stamp,previous_ts) as (
-    select julianday("now"), (select min(time_stamp_ms) from timing)
+    select julianday("now"), (select min(time_stamp_jday) from timing)
   )
 insert into timing 
 select  "End",
@@ -72,3 +69,7 @@ select  "End",
         (ts.time_stamp - ts.previous_ts ) *100000
 from ts
 ;
+
+attach "results.db" as db_results;
+insert into db_results.results
+select "in_one_statement",(select sum(isPrime) from primes_table),* from timing;

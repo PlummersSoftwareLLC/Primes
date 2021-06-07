@@ -1,3 +1,8 @@
+PRAGMA TEMP_STORE = 2;
+PRAGMA JOURNAL_MODE = OFF;
+PRAGMA SYNCHRONOUS = 0;
+PRAGMA LOCKING_MODE = EXCLUSIVE;
+
 drop table if exists timing;
 create table timing (
     what,
@@ -58,6 +63,7 @@ as (
 select n from primes
 ;
 
+
 with
   ts(time_stamp,previous_ts) as (
     select julianday("now"), (select max(time_stamp_jday) from timing)
@@ -70,8 +76,8 @@ from ts
 ;
 
 -- second run
-drop table if exists primes;
-CREATE TABLE primes AS
+drop table if exists primes_table;
+CREATE TABLE primes_table AS
 with recursive 
 -- configure the limit here
     start_at(n) as (
@@ -93,7 +99,7 @@ product (num,not_prime)
 as (
     select n, n*n as sqr
       from primes_first_segment
-      where 
+      where
             sqr <= (select max_nr from max_limit)
         and n !=2 -- this filters out all the recursive calls for evennumbers!
     union all -- all because we know there is no overlap between the two sets, is a bit faster than just union
@@ -130,3 +136,6 @@ from ts
 
 -- outputs
 select count(*) from primes_table;
+attach "results.db" as db_results;
+insert into db_results.results
+select "in_two_steps_1",(select count(*) from primes_table),* from timing;

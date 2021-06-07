@@ -8,10 +8,19 @@ PRAGMA JOURNAL_MODE = OFF;
 PRAGMA SYNCHRONOUS = 0;
 PRAGMA LOCKING_MODE = EXCLUSIVE;
 
+drop table if exists timing;
+create table timing (
+    what,
+    time_stamp_jday,
+    duration
+);
+
+-- first entry
+insert into timing values ("start",julianday("now"),0);
+
 -- starting a transaction makes no difference in performance
 begin transaction;
 
-select "start=", julianday("now");
 
 drop table if exists naturals;
 create table naturals (
@@ -28,7 +37,16 @@ create table not_primes (
     n integer
 );
 
-select "before init fill=", julianday("now");
+with
+  ts(time_stamp,previous_ts) as (
+    select julianday("now"), (select max(time_stamp_jday) from timing)
+  )
+insert into timing 
+select  "Init",
+        ts.time_stamp,
+        (ts.time_stamp - ts.previous_ts ) *86400.0
+from ts
+;
 -- only include 2 and the odd numbers in the table
 -- not much impact on the performance compared to
 -- adding the even numbers too
@@ -45,11 +63,29 @@ insert into naturals
 --select n, 1, null from nn; -- debug
 select n, 1 from nn;
 
-select "before index1=", julianday("now");
+with
+  ts(time_stamp,previous_ts) as (
+    select julianday("now"), (select max(time_stamp_jday) from timing)
+  )
+insert into timing 
+select  "fill naturals",
+        ts.time_stamp,
+        (ts.time_stamp - ts.previous_ts ) *86400.0
+from ts
+;
 -- adding the index makes the program twice as fast!
 create unique index naturals_i on naturals(n);
 
-select "before main calculation=", julianday("now");
+with
+  ts(time_stamp,previous_ts) as (
+    select julianday("now"), (select max(time_stamp_jday) from timing)
+  )
+insert into timing 
+select  "Index 1",
+        ts.time_stamp,
+        (ts.time_stamp - ts.previous_ts ) *86400.0
+from ts
+;
 /*
   The recursive statement delivers a virtual table
   with two columns n, not prime.
@@ -109,10 +145,28 @@ select "before main calculation=", julianday("now");
 insert into not_primes
 select distinct not_prime from product;
 
-select "before index2=", julianday("now");
+with
+  ts(time_stamp,previous_ts) as (
+    select julianday("now"), (select max(time_stamp_jday) from timing)
+  )
+insert into timing 
+select  "Not primes calculation",
+        ts.time_stamp,
+        (ts.time_stamp - ts.previous_ts ) *86400.0
+from ts
+;
 create unique index not_primes_i on not_primes(n);
 
-select "before join=", julianday("now");
+with
+  ts(time_stamp,previous_ts) as (
+    select julianday("now"), (select max(time_stamp_jday) from timing)
+  )
+insert into timing 
+select  "Index 2",
+        ts.time_stamp,
+        (ts.time_stamp - ts.previous_ts ) *86400.0
+from ts
+;
 insert or replace into naturals
 select naturals.n, 0 
 from not_primes
@@ -125,8 +179,19 @@ join naturals
 --from product join naturals
 --  on (product.not_prime = naturals.n)
 --;
---commit;
-select "end=", julianday("now");
+commit;
+
+-- end
+with
+  ts(time_stamp,previous_ts) as (
+    select julianday("now"), (select min(time_stamp_jday) from timing)
+  )
+insert into timing 
+select  "End",
+        ts.time_stamp,
+        (ts.time_stamp - ts.previous_ts ) *100000
+from ts
+;
 
 
 -- output
@@ -136,3 +201,7 @@ from
 where 
     isprime =1
 ;
+
+attach "results.db" as db_results;
+insert into db_results.results
+select "once",(select count(*) from naturals where isPrime = 1),* from timing;
