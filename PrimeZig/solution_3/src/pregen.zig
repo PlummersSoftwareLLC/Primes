@@ -27,6 +27,7 @@ pub fn PreGenerated(comptime count: usize) type {
 
     generator.reset();
 
+    // this takes a bunch of computational power:  Let it happen.
     @setEvalBranchQuota(100000);
 
     // elucidate the pattern for all of the primes.
@@ -65,7 +66,7 @@ fn relatively_prime(a: usize, b: usize) bool {
     return (a == b) or ((b % a) != 0);
 }
 
-test "the generation of our hops is generally correct" {
+test "the generation of our hops table is correct" {
     inline for (seeds) |seed| {
         const T = PreGenerated(seed);
         var this: usize = 1;

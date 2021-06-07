@@ -1,7 +1,11 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-pub fn IntSieve(comptime T: type, sieve_size: comptime_int) type {
+const SieveOpts = struct {
+    pregens: ?comptime_int = null
+};
+
+pub fn IntSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) type {
     return struct {
         // values
         pub const size = sieve_size;
@@ -76,7 +80,7 @@ pub fn IntSieve(comptime T: type, sieve_size: comptime_int) type {
     };
 }
 
-pub fn BitSieve(comptime T: type, sieve_size: comptime_int) type {
+pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) type {
     return struct {
         // values
         pub const size = sieve_size;

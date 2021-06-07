@@ -50,7 +50,7 @@ test "Test single threaded" {
     inline for (expected_results) |result| {
         const count = result[0];
         const expected_primes = result[1];
-        const Sieve = IntSieve(bool, count);
+        const Sieve = IntSieve(bool, count, .{});
 
         var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes);
         std.testing.expectEqual(@as(u64, 2), passes);
@@ -61,7 +61,7 @@ test "Test multithreaded-amdahl" {
     inline for (expected_results) |result| {
         const count = result[0];
         const expected_primes = result[1];
-        const Sieve = IntSieve(bool, count);
+        const Sieve = IntSieve(bool, count, .{});
 
         var passes = try runSieve(ParallelAmdahlRunner(Sieve, .{}), expected_primes);
         std.testing.expectEqual(@as(u64, 2), passes);
@@ -72,7 +72,7 @@ test "Test mulithreaded-gustafson" {
     inline for (expected_results) |result| {
         const count = result[0];
         const expected_primes = result[1];
-        const Sieve = IntSieve(bool, count);
+        const Sieve = IntSieve(bool, count, .{});
 
         _ = try runSieve(ParallelGustafsonRunner(Sieve, .{}), expected_primes);
     }
@@ -82,7 +82,7 @@ test "Single threaded with bitsieve/8" {
     inline for (expected_results) |result| {
         const count = result[0];
         const expected_primes = result[1];
-        const Sieve = BitSieve(u8, count);
+        const Sieve = BitSieve(u8, count, .{});
 
         var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes);
         std.testing.expectEqual(@as(u64, 2), passes);
@@ -93,9 +93,28 @@ test "Single threaded with bitsieve/64" {
     inline for (expected_results) |result| {
         const count = result[0];
         const expected_primes = result[1];
-        const Sieve = BitSieve(u64, count);
+        const Sieve = BitSieve(u64, count, .{});
 
         var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes);
         std.testing.expectEqual(@as(u64, 2), passes);
+    }
+}
+
+const big_results = .{
+    .{ 10_000, 1_229 },
+    .{ 100_000, 9_592 },
+    .{ 1_000_000, 78_498 },
+    .{ 10_000_000, 664_579 },
+}
+
+const pregens = .{2, 3, 4, 5};
+
+test "Single threaded with a boost from pregeneration" {
+    inline for (big_results) |result| {
+        inline for (pregen) |pregen| {
+            const count = result[0];
+            const expected_primes = result[1];
+            const Sieve = IntSieve(u64, count, .{.pregen =  pregen});
+        }
     }
 }

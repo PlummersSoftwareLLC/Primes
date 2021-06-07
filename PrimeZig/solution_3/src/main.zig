@@ -23,21 +23,22 @@ pub fn main() anyerror!void {
     comptime const AllDataTypes = .{ bool, u1, u8, u16, u32, u64, usize };
     comptime const BitSieveDataTypes = .{u8, u16, u32, u64};
 
-    comptime const runner_specs = .{
-        .{ SingleThreadedRunner, IntSieve, .{} },
-        .{ ParallelAmdahlRunner, IntSieve, .{} },
-        .{ ParallelGustafsonRunner, IntSieve, .{} },
-        .{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true } },
-        .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true } },
-        .{ SingleThreadedRunner, BitSieve, .{} },
-        .{ ParallelGustafsonRunner, BitSieve, .{ } },
-        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true } },
+    comptime const specs = .{
+        .{ SingleThreadedRunner, IntSieve, .{}, .{}},
+        .{ ParallelAmdahlRunner, IntSieve, .{}, .{}},
+        .{ ParallelGustafsonRunner, IntSieve, .{}, .{}},
+        .{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, .{}},
+        .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, .{}},
+        .{ SingleThreadedRunner, BitSieve, .{}, .{}},
+        .{ ParallelGustafsonRunner, BitSieve, .{}, .{}},
+        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, .{}},
     };
 
-    inline for (runner_specs) |runner_spec, runner_index| {
-        comptime const RunnerFn = runner_spec[0];
-        comptime const SieveFn = runner_spec[1];
-        comptime const runner_opt = runner_spec[2];
+    inline for (specs) |spec| {
+        comptime const RunnerFn = spec[0];
+        comptime const SieveFn = spec[1];
+        comptime const runner_opts = spec[2];
+        comptime const sieve_opts = spec[3];
 
         comptime const DataTypes = switch (SieveFn) {
             IntSieve => AllDataTypes,
@@ -46,8 +47,8 @@ pub fn main() anyerror!void {
         };
 
         inline for (DataTypes) |Type| {
-            comptime const Sieve = SieveFn(Type, SIZE);
-            comptime const Runner = RunnerFn(Sieve, runner_opt);
+            comptime const Sieve = SieveFn(Type, SIZE, sieve_opts);
+            comptime const Runner = RunnerFn(Sieve, runner_opts);
             try runSieveTest(Runner, Runner.name, SIZE, run_for, allocator);
         }
     }
