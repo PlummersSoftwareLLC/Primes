@@ -1,13 +1,13 @@
-# Sqlite implementation of the Sieve of Eratosthenes algorithm
+# SQLite implementation of the Sieve of Eratosthenes algorithm
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-other-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-green)
 
-This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in Sqlite. SQL is a Turing complete language, so it is interesting how algorithm can be implemented in SQL, and thus in Sqlite. However, there are some challenges to overcome when using Sqlite and conform to the rules in [CONTRIBUTING.md](../../CONTRIBUTING.md#rules). Sqlite lacks some important features:
+This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in SQLite. SQL is a Turing complete language, so it is interesting how algorithm can be implemented in SQL, and thus in SQLite. However, there are some challenges to overcome when using SQLite and conform to the rules in [CONTRIBUTING.md](../../CONTRIBUTING.md#rules). SQLite lacks some important features:
 
-1. a built in sqrt function
+1. a builtin sqrt function
 2. a real good way to run the calculation in a while loop for at least 5 seconds and report on the results
 3. to have an outer loop as described in the base rules
 
@@ -20,8 +20,8 @@ The lack of an outer loop is mechanism (feature 3) is solved by:
 
 Further more, the nature of SQL is different compared to other languages:
 
-- a bit array is not natural in SQL. Instead it is more natural to have a lists of records (sets) of numbers
-- One by one operations are not natural in SQL. Instead it is more natural to do mass operations on a list of records.
+- A bit array is not natural in SQL. Instead it is more natural to have sets of records
+- One by one operations are not natural in SQL. Instead it is more natural to do mass operations on a (sub)set of records.
 
 Based on the above, the implementation uses the following algorithm:
 
