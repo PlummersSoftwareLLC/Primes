@@ -10,7 +10,7 @@ ENV PATH=/opt/vlang:$PATH
 WORKDIR /opt/app
 COPY *.v .
 
-RUN v primes.v
+RUN v -prod primes.v
 
 FROM alpine:3.13
 
