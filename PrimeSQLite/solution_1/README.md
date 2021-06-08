@@ -46,6 +46,10 @@ In the second stage the elimination is done for the found prime numbers of the f
 3. Then list2 is subtracted from list1 and the primes found in stage1 are added
 4. The results from 3 are stored in a table, and this is considered the end result.  
 
+### Alternative Algorithms
+
+Alternative algorithms and formulations for this implementation have been considered. The different variants are stored in the [attic](./attic/README.md) of this solution.
+
 ### Credits
 
 The Python part is based on the implementation from "Python/solution_2, by ssovest".
