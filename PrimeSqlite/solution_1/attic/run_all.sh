@@ -1,9 +1,5 @@
 #!/bin/bash -v
 
-# collect cpu info and ignore errors
-rm cpuinfo.db 
-sqlite3 cpuinfo.db <make_cpuinfo_db.sql 1>/dev/null 2>/dev/null
-
 # tests
 sqlite3 <once.sql                   | grep -v off | grep -v exclusive                 
 sqlite3 <once_1000.sql              | grep -v off | grep -v exclusive    

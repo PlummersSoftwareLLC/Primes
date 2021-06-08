@@ -1,8 +1,12 @@
 """
 Sqlite Prime Sieve
 
+Although this is a Python script, the actual calculation of 
+the prime sieve is done in SQLite.
+
 """
 import sqlite3
+from math import sqrt
 
 prime_counts = { 10 : 4,                 # Historical data for validating our results - the number of primes
                 100 : 25,                # to be found under some limit, such as 168 primes under 1000
@@ -14,7 +18,14 @@ prime_counts = { 10 : 4,                 # Historical data for validating our re
                 100000000 : 5761455
                 }
 
-def init_db():
+def init_db(limit):
+    """
+        - Initialize a in memory database in sqlite
+        - set important sqlite performance parameters, 
+          specific for the problem at hand
+        - passing of configuration parameters to sqlite
+        - workaround for the lack of a sqrt built in function in sqlite
+    """
     try:
         sqliteConnection = sqlite3.connect(':memory:')
         cursor = sqliteConnection.cursor()
@@ -24,14 +35,23 @@ def init_db():
             PRAGMA SYNCHRONOUS = 0;
             PRAGMA LOCKING_MODE = EXCLUSIVE;
 
-            -- configure the limit here
+            -- table to hold the limit, 
+            -- and way to pass this argument to the sqlite script
+            -- this method has less impact than a paramater during run_sieve
             drop table if exists max_limit_conf;
-            create table max_limit_conf as 
-                select 1000000 as max_nr,
-                       1000 as sqrt_max -- workaround because sqlite does not have sqrt function
-            ;
+            create table max_limit_conf (
+                max_nr      INT,
+                sqrt_max    INT -- workaround because sqlite does not have sqrt function
+            );  
 
             '''
+        )
+        cursor.execute('''
+            insert into max_limit_conf(max_nr,sqrt_max) values (?,?);
+            ''',
+            ( 
+                limit,round(sqrt(limit))
+            )
         )
     except sqlite3.Error as error:
         print("Error in init_db", error)
@@ -43,6 +63,16 @@ def init_db():
     return sqliteConnection
 
 def run_sieve(sqliteConnection):
+    """
+        This function does the actual calculation of the prime numbers
+        - it clears any previous results
+        - in the first stage all prime numbers smaller than the square root
+          of the limit are calculated. This is done with a brute force method
+        - in the second stage the elimination is done for the found prime numbers 
+          in the first stage
+        - all prime numbers are stored in a table, and this is considered the
+          end result.   
+    """
     try:
         cursor = sqliteConnection.cursor()
 
@@ -51,7 +81,7 @@ drop table if exists primes_table;
 CREATE TABLE primes_table AS
 with recursive 
   naturals_1(n)
-  -- init of the narural numbers 2,3,5,7,...
+  -- init of the natural numbers 2,3,5,7,...
   as (
       select 2
       union all
@@ -131,7 +161,6 @@ select n from primes
         if cursor:
             cursor.close()
     
-
 def print_results(sqliteConnection,show_results, duration, passes):
     try:
         cursor = sqliteConnection.cursor()
@@ -145,19 +174,19 @@ def print_results(sqliteConnection,show_results, duration, passes):
             print("Primes are: ", record)
         
         cursor.execute('''
-            select count(*) from primes_table;;
+            select count(*) from primes_table;
             '''
         )
         record = cursor.fetchall()
-
         count = record[0][0]
+
         if show_results:
             print()
-        print("Passes: %s, Time: %s, Avg: %s, Limit: %s, Count: %s, Valid: %s" % (passes, duration, duration/passes, self._size, count, self.validate_results()))
+        print("Passes: %s, Time: %s, Avg: %s, Limit: %s, Count: %s, Valid: %s" % (passes, duration, duration/passes, limit, count, validate_results(limit,count)))
 
         # Following 2 lines added by to conform to drag race output format
         print()
-        print("fvbakel_sqlite; %s;%s;1" % (passes, duration))
+        print("fvbakel_sqlite; %s;%s;1;algorithm=other,faithful=no,bits=8" % (passes, duration))
           
     except sqlite3.Error as error:
         print("Error in print_primes", error)
@@ -166,12 +195,20 @@ def print_results(sqliteConnection,show_results, duration, passes):
         if cursor:
             cursor.close()
 
-
-
 def close_db(sqliteConnection):
     if sqliteConnection:
         sqliteConnection.close()
-        print("The SQLite connection is closed")
+
+def validate_results(limit,count):                      # Check to see if this is an upper_limit we can
+
+    """Look up our count of primes in the historical data (if we have it)
+    to see if it matches"""
+
+    if limit in prime_counts:                # the data, and (b) our count matches. Since it will return
+        return prime_counts[limit] == count  # false for an unknown upper_limit, can't assume false == bad
+    else:
+        return 'unkown'
+    return False
 
 # MAIN Entry
 if __name__ == "__main__":
@@ -179,13 +216,23 @@ if __name__ == "__main__":
     from timeit import default_timer  # For timing the durations
 
     parser = ArgumentParser(description="Sqlite Prime Sieve")
+    parser.add_argument("--limit", "-l", help="Upper limit for calculating prime numbers", type=int, default=1_000_000)
     parser.add_argument("--time", "-t", help="Time limit", type=float, default=5)
     parser.add_argument("--show", "-s", help="Print found prime numbers", action="store_true")
+    parser.add_argument("--version", "-v", help="Print version information", action="store_true")
+
 
     args = parser.parse_args()
     limit = args.limit
     timeout = args.time
     show_results = args.show
+
+    if args.version:
+        import sys
+        print("Python version", sys.version_info)
+        print ("SQLite version", sqlite3.sqlite_version)
+        print("SQLite python module version ",sqlite3.version)
+        exit()
 
     sqliteConnection = init_db(limit)
 
@@ -195,8 +242,6 @@ if __name__ == "__main__":
     while (default_timer() - time_start < timeout):        # Run until more than 5 seconds have elapsed
         run_sieve(sqliteConnection)                        # Calc the primes with sqlite
         passes = passes + 1                                # Count this pass
-        if passes == 2:
-            break
 
     time_delta = default_timer() - time_start              # After the "at least 5 seconds", get the actual elapsed
 
