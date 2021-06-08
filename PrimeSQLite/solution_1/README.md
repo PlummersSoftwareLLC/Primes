@@ -5,7 +5,11 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-green)
 
-This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in SQLite. SQL is a Turing complete language, so it is interesting how algorithm can be implemented in SQL, and thus in SQLite. However, there are some challenges to overcome when using SQLite and conform to the rules in [CONTRIBUTING.md](../../CONTRIBUTING.md#rules). SQLite lacks some important features:
+This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in SQLite. SQL is a [Turing complete](https://en.wikipedia.org/wiki/Turing_completeness) language, so it is interesting how algorithm can be implemented in SQL, and thus in SQLite.
+
+## Challenges
+
+There are some challenges to overcome when using SQLite and conform to the rules in [CONTRIBUTING.md](../../CONTRIBUTING.md#rules). SQLite lacks some important features:
 
 1. a builtin sqrt function
 2. a real good way to run the calculation in a while loop for at least 5 seconds and report on the results
@@ -18,12 +22,16 @@ The lack of an outer loop is mechanism (feature 3) is solved by:
 - Using the `with recursive` statement, which results in a loop
 - Calculating all prime numbers in two stages
 
+### Difference in the nature of SQL
+
 Further more, the nature of SQL is different compared to other languages:
 
 - A bit array is not natural in SQL. Instead it is more natural to have sets of records
 - One by one operations are not natural in SQL. Instead it is more natural to do mass operations on a (sub)set of records.
 
-Based on the above, the implementation uses the following algorithm:
+### The used algorithm
+
+Based on the above, this implementation uses the following algorithm:
 
 In the first stage all prime numbers smaller than the square root of the limit are calculated. This is done with a brute force method:
 
@@ -38,9 +46,9 @@ In the second stage the elimination is done for the found prime numbers of the f
 3. Then list2 is subtracted from list1 and the primes found in stage1 are added
 4. The results from 3 are stored in a table, and this is considered the end result.  
 
-The Python part is based on the implementation from:
+### Credits
 
-- Python/solution_2, by ssovest
+The Python part is based on the implementation from "Python/solution_2, by ssovest".
 
 ## Run instructions
 
