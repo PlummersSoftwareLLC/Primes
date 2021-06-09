@@ -1,11 +1,12 @@
-# SQLite implementation of the Sieve of Eratosthenes algorithm
+# SQLite implementation
 
-![Algorithm](https://img.shields.io/badge/Algorithm-other-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
+![Deviation](https://img.shields.io/badge/Deviation-approximation-blue)
+![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-8-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
-This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in SQLite. SQL is a [Turing complete](https://en.wikipedia.org/wiki/Turing_completeness) language, so it is interesting how algorithm can be implemented in SQL, and thus in SQLite.
+This implementation is an approximation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in SQLite. SQL is a [Turing complete](https://en.wikipedia.org/wiki/Turing_completeness) language, however in practice there are some limitations on what can practically be done with SQL in SQLite. These limitations and the nature of the SQL language is the reason that this implementation deviates from the exact algorithm, and thus is an approximation
 
 ## Challenges
 
@@ -37,18 +38,18 @@ In the first stage all prime numbers smaller than the square root of the limit a
 
 1. First all natural numbers smaller than square root of the limit are listed
 2. Then all numbers that can not be a prime are listed
-3. Then list2 is subtracted from list1, these are the first set of primes.
+3. Then list 2 is subtracted from list 1, these are the first set of primes.
 
 In the second stage the elimination is done for the found prime numbers of the first stage. This is done with the following logic:
 
 1. First all natural numbers between the square root of the limit and the limit are listed
 2. For all primes that are found in stage 1, all factors are calculated and listed
-3. Then list2 is subtracted from list1 and the primes found in stage1 are added
+3. Then list 2 is subtracted from list 1 and the primes found in stage 1 are added
 4. The results from 3 are stored in a table, and this is considered the end result.  
 
-### Alternative Algorithms
+### Alternative algorithms
 
-Alternative algorithms and formulations for this implementation have been considered. The different variants are stored in the [attic](./attic/README.md) of this solution.
+Alternative algorithms and formulations for this implementation have been considered. The different variants are stored in the [attic](./attic/) of this solution.
 
 ### Credits
 
