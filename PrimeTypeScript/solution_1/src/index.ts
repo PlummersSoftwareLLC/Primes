@@ -61,7 +61,7 @@ class PrimeSieve {
       `Passes: ${passes}, Time: ${duration}, Avg: ${avg}, Limit: ${this.sieveSize}, Count1: ${countPrimes}, Count2: ${count}, Valid: ${valid}`
     );
 
-    console.log(`marghidanu;${passes};${duration};1`);
+    console.log(`marghidanu;${passes};${duration};1;algorithm=base,faithful=yes`);
   }
 
   private countPrimes(): number {

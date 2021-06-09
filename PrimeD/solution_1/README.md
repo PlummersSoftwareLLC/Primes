@@ -1,6 +1,9 @@
 # D Solution by Eagerestwolf
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 D, or dlang, is a programming language that used to pit itself as a direct
 competitor to C and C++, and it's easy to see why: it's a statically typed,
@@ -73,7 +76,7 @@ dub run -b 'release'
 ```
 Passes: 9306, Time: 5.000000, Avg: 0.000537, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
 
-eagerestwolf;9306;5.000000;1
+eagerestwolf;9306;5.000000;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### dub
@@ -81,5 +84,5 @@ eagerestwolf;9306;5.000000;1
 ```
 Passes: 8514, Time: 5.000000, Avg: 0.000587, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
 
-eagerestwolf;8514;5.000000;1
+eagerestwolf;8514;5.000000;1;algorithm=base,faithful=yes,bits=8
 ```
