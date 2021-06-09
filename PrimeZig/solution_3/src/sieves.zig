@@ -1,8 +1,9 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+const PreGenerated = @import("pregen.zig").PreGenerated;
 
 const SieveOpts = struct {
-    pregens: ?comptime_int = null
+    pregen: ?comptime_int = null
 };
 
 pub fn IntSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) type {
@@ -31,9 +32,26 @@ pub fn IntSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             self.allocator.destroy(self.field);
         }
 
-        pub fn reset(self: *Self) void {
-            for (self.field.*) |*number| {
-                number.* = TRUE;
+        pub fn reset(self: *Self) usize {
+            if (opts.pregen) | pregen | {
+                const Lookup = PreGenerated(pregen, .byte);
+                var index: usize = 0;
+                for (self.field.*) |*slot| {
+                    slot.* = Lookup.template[index];
+                    index += 1;
+                    if (index == Lookup.template.len) { index = 0; }
+                }
+
+                inline for (Lookup.primes) |prime| {
+                    self.field.*[prime >> 1] = 1;
+                }
+
+                return Lookup.first_prime;
+            } else {
+                for (self.field.*) |*slot| {
+                    slot.* = TRUE;
+                }
+                return 3;
             }
         }
 
@@ -76,7 +94,9 @@ pub fn IntSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
                 field.*[num] = FALSE;
             }
         }
-        pub const name = "sieve-" ++ @typeName(T);
+
+        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ PreGenerated(pregen, .byte).name) else "";
+        pub const name = "sieve-" ++ @typeName(T) ++ lookup_name;
     };
 }
 
@@ -108,14 +128,34 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             self.allocator.destroy(self.field);
         }
 
-        pub fn reset(self: *Self) void {
+        pub fn reset(self: *Self) usize {
             comptime const finalmask = (1 << (field_size % bit_width)) - 1;
-            for (self.field.*) |*number| {
-                number.* = @as(T, 0) -% 1;
+            var starting_point: usize = 0;
+
+            if (opts.pregen) | pregen | {
+                const Lookup = PreGenerated(pregen, .byte);
+                var index: usize = 0;
+                for (self.field.*) |*slot| {
+                    slot.* = Lookup.template[index];
+                    index += 1;
+                    if (index == Lookup.template.len) { index = 0; }
+                }
+
+                inline for (Lookup.primes) |prime| {
+                    self.field.*[prime >> 1] = 1;
+                }
+                starting_point = Lookup.first_prime;
+            } else {
+                for (self.field.*) |*number| {
+                    number.* = @as(T, 0) -% 1;
+                }
+                starting_point = 3;
             }
+
             if (needs_pad) {
                 self.field.*[field_units - 1] = finalmask;
             }
+            return starting_point;
         }
 
         pub fn primeCount(self: *Self) usize {
@@ -187,7 +227,8 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             return masks;
         }
 
-        pub const name = "bitSieve-" ++ @typeName(T);
+        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ PreGenerated(pregen, .bit).name) else "";
+        pub const name = "bitSieve-" ++ @typeName(T) ++ lookup_name;
     };
 }
 

@@ -3,80 +3,135 @@
 //! "skip" values.
 
 const std = @import("std");
-const OEIS_PRIMES = .{3, 5, 7, 11, 13, 17};
+const OEIS_PRIMES = [_]comptime_int{ 3, 5, 7, 11, 13, 17, 19 };
 const IntSieve = @import("sieves.zig").IntSieve;
+const Unit = enum { byte, bit };
 
-pub fn PreGenerated(comptime count: usize) type {
+pub fn PreGenerated(comptime count: usize, comptime gsize: Unit) type {
     var prods = std.mem.zeroes([OEIS_PRIMES.len]comptime usize);
-    var source_primes_ = std.mem.zeroes([count]comptime_int);
+    var source_primes = std.mem.zeroes([count]comptime_int);
 
     var prod: comptime_int = 1;
+
+    // fail if we are tryng too hard.
+    if (count > 6) {
+        unreachable;
+    }
+
     for (OEIS_PRIMES) |prime, index| {
         prod *= prime;
         prods[index] = prod;
-        if (index < count) { source_primes_[index] = prime; }
+        if (index < count) {
+            source_primes[index] = prime;
+        }
     }
     const max_prime = prods[count - 1];
-    var field: [max_prime]comptime bool = undefined;
+    var field: [max_prime]comptime u8 = undefined;
 
-    // bind in a sieve.
-    var generator = IntSieve(comptime bool, max_prime * 2){
+    // fill out key values to make the generator usable.  Note we are not using
+    // an allocator here (because you don't get one at comptime), so instead od using
+    // the init function, we must set the field directly.
+    var generator = IntSieve(comptime u8, max_prime * 2, .{}){
         .field = &field,
         .allocator = std.heap.page_allocator, //just as a placeholder.  won't be used.
     };
 
-    generator.reset();
-
     // this takes a bunch of computational power:  Let it happen.
     @setEvalBranchQuota(100000);
 
-    // elucidate the pattern for all of the primes.
-    for (OEIS_PRIMES) | prime, index | {
+    _ = generator.reset();
+
+    // elucidate the pattern for each of the primes.
+    for (OEIS_PRIMES) |prime, index| {
         if (index < count) {
             generator.runFactor(prime);
+            generator.field[prime >> 1] = 0;
         }
     }
 
-    // next, count all of the trues.
-    const hops_size = generator.primeCount();
-    var hops_: [hops_size]usize = undefined;
+    var bigenoughbuf: [20]u8 = undefined;
+    var buf = try std.fmt.bufPrint(bigenoughbuf[0..], "{}of{}", .{ generator.primeCount(), max_prime * 2 });
+    const buf_len = buf.len;
 
-    var hops_index = 0;
-    var last_index = 0;
-    // convert from a list to hops.
-    for (generator.field) |item, index| {
-        if ((index != 0) and item) {
-            hops_[hops_index] = index - last_index;
-            hops_index += 1;
-            last_index = index;
-        }
+    if (gsize == .bit) {
+        compress(generator.field[0..]);
     }
-    //hops[hops_size - 1] = hops_size - last_index;
 
     return struct {
-        const source_primes = source_primes_;
-        const size = hops_size;
-        const hops = hops_;
+        pub const primes = source_primes;
+        pub const template = generator.field;
+        pub const first_prime = OEIS_PRIMES[count];
+        pub const name = bigenoughbuf[0..buf_len];
     };
 }
 
-const seeds = [_]comptime_int{2, 3, 4, 5};
+const seeds = [_]comptime_int{ 2, 3, 4, 5 };
 
 fn relatively_prime(a: usize, b: usize) bool {
-    return (a == b) or ((b % a) != 0);
+    return ((b % a) != 0);
 }
 
-test "the generation of our hops table is correct" {
+fn compress(slice: []u8) void {
+    const length = slice.len;
+    // encode the first slice.
+    for (slice) |value, index| {
+        encode(slice, value, index);
+    }
+    // encode further slices
+    var this_index = length;
+    while (this_index < length * 8) : (this_index += 1) {
+        encode_copy(slice, this_index, this_index % length);
+    }
+}
+
+fn encode(slice: []u8, value: u8, index: usize) void {
+    const byte_index = index >> 3;
+    const bit_index = @truncate(u3, index & 0b111);
+    if (bit_index == 0) {
+        slice[byte_index] = value;
+    } else {
+        slice[byte_index] = slice[byte_index] | (value << bit_index);
+    }
+}
+
+fn encode_copy(slice: []u8, dest: usize, source: usize) void {
+    const source_byte = source >> 3;
+    const source_bit = @truncate(u3, source & 0b111);
+
+    const dest_byte = dest >> 3;
+    const dest_bit = @truncate(u3, dest & 0b111);
+
+    const bit: u8 = if ((slice[source_byte] & (@as(u8, 1) << source_bit)) == 0) 0 else 1;
+
+    if (dest_bit == 0) {
+        slice[dest_byte] = bit;
+    } else {
+        slice[dest_byte] = slice[dest_byte] | (bit << dest_bit);
+    }
+}
+
+test "the generation of our table is correct" {
     inline for (seeds) |seed| {
-        const T = PreGenerated(seed);
-        var this: usize = 1;
-        for (T.hops) |v| {
-            this += 2 * v;
-            var sound = true;
-            inline for (T.source_primes) |prime| {
-                sound = sound and relatively_prime(prime, this);
+        const T = PreGenerated(seed, .byte);
+        for (T.template) |v, index| {
+            var this = 2 * index + 1;
+            var maybe_prime = true;
+            inline for (T.primes) |prime| {
+                maybe_prime = maybe_prime and relatively_prime(prime, this);
             }
-            std.debug.assert(sound);
+            if (v == 1) {
+                std.debug.assert(maybe_prime);
+            } else {
+                std.debug.assert(!maybe_prime);
+            }
         }
     }
+}
+
+test "compression function works" {
+    var uncompressed: [3]u8 = .{ 1, 0, 1 };
+    var compressed: [3]u8 = .{ 0b01_101_101, 0b1_101_101_1, 0b101_101_10 };
+    std.debug.print("\n", .{});
+    compress(uncompressed[0..]);
+    std.testing.expectEqual(compressed, uncompressed);
 }

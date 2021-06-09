@@ -9,6 +9,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
     return struct {
         const Self = @This();
         sieve: Sieve = undefined,
+        factor: usize = undefined,
 
         pub fn init(self: *Self, allocator: *Allocator) !void {
             self.sieve = try Sieve.create(allocator);
@@ -19,13 +20,13 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         }
 
         pub fn reset(self: *Self) void {
-            self.sieve.reset();
+            self.factor = self.sieve.reset();
         }
 
         pub fn run(self: *Self, passes: *u64) void {
             @setAlignStack(256);
             comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
-            var factor: usize = 3;
+            var factor = self.factor;
 
             while (factor <= stop) : (factor = self.sieve.findNextFactor(factor)) {
                 self.sieve.runFactor(factor);
@@ -152,10 +153,10 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
                 worker_finished[index] = false;
             }
 
-            self.sieve.reset();
+            var first_job = self.sieve.reset();
 
             // set up the current job to be the first.
-            self.current_job = Job{ .factor = 3 };
+            self.current_job = Job{ .factor = first_job };
         }
 
         /////// UTILITY FUNCTIONS
@@ -225,6 +226,8 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
         started: bool = false,
         finished: bool = false,
         sieve: Sieve = undefined,
+        // the factor for the main loop.
+        factor: usize = undefined,
 
         pub fn init(self: *Self, allocator: *Allocator) !void {
             // set up the global worker pool, by abstracting a slice out of the available slots.
@@ -266,7 +269,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
                 init_hold = null;
             }
 
-            runSieve(&self.sieve);
+            runSieve(&self.sieve, self.factor);
 
             // increment the number of passes.
             _ = @atomicRmw(u64, passes, .Add, 1, .Monotonic);
@@ -278,8 +281,8 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             defer sieve.destroy();
 
             while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
-                sieve.reset();
-                runSieve(&sieve);
+                var factor = sieve.reset();
+                runSieve(&sieve, factor);
 
                 // increment the number of passes.
                 _ = @atomicRmw(u64, runner.passes, .Add, 1, .Monotonic);
@@ -288,16 +291,16 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
 
         // NB only resets the main thread.
         pub fn reset(self: *Self) void {
-            self.sieve.reset();
+            self.factor = self.sieve.reset();
         }
 
         // utility functions
 
-        fn runSieve(sieve: *Sieve) void {
+        fn runSieve(sieve: *Sieve, starting_factor: usize) void {
             @setAlignStack(256);
             comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
 
-            var factor: usize = 3;
+            var factor = starting_factor;
             var field = sieve.field;
 
             while (factor <= stop) : (factor = sieve.findNextFactor(factor)) {
