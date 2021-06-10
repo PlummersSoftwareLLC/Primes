@@ -25,43 +25,69 @@ dict set knownPrimeCounts 1000000 78498
 dict set knownPrimeCounts 10000000 664579
 dict set knownPrimeCounts 100000000 5761455
 
-#
-# set the value of a bit at the given position to the given value
-proc bit {varName pos {bitval {}}} {
-    upvar 1 $varName var
-    if {![info exist var]} {
-        set var 0
-    }
-    set element [expr {$pos/32}]
-    while {$element >= [llength $var]} {
-        lappend var 0
-    }
-    set bitpos [expr {1 << $pos%32}]
-    set word [lindex $var $element]
-    if {$bitval != ""} {
-        if {$bitval} {
-            set word [expr {$word | $bitpos}]
-        } else {
-            set word [expr {$word & ~$bitpos}]
-        }
-        lset var $element $word
-    }
-    expr {($word & $bitpos) != 0}
-}
+::oo::class create bit_array {
+    variable bit_vector
+    variable size
 
-#
-# Convert the bit array to an array of index numbers
-proc bits bitvec {
-    set res {}
-    set pos 0
-    foreach word $bitvec {
-        for {set i 0} {$i<32} {incr i} {
-            if {$word & 1<<$i} {lappend res $pos}
-            incr pos
+    constructor {size_input init_value} {
+        variable bit_vector
+        variable size
+
+        set size $size_input
+
+        set word_fill " 0xFFFFFFFF"
+        if {$init_value == 0} {
+            set word_fill " 0x00000000"
+        }
+
+        set bit_vector [string repeat "$word_fill" [expr {($size+31)/32}]]
+
+        # mask out excess bits at the end
+        for {set i [expr $size]} {$i<=(($size+31)/32)*32} {incr i} {
+            my bit $i 0
         }
     }
-    return $res
- }
+
+    #
+    # set the value of a bit at the given position to the given value
+    # if no value is specified the value of the given bit is returned
+    method bit {pos {bitval {}}} {
+        variable bit_vector
+
+        set element [expr {$pos/32}]
+        while {$element >= [llength $bit_vector]} {
+            lappend bit_vector 0
+        }
+        set bitpos [expr {1 << $pos%32}]
+        set word [lindex $bit_vector $element]
+        if {$bitval != ""} {
+            if {$bitval} {
+                set word [expr {$word | $bitpos}]
+            } else {
+                set word [expr {$word & ~$bitpos}]
+            }
+            lset bit_vector $element $word
+        }
+        expr {($word & $bitpos) != 0}
+    }
+
+    #
+    # Convert the bit array to an array of index numbers
+    method bits {} {
+        variable bit_vector
+        
+        set res {}
+        set pos 0
+        foreach word $bit_vector {
+            for {set i 0} {$i<32} {incr i} {
+                if {$word & 1<<$i} {lappend res $pos}
+                incr pos
+            }
+        }
+        return $res
+    }
+
+}
 
 ::oo::class create prime_sieve {
     variable limit
@@ -80,12 +106,9 @@ proc bits bitvec {
             # uneven, add one to the size
             incr size 
         }
-        set primes [string repeat " 0xFFFFFFFF" [expr {($size+31)/32}]]
 
-        # mask out excess bits at the end
-        for {set i [expr $size]} {$i<=(($size+31)/32)*32} {incr i} {
-            bit primes $i 0
-        }
+        set primes [bit_array new $size 1]
+
     }
 
     #
@@ -98,7 +121,7 @@ proc bits bitvec {
 
         lappend res 2
         set i 0    
-        foreach bit_index [bits $primes] {
+        foreach bit_index [$primes bits] {
             if {$i!=0} {
                 lappend res [expr {($bit_index * 2) + 1}]
             }
@@ -123,12 +146,12 @@ proc bits bitvec {
             set step [expr ($factor * 2) + 1]
             set i $start
             while {$i<=$size} {
-                bit primes $i 0
+                $primes bit $i 0
                 incr i $step
             }
             # search next bit set to 1
             for {set i [expr {$factor + 1}]} {$i<=$size} {incr i} {
-                if {[bit primes $i]} {
+                if {[$primes bit $i]} {
                     set factor $i
                     break
                 }
@@ -161,7 +184,6 @@ proc bits bitvec {
     # Write the results to the output
     method print_results {show_results duration passes} {
         variable limit
-        variable primes
 
         set prime_nrs [my bits_to_primes]
 

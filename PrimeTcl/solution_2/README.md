@@ -1,12 +1,13 @@
-# Tcl solution by fvbakel
+# Object-Oriented Tcl implementation
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation in Tcl, with a 32 bit string array as buffer
-for the bit array. Native Tcl does not have objects, so this implementation uses a variable (`primes`) for the bit array. This variable is passed as a parameter to the `run_sieve` procedure to be as faithful as possible to the original and the rules. This implementation is based on the logic from:
+This is an implementation in object-oriented Tcl. Historically, Tcl did not have native support for object-oriented programming. As of version 8.6 however, Tcl includes a built-in object oriented system.
+
+This implementation the object-oriented feature of Tcl. It uses two classes, `bit_array` and `prime_sieve`. The `bit_array` class implements a bit array with basic get and set methods. It uses a 32 bit string array to represent the bit values. The `prime_sieve` class is used for the actual sieve calculation.
 
 - Python/solution_2, by ssovest
 - PrimeCPP,          by Dave Plummer
