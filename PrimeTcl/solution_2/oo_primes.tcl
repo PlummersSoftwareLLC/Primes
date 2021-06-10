@@ -25,15 +25,6 @@ dict set knownPrimeCounts 1000000 78498
 dict set knownPrimeCounts 10000000 664579
 dict set knownPrimeCounts 100000000 5761455
 
-::oo::class create Primes {
-    variable limit
-    
-    constructor {limit} {
-        my limit $limit
-    }
-}
-
-
 #
 # set the value of a bit at the given position to the given value
 proc bit {varName pos {bitval {}}} {
@@ -72,98 +63,122 @@ proc bits bitvec {
     return $res
  }
 
-#
-# Convert an array of index numbers to prime numbers
-proc bits_to_primes bitvec {
-    set res {}
-    set pos 1
-
-    lappend res 2
-    set i 0    
-    foreach bit_index [bits $bitvec] {
-        if {$i!=0} {
-        lappend res [expr {($bit_index * 2) + 1}]
-        }
-        incr i
-    }
-
-    return $res
-}
-
-#
-# Calculate the bit array
-proc run_sieve {primesName max} {
-    upvar 1 $primesName primes
-
-    set maxroot [expr {sqrt($max)}]
-    set size [expr {$max/2}]
-    if {[expr ($max%2)]} {
-        # uneven, add one to the size
-        incr size 
-    }
-    set primes [string repeat " 0xFFFFFFFF" [expr {($size+31)/32}]]
-
-    # mask out excess bits at the end
-    for {set i [expr $size]} {$i<=(($size+31)/32)*32} {incr i} {
-        bit primes $i 0
-    }
+::oo::class create prime_sieve {
+    variable limit
+    variable primes
+    variable size
     
-    set factor 1
-    while {$factor<$maxroot} {
-        set start [expr ($factor * 3) + 1]
-        set step [expr ($factor * 2) + 1]
-        set i $start
-        while {$i<=$size} {
-            bit primes $i 0
-            incr i $step
+    constructor {limit_input} {
+        variable limit
+        variable primes
+        variable size
+
+        set limit $limit_input
+        set size [expr {$limit_input/2}]
+
+        if {[expr ($limit_input%2)]} {
+            # uneven, add one to the size
+            incr size 
         }
-        # search next bit set to 1
-        for {set i [expr {$factor + 1}]} {$i<=$size} {incr i} {
-            if {[bit primes $i]} {
-                set factor $i
-                break
+        set primes [string repeat " 0xFFFFFFFF" [expr {($size+31)/32}]]
+
+        # mask out excess bits at the end
+        for {set i [expr $size]} {$i<=(($size+31)/32)*32} {incr i} {
+            bit primes $i 0
+        }
+    }
+
+    #
+    # Convert an array of index numbers to prime numbers
+    method bits_to_primes {} {
+        variable primes
+
+        set res {}
+        set pos 1
+
+        lappend res 2
+        set i 0    
+        foreach bit_index [bits $primes] {
+            if {$i!=0} {
+                lappend res [expr {($bit_index * 2) + 1}]
+            }
+            incr i
+        }
+
+        return $res
+    }
+
+    #
+    # Calculate the bit array
+    method run_sieve {} {
+        variable limit
+        variable primes
+        variable size
+
+        set maxroot [expr {sqrt($limit)}]
+       
+        set factor 1
+        while {$factor<$maxroot} {
+            set start [expr ($factor * 3) + 1]
+            set step [expr ($factor * 2) + 1]
+            set i $start
+            while {$i<=$size} {
+                bit primes $i 0
+                incr i $step
+            }
+            # search next bit set to 1
+            for {set i [expr {$factor + 1}]} {$i<=$size} {incr i} {
+                if {[bit primes $i]} {
+                    set factor $i
+                    break
+                }
             }
         }
     }
-}
 
-#
-# Check if the number of found primes matches the 
-# known number of primes for the given limit
-proc check_valid {limit count} {
-    global knownPrimeCounts
-    set res "false"
-    if {[dict exists $knownPrimeCounts $limit]} { 
-        set known_value [dict get $knownPrimeCounts $limit]
-        if {$known_value==$count } {
-            set res "true"
-        } 
-    } else {
-            set res "unknown"
-        }
-    return $res
-}
+    #
+    # Check if the number of found primes matches the 
+    # known number of primes for the given limit
+    method check_valid {count} {
+        variable limit
+ 
+        global knownPrimeCounts
 
-#
-# Write the results to the output
-proc print_results {primesName limit show_results duration passes} {
-    upvar 1 $primesName primes
-    
-    set prime_nrs [bits_to_primes $primes]
+        set res "false"
 
-    if {$show_results==1} {
-        puts "Primes found:"
-        puts "$prime_nrs"
+        if {[dict exists $knownPrimeCounts $limit]} { 
+            set known_value [dict get $knownPrimeCounts $limit]
+            if {$known_value==$count } {
+                set res "true"
+            } 
+        } else {
+                set res "unknown"
+            }
+        return $res
     }
-    
-    set avg [expr {$duration / $passes}]
-    set count [llength $prime_nrs]
-    set valid [check_valid $limit $count]
-    puts "Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid"
-    # Following 2 lines are to conform to drag race output format
-    puts ""
-    puts "fvbakeltcl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1"
 
+    #
+    # Write the results to the output
+    method print_results {show_results duration passes} {
+        variable limit
+        variable primes
+
+        set prime_nrs [my bits_to_primes]
+
+        if {$show_results==1} {
+            puts "Primes found:"
+            puts "$prime_nrs"
+        }
+        
+        set avg [expr {$duration / $passes}]
+        set count [llength $prime_nrs]
+        set valid [my check_valid $count]
+        puts "Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid"
+        # Following 2 lines are to conform to drag race output format
+        puts ""
+        puts "fvbakeltcl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1"
+
+    }
 }
 
 #
@@ -174,16 +189,17 @@ proc main {time_limit limit show_results} {
     set start [clock milliseconds]
     while {1} {
         incr passes
-        set primes  {}
+        
+        set sieve [prime_sieve new $limit]
 
-        run_sieve primes $limit
+        $sieve run_sieve 
 
         set now [clock milliseconds]
         set duration_ms [expr {$now -$start}]
         set duration_sec [expr {double($duration_ms) /1000}]
 
         if {$duration_ms > $stop_after_ms} {
-            print_results primes $limit $show_results $duration_sec $passes
+            $sieve print_results $show_results $duration_sec $passes
             break
         }
     }
