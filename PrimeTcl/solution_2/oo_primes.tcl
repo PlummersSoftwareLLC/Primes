@@ -48,6 +48,10 @@ dict set knownPrimeCounts 100000000 5761455
         }
     }
 
+    destructor {
+        # no sub objects to be cleared
+    }
+
     #
     # set the value of a bit at the given position to the given value
     # if no value is specified the value of the given bit is returned
@@ -111,6 +115,10 @@ dict set knownPrimeCounts 100000000 5761455
 
     }
 
+    destructor {
+        $primes destroy
+    }
+
     #
     # Convert an array of index numbers to prime numbers
     method bits_to_primes {} {
@@ -142,7 +150,12 @@ dict set knownPrimeCounts 100000000 5761455
        
         set factor 1
         while {$factor<$maxroot} {
-            set start [expr ($factor * 3) + 1]
+            # Start at the square root of factor
+            # But since factor is the index of the odd number, 
+            # it requires some calculation
+            #
+            set cur_prime [expr ($factor *2) + 1]
+            set start [expr (($cur_prime * $cur_prime) / 2)]
             set step [expr ($factor * 2) + 1]
             set i $start
             while {$i<=$size} {
@@ -198,7 +211,7 @@ dict set knownPrimeCounts 100000000 5761455
         puts "Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid"
         # Following 2 lines are to conform to drag race output format
         puts ""
-        puts "fvbakeltcl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1"
+        puts "fvbakel_ootcl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1"
 
     }
 }
@@ -224,6 +237,8 @@ proc main {time_limit limit show_results} {
             $sieve print_results $show_results $duration_sec $passes
             break
         }
+
+        $sieve destroy
     }
 }
 

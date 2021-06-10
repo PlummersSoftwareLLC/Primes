@@ -9,6 +9,8 @@ This is an implementation in object-oriented Tcl. Historically, Tcl did not have
 
 This implementation the object-oriented feature of Tcl. It uses two classes, `bit_array` and `prime_sieve`. The `bit_array` class implements a bit array with basic get and set methods. It uses a 32 bit string array to represent the bit values. The `prime_sieve` class is used for the actual sieve calculation.
 
+This implementation is based on:
+
 - Python/solution_2, by ssovest
 - PrimeCPP,          by Dave Plummer
 - [Bit vectors](https://wiki.tcl-lang.org/page/Bit+vectors), by Richard Suchenwirth
@@ -32,13 +34,13 @@ To run with Docker take the following steps:
 2. Build the image:
 
     ```bash
-    docker build --pull --rm -f "Dockerfile" -t tclsolution1:latest "."
+    docker build --pull --rm -f "Dockerfile" -t ootcl:latest "."
     ```
 
 3. Run with Docker:
 
     ```bash
-    docker run --rm -it  tclsolution1:latest 
+    docker run --rm -it  ootcl:latest 
     ```
 
 ## Output
@@ -46,10 +48,10 @@ To run with Docker take the following steps:
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-docker run --rm -it  tclsolution1:latest 
-Passes: 4, Time: 6.137, Avg: 1.53425 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
+docker run --rm -it  ootcl:latest 
+Passes: 4, Time: 6.476, Avg: 1.619 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-fvbakeltcl;4;6.137;1;algorithm=base,faithful=yes,bits=1
+fvbakel_ootcl;4;6.476;1;algorithm=base,faithful=yes,bits=1
 ```
 
 These results are with the following conditions:
