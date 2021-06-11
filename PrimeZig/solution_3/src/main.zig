@@ -21,24 +21,24 @@ pub fn main() anyerror!void {
     var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
 
     comptime const AllDataTypes = .{ bool, u1, u8, u16, u32, u64, usize };
-    comptime const BitSieveDataTypes = .{u8, u16, u32, u64};
+    comptime const BitSieveDataTypes = .{ u8, u16, u32, u64 };
 
     comptime const specs = .{
-        .{ SingleThreadedRunner, IntSieve, .{}, false},
-        .{ ParallelAmdahlRunner, IntSieve, .{}, false},
-        .{ ParallelGustafsonRunner, IntSieve, .{}, false},
-        .{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false},
-        .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false},
-        .{ SingleThreadedRunner, BitSieve, .{}, false},
-        .{ ParallelGustafsonRunner, BitSieve, .{}, false},
-        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false},
-        .{ SingleThreadedRunner, IntSieve, .{}, true},
-        .{ SingleThreadedRunner, BitSieve, .{}, true},
-        .{ ParallelGustafsonRunner, BitSieve, .{}, true},
-        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, true},
+        .{ SingleThreadedRunner, IntSieve, .{}, false },
+        .{ ParallelAmdahlRunner, IntSieve, .{}, false },
+        .{ ParallelGustafsonRunner, IntSieve, .{}, false },
+        .{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false },
+        .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false },
+        .{ SingleThreadedRunner, BitSieve, .{}, false },
+        .{ ParallelGustafsonRunner, BitSieve, .{}, false },
+        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false },
+        .{ SingleThreadedRunner, IntSieve, .{}, true },
+        .{ SingleThreadedRunner, BitSieve, .{}, true },
+        .{ ParallelGustafsonRunner, BitSieve, .{}, true },
+        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, true },
     };
 
-    comptime const pregens = [_]comptime_int{2, 3, 4, 5};
+    comptime const pregens = [_]comptime_int{ 2, 3, 4, 5 };
 
     inline for (specs) |spec| {
         comptime const RunnerFn = spec[0];
@@ -50,8 +50,8 @@ pub fn main() anyerror!void {
             comptime const DataTypes = if (SieveFn == IntSieve) .{u8} else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
-                inline for (pregens) | pregen | {
-                    comptime const Sieve = SieveFn(Type, SIZE, .{.pregen = pregen});
+                inline for (pregens) |pregen| {
+                    comptime const Sieve = SieveFn(Type, SIZE, .{ .pregen = pregen });
                     comptime const Runner = RunnerFn(Sieve, runner_opts);
                     try runSieveTest(Runner, Runner.name, SIZE, run_for, allocator);
                 }

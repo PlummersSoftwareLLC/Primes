@@ -2,9 +2,7 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const PreGenerated = @import("pregen.zig").PreGenerated;
 
-const SieveOpts = struct {
-    pregen: ?comptime_int = null
-};
+const SieveOpts = struct { pregen: ?comptime_int = null };
 
 pub fn IntSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) type {
     return struct {
@@ -33,13 +31,15 @@ pub fn IntSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
         }
 
         pub fn reset(self: *Self) usize {
-            if (opts.pregen) | pregen | {
+            if (opts.pregen) |pregen| {
                 const Lookup = PreGenerated(pregen, .byte);
                 var index: usize = 0;
                 for (self.field.*) |*slot| {
                     slot.* = Lookup.template[index];
                     index += 1;
-                    if (index == Lookup.template.len) { index = 0; }
+                    if (index == Lookup.template.len) {
+                        index = 0;
+                    }
                 }
 
                 inline for (Lookup.primes) |prime| {
@@ -132,15 +132,21 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             comptime const finalmask = (1 << (field_size % bit_width)) - 1;
             var starting_point: usize = 0;
 
-            if (opts.pregen) | pregen | {
+            if (opts.pregen) |pregen| {
                 const Lookup = PreGenerated(pregen, .bit);
                 var index: usize = 0;
 
                 copyBits(self.field, &Lookup.template);
 
                 // make the primes prime
-                inline for (Lookup.primes) | prime | {
-                    const shift = switch(T) {u8 => 3, u16 => 4, u32 => 5, u64 => 6, else => unreachable};
+                inline for (Lookup.primes) |prime| {
+                    const shift = switch (T) {
+                        u8 => 3,
+                        u16 => 4,
+                        u32 => 5,
+                        u64 => 6,
+                        else => unreachable,
+                    };
                     const mask = (@as(T, 1) << shift) - @as(T, 1);
                     const prime_index = prime >> 1;
                     const byte_index = prime_index >> shift;
@@ -175,7 +181,7 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             return count;
         }
 
-        const src_units = if (opts.pregen) | pregen | PreGenerated(pregen, .bit).template.len else 1;
+        const src_units = if (opts.pregen) |pregen| PreGenerated(pregen, .bit).template.len else 1;
         // TODO: move this to PreGenerated?
 
         fn copyBits(bit_field: *[field_units]T, src: *const *[src_units]u8) void {
@@ -186,10 +192,10 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
                 while (start + src_units < dest_len) : (start += src_units) {
                     std.mem.copy(u8, u8_field.*[start..], src.*[0..]);
                 }
-                std.mem.copy(u8, u8_field.*[start..dest_len], src.*[0..dest_len-start]);
+                std.mem.copy(u8, u8_field.*[start..dest_len], src.*[0 .. dest_len - start]);
             } else {
                 var src_index: usize = 0;
-                for (bit_field.*) | *dest | {
+                for (bit_field.*) |*dest| {
                     dest.* = findBits(src, &src_index);
                 }
             }
@@ -289,4 +295,3 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
         pub const name = "bitSieve-" ++ @typeName(T) ++ lookup_name;
     };
 }
-
