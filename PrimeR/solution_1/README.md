@@ -5,13 +5,13 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in R. This implementation makes use of the reference class object oriented method that is available in R. This results in a solution that is closer to the rules defined in [CONTRIBUTION.md](../../CONTRIBUTION.md).
+This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in R. This implementation makes use of the reference class object oriented method that is available in R. This results in a solution that is closer to the rules defined in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Run instructions
 
 ### Run native
 
-To run this solution you need "R". This program is available in most package managers of Linux distributions. The script is designed to run with `Rscript`.
+To run this solution you need "R". This program is available in most package managers of Linux distributions. The script is designed to run in batch mode with `Rscript`.
 
 ```bash
 cd path/to/sieve
