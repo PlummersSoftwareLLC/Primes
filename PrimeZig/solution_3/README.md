@@ -39,5 +39,10 @@ Architecture:
 - `src/sieves.zig` generic sieves.  Impls:
   - `IntSieve` sieve stored as a (1/2) array of integers of comptime-defined sizes.
   - `BitSieve` sieve stored as a (1/2) array of bits, backed by comptime-defined unsigned integer types.
-- `src/tests.zig` test cases.  Execute by running `zig test src/tests.zig`.  May not work correctly
-  (tested on zig 0.7.2)
+- `src/tests.zig` test cases.  Execute by running `zig test src/tests.zig`.
+
+Notes:
+
+As is program is currently not working on zig 0.8.0 (`zig build`) the build did not survive transitioning
+from zig 0.7.1 due to the system recognizing more undefined behaviour, but it works correctly in unsafe
+zig; will be looking into fixing this.
