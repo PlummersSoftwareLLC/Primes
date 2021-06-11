@@ -1,4 +1,17 @@
-#print("Hello World",quote=FALSE)
+time_limit <- 5
+limit <- 1000000
+show_results <- FALSE
+
+knownPrimeCounts <- c(
+    "10" = 4,
+    "100" = 25,
+    "1000" = 168,
+    "10000" = 1229,
+    "100000" = 9592,
+    "1000000" = 78498,
+    "10000000" = 664579,
+    "100000000" = 5761455
+)
 
 prime_sieve <- setRefClass("prime_sieve",
     fields = list (
@@ -9,41 +22,102 @@ prime_sieve <- setRefClass("prime_sieve",
         init_fields = function(limit_input) {
             limit <<- limit_input
             # some extra logic to handle odd and even limits
-            bit_size <<- floor(limit_input / 2) + (floor(limit_input %% 2) - 1)
+            bit_size <<- floor(limit_input / 2) 
+            if (limit_input %% 2 == 0) {
+                bit_size <<- bit_size - 1
+            }
             bit_array <<- rep(TRUE, bit_size)
         },
-        run_sieve = function(prime_sieve) {
+        run_sieve = function() {
+            # maximum primenumber we need to propangate the prime number
             maxroot <- floor(sqrt(limit))
-            maxroot_index <-floor(maxroot /2) 
-
-            cat(sprintf("limit=%i\n,bit_size=%i\n,maxroot=%i\n,maxroot_index=%i\n",limit,bit_size,maxroot,maxroot_index))
+            # given the max root, what is the maxium index of the array
+            # we need to propangate
+            maxroot_index <-floor(maxroot / 2)
+            if (maxroot %% 2 == 0) {
+                # eg if limit=100, maxroot=10, even numbers have no index
+                # only the square root of one odd number below that have 
+                # to be propangated
+                maxroot_index <- maxroot_index - 1
+            } 
+            
+            #cat(sprintf("limit=%i\n,bit_size=%i\n,maxroot=%i\n,maxroot_index=%i\n",limit,bit_size,maxroot,maxroot_index))
 
             factor <- 1
             while(factor <= maxroot_index){
                 # cross out all factors
                 prime <- factor * 2 +1
                 start <- ( ((prime * prime) -1) /2 )
-                step <-  factor * 2 + 1
-                cat(sprintf("processing prime=%i,start=%i (=%i), step=%i (=%i)\n",prime,start,(start*2 +1),step,(step*2 +1) ))
+                step <- factor * 2 + 1
+                
+                #cat(sprintf("processing factor=%i,prime=%i,start=%i (=%i), step=%i (=%i)\n",factor,prime,start,(start*2 +1),step,(step*2 +1) ))
 
                 bit_array[seq.int(from=start, to=bit_size, by=step)] <- FALSE
                 # determine new factor
-                factor <- factor + min(which(bit_array[(factor + 1) : limit]))
+                factor <- factor + min(which(bit_array[(factor + 1) : bit_size]))
             }
             # store the calculated new array
             bit_array <<-bit_array
         },
         # hard coded add 2
         # convert bit index mumbers back to prime numbers
-        bit_array_to_primes = function(bit_array_to_primes) {
+        bit_array_to_primes = function() {
             return (append(2,(which(bit_array) * 2 + 1)))
+        },
+        validate_results = function(count) {
+            expected <- knownPrimeCounts[sprintf("%i",limit)]
+             if (is.na(expected)) {
+                return("unkown")
+            } else if (count == expected) {
+                return("true")
+            } else {
+                return("false")
+            }
+        },
+        print_results = function(limit, show_results, duration, passes) {
+            avg <- duration / passes
+            count <- sum(bit_array) +1
+            valid <- validate_results(count)
+
+            if (show_results) {
+                cat(bit_array_to_primes(),"\n")
+            }
+
+            cat(sprintf("Passes: %i, Time: %f, Avg: %f (sec/pass), Limit: %i, Count: %i, Valid: %s\n",
+                    passes,
+                    duration,
+                    avg,
+                    limit,
+                    count,
+                    valid
+                )
+            )
+            cat("\n")
+            cat(sprintf("fvbakel_R;%i;%f;1;algorithm=base,faithful=yes,bits=1\n",
+                    passes,
+                    duration
+                )
+            )
         }
     )
 )
 
-sieve <- prime_sieve$new()
-sieve$init_fields(96)
-sieve$run_sieve()
-sieve$bit_array_to_primes()
+main <-function() {
+    # get time in sec
+    start <- as.numeric(format(Sys.time(), "%OS3"))
+    passes <- 0
+    while (TRUE) {
+        passes <- passes + 1
+        sieve <- prime_sieve$new()
+        sieve$init_fields(limit)
+        sieve$run_sieve()
+        now <- as.numeric(format(Sys.time(), "%OS3"))
+        duration <- now - start
+        if (duration > time_limit || passes==1) {
+            sieve$print_results(limit, show_results, duration, passes)
+            break
+        }
+    }
+}
 
-print("Bye Bye",quote=FALSE)
+main()
