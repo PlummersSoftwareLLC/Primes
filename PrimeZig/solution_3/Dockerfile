@@ -20,4 +20,4 @@ WORKDIR /opt/app
 COPY . .
 RUN zig build -Drelease-fast
 
-ENTRYPOINT [ "./zig-cache/bin/PrimeZig" ]
+ENTRYPOINT [ "./zig-out/bin/PrimeZig" ]
