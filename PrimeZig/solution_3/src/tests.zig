@@ -106,23 +106,25 @@ test "Single threaded with bitsieve/64" {
     }
 }
 
-const pregens = [_]comptime_int{2};//, 3, 4, 5};
+const pregens = [_]comptime_int{2}; //, 3, 4, 5};
 const OEIS_PRIMES = [_]usize{ 3, 5, 7, 11, 13, 17, 19 };
 
-fn divisible_by(a: usize, b: usize) bool { return (a % b) == 0; }
+fn divisible_by(a: usize, b: usize) bool {
+    return (a % b) == 0;
+}
 
 test "Int Sieve boost produces correct byte values" {
     inline for (expected_results) |result| {
         inline for (pregens) |pregen| {
             const count = result[0];
-            const Sieve = IntSieve(u8, count, .{.pregen = pregen});
+            const Sieve = IntSieve(u8, count, .{ .pregen = pregen });
 
             var sieve = try Sieve.create(allocator);
             defer sieve.destroy();
 
             _ = sieve.reset();
 
-            for (sieve.field) | v, index | {
+            for (sieve.field) |v, index| {
                 var target = 2 * index + 1;
                 var maybe_prime = true;
                 for (OEIS_PRIMES[0..pregen]) |prime| {
@@ -135,11 +137,23 @@ test "Int Sieve boost produces correct byte values" {
     }
 }
 
-const intsizes = [_]type{u8, u16, u32, u64};
+const intsizes = [_]type{ u8, u16, u32, u64 };
 
 fn bit_fetch(comptime int_t: type, slice: []int_t, target: usize) bool {
-    const shift = switch (int_t) { u8 => 3, u16 => 4, u32 => 5, u64 => 6, else => unreachable};
-    const shift_t = switch (int_t) { u8 => u3, u16 => u4, u32 => u5, u64 => u6, else => unreachable};
+    const shift = switch (int_t) {
+        u8 => 3,
+        u16 => 4,
+        u32 => 5,
+        u64 => 6,
+        else => unreachable,
+    };
+    const shift_t = switch (int_t) {
+        u8 => u3,
+        u16 => u4,
+        u32 => u5,
+        u64 => u6,
+        else => unreachable,
+    };
 
     const slice_mask: usize = (@as(usize, 1) << shift) - 1;
 
@@ -151,11 +165,11 @@ fn bit_fetch(comptime int_t: type, slice: []int_t, target: usize) bool {
 }
 
 test "Bit Sieve boost produces correct bit values" {
-    inline for (intsizes) | int_t | {
+    inline for (intsizes) |int_t| {
         inline for (expected_results) |result| {
             inline for (pregens) |pregen| {
                 const count = result[0];
-                const Sieve = BitSieve(int_t, count, .{.pregen = pregen});
+                const Sieve = BitSieve(int_t, count, .{ .pregen = pregen });
 
                 var sieve = try Sieve.create(allocator);
                 defer sieve.destroy();
@@ -166,7 +180,7 @@ test "Bit Sieve boost produces correct bit values" {
                 while (index < (Sieve.size >> 1)) : (index += 1) {
                     var target = 2 * index + 1;
                     var shouldbe_prime = true;
-                    for (OEIS_PRIMES[0..pregen]) | prime | {
+                    for (OEIS_PRIMES[0..pregen]) |prime| {
                         shouldbe_prime = shouldbe_prime and !divisible_by(target, prime);
                         shouldbe_prime = shouldbe_prime or (prime == target);
                     }
@@ -178,13 +192,12 @@ test "Bit Sieve boost produces correct bit values" {
     }
 }
 
-
 test "Single threaded Int Sieve with a boost from pregeneration" {
     inline for (expected_results) |result| {
         inline for (pregens) |pregen| {
             const count = result[0];
             const expected_primes = result[1];
-            const Sieve = IntSieve(u8, count, .{.pregen = pregen});
+            const Sieve = IntSieve(u8, count, .{ .pregen = pregen });
 
             var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, true);
             std.testing.expectEqual(@as(u64, 2), passes);
@@ -197,11 +210,10 @@ test "Single threaded Bit Sieve with a boost from pregeneration" {
         inline for (pregens) |pregen| {
             const count = result[0];
             const expected_primes = result[1];
-            const Sieve = BitSieve(u8, count, .{.pregen = pregen});
+            const Sieve = BitSieve(u8, count, .{ .pregen = pregen });
 
             var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, true);
             std.testing.expectEqual(@as(u64, 2), passes);
         }
     }
 }
-

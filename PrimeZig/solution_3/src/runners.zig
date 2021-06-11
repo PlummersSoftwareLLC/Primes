@@ -56,8 +56,7 @@ fn blockOnInit() void {
 const ParallelismOpts = struct {
 // should we apply a thread count reduction assuming that the system is hyperthreading
 // and we should only spawn half as many cores.
-    no_ht: bool = false
-};
+no_ht: bool = false };
 
 /// job sharing parallelism.
 pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
@@ -92,9 +91,7 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             self.sieve = sieve;
 
             for (worker_pool) |*thread_ptr, index| {
-                // NB as of zig 0.8.0 (~June 4 2021), std.Thread.Spawn will take params
-                // (func, context) instead of (context, func)
-                thread_ptr.* = try std.Thread.spawn(ThreadInfo{ .self = self, .index = index }, workerLoop);
+                thread_ptr.* = try std.Thread.spawn(workerLoop, ThreadInfo{ .self = self, .index = index });
             }
         }
 
@@ -244,9 +241,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             self.allocator = allocator;
 
             for (worker_pool) |*thread_ptr, index| {
-                // NB as of zig 0.8.0 (~June 4 2021), std.Thread.Spawn will take params
-                // (func, context) instead of (context, func)
-                thread_ptr.* = try std.Thread.spawn(self, workerLoop);
+                thread_ptr.* = try std.Thread.spawn(workerLoop, self);
             }
         }
 
