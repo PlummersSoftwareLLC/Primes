@@ -47,17 +47,17 @@ pub fn main() anyerror!void {
         comptime const use_pregen = spec[3];
 
         if (use_pregen) {
-            inline for (pregens) | pregen | {
-                comptime const Sieve = SieveFn(u8, SIZE, .{.pregen = pregen});
-                comptime const Runner = RunnerFn(Sieve, runner_opts);
-                try runSieveTest(Runner, Runner.name, SIZE, run_for, allocator);
+            comptime const DataTypes = if (SieveFn == IntSieve) .{u8} else BitSieveDataTypes;
+
+            inline for (DataTypes) |Type| {
+                inline for (pregens) | pregen | {
+                    comptime const Sieve = SieveFn(Type, SIZE, .{.pregen = pregen});
+                    comptime const Runner = RunnerFn(Sieve, runner_opts);
+                    try runSieveTest(Runner, Runner.name, SIZE, run_for, allocator);
+                }
             }
         } else {
-            comptime const DataTypes = switch (SieveFn) {
-                IntSieve => AllDataTypes,
-                BitSieve => BitSieveDataTypes,
-                else => unreachable,
-            };
+            comptime const DataTypes = if (SieveFn == IntSieve) AllDataTypes else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
                 comptime const Sieve = SieveFn(Type, SIZE, .{});
