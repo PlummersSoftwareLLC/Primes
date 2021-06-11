@@ -133,17 +133,23 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             var starting_point: usize = 0;
 
             if (opts.pregen) | pregen | {
-                const Lookup = PreGenerated(pregen, .byte);
+                const Lookup = PreGenerated(pregen, .bit);
                 var index: usize = 0;
-                for (self.field.*) |*slot| {
-                    slot.* = Lookup.template[index];
-                    index += 1;
-                    if (index == Lookup.template.len) { index = 0; }
+
+                copyBits(self.field, &Lookup.template);
+
+                // make the primes prime
+                inline for (Lookup.primes) | prime | {
+                    const shift = switch(T) {u8 => 3, u16 => 4, u32 => 5, u64 => 6, else => unreachable};
+                    const mask = (@as(T, 1) << shift) - @as(T, 1);
+                    const prime_index = prime >> 1;
+                    const byte_index = prime_index >> shift;
+                    const bit_index = prime_index & mask;
+                    const bit_flip = @as(T, 1) << bit_index;
+
+                    self.field.*[byte_index] |= bit_flip;
                 }
 
-                inline for (Lookup.primes) |prime| {
-                    self.field.*[prime >> 1] = 1;
-                }
                 starting_point = Lookup.first_prime;
             } else {
                 for (self.field.*) |*number| {
@@ -153,7 +159,7 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             }
 
             if (needs_pad) {
-                self.field.*[field_units - 1] = finalmask;
+                self.field.*[field_units - 1] &= finalmask;
             }
             return starting_point;
         }
@@ -167,6 +173,58 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             }
 
             return count;
+        }
+
+        const src_units = if (opts.pregen) | pregen | PreGenerated(pregen, .bit).template.len else 1;
+        // TODO: move this to PreGenerated?
+
+        fn copyBits(bit_field: *[field_units]T, src: *const *[src_units]u8) void {
+            if (T == u8) {
+                const dest_len = field_units * @sizeOf(T);
+                var start: usize = 0;
+                var u8_field = @ptrCast(*[dest_len]u8, bit_field);
+                while (start + src_units < dest_len) : (start += src_units) {
+                    std.mem.copy(u8, u8_field.*[start..], src.*[0..]);
+                }
+                std.mem.copy(u8, u8_field.*[start..dest_len], src.*[0..dest_len-start]);
+            } else {
+                var src_index: usize = 0;
+                for (bit_field.*) | *dest | {
+                    dest.* = findBits(src, &src_index);
+                }
+            }
+        }
+
+        inline fn findBits(src: *const *[src_units]u8, src_index: *usize) T {
+            var buf: [@sizeOf(T)]u8 = undefined;
+            var next_index = src_index.* + @sizeOf(T);
+            if (next_index < src_units) {
+                std.mem.copy(u8, &buf, src.*[(src_index.*)..next_index]);
+                src_index.* = next_index;
+            } else {
+                copyWrapping(&buf, src, src_index);
+            }
+
+            var result = @bitCast(T, buf);
+
+            comptime const should_swap = comptime blk: {
+                break :blk (std.builtin.cpu.arch.endian() == .Big);
+            };
+
+            return if (should_swap) @byteSwap(T, result) else result;
+        }
+
+        inline fn copyWrapping(buf: []u8, src: *const *[src_units]u8, src_index: *usize) void {
+            var buf_index: usize = 0;
+            while (src_index.* < src_units) : (src_index.* += 1) {
+                buf[buf_index] = src.*[src_index.*];
+                buf_index += 1;
+            }
+            src_index.* = 0;
+            while (buf_index < @sizeOf(T)) : (buf_index += 1) {
+                buf[buf_index] = src.*[src_index.*];
+                src_index.* += 1;
+            }
         }
 
         // a mask that is usable to obtain the residual (remainder) from the

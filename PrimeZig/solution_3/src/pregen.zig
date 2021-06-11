@@ -65,11 +65,8 @@ pub fn PreGenerated(comptime count: usize, comptime gsize: Unit) type {
     };
 }
 
-const seeds = [_]comptime_int{ 2, 3, 4, 5 };
-
-fn relatively_prime(a: usize, b: usize) bool {
-    return ((b % a) != 0);
-}
+// COMPRESSION UTILITIES:  turns a jagged (non-multiple of 8) list of bytes, repeats it 8 times,
+// and results in bytes of bitmaps.
 
 fn compress(slice: []u8) void {
     const length = slice.len;
@@ -110,7 +107,15 @@ fn encode_copy(slice: []u8, dest: usize, source: usize) void {
     }
 }
 
-test "the generation of our table is correct" {
+// TESTS
+
+const seeds = [_]comptime_int{ 2, 3, 4, 5 };
+
+fn relatively_prime(a: usize, b: usize) bool {
+    return ((b % a) != 0);
+}
+
+test "the generation of a byte table is correct" {
     inline for (seeds) |seed| {
         const T = PreGenerated(seed, .byte);
         for (T.template) |v, index| {
@@ -123,6 +128,27 @@ test "the generation of our table is correct" {
                 std.debug.assert(maybe_prime);
             } else {
                 std.debug.assert(!maybe_prime);
+            }
+        }
+    }
+}
+
+test "the generation of a bit table is correct" {
+    inline for (seeds) |seed| {
+        const T = PreGenerated(seed, .bit);
+        for (T.template) |v, index| {
+            var subindex: usize = 0;
+            while (subindex < 8) : (subindex += 1) {
+                var this = 2 * ((index << 3) + subindex) + 1;
+                var maybe_prime = true;
+                inline for (T.primes) |prime| {
+                    maybe_prime = maybe_prime and relatively_prime(prime, this);
+                }
+                if ((v & (@as(u8, 1) << @truncate(u3, subindex))) != 0) {
+                    std.debug.assert(maybe_prime);
+                } else {
+                    std.debug.assert(!maybe_prime);
+                }
             }
         }
     }
