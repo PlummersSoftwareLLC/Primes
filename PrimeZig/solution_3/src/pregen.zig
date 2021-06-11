@@ -1,6 +1,6 @@
 //! implementation of the ability to pregenerate primes and use them.
-//! array should be a compile-time list of usize numbers which are
-//! "skip" values.
+//! should generate into the compiled artifact exactly the memory layout
+//! to be copied in as a "wheel" for the first (n) primes
 
 const std = @import("std");
 const OEIS_PRIMES = [_]comptime_int{ 3, 5, 7, 11, 13, 17, 19 };
