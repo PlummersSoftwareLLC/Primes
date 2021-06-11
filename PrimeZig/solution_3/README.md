@@ -26,3 +26,18 @@ Features combinations of the following optimizations:
   - Gustafson scaling:  each thread works independently and contributes independently to the common count.
 - `wheel`:  Precalculate (at compile time) a series of initial primes and during the "reset" phase, project
      these primes onto the field.  Then proceed as normal with the remaining primes.
+
+Architecture:
+
+- `src/alloc.zig` an allocator that prioritizes use of scratch space set aside in .bss
+- `src/main.zig` entrypoint for the program; builds the drag race layout
+- `src/pregen.zig` uses the sieve program to generate wheel LUTs at compile-time
+- `src/runners.zig` generic "runner" framework.  Impls:
+  - `SingleThreadedRunner`
+  - `AmdahlRunner`
+  - `GustafsonRunner`
+- `src/sieves.zig` generic sieves.  Impls:
+  - `IntSieve` sieve stored as a (1/2) array of integers of comptime-defined sizes.
+  - `BitSieve` sieve stored as a (1/2) array of bits, backed by comptime-defined unsigned integer types.
+- `src/tests.zig` test cases.  Execute by running `zig test src/tests.zig`.  May not work correctly
+  (tested on zig 0.7.2)
