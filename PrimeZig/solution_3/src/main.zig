@@ -44,16 +44,16 @@ pub fn main() anyerror!void {
         comptime const RunnerFn = spec[0];
         comptime const SieveFn = spec[1];
         comptime const runner_opts = spec[2];
-        comptime const use_pregen = spec[3];
+        comptime const wheel = spec[3];
 
-        if (use_pregen) {
+        if (wheel) {
             comptime const DataTypes = if (SieveFn == IntSieve) .{u8} else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
                 inline for (pregens) |pregen| {
                     comptime const Sieve = SieveFn(Type, SIZE, .{ .pregen = pregen });
                     comptime const Runner = RunnerFn(Sieve, runner_opts);
-                    try runSieveTest(Runner, Runner.name, SIZE, run_for, allocator);
+                    try runSieveTest(Runner, run_for, allocator, wheel, 1);
                 }
             }
         } else {
@@ -62,7 +62,7 @@ pub fn main() anyerror!void {
             inline for (DataTypes) |Type| {
                 comptime const Sieve = SieveFn(Type, SIZE, .{});
                 comptime const Runner = RunnerFn(Sieve, runner_opts);
-                try runSieveTest(Runner, Runner.name, SIZE, run_for, allocator);
+                try runSieveTest(Runner, run_for, allocator, wheel, @bitSizeOf(Type));
             }
         }
     }
@@ -70,10 +70,10 @@ pub fn main() anyerror!void {
 
 fn runSieveTest(
     comptime Runner: type,
-    comptime name: anytype,
-    size: comptime_int,
     run_for: comptime_int,
     allocator: *std.mem.Allocator,
+    wheel: bool,
+    bits: usize
 ) anyerror!void {
     const timer = try time.Timer.start();
     var passes: u64 = 0;
@@ -89,13 +89,16 @@ fn runSieveTest(
 
     const elapsed = timer.read();
 
-    try printResults("ManDeJan&ityonemo-zig-" ++ name, passes, elapsed, size);
+    var threads = try Runner.threads();
+    try printResults("ManDeJan&ityonemo-zig-" ++ Runner.name, passes, elapsed, threads, wheel, bits);
 }
 
-fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, limit: usize) !void {
+fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, threads: usize, wheel: bool, bits: usize) !void {
     const elapsed = @intToFloat(f32, elapsed_ns) / @intToFloat(f32, time.ns_per_s);
     const stdout = std.io.getStdOut().writer();
-    try stdout.print("{s};{};{d:.5};1\n", .{
-        backing, passes, elapsed,
+    const algo = if (wheel) "wheel" else "base";
+
+    try stdout.print("{s};{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{
+        backing, passes, elapsed, threads, algo, bits
     });
 }

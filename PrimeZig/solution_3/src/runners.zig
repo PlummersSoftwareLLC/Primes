@@ -36,6 +36,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         }
 
         pub const name = "single-" ++ Sieve.name;
+        pub fn threads() !usize { return 1; }
     };
 }
 
@@ -203,8 +204,11 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             return false;
         }
 
-        const uses_ht = if (opt.no_ht) "noht-" else "";
-        pub const name = "parallel-amdahl-" ++ uses_ht ++ Sieve.name;
+        pub const name = "parallel-amdahl-" ++ Sieve.name;
+
+        pub fn threads() !usize {
+            return std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction;
+        }
     };
 }
 
@@ -303,7 +307,10 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             }
         }
 
-        const uses_ht = if (opt.no_ht) "noht-" else "";
-        pub const name = "parallel-gustafson-" ++ uses_ht ++ Sieve.name;
+        pub const name = "parallel-gustafson-" ++ Sieve.name;
+
+        pub fn threads() !usize {
+            return std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction;
+        }
     };
 }
