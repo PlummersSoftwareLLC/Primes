@@ -29,19 +29,17 @@ prime_sieve <- setRefClass("prime_sieve",
             bit_array <<- rep(TRUE, bit_size)
         },
         run_sieve = function() {
-            # maximum primenumber we need to propangate the prime number
+            # maximum primenumber we need to propagate the prime number
             maxroot <- floor(sqrt(limit))
             # given the max root, what is the maxium index of the array
-            # we need to propangate
+            # we need to propagate
             maxroot_index <-floor(maxroot / 2)
             if (maxroot %% 2 == 0) {
                 # eg if limit=100, maxroot=10, even numbers have no index
                 # only the square root of one odd number below that have 
-                # to be propangated
+                # to be propagated
                 maxroot_index <- maxroot_index - 1
             } 
-            
-            #cat(sprintf("limit=%i\n,bit_size=%i\n,maxroot=%i\n,maxroot_index=%i\n",limit,bit_size,maxroot,maxroot_index))
 
             factor <- 1
             while(factor <= maxroot_index){
@@ -50,9 +48,9 @@ prime_sieve <- setRefClass("prime_sieve",
                 start <- ( ((prime * prime) -1) /2 )
                 step <- factor * 2 + 1
                 
-                #cat(sprintf("processing factor=%i,prime=%i,start=%i (=%i), step=%i (=%i)\n",factor,prime,start,(start*2 +1),step,(step*2 +1) ))
-
+                # propagate
                 bit_array[seq.int(from=start, to=bit_size, by=step)] <- FALSE
+
                 # determine new factor
                 factor <- factor + min(which(bit_array[(factor + 1) : bit_size]))
             }
@@ -102,7 +100,7 @@ prime_sieve <- setRefClass("prime_sieve",
     )
 )
 
-main <-function() {
+main <-function(time_limit,limit,show_results) {
     # get time in sec
     start <- as.numeric(format(Sys.time(), "%OS3"))
     passes <- 0
@@ -120,4 +118,4 @@ main <-function() {
     }
 }
 
-main()
+main(time_limit,limit,show_results)
