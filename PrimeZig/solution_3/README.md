@@ -12,7 +12,7 @@ zig build -Drelease-fast
 Run:
 
 ```
-./zig-cache/bin/PrimeZig
+./zig-out/bin/PrimeZig
 ```
 
 Uses highly composable Zig datastructures.
