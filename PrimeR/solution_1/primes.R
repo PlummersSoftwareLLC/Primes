@@ -80,7 +80,7 @@ prime_sieve <- setRefClass("prime_sieve",
             if (show_results) {
                 cat(bit_array_to_primes(),"\n")
             }
-
+            
             cat(sprintf("Passes: %i, Time: %f, Avg: %f (sec/pass), Limit: %i, Count: %i, Valid: %s\n",
                     passes,
                     duration,
@@ -91,7 +91,7 @@ prime_sieve <- setRefClass("prime_sieve",
                 )
             )
             cat("\n")
-            cat(sprintf("fvbakel_R;%i;%f;1;algorithm=base,faithful=yes,bits=1\n",
+            cat(sprintf("fvbakel_R;%i;%f;1;algorithm=base,faithful=yes,bits=32\n",
                     passes,
                     duration
                 )
@@ -111,7 +111,7 @@ main <-function(time_limit,limit,show_results) {
         sieve$run_sieve()
         now <- as.numeric(format(Sys.time(), "%OS3"))
         duration <- now - start
-        if (duration > time_limit || passes==1) {
+        if (duration > time_limit) {
             sieve$print_results(limit, show_results, duration, passes)
             break
         }
