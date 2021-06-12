@@ -120,7 +120,7 @@ printf(
 
 // Following 2 lines added by rbergen to conform to drag race output format
 echo "\n\n";
-printf("DennisdeBest;%d;%f;1\n", $passes, ((float)$tD) / 1000);
+printf("DennisdeBest;%d;%f;1;algorithm=base,faithful=yes\n", $passes, ((float)$tD) / 1000);
 
 function getTimeDiffInMs(float $tStart): float
 {

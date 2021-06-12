@@ -106,7 +106,7 @@ class prime_sieve
 
           // Following 2 lines added by rbergen to conform to drag race output format
           printf("\n");       
-          printf("davepl;%d;%f;1\n", passes, duration);
+          printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
       }
 
       int countPrimes()
@@ -131,7 +131,7 @@ int main()
         passes++;
         if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
         {
-            sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000, passes);
+            sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000.0, passes);
             break;
         }
     } 

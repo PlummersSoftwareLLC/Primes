@@ -7,7 +7,7 @@ import (
 )
 
 var myDict = map[int]int{
-	10:  10,
+	10:  4,
 	1e2: 25,
 	1e3: 168,
 	1e4: 1229,
@@ -89,7 +89,7 @@ func (s Sieve) Results(showResults bool, duration time.Duration, passes int) {
 
 	// Following 2 lines added by rbergen to conform to drag race output format
 	fmt.Println()
-	fmt.Printf("bundgaard;%d;%f;1\n", passes, duration.Seconds())
+	fmt.Printf("bundgaard;%d;%f;1;algorithm=base,faithful=yes\n", passes, duration.Seconds())
 }
 
 func main() {

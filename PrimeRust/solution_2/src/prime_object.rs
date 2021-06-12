@@ -111,6 +111,6 @@ impl PrimeSieve {
 
         // Following 2 lines added by rbergen to conform to drag race output format
         println!("");
-        println!("Azgrom;{};{:?};1", passes, duration.as_secs_f32());
+        println!("Azgrom;{};{:?};1;algorithm=base,faithful=yes", passes, duration.as_secs_f32());
     }
 }

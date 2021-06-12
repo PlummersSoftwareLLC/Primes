@@ -1,6 +1,9 @@
 # Haxe solution by [Taylor Robinson](https://github.com/tayiorrobinson)
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 An implementation of a Prime Sieve in Haxe.
 
@@ -42,7 +45,7 @@ For simplicity, you can run the following commands from a bash shell to compile 
 My machine is a MacBook Pro 2020 (M1, 8GB RAM) running macOS Big Sur.
 
 ```
-TayIorRobinson_Haxe_C++;2052;10.0021259784698;1
-TayIorRobinson_Haxe_HaxeEval;49;10.1027731895446777;1
-TayIorRobinson_Haxe_Python;26;10.114451885223389;1
+TayIorRobinson_Haxe_C++;2052;10.0021259784698;1;algorithm=base,faithful=yes
+TayIorRobinson_Haxe_HaxeEval;49;10.1027731895446777;1;algorithm=base,faithful=yes
+TayIorRobinson_Haxe_Python;26;10.114451885223389;1;algorithm=base,faithful=yes
 ```

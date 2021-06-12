@@ -61,7 +61,7 @@ export class PrimeSieve {
 
         // Following 2 lines added by rbergen to conform to drag race output format
         console.log("");
-        console.log("donmahallem;" + passes.toString() + ";" + duration.toString() + ";1");
+        console.log("donmahallem;" + passes.toString() + ";" + duration.toString() + ";1;algorithm=base,faithful=yes");
 
     }
 

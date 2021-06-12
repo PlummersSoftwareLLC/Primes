@@ -1,7 +1,11 @@
 # Rust solution by @mike-barber
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
-![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber
@@ -31,10 +35,10 @@ Tested on a Ryzen 3900X, Rust 1.51, running on WSL2.
 
 This is as reported on `stdout`:
 ```
-mike-barber_byte-storage;18177;5.0000672340;1
-mike-barber_bit-storage;11954;5.0003018379;1
-mike-barber_byte-storage;169690;5.0010256767;24
-mike-barber_bit-storage;151787;5.0007596016;24
+mike-barber_byte-storage;18177;5.0000672340;1;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;11954;5.0003018379;1;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;169690;5.0010256767;24;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;151787;5.0007596016;24;algorithm=base,faithful=yes,bits=1
 ```
 
 We report more informative metrics to `stderr` too, but these don't go into the report, as recorded below.

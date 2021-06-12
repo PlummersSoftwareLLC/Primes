@@ -181,6 +181,6 @@ int main(int argc, char **argv) {
   clock_gettime(CLOCK_MONOTONIC,&et);
   double elapsed_time=et.tv_sec+et.tv_nsec*1e-9-st.tv_sec-st.tv_nsec*1e-9;
   //printf("valid=%d ",valid_result);
-  printf("danielspaangberg_480of2310_epar;%d;%f;%d\n", passes,elapsed_time,omp_get_max_threads());
+  printf("danielspaangberg_480of2310_epar;%d;%f;%d;algorithm=wheel,faithful=yes,bits=1\n", passes,elapsed_time,omp_get_max_threads());
   return 0;
 }

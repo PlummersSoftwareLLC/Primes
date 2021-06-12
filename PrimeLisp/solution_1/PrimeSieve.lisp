@@ -91,4 +91,4 @@
 
 ;; Following 2 lines added by rbergen to conform to drag race output format
 (terpri)
-(format t "~%mikehw;~d;~f;1~%" passes duration)
+(format t "~%mikehw;~d;~f;1;algorithm=base,faithful=no,bits=1~%" passes duration)

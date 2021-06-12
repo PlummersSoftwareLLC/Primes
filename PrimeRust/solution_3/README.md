@@ -1,6 +1,9 @@
 # Rust solution by Blui42
 
-![Category](https://img.shields.io/badge/Category-faithful-green) 
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 This is mostly a 1:1 implementation of the C++ code in rust.
 Uncomment line 61 for an output of all the primes.

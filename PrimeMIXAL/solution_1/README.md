@@ -1,7 +1,10 @@
 # MIXAL solution by rbergen
 
-![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
-![Category](https://img.shields.io/badge/Category-approximation-blue)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Deviation](https://img.shields.io/badge/Deviation-sievesize-blue)
 
 *Category: Unfaithful / Closest Approximation*
 
@@ -16,7 +19,7 @@ Due to this, the core implementation deviates from the basic rules in two ways:
 * By default, the sieve size is 200,000 instead of 1,000,000. The reason is that MIX has a total memory capacity of 3,999 words, each 30 bits wide. This does not allow for a bit array of 500,000 entries to be stored. In the practical sense, a sieve size of 200,000 is the maximum.
 * The implementation does itself not run for a period of 5 seconds. Instead, depending on configuration it will either execute a configured number of sieve runs, or keep repeating sieve runs indefinitely. The reason is that MIX has no internal clock that measures actual time. Instruction execution times are measured in "ticks", the duration of which is undefined, by design. In practice, this means that if a timed execution is desired, the starting, timing and stopping of it must be controlled external to the program.
 
-These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. It is therefore that I have labeled the category as "approximation". 
+These deviations are part of the implementation out of necessity, but I have made a genuine effort to stay as close to the original implementation(s) and the basic rules as possible. 
 
 To mitigate the second deviation, the implementation comes with a wrapper shell script that:
 * Times the run of the implementation externally, using the GNU time command
@@ -108,7 +111,7 @@ RUN: 00027, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
 RUN: 00028, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
 RUN: 00029, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
 RUN: 00030, SIEVE:  0000200000, PRIMES: 17984, RESULT: CORRECT
-RBERGEN;30;<TIME>;1
+RBERGEN;30;<TIME>;1;ALGORITHM=BASE,FAITHFUL=NO,BITS=1
 ... done
 ```
 
@@ -122,5 +125,5 @@ RBERGEN;30;<TIME>;1
 ### Wrapper script
 When using the wrapper script and parameters indicated above, the output is as follows, regardless of whether run result output is enabled or not:
 ```
-rbergen;30;5.19;1
+rbergen;30;5.19;1;algorithm=base,faithful=no,bits=1
 ```

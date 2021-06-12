@@ -46,14 +46,14 @@ public class PrimeSieveJava
 	// Also rather interesting: checking index % 2 != 0 is slower than index % 2 == 1
 	private boolean getBit(int index)
 	{
-		return index % 2 == 1 && !dataSet[index >> 1];
+		return (index & 1) == 1 && !dataSet[index >> 1];
 	}
 	
 	// Again instead of checking if index is even we just update the array at that index equivalent to that check
 	// to boost performance
 	private void clearBit(int index)
 	{
-		dataSet[index >> 1] = index % 2 == 1;
+		dataSet[index >> 1] = (index & 1) == 1;
 	}
 	
 	public void runSieve()
@@ -109,7 +109,7 @@ public class PrimeSieveJava
 
         // Following 2 lines added by rbergen to conform to drag race output format
 		System.out.println();
-		System.out.printf("MansenC;%d;%f;1\n", passes, duration);
+		System.out.printf("MansenC;%d;%f;1;algorithm=base,faithful=yes\n", passes, duration);
 		
 	}
 	
@@ -136,7 +136,7 @@ public class PrimeSieveJava
 	static
 	{
 		VALIDATION_DATA = new HashMap<>();
-		VALIDATION_DATA.put(10, 1);
+		VALIDATION_DATA.put(10, 4);
 		VALIDATION_DATA.put(100, 25);
 		VALIDATION_DATA.put(1000, 168);
 		VALIDATION_DATA.put(10000, 1229);

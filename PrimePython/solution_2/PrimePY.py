@@ -96,7 +96,7 @@ class PrimeSieve:
 
         # Following 2 lines added by rbergen to conform to drag race output format
         print();
-        print("ssovest; %s;%s;1" % (passes, duration));
+        print("ssovest; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
 
 
 # MAIN Entry
