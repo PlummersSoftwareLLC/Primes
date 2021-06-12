@@ -1,5 +1,13 @@
 # Prime Sieve Algorithms
 
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+
 ## C# solution by @Kinematics
 
 This is a collection of prime sieve algorithms implemented in C#.  It uses .NET 5, and can be compiled using Visual Studio 16.9 or later.
@@ -62,63 +70,63 @@ Results that I get, running these on a Ryzen 3700X.
 ```
 @Kinematics: Starting (original)...
 Passes: 2919, Time: 5.00151 s, Per Loop: 1.713258 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_original;2919;5.00151;1
+kinematics_original;2919;5.00151;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (standard)...
 Passes: 3678, Time: 5.00021 s, Per Loop: 1.359434 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_standard;3678;5.00021;1
+kinematics_standard;3678;5.00021;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (bool array)...
 Passes: 5102, Time: 5.00011 s, Per Loop: 0.980008 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_bool;5102;5.00011;1
+kinematics_bool;5102;5.00011;1;algorithm=base,faithful=yes
 
 @Kinematics: Starting (inverted bool array)...
 Passes: 6313, Time: 5.00056 s, Per Loop: 0.792016 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_ibool;6313;5.00056;1
+kinematics_ibool;6313;5.00056;1;algorithm=base,faithful=yes
 
 @Kinematics: Starting (direct access inverted bool array)...
 Passes: 8964, Time: 5.00047 s, Per Loop: 0.557787 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_dbool;8964;5.00047;1
+kinematics_dbool;8964;5.00047;1;algorithm=base,faithful=yes
 
 @Kinematics: Starting (raw bits)...
 Passes: 6187, Time: 5.00047 s, Per Loop: 0.808146 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw;6187;5.00047;1
+kinematics_raw;6187;5.00047;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (raw bits uint)...
 Passes: 6366, Time: 5.00003 s, Per Loop: 0.785423 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw32;6366;5.00003;1
+kinematics_raw32;6366;5.00003;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (raw bits direct)...
 Passes: 6416, Time: 5.00043 s, Per Loop: 0.779302 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_rawd;6416;5.00043;1
+kinematics_rawd;6416;5.00043;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (raw bits [2 of 6])...
 Passes: 6103, Time: 5.00023 s, Per Loop: 0.819269 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw6;6103;5.00023;1
+kinematics_raw6;6103;5.00023;1;algorithm=wheel,faithful=yes,bits=1
 
 @Kinematics: Starting (raw bits parallel version)...
 Passes: 4207, Time: 5.00048 s, Per Loop: 1.188495 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
-kinematics_rawp;4207;5.00048;16
+kinematics_rawp;4207;5.00048;16;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (array pool)...
 Passes: 6084, Time: 5.00053 s, Per Loop: 0.821828 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool;6084;5.00053;1
+kinematics_pool;6084;5.00053;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (array pool [2 of 6])...
 Passes: 9670, Time: 5.00003 s, Per Loop: 0.517063 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool2of6;9670;5.00003;1
+kinematics_pool2of6;9670;5.00003;1;algorithm=wheel,faithful=yes,bits=1
 
 @Kinematics: Starting (parallel array pool [2 of 6])...
 Passes: 5467, Time: 5.00014 s, Per Loop: 0.914578 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
-kinematics_pool6p;5467;5.00014;16
+kinematics_pool6p;5467;5.00014;16;algorithm=wheel,faithful=yes,bits=1
 
 @Kinematics: Starting (array pool [8 of 30])...
 Passes: 12467, Time: 5.00035 s, Per Loop: 0.401059 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool30;12467;5.00035;1
+kinematics_pool30;12467;5.00035;1;algorithm=wheel,faithful=yes,bits=1
 
 @Kinematics: Starting (array pool [8 of 30] with bitmasking)...
 Passes: 15611, Time: 5.00008 s, Per Loop: 0.320287 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool30m;15611;5.00008;1
+kinematics_pool30m;15611;5.00008;1;algorithm=wheel,faithful=yes,bits=1
 ```
 
 NB: Parallel versions don't start outperforming linear versions until 10,000,000 sieve size.

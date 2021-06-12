@@ -8,6 +8,7 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "raw6";
         public string Name => "Raw Allocation, 2 of 6";
+        public int? BitsPerPrime => 1;
 
         public int SieveSize { get; }
         private readonly byte[] rawbits;
