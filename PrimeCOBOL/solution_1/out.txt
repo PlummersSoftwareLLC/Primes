@@ -1,0 +1,122 @@
+Sending build context to Docker daemon  10.75kB
+Step 1/7 : FROM alpine:3.13
+3.13: Pulling from library/alpine
+Digest: sha256:69e70a79f2d41ab5d637de98c1e0b055206ba40a8145e7bddb55ccc04e13cf8f
+Status: Image is up to date for alpine:3.13
+ ---> 6dbb9cc54074
+Step 2/7 : WORKDIR /opt/app
+ ---> Using cache
+ ---> f67661738d54
+Step 3/7 : RUN apk add tar libaio libnsl libc6-compat autoconf make g++ gmp-dev db-dev libxml2-dev
+ ---> Using cache
+ ---> 4757a002a3b7
+Step 4/7 : RUN wget https://sourceforge.net/projects/gnucobol/files/gnucobol/3.1/gnucobol-3.1-rc1.tar.gz/download -O gnucobol-3.1-rc1.tar.gz &&     tar xvfz gnucobol-3.1-rc1.tar.gz && cd gnucobol-3.1-rc1 && ./configure && make && make install && cd ..
+ ---> Using cache
+ ---> eaf4b3498cb0
+Step 5/7 : COPY ./primes.cbl .
+ ---> 2fdafc090438
+Step 6/7 : RUN cobc -x primes.cbl
+ ---> Running in 40dc9cedcc33
+Removing intermediate container 40dc9cedcc33
+ ---> af65e2ca1647
+Step 7/7 : ENTRYPOINT ["./primes"]
+ ---> Running in 847c015119b5
+Removing intermediate container 847c015119b5
+ ---> ddf326a691df
+Successfully built ddf326a691df
+Successfully tagged cobol:latest
+Start calculation
+MAX_LIMIT=0000100
+BIT_SIZE=0000050
+K=0000004
+K=0000007
+K=0000010
+K=0000016
+K=0000019
+K=0000025
+K=0000028
+K=0000034
+K=0000043
+K=0000046
+K=0000055
+K=0000061
+K=0000064
+K=0000070
+K=0000088
+K=0000091
+K=0000100
+K=0000106
+K=0000109
+K=0000124
+K=0000133
+K=0000145
+K=0000151
+K=0000154
+K=0000160
+K=0000163
+K=0000169
+K=0000190
+K=0000205
+K=0000208
+K=0000223
+K=0000226
+K=0000253
+K=0000259
+K=0000268
+K=0000271
+K=0000286
+K=0000289
+K=0000295
+K=0000298
+Count starts
+I=0000002
+I=0000003
+I=0000004
+I=0000005
+I=0000006
+I=0000007
+I=0000008
+I=0000009
+I=0000010
+I=0000011
+I=0000012
+I=0000013
+I=0000014
+I=0000015
+I=0000016
+I=0000017
+I=0000018
+I=0000019
+I=0000020
+I=0000021
+I=0000022
+I=0000023
+I=0000024
+I=0000025
+I=0000026
+I=0000027
+I=0000028
+I=0000029
+I=0000030
+I=0000031
+I=0000032
+I=0000033
+I=0000034
+I=0000035
+I=0000036
+I=0000037
+I=0000038
+I=0000039
+I=0000040
+I=0000041
+I=0000042
+I=0000043
+I=0000044
+I=0000045
+I=0000046
+I=0000047
+I=0000048
+I=0000049
+I=0000050
+I=0000051
+PRIMES FOUND: 0000023
