@@ -1,7 +1,61 @@
-Sources used:
+# COBOL implementation
 
-- https://medium.com/swlh/modern-cobol-microservice-tutorial-7d7d738f0b00
-- docker run -d -i --name gnucobol olegkunitsyn/gnucobol:2.2
-- https://www.gnu.org/software/gnucobol/
-- https://github.com/OlegKunitsyn/gnucobol-docker
-- https://blog.maxjahn.at/2020/11/why-i-implemented-a-serverless-function-in-cobol/
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+
+This is an implementation in COBOL. It makes use of the GNUCobol compiler. An array of the data type `PIC 1(1)` is used, which comes down to a 8 bit storage in the GNUCobol compiler.
+In COBOL it is common.
+
+## Run instructions
+
+### Build and run native
+
+To run this solution you need the GNUCobol compiler and dependencies.
+
+```bash
+cd path/to/sieve
+cobc -x primes.cbl
+./primes
+```
+
+### Run with Docker
+
+To run with Docker take the following steps:
+
+1. Install Docker: <https://docs.docker.com/get-docker/>
+2. Build the image:
+
+    ```bash
+    docker build --pull --rm -f "Dockerfile" -t cobol:latest "."
+    ```
+
+3. Run with Docker:
+
+    ```bash
+    docker run --rm -it  cobol:latest 
+    ```
+
+Or you can do step 2 and 3 with `go.sh`.
+
+## Output
+
+Below is an example of the output on my machine, running with Docker.
+
+```bash
+Passes: 00739, Time: 5.0, Avg: 0.00676(sec/pass), Limit: 1000000, Count: 0078498, Valid: True 
+ 
+fvbakel_Cobol;00739;5.0;1;algorithm=base,faithful=yes,bits=8
+```
+
+These results are with the following conditions:
+
+- Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
+- GNUCobol Compiler: 3.1
+- running in Docker container alpine:3.13
+- Docker version 20.10.2, build 20.10.2-0ubuntu2
+
+## Note
+
+This is my first COBOL program, it is quite possible that better implementations are possible. I now that now days it is allowed to use lower case in COBOL, however I choose to use the upper case for the nostalgic feeling.
