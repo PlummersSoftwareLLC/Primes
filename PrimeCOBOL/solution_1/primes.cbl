@@ -10,7 +10,7 @@
        77  MAX_TIME_HS                    PIC 9(9)   COMP.
        77  DURATION-SEC                   PIC 9(1)V9 COMP-3.     
        77  PASSES                         PIC 9(5)   COMP.
-       77  AVG                            PIC 9(5)v9 COMP-3.
+       77  AVG                            PIC 9(1)v99999 COMP-3.
        77  VAL-RES                        PIC X(5).   
        77  MAX_ROOT                       PIC 9(7)   COMP.
        77  MAX_ROOT_INDEX                 PIC 9(7)   COMP.
@@ -23,8 +23,8 @@
        77  IS-EVEN                        PIC 9(1)v9 COMP-3.
        77  BIT_SIZE                       PIC 9(7)   COMP.
        01  BIT-ARRAY.
-            03 FLAG PIC 1(1) 
-               OCCURS 500000 TIMES
+            03 FLAG PIC 1(1) *>USAGE BIT is not implemented and is slow
+               OCCURS 500000 TIMES *> Dynamic 
                INDEXED BY Z.
        01  WS-TIMES.
            03  WS-TIME                    PIC 9(8).
@@ -69,7 +69,7 @@
            PERFORM VARYING Z 
                    FROM 1 BY 1 
                    UNTIL Z>BIT_SIZE
-               MOVE 1 TO FLAG (Z)
+                MOVE 1 TO FLAG (Z)
            END-PERFORM.
            MOVE 1 TO FACTOR.
            PERFORM UNTIL FACTOR > MAX_ROOT_INDEX
@@ -90,9 +90,9 @@
       *
        PRINT_RESULTS.
            DIVIDE 100 INTO DURATION-HS GIVING DURATION-SEC.
-           DIVIDE PASSES INTO DURATION-SEC GIVING AVG.
+           COMPUTE AVG =  DURATION-SEC / PASSES.
            PERFORM COUNT-PRIMES THROUGH END-COUNT-PRIMES.
-           MOVE "True" TO VAL-RES.
+           PERFORM IS-VALID THROUGH END-IS-VALID.
            DISPLAY "Passes: ",PASSES,
                    ", Time: ",DURATION-SEC,
                    ", Avg: ",AVG,
@@ -105,6 +105,26 @@
                    ";1;algorithm=base,faithful=yes,bits=8".
        END-PRINT_RESULTS.
            EXIT.
+      *
+       IS-VALID.
+           MOVE "False" TO VAL-RES.
+           IF MAX_LIMIT = 10 AND 
+              PRIME-COUNT=4 THEN MOVE "True" TO VAL-RES.
+           IF MAX_LIMIT = 100 AND 
+              PRIME-COUNT=25 THEN MOVE "True" TO VAL-RES.
+           IF MAX_LIMIT = 1000 AND 
+              PRIME-COUNT=168 THEN MOVE "True" TO VAL-RES.
+           IF MAX_LIMIT = 10000 AND 
+              PRIME-COUNT=1229 THEN MOVE "True" TO VAL-RES.
+           IF MAX_LIMIT = 100000 AND 
+              PRIME-COUNT=9592 THEN MOVE "True" TO VAL-RES.
+           IF MAX_LIMIT = 1000000 AND 
+              PRIME-COUNT=78498 THEN MOVE "True" TO VAL-RES.               
+           IF MAX_LIMIT = 10000000 AND 
+              PRIME-COUNT=664579 THEN MOVE "True" TO VAL-RES.
+           IF MAX_LIMIT = 100000000 AND 
+              PRIME-COUNT=5761455 THEN MOVE "True" TO VAL-RES.      
+       END-IS-VALID.    
       * 
        COUNT-PRIMES.
            MOVE 2 TO PRIME
