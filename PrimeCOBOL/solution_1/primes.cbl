@@ -1,11 +1,12 @@
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PRIMES.
-       AUTHOR. FRANSTEP-SIZE VAN BAKEL.
+       AUTHOR. FRANK VAN BAKEL.
        ENVIRONMENT DIVISION.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
-       77  MAX_LIMIT                      PIC 9(7) VALUE 100.
+       77  MAX_LIMIT                      PIC 9(7) VALUE 97.
        77  MAX_ROOT                       PIC 9(7) COMP.
+       77  MAX_ROOT_INDEX                 PIC 9(7) COMP.
        77  PRIME                          PIC 9(7) COMP.
        77  PRIME-COUNT                    PIC 9(7) COMP.
        77  FACTOR                         PIC 9(7) COMP.
@@ -13,43 +14,51 @@
        77  START-AT                       PIC 9(7) COMP.
        77  K                              PIC 9(7) COMP.
        77  I                              PIC 9(7) COMP.
+       77  IS-EVEN                        PIC 9(5)v9.
        77  BIT_SIZE                       PIC 9(7) COMP.
        01  BIT-ARRAY.
-            03 FLAG OCCURS 50 TIMES       PIC 9 COMP.
+            03 FLAG OCCURS 50 TIMES     PIC 9 COMP.
        PROCEDURE DIVISION.
       * 
        START-UP.
             DISPLAY "Start calculation".
-            COMPUTE MAX_ROOT = (MAX_LIMIT ** .5).
-            DIVIDE  2 INTO MAX_LIMIT GIVING BIT_SIZE.
-            DISPLAY "MAX_ROOT=", MAX_ROOT.
-            DISPLAY "MAX_LIMIT=", MAX_LIMIT.
-            DISPLAY "BIT_SIZE=", BIT_SIZE.
-            PERFORM RUN_SIEVE THROUGH RUN_SIEVE-END.
+            PERFORM RUN_SIEVE THROUGH END-RUN_SIEVE.
             DISPLAY "Count starts".
             MOVE 1 TO PRIME-COUNT.
             MOVE 1 TO I.
-            PERFORM COUNT-PRIMES UNTIL I = BIT_SIZE.
+            PERFORM COUNT-PRIMES UNTIL I > BIT_SIZE.
             DISPLAY "PRIMES FOUND: ", PRIME-COUNT.
             STOP RUN.
       *
        RUN_SIEVE.
+            COMPUTE MAX_ROOT ROUNDED = (MAX_LIMIT ** .5).
+            DIVIDE 2 INTO MAX_ROOT 
+               GIVING MAX_ROOT_INDEX ROUNDED
+               REMAINDER IS-EVEN.
+            IF IS-EVEN = 0 THEN 
+                   ADD -1 TO MAX_ROOT_INDEX.
+            DIVIDE 2 INTO MAX_LIMIT GIVING BIT_SIZE ROUNDED.
+            DISPLAY "MAX_ROOT=", MAX_ROOT.
+            DISPLAY "MAX_ROOT_INDEX=",MAX_ROOT_INDEX.
+            DISPLAY "MAX_LIMIT=", MAX_LIMIT.
+            DISPLAY "BIT_SIZE=", BIT_SIZE.
+      *     Set all values in the array to 1      
             MOVE 1 TO I.
-            PERFORM INIT-BITS 100 TIMES.
+            PERFORM INIT-BITS BIT_SIZE TIMES.
             MOVE 1 TO FACTOR.
-            PERFORM SCAN-FOR-PRIMES UNTIL FACTOR > MAX_ROOT.
+      *     Outer loop 
+            PERFORM SCAN-FOR-PRIMES UNTIL FACTOR >= MAX_ROOT_INDEX.
             DISPLAY "RUN_SIEVE ready".
-       RUN_SIEVE-END.
+       END-RUN_SIEVE.
             EXIT.
       * 
        COUNT-PRIMES.
-            IF FLAG (I) = 1
-                 THEN
-                      ADD 1 TO PRIME-COUNT
-                      ADD I I 1 GIVING PRIME
-                      DISPLAY "PRIME counted=", PRIME.
+            IF FLAG (I) = 1 THEN
+                   ADD 1 TO PRIME-COUNT
+                   ADD I I 1 GIVING PRIME
+                   DISPLAY "PRIME counted=", PRIME.
             ADD 1 TO I.
-       COUNT-PRIMES-END.
+       END-COUNT-PRIMES.
             EXIT.
       * 
        INIT-BITS.
@@ -59,34 +68,27 @@
             EXIT.
       * 
        SCAN-FOR-PRIMES.
-            IF FLAG (FACTOR) = 0
-                 THEN
-                      GO TO NOT-PRIME.
-            ADD FACTOR FACTOR 1 GIVING PRIME.
-            ADD FACTOR FACTOR 1 GIVING STEP-SIZE.
-      *      COMPUTE START-AT = ( ( ( PRIME * PRIME ) -1 ) * 0.5 ).
-            COMPUTE START-AT = (((PRIME * PRIME) - 1) * .5).
-            MOVE START-AT TO K.
-            DISPLAY "PRIME Calculated=", PRIME.
-            DISPLAY "START-AT=", START-AT.
-            DISPLAY "STEP-SIZE=", STEP-SIZE.
-            DISPLAY "K=", K.
-            PERFORM STRIKOUT UNTIL K > BIT_SIZE.
+            IF FLAG (FACTOR) = 1 THEN
+                   ADD FACTOR FACTOR 1 GIVING PRIME
+                   ADD FACTOR FACTOR 1 GIVING STEP-SIZE
+                   COMPUTE START-AT = (((PRIME * PRIME) - 1) / 2)
+                   MOVE START-AT TO K
+                   DISPLAY "PRIME Calculated=", PRIME
+                   DISPLAY "START-AT=", START-AT
+                   DISPLAY "STEP-SIZE=", STEP-SIZE
+                   PERFORM STRIKOUT UNTIL K > BIT_SIZE.
             ADD 1 TO FACTOR.
             DISPLAY "FACTOR=", FACTOR.
-
-      * 
-       NOT-PRIME.
-            DISPLAY "NOT-PRIME FACTOR=",FACTOR.  
-            ADD 1 TO FACTOR.
-            DISPLAY "NOT-PRIME FACTOR now=",FACTOR.
-            GO TO SCAN-FOR-PRIMES.
+       END-SCAN-FOR-PRIMES.
+           EXIT.
       * 
        STRIKOUT.
-            DISPLAY "STRIKING OUT K=",K.
+      *      DISPLAY "STRIKING OUT K=",K.
             MOVE 0 TO FLAG (K).
             ADD STEP-SIZE TO K.
-            DISPLAY "NEXT K=", K.
+      *      DISPLAY "NEXT K=", K.
+       END-STRIKOUT.
+           EXIT.
       * 
        END-PROGRAM.
             EXIT.
