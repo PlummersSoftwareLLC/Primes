@@ -1,0 +1,15 @@
+from time import perf_counter as pfc
+import numpy
+
+def primes_numpy(limit):
+  is_prime = numpy.ones(limit + 1, dtype=bool)
+  for n in range(2, int(limit**0.5 + 1.5)):
+    if is_prime[n]:
+      is_prime[n*n::n] = 0
+  return numpy.nonzero(is_prime)[0][2:]
+
+limit = 100_000_000
+
+start = pfc()
+e = primes_numpy(limit)
+print(f'Prime Numpy ->Time: {pfc()-start:0.6f} sec, Limit: {limit:0,}, Count: {len(e):0,}')
