@@ -9,7 +9,7 @@ This is an implementation in COBOL. It makes use of the GNUCobol compiler. An ar
 
 ## Considerations
 
-In COBOL it is common to have globals declared with a fixed size. This static declaration is used in this implementation which makes it not faithful. In each run of the calculation this static array is filled with ones. Setting these one by one is very CPU intensive and slow operation in Cobol. Instead it is much faster to copy memory. Son instead of:
+In COBOL it is common to have globals declared with a fixed size. This static declaration is used in this implementation which makes it not faithful. In each run of the calculation this static array is filled with ones. Setting these one by one is very CPU intensive and slow operation in COBOL. Instead it is much faster to copy memory. So instead of:
 
 ```COBOL
             PERFORM VARYING Z 
@@ -22,7 +22,14 @@ In COBOL it is common to have globals declared with a fixed size. This static de
 The following code is used:
 
 ```COBOL
+        01  ONE-FILLED-ARRAY.        
+            03 ONE PIC 1(1)
+               VALUE 1 
+               OCCURS 500000 TIMES
+               INDEXED BY Y. 
+        ...
 
+        MOVE ONE-FILLED-ARRAY TO BIT-ARRAY.
 ```
 
 This initialization improvement, improved the performance by 40%!.
@@ -63,9 +70,9 @@ Or you can do step 2 and 3 with `go.sh`.
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-Passes: 00738, Time: 5.0, Avg: 0.00677(sec/pass), Limit: 1000000, Count: 0078498, Valid: True 
+Passes: 01104, Time: 5.0, Avg: 0.00452 (sec/pass), Limit: 1000000, Count: 0078498, Valid: True 
  
-fvbakel_Cobol;00738;5.0;1;algorithm=base,faithful=no,bits=8
+fvbakel_Cobol;01104;5.0;1;algorithm=base,faithful=no,bits=8
 ```
 
 These results are with the following conditions:
