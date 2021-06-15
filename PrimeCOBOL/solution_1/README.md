@@ -6,7 +6,27 @@
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 This is an implementation in COBOL. It makes use of the GNUCobol compiler. An array of the data type `PIC 1(1)` is used, which comes down to a 8 bit storage in the GNUCobol compiler.
-In COBOL it is common to have globals declared with a fixed size. This static declaration is used in this implementation which makes it not faithful.
+
+## Considerations
+
+In COBOL it is common to have globals declared with a fixed size. This static declaration is used in this implementation which makes it not faithful. In each run of the calculation this static array is filled with ones. Setting these one by one is very CPU intensive and slow operation in Cobol. Instead it is much faster to copy memory. Son instead of:
+
+```COBOL
+            PERFORM VARYING Z 
+                    FROM 1 BY 1 
+                    UNTIL Z>BIT_SIZE
+                 MOVE 1 TO FLAG (Z)
+            END-PERFORM.
+```
+
+The following code is used:
+
+```COBOL
+
+```
+
+
+This initialization improvement, improved the performance by 40%!.
 
 ## Run instructions
 

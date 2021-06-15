@@ -80,7 +80,7 @@
                    ADD -1 TO BIT_SIZE.
 
            MOVE ONE-FILLED-ARRAY TO BIT-ARRAY.
-           DISPLAY FLAG (4).
+
            MOVE 1 TO FACTOR.
            PERFORM UNTIL FACTOR > MAX_ROOT_INDEX
                IF FLAG (FACTOR) = 1 THEN
