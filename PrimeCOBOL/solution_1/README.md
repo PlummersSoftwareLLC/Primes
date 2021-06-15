@@ -25,7 +25,6 @@ The following code is used:
 
 ```
 
-
 This initialization improvement, improved the performance by 40%!.
 
 ## Run instructions
