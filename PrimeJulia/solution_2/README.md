@@ -5,7 +5,21 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-Julia can be downloaded from https://julialang.org/downloads/.
+[Julia](https://julialang.org/) is a dynamically typed language made for performance.
+Instead of classes, the main programming paradigm is multiple dispatch:
+functions are dynamically dispatched on the types of all arguments,
+not just one like in OOP (the implicit `this` argument).
+Therefore, methods don't belong to a specific type.
+
+Here, the algorithm constructs a `Primes` object,
+which is just a wrapper for the array of Booleans,
+and overloads of some standard library functions are defined
+so that the object can be treated as a collection of prime numbers
+(e.g. since iteration and reverse-iteration are implemented,
+we can easily and efficiently show the first and the last 5 primes).
+
+Performance is achieved through a JIT, or "just-ahead-of-time" compliler (as they call it),
+which makes it feel lika a fast scripting language.
 
 This is how you run the code from the command line:
 ```
