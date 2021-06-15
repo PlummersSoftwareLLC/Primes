@@ -4,27 +4,31 @@
        ENVIRONMENT DIVISION.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
-       77  MAX_LIMIT                      PIC 9(7)   COMP VALUE 1000000.
-       77  SHOW_RESULTS                   PIC 9(2)   COMP VALUE 0.
-       77  MAX_TIME_SEC                   PIC 9(4)   COMP VALUE 5. 
-       77  MAX_TIME_HS                    PIC 9(9)   COMP.
-       77  DURATION-SEC                   PIC 9(1)V9 COMP-3.     
-       77  PASSES                         PIC 9(5)   COMP.
-       77  AVG                            PIC 9(1)v99999 COMP-3.
-       77  VAL-RES                        PIC X(5).   
-       77  MAX_ROOT                       PIC 9(7)   COMP.
-       77  MAX_ROOT_INDEX                 PIC 9(7)   COMP.
-       77  START-AT                       PIC 9(7)   COMP.
-       77  PRIME                          PIC 9(7)   COMP.
-       77  PRIME-COUNT                    PIC 9(7)   COMP.
-       77  FACTOR                         PIC 9(7)   COMP.
-       77  STEP-SIZE                      PIC 9(7)   COMP.
-       77  I                              PIC 9(7)   COMP.
-       77  IS-EVEN                        PIC 9(1)v9 COMP-3.
-       77  BIT_SIZE                       PIC 9(7)   COMP.
+       01  CONFIG-PARAMETERS.
+           03  MAX_LIMIT                  PIC 9(7)   COMP VALUE 1000000.
+           03  SHOW_RESULTS               PIC 1(1)   COMP VALUE 0.
+           03  MAX_TIME_SEC               PIC 9(4)   COMP VALUE 5. 
+       01  DRAG-RACE-CALCULATIONS.
+           03  AVG                        PIC 9(1)v99999 COMP-3.
+           03  VAL-RES                    PIC X(5).   
+           03  PASSES                     PIC 9(5)   COMP.
+           03  DURATION-SEC               PIC 9(1)V9 COMP-3.
+       01  SIEVE-CALCULATIONS.    
+           03  MAX_ROOT                   PIC 9(7)   COMP.
+           03  MAX_ROOT_INDEX             PIC 9(7)   COMP.
+           03  START-AT                   PIC 9(7)   COMP.
+           03  PRIME                      PIC 9(7)   COMP.
+           03  PRIME-COUNT                PIC 9(7)   COMP.
+           03  FACTOR                     PIC 9(7)   COMP.
+           03  STEP-SIZE                  PIC 9(7)   COMP.
+           03  I                          PIC 9(7)   COMP.
+           03  IS-EVEN                    PIC 9(1)v9 COMP-3.
        01  BIT-ARRAY.
-            03 FLAG PIC 1(1) *>USAGE BIT is not implemented and is slow
-               OCCURS 500000 TIMES *> Dynamic 
+           03  BIT_SIZE                   PIC 9(7)   COMP.
+      *    USAGE BIT is not implemented and is slow 
+      *    Dynamic allocation is not common in Cobol so used fixed size
+           03 FLAG PIC 1(1) *>USAGE BIT
+               OCCURS 500000 TIMES 
                INDEXED BY Z.
        01  WS-TIMES.
            03  WS-TIME                    PIC 9(8).
@@ -33,9 +37,10 @@
                05  WS-TIME-M              PIC 9(2).
                05  WS-TIME-S              PIC 9(2).
                05  WS-TIME-HS             PIC 9(2).
-           03  NOW-HS                     PIC 9(9).    
-           03  START-HS                   PIC 9(9).
-           03  DURATION-HS                PIC 9(9).
+           03  NOW-HS                     PIC 9(9)   COMP.    
+           03  START-HS                   PIC 9(9)   COMP.
+           03  DURATION-HS                PIC 9(9)   COMP.
+           03  MAX_TIME_HS                PIC 9(9)   COMP.
        PROCEDURE DIVISION.
       * 
        START-UP.
@@ -96,13 +101,13 @@
            DISPLAY "Passes: ",PASSES,
                    ", Time: ",DURATION-SEC,
                    ", Avg: ",AVG,
-                   "(sec/pass), Limit: ",MAX_LIMIT,
+                   " (sec/pass), Limit: ",MAX_LIMIT,
                    ", Count: ",PRIME-COUNT,
                    ", Valid: ",VAL-RES.
            DISPLAY " " *>Workaround to display empty new line
            DISPLAY "fvbakel_Cobol;",PASSES,
                    ";",DURATION-SEC,
-                   ";1;algorithm=base,faithful=yes,bits=8".
+                   ";1;algorithm=base,faithful=no,bits=8".
        END-PRINT_RESULTS.
            EXIT.
       *

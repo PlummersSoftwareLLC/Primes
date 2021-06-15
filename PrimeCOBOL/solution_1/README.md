@@ -1,12 +1,12 @@
 # COBOL implementation
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 This is an implementation in COBOL. It makes use of the GNUCobol compiler. An array of the data type `PIC 1(1)` is used, which comes down to a 8 bit storage in the GNUCobol compiler.
-In COBOL it is common.
+In COBOL it is common to have globals declared with a fixed size. This static declaration is used in this implementation which makes it not faithful.
 
 ## Run instructions
 
@@ -44,9 +44,9 @@ Or you can do step 2 and 3 with `go.sh`.
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-Passes: 00739, Time: 5.0, Avg: 0.00676(sec/pass), Limit: 1000000, Count: 0078498, Valid: True 
+Passes: 00738, Time: 5.0, Avg: 0.00677(sec/pass), Limit: 1000000, Count: 0078498, Valid: True 
  
-fvbakel_Cobol;00739;5.0;1;algorithm=base,faithful=yes,bits=8
+fvbakel_Cobol;00738;5.0;1;algorithm=base,faithful=no,bits=8
 ```
 
 These results are with the following conditions:
@@ -58,4 +58,4 @@ These results are with the following conditions:
 
 ## Note
 
-This is my first COBOL program, it is quite possible that better implementations are possible. I now that now days it is allowed to use lower case in COBOL, however I choose to use the upper case for the nostalgic feeling.
+This is my first COBOL program, it is quite possible that better implementations are possible. I know that now days it is allowed to use lowercase in COBOL, however I choose to use the uppercase for the nostalgic feeling.
