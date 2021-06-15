@@ -23,14 +23,21 @@
            03  STEP-SIZE                  PIC 9(7)   COMP.
            03  I                          PIC 9(7)   COMP.
            03  IS-EVEN                    PIC 9(1)v9 COMP-3.
-       01  BIT-ARRAY.
            03  BIT_SIZE                   PIC 9(7)   COMP.
+       01  BIT-ARRAY.
       *    USAGE BIT is not implemented and is slow 
       *    Dynamic allocation is not common in Cobol so used fixed size
-           03 FLAG PIC 1(1) *>USAGE BIT
+           03 FLAG PIC 1(1) *>USAGE BIT *>uses 1 byte
                OCCURS 500000 TIMES 
                INDEXED BY Z.
-       01  WS-TIMES.
+      *    Below is a static array that is used to 
+      *    initialize the BIT-ARRAY for each run with 1 values.
+       01  ONE-FILLED-ARRAY.        
+           03 ONE PIC 1(1)
+               VALUE 1 
+               OCCURS 500000 TIMES
+               INDEXED BY Y. 
+        01 WS-TIMES.
            03  WS-TIME                    PIC 9(8).
            03  WS-TIME-R REDEFINES WS-TIME.
                05  WS-TIME-H              PIC 9(2).
@@ -70,12 +77,10 @@
                GIVING BIT_SIZE ROUNDED
                REMAINDER IS-EVEN.
            IF IS-EVEN = 0 THEN 
-                   ADD -1 TO BIT_SIZE.    
-           PERFORM VARYING Z 
-                   FROM 1 BY 1 
-                   UNTIL Z>BIT_SIZE
-                MOVE 1 TO FLAG (Z)
-           END-PERFORM.
+                   ADD -1 TO BIT_SIZE.
+
+           MOVE ONE-FILLED-ARRAY TO BIT-ARRAY.
+           DISPLAY FLAG (4).
            MOVE 1 TO FACTOR.
            PERFORM UNTIL FACTOR > MAX_ROOT_INDEX
                IF FLAG (FACTOR) = 1 THEN
