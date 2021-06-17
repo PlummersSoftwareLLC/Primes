@@ -87,7 +87,7 @@ The collection of solutions in this repository have come to use different approa
 | Name | Description |
 |-|-|
 | [algorithm](#algorithm) | The algorithm used to find the primes in the prime number sieve. |
-| [faithfulness](#faitfhulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
+| [faithfulness](#faithfulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
 | [parallelism](#parallelism) | If the implementation uses any type of multi-threaded processing/calculation. |
 | [storage](#flag-storage) | The number of bits used to indicate if a number in the sieve is a prime number, or not. |
 
