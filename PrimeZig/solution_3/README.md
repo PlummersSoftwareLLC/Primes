@@ -1,7 +1,15 @@
 # Zig solution by ManDeJan and ityonemo
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Algorithm](https://img.shields.io/badge/Algorithm-<wheel>-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-16-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-64-yellowgreen)
 
 Build:
 
