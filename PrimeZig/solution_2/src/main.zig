@@ -61,7 +61,7 @@ fn runNewSieveTest(
     }
     const elapsed = timer.read();
 
-    try printResults("ManDeJan&ityonemo-zig-newbyte-sieve-type-" ++ @typeName(Type), passes, elapsed, size);
+    try printResults("ManDeJan&ityonemo-zig-newbyte-sieve-type-" ++ @typeName(Type), passes, elapsed, @bitSizeOf(Type));
 }
 
 fn runSieveBitTest(comptime size: comptime_int, run_for: comptime_int) anyerror!void {
@@ -72,13 +72,13 @@ fn runSieveBitTest(comptime size: comptime_int, run_for: comptime_int) anyerror!
         prime.BitSieve(size).init().run();
     }
     const elapsed = timer.read();
-    try printResults("ManDeJan&ityonemo-zig-bit-sieve", passes, elapsed, size);
+    try printResults("ManDeJan&ityonemo-zig-bit-sieve", passes, elapsed, 1);
 }
 
-fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, limit: usize) !void {
+fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, bit_size: usize) !void {
     const elapsed = @intToFloat(f32, elapsed_ns) / @intToFloat(f32, time.ns_per_s);
     const stdout = std.io.getStdOut().writer();
-    try stdout.print("{s};{};{d:.5};1\n", .{
-        backing, passes, elapsed
+    try stdout.print("{s};{};{d:.5};1;faithful=yes,algorithm=base,bits={}\n", .{
+        backing, passes, elapsed, bit_size
     });
 }
