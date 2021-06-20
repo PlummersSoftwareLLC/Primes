@@ -1,7 +1,11 @@
 # x86-64 assembly solution by rbergen
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
-![Category](https://img.shields.io/badge/Category-unfaithful-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 This solution contains six implementations in x86-64 assembly, of which:
 * x64ff_bitbtr is faithful, uses bits to store prime number flags and clears them using the btr instruction
@@ -27,10 +31,10 @@ A Dockerfile has been provided.
 
 ## Output
 ```
-rbergen_x64uff_byte;7334;5.000;1
-rbergen_x64ff_byte;8302;5.000;1
-rbergen_x64uff_bitbtr;4179;5.000;1
-rbergen_x64ff_bitbtr;4177;5.000;1
-rbergen_x64uff_bitshift;6269;5.000;1
-rbergen_x64ff_bitshift;4600;5.000;1
+rbergen_x64uff_byte;7334;5.000;1;algorithm=base,faithful=no,bits=8
+rbergen_x64ff_byte;8302;5.000;1;algorithm=base,faithful=yes,bits=8
+rbergen_x64uff_bitbtr;4179;5.000;1;algorithm=base,faithful=no,bits=1
+rbergen_x64ff_bitbtr;4177;5.000;1;algorithm=base,faithful=yes,bits=1
+rbergen_x64uff_bitshift;6269;5.000;1;algorithm=base,faithful=no,bits=1
+rbergen_x64ff_bitshift;4600;5.000;1;algorithm=base,faithful=yes,bits=1
 ```

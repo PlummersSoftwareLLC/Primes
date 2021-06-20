@@ -13,6 +13,8 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "pool";
         public string Name => "Array Pool";
+        public bool IsBaseAlgorithm => true;
+        public int? BitsPerPrime => 1;
 
         private readonly Int64[] data;
 

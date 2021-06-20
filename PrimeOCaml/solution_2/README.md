@@ -1,5 +1,10 @@
 # OCaml solution by @gkpotter
 
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+
 An unfaithful implementation of the prime sieving algorithm using a functional approach in [OCaml](https://ocaml.org).
 
 ## Run Instructions

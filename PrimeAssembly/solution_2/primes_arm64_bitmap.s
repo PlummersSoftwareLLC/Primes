@@ -209,7 +209,7 @@ printResults:
 .balign     4
 
 outputFmt:                              // format string for output
-.asciz      "rbergen_arm64_bitmap;%d;%d.%03d;1\n"   
+.asciz      "rbergen_arm64_bitmap;%d;%d.%03d;1;algorithm=base,faithful=yes,bits=1\n"   
 
 .balign     4
 

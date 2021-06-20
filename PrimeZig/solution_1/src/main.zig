@@ -28,5 +28,5 @@ pub fn main() anyerror!void {
 
     // Following 2 lines added by rbergen to conform to drag race output format
     print("\n", .{});
-    try std.io.getStdOut().writer().print("devblok;{};{d:.5};1\n", .{ passes, elapsed });
+    try std.io.getStdOut().writer().print("devblok;{};{d:.5};1;algorithm=base,faithful=yes,bits=8\n", .{ passes, elapsed });
 }

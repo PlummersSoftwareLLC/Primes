@@ -65,7 +65,7 @@ package PrimeSieve {
 
         print "" if ($show_results);
 
-        printf "marghidanu;%d;%f;%d\n", $passes, $duration, 1;
+        printf "marghidanu;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
 #         printf STDERR
 # "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
 #           $passes, $duration, $duration / $passes,

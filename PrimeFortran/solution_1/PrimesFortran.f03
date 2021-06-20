@@ -29,7 +29,7 @@ program primes_fortran
                          100000000_int64/)
 
  
-  prime_number_up_to_limit= (/1_int32,&             ! 10
+  prime_number_up_to_limit= (/4_int32,&             ! 10
                               25_int32,&            ! 100
                               168_int32,&           ! 1000
                               1229_int32,&          ! 10000
@@ -145,7 +145,7 @@ contains
        endif
     enddo
     
-    write(*,'("johandweber_fortran;",I0,";",F0.3,";1" )')  passes, duration
+    write(*,'("johandweber_fortran;",I0,";",F0.3,";1;algorithm=base,faithful=no,bits=1" )')  passes, duration
     write(ERROR_UNIT,*)
 
     if (show_results) then

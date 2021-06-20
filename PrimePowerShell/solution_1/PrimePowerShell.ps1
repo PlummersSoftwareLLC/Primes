@@ -92,7 +92,7 @@ param(
 
 # Known results for validating the output.
 $KnowResults = @{
-    10 = 1;
+    10 = 4;
     100 = 25;
     1000 = 168;
     10000 = 1229;
@@ -229,7 +229,7 @@ function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
     #Write-Host "Passes: $Passes, Time: $Duration, Avg: $($Duration / $Passes), Limit: $($Sieve.SieveSize), Count: $count, Valid: $(Test-Results $Sieve)"
     #Write-Host ""
 
-    Write-Host "crowbar27_ps1;$Passes;$($Duration.ToString("G6"));1"
+    Write-Host "crowbar27_ps1;$Passes;$($Duration.ToString("G6"));1;algorithm=base,faithful=yes,bits=1"
 
     return $retval.ToArray()
 }

@@ -107,7 +107,7 @@ procedure Main is
 
 -- Following 2 lines added by rbergen to conform to drag race output format
       Put_Line ("");
-      Put_Line ("BoopBeepBoopBeep;" & Passes'Image & ";" & Dur'Image & ";1");
+      Put_Line ("BoopBeepBoopBeep;" & Passes'Image & ";" & Dur'Image & ";1;algorithm=base,faithful=no");
 
    end Print_Result;
    Passes     : Integer := 0;

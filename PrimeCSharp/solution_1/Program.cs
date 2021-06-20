@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using CommandLine;
 using PrimeCSharp.Benchmarks;
 
@@ -9,6 +10,8 @@ namespace PrimeCSharp
     {
         static void Main(string[] args)
         {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
+
             var result = Parser.Default.ParseArguments<RunSettings>(args)
                 .WithParsed(options => Run(options))
                 .WithNotParsed(errors => HandleErrors(errors)); // errors is a sequence of type IEnumerable<Error>

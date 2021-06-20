@@ -1,4 +1,4 @@
-const primeCounts = Dict( 10 => 1,
+const primeCounts = Dict( 10 => 4,
                           100 => 25,
                           1000 => 168,
                           10000 => 1229,
@@ -66,7 +66,7 @@ function printResults(sieve::prime_sieve, showResults::Bool, duration::Number, p
 
 	# Following 2 lines added by rbergen to conform to drag race output format
 	println()
-	println("dcbi;$passes;$duration;1")
+	println("dcbi;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
 
 end
 

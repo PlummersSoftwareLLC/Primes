@@ -1,6 +1,9 @@
 # Dart solution by Eagerestwolf
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 This implementation of the Prime Sieve uses the Dart Programming Language,
 created by Google. The source file `bin/PrimeDart.dart` contains a lot of
@@ -69,7 +72,7 @@ platform, but Dart will generate a standard ELF binary on *nix systems.
 ```
 Passes: 1051, Time: 5.00003, Avg: 0.004757402473834443, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
 
-eagerestwolf;1051;5.00003;1
+eagerestwolf;1051;5.00003;1;algorithm=base,faithful=yes
 ```
 
 ### Dart SDK
@@ -77,7 +80,7 @@ eagerestwolf;1051;5.00003;1
 ```
 Passes: 817, Time: 5.014207, Avg: 0.0061373402692778455, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
 
-eagerestwolf;817;5.014207;1
+eagerestwolf;817;5.014207;1;algorithm=base,faithful=yes
 ```
 
 ### Dart Compiled
@@ -85,5 +88,5 @@ eagerestwolf;817;5.014207;1
 ```
 Passes: 849, Time: 5.000307, Avg: 0.005889643109540636, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
 
-eagerestwolf;849;5.000307;1
+eagerestwolf;849;5.000307;1;algorithm=base,faithful=yes
 ```

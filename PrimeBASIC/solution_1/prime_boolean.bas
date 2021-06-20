@@ -132,4 +132,4 @@ If GetReferenceResult(SieveSize) <> Sieve->CountPrimes() Then Print "WARNING: re
 
 Delete Sieve
 
-Print Using "rbergen__boolean;&;#.###;1"; PassCount; Duration
+Print Using "rbergen__boolean;&;#.###;1;algorithm=base,faithful=yes"; PassCount; Duration

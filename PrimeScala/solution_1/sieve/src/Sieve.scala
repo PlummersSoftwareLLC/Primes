@@ -4,7 +4,7 @@ class PrimeSieve(sieveSize: Int) {
   val rawBits: Array[Boolean] = Array.fill((sieveSize + 1) / 2)(true)
 
   val primeCounts: Map[Int, Int] = Map(
-    10        -> 1, //Historical data for validating our results - the number of primes
+    10        -> 4, //Historical data for validating our results - the number of primes
     100       -> 25, //to be found under some limit, such as 168 primes under 1000
     1000      -> 168,
     10000     -> 1229,
@@ -70,7 +70,7 @@ class PrimeSieve(sieveSize: Int) {
 
     if (showResults) println()
 
-    println(s"rom1dep;$passes;$duration;1")
+    println(s"rom1dep;$passes;$duration;1;algorithm=base,faithful=yes")
   }
 }
 

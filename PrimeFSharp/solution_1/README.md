@@ -1,6 +1,9 @@
 # F# solution by rbergen
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This is an implementation in F#.
 
@@ -17,5 +20,5 @@ A Dockerfile has been provided.
 
 ## Output
 ```
-rbergen;3468;5.0011417;1
+rbergen;3468;5.0011417;1;algorithm=base,faithful=yes,bits=1
 ```

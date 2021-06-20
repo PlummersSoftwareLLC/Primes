@@ -65,7 +65,7 @@ method printResults(this: PrimeSieve, showResults: bool, duration: float64, pass
         isValid = (countPrimes == uint64(DICT[this.sieveSize]))
 
     stderr.writeLine(&"Passes: {passes}, Time: {duration}, Avg: {(duration / float64(passes))}, Limit: {this.sieveSize}, Count1: {count}, Count2: {countPrimes}, Valid: {isValid}")
-    echo &"marghidanu;{passes};{duration};1"
+    echo &"marghidanu;{passes};{duration};1;algorithm=base,faithful=yes,bits=8"
 
 proc newPrimeSieve(sieveSize: uint64): PrimeSieve =
     PrimeSieve(sieveSize: sieveSize, bits: newSeq[bool](sieveSize))
