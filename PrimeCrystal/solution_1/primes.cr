@@ -61,19 +61,11 @@ struct PrimeSieve
     end
 
     printf("Passes: %d Time: %f Avg: %f Limit: %d Count1: %d Count2: %d Valid: %s\n",
-      passes,
-      duration,
-      (duration / passes),
-      @sieve_size,
-      count,
-      count_primes(),
-      validate_results(),
+      passes, duration, (duration / passes), @sieve_size, count,
+      count_primes(), validate_results(),
     )
 
-    # Following 2 lines added by rbergen to conform to drag race output format
-    puts
     printf("marghidanu;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration)
-
   end
 
   def count_primes
@@ -87,16 +79,16 @@ struct PrimeSieve
 end
 
 passes = 0
-start_time = Time.utc.to_unix
+start_time = Time.monotonic
 
 loop do
   sieve = PrimeSieve.new(1000000_u64)
   sieve.run_sieve
 
   passes += 1
-  duration = (Time.utc.to_unix - start_time).to_f64
-  if duration >= 5_f64
-    sieve.print_results(false, duration, passes)
+  duration = Time.monotonic - start_time
+  if duration.total_seconds >= 5_f64
+    sieve.print_results(false, duration.total_seconds, passes)
     break
   end
 end
