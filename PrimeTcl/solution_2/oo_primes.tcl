@@ -35,17 +35,12 @@ dict set knownPrimeCounts 100000000 5761455
 
         set size $size_input
 
-        set word_fill " 0xFFFFFFFF"
+        set word_fill 1
         if {$init_value == 0} {
-            set word_fill " 0x00000000"
+            set word_fill = 0
         }
 
-        set bit_vector [string repeat "$word_fill" [expr {($size+31)/32}]]
-
-        # mask out excess bits at the end
-        for {set i [expr $size]} {$i<=(($size+31)/32)*32} {incr i} {
-            my bit $i 0
-        }
+        set bit_vector [lrepeat $size_input $word_fill]
     }
 
     destructor {
@@ -57,22 +52,10 @@ dict set knownPrimeCounts 100000000 5761455
     # if no value is specified the value of the given bit is returned
     method bit {pos {bitval {}}} {
         variable bit_vector
-
-        set element [expr {$pos/32}]
-        while {$element >= [llength $bit_vector]} {
-            lappend bit_vector 0
-        }
-        set bitpos [expr {1 << $pos%32}]
-        set word [lindex $bit_vector $element]
         if {$bitval != ""} {
-            if {$bitval} {
-                set word [expr {$word | $bitpos}]
-            } else {
-                set word [expr {$word & ~$bitpos}]
-            }
-            lset bit_vector $element $word
+            lset bit_vector $pos $bitval
         }
-        expr {($word & $bitpos) != 0}
+        lindex $bit_vector $pos
     }
 
     #
@@ -82,11 +65,11 @@ dict set knownPrimeCounts 100000000 5761455
         
         set res {}
         set pos 0
-        foreach word $bit_vector {
-            for {set i 0} {$i<32} {incr i} {
-                if {$word & 1<<$i} {lappend res $pos}
-                incr pos
+        foreach bit $bit_vector {
+            if {$bit} {
+                lappend res $pos
             }
+            incr pos
         }
         return $res
     }
