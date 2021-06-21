@@ -1,6 +1,6 @@
 time_limit := 5.
 limit := 1000000.
-" 0=off, 1=on"
+"0=off, 1=on"
 show_results := 0.
 
 Object subclass: BitArray [
@@ -33,7 +33,7 @@ Object subclass: BitArray [
 
         index := bitIndex - 1 // 8 + 1.
         bitPosition := bitIndex - 1 \\ 8 + 1.
-        ^byte_array at: index put: ((byte_array at: index) setBit: bitPosition)
+        byte_array at: index put: ((byte_array at: index) setBit: bitPosition)
     ]
 
     clearBit: bitIndex [
@@ -41,7 +41,7 @@ Object subclass: BitArray [
 
         index := bitIndex - 1 // 8 + 1.
         bitPosition := bitIndex - 1 \\ 8 + 1.
-        ^byte_array at: index put: ((byte_array at: index) clearBit: bitPosition)
+        byte_array at: index put: ((byte_array at: index) clearBit: bitPosition)
     ]
 
     searchNextBit: bitIndex [
