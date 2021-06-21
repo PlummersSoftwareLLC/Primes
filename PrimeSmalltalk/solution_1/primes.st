@@ -182,7 +182,7 @@ Object subclass: PrimeSieve [
         '' displayNl.
 
         (   'fvbakel_smalltalk;',passes displayString,
-            ';',duration displayString,
+            ';',(duration asFloatE) displayString,
             ';1;algorithm=base,faithful=yes,bits=1'
         ) displayNl.
     ]
