@@ -64,7 +64,7 @@ Object subclass: BitArray [
         1 to: bit_size do: [ :cur_index |
             ( (self bitAt: cur_index) == 1)
                 ifTrue: [
-                    count := count +1.
+                    count := count + 1.
                 ].
         ].
         ^count.
@@ -77,10 +77,9 @@ BitArray class extend [
 
         r := (super new).
         r init: bitCount initval: initValue.  
-        ^ r
+        ^r
     ]
 ]
-
 
 Object subclass: PrimeSieve [
     | bit_array limit bit_size|
@@ -101,17 +100,17 @@ Object subclass: PrimeSieve [
 
         maxroot := (limit sqrt) floor.
         maxroot_index := maxroot // 2.
-        ((maxroot \\ 2) ==0)
+        ((maxroot \\ 2) == 0)
             ifTrue: [
-                maxroot_index := maxroot_index -1.   
+                maxroot_index := maxroot_index - 1.   
             ].
         factor := 1.
 
         [factor <= maxroot_index] whileTrue: [
             |prime start step|
 
-            prime := factor * 2 +1.
-            start := ( ((prime * prime) -1) // 2 ).
+            prime := factor * 2 + 1.
+            start := ( ((prime * prime) - 1) // 2 ).
             step  := factor * 2 + 1.
             "Crossout"
             start to: bit_size by: step do: [:index|
@@ -138,7 +137,7 @@ Object subclass: PrimeSieve [
             ( (bit_array bitAt: cur_index) == 1)
                 ifTrue: [
                     primes at: i put: (cur_index * 2 + 1).
-                    i := i +1.
+                    i := i + 1.
                 ].
         ].
         ^primes.
@@ -179,6 +178,7 @@ Object subclass: PrimeSieve [
           ', Count: ', count displayString, 
           ', Valid: ', valid displayString
         ) displayNl.
+        
         '' displayNl.
 
         (   'fvbakel_smalltalk;',passes displayString,
@@ -194,7 +194,7 @@ PrimeSieve class extend [
 
         r := (super new).
         r init: max_limit.  
-        ^ r
+        ^r
     ]
 ]
 
@@ -206,11 +206,11 @@ start := Time millisecondClockValue.
 duration_ms := 0.
 passes := 0.
 [ duration_ms < max_limit_ms ] whileTrue: [
-    passes := passes +1.
+    passes := passes + 1.
     sieve := PrimeSieve new: limit.
     sieve run_sieve.
 
-    duration_ms := (Time millisecondClockValue) -start.
+    duration_ms := (Time millisecondClockValue) - start.
 
     (duration_ms >= max_limit_ms)
         ifTrue: [
@@ -218,6 +218,3 @@ passes := 0.
             sieve print_results: show_results time: duration nr: passes.
         ].
 ].
-
-
-
