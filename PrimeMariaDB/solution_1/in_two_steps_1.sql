@@ -1,23 +1,32 @@
 -- for mysql use
---SET SESSION cte_max_recursion_depth = 1000000
+--SET SESSION cte_max_recursion_depth = 0;
 -- for MariaDB
-SET SESSION max_recursive_iterations = 1000000;
+SET SESSION max_recursive_iterations = 100000000;
+--SET GLOBAL innodb_buffer_pool_size =  (1024 * 1024 * 1024 * 2); -- 2GB
+SET max_heap_table_size = (1024 * 1024 * 1024 * 1); -- 1GB
 
 drop database if exists primedb;
 create database primedb;
 
 use primedb;
 
+drop table if exists timing;
+create table timing  (
+    what        varchar(50),
+    time_stamp  BIGINT DEFAULT (UNIX_TIMESTAMP(NOW()) * 1000 + floor(MICROSECOND(NOW(6))/1000))
+) engine = MEMORY;
 
 -- configure the limit here
 drop table if exists max_limit_conf;
-create TEMPORARY table  max_limit_conf engine = MEMORY as 
+create table  max_limit_conf engine = MEMORY as 
         select 1000000 as max_nr,
                1000 as sqr -- workaround because sqlite does not have sqrt function
 ;
 
+insert into timing(what) values ("Start");
+
 drop table if exists primes_first_segment;
-create TEMPORARY table  primes_first_segment engine = MEMORY AS
+create table  primes_first_segment engine = MEMORY AS
 with recursive 
 -- configure the limit here
     max_limit(max_nr) as (
@@ -61,7 +70,7 @@ select n from primes
 
 -- second run
 drop table if exists primes_table;
-create TEMPORARY table  primes_table engine = MEMORY AS
+create table  primes_table engine = MEMORY AS
 with recursive 
 -- configure the limit here
     start_at(n) as (
@@ -106,6 +115,13 @@ union all
 select n from primes
 ;
 
+insert into timing(what) values ("End");
+
 -- outputs
 select count(*) from primes_table;
 --select * from primes_table;
+select  (
+          (select time_stamp from timing where what = 'End')
+        - (select time_stamp from timing where what = 'Start')
+      ) / 1000 as duration
+;

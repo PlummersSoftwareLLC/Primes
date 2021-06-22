@@ -380,9 +380,12 @@ _main() {
 			mysql_note "Temporary server started."
 
 			docker_setup_db
+			# enable below to start interactive mysql session
+			#docker_process_sql --database=mysql
 			docker_process_init_files /docker-entrypoint-initdb.d/*
 
 			# for drag-race we just want to stop the container here
+			
 			exit
 
 			mysql_note "Stopping temporary server"
