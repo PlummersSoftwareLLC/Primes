@@ -17,8 +17,13 @@ const SIZE = 1_000_000;
 var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
 
 pub fn main() anyerror!void {
+    @setEvalBranchQuota(10000);
+
     const run_for = 5; // Seconds
     var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
+
+    // check for the --all flag.
+    const all = (std.os.argv.len == 2) and (std.mem.eql(u8, std.mem.spanZ(std.os.argv[1]), "--all"));
 
     comptime const AllDataTypes = .{ bool, u1, u8, u16, u32, u64, usize };
     comptime const BitSieveDataTypes = .{ u8, u16, u32, u64 };
@@ -38,6 +43,7 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, true },
     };
 
+    // number of pregenerated primes in the wheel
     comptime const pregens = [_]comptime_int{ 2, 3, 4, 5 };
 
     inline for (specs) |spec| {
@@ -50,22 +56,61 @@ pub fn main() anyerror!void {
             comptime const DataTypes = if (SieveFn == IntSieve) .{u8} else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
+                comptime const typebits = if (SieveFn == IntSieve) @bitSizeOf(Type) else 1;
                 inline for (pregens) |pregen| {
                     comptime const Sieve = SieveFn(Type, SIZE, .{ .pregen = pregen });
                     comptime const Runner = RunnerFn(Sieve, runner_opts);
-                    try runSieveTest(Runner, run_for, allocator, wheel, 1);
+                    comptime const selected = selected_runs(Runner);
+                    if (all or selected) {
+                        try runSieveTest(Runner, run_for, allocator, wheel, typebits);
+                    }
                 }
             }
         } else {
             comptime const DataTypes = if (SieveFn == IntSieve) AllDataTypes else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
+                comptime const typebits = if (SieveFn == IntSieve) @bitSizeOf(Type) else 1;
                 comptime const Sieve = SieveFn(Type, SIZE, .{});
                 comptime const Runner = RunnerFn(Sieve, runner_opts);
-                try runSieveTest(Runner, run_for, allocator, wheel, @bitSizeOf(Type));
+                comptime const selected = selected_runs(Runner);
+                if (all or selected) {
+                    try runSieveTest(Runner, run_for, allocator, wheel, typebits);
+                }
             }
         }
     }
+}
+
+fn selected_runs(comptime Runner: type) bool {
+    const selections = .{
+        "single-sieve-bool",
+        "single-sieve-u8",
+        "parallel-amdahl-sieve-u8",
+        "parallel-gustafson-sieve-u8",
+        "parallel-amdahl-sieve-u8",
+        "parallel-gustafson-sieve-u8",
+        "single-bitSieve-u32",
+        "single-bitSieve-u64",
+        "parallel-gustafson-bitSieve-u32",
+        "parallel-gustafson-bitSieve-u64",
+        "single-sieve-u8-480of2310",
+        "single-sieve-u8-5760of30030",
+        "single-bitSieve-u32-480of2310",
+        "single-bitSieve-u32-5760of30030",
+        "single-bitSieve-u64-480of2310",
+        "single-bitSieve-u64-5760of30030",
+        "parallel-gustafson-bitSieve-u8-480of2310",
+        "parallel-gustafson-bitSieve-u8-5760of30030",
+        "parallel-gustafson-bitSieve-u32-480of2310",
+        "parallel-gustafson-bitSieve-u32-5760of30030",
+        "parallel-gustafson-bitSieve-u64-480of2310",
+        "parallel-gustafson-bitSieve-u64-5760of30030",
+    };
+    for (selections) |selection| {
+        if (std.mem.eql(u8, selection, Runner.name)) return true;
+    }
+    return false;
 }
 
 fn runSieveTest(

@@ -17,10 +17,16 @@ Build:
 zig build -Drelease-fast
 ```
 
-Run:
+Run (selected conditions):
 
 ```
 ./zig-out/bin/PrimeZig
+```
+
+Run (all permutations)
+
+```
+./zig-out/bin/PrimeZig --all
 ```
 
 Uses highly composable Zig datastructures.

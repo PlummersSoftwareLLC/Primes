@@ -188,11 +188,11 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             if (T == u8) {
                 const dest_len = field_units * @sizeOf(T);
                 var start: usize = 0;
-                var u8_field = @ptrCast(*[dest_len]u8, bit_field);
+                var u8_field = @ptrCast([*] u8, bit_field);
                 while (start + src_units < dest_len) : (start += src_units) {
-                    std.mem.copy(u8, u8_field.*[start..], src.*[0..]);
+                    @memcpy(u8_field, @ptrCast([*] const u8, src), @sizeOf(T));
                 }
-                std.mem.copy(u8, u8_field.*[start..dest_len], src.*[0 .. dest_len - start]);
+                @memcpy(u8_field, @ptrCast([*] const u8, src), dest_len - start);
             } else {
                 var src_index: usize = 0;
                 for (bit_field.*) |*dest| {
