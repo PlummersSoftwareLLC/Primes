@@ -17,7 +17,7 @@ const SIZE = 1_000_000;
 var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
 
 pub fn main() anyerror!void {
-    @setEvalBranchQuota(10000);
+    @setEvalBranchQuota(100000);
 
     const run_for = 5; // Seconds
     var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
@@ -96,6 +96,8 @@ fn selected_runs(comptime Runner: type) bool {
         "parallel-gustafson-bitSieve-u64",
         "single-sieve-u8-480of2310",
         "single-sieve-u8-5760of30030",
+        "single-bitSieve-u8-480of2310",
+        "single-bitSieve-u8-5760of30030",
         "single-bitSieve-u32-480of2310",
         "single-bitSieve-u32-5760of30030",
         "single-bitSieve-u64-480of2310",
