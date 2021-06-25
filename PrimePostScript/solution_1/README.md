@@ -1,14 +1,14 @@
 # PostScript solution by @epithet
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 This is how you run the code from the command line:
 ```
 $ bash run.sh
-epithet-ps;250;5.013;1;algorithm=base,faithful=yes,bits=8
+epithet-ps;250;5.013;1;algorithm=base,faithful=no,bits=8
 ```
 
 Execute `bash test.sh` to run unit tests.
