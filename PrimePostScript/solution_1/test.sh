@@ -4,7 +4,7 @@ GS='gs -q -dNOSAFER -dNOPAUSE -dBATCH -dNODISPLAY -c'
 
 test_primes() {
     echo -n "TEST '$1' -> '$2' "
-    result="$($GS "(primesieve.ps) run $1")"
+    result="$($GS "(primesieve.ps) run $1 pstack")"
     result="$(echo $result)"
     if test "$result" = "$2"; then
         echo PASS
