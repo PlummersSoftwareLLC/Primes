@@ -43,7 +43,7 @@ fn runSieveTest(
     }
     const elapsed = timer.read();
 
-    try printResults("ManDeJan&ityonemo-zig-byte-sieve-type-" ++ @typeName(Type), passes, elapsed, size);
+    try printResults("ManDeJan&ityonemo-zig-byte-sieve-type-" ++ @typeName(Type), passes, elapsed, @bitSizeOf(Type));
 }
 
 fn runNewSieveTest(
