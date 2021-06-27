@@ -47,6 +47,19 @@ marghidanu;96;5.062005;1;algorithm=base,faithful=yes
 
 Wren CLI is not yet available for M1, so the following results are from running it under Rosetta 2.
 
+```
+marghidanu;80;5.016132;1;algorithm=base,faithful=yes
+marghidanu;87;5.052532;1;algorithm=base,faithful=yes
+marghidanu;73;5.052225;1;algorithm=base,faithful=yes
+marghidanu;82;5.037277;1;algorithm=base,faithful=yes
+marghidanu;89;5.0083;1;algorithm=base,faithful=yes
+marghidanu;79;5.037238;1;algorithm=base,faithful=yes
+marghidanu;90;5.006991;1;algorithm=base,faithful=yes
+marghidanu;85;5.025092;1;algorithm=base,faithful=yes
+marghidanu;82;5.050698;1;algorithm=base,faithful=yes
+marghidanu;82;5.003328;1;algorithm=base,faithful=yes
+```
+
 ## Notes
 
 Interesting scripting language with concurrency support; I wish the standard library had more functionality. Very easy to use, documentation is clean and easy to understand. Keep in mind that Wren is intended for embedding in applications.
