@@ -1,0 +1,30 @@
+(primesieve.ps) run
+
+/width systemdict (DEVICEWIDTH) get def
+/height systemdict (DEVICEHEIGHT) get def
+
+/drawdot {
+    newpath
+    moveto
+    1 0 rlineto
+    0 1 rlineto
+    -1 0 rlineto
+    closepath
+    fill
+} def
+
+/drawprime {
+    %dup =
+    1 sub
+    dup
+    //width mod
+    exch
+    //width idiv
+    drawdot
+} def
+
+//width //height mul primesieve
+/drawprime load
+iterprimes
+
+showpage

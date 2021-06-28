@@ -50,5 +50,5 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     println(stderr, join(length(primes) > 10 ? [first(primes, 5)..., '…', last(primes, 5)...] : primes, ", "))
     println(stderr, "Passes: $passes, Time: $duration, Avg: $(duration/passes), Limit: $limit, Count: $(length(primes))")
-    println("epithet;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
+    println("epithet-jl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
 end
