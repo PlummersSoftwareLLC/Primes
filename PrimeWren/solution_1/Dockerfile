@@ -9,6 +9,6 @@ RUN curl -sL https://github.com/wren-lang/wren-cli/releases/download/0.3.0/wren_
     && chmod a+x /usr/local/bin/wren_cli 
 
 WORKDIR /opt/app
-COPY *.wren .
+COPY primes.wren .
 
 ENTRYPOINT [ "/usr/local/bin/wren_cli", "primes.wren" ]
