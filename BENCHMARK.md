@@ -9,6 +9,7 @@ This document describes how to built and run all benchmarks (solutions) for diff
 3. [Windows](#windows)
 4. [macOS](#macos)
 5. [Example output](#example-output)
+6. [Running a single benchmark](#running-a-single-benchmark)
 
 ## What operating system to use?
 
@@ -281,4 +282,39 @@ etc
 │  14   │ csharp         │ 1        │ kinematics_pool6p                 │  2510  │ 5.00935  │    4    │           │          │      │   125.26575   │
 │  15   │ csharp         │ 1        │ kinematics_rawp                   │  1840  │ 5.00896  │    4    │           │          │      │   91.83543    │
 └───────┴────────────────┴──────────┴───────────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+```
+
+## Running a single benchmark
+
+Running te following command:
+
+```bash
+make one SOLUTION=PrimesCrystal/solution1
+```
+
+should return something like:
+
+```bash
+❯ make one SOLUTION=PrimeCrystal/solution_1
+[*] Running primecrystal-solution_1
+Passes: 4232 Time: 5.000194 Avg: 0.001182 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
+marghidanu;4232;5.000194;1;algorithm=base,faithful=yes,bits=1
+
+added 196 packages, and audited 197 packages in 3s
+
+33 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> primes@0.1.0 start
+> ts-node ./src/index.ts "report" "-d" "/var/folders/cp/szjr187549j7zps8zqzw_n940000gn/T/tmp.cQQFnuZm" "else" "echo" "Not specified!"
+
+
+                                                       Single-threaded                                                        
+┌───────┬────────────────┬──────────┬────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label      │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ crystal        │ 1        │ marghidanu │  4232  │ 5.00019  │    1    │   base    │   yes    │ 1    │   846.36716   │
+└───────┴────────────────┴──────────┴────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
