@@ -14,17 +14,17 @@ This solution consists of 3 implementations of the prime calculation in SQL usin
 
 These implementations are based on the SQLite implementation. The docker image that is used as a basis uses `docker-entrypoint.sh` as an entry point. This script has been modified to just run the sql scripts in this solution and then exit. In al cases memory stored tables without transaction support are used. To enable this and to avoid the table to be written to disk the setting `max_heap_table_size` was set to 1Gb.
 
-Furthermore the `with recursive` statement is used in all implementation. The number of recursive calls is however limited in the default installation. This can result incorrect calculations, without errors. To allow for the correct number of recursions the `max_recursive_iterations` parameter is set to 1.000.000. Note that when the `max_limit` is increased then this parameter needs to be increased too.
+Furthermore the `with recursive` statement is used in all implementations. The number of recursive calls is however limited in the default installation. This can result incorrect calculations, without errors. To allow for the correct number of recursions the `max_recursive_iterations` parameter is set to 1.000.000. Note that when the `max_limit` is increased then this parameter needs to be increased too.
 
 ### MariaDB1 implementation
 
 This implementation uses the base algorithm. It makes use of a template table `primes_table_template`. This table has two columns. The first column (`n`) contains the natural numbers that are considered and the second column (`isPrime`) is always initialized to the value 1. In the beginning of the calculation this table is copied to a new table `primes_table`. The non prime numbers are eliminated on this table by setting the `isPrime` value to 0.
 
-For the `isPrime` column the datatype `INT` is used which used 32 bits. Various experiments revealed that different types like `TINYINT` and `BIT(1)` result in a worse performance.
+For the `isPrime` column the datatype `INT` is used. This datatype uses 32 bits for storage. Various experiments revealed that different types like `TINYINT` and `BIT(1)` result in a worse performance.
 
 ### MariaDB2 implementation
 
-This implementation does not use the base algorithm. It is as close as possible to the [SQLite solution 1](../../PrimeSQLite/solution_1/) implementation.
+This implementation does not use the base algorithm. It is as close as possible to the [SQLite solution 1](../../PrimeSQLite/solution_1/) implementation and algorithm.
 
 ### MariaDB3 implementation
 
