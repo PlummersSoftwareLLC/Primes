@@ -9,6 +9,7 @@ This document describes how to built and run all benchmarks (solutions) for diff
 3. [Windows](#windows)
 4. [macOS](#macos)
 5. [Example output](#example-output)
+6. [Running a single benchmark](#running-a-single-benchmark)
 
 ## What operating system to use?
 
