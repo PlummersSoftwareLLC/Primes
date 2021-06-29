@@ -1,54 +1,48 @@
--- for mysql use
---SET SESSION cte_max_recursion_depth = 0;
--- for MariaDB
-SET SESSION max_recursive_iterations = 100000000;
---SET GLOBAL innodb_buffer_pool_size =  (1024 * 1024 * 1024 * 2); -- 2GB
-SET max_heap_table_size = (1024 * 1024 * 1024 * 1); -- 1GB
+SET SESSION max_recursive_iterations = 1000000;
+SET SESSION max_heap_table_size = (1024 * 1024 * 1024 * 2); -- 1GB
 
 drop database if exists primedb;
 create database primedb;
 
 use primedb;
 
-drop table if exists timing;
-create table timing  (
-    what        varchar(50),
-    time_stamp  BIGINT DEFAULT (UNIX_TIMESTAMP(NOW()) * 1000 + floor(MICROSECOND(NOW(6))/1000))
-) engine = MEMORY;
-
--- configure the limit here
-drop table if exists max_limit_conf;
-create table  max_limit_conf engine = MEMORY as 
-        select 1000000 as max_nr,
-               1000 as sqr -- workaround because sqlite does not have sqrt function
-;
+-- static table to validate the result
+drop table if exists known_prime_counts;
+create table  known_prime_counts (
+  max_limit     INT,
+  nr_of_primes  INT
+ ) engine = MEMORY;
+ insert into known_prime_counts values 
+    (10,4),
+    (100,25),
+    (1000,168),
+    (10000,1229),
+    (100000,9592),
+    (1000000,78498),
+    (10000000,664579),
+    (100000000,5761455)
+ ;
 
 DELIMITER //
 drop procedure if exists run_sieve//
-create procedure run_sieve()
+create procedure run_sieve(
+  IN max_limit_input   INT
+)
 begin
 
   drop table if exists primes_first_segment;
-  create table  primes_first_segment engine = MEMORY AS
+  create table  primes_first_segment engine = MEMORY TRANSACTIONAL=0 AS
   with recursive 
-  -- configure the limit here
-      max_limit(max_nr) as (
-          select sqr from max_limit_conf LIMIT 1 
-  ),
-      naturals(n)
-  -- init of the narural numbers 2,3,5,7,...
-  as (
-      select 2
-      union all
-          select n+1 from naturals where n=2
-      union all
-          select n+2 from naturals where n>2 and n+2<=(select max_nr from max_limit)
-  ),
-  --
+    max_limit(max_nr) as (
+          select floor(sqrt(max_limit_input))
+    ),
+    naturals(n) as (
+      select n from naturals_table where n <=(select max_nr from max_limit)
+    ),
+
   -- in the recursive call below we are calculating everything that can not be prime
   -- based on the primes < 1000 we found in the first run
-  product (num,not_prime)
-  as (
+    product (num,not_prime) as (
       select n, n*n as sqr
         from naturals
         where 
@@ -62,8 +56,7 @@ begin
       where
         (not_prime + (2 * num) ) <= (select max_nr from max_limit)
     ),
-    primes(n)
-    as (
+    primes(n) as (
         select n from naturals
         except
         select product.not_prime from product
@@ -73,31 +66,21 @@ begin
 
   -- second run
   drop table if exists primes_table;
-  create table  primes_table engine = MEMORY AS
+  create table  primes_table engine = MEMORY TRANSACTIONAL=0 AS
   with recursive 
-  -- configure the limit here
-      start_at(n) as (
-          select ((select sqr from max_limit_conf LIMIT 1) + 1)
-  ),
-      max_limit(max_nr) as (
-          select max_nr from max_limit_conf  LIMIT 1
-  ),
-      naturals(n)
-  -- init of the narural numbers 2,3,5,7,...
-  as (
-      select n from start_at
-      union all
-          select n+2 from naturals where n+2<=(select max_nr from max_limit)
-  ),
-  --
-  -- in the recursive call below we are calculating everything that can not be prime
-  product (num,not_prime)
-  as (
+    start_at(n) as (
+          select floor(sqrt(max_limit_input)) + 1
+    ),
+    max_limit(max_nr) as (
+          select max_limit_input
+    ),
+    --
+    -- in the recursive call below we are calculating everything that can not be prime
+    product (num,not_prime) as (
       select n, n*n as sqr
         from primes_first_segment
         where
-              (n*n) <= (select max_nr from max_limit)
-          and n !=2 -- this filters out all the recursive calls for evennumbers!
+          n !=2 -- this filters out all the recursive calls for evennumbers!
       union all -- all because we know there is no overlap between the two sets, is a bit faster than just union
       select 
         num, -- because recursive does not allow to reuse n
@@ -107,9 +90,11 @@ begin
       where
         (not_prime + (2 * num)) <= (select max_nr from max_limit)
     ),
-    primes(n)
-    as (
-        select n from naturals
+    primes(n) as (
+        select n from naturals_table 
+        where   
+              n <=(select max_nr from max_limit)
+          and n >=(select n from start_at)
         except
         select product.not_prime from product
     )
@@ -120,23 +105,34 @@ begin
 
 end//
 
-DELIMITER //
 drop procedure if exists print_results//
 create procedure print_results(
+  IN max_limit      INT,
   IN show_results   BOOLEAN,
-  IN duration       INT,
+  IN duration       REAL,
   IN passes         INT
 )
 begin
   declare avg       REAL;
   declare count     INT;
   declare valid     VARCHAR(10);
-  declare max_limit INT;
 
   set avg = duration / passes;
   select count(*) into count from primes_table;
-  set valid = 'True';
-  select max_nr into max_limit from max_limit_conf limit 1;
+  select case
+            when result_found = 1 then 'True'
+            else 'False' 
+         end
+    into valid 
+  from
+    (
+      select count(*) as result_found
+      from known_prime_counts
+      where 
+            known_prime_counts.max_limit = max_limit
+        and nr_of_primes = count 
+    ) as dummy
+  ;
 
   if show_results then
     select * from primes_table order by n asc;
@@ -150,36 +146,65 @@ begin
                 ', Count: ', count,
                 ', Valid: ', valid,
                 '\n\n',
-                'fvbakel_MariaDB;',passes,
+                'fvbakel_MariaDB3;',passes,
                 ';',duration,
                 ';1;algorithm=other,faithful=no,bits=32'
                 ) as '';
 end//
 
-DELIMITER //
+drop procedure if exists init//
+create procedure init(
+  IN  max_limit   INT
+)
+begin
+  -- static table used for fast init
+  -- this table represents a static list of the natural numbers
+  -- it can take up to 1 seccond to create this table.
+  -- result is a table with 2,3,5,7,...,max_limit
+  drop table if exists naturals_table;
+  create table naturals_table engine = MEMORY TRANSACTIONAL=0 as
+  with recursive
+      naturals (n) as (
+          select 2
+      union all
+          select n+1 from naturals where n=2
+      union all
+          select n+2 from naturals where n>2 and n+2<=max_limit
+      )
+      select n from naturals
+  ;
+
+  create index naturals_table_i on naturals_table(n);
+end//
+
 drop procedure if exists main//
 create procedure main()
 begin
+  DECLARE  max_limit     INT default 1000000;
+  DECLARE  max_time      INT default 5;
+  DECLARE  show_results  BOOLEAN default False;
+
   declare start_time    BIGINT;
   declare duration_ms   INT default 0;
   declare duration      REAL;
-  declare max_time      INT default 5;
   declare max_time_ms   INT;
   declare passes        INT default 0;
+
+  call init(max_limit);
 
   set max_time_ms = max_time * 1000;
   set start_time = (UNIX_TIMESTAMP(NOW()) * 1000 + floor(MICROSECOND(NOW(6))/1000));
   while duration_ms < max_time_ms DO
     set passes = passes + 1;
-    call run_sieve();
+    drop table if exists primes_table;
+    call run_sieve(max_limit);
     set duration_ms =   (UNIX_TIMESTAMP(NOW()) * 1000 + floor(MICROSECOND(NOW(6))/1000))
                         - start_time ;
   end while;
   set duration = duration_ms / 1000;
-  call print_results(False,duration,passes);
+  call print_results(max_limit,show_results,duration,passes);
 end//
 
 DELIMITER ;
 
 call main();
-

@@ -1,4 +1,4 @@
-SET SESSION max_recursive_iterations = 100000000;
+SET SESSION max_recursive_iterations = 1000000;
 SET SESSION max_heap_table_size = (1024 * 1024 * 1024 * 1); -- 1GB
 
 drop database if exists primedb;
@@ -11,7 +11,7 @@ drop table if exists known_prime_counts;
 create table  known_prime_counts (
   max_limit     INT,
   nr_of_primes  INT
- )engine = MEMORY;
+ ) engine = MEMORY;
  insert into known_prime_counts values 
     (10,4),
     (100,25),
@@ -23,104 +23,53 @@ create table  known_prime_counts (
     (100000000,5761455)
  ;
 
-
 DELIMITER //
 drop procedure if exists run_sieve//
 create procedure run_sieve(
   IN max_limit_input   INT
 )
 begin
-
-  drop table if exists primes_first_segment;
-  create table  primes_first_segment engine = MEMORY AS
-  with recursive 
-  -- configure the limit here
-      max_limit(max_nr) as (
-          select floor(sqrt(max_limit_input))
-  ),
-      naturals(n)
-  -- init of the narural numbers 2,3,5,7,...
-  as (
-      select 2
-      union all
-          select n+1 from naturals where n=2
-      union all
-          select n+2 from naturals where n>2 and n+2<=(select max_nr from max_limit)
-  ),
-  --
-  -- in the recursive call below we are calculating everything that can not be prime
-  -- based on the primes < 1000 we found in the first run
-  product (num,not_prime)
-  as (
-      select n, n*n as sqr
-        from naturals
-        where 
-              (n*n) <= (select max_nr from max_limit)
-      union all -- all because we know there is no overlap between the two sets, is a bit faster than just union
-      select 
-        num, -- because recursive does not allow to reuse n
-        not_prime + (2 * num) as prod -- because we know that every other number must be even
-      from
-        product
-      where
-        (not_prime + (2 * num) ) <= (select max_nr from max_limit)
-    ),
-    primes(n)
-    as (
-        select n from naturals
-        except
-        select product.not_prime from product
-    )
-  select n from primes
-  ;
-
-  -- second run
+  declare maxroot       INT;
+  declare prime         INT;
+  declare start         INT;
+  declare next_prime    INT;
+  
   drop table if exists primes_table;
-  create table  primes_table engine = MEMORY AS
-  with recursive 
-  -- configure the limit here
-      start_at(n) as (
-          select floor(sqrt(max_limit_input)) + 1
-  ),
-      max_limit(max_nr) as (
-          select max_limit_input
-  ),
-      naturals(n)
-  -- init of the narural numbers 2,3,5,7,...
-  as (
-      select n from start_at
-      union all
-          select n+2 from naturals where n+2<=(select max_nr from max_limit)
-  ),
-  --
-  -- in the recursive call below we are calculating everything that can not be prime
-  product (num,not_prime)
-  as (
-      select n, n*n as sqr
-        from primes_first_segment
-        where
-              (n*n) <= (select max_nr from max_limit)
-          and n !=2 -- this filters out all the recursive calls for evennumbers!
-      union all -- all because we know there is no overlap between the two sets, is a bit faster than just union
-      select 
-        num, -- because recursive does not allow to reuse n
-        not_prime + (2 * num) as prod -- because we know that every other number must be even
-      from
-        product
-      where
-        (not_prime + (2 * num)) <= (select max_nr from max_limit)
-    ),
-    primes(n)
-    as (
-        select n from naturals
-        except
-        select product.not_prime from product
-    )
-  select n from primes_first_segment
-  union all
-  select n from primes
-  ;
+  create table primes_table like primes_table_template;
+  insert into primes_table select * from primes_table_template;
 
+  create index primes_i on primes_table(n);
+
+  set maxroot = floor(sqrt(max_limit_input));
+
+  set prime = 3;
+  while (prime <= maxroot) do
+    set start = prime * prime;
+    -- cross out all non primes based on this prime  
+    update primes_table 
+    inner join (
+      with recursive
+        not_prime(n) as (
+          select start
+          union all
+          select (n + prime) from not_prime where (n + prime) <= max_limit_input
+        )
+      select n from not_prime
+    ) not_primes on primes_table.n = not_primes.n
+    set primes_table.isPrime = 0
+    ;
+
+    -- find next prime
+    select IFNULL(min(n),max_limit_input) 
+    into next_prime
+    from primes_table
+    where
+          n > prime
+      and isPrime = 1
+    ;
+
+    set prime = next_prime;
+   end while;
 end//
 
 drop procedure if exists print_results//
@@ -136,7 +85,7 @@ begin
   declare valid     VARCHAR(10);
 
   set avg = duration / passes;
-  select count(*) into count from primes_table;
+  select count(*) into count from primes_table where isPrime = 1;
   select case
             when result_found = 1 then 'True'
             else 'False' 
@@ -153,7 +102,7 @@ begin
   ;
 
   if show_results then
-    select * from primes_table order by n asc;
+    select * from primes_table where isPrime = 1 order by n asc;
   end if;
 
   select concat_ws('',
@@ -166,8 +115,34 @@ begin
                 '\n\n',
                 'fvbakel_MariaDB1;',passes,
                 ';',duration,
-                ';1;algorithm=other,faithful=no,bits=32'
+                ';1;algorithm=base,faithful=no,bits=32'
                 ) as '';
+end//
+
+drop procedure if exists init//
+create procedure init(
+  IN  max_limit   INT
+)
+begin
+  -- static table used for fast init
+  -- this table represents a static list of the natural numbers 
+  -- with isPrime initialized to 1
+  -- it can take up to 1 seccond to create this table.
+  -- result is a table with 2,3,5,7,...,max_limit
+  -- This table is copied each time in the calculation 
+  -- to the actual table
+  drop table if exists primes_table_template;
+  create table primes_table_template engine = MEMORY TRANSACTIONAL=0 as
+  with recursive
+      naturals (n,isPrime) as (
+          select 2,1
+      union all
+          select n+1,1 from naturals where n=2
+      union all
+          select n+2,1 from naturals where n>2 and n+2<=max_limit
+      )
+      select n,isPrime from naturals
+  ;
 end//
 
 drop procedure if exists main//
@@ -183,10 +158,13 @@ begin
   declare max_time_ms   INT;
   declare passes        INT default 0;
 
+  call init(max_limit);
+
   set max_time_ms = max_time * 1000;
   set start_time = (UNIX_TIMESTAMP(NOW()) * 1000 + floor(MICROSECOND(NOW(6))/1000));
   while duration_ms < max_time_ms DO
     set passes = passes + 1;
+    drop table if exists primes_table;
     call run_sieve(max_limit);
     set duration_ms =   (UNIX_TIMESTAMP(NOW()) * 1000 + floor(MICROSECOND(NOW(6))/1000))
                         - start_time ;

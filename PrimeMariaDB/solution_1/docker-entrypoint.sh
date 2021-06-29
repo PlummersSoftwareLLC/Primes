@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# This script is based on:
+# https://github.com/MariaDB/mariadb-docker/blob/master/docker-entrypoint.sh
+#
+# For this script the GNU General Public License v2.0 applies. See
+# https://github.com/MariaDB/mariadb-docker/blob/master/LICENSE
+#
 set -eo pipefail
 shopt -s nullglob
 
@@ -81,7 +88,8 @@ docker_process_init_files() {
 					. "$f"
 				fi
 				;;
-			*.sql)     mysql_note "$0: running $f"; docker_process_sql -r -s < "$f"; echo ;;
+			#*.sql)     mysql_note "$0: running $f"; docker_process_sql -r -s < "$f"; echo ;;
+			*.sql)     docker_process_sql -r -s < "$f"; echo ;;
 			*.sql.gz)  mysql_note "$0: running $f"; gunzip -c "$f" | docker_process_sql; echo ;;
 			*.sql.xz)  mysql_note "$0: running $f"; xzcat "$f" | docker_process_sql; echo ;;
 			*.sql.zst) mysql_note "$0: running $f"; zstd -dc "$f" | docker_process_sql; echo ;;
@@ -348,9 +356,7 @@ _main() {
 	if [ "${1:0:1}" = '-' ]; then
 		set -- mysqld "$@"
 	fi
-	echo "We are here"
 	echo "$@"
-	echo "$1"
 	# skip setup if they aren't running mysqld or want an option that stops mysqld
 	if [ "$1" = 'mariadbd' ] || [ "$1" = 'mysqld' ] && ! _mysql_want_help "$@"; then
 		mysql_note "Entrypoint script for MariaDB Server ${MARIADB_VERSION} started."
@@ -381,26 +387,24 @@ _main() {
 
 			docker_setup_db
 			# enable below to start interactive mysql session
-			#docker_process_sql --database=mysql
+			# docker_process_sql --database=mysql
 			docker_process_init_files /docker-entrypoint-initdb.d/*
 
-			# for drag-race we just want to stop the container here
-			
-			exit
+		#	mysql_note "Stopping temporary server"
+		#	docker_temp_server_stop
+		#	mysql_note "Temporary server stopped"
 
-			mysql_note "Stopping temporary server"
-			docker_temp_server_stop
-			mysql_note "Temporary server stopped"
-
-			echo
-			mysql_note "MariaDB init process done. Ready for start up."
-			echo
-			
+		#	echo
+		#	mysql_note "MariaDB init process done. Ready for start up."
+		#	echo
 		fi
 	fi
-	exec "$@"
+	# comand below wil start the mariadb deamon process
+	# exec "$@"
+	# Uncomment the line below for bash shell access after initialization
+	# /bin/bash
+
 }
 
-echo "Drag-race start"
 _main "$@"
 
