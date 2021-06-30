@@ -29,13 +29,14 @@ const std::map<const long long, const int> resultsDictionary =
 
 };
 
+template<long sieveSize>
 class prime_sieve
 {
   private:
 
-      long sieveSize = 0;
-      vector<bool> Bits;
-
+      //long sieveSize = 0;
+      //vector<bool> Bits;
+      bitset<sieveSize> Bits;
 
       bool validateResults()
       {
@@ -47,9 +48,10 @@ class prime_sieve
 
    public:
 
-      prime_sieve(long n) 
-        : Bits(n, true), sieveSize(n)
+      prime_sieve() 
+        //: Bits(n, true), sieveSize(n)
       {
+            Bits.set();
       }
 
       ~prime_sieve()
@@ -128,7 +130,7 @@ int main()
 
     while (true)
     {
-        prime_sieve sieve(1000000L);
+        prime_sieve<1000000L> sieve{};
         sieve.runSieve();
         passes++;
         if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
