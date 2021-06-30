@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-no-red)
+![Bit count](https://img.shields.io/badge/Bits-yes-red)
 
 ## Run
 
@@ -36,6 +36,13 @@ Passes: 56, Time: 5.070278, Avg: 0.090541, Limit: 1000000, Count1: 78498, Count2
 Passes: 56, Time: 5.027602, Avg: 0.089779, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
 Passes: 56, Time: 5.064072, Avg: 0.090430, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
 Passes: 56, Time: 5.041186, Avg: 0.090021, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
+```
+
+vec is giving crappy result ( 50% slower )
+
+```
+dohnuts;13;5.045053;1;algorithm=base,faithful=yes
+Passes: 13, Time: 5.045053, Avg: 0.388081, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
 ```
 
 ## Author

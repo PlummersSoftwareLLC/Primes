@@ -11,7 +11,7 @@ package PrimeSieve {
         my ( $class ) = @_;
 
         return bless {
-            bits       => [],
+            bits       => '',
         }, $class;
     }
 
@@ -24,7 +24,7 @@ package PrimeSieve {
         while ( $factor <= $q ) {
             my $num = $factor;
             for ( my $num = $factor ; $num < main::SIEVESIZE ; $num += 2 ) {
-                unless ( $b->[$num] ) {
+                unless ( vec($b, $num, 1) ) {
                     $factor = $num;
                     last;
                 }
@@ -32,22 +32,22 @@ package PrimeSieve {
 
             my $num2 = $factor * $factor;
             while ( $num2 < main::SIEVESIZE ) {
-                $b->[$num2] = 1;
+                vec($b, $num2, 1) = 1;
                 $num2 += $factor * 2;
             }
 
             $factor += 2;
         }
+        $self->{bits} = $b;
     }
 
     sub print_results {
         my ( $self, $show_results, $duration, $passes ) = @_;
 
         print "2, " if ($show_results);
-
         my $count = ( main::SIEVESIZE >= 2 );
         for ( my $num = 3 ; $num <= main::SIEVESIZE ; $num += 2 ) {
-            unless ( $self->{bits}[$num] ) {
+            unless ( vec( $self->{bits}, $num, 1) ) {
                 printf( "%d, ", $num ) if ($show_results);
                 $count++;
             }
@@ -56,11 +56,11 @@ package PrimeSieve {
         print "" if ($show_results);
 
         printf "dohnuts;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
-#         printf STDERR
-# "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
-#           $passes, $duration, $duration / $passes,
-#           main::SIEVESIZE, $count, $self->count_primes(),
-#           $self->validate_results();
+        printf STDERR
+ "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
+           $passes, $duration, $duration / $passes,
+           main::SIEVESIZE, $count, $self->count_primes(),
+           $self->validate_results();
     }
 
     sub count_primes {
@@ -68,7 +68,7 @@ package PrimeSieve {
 
         my $count = ( main::SIEVESIZE >= 2 );
         for ( my $i = 3 ; $i < main::SIEVESIZE ; $i += 2 ) {
-            $count++ unless ( $self->{bits}[$i] );
+            $count++ unless ( vec( $self->{bits}, $i, 1) );
         }
 
         return $count;
