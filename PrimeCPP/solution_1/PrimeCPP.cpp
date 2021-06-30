@@ -14,26 +14,28 @@
 using namespace std;
 using namespace std::chrono;
 
+const std::map<const long long, const int> resultsDictionary = 
+{
+      {          10LL, 4         },               // Historical data for validating our results - the number of primes
+      {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
+      {        1000LL, 168       },
+      {       10000LL, 1229      },
+      {      100000LL, 9592      },
+      {     1000000LL, 78498     },
+      {    10000000LL, 664579    },
+      {   100000000LL, 5761455   },
+      {  1000000000LL, 50847534  },
+      { 10000000000LL, 455052511 },
+
+};
+
 class prime_sieve
 {
   private:
 
       long sieveSize = 0;
       vector<bool> Bits;
-      const std::map<const long long, const int> resultsDictionary = 
-      {
-            {          10LL, 4         },               // Historical data for validating our results - the number of primes
-            {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
-            {        1000LL, 168       },
-            {       10000LL, 1229      },
-            {      100000LL, 9592      },
-            {     1000000LL, 78498     },
-            {    10000000LL, 664579    },
-            {   100000000LL, 5761455   },
-            {  1000000000LL, 50847534  },
-            { 10000000000LL, 455052511 },
 
-      };
 
       bool validateResults()
       {
