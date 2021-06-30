@@ -29,6 +29,24 @@ const std::map<const long long, const int> resultsDictionary =
 
 };
 
+template<long s>
+class bitset2 {
+	static constexpr int half_size = s / 2;
+ private:
+	bitset<half_size> odds;
+	//bitset<half_size> evens;
+ public:
+	inline auto operator[](std::size_t pos) {
+		//assert(pos & 1);
+		return odds[(pos >> 1)];
+	}
+	
+	void set() {
+		odds.set();
+		//evens.set();
+	}
+};
+
 template<long sieveSize>
 class prime_sieve
 {
@@ -36,7 +54,7 @@ class prime_sieve
 
       //long sieveSize = 0;
       //vector<bool> Bits;
-      bitset<sieveSize> Bits;
+      bitset2<sieveSize> Bits;
 
       bool validateResults()
       {
