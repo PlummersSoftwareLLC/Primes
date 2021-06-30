@@ -1,0 +1,62 @@
+% limit primesieve -> sieve
+/primesieve {
+    dup 1 le { 1 sub } if % set limit to 0 if ≤ 1
+    1 add 2 idiv dup string exch % sieve, length
+
+    1 % current prime (0-based index into sieve)
+    {
+        dup 2 mul 1 add % the actual prime number
+        dup dup mul 1 add 2 idiv 1 sub % from
+        3 index 1 sub % to: sieve length - 1
+
+        2 copy gt { pop pop pop exit } if % break condition: from > to
+
+        % iterate over indices corresponding to every second multiple 
+        % of the current prime number, starting from its square
+        3 -1 roll exch % rearrange stack: from-step-to
+        {
+            3 index % grab sieve
+            exch 1 put % mark as non-prime
+        } for
+
+        { % find next prime
+            1 add
+            dup
+            3 index % sieve
+            exch get
+            0 eq { exit } if
+        } loop
+    } loop
+
+    pop pop
+} def
+
+% sieve callback iterprimes
+/iterprimes {
+    1 index length 1 ge { dup 2 exch exec } if
+    1  1  3 index length 1 sub {
+        dup
+        3 index exch get
+        0 eq {
+            1 add 2 mul 1 sub
+            1 index exec
+        } { pop } ifelse
+    } for
+    pop pop
+} def
+
+% limit countprimes -> count
+/countprimes {
+    /n 0 def
+    primesieve
+    { pop /n n 1 add def }
+    iterprimes
+    n
+} def
+
+% limit listprimes
+/listprimes {
+    primesieve
+    { = }
+    iterprimes
+} def

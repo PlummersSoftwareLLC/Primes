@@ -89,15 +89,15 @@ export const command = new Command('report')
       return;
     }
 
-    console.log('');
-    resultService.printResults(
-      'Single-threaded',
-      results.filter((value) => value.threads === 1)
-    );
+    const singleThreadedResults = results.filter((value) => value.threads === 1);
+    if (singleThreadedResults.length > 0) {
+      console.log('');
+      resultService.printResults('Single-threaded', singleThreadedResults);
+    }
 
-    console.log('');
-    resultService.printResults(
-      'Multi-threaded',
-      results.filter((result) => result.threads > 1)
-    );
+    const multiThreadedResults = results.filter((result) => result.threads > 1);
+    if (multiThreadedResults.length > 0) {
+      console.log('');
+      resultService.printResults('Multi-threaded', multiThreadedResults);
+    }
   });
