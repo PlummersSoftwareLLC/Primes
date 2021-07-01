@@ -1,6 +1,19 @@
 import kotlin.math.*
 import kotlin.*
 
+fun getSystemTimeInMillis() = System.currentTimeMillis()
+
+val KNOWN_PRIMES = mapOf (
+  10 to 4,
+  100 to 25,
+  1000 to 168,
+  10000 to 1229,
+  100000 to 9592,
+  1000000 to 78498,
+  10000000 to 664579,
+  100000000 to 5761455
+)
+
 class PrimeSieve (max_limit: Int) {
   val limit: Int = max_limit
   // val bit_size = (limit + 1) >> 1
@@ -12,8 +25,8 @@ class PrimeSieve (max_limit: Int) {
 		var factor: Int = 3
 		val q: Int = floor(sqrt(limit.toDouble())).toInt()
 		
-		while (factor < q) {
-			for (i in factor until bit_size) {
+		while (factor <= q) {
+			for (i in factor until bit_size step 2) {
 				if (bits.get(i) == false)	{
 					factor = i
 					break
@@ -38,6 +51,10 @@ class PrimeSieve (max_limit: Int) {
     return count
   }
 
+  fun validate_result(count: Int) : Boolean {
+    return (KNOWN_PRIMES[limit] ?: 0 == count)
+  }
+
   fun print_primes() {
     println(2)
     for (i in 3 until bit_size step 2) {
@@ -47,16 +64,43 @@ class PrimeSieve (max_limit: Int) {
     }
   }
 
+  fun print_results(show_results: Boolean, duration:Float, passes:Int) {
+    val count: Int = count_primes()
+    val valid: Boolean = validate_result(count)
+    val avg: Float = duration / passes
+
+    if (show_results) {
+      print_primes()
+    }
+    
+    println("Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid")
+    // Following 2 lines are to conform to drag race output format
+    println("")
+    println("fvbakel_Kotlin;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
+
+  }
+
 }
 
-
-
 fun main() {
-  println("Hello World!")
+  val max_limit: Int = 1_000_000
+  val max_time: Int = 5
+  val show_results : Boolean = false
 
-  var sieve = PrimeSieve(100)
-  sieve.run_sieve()
-  println(sieve.count_primes())
-  sieve.print_primes()
+  val max_time_ms: Int = max_time *1000
+  var duration_ms : Int = 0
+  var passes : Int = 0
+  val start_time: Long = getSystemTimeInMillis()
+  var sieve : PrimeSieve? = null
+
+
+  while (duration_ms <= max_time_ms) {
+    passes++
+    sieve = PrimeSieve(max_limit)
+    sieve.run_sieve()
+    duration_ms = (getSystemTimeInMillis() - start_time).toInt()
+  }
+
+  sieve?.print_results(show_results,(duration_ms / 1000.toFloat()),passes)
 
 }
