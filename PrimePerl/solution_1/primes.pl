@@ -71,7 +71,7 @@ package PrimeSieve {
 
         print "" if ($show_results);
 
-        printf "dohnuts;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
+        printf "Plummers;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
         $ENV{DEBUG} and printf STDERR
 "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
            $passes, $duration, $duration / $passes,
