@@ -1,7 +1,7 @@
 import kotlin.math.*
 import kotlin.*
 
-fun getSystemTimeInMillis() = System.currentTimeMillis()
+fun getSystemTimeInMillis() = kotlin.js.Date().getTime().toLong()
 
 val KNOWN_PRIMES = mapOf (
   10 to 4,
@@ -22,29 +22,29 @@ class PrimeSieve (max_limit: Int) {
   private var bits: BooleanArray = BooleanArray(bit_size)
 
   fun run_sieve() {
-      var factor: Int = 3
-      val q: Int = floor(sqrt(limit.toDouble())).toInt()
-      
-      while (factor <= q) {
-         for (i in factor until bit_size step 2) {
-            if (bits.get(i) == false)   {
-               factor = i
-               break
-            }
-         }
-         
-         for (i in factor * factor until bit_size step factor * 2) {
-            bits.set(i,true)
+    var factor: Int = 3
+    val q: Int = floor(sqrt(limit.toDouble())).toInt()
+    
+    while (factor <= q) {
+        for (i in factor until bit_size step 2) {
+          if (bits.get(i) == false)   {
+              factor = i
+              break
           }
+        }
+        
+        for (i in factor * factor until bit_size step factor * 2) {
+          bits.set(i,true)
+        }
 
-         factor += 2
-      }
+        factor += 2
+    }
   }
 
   fun count_primes(): Int {
     var count: Int = 1
     for (i in 3 until bit_size step 2) {
-        if (bits.get(i) == false)   {
+            if (bits.get(i) == false)   {
           count++
         }
     }
@@ -76,7 +76,7 @@ class PrimeSieve (max_limit: Int) {
     println("Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid")
     // Following 2 lines are to conform to drag race output format
     println("")
-    println("fvbakel_Kotlin;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
+    println("fvbakel_Kotlin_js;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
 
   }
 

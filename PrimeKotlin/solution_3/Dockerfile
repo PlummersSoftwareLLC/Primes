@@ -2,7 +2,7 @@ FROM adoptopenjdk:11-jdk-hotspot as build
 
 ENV KOTLIN_VERSION=1.5.20
 
-# installs
+#installs
 RUN apt-get update && apt-get install wget unzip
 
 RUN cd /opt \
@@ -13,13 +13,18 @@ ENV PATH $PATH:/opt/kotlinc/bin
 
 # Build stage
 WORKDIR /opt/app
+COPY *.kt ./
+RUN unzip -j /opt/kotlinc/lib/kotlin-stdlib-js.jar "kotlin.js" -d /opt/app
 
-COPY primes.kt .
-RUN kotlinc primes.kt -include-runtime -d primes.jar
+RUN kotlinc-js -module-kind commonjs primes-js.kt -output primes.js
 
 # Run stage
-FROM adoptopenjdk:11-jdk-hotspot
-WORKDIR /opt/app
-COPY --from=build /opt/app/primes.jar .
+FROM node:current-alpine3.13
 
-ENTRYPOINT ["java","-jar","primes.jar"]
+WORKDIR /opt/app
+
+RUN mkdir ./node_modules/
+COPY --from=build /opt/app/kotlin.js ./node_modules/
+COPY --from=build /opt/app/primes.js ./
+
+ENTRYPOINT [ "node", "primes.js" ]

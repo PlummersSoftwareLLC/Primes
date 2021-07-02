@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation in [Kotlin](https://en.wikipedia.org/wiki/Kotlin_(programming_language)). In this implementation JVM (Java Virtual Machine) is used as the target platform. However the common modules of Kotlin are used as much as possible. Only the line `fun getSystemTimeInMillis() = System.currentTimeMillis()` is JVM specific. Changing this function to the platform specific function should be enough to build for example to native.
+This is an implementation in [Kotlin](https://en.wikipedia.org/wiki/Kotlin_(programming_language)). In this implementation JVM (Java Virtual Machine) is used as the target platform. However the common modules of Kotlin are used as much as possible. Only the line `fun getSystemTimeInMillis() = System.currentTimeMillis()` is JVM specific.
 
 ## Considerations
 
@@ -57,5 +57,5 @@ These results are with the following conditions:
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
 - Kotlin: 1.5.10
 - Java: OpenJDK 64-Bit Server VM AdoptOpenJDK-11.0.11+9 (build 11.0.11+9, mixed mode)
-- running in Docker container alpine:3.13
+- Running in Docker container Ubuntu:18.04
 - Docker version 20.10.2, build 20.10.2-0ubuntu2
