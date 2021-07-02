@@ -22,29 +22,29 @@ class PrimeSieve (max_limit: Int) {
   private var bits: BooleanArray = BooleanArray(bit_size)
 
   fun run_sieve() {
-		var factor: Int = 3
-		val q: Int = floor(sqrt(limit.toDouble())).toInt()
-		
-		while (factor <= q) {
-			for (i in factor until bit_size step 2) {
-				if (bits.get(i) == false)	{
-					factor = i
-					break
-				}
-			}
-			
-			for (i in factor * factor until bit_size step factor * 2) {
-				bits.set(i,true)
-      }
-			
-			factor += 2
-		}
+    var factor: Int = 3
+    val q: Int = floor(sqrt(limit.toDouble())).toInt()
+    
+    while (factor <= q) {
+        for (i in factor until bit_size step 2) {
+          if (bits.get(i) == false)   {
+              factor = i
+              break
+          }
+        }
+        
+        for (i in factor * factor until bit_size step factor * 2) {
+          bits.set(i,true)
+        }
+
+        factor += 2
+    }
   }
 
   fun count_primes(): Int {
     var count: Int = 1
     for (i in 3 until bit_size step 2) {
-				if (bits.get(i) == false)	{
+            if (bits.get(i) == false)   {
           count++
         }
     }
@@ -58,7 +58,7 @@ class PrimeSieve (max_limit: Int) {
   fun print_primes() {
     println(2)
     for (i in 3 until bit_size step 2) {
-				if (bits.get(i) == false)	{
+            if (bits.get(i) == false)   {
           println(i)
         }
     }
