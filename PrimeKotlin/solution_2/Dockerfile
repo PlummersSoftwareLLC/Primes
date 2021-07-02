@@ -8,18 +8,17 @@ RUN /opt/kotlin-native/bin/kotlinc-native --check_dependencies && rm -rf /root/.
 
 ENV PATH $PATH:/opt/kotlin-native/bin
 
-# Workaround for missing lib that is static referenced
+# Workaround for missing lib
 RUN ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
 
 WORKDIR /opt/app
 COPY primes-native.kt .
-RUN kotlinc-native primes-native.kt -o primes
+RUN kotlinc-native primes-native.kt -opt -o primes
 
-ENTRYPOINT ["/bin/bash"]
 # Run stage
-#FROM ubuntu:18.04
+FROM ubuntu:18.04
 
-#WORKDIR /opt/app
-#COPY --from=build /opt/app/primes.kexe .
+WORKDIR /opt/app
+COPY --from=build /opt/app/primes.kexe .
 
-#ENTRYPOINT ["./primes.kexe"]
+ENTRYPOINT ["./primes.kexe"]

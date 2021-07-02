@@ -5,22 +5,22 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation in [Kotlin](https://en.wikipedia.org/wiki/Kotlin_(programming_language)). In this implementation JVM (Java Virtual Machine) is used as the target platform. However the common modules of Kotlin are used as much as possible. Only the line `fun getSystemTimeInMillis() = System.currentTimeMillis()` is JVM specific. Changing this function to the platform specific function should be enough to build for example to native.
+This is an implementation in [Kotlin](https://en.wikipedia.org/wiki/Kotlin_(programming_language)). In this implementation Linux Native is used as the target platform. However the common modules of Kotlin are used as much as possible. Only the line `fun getSystemTimeInMillis() = kotlin.system.getTimeMillis()` is specific to the native platform.
 
 ## Considerations
 
-The Kotlin compiler can compile to Java byte code. This resulting byte code can be run in the Kotlin virtual machine or JVM. In this implementation the byte code is run in the JVM because that turns out to have a 10% performance improvement.
+The Kotlin native library allows the class `BitSet`. However it turns out that using this class is extremely slow.
 
 ## Run instructions
 
 ### Run native
 
-To run this solution you need Kotlin and minimal Java 1.8. Take the steps below to build and run this implementation.
+To build this solution you need Kotlin-native and minimal Java 1.8. Take the steps below to build and run this implementation.
 
 ```bash
 cd path/to/sieve
-kotlinc ./ -d primes.jar
-java -jar primes.jar
+kotlinc-native primes-native.kt -opt -o primes
+./primes.kexe
 ```
 
 ### Run with Docker
@@ -47,15 +47,14 @@ Or do step 2 and 3 with `go.sh`.
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-Passes: 3718, Time: 5.002, Avg: 0.0013453469 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
+Passes: 1245, Time: 5.004, Avg: 0.004019277 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-fvbakel_Kotlin;3718;5.002;1;algorithm=base,faithful=yes,bits=1
+fvbakel_Kotlin_native;1245;5.004;1;algorithm=base,faithful=yes,bits=1
 ```
 
 These results are with the following conditions:
 
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
 - Kotlin: 1.5.10
-- Java: OpenJDK 64-Bit Server VM AdoptOpenJDK-11.0.11+9 (build 11.0.11+9, mixed mode)
-- running in Docker container alpine:3.13
+- Running in Docker container Ubuntu:18.04
 - Docker version 20.10.2, build 20.10.2-0ubuntu2
