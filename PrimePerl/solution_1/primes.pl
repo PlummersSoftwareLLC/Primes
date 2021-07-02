@@ -16,17 +16,13 @@ my %DICT = (
     10000000000 => 455052511,
 );
 
-my $SIEVESIZE = 1000000;
-if ($ARGV[0] and exists $DICT{$ARGV[0]}) {
-  $SIEVESIZE = $ARGV[0];
-}
-
 package PrimeSieve {
 
     sub new {
-        my ( $class ) = @_;
+        my ( $class, $size ) = @_;
 
         return bless {
+            size       => $size,
             bits       => [],
         }, $class;
     }
@@ -35,11 +31,12 @@ package PrimeSieve {
         my $self = shift;
 
         my $factor = 3;
-        my $q      = sqrt $SIEVESIZE;
+        my $s      = $self->{size};
+        my $q      = sqrt $s;
         my $b      = $self->{bits};
         while ( $factor <= $q ) {
             my $num = $factor;
-            for ( my $num = $factor ; $num < $SIEVESIZE ; $num += 2 ) {
+            for ( my $num = $factor ; $num < $s ; $num += 2 ) {
                 unless ( $b->[$num] ) {
                     $factor = $num;
                     last;
@@ -47,7 +44,7 @@ package PrimeSieve {
             }
 
             my $num2 = $factor * $factor;
-            while ( $num2 < $SIEVESIZE ) {
+            while ( $num2 < $s ) {
                 $b->[$num2] = 1;
                 $num2 += $factor * 2;
             }
@@ -61,8 +58,8 @@ package PrimeSieve {
 
         print "2, " if ($show_results);
 
-        my $count = ( $SIEVESIZE >= 2 );
-        for ( my $num = 3 ; $num <= $SIEVESIZE ; $num += 2 ) {
+        my $count = ( $self->{size} >= 2 );
+        for ( my $num = 3 ; $num <= $self->{size} ; $num += 2 ) {
             unless ( $self->{bits}[$num] ) {
                 printf( "%d, ", $num ) if ($show_results);
                 $count++;
@@ -71,19 +68,19 @@ package PrimeSieve {
 
         print "" if ($show_results);
 
-        printf "Plummers;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
+        printf "marghidanu;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
         $ENV{DEBUG} and printf STDERR
 "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
            $passes, $duration, $duration / $passes,
-           $SIEVESIZE, $count, $self->count_primes(),
+           $self->{size}, $count, $self->count_primes(),
            $self->validate_results();
     }
 
     sub count_primes {
         my $self = shift;
-
-        my $count = ( $SIEVESIZE >= 2 );
-        for ( my $i = 3 ; $i < $SIEVESIZE ; $i += 2 ) {
+        my $s = $self->{size};
+        my $count = ( $s >= 2 );
+        for ( my $i = 3 ; $i < $s ; $i += 2 ) {
             $count++ unless ( $self->{bits}[$i] );
         }
 
@@ -93,7 +90,8 @@ package PrimeSieve {
     sub validate_results {
         my $self = shift;
         my $x = $self->count_primes();
-        my $y = $DICT{ $SIEVESIZE };
+        my $s = $self->{size};
+        my $y = $DICT{ $s };
         return ( $y == $x );
     }
 };
@@ -104,8 +102,13 @@ package main {
     my $passes     = 0;
     my $start_time = time;
 
+    my $s = 1000000;
+    if ($ARGV[0] and exists $DICT{$ARGV[0]}) {
+        $s = $ARGV[0];
+    }
+
     while (1) {
-        my $sieve = PrimeSieve->new();
+        my $sieve = PrimeSieve->new($s);
         $sieve->run_sieve();
         $passes++;
 
