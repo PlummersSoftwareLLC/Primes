@@ -5,7 +5,9 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation in [Kotlin-JS](https://en.wikipedia.org/wiki/Kotlin_(programming_language)). In this implementation javascript (Node.js) is used as the target platform. However the common modules of Kotlin are used as much as possible. Only the line `fun getSystemTimeInMillis() = kotlin.js.Date().getTime().toLong()` is specific to the javascript platform.
+This is an implementation in [Kotlin-JS](https://en.wikipedia.org/wiki/Kotlin_(programming_language)). In this implementation javascript (Node.js) is used as the target platform. The source file from [solution_1/primes.kt](../solution_1/primes.kt) is used as a basis and only the platform specific lines are changed. 
+
+Only the line `fun getSystemTimeInMillis() = kotlin.js.Date().getTime().toLong()` is specific to the javascript platform. This line and the output lines are the only difference with [solution_1/primes.kt](../solution_1/primes.kt).
 
 ## Run instructions
 
