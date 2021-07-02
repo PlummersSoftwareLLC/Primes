@@ -8,6 +8,7 @@ mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql &>/dev/nul
 # Start server process
 mariadbd  &>/dev/null &
 
+# Wait for the server process to complete
 for i in {30..0}; do
 	if mysql -umysql --database=mysql <<<'SELECT 1' &> /dev/null; then
 		break
@@ -23,4 +24,3 @@ fi
 mysql -umysql --raw <primes_1.sql
 mysql -umysql --raw <primes_2.sql
 mysql -umysql --raw <primes_3.sql
-/bin/bash
