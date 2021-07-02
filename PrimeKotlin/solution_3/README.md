@@ -53,7 +53,7 @@ fvbakel_Kotlin_js;408;5.001;1;algorithm=base,faithful=yes,bits=1
 These results are with the following conditions:
 
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
-- Kotlin: 1.5.10
+- Kotlin: 1.5.20
 - Node.js: v16.3.0
 - Running in Docker container Alpine:3.13
 - Docker version 20.10.2, build 20.10.2-0ubuntu2

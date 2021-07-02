@@ -55,6 +55,6 @@ fvbakel_Kotlin_native;1245;5.004;1;algorithm=base,faithful=yes,bits=1
 These results are with the following conditions:
 
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
-- Kotlin: 1.5.10
+- Kotlin: 1.5.20
 - Running in Docker container Ubuntu:18.04
 - Docker version 20.10.2, build 20.10.2-0ubuntu2
