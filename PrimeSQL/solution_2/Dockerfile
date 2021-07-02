@@ -2,10 +2,8 @@ FROM mariadb:10.6.2
 
 WORKDIR /opt/app
 
-COPY docker-entrypoint.sh /opt/app/
+COPY *.sql ./
+COPY run.sh ./
 
-ENV MARIADB_ROOT_PASSWORD=primes
-
-COPY *.sql /docker-entrypoint-initdb.d/
-
-ENTRYPOINT ["/opt/app/docker-entrypoint.sh", "mariadbd"]
+USER mysql
+ENTRYPOINT ["./run.sh"]

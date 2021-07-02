@@ -12,7 +12,9 @@ This solution consists of 3 implementations of the prime calculation in SQL usin
 
 ### Overview
 
-These implementations are based on the [SQLite implementation](../../PrimeSQL/solution_1/). The docker image that is used as a basis uses `docker-entrypoint.sh` as an entry point. This script has been modified to just run the sql scripts in this solution and then exit. In al cases memory stored tables without transaction support are used. To enable this and to avoid the table to be written to disk the setting `max_heap_table_size` was set to 1Gb.
+These implementations are based on the [SQLite implementation](../solution_1/). The docker image that is used as a basis uses `docker-entrypoint.sh` as an entry point. This script is not used to avoid initializations that are not needed to run the implementations. Instead the script `run.sh` is used to do only the minimal required steps needed to initialize MariaDB and run the implementations.
+
+In al cases memory stored tables without transaction support are used. To enable this and to avoid the table to be written to disk the setting `max_heap_table_size` was set to 1Gb.
 
 Furthermore the `with recursive` statement is used in all implementations. The number of recursive calls is however limited in the default installation. This can result incorrect calculations, without errors. To allow for the correct number of recursions the `max_recursive_iterations` parameter is set to 1.000.000. Note that when the `max_limit` is increased then this parameter needs to be increased too.
 
@@ -24,7 +26,7 @@ For the `isPrime` column the datatype `INT` is used. This datatype uses 32 bits 
 
 ### MariaDB2 implementation
 
-This implementation does not use the base algorithm. It is as close as possible to the [SQLite solution 1](../../PrimeSQL/solution_1/) implementation and algorithm.
+This implementation does not use the base algorithm. It is as close as possible to the [SQLite solution 1](../solution_1/) implementation and algorithm.
 
 ### MariaDB3 implementation
 
