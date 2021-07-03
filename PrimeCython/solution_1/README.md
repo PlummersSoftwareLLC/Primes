@@ -2,7 +2,7 @@
 
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green) (if don't call cython as an external dependency)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green) (if you don't call cython as an external dependency)
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 
@@ -19,7 +19,7 @@ gcc -I /usr/local/include/python3.9 -l python3.9 -lm PrimeCY.c -o PrimeCY
 ./PrimeCY
 ```
 
-Belonging to your python installation to python include path may be differend and the linker my not found the libary by default. So to avoid these problems you can use docker:
+Belonging to your python installation to python include path may be differend and the linker may not found the libary by default. So to avoid these problems you can use docker:
 
 ```
 docker build . -t primecy
