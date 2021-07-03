@@ -1,5 +1,13 @@
 # Cython Prime Sieve by rpkak
 
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green) (if don't call cython as an external dependency)
+
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+
 This is a copy of the [second implementation of the python prime sieve](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimePython/solution_2) with cython implemented.
 
 ## Run instructions
