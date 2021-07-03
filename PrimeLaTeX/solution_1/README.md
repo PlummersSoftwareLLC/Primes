@@ -17,9 +17,11 @@ document processer after all).
 
 `prime_functions.tex` contains the actual implementation.
 
-`prime_numbers.tex` generates a document with the prime numbers up to 1000.
-
 `prime_race.tex` is the main program.
+
+`prime_numbers.tex` generates a document with the prime numbers up to 100'000.
+(Not 1'000'000, laying all of them out on the page is too much)
+
 
 ## How to run
 
