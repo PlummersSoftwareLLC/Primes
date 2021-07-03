@@ -2,7 +2,11 @@
 #   - run unit tests 
 #   - build executable
 #
-FROM primeimages/rust:1.52.1 AS build
+
+# Note: Debian based, not Alpine; for some reason, the 
+# Alpine malloc call is slower than it should be.
+#
+FROM rust:1.52.1 AS build
 
 WORKDIR /app
 COPY . .
@@ -14,7 +18,8 @@ RUN cargo build --release
 #   - copy built executable 
 # 
 
-FROM alpine:3.13
+# Debian base image, not Alpine, for reason noted above
+FROM debian:buster-slim AS runtime
 
 WORKDIR /app
 
