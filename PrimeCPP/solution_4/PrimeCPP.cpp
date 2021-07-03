@@ -1,22 +1,50 @@
 #include <chrono>
 #include <map>
+#include <type_traits>
 #include <vector>
 
+#include <climits>
+#include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
+
+template<typename T, typename U>
+constexpr auto ceildiv(const T& dividend, const U& divisor)
+{
+    return static_cast<std::common_type_t<T, U>>(std::ceil(static_cast<double>(dividend) / divisor));
+}
 
 class BitStorage {
+    using storage_t = std::uint16_t;
+    static constexpr auto STORAGE_WIDTH = sizeof(storage_t) * CHAR_BIT;
+    static constexpr auto INVERT = true;
+
     class BitReference {
       public:
         explicit BitReference(BitStorage& bitStorage, const std::size_t idx) : m_parent(bitStorage), m_idx(idx) {}
 
         inline BitReference& operator=(const bool value)
         {
-            m_parent.m_storage[m_idx] = value;
+            const auto byteIdx = m_idx / STORAGE_WIDTH;
+            const auto bitIdx = m_idx % STORAGE_WIDTH;
+
+            if(value ^ INVERT)
+                m_parent.m_storage[byteIdx] |= (storage_t{1} << bitIdx);
+            else
+                m_parent.m_storage[byteIdx] &= ~(storage_t{1} << bitIdx);
+
             return *this;
         }
 
-        inline operator bool() const { return m_parent.m_storage[m_idx]; }
+        inline operator bool() const
+        {
+            const auto byteIdx = m_idx / STORAGE_WIDTH;
+            const auto bitIdx = m_idx % STORAGE_WIDTH;
+
+            return ((m_parent.m_storage[byteIdx] >> bitIdx) & 1) ^ INVERT;
+        }
 
       private:
         BitStorage& m_parent;
@@ -24,12 +52,20 @@ class BitStorage {
     };
 
   public:
-    explicit BitStorage(const std::size_t size, const bool defaultValue = false) : m_storage(size, defaultValue) {}
+    explicit BitStorage(const std::size_t size, const bool defaultValue = false) : m_size(ceildiv(size, STORAGE_WIDTH)), m_storage(new storage_t[m_size])
+    {
+        for(auto i = std::size_t{0}; i < m_size; ++i) {
+            m_storage[i] = (defaultValue ^ INVERT) ? ~storage_t{} : storage_t{};
+        }
+    }
+
+    ~BitStorage() { delete[] m_storage; }
 
     inline BitReference operator[](const std::size_t idx) { return BitReference(*this, idx); }
 
   private:
-    std::vector<bool> m_storage;
+    const std::size_t m_size;
+    storage_t* m_storage = nullptr;
 };
 
 class PrimeSieve {
