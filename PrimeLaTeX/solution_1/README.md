@@ -23,7 +23,8 @@ document processer after all).
 
 ## How to run
 
-Any up-to-date TeX distribution should work. Tested with texlive-2021 on Linux.
+Any up-to-date (2021) TeX distribution should work. Tested with texlive-2021 on
+Linux.
 
 Run
 
