@@ -1,24 +1,27 @@
 program PrimePas;
 
+// Optimized by Kim Madsen/C4D
+// www.components4developers.com
+
 {$APPTYPE CONSOLE}
 
 uses
-	System.SysUtils,
-	Classes,
-	System.Generics.Collections,
-	System.Timespan,
-	Math,
-	Windows;
+  System.SysUtils,
+  Classes,
+  System.Generics.Collections,
+  System.Timespan,
+  Math,
+  Windows;
 
 type
 	TPrimeSieve = class
 	private
-		FSieveSize: Integer;
+		FSieveSize: NativeInt;
+		FSieveSize2: NativeInt;
+		FSieveSizeSqrt: NativeInt;
 		FBitArray: array of ByteBool; //ByteBool: 4644. WordBool: 4232. LongBool: 3673
-		FMyDict: TDictionary<Integer, Integer>;
+		FMyDict: TDictionary<NativeInt, NativeInt>;
 
-		function GetBit(Index: Integer): Boolean;
-		procedure ClearBit(Index: Integer);
 		procedure InitializeBits;
 	public
 		constructor Create(Size: Integer);
@@ -39,15 +42,17 @@ begin
 	inherited Create;
 
 	FSieveSize := Size;
+	FSieveSize2:= (Size+1) div 2;
+	FSieveSizeSqrt:=Floor(Sqrt(FSieveSize));
 
 	//The optimization here is that we only store bits for *odd* numbers.
 	// So FBitArray[3] is if 3 is prime
 	// and FBitArray[4] is if 5 is prime
 	//GetBit and SetBit do the work of "div 2"
-	SetLength(FBitArray, (FSieveSize+1) div 2);
+	SetLength(FBitArray, FSieveSize2);
 	InitializeBits;
 
-	FMyDict := TDictionary<Integer, Integer>.Create;
+	FMyDict := TDictionary<NativeInt, NativeInt>.Create;
 
 	// Historical data for validating our results - the number of primes
 	// to be found under some limit, such as 168 primes under 1000
@@ -63,15 +68,15 @@ end;
 
 destructor TPrimeSieve.Destroy;
 begin
-	FreeAndNil({var}FMyDict);
+	FreeAndNil(FMyDict);
 
 	inherited;
 end;
 
 function TPrimeSieve.CountPrimes: Integer;
 var
-	count: Integer;
-	i: Integer;
+	count: NativeInt;
+	i: NativeInt;
 begin
 	count := 0;
 	for i := 0 to High(FBitArray) do
@@ -91,21 +96,10 @@ begin
 		Result := False;
 end;
 
-function TPrimeSieve.GetBit(Index: Integer): Boolean;
-begin
-	if (Index mod 2 = 0) then
-	begin
-		Result := False;
-		Exit;
-	end;
-
-	Result := FBitArray[Index div 2];
-end;
-
 procedure TPrimeSieve.InitializeBits;
 var
-	i: Integer;
-	remaining: Integer;
+	i: NativeInt;
+	remaining: NativeInt;
 begin
 	remaining := Length(FBitArray);
 	i := 0;
@@ -130,63 +124,37 @@ begin
 	end;
 end;
 
-procedure TPrimeSieve.ClearBit(Index: Integer);
-begin
-{
-	Profiling shows 99% of the execution is spent here in ClearBit.
-
-	Testing index using and 1:        4387 passes
-	Testing index using mod 2:        4644 passes
-			WriteLine with inline text: 4644 passes
-			WriteLine with const  text: 4636 passes
-			No WriteLine:               4840 passes
-	Omit testing of index:            5280 passes
-
-	Which is surprising, as you'd think the branch predictor would realize this branch is **never** taken.
-}
-	if (Index mod 2) = 0 then
-	begin
-//		Writeln('You are setting even bits, which is sub-optimal');
-		Exit;
-	end;
-
-	//Any compiler worth its salt converts "div 2" into "shr 1".
-	//In this case Delphi is worth it's salt; emitting "sar".
-	//(But don't forget: Delphi still can't hoist loop variables)
-	FBitArray[Index div 2] := False;
-end;
-
-
 procedure TPrimeSieve.RunSieve;
 var
-	factor: Integer;
-	q: Integer;
-	num: Integer;
+	num: NativeInt;
+	r: NativeInt;
+	factor: NativeInt;
 begin
 	factor := 3;
-	q := Floor(Sqrt(FSieveSize));
 
-	while (factor <= q) do
+	while factor<=FSieveSizeSqrt do
 	begin
-		for num := factor to FSieveSize do
+		r:=factor AND $1;
+		num:=factor SHR 1;
+		while num<FSieveSize2 do
 		begin
-			if GetBit(num) then
+			if FBitArray[num] then
 			begin
-				factor := num;
+				factor := (num SHL 1) OR r;
 				Break;
 			end;
+			inc(num);
 		end;
 
 		// If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-		// We can then step by factor * 2 because every second one is going to be even by definition
-		num := factor*3;
-		while num <= FSieveSize do
+		num := factor*3 SHR 1;
+		while num<=FSieveSize2 do
 		begin
-			ClearBit(num);
-			Inc(num, factor*2);
+			FBitArray[num]:=False;
+			Inc(num,factor);
 		end;
 
-		Inc(factor, 2);
+		Inc(factor,2);
 	end;
 end;
 
@@ -203,11 +171,14 @@ begin
 	count := 1;
 	for num := 3 to FSieveSize do
 	begin
-		if GetBit(num) then
+		if (num and $1 = $1) then
 		begin
-			if ShowResults then
-				Write(IntToStr(num) + ', ');
-			Inc(count);
+			if FBitArray[num div 2] then
+			begin
+				if ShowResults then
+					Write(IntToStr(num) + ', ');
+				Inc(count);
+			end;
 		end;
 	end;
 
@@ -215,7 +186,7 @@ begin
 		WriteLn('');
 
 	WriteLn(Format('Passes: %d, Time: %.3f sec, Avg: %.4f ms, Limit: %d, Count: %d, Valid: %s',
-			[Passes, Duration, Duration/Passes*1000, FSieveSize, count, SYesNo[ValidateResults]]));
+		[Passes, Duration, Duration/Passes*1000, FSieveSize, count, SYesNo[ValidateResults]]));
 end;
 
 procedure Main;
@@ -246,9 +217,22 @@ end;
 
 {
 	Intel Core i5-9400 @ 2.90 GHz
-
 	- 32-bit: 4,809 passes
 	- 64-bit: 2,587 passes
+
+
+  Pre optimization by Kim Madsen/C4D
+  (plenty of other CPU heavy processes running on various cores)
+  AMD Threadripper 1950X @ 3.40 GHz
+	- 32-bit: 4,400 passes
+
+  Post optimization by Kim Madsen/C4D
+  (plenty of other CPU heavy processes running on various cores)
+  AMD Threadripper 1950X @ 3.40 GHz
+  - 32-bit: 7,600 passes
+  - 64-bit: DEAD SLOW of some reason
+  Further optimizations:
+  - 32-bit: 8,600+ passes
 }
 begin
 	try
