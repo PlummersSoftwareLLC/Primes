@@ -1,0 +1,44 @@
+# Cython Prime Sieve by rpkak
+
+This is a copy of the [second implementation of the python prime sieve](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimePython/solution_2) with cython implemented.
+
+## Run instructions
+
+```
+pip install cython
+cython -3 --embed PrimeCY.pyx -o PrimeCY.c
+gcc -I /usr/local/include/python3.9 -l python3.9 -lm PrimeCY.c -o PrimeCY
+./PrimeCY
+```
+
+Belonging to your python installation to python include path may be differend and the linker my not found the libary by default. So to avoid these problems you can use docker:
+
+```
+docker build . -t primecy
+docker run --rm primecy
+```
+
+## Command line arguments
+
+ - `--limit=X`, `-l X`: set upper limit for calculating primes. Default is 1_000_000.
+ - `--time=X`, `-t X`: set running time, in seconds. Default is 10.
+ - `--show`, `-s`: output the found primes.
+
+# Output
+
+```
+
+```
+
+# Cython and Python compared
+
+| Limit | Passes in Cython | Passes in Python |
+|-|-|-|
+| 10 | 4086807 | 2028691 |
+| 100 | 1850491 | 918008 |
+| 1000 | 776838 | 415440 |
+| 10000 | 217403 | 135719 |
+| 100000 | 32547 | 17272 |
+| 1000000 | 3247 | 2029 |
+| 10000000 | 100 | 95 |
+| 100000000 | 9 | 7 |
