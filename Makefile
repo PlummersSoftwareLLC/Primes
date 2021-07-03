@@ -6,9 +6,9 @@ SOLUTIONS  := $(shell find Prime* -type f -name Dockerfile -exec dirname {} \; |
 OUTPUT_DIR := $(shell mktemp -d)
 ARCH_FILE  := ${shell case $$(uname -m) in x86_64) echo arch-amd64 ;; aarch64) echo arch-arm64 ;; esac}
 
-all: sanity-checks report
+all: report
 
-benchmark: $(SOLUTIONS)
+benchmark: sanity-docker $(SOLUTIONS)
 	@echo "--- Output files available in $(OUTPUT_DIR)"
 
 	@for s in $(SOLUTIONS); do \
@@ -22,7 +22,7 @@ benchmark: $(SOLUTIONS)
 		fi; \
 	done
 
-report: benchmark
+report: sanity-node benchmark
 	@cd tools/; \
 	npm ci && npm start -- report -d "$(OUTPUT_DIR)"
 
