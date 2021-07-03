@@ -31,28 +31,11 @@ class PrimeSieve {
         }
     }
 
-    void printResults(bool showResults, double duration, int passes)
+    void printResults(double duration, int passes)
     {
-        if(showResults)
-            std::printf("2, ");
+        if(!validateResults())
+            std::printf("Error: Results not valid!\n");
 
-        auto count = (m_sieveSize >= 2) ? 1 : 0; // Starting count (2 is prime)
-        for(auto num = std::size_t{3}; num <= m_sieveSize; num += 2) {
-            if(m_bits[num]) {
-                if(showResults)
-                    std::printf("%lu, ", num);
-                ++count;
-            }
-        }
-
-        if(showResults)
-            std::printf("\n");
-
-        std::printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %lu, Valid: %d\n", passes, duration, duration / passes, m_sieveSize,
-                    count, countPrimes(), validateResults());
-
-        // Following 2 lines added by rbergen to conform to drag race output format
-        std::printf("\n");
         std::printf("BlackMark;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
     }
 
@@ -106,7 +89,7 @@ int main()
         sieve.runSieve();
         ++passes;
         if(const auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration_cast<std::chrono::seconds>(end - start).count() >= 5) {
-            sieve.printResults(false, std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1'000'000.0, passes);
+            sieve.printResults(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1'000'000.0, passes);
             break;
         }
     }
