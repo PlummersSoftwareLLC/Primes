@@ -19,7 +19,7 @@
 
 // Steps array for finding the next number not divisible by 2,3,5,7,11,13
 // Pre halved
-static unsigned int steps[5760]={
+static unsigned int steps[5760] = {
  8,1,2,3,1,3,2,1,2,3,3,1,3,2,1,3,2,3,4,2,1,2,1,2,7,
  2,3,1,5,1,3,3,2,3,3,1,5,1,2,1,6,6,2,1,2,3,1,5,3,3,
  3,1,3,2,1,3,2,7,2,1,2,3,4,3,5,1,2,3,1,3,3,3,2,3,1,
@@ -377,10 +377,10 @@ int main(int argc, char **argv) {
     if (elapsed_time >= 5.) {
       // Count the number of primes and validate the result
       int nprimes = count_primes(sieve_state);
-      //printf("valid=%d ",(nprimes==valid_primes));
+      //printf("valid=%d ", (nprimes == valid_primes));
       printf(
-          "danielspaangberg_5760of30030_owrb;%d;%f;1;algorithm=wheel,faithful=yes,bits=1\n",
-          passes, elapsed_time);
+        "danielspaangberg_5760of30030_owrb;%d;%f;1;algorithm=wheel,faithful=yes,bits=1\n",
+        passes, elapsed_time);
       break;
     }
     delete_sieve(sieve_state);
