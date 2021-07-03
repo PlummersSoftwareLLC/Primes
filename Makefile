@@ -6,7 +6,7 @@ SOLUTIONS  := $(shell find Prime* -type f -name Dockerfile -exec dirname {} \; |
 OUTPUT_DIR := $(shell mktemp -d)
 ARCH_FILE  := ${shell case $$(uname -m) in x86_64) echo arch-amd64 ;; aarch64) echo arch-arm64 ;; esac}
 
-all: docker report
+all: sanity-checks report
 
 benchmark: $(SOLUTIONS)
 	@echo "--- Output files available in $(OUTPUT_DIR)"
@@ -37,7 +37,14 @@ one:
 		echo "Not specified!"; \
 	fi
 
-docker:
+sanity-checks: sanity-docker sanity-node
+
+sanity-node:
+	@# Check it node.js is installed. Needed to generate report.
+	@node --version >/dev/null 2>&1 || (echo 'Please install Node.js. https://nodejs.org/en/download' && exit 1)
+	@npm --version >/dev/null 2>&1 || (echo 'How is Npm not installed but Node.js is?' && exit 1)
+
+sanity-docker:
 	@# Check if docker engine is installed
 	@docker --version >/dev/null 2>&1 || (echo 'Please install docker. https://docs.docker.com/engine/install' && exit 1)
 	
