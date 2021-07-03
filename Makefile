@@ -26,7 +26,7 @@ report: sanity-node benchmark
 	@cd tools/; \
 	npm ci && npm start -- report -d "$(OUTPUT_DIR)"
 
-one:
+one: sanity-checks
 	@if [[ ! -z "$${SOLUTION}" ]]; then \
 		NAME=$$(echo "$${SOLUTION}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]'); \
 		OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
