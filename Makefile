@@ -8,7 +8,7 @@ ARCH_FILE  := ${shell case $$(uname -m) in x86_64) echo arch-amd64 ;; aarch64) e
 
 all: report
 
-benchmark: sanity-docker $(SOLUTIONS)
+benchmark: check-docker-works $(SOLUTIONS)
 	@echo "--- Output files available in $(OUTPUT_DIR)"
 
 	@for s in $(SOLUTIONS); do \
@@ -22,11 +22,11 @@ benchmark: sanity-docker $(SOLUTIONS)
 		fi; \
 	done
 
-report: sanity-node benchmark
+report: check-node-works benchmark
 	@cd tools/; \
 	npm ci && npm start -- report -d "$(OUTPUT_DIR)"
 
-one: sanity-checks
+one: check-env
 	@if [[ ! -z "$${SOLUTION}" ]]; then \
 		NAME=$$(echo "$${SOLUTION}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]'); \
 		OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
@@ -37,14 +37,14 @@ one: sanity-checks
 		echo "Not specified!"; \
 	fi
 
-sanity-checks: sanity-docker sanity-node
+check-env: check-docker-works check-node-works
 
-sanity-node:
+check-node-works:
 	@# Check it node.js is installed. Needed to generate report.
 	@node --version >/dev/null 2>&1 || (echo 'Please install Node.js. https://nodejs.org/en/download' && exit 1)
 	@npm --version >/dev/null 2>&1 || (echo 'How is Npm not installed but Node.js is?' && exit 1)
 
-sanity-docker:
+check-docker-works:
 	@# Check if docker engine is installed
 	@docker --version >/dev/null 2>&1 || (echo 'Please install docker. https://docs.docker.com/engine/install' && exit 1)
 	
