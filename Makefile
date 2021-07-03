@@ -6,8 +6,10 @@ SOLUTIONS  := $(shell find Prime* -type f -name Dockerfile -exec dirname {} \; |
 OUTPUT_DIR := $(shell mktemp -d)
 ARCH_FILE  := ${shell case $$(uname -m) in x86_64) echo arch-amd64 ;; aarch64) echo arch-arm64 ;; esac}
 
+.PHONY: all
 all: report
 
+.PHONY: benchmark
 benchmark: check-docker-works $(SOLUTIONS)
 	@echo "--- Output files available in $(OUTPUT_DIR)"
 
@@ -22,10 +24,12 @@ benchmark: check-docker-works $(SOLUTIONS)
 		fi; \
 	done
 
+.PHONY: report
 report: check-node-works benchmark
 	@cd tools/; \
 	npm ci && npm start -- report -d "$(OUTPUT_DIR)"
 
+.PHONY: one
 one: check-env
 	@if [[ ! -z "$${SOLUTION}" ]]; then \
 		NAME=$$(echo "$${SOLUTION}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]'); \
@@ -37,12 +41,15 @@ one: check-env
 		echo "Not specified!"; \
 	fi
 
+.PHONY: check-env
 check-env: check-docker-works check-node-works
 
+.PHONY: check-node-works
 check-node-works:
 	@# Check it Node.js is installed. Needed to generate report.
 	@npm --version >/dev/null 2>&1 || (echo 'Please install Node.js. https://nodejs.org/en/download' && exit 1)
 
+.PHONY: check-docker-works
 check-docker-works:
 	@# Check if docker engine is installed
 	@docker --version >/dev/null 2>&1 || (echo 'Please install docker. https://docs.docker.com/engine/install' && exit 1)
