@@ -7,25 +7,22 @@
 
 class PrimeSieve {
   public:
-    PrimeSieve(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize, true) {}
+    PrimeSieve(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / 2 + 1, true) {}
 
     ~PrimeSieve() {}
 
     void runSieve()
     {
-        auto factor = std::size_t{3};
-
-        while(factor * factor <= m_sieveSize) {
-            for(auto num = factor; num < m_sieveSize; num += 2) {
+        for(auto i = std::size_t{1}; i * i <= m_sieveSize; ++i) {
+            for(auto num = i; num < m_sieveSize / 2; ++num) {
                 if(m_bits[num]) {
-                    factor = num;
+                    i = num;
                     break;
                 }
             }
-            for(auto num = factor * factor; num < m_sieveSize; num += factor * 2)
+            const auto factor = i * 2 + 1;
+            for(auto num = factor * factor / 2; num < m_sieveSize / 2; num += factor)
                 m_bits[num] = false;
-
-            factor += 2;
         }
     }
 
@@ -39,8 +36,8 @@ class PrimeSieve {
 
     std::size_t countPrimes()
     {
-        auto count = (m_sieveSize >= 2) ? std::size_t{1} : std::size_t{0};
-        for(auto i = std::size_t{3}; i < m_sieveSize; i += 2)
+        auto count = std::size_t{1};
+        for(auto i = std::size_t{1}; i < m_sieveSize / 2; ++i)
             if(m_bits[i])
                 ++count;
         return count;
