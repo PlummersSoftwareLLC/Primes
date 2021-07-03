@@ -40,9 +40,8 @@ one: check-env
 check-env: check-docker-works check-node-works
 
 check-node-works:
-	@# Check it node.js is installed. Needed to generate report.
-	@node --version >/dev/null 2>&1 || (echo 'Please install Node.js. https://nodejs.org/en/download' && exit 1)
-	@npm --version >/dev/null 2>&1 || (echo 'How is Npm not installed but Node.js is?' && exit 1)
+	@# Check it Node.js is installed. Needed to generate report.
+	@npm --version >/dev/null 2>&1 || (echo 'Please install Node.js. https://nodejs.org/en/download' && exit 1)
 
 check-docker-works:
 	@# Check if docker engine is installed
