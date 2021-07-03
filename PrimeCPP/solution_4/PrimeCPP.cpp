@@ -53,7 +53,7 @@ class PrimeSieve {
 
         // Following 2 lines added by rbergen to conform to drag race output format
         std::printf("\n");
-        std::printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
+        std::printf("BlackMark;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
     }
 
     std::size_t countPrimes()
