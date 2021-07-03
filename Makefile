@@ -6,7 +6,7 @@ SOLUTIONS  := $(shell find Prime* -type f -name Dockerfile -exec dirname {} \; |
 OUTPUT_DIR := $(shell mktemp -d)
 ARCH_FILE  := ${shell case $$(uname -m) in x86_64) echo arch-amd64 ;; aarch64) echo arch-arm64 ;; esac}
 
-all: report
+all: docker report
 
 benchmark: $(SOLUTIONS)
 	@echo "--- Output files available in $(OUTPUT_DIR)"
@@ -36,3 +36,10 @@ one:
 	else \
 		echo "Not specified!"; \
 	fi
+
+docker:
+	@# Check if docker engine is installed
+	@docker --version >/dev/null 2>&1 || (echo 'Please install docker. https://docs.docker.com/engine/install' && exit 1)
+	
+	@# Check if docker is running and that we can connect to it
+	@docker ps >/dev/null
