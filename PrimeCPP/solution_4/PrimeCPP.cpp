@@ -77,7 +77,7 @@ class PrimeSieve {
 
     ~PrimeSieve() {}
 
-    void runSieve()
+    inline void runSieve()
     {
         for(auto i = sieve_size_t{1}; i * i <= m_sieveSize; ++i) {
             for(auto num = i; num < m_sieveSize / 2; ++num) {
@@ -92,7 +92,7 @@ class PrimeSieve {
         }
     }
 
-    void printResults(double duration, int passes)
+    inline void printResults(double duration, int passes)
     {
         if(!validateResults())
             std::printf("Error: Results not valid!\n");
@@ -100,7 +100,7 @@ class PrimeSieve {
         std::printf("BlackMark;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
     }
 
-    std::size_t countPrimes()
+    inline std::size_t countPrimes()
     {
         auto count = std::size_t{1};
         for(auto i = sieve_size_t{1}; i < m_sieveSize / 2; ++i)
@@ -116,7 +116,7 @@ class PrimeSieve {
     // Historical data for validating our results - the number of primes to be found under some limit, such as 168 primes under 1000
     static const std::map<const sieve_size_t, const std::size_t> m_resultsDictionary;
 
-    bool validateResults()
+    inline bool validateResults()
     {
         auto result = m_resultsDictionary.find(m_sieveSize);
         if(m_resultsDictionary.end() == result)
