@@ -27,7 +27,9 @@ docker run --rm primecy
 # Output
 
 ```
+Passes: 3592, Time: 10.001709000000119, Avg: 0.00278444014476618, Limit: 1000000, Count: 78498, Valid: True
 
+ssovest; 3592;10.001709000000119;1;algorithm=base,faithful=yes,bits=8
 ```
 
 # Cython and Python compared
