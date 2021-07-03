@@ -1,0 +1,6 @@
+*~
+*.aux
+*.dvi
+*.pdf
+*.log
+result.txt
