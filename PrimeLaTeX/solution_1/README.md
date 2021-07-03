@@ -41,6 +41,8 @@ to standard output.
 
 (Copied from the PDF)
 
+|                  |         |
+| ---------------- | ------- |
 | **Primes found** | 78498   |
 | **Limit**        | 1000000 |
 | **Total time**   | 13.08 s |
