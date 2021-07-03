@@ -84,9 +84,8 @@ void printResults(const Sieve &sieve, bool showResults, double duration, int pas
            countPrimes(sieve),
            validateResults(sieve));
 
-    // Following 2 lines added by rbergen to conform to drag race output format
     printf("\n");
-    printf("davepl_constexpr;%d;%f;%d;algorithm=base,faithful=yes,bits=1\n", passes, duration, threads);
+    printf("flo80;%d;%f;%d;algorithm=base,faithful=yes,bits=1\n", passes, duration, threads);
 }
 
 int main(int argc, char **argv)
