@@ -6,14 +6,16 @@
 #include <cstdio>
 
 class PrimeSieve {
+    using sieve_size_t = std::size_t;
+
   public:
-    PrimeSieve(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / 2 + 1, true) {}
+    PrimeSieve(const sieve_size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / 2 + 1, true) {}
 
     ~PrimeSieve() {}
 
     void runSieve()
     {
-        for(auto i = std::size_t{1}; i * i <= m_sieveSize; ++i) {
+        for(auto i = sieve_size_t{1}; i * i <= m_sieveSize; ++i) {
             for(auto num = i; num < m_sieveSize / 2; ++num) {
                 if(m_bits[num]) {
                     i = num;
@@ -37,18 +39,18 @@ class PrimeSieve {
     std::size_t countPrimes()
     {
         auto count = std::size_t{1};
-        for(auto i = std::size_t{1}; i < m_sieveSize / 2; ++i)
+        for(auto i = sieve_size_t{1}; i < m_sieveSize / 2; ++i)
             if(m_bits[i])
                 ++count;
         return count;
     }
 
   private:
-    const std::size_t m_sieveSize = 0;
+    const sieve_size_t m_sieveSize = 0;
     std::vector<bool> m_bits;
 
     // Historical data for validating our results - the number of primes to be found under some limit, such as 168 primes under 1000
-    static const std::map<const std::size_t, const std::size_t> m_resultsDictionary;
+    static const std::map<const sieve_size_t, const std::size_t> m_resultsDictionary;
 
     bool validateResults()
     {
@@ -60,7 +62,7 @@ class PrimeSieve {
 };
 
 // clang-format off
-const std::map<const std::size_t, const std::size_t> PrimeSieve::m_resultsDictionary = {
+const std::map<const PrimeSieve::sieve_size_t, const std::size_t> PrimeSieve::m_resultsDictionary = {
     {            10,           4},
     {           100,          25},
     {         1'000,         168},
