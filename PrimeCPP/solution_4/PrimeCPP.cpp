@@ -5,8 +5,36 @@
 #include <cstddef>
 #include <cstdio>
 
+class BitStorage {
+    class BitReference {
+      public:
+        explicit BitReference(BitStorage& bitStorage, const std::size_t idx) : m_parent(bitStorage), m_idx(idx) {}
+
+        inline BitReference& operator=(const bool value)
+        {
+            m_parent.m_storage[m_idx] = value;
+            return *this;
+        }
+
+        inline operator bool() const { return m_parent.m_storage[m_idx]; }
+
+      private:
+        BitStorage& m_parent;
+        const std::size_t m_idx;
+    };
+
+  public:
+    explicit BitStorage(const std::size_t size, const bool defaultValue = false) : m_storage(size, defaultValue) {}
+
+    inline BitReference operator[](const std::size_t idx) { return BitReference(*this, idx); }
+
+  private:
+    std::vector<bool> m_storage;
+};
+
 class PrimeSieve {
     using sieve_size_t = std::size_t;
+    using bit_storage_t = BitStorage;
 
   public:
     PrimeSieve(const sieve_size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / 2 + 1, true) {}
@@ -47,7 +75,7 @@ class PrimeSieve {
 
   private:
     const sieve_size_t m_sieveSize = 0;
-    std::vector<bool> m_bits;
+    bit_storage_t m_bits;
 
     // Historical data for validating our results - the number of primes to be found under some limit, such as 168 primes under 1000
     static const std::map<const sieve_size_t, const std::size_t> m_resultsDictionary;
