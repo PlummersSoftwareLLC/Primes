@@ -1,64 +1,31 @@
-// ---------------------------------------------------------------------------
-// PrimeCPP.cpp : Dave's Garage Prime Sieve in C++ - No warranty for anything!
-// ---------------------------------------------------------------------------
-
-#include <bitset>
 #include <chrono>
-#include <cmath>
-#include <cstring>
-#include <ctime>
-#include <iostream>
 #include <map>
 #include <vector>
 
-using namespace std;
-using namespace std::chrono;
+#include <cmath>
+#include <cstddef>
+#include <cstdio>
 
-class prime_sieve {
-  private:
-    long sieveSize = 0;
-    vector<bool> Bits;
-    const std::map<const long long, const int> resultsDictionary = {
-        {10LL, 4},   // Historical data for validating our results - the number of primes
-        {100LL, 25}, // to be found under some limit, such as 168 primes under 1000
-        {1000LL, 168},
-        {10000LL, 1229},
-        {100000LL, 9592},
-        {1000000LL, 78498},
-        {10000000LL, 664579},
-        {100000000LL, 5761455},
-        {1000000000LL, 50847534},
-        {10000000000LL, 455052511},
-
-    };
-
-    bool validateResults()
-    {
-        auto result = resultsDictionary.find(sieveSize);
-        if(resultsDictionary.end() == result)
-            return false;
-        return result->second == countPrimes();
-    }
-
+class PrimeSieve {
   public:
-    prime_sieve(long n) : Bits(n, true), sieveSize(n) {}
+    PrimeSieve(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize, true) {}
 
-    ~prime_sieve() {}
+    ~PrimeSieve() {}
 
     void runSieve()
     {
-        int factor = 3;
-        int q = (int)sqrt(sieveSize);
+        auto factor = std::size_t{3};
+        const auto q = static_cast<std::size_t>(std::sqrt(m_sieveSize));
 
         while(factor <= q) {
-            for(int num = factor; num < sieveSize; num += 2) {
-                if(Bits[num]) {
+            for(auto num = factor; num < m_sieveSize; num += 2) {
+                if(m_bits[num]) {
                     factor = num;
                     break;
                 }
             }
-            for(int num = factor * factor; num < sieveSize; num += factor * 2)
-                Bits[num] = false;
+            for(auto num = factor * factor; num < m_sieveSize; num += factor * 2)
+                m_bits[num] = false;
 
             factor += 2;
         }
@@ -67,50 +34,77 @@ class prime_sieve {
     void printResults(bool showResults, double duration, int passes)
     {
         if(showResults)
-            printf("2, ");
+            std::printf("2, ");
 
-        int count = (sieveSize >= 2); // Starting count (2 is prime)
-        for(int num = 3; num <= sieveSize; num += 2) {
-            if(Bits[num]) {
+        auto count = (m_sieveSize >= 2) ? 1 : 0; // Starting count (2 is prime)
+        for(auto num = std::size_t{3}; num <= m_sieveSize; num += 2) {
+            if(m_bits[num]) {
                 if(showResults)
-                    printf("%d, ", num);
-                count++;
+                    std::printf("%lu, ", num);
+                ++count;
             }
         }
 
         if(showResults)
-            printf("\n");
+            std::printf("\n");
 
-        printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", passes, duration, duration / passes, sieveSize, count,
-               countPrimes(), validateResults());
+        std::printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %lu, Valid: %d\n", passes, duration, duration / passes, m_sieveSize,
+                    count, countPrimes(), validateResults());
 
         // Following 2 lines added by rbergen to conform to drag race output format
-        printf("\n");
-        printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
+        std::printf("\n");
+        std::printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
     }
 
-    int countPrimes()
+    std::size_t countPrimes()
     {
-        int count = (sieveSize >= 2);
-        ;
-        for(int i = 3; i < sieveSize; i += 2)
-            if(Bits[i])
-                count++;
+        auto count = (m_sieveSize >= 2) ? std::size_t{1} : std::size_t{0};
+        for(auto i = std::size_t{3}; i < m_sieveSize; i += 2)
+            if(m_bits[i])
+                ++count;
         return count;
+    }
+
+  private:
+    const std::size_t m_sieveSize = 0;
+    std::vector<bool> m_bits;
+
+    // Historical data for validating our results - the number of primes to be found under some limit, such as 168 primes under 1000
+    // clang-format off
+    const std::map<const std::size_t, const std::size_t> m_resultsDictionary = {
+        {            10,           4},
+        {           100,          25},
+        {         1'000,         168},
+        {        10'000,       1'229},
+        {       100'000,       9'592},
+        {     1'000'000,      78'498},
+        {    10'000'000,     664'579},
+        {   100'000'000,   5'761'455},
+        { 1'000'000'000,  50'847'534},
+        {10'000'000'000, 455'052'511},
+    };
+    // clang-format on
+
+    bool validateResults()
+    {
+        auto result = m_resultsDictionary.find(m_sieveSize);
+        if(m_resultsDictionary.end() == result)
+            return false;
+        return result->second == countPrimes();
     }
 };
 
 int main()
 {
     auto passes = 0;
-    auto tStart = steady_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
 
     while(true) {
-        prime_sieve sieve(1000000L);
+        PrimeSieve sieve(1'000'000);
         sieve.runSieve();
-        passes++;
-        if(duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5) {
-            sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000.0, passes);
+        ++passes;
+        if(const auto end = std::chrono::high_resolution_clock::now(); std::chrono::duration_cast<std::chrono::seconds>(end - start).count() >= 5) {
+            sieve.printResults(false, std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1'000'000.0, passes);
             break;
         }
     }
