@@ -1,8 +1,8 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
-    FlagStorageByteVector, PrimeSieve,
+    FlagStorageByteVector, FlagStorageBitVectorRotate, PrimeSieve,
 };
-use std::time::{Duration, Instant};
+use std::{thread, time::{Duration, Instant}};
 use structopt::StructOpt;
 
 pub mod primes {
@@ -72,7 +72,9 @@ pub mod primes {
             FlagStorageByteVector(vec![1; size])
         }
 
+
         // bounds checks are elided since we're runing up to .len()
+        #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
             while i < self.0.len() {
@@ -90,29 +92,30 @@ pub mod primes {
         }
     }
 
-    /// Storage using a vector of bytes, but addressing individual bits within each
+    /// Storage using a vector of 32-bit words, but addressing individual bits within each. Bits are
+    /// reset by applying a mask created by a shift on every iteration, similar to the C++ implementation.
     pub struct FlagStorageBitVector {
-        words: Vec<u8>,
+        words: Vec<u32>,
         length_bits: usize,
     }
 
-    const U8_BITS: usize = 8;
+    const U32_BITS: usize = 32;
     impl FlagStorage for FlagStorageBitVector {
         fn create_true(size: usize) -> Self {
-            let num_words = size / U8_BITS + (size % U8_BITS).min(1);
+            let num_words = size / U32_BITS + (size % U32_BITS).min(1);
             FlagStorageBitVector {
-                words: vec![0xff; num_words],
+                words: vec![0xffffffff; num_words],
                 length_bits: size,
             }
         }
 
+        #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
-            while i < self.words.len() * U8_BITS {
-                let word_idx = i / U8_BITS;
-                let bit_idx = i % U8_BITS;
+            while i < self.words.len() * U32_BITS {
+                let word_idx = i / U32_BITS;
+                let bit_idx = i % U32_BITS;
                 // Note: Unsafe usage to ensure that we elide the bounds check reliably.
-                //       It's a bit hit-or-miss otherwise, depending on how stuff is inlined.
                 //       We have ensured that word_index < self.words.len().
                 unsafe {
                     *self.words.get_unchecked_mut(word_idx) &= !(1 << bit_idx);
@@ -125,8 +128,51 @@ pub mod primes {
             if index >= self.length_bits {
                 return false;
             }
-            let word = self.words.get(index / U8_BITS).unwrap();
-            *word & (1 << (index % U8_BITS)) != 0
+            let word = self.words.get(index / U32_BITS).unwrap();
+            *word & (1 << (index % U32_BITS)) != 0
+        }
+    }
+
+    /// Storage using a vector of 32-bit words, but addressing individual bits within each. Bits are 
+    /// reset by rotating the mask left instead of modulo+shift.
+    pub struct FlagStorageBitVectorRotate {
+        words: Vec<u32>,
+        length_bits: usize,
+    }
+
+    impl FlagStorage for FlagStorageBitVectorRotate {
+        fn create_true(size: usize) -> Self {
+            let num_words = size / U32_BITS + (size % U32_BITS).min(1);
+            FlagStorageBitVectorRotate {
+                words: vec![0xffffffff; num_words],
+                length_bits: size,
+            }
+        }
+
+        #[inline(always)]
+        fn reset_flags(&mut self, start: usize, skip: usize) {
+            let mut i = start;
+            let initial_bit_idx = start % U32_BITS;
+            let mut rolling_mask: u32 = !(1 << initial_bit_idx);
+            let roll_bits = skip as u32;
+            while i < self.words.len() * U32_BITS {
+                let word_idx = i / U32_BITS;
+                // Note: Unsafe usage to ensure that we elide the bounds check reliably.
+                //       We have ensured that word_index < self.words.len().
+                unsafe {
+                    *self.words.get_unchecked_mut(word_idx) &= rolling_mask;
+                }
+                i += skip;
+                rolling_mask = rolling_mask.rotate_left(roll_bits);
+            }
+        }
+
+        fn get(&self, index: usize) -> bool {
+            if index >= self.length_bits {
+                return false;
+            }
+            let word = self.words.get(index / U32_BITS).unwrap();
+            *word & (1 << (index % U32_BITS)) != 0
         }
     }
 
@@ -266,6 +312,10 @@ struct CommandLineOptions {
     #[structopt(long)]
     bits: bool,
 
+    /// Run variant that uses bit-level storage, applied using rotate
+    #[structopt(long)]
+    bits_rotate: bool,
+    
     /// Run variant that uses byte-level storage
     #[structopt(long)]
     bytes: bool,
@@ -285,13 +335,14 @@ fn main() {
         None => vec![1, num_cpus::get()],
     };
 
-    let (run_bits, run_bytes) = match (opt.bits, opt.bytes) {
-        (false, false) => (true, true),
-        (bits, bytes) => (bits, bytes),
+    let (run_bits, run_bits_rotate, run_bytes) = match (opt.bits, opt.bits_rotate, opt.bytes) {
+        (false, false, false) => (true, true, true),
+        (bits, bits_rotate, bytes) => (bits, bits_rotate, bytes),
     };
 
     for threads in thread_options {
         if run_bytes {
+            thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageByteVector>(
@@ -306,10 +357,26 @@ fn main() {
         }
 
         if run_bits {
+            thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVector>(
                     "bit-storage",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+        }
+
+        if run_bits_rotate {
+            thread::sleep(Duration::from_secs(1));
+            print_header(threads, limit, run_duration);
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorRotate>(
+                    "bit-storage-rotate",
                     1,
                     run_duration,
                     threads,
@@ -394,13 +461,16 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::{
-        FlagStorage, FlagStorageBitVector, FlagStorageByteVector, PrimeSieve, PrimeValidator,
-    };
+    use crate::primes::{FlagStorage, FlagStorageBitVector, FlagStorageBitVectorRotate, FlagStorageByteVector, PrimeSieve, PrimeValidator};
 
     #[test]
     fn sieve_known_correct_bits() {
         sieve_known_correct::<FlagStorageBitVector>();
+    }
+
+    #[test]
+    fn sieve_known_correct_bits_rolling() {
+        sieve_known_correct::<FlagStorageBitVectorRotate>();
     }
 
     #[test]
