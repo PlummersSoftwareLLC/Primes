@@ -2,7 +2,6 @@
 #include <map>
 #include <vector>
 
-#include <cmath>
 #include <cstddef>
 #include <cstdio>
 
@@ -15,9 +14,8 @@ class PrimeSieve {
     void runSieve()
     {
         auto factor = std::size_t{3};
-        const auto q = static_cast<std::size_t>(std::sqrt(m_sieveSize));
 
-        while(factor <= q) {
+        while(factor * factor <= m_sieveSize) {
             for(auto num = factor; num < m_sieveSize; num += 2) {
                 if(m_bits[num]) {
                     factor = num;
