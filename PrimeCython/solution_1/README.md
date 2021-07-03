@@ -16,7 +16,7 @@ gcc -I /usr/local/include/python3.9 -l python3.9 -lm PrimeCY.c -o PrimeCY
 ./PrimeCY
 ```
 
-Belonging to your python installation to python include path may be differend and the linker may not found the libary by default. So to avoid these problems you can use docker:
+Belonging to your python installation the python include path may be different and the linker may not found the library by default. So to avoid these problems you can use docker:
 
 ```
 docker build . -t primecy
