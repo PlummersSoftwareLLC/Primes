@@ -429,7 +429,7 @@ int main(int argc, char **argv) {
     if (elapsed_time >= 5.) {
       // Count the number of primes and validate the result
       int nprimes = count_primes(sieve_state);
-      //printf("valid=%d ",(nprimes == valid_primes));
+      //printf("valid=%d ", (nprimes == valid_primes));
       printf(
         "danielspaangberg_5760of30030_par;%d;%f;%d;algorithm=wheel,faithful=yes,bits=1\n",
         passes, elapsed_time, omp_get_max_threads());
