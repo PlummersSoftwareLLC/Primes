@@ -75,7 +75,7 @@ class PrimeSieve (max_limit: Int) {
     println("Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid")
     // Following 2 lines are to conform to drag race output format
     println("")
-    println("fvbakel_Kotlin;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
+    println("fvbakel_Kotlin;$passes;$duration;1;algorithm=base,faithful=yes,bits=8")
 
   }
 

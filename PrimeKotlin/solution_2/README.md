@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 This is an implementation in [Kotlin](https://en.wikipedia.org/wiki/Kotlin_(programming_language)). In this implementation Linux Native is used as the target platform. The source file from [solution_1/primes.kt](../solution_1/primes.kt) is used as a basis and only the platform specific lines are changed.
 
