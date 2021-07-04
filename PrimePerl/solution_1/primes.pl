@@ -19,10 +19,10 @@ my %DICT = (
 package PrimeSieve {
 
     sub new {
-        my ( $class, $size ) = @_;
+        my ( $class, $sieve_size ) = @_;
 
         return bless {
-            size       => $size,
+            sieve_size       => $sieve_size,
             bits       => [],
         }, $class;
     }
@@ -31,7 +31,7 @@ package PrimeSieve {
         my $self = shift;
 
         my $factor = 3;
-        my $s      = $self->{size};
+        my $s      = $self->{sieve_size};
         my $q      = sqrt $s;
         my $b      = $self->{bits};
         while ( $factor <= $q ) {
@@ -58,8 +58,8 @@ package PrimeSieve {
 
         print "2, " if ($show_results);
 
-        my $count = ( $self->{size} >= 2 );
-        for ( my $num = 3 ; $num <= $self->{size} ; $num += 2 ) {
+        my $count = ( $self->{sieve_size} >= 2 );
+        for ( my $num = 3 ; $num <= $self->{sieve_size} ; $num += 2 ) {
             unless ( $self->{bits}[$num] ) {
                 printf( "%d, ", $num ) if ($show_results);
                 $count++;
@@ -72,15 +72,14 @@ package PrimeSieve {
         $ENV{DEBUG} and printf STDERR
 "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
            $passes, $duration, $duration / $passes,
-           $self->{size}, $count, $self->count_primes(),
+           $self->{sieve_size}, $count, $self->count_primes(),
            $self->validate_results();
     }
 
     sub count_primes {
         my $self = shift;
-        my $s = $self->{size};
-        my $count = ( $s >= 2 );
-        for ( my $i = 3 ; $i < $s ; $i += 2 ) {
+        my $count = ( $self->{sieve_size} >= 2 );
+        for ( my $i = 3 ; $i < $self->{sieve_size} ; $i += 2 ) {
             $count++ unless ( $self->{bits}[$i] );
         }
 
@@ -89,10 +88,8 @@ package PrimeSieve {
 
     sub validate_results {
         my $self = shift;
-        my $x = $self->count_primes();
-        my $s = $self->{size};
-        my $y = $DICT{ $s };
-        return ( $y == $x );
+        my $y = $DICT{ $self->{sieve_size} };
+        return ( $DICT{ $self->{sieve_size} } == $self->count_primes() );
     }
 };
 
