@@ -24,100 +24,40 @@ dict set knownPrimeCounts 1000000 78498
 dict set knownPrimeCounts 10000000 664579
 dict set knownPrimeCounts 100000000 5761455
 
-::oo::class create bit_array {
-    variable bit_vector
-    variable size
-
-    constructor {size_input init_value} {
-        variable bit_vector
-        variable size
-
-        set size $size_input
-
-        set word_fill 1
-        if {$init_value == 0} {
-            set word_fill = 0
-        }
-
-        set bit_vector [lrepeat $size_input $word_fill]
-    }
-
-    destructor {
-        # no sub objects to be cleared
-    }
-
-    #
-    # set the value of a bit at the given position to the given value
-    # if no value is specified the value of the given bit is returned
-    method bit {pos {bitval {}}} {
-        variable bit_vector
-        if {$bitval != ""} {
-            lset bit_vector $pos $bitval
-        }
-        lindex $bit_vector $pos
-    }
-
-    #
-    # Convert the bit array to an array of index numbers
-    method bits {} {
-        variable bit_vector
-        
-        set res {}
-        set pos 0
-        foreach bit $bit_vector {
-            if {$bit} {
-                lappend res $pos
-            }
-            incr pos
-        }
-        return $res
-    }
-
-}
-
 ::oo::class create prime_sieve {
     variable limit
-    variable primes
+    variable bit_array
     variable size
     
     constructor {limit_input} {
         variable limit
-        variable primes
-        variable size
+        variable bit_array
 
         set limit $limit_input
-        set size [expr {$limit_input/2}]
-
-        if {[expr ($limit_input%2)]} {
-            # uneven, add one to the size
-            incr size 
-        }
-
-        set primes [bit_array new $size 1]
-
+        set size [expr $limit +1]
+        set bit_array [lrepeat $size 1]
     }
 
     destructor {
-        $primes destroy
+        # nothing to destroy
     }
 
     #
     # Convert an array of index numbers to prime numbers
     method bits_to_primes {} {
-        variable primes
+        variable bit_array
 
         set res {}
         set pos 1
 
         lappend res 2
         set i 0    
-        foreach bit_index [$primes bits] {
-            if {$i!=0} {
-                lappend res [expr {($bit_index * 2) + 1}]
+        foreach {even odd} $bit_array {
+            if {$i != 0  && $odd == 1} {
+                lappend res $odd
             }
-            incr i
+            incr i 2
         }
-
         return $res
     }
 
@@ -125,32 +65,30 @@ dict set knownPrimeCounts 100000000 5761455
     # Calculate the bit array
     method run_sieve {} {
         variable limit
-        variable primes
+        variable bit_array
         variable size
 
-        set maxroot [expr {sqrt($limit)}]
+        set maxroot [expr {round(floor(sqrt($limit)))}]
        
-        set factor 1
-        while {$factor<$maxroot} {
-            # Start at the square root of factor
-            # But since factor is the index of the odd number, 
-            # it requires some calculation
-            #
-            set cur_prime [expr ($factor *2) + 1]
-            set start [expr (($cur_prime * $cur_prime) / 2)]
-            set step [expr ($factor * 2) + 1]
-            set i $start
-            while {$i<=$size} {
-                $primes bit $i 0
-                incr i $step
-            }
+        set num 3
+        while {$num<$maxroot} {
             # search next bit set to 1
-            for {set i [expr {$factor + 1}]} {$i<=$size} {incr i} {
-                if {[$primes bit $i]} {
-                    set factor $i
+            foreach {odd even} [lrange bit_array $num $maxroot] {
+                if { $odd == 1} {
                     break
                 }
+                incr num 2
             }
+
+            # Start at the square root of factor
+            set start [expr $num * $num]
+            set i $start
+            while {$i<=$limit} {
+                lset bit_array $i 0
+                incr i $num
+            }
+
+            incr num 2
         }
     }
 
@@ -193,7 +131,7 @@ dict set knownPrimeCounts 100000000 5761455
         puts "Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid"
         # Following 2 lines are to conform to drag race output format
         puts ""
-        puts "fvbakel_ootcl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1"
+        puts "fvbakel_ootcl2;$passes;$duration;1;algorithm=base,faithful=no,bits=32"
 
     }
 }
