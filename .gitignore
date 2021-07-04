@@ -2,3 +2,4 @@ PrimeCrystal/primes
 .DS_Store
 *.pyc
 .vscode
+pypy*
