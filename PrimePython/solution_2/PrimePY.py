@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     parser = ArgumentParser(description="Python Prime Sieve")
     parser.add_argument("--limit", "-l", help="Upper limit for calculating prime numbers", type=int, default=1_000_000)
-    parser.add_argument("--time", "-t", help="Time limit", type=float, default=10)
+    parser.add_argument("--time", "-t", help="Time limit", type=float, default=5)
     parser.add_argument("--show", "-s", help="Print found prime numbers", action="store_true")
 
     args = parser.parse_args()
