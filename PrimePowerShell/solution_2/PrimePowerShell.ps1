@@ -79,8 +79,14 @@ found.
 
 [CmdletBinding()] 
 param(
-    [Parameter(Position = 0)] [string] $SieveSize = 1000000,
-    [Parameter(Position = 1)] [int] $MinimumRuntime = 5,
+    [Parameter(Position = 0,
+        Mandatory = $false)] 
+    [int] $SieveSize = 1000000,
+    
+    [Parameter(Position = 1,
+        Mandatory = $false)]
+    [int] $MinimumRuntime = 5,
+    
     [switch] $ResetState,
     [switch] $ShowResults
 )
@@ -122,11 +128,17 @@ function New-PrimeSieve([int] $Size) {
 # original 'countPrimes' method, which has been renamed to conform with standard
 # PS verbs
 # (https://docs.microsoft.com/de-de/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7.1).
-function Measure-Primes([PsObject] $Sieve) {
+function Measure-Primes {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory,
+            ValueFromPipelineByPropertyName)]
+        [System.Collections.BitArray]$BitArray
+    )
     $retval = 0
 
-    for ($i = 0; $i -lt $Sieve.BitArray.Count; ++$i) {
-        if ($Sieve.BitArray[$i]) {
+    for ($i = 0; $i -lt $BitArray.Count; ++$i) {
+        if ($BitArray[$i]) {
             ++$retval
         }
     }
@@ -138,9 +150,19 @@ function Measure-Primes([PsObject] $Sieve) {
 # Validates the results agains known results. Note that this is the original
 # 'validateResults' method, which has been renamed to conform with standard PS
 # verbs.
-function Test-Results([PsObject] $Sieve) {
-    if ($KnowResults.ContainsKey($Sieve.SieveSize)) {
-        return ($KnowResults[$Sieve.SieveSize] -eq (Measure-Primes $Sieve))
+function Test-Results {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory,
+            ValueFromPipelineByPropertyName)]
+        [int]$SieveSize,
+
+        [Parameter(Mandatory,
+            ValueFromPipelineByPropertyName)]
+        [System.Collections.BitArray]$BitArray
+    )
+    if ($KnowResults.ContainsKey($SieveSize)) {
+        return ($KnowResults[$SieveSize] -eq (Measure-Primes -BitArray $BitArray))
     } else {
         return $false
     }
@@ -149,26 +171,46 @@ function Test-Results([PsObject] $Sieve) {
 
 # Computes the primes up to the specified limit. Note this is the original
 # 'runSieve' method, which has been renamed to conform with standard PS verbs.
-function Invoke-Sieve([PsObject] $Sieve) {
+function Invoke-Sieve {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory,
+            ValueFromPipelineByPropertyName)]
+        [int]$SieveSize,
+
+        [Parameter(Mandatory,
+            ValueFromPipelineByPropertyName)]
+        [System.Collections.BitArray]$BitArray,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$PassThru = $false
+    )
     $factor = 3
-    $q = [int] [System.Math]::Sqrt($Sieve.SieveSize)
+    $q = [int] [System.Math]::Sqrt($SieveSize)
 
     while ($factor -lt $q) {
-        for ($i = $factor; $i -le $Sieve.SieveSize; ++$i) {
-            if (($i -band 1) -or $Sieve.BitArray[$i -shr 1]) {
+        for ($i = $factor; $i -le $SieveSize; ++$i) {
+            if (($i -band 1) -or $BitArray[$i -shr 1]) {
                 $factor = $i
                 break;
             }
         }
         
         $step = 2 * $factor
-        for ($i = $factor * 3; $i -le $Sieve.SieveSize; $i += $step) {
+        for ($i = $factor * 3; $i -le $SieveSize; $i += $step) {
             if ($i -band 1) {
-                $Sieve.BitArray[$i -shr 1] = $false;
+                $BitArray[$i -shr 1] = $false;
             }
         }
 
         $factor += 2
+    }
+
+    if($PassThru) {
+        return New-Object -TypeName PSObject -Property @{
+            SieveSize = $SieveSize
+            BitArray = $BitArray
+        }
     }
 }
 
@@ -209,8 +251,14 @@ function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
 }
 
 # Resets the sieve object in order to reuse it.
-function Reset-Sieve([PsObject] $Sieve) {
-    $Sieve.BitArray.SetAll($true)
+function Reset-Sieve {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory,
+            ValueFromPipelineByPropertyName)]
+        [System.Collections.BitArray]$BitArray
+    )
+    $BitArray.SetAll($true)
 }
 
 
@@ -220,6 +268,7 @@ function Reset-Sieve([PsObject] $Sieve) {
 
 $stopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
 $passes = 0
+$sieve = $null
 
 if ($ResetState) {
     Write-Verbose "Starting benchmark with reusable state ..."
@@ -229,8 +278,7 @@ if ($ResetState) {
     $stopWatch.Start()
 
     while ($stopWatch.Elapsed.TotalSeconds -lt $MinimumRuntime) {
-        Reset-Sieve $sieve
-        Invoke-Sieve $sieve
+        $sieve | Reset-Sieve | Invoke-Sieve
         ++$passes
     }
 
@@ -242,8 +290,7 @@ if ($ResetState) {
     $stopWatch.Start()
 
     while ($stopWatch.Elapsed.TotalSeconds -lt $MinimumRuntime) {
-        $sieve = New-PrimeSieve $SieveSize
-        Invoke-Sieve $sieve
+        $sieve = New-PrimeSieve $SieveSize | Invoke-Sieve -PassThru
         ++$passes
     }
 
@@ -260,5 +307,5 @@ New-Object -TypeName PsObject -Property @{
     Passes = $passes;
     Primes = $primes;
     SieveSize = $SieveSize;
-    Valid = (Test-Results $Sieve);
+    Valid = ($Sieve | Test-Results);
 }
