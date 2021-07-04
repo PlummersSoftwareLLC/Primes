@@ -7,7 +7,7 @@
 
 This is an implementation in object-oriented Tcl. Historically, Tcl did not have native support for object-oriented programming. As of version 8.6 however, Tcl includes a built-in object oriented system.
 
-This implementation the object-oriented feature of Tcl. It uses two classes, `bit_array` and `prime_sieve`. The `bit_array` class implements a bit array with basic get and set methods. It uses a 32 bit string array to represent the bit values. The `prime_sieve` class is used for the actual sieve calculation.
+This implementation uses two classes, `bit_array` and `prime_sieve`. The `bit_array` class implements a bit array with basic get and set methods. It uses a 32 bit string array to represent the bit values. The `prime_sieve` class is used for the actual sieve calculation.
 
 This implementation is based on:
 
@@ -23,7 +23,7 @@ To run this solution you need Tcl. The Tcl shell (`tclsh`) is included in most L
 
 ```bash
 cd path/to/sieve
-tclsh primes.tcl
+tclsh oo_primes.tcl
 ```
 
 ### Run with Docker

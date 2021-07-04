@@ -7,11 +7,10 @@
 
 This is an implementation in object-oriented Tcl. Historically, Tcl did not have native support for object-oriented programming. As of version 8.6 however, Tcl includes a built-in object oriented system.
 
-This implementation the object-oriented feature of Tcl. The basic framework is copied from [solution_2](../solution_2). However, in this implementation the `bit_array` variable is just an array of 32 bit integers. Further more, `for` loops are replaced with `foreach` loops.
+The basic framework of this solution is copied from [solution_2](../solution_2). However, in this implementation the `bit_array` variable is just an array of 32 bit integers. Further more, `for` loops are replaced with `foreach` loops giving it a factor 2 performance improvement compared to [solution_2](../solution_2).
 
 This implementation is based on:
 
-- Python/solution_2, by ssovest
 - PrimeCPP,          by Dave Plummer
 
 ## Run instructions
@@ -22,7 +21,7 @@ To run this solution you need Tcl. The Tcl shell (`tclsh`) is included in most L
 
 ```bash
 cd path/to/sieve
-tclsh primes.tcl
+tclsh oo_primes.tcl
 ```
 
 ### Run with Docker
