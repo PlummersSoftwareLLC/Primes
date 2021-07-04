@@ -8,7 +8,6 @@ program Project2;
 // Optimized by Kim Madsen/C4D with help from
 //
 //   Brian Muegge
-//   Stefan Glienke
 //
 // Supports both 32 bit and 64 bit compilation.
 //
