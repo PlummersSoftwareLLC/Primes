@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <utility>
 
+#include <cmath>
 #include <cstddef>
 
 namespace utils {
@@ -18,6 +19,18 @@ auto for_constexpr(Fn&& func, std::index_sequence<Idxs...>)
             return true;
         return false;
     }
+}
+
+template<typename...>
+struct always_false : std::false_type {
+};
+template<typename... Ts>
+inline constexpr auto always_false_v = always_false<Ts...>::value;
+
+template<typename T, typename U>
+constexpr auto ceildiv(const T& dividend, const U& divisor)
+{
+    return static_cast<std::common_type_t<T, U>>(std::ceil(static_cast<double>(dividend) / divisor));
 }
 
 } // namespace utils

@@ -6,6 +6,7 @@ WORKDIR /opt/app
 
 COPY Makefile .
 COPY *.cpp .
+COPY *.hpp .
 
 RUN make
 
