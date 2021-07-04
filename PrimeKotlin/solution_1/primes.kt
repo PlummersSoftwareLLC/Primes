@@ -16,7 +16,6 @@ val KNOWN_PRIMES = mapOf (
 
 class PrimeSieve (max_limit: Int) {
   val limit: Int = max_limit
-  // val bit_size = (limit + 1) >> 1
   val bit_size: Int = limit
   
   private var bits: BooleanArray = BooleanArray(bit_size)
