@@ -1,7 +1,7 @@
-# C++ solution by flo80
+# C++ constexpr solution by flo80
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Deviation](https://img.shields.io/badge/Deviation-compile%20time-blue)
@@ -11,7 +11,9 @@ Since the standard library does not provide required functions, sqrt and bitfiel
 
 *Deviation*: It does use the base algorithm but due to compile time optimization, a lot of the actual calculation does not happen at runtime
 
-Note: this solution is limited to numbers up to around 50,000,000 (stack size limit on Mac OS it seems).
+*Faithfulness*: Since the buffer size is fixed, it is [not considered faithful](https://github.com/PlummersSoftwareLLC/Primes/pull/274).
+
+*Note*: this solution is limited to numbers up to around 50,000,000 (stack size limit on Mac OS it seems).
 
 ## Run instructions
 

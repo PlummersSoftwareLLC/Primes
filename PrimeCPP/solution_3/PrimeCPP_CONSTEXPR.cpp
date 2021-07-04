@@ -85,7 +85,7 @@ void printResults(const Sieve &sieve, bool showResults, double duration, int pas
            validateResults(sieve));
 
     printf("\n");
-    printf("flo80;%d;%f;%d;algorithm=base,faithful=yes,bits=1\n", passes, duration, threads);
+    printf("flo80_constexpr;%d;%f;%d;algorithm=base,faithful=no,bits=1\n", passes, duration, threads);
 }
 
 int main(int argc, char **argv)
