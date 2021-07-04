@@ -30,7 +30,7 @@ one:
 	@if [[ ! -z "$${SOLUTION}" ]]; then \
 		NAME=$$(echo "$${SOLUTION}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]'); \
 		OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
-		echo "[*] Running $${NAME}" && docker run --rm $$(docker build -q $$SOLUTION) | tee tee "$${OUTPUT}"; \
+		echo "[*] Running $${NAME}" && docker run --rm $$(docker build -q $$SOLUTION) | tee "$${OUTPUT}"; \
 		cd tools/; \
 		npm ci && npm start -- report -d "$(OUTPUT_DIR)" \
 	else \
