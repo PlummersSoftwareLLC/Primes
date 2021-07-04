@@ -5,9 +5,8 @@ MyFirstPython Program (tm) Dave Plummer 8/9/2018
 Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 """
 
-from math import sqrt
-
-
+from math import sqrt, ceil
+    
 class PrimeSieve:
 
     """This is the main PrimeSieve class. Call it with the number you wish as
@@ -43,26 +42,20 @@ class PrimeSieve:
 
         """Calculate the primes up to the specified limit"""
 
-        # factor = 1
         # sqrt doesn't seem to make any difference in CPython,
         # but works much faster than "x**.5" in Pypy
         q = sqrt(self._size) / 2
         bitslen = len(self._bits)
-        # q_int = int(q)
+        q_int = int(ceil(q))
 
-        for factor in range(1, self._size):
-            if factor >= q:
-                break
+        for factor in range(1, q_int):
             factor = self._bits.index(b"\x01", factor)
-
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
             start = factor * 3 + 1
             step  = factor * 2 + 1
             size  = bitslen - start
             self._bits[start :: step] = b"\x00" * (size // step + bool(size % step))  # bool is (a subclass of) int in python
-
-            # factor += 1
 
     def count_primes(self):
 
@@ -83,7 +76,6 @@ class PrimeSieve:
             yield 2  # Since we auto-filter evens, we have to special case the number 2 which is prime
         if self._size > 2:
             num = 1
-            # while num > 0:
             for x in range(self._size):
                 if num <= 0:
                     break
@@ -96,12 +88,12 @@ class PrimeSieve:
         """Displays the primes found (or just the total count,
         depending on what you ask for)"""
 
-        count = 0
-        # count = len(tuple(self.get_primes()))
-        for num in self.get_primes():  # Count (and optionally dump) the primes that were found below the limit
-            count += 1
-            if show_results:
-                print("%s, " % num, end="")
+        result = tuple(map(lambda x: x, self.get_primes()))
+        count = len(result)
+        
+        if show_results:
+            num = result[-1]
+            print("%s, " % num, end="")
 
         if show_results:
             print()

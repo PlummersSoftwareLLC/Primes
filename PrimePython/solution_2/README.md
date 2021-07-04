@@ -42,7 +42,15 @@ python -m unittest
 
 ```
 $ python3 PrimePY.py 
-Passes: 4224, Time: 10.000919606, Avg: 0.00236764195217803, Limit: 1000000, Count: 78498, Valid: True
+Passes: 4327, Time: 10.001078526999999, Avg: 0.0023113192805639007, Limit: 1000000, Count: 78498, Valid: True
 
-ssovest; 4224;10.000919606;1;algorithm=base,faithful=yes,bits=8
+ssovest; 4327;10.001078526999999;1;algorithm=base,faithful=yes,bits=8
 ```
+
+# Pytest
+```
+FAILED tests/test_sieve.py::TestPrintResults::test_format - AssertionError: 4 != 2
+FAILED tests/test_sieve.py::TestPrintResults::test_valid - AssertionError: 'True\n\nssovest; 1;1;1;algorithm=base,faithful=yes,bits=8\n' != 'True\n'
+```
+
+It seems the terminal interpretation is different and the unittests are failing on splitting the output.
