@@ -262,5 +262,5 @@ void runMultiThreaded()
     
     auto s = new Sieve!PRIME_COUNT;
     s.runSieve();
-    s.printResults("BradleyChatha-Multi", "algorithm=base,faithful=yes,bits=1,parallel=yes" false, elapsedTime, passes);
+    s.printResults("BradleyChatha-Multi", "algorithm=base,faithful=yes,bits=1,parallel=yes", false, elapsedTime, passes);
 }
