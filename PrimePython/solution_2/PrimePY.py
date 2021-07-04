@@ -88,12 +88,12 @@ class PrimeSieve:
         """Displays the primes found (or just the total count,
         depending on what you ask for)"""
 
-        result = tuple(map(lambda x: x, self.get_primes()))
+        result = list(map(lambda x: x, self.get_primes()))
         count = len(result)
         
         if show_results:
-            num = result[-1]
-            print("%s, " % num, end="")
+            num = result
+            print(", ".join(map(str, num)), end="")
 
         if show_results:
             print()
