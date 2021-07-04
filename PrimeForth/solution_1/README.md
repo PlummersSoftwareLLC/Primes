@@ -1,15 +1,14 @@
 # Forth Prime Sieve by tjol
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This is a straighforward port of Dave's algorithm to Forth (tested with GForth).
 
-It doesn't technically use a class or structure, but rather a pointer to the memory
-area that contains the state of the sieve. The memory is allocated, initialized and
-deallocated on every iteration.
+The state of the sieve is stored in dictionary-allocated memory, and allocated,
+initialized and deallocated on every iteration.
 
 There are two versions:
 
