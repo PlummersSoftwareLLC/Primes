@@ -250,6 +250,10 @@ void runMultiThreaded()
 
     while(timer.peek.total!"seconds" < MAX_SECONDS)
     {
+        // .parallel makes the foreach body run on worker threads. It defaults to using as many
+        // threads as there are CPUs (a.k.a totalCPUs).
+        //
+        // D makes multi-threaded processing painfully easy.
         foreach(i; iota(0, totalCPUs).parallel)
         {
             scope sieve = new Sieve!PRIME_COUNT;
