@@ -27,11 +27,8 @@ function count=run_sieve(limit)
     endif
   endfunction
 
-  function clear_bit(index)
-    % Mark a number as non-prime
-    if(rem(index,2)==1)
-      raw_bits((index+1)/2) = 0;
-    endif
+  function clear_bits(range)
+    raw_bits((range + 1) / 2) = 0;
   endfunction
 
   factor = 3;
@@ -47,9 +44,8 @@ function count=run_sieve(limit)
 
     % Mark all odd multiples of 'factor' as non-prime
     % Even multiples are already known to be non-prime
-    for num=factor*3:factor*2:limit
-      clear_bit(num);
-    endfor
+
+    clear_bits(factor*3:factor*2:limit);
     
     % Increment 'factor' to the next prime candidate
     factor += 2;
