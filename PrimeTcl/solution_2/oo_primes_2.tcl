@@ -126,7 +126,7 @@ dict set knownPrimeCounts 100000000 5761455
         puts "Passes: $passes, Time: $duration, Avg: $avg (sec/pass), Limit: $limit, Count: $count, Valid: $valid"
         # Following 2 lines are to conform to drag race output format
         puts ""
-        puts "fvbakel_ootcl2;$passes;$duration;1;algorithm=base,faithful=no,bits=32"
+        puts "fvbakel_ootcl2;$passes;$duration;1;algorithm=base,faithful=yes,bits=32"
 
     }
 }

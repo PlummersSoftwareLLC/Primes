@@ -4,6 +4,7 @@ RUN apk add --update tcl
 
 WORKDIR /opt/app
 
-COPY oo_primes.tcl .
+COPY *.tcl ./
+COPY run.sh ./
 
-ENTRYPOINT ["tclsh","oo_primes.tcl" ]
+ENTRYPOINT ["./run.sh" ]
