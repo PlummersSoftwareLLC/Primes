@@ -20,7 +20,7 @@ class BitArray {
     using UT = UnderlyingType;
     UnderlyingType *array;
 
-    inline static constexpr size_t arraySize(size_t size) {
+    inline static size_t arraySize(size_t size) {
         return size/(8*sizeof(UT)) + (size % (8*sizeof(UT)) > 0);
     }
 
