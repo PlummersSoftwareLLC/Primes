@@ -1,4 +1,4 @@
-# Python Prime Sieve Improvements by jackguo
+# Python Prime Sieve Improvements by chunheguo
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
