@@ -181,7 +181,7 @@ final class Sieve(uint _sieveSize)
     private uint countPrimes() @nogc nothrow pure
     {
         import core.bitop : popcnt;
-        import std.algorithm : map, fold;
+        import std.algorithm : map, sum;
 
         // D has a concept called `ranges`, which are (usually) lightweight structs
         // which provide a .popFront(), .front(), and .empty() functions.
@@ -199,8 +199,8 @@ final class Sieve(uint _sieveSize)
         //  Evaluate popcnt(n) where `n` is the next byte.
         //  Find the sum of all the `popcnt(n)` evaluations.
         return this._bits[0..$]
-                    .map!(num => popcnt(num & 0b1010_1010)) // We only care about odd numbers, so we mask out any bits that are even.
-                    .fold!((a, b) => a + b)(0);
+                    .map!popcnt
+                    .sum;
     }
 }
 
