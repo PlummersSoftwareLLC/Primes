@@ -15,7 +15,8 @@ unittest
 }
 
 // Final can't be inherited from. This also means that the functions of a final class are non-virtual.
-final class Sieve
+// The parenthesis indicates that this is a templated class.
+final class Sieve(uint _sieveSize)
 {
     // D allows nesting imports into _any_ scope, in order to avoid symbol pollution, and
     // it also allows D to write more "file-portable" code.
@@ -28,9 +29,10 @@ final class Sieve
         // Similar to C#'s `readonly`, we can initialise otherwise-const data inside of the ctor.
         //
         // `uint[uint]` is an associative array in D. It has the form `VALUE_TYPE[KEY_TYPE]`.
-        ubyte[]          _bits;
-        const uint       _sieveSize;
-        const uint[uint] _historicalData;
+        //
+        // Because _sieveSize is a templated value, we know what it is at compile-time, so can stack allocate here.
+        ubyte[_sieveSize] _bits = ubyte.max;
+        const uint[uint]  _historicalData;
     }
 
     // You can of course also do the C/C++ style to avoid a level of indentation.
@@ -40,16 +42,8 @@ final class Sieve
     // This is a constructor in D.
     // `nothrow` of course means that this function doesn't throw exceptions, which allows the compiler
     // to remove any exception handling code it'd otherwise generate.
-    this(uint size) nothrow
+    this() nothrow
     {
-        // We can also selectively specify which symbols from a package we want to import.
-        // It's good practice to do so (less symbol bloat), but it's also super tedious.
-        import std.range : iota;
-
-        this._sieveSize = size;
-        this._bits      = new ubyte[size.alignTo!8 / 8]; // Initialise with enough bits to get us by.
-        this._bits[]    = ubyte.max; // VAR[] = VALUE means "set every element in VAR to VALUE". A cleaner memset essentially.
-
         // D allows for underscores within a number to provide clarity.
         this._historicalData = 
         [
@@ -67,6 +61,8 @@ final class Sieve
     // Members are public by default.
     void runSieve()
     {
+        // We can also selectively specify which symbols from a package we want to import.
+        // It's good practice to do so (less symbol bloat), but it's also super tedious.
         import std.algorithm : each;
         import std.range     : iota;
         import std.conv      : to;
@@ -84,7 +80,7 @@ final class Sieve
         //  `.to!int` and `.to!int()` are exactly the same.
 
         auto factor = 3;
-        const q = sqrt(this._sieveSize.to!float).round.to!uint;
+        const q = sqrt(_sieveSize.to!float).round.to!uint;
 
         while(factor < q)
         {
@@ -101,7 +97,7 @@ final class Sieve
             // This is a more functional style of for each.
             // Note that we create and pass a delegate/lambda into a _template_ parameter.
             // This can allow D compilers to perform optimisations, including inlining.
-            iota(factor * 3, this._sieveSize, factor * 2)
+            iota(factor * 3, _sieveSize, factor * 2)
                 .each!(num => this.clearBit(num));
 
             factor += 2;
@@ -122,7 +118,7 @@ final class Sieve
             output.put("2, ");
 
         auto count = 1;
-        foreach(num; 3..this._sieveSize)
+        foreach(num; 3.._sieveSize)
         {
             if(this.getBit(num))
             {
@@ -147,7 +143,7 @@ final class Sieve
             passes,
             duration,
             duration / passes,
-            this._sieveSize,
+            _sieveSize,
             count,
             this.validateResults()
         );
@@ -163,7 +159,7 @@ final class Sieve
     private bool validateResults() pure
     {
         // .get(key, default_value)
-        return this._historicalData.get(this._sieveSize, uint.max) == this.countPrimes();
+        return this._historicalData.get(_sieveSize, uint.max) == this.countPrimes();
     }
 
     private bool getBit(uint index) @nogc nothrow
@@ -219,14 +215,14 @@ void main()
     // One interesting usage of templates: Specifying a unit to act on.
     while(timer.peek.total!"seconds" < MAX_SECONDS)
     {
-        auto sieve = new Sieve(PRIME_COUNT);
+        auto sieve = new Sieve!PRIME_COUNT;
         sieve.runSieve();
         passes++;
     }
 
     const elapsedTime = timer.peek();
     
-    auto s = new Sieve(PRIME_COUNT);
+    auto s = new Sieve!PRIME_COUNT;
     s.runSieve();
     s.printResults(false, elapsedTime, passes);
 }
