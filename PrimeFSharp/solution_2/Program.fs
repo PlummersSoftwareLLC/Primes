@@ -55,7 +55,7 @@ let printResults showResults duration passes sieveSize bitArray =
     printfn $"Passes: %d{passes}, Time: %f{duration}, Avg: %f{duration / (float passes)}, Limit: %d{sieveSize}, Count: %d{countPrimes primes}, Valid: %b{isValid}\n"
 
     if isValid then
-        printfn $"dmannock_fsharp_port;%d{passes};%f{duration};1;algorithm=base,faithful=yes,bits=1"
+        printfn $"dmannock_fsharp_port;%d{passes};%f{duration};1;algorithm=base,faithful=yes"
     else
         printfn "ERROR: invalid results"
 
