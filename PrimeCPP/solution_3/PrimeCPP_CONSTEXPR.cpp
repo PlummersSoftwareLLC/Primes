@@ -88,19 +88,11 @@ void printResults(const Sieve &sieve, bool showResults, double duration, int pas
     printf("flo80_constexpr;%d;%f;%d;algorithm=base,faithful=no,bits=1\n", passes, duration, threads);
 }
 
-int main(int argc, char **argv)
+void run(uint64_t upperLimit, const Sieve &checkSieve, int numberOfThreads = 1, int runtimeSeconds = 5)
 {
-    uint64_t upperLimit = 1000000L;
-    constexpr int runtimeSeconds = 5;
-
-    if (argc > 1)
-    {
-        upperLimit = std::max((uint64_t)atoll(argv[argc - 1]), (uint64_t)1);
-        assert(upperLimit < Sieve::maxSize);
-    }
 
     unsigned int passes = 0;
-    const auto numberOfThreads = thread::hardware_concurrency();
+
     printf("Computing primes to %llu on %d thread%s for %d second%s.\n", upperLimit,
            numberOfThreads,
            numberOfThreads == 1 ? "" : "s",
@@ -126,13 +118,29 @@ int main(int argc, char **argv)
         passes += numberOfThreads;
     }
 
-    auto tEnd = steady_clock::now() - tStart;
-    auto duration = duration_cast<microseconds>(tEnd).count() / 1000000.0;
+    const auto tEnd = steady_clock::now();
+    printResults(checkSieve, false, duration_cast<microseconds>(tEnd - tStart).count() / 1000000.0, passes, numberOfThreads);
+}
+
+int main(int argc, char **argv)
+{
+    uint64_t upperLimit = 1'000'000L;
+    constexpr int runtimeSeconds = 5;
+
+    if (argc > 1)
+    {
+        upperLimit = std::max((uint64_t)atoll(argv[argc - 1]), (uint64_t)1);
+        assert(upperLimit < Sieve::maxSize);
+    }
 
     auto checkSieve = Sieve(upperLimit);
     checkSieve.runSieve();
-    auto result = validateResults(checkSieve) ? checkSieve.count() : 0;
+    const auto result = validateResults(checkSieve) ? checkSieve.count() : 0;
 
-    printResults(checkSieve, false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000.0, passes, numberOfThreads);
+    const auto numberOfThreads = thread::hardware_concurrency();
+    thread::hardware_concurrency();
+    run(upperLimit, checkSieve, numberOfThreads, runtimeSeconds);
+    run(upperLimit, checkSieve, 1, runtimeSeconds);
+
     return result;
 }
