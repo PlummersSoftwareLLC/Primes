@@ -1,13 +1,3 @@
-function mark(primes, num)
-	primes[bit.rshift(num, 6)] = bit.bor(
-		primes[bit.rshift(num, 6)],
-		bit.band(
-			bit.lshift(1, bit.band(bit.rshift(num, 1), 31)),
-			-bit.band(num, 1)
-		)
-	)
-end
-
 function get(primes, num)
 	return bit.band(
 		primes[bit.rshift(num, 6)],
@@ -19,8 +9,14 @@ local function ruleOut(primes, max)
 	local sqrtMax = math.ceil(math.sqrt(max))
 	local prime = 3
 	while prime <= sqrtMax do
-		for i = prime^2, max, prime do
-			mark(primes, i)
+		for num = prime^2, max, prime do
+			primes[bit.rshift(num, 6)] = bit.bor(
+				primes[bit.rshift(num, 6)],
+				bit.band(
+					bit.lshift(1, bit.band(bit.rshift(num, 1), 31)),
+					-bit.band(num, 1)
+				)
+			)
 		end
 		repeat
 			prime = prime + 2
@@ -56,4 +52,4 @@ repeat
 	passes = passes + 1
 	endTime = os.time()
 until endTime >= startTime+5
-print(string.format("Passes: %d, Time: %.6f, Avg: %.6f, Limit: %d, Count: %d, Valid: %s", passes, endTime-startTime, (endTime-startTime)/passes, limit, realNum, realNum == checkNum and "true" or "false"))
+print(string.format("ben1jen_luajit1;%d;%.6f;1;algorithm=base,faithful=no,bits=1", passes, os.time()-startTime))
