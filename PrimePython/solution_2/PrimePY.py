@@ -46,7 +46,7 @@ class PrimeSieve:
         # but works much faster than "x**.5" in Pypy
         q = sqrt(self._size) / 2
         bitslen = len(self._bits)
-        q_int = int(ceil(q))
+        q_int = ceil(q)
 
         for factor in range(1, q_int):
             factor = self._bits.index(b"\x01", factor)
