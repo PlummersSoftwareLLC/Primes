@@ -25,31 +25,32 @@ local function ruleOut(primes, max)
 end
 
 local function getPrimes(max)
-	local buf = {}
+	local buf = {max=max}
 	for i = 0, max/64 do
 		buf[i] = 0
 	end
 
 	ruleOut(buf, max)
-
-	local primeCount = 0
-	for i = 1, max, 2 do
-		if get(buf, i) then
-			primeCount = primeCount + 1
-		end
-	end
-	return primeCount
+	return buf
 end
 
 local limit, passes = 1000000, 0
-local checkNum, realNum = 78498, 0
+local checkNum, realBuf = 78498, {}
 
 -- Lua doesn't have a call to get time more accurate than 1 second, so here I wait until the beginning of a second to give as accurate results as possible.
 local startTime, endTime = os.time()+1
 while os.time() ~= startTime do end
 repeat
-	realNum = getPrimes(limit)
+	realBuf = getPrimes(limit)
 	passes = passes + 1
 	endTime = os.time()
 until endTime >= startTime+5
-print(string.format("ben1jen_luajit1;%d;%.6f;1;algorithm=base,faithful=no,bits=1", passes, os.time()-startTime))
+
+local realNum = 0
+for i = 1, realBuf.max, 2 do
+	if get(realBuf, i) then
+		realNum = realNum + 1
+	end
+end
+assert(realNum == checkNum, "realNum: " .. tostring(realNum))
+print(string.format("ben1jen_luajit1;%d;%.6f;1;algorithm=base,faithful=no,bits=1", passes, endTime-startTime))
