@@ -26,7 +26,6 @@ dict set knownPrimeCounts 100000000 5761455
 ::oo::class create prime_sieve {
     variable limit
     variable bit_array
-    variable size
     
     constructor {limit_input} {
         variable limit
@@ -63,7 +62,6 @@ dict set knownPrimeCounts 100000000 5761455
     method run_sieve {} {
         variable limit
         variable bit_array
-        variable size
 
         set maxroot [expr {round(floor(sqrt($limit)))}]
        
