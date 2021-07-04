@@ -6,7 +6,8 @@ Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 """
 
 from math import sqrt, ceil
-    
+
+
 class PrimeSieve:
 
     """This is the main PrimeSieve class. Call it with the number you wish as
@@ -46,9 +47,9 @@ class PrimeSieve:
         # but works much faster than "x**.5" in Pypy
         q = sqrt(self._size) / 2
         bitslen = len(self._bits)
-        q_int = ceil(q)
-
-        for factor in range(1, q_int):
+        
+        factor = 1
+        while factor <= q:
             factor = self._bits.index(b"\x01", factor)
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
@@ -56,6 +57,7 @@ class PrimeSieve:
             step  = factor * 2 + 1
             size  = bitslen - start
             self._bits[start :: step] = b"\x00" * (size // step + bool(size % step))  # bool is (a subclass of) int in python
+            factor +=1
 
     def count_primes(self):
 
@@ -111,7 +113,7 @@ if __name__ == "__main__":
 
     parser = ArgumentParser(description="Python Prime Sieve")
     parser.add_argument("--limit", "-l", help="Upper limit for calculating prime numbers", type=int, default=1_000_000)
-    parser.add_argument("--time", "-t", help="Time limit", type=float, default=5)
+    parser.add_argument("--time", "-t", help="Time limit", type=float, default=10)
     parser.add_argument("--show", "-s", help="Print found prime numbers", action="store_true")
 
     args = parser.parse_args()
