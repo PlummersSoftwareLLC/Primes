@@ -33,21 +33,26 @@ class PrimeSieve:
         """Look up our count of primes in the historical data (if we have it)
         to see if it matches"""
 
-        if self._size in self.prime_counts:                              # the data, and (b) our count matches. Since it will return
-            return self.prime_counts[self._size] == self.count_primes()  # false for an unknown upper_limit, can't assume false == bad
-        return False
+        return self.prime_counts.get(self._size, -1) == self.count_primes()
+
+        # if self._size in self.prime_counts:                              # the data, and (b) our count matches. Since it will return
+        #     return self.prime_counts[self._size] == self.count_primes()  # false for an unknown upper_limit, can't assume false == bad
+        # return False
 
     def run_sieve(self):
 
         """Calculate the primes up to the specified limit"""
 
-        factor = 1
+        # factor = 1
         # sqrt doesn't seem to make any difference in CPython,
         # but works much faster than "x**.5" in Pypy
         q = sqrt(self._size) / 2
         bitslen = len(self._bits)
+        # q_int = int(q)
 
-        while factor <= q:
+        for factor in range(1, self._size):
+            if factor >= q:
+                break
             factor = self._bits.index(b"\x01", factor)
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
@@ -57,14 +62,17 @@ class PrimeSieve:
             size  = bitslen - start
             self._bits[start :: step] = b"\x00" * (size // step + bool(size % step))  # bool is (a subclass of) int in python
 
-            factor += 1
+            # factor += 1
 
     def count_primes(self):
 
         """Return the count of bits that are still set in the sieve.
         Assumes you've already called run_sieve, of course!"""
+        if self._size > 1:
+            return self._bits.count(b"\x01") 
+        return 0
 
-        return self._bits.count(b"\x01") if self._size > 1 else 0
+        
 
     def get_primes(self):
 
@@ -75,9 +83,13 @@ class PrimeSieve:
             yield 2  # Since we auto-filter evens, we have to special case the number 2 which is prime
         if self._size > 2:
             num = 1
-            while num > 0:
+            # while num > 0:
+            for x in range(self._size):
+                if num <= 0:
+                    break
                 yield num * 2 + 1
                 num = self._bits.find(1, num + 1)
+                
 
     def print_results(self, show_results, duration, passes):
 
@@ -85,6 +97,7 @@ class PrimeSieve:
         depending on what you ask for)"""
 
         count = 0
+        # count = len(tuple(self.get_primes()))
         for num in self.get_primes():  # Count (and optionally dump) the primes that were found below the limit
             count += 1
             if show_results:
@@ -95,8 +108,8 @@ class PrimeSieve:
         print("Passes: %s, Time: %s, Avg: %s, Limit: %s, Count: %s, Valid: %s" % (passes, duration, duration/passes, self._size, count, self.validate_results()))
 
         # Following 2 lines added by rbergen to conform to drag race output format
-        print();
-        print("ssovest; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
+        print()
+        print("ssovest; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration))
 
 
 # MAIN Entry
