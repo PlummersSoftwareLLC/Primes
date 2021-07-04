@@ -64,4 +64,4 @@
       (print (list "Passes:" passes "Time:" duration "Avg" avg "Count" (count-primes result)) *error-output*)
       (terpri *error-output*)
   
-      (format t "mayerrobert-cl;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration))))
+      (format t "mayerrobert-cl;~d;~f;1;algorithm=base,faithful=no,bits=1~%" passes duration))))
