@@ -145,7 +145,7 @@ fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, threads: us
     const stdout = std.io.getStdOut().writer();
     const algo = if (wheel) "wheel" else "base";
 
-    try stdout.print("{s};{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{
+    try stdout.print("{s};{};{d:.5};{};faithful=no,algorithm={s},bits={}\n", .{
         backing, passes, elapsed, threads, algo, bits
     });
 }
