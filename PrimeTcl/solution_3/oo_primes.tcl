@@ -7,7 +7,6 @@
 #
 # Based on:
 # - PrimeCPP.cpp : Dave's Garage Prime Sieve in C++
-# - Python Prime Sieve: recuces the bit array size by using it only for the odd numbers
 
 set time_limit 5
 set limit 1000000
@@ -43,12 +42,10 @@ dict set knownPrimeCounts 100000000 5761455
     }
 
     #
-    # Convert an array of index numbers to prime numbers
+    # Convert the bit_array to prime numbers
     method bits_to_primes {} {
         variable bit_array
-
         set res {}
-        set pos 1
 
         lappend res 2
         set i 0    
