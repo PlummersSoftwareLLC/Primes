@@ -3,6 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 A faithful yet more idiomatic and memory efficient (bits 1) implementation than solution_1, which appears to be a very direct translation of the original Python code.
@@ -38,7 +39,9 @@ Windows 10 Build 19041 | i5-7600K @ 3.80 GHz
 
 ```
 <command> dub run -b release --compiler=ldc2
-<stderr>  Passes: 5451, Time: 5 secs, 165 ╬╝s, and 9 hnsecs, Avg: 917 ╬╝s and 2 hnsecs, Limit: 1000000, Count: 78498, Valid: false
+<stderr>  Passes: 6936, Time: 5 secs, 1 ms, 505 ╬╝s, and 9 hnsecs, Avg: 721 ╬╝s, Limit: 1000000, Count: 78498, Valid: false
+<stderr>  Passes: 17101, Time: 5 secs, 169 ╬╝s, and 3 hnsecs, Avg: 292 ╬╝s and 3 hnsecs, Limit: 1000000, Count: 78498, Valid: false
 
-BradleyChatha;5451;5.00017;1;algorithm=base,faithful=yes,bits=1
+BradleyChatha;6936;5.00151;1;algorithm=base,faithful=yes,bits=1
+BradleyChatha-Multi;17101;5.00017;1;algorithm=base,faithful=yes,bits=1
 ```

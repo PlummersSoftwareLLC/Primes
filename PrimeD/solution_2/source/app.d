@@ -104,7 +104,7 @@ final class Sieve(uint _sieveSize)
         }
     }
 
-    void printResults(bool showResults, Duration duration, uint passes) @trusted // `stderr` is unsafe apparently
+    void printResults(string tag, string attribs, bool showResults, Duration duration, uint passes) @trusted // `stderr` is unsafe apparently
     {
         import std.array  : Appender;
         import std.conv   : to;
@@ -148,10 +148,12 @@ final class Sieve(uint _sieveSize)
             this.validateResults()
         );
 
-        writefln!"BradleyChatha;%s;%s;1;algorithm=base,faithful=yes,bits=1"
+        writefln!"%s;%s;%s;1;%s"
         (
+            tag,
             passes,
-            duration.total!"nsecs".to!double / 1e+9 // Duration works in `long`, but we want a `double`, so this is just a conversion.
+            duration.total!"nsecs".to!double / 1e+9, // Duration works in `long`, but we want a `double`, so this is just a conversion.
+            attribs
         );
     }
 
@@ -203,6 +205,12 @@ final class Sieve(uint _sieveSize)
 
 void main()
 {
+    runSingleThreaded();
+    runMultiThreaded();
+}
+
+void runSingleThreaded()
+{
     import std.datetime.stopwatch : StopWatch, AutoStart;
 
     // `enum` here means `value that only exists at compile-time, and does not take up stack/memory space`
@@ -224,5 +232,35 @@ void main()
     
     auto s = new Sieve!PRIME_COUNT;
     s.runSieve();
-    s.printResults(false, elapsedTime, passes);
+    s.printResults("BradleyChatha", "algorithm=base,faithful=yes,bits=1,parallel=no", false, elapsedTime, passes);
+}
+
+void runMultiThreaded()
+{
+    import core.atomic : atomicOp;
+    import std.datetime.stopwatch : StopWatch, AutoStart;
+    import std.range : iota;
+    import std.parallelism : totalCPUs, parallel;
+
+    enum PRIME_COUNT = 1_000_000;
+    enum MAX_SECONDS = 5;
+
+    shared passes = 1u; // `shared` is used to mark data that is used between multiple threads.
+    auto timer = StopWatch(AutoStart.yes);
+
+    while(timer.peek.total!"seconds" < MAX_SECONDS)
+    {
+        foreach(i; iota(0, totalCPUs).parallel)
+        {
+            scope sieve = new Sieve!PRIME_COUNT;
+            sieve.runSieve();
+            atomicOp!"+="(passes, 1);
+        }
+    }
+
+    const elapsedTime = timer.peek();
+    
+    auto s = new Sieve!PRIME_COUNT;
+    s.runSieve();
+    s.printResults("BradleyChatha-Multi", "algorithm=base,faithful=yes,bits=1,parallel=yes" false, elapsedTime, passes);
 }
