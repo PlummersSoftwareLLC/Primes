@@ -49,7 +49,7 @@ Below is an example of the output on my machine, running with Docker.
 ```bash
 Passes: 408, Time: 5.001, Avg: 0.012257352941176471 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-fvbakel_Kotlin_js;408;5.001;1;algorithm=base,faithful=yes,bits=1
+fvbakel_Kotlin_js;408;5.001;1;algorithm=base,faithful=yes
 ```
 
 These results are with the following conditions:
