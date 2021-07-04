@@ -30,22 +30,22 @@ The program doesn't have a convenient command-line interface.
 
 Bit-array version, gforth 0.7.3:
 
-    tjol-1bit;175 ;5.020695 ;1;algorithm=base,faithful=yes
+    tjol-1bit;175 ;5.020695 ;1;algorithm=base,faithful=no
 
 Byte-array version, gforth 0.7.3:
 
-    tjol-8bit;284 ;5.00106 ;1;algorithm=base,faithful=yes
+    tjol-8bit;284 ;5.00106 ;1;algorithm=base,faithful=no
 
 Bit-array version, gforth 0.7.9_20210701:
     
-    tjol-1bit;426 ;5.000673 ;1;algorithm=base,faithful=yes
+    tjol-1bit;426 ;5.000673 ;1;algorithm=base,faithful=no
 
 Byte-array version, gforth 0.7.9_20210701:
     
-    tjol-8bit;481 ;5.008582 ;1;algorithm=base,faithful=yes
+    tjol-8bit;481 ;5.008582 ;1;algorithm=base,faithful=no
 
 Bit-array version in docker, gforth 0.7.9_20190627:
 
-    tjol-1bit;259 ;5.000519 ;1;algorithm=base,faithful=yes
+    tjol-1bit;259 ;5.000519 ;1;algorithm=base,faithful=no
 
 This is on a Ryzen 5 2600 running OpenSUSE Tumbleweed.
