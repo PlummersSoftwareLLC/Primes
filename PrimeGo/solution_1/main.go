@@ -98,10 +98,10 @@ func main() {
 	startClock := time.Now()
 
 	initBitArray := make([]bool, 1e6)
-	for i := range initBitArray {
-		initBitArray[i] = true
-	}
 	for {
+		for i := range initBitArray {
+			initBitArray[i] = true
+		}
 		sieve := Sieve{bitArray: initBitArray, sieveSize: 1e6}
 		sieve.runSieve()
 		passes++
