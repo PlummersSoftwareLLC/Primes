@@ -54,13 +54,14 @@
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5))))
 
-  (do () ((>= (get-internal-real-time) end))
-    (run-sieve 1000000)
-    (incf passes))
-
-  (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
-         (avg (/ duration passes)))
-    (print (list "Passes:" passes "Time:" duration "Avg" avg "Count" (count-primes (run-sieve 1000000))) *error-output*)
-    (terpri *error-output*)
-
-    (format t "mayerrobert-cl;~d;~f;1;algorithm=base,faithful=no,bits=1~%" passes duration)))
+  (prog (result)
+    (do () ((>= (get-internal-real-time) end))
+      (setq result (run-sieve 1000000))
+      (incf passes))
+  
+    (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
+           (avg (/ duration passes)))
+      (print (list "Passes:" passes "Time:" duration "Avg" avg "Count" (count-primes result)) *error-output*)
+      (terpri *error-output*)
+  
+      (format t "mayerrobert-cl;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration))))
