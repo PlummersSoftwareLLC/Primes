@@ -1,0 +1,8 @@
+*~
+*.aux
+*.dvi
+*.pdf
+*.log
+*.fls
+*.synctex*
+result.txt
