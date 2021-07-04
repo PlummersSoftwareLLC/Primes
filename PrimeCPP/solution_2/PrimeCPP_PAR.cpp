@@ -11,7 +11,6 @@
 #include <cmath>
 #include <vector>
 #include <thread>
-#include <memory>
 
 using namespace std;
 using namespace std::chrono;
@@ -242,7 +241,7 @@ int main(int argc, char **argv)
 
     if (bOneshot)
     {
-        std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve();
+        prime_sieve(llUpperLimit).runSieve();
     }
     else
     {
@@ -250,14 +249,12 @@ int main(int argc, char **argv)
         {
             vector<thread> threadPool;
             
-            // We create N threads and give them each the job of runing the 'runSieve' method on a sieve
-            // that we create on the heap, rather than the stack, due to their possible enormity.  By using
-            // a unique_ptr it will automatically free resources as soon as its torn down.
+            // We create N threads and give them each the job of runing the 'runSieve' method on a sieve.
 
             for (unsigned int i = 0; i < cThreads; i++)
                 threadPool.push_back(thread([llUpperLimit] 
                 { 
-                    std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve(); 
+                    prime_sieve(llUpperLimit).runSieve(); 
                 }));
 
             // Now we wait for all of the threads to finish before we repeat
