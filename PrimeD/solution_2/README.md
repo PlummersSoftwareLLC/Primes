@@ -43,5 +43,5 @@ Windows 10 Build 19041 | i5-7600K @ 3.80 GHz
 <stderr>  Passes: 17101, Time: 5 secs, 169 ╬╝s, and 3 hnsecs, Avg: 292 ╬╝s and 3 hnsecs, Limit: 1000000, Count: 78498, Valid: false
 
 BradleyChatha;6936;5.00151;1;algorithm=base,faithful=yes,bits=1
-BradleyChatha-Multi;17101;5.00017;1;algorithm=base,faithful=yes,bits=1
+BradleyChatha-Multi;17101;5.00017;4;algorithm=base,faithful=yes,bits=1
 ```

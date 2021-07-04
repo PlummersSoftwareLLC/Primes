@@ -104,7 +104,7 @@ final class Sieve(uint _sieveSize)
         }
     }
 
-    void printResults(string tag, string attribs, bool showResults, Duration duration, uint passes) @trusted // `stderr` is unsafe apparently
+    void printResults(string tag, string attribs, uint threadCount, bool showResults, Duration duration, uint passes) @trusted // `stderr` is unsafe apparently
     {
         import std.array  : Appender;
         import std.conv   : to;
@@ -148,11 +148,12 @@ final class Sieve(uint _sieveSize)
             this.validateResults()
         );
 
-        writefln!"%s;%s;%s;1;%s"
+        writefln!"%s;%s;%s;%s;%s"
         (
             tag,
             passes,
             duration.total!"nsecs".to!double / 1e+9, // Duration works in `long`, but we want a `double`, so this is just a conversion.
+            threadCount,
             attribs
         );
     }
@@ -232,7 +233,7 @@ void runSingleThreaded()
     
     auto s = new Sieve!PRIME_COUNT;
     s.runSieve();
-    s.printResults("BradleyChatha", "algorithm=base,faithful=yes,bits=1,parallel=no", false, elapsedTime, passes);
+    s.printResults("BradleyChatha", "algorithm=base,faithful=yes,bits=1,parallel=no", 1, false, elapsedTime, passes);
 }
 
 void runMultiThreaded()
@@ -266,5 +267,12 @@ void runMultiThreaded()
     
     auto s = new Sieve!PRIME_COUNT;
     s.runSieve();
-    s.printResults("BradleyChatha-Multi", "algorithm=base,faithful=yes,bits=1,parallel=yes", false, elapsedTime, passes);
+    s.printResults(
+        "BradleyChatha-Multi", 
+        "algorithm=base,faithful=yes,bits=1,parallel=yes", 
+        totalCPUs, 
+        false, 
+        elapsedTime, 
+        passes
+    );
 }
