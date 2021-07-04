@@ -13,10 +13,20 @@ import qualified System.Clock as Clock
 
 import qualified BitSet
 
-runBenchmark :: Int -> Clock.TimeSpec -> (Int -> IO SieveResult) -> IO ()
-runBenchmark sieveSize durationCutoff sieve = do
-  (passes, duration, result) <- benchmark durationCutoff (sieve sieveSize)
-  showResults passes duration result
+data Benchmark = Benchmark
+  { benchmarkLabel :: String
+  , benchmarkCutoff :: Clock.TimeSpec
+  , benchmarkRun :: IO SieveResult
+  , benchmarkThreads :: Int
+  , benchmarkFaithful :: Bool
+  , benchmarkAlgorithm :: String
+  , benchmarkBits :: Int
+  }
+
+runBenchmark :: Benchmark -> IO ()
+runBenchmark bench = do
+  (passes, duration, result) <- benchmark (benchmarkCutoff bench) (benchmarkRun bench)
+  showResults bench passes duration result
 
 -- | Count how many times the action can be run in the given duration,
 -- and return the result of the last run.
@@ -33,16 +43,16 @@ benchmark duration action = do
         then loop (counter + 1) start end
         else pure (counter + 1, now - start, result)
 
-showResults :: Int -> Clock.TimeSpec -> SieveResult -> IO ()
-showResults passes duration result = do
-  printf "Passes: %d, Time: %.6f, Avg: %.6f, Limit: %d, Count1: %d, Count2: %d, Valid: %s\n"
+showResults :: Benchmark -> Int -> Clock.TimeSpec -> SieveResult -> IO ()
+showResults bench passes duration result = do
+  printf "%s;%d;%.6f;%d;algorithm=%s,bits=%d,faithful=%s\n"
+    (benchmarkLabel bench)
     passes
     durationSeconds
-    (durationSeconds / realToFrac passes)
-    (sieveResultSize result)
-    (sieveResultNumPrimes result)
-    (length $ sieveResultPrimes result)
-    (show $ isValid result)
+    (benchmarkThreads bench)
+    (benchmarkAlgorithm bench)
+    (benchmarkBits bench)
+    (if benchmarkFaithful bench then "yes" else "no")
   where
     durationSeconds = realToFrac (Clock.toNanoSecs duration) / 1_000_000_000 :: Double
 
