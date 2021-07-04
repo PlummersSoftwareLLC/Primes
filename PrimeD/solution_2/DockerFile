@@ -1,0 +1,5 @@
+FROM Alpine:3.31
+RUN curl -fsS https://dlang.org/install.sh | bash -s ldc
+WORKDIR /app
+ADD . /app
+ENTRYPOINT [ "dub build", "-b release", "--compiler ldc2" ]
