@@ -79,7 +79,7 @@ let main _argv =
   if sieve.CountPrimes <> referenceResults.[sieveSize] then
     printfn "WARNING: result is incorrect!"
 
-  printfn $"rbergen;{ passCount };{ duration };1;algorithm=base,faithful=yes"
+  printfn $"rbergen;{ passCount };{ duration };1;algorithm=base,faithful=yes,bits=1"
 
   0
 
