@@ -77,10 +77,11 @@ dict set knownPrimeCounts 100000000 5761455
 
             # Start at the square root of factor
             set start [expr $num * $num]
+            set step [expr $num * 2]
             set i $start
             while {$i<=$limit} {
                 lset bit_array $i 0
-                incr i $num
+                incr i $step
             }
 
             incr num 2
