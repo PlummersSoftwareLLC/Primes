@@ -215,7 +215,7 @@ void main()
     // One interesting usage of templates: Specifying a unit to act on.
     while(timer.peek.total!"seconds" < MAX_SECONDS)
     {
-        auto sieve = new Sieve!PRIME_COUNT;
+        scope sieve = new Sieve!PRIME_COUNT;
         sieve.runSieve();
         passes++;
     }
