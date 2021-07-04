@@ -46,7 +46,7 @@ check-env: check-docker-works check-node-works
 
 .PHONY: check-node-works
 check-node-works:
-	@# Check it Node.js is installed. Needed to generate report.
+	@# Check if Node.js is installed. Needed to generate report.
 	@npm --version >/dev/null 2>&1 || (echo 'Please install Node.js. https://nodejs.org/en/download' && exit 1)
 
 .PHONY: check-docker-works
