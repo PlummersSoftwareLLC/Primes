@@ -10,53 +10,65 @@
 #include <cstring>
 #include <cmath>
 #include <vector>
+#include <limits>
+#include <cmath>
 
 using namespace std;
 using namespace std::chrono;
 
-const std::map<const long long, const int> resultsDictionary = 
+static const std::map<const long long, const int> resultsDictionary = 
 {
-      {          10LL, 4         },               // Historical data for validating our results - the number of primes
-      {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
-      {        1000LL, 168       },
-      {       10000LL, 1229      },
-      {      100000LL, 9592      },
-      {     1000000LL, 78498     },
-      {    10000000LL, 664579    },
-      {   100000000LL, 5761455   },
-      {  1000000000LL, 50847534  },
-      { 10000000000LL, 455052511 },
+	{          10LL, 4         },               // Historical data for validating our results - the number of primes
+	{         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
+	{        1000LL, 168       },
+	{       10000LL, 1229      },
+	{      100000LL, 9592      },
+	{     1000000LL, 78498     },
+	{    10000000LL, 664579    },
+	{   100000000LL, 5761455   },
+	{  1000000000LL, 50847534  },
+	{ 10000000000LL, 455052511 },
 
 };
 
-template<long s>
-class bitset2 {
-	static constexpr int half_size = s / 2;
- private:
-	bitset<half_size> odds;
-	//bitset<half_size> evens;
+static constexpr size_t _log2(size_t n) { return ( (n<2) ? 0 : 1+_log2(n/2)); }
+static constexpr bool is_powerof2(size_t v) { return v && ((v & (v - 1)) == 0); }	
+
+class dynamic_bitset {
+	static constexpr size_t bucket_size = 32;
+	static_assert(is_powerof2(bucket_size));
+	std::vector<std::bitset<bucket_size>> data;
+		
+	static constexpr size_t mod = bucket_size - 1;
+	static constexpr size_t div = _log2(bucket_size);	
  public:
-	inline auto operator[](std::size_t pos) {
-		//assert(pos & 1);
-		return odds[(pos >> 1)];
+	dynamic_bitset(unsigned long n, bool): data((n >> div)+1, 0) {}
+	~dynamic_bitset() = default; 
+	
+	void clear(size_t position) noexcept {
+		//size_t position = pos >> 1;
+        size_t block_id = position >> div;
+        size_t offset = position & mod;
+		
+		data[block_id].set(offset, true);
 	}
 	
-	void set() {
-		odds.set();
-		//evens.set();
+	bool operator[](size_t position) const noexcept {
+		//size_t position = pos >> 1;
+        size_t block_id = position >> div;
+        size_t offset = position & mod;		
+		
+		return (data[block_id][offset] == 0);
 	}
 };
 
-template<long sieveSize>
 class prime_sieve
 {
   private:
-
-      //long sieveSize = 0;
-      //vector<bool> Bits;
-      bitset2<sieveSize> Bits;
-
-      bool validateResults()
+      size_t sieveSize;
+	  dynamic_bitset Bits;
+	 
+	 bool validateResults()
       {
           auto result = resultsDictionary.find(sieveSize);
           if (resultsDictionary.end() == result)
@@ -66,10 +78,9 @@ class prime_sieve
 
    public:
 
-      prime_sieve() 
-        //: Bits(n, true), sieveSize(n)
+      prime_sieve(long n) 
+        : Bits(n, true), sieveSize(n)
       {
-            Bits.set();
       }
 
       ~prime_sieve()
@@ -78,12 +89,12 @@ class prime_sieve
 
       void runSieve()
       {
-          int factor = 3;
-          int q = (int) sqrt(sieveSize);
+          size_t factor = 3;
+          size_t q = (size_t) sqrt(sieveSize);
 
           while (factor <= q)
           {
-              for (int num = factor; num < sieveSize; num += 2)
+              for (size_t num = factor; num < sieveSize; num += 2)
               {
                   if (Bits[num])
                   {
@@ -91,8 +102,8 @@ class prime_sieve
                       break;
                   }
               }
-              for (int num = factor * factor; num < sieveSize; num += factor * 2)
-                  Bits[num] = false;
+              for (size_t num = factor * factor; num < sieveSize; num += factor * 2)
+                  Bits.clear(num); // = false;
 
               factor += 2;
           }
@@ -148,7 +159,7 @@ int main()
 
     while (true)
     {
-        prime_sieve<1000000L> sieve{};
+        prime_sieve sieve(1000000L);
         sieve.runSieve();
         passes++;
         if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
