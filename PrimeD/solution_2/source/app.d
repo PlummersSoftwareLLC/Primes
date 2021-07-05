@@ -27,7 +27,7 @@ final class Sieve(uint SieveSize)
     private
     {
         // Because SieveSize is a templated value, we know what it is at compile-time, so can stack allocate here.
-        ubyte[SieveSize] _bits = ubyte.max;
+        ubyte[alignTo!8(SieveSize) / 8] _bits = ubyte.max;
     }
 
     // You can of course also do the C/C++ style to avoid a level of indentation.
