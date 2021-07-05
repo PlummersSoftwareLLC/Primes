@@ -11,7 +11,7 @@ Date:      2021-07-04
 'use strict';
 
 var config = {
-    'verbose'          : true,
+    'verbose'          : false,
     'timeLimitSeconds' : 5,
     'sieveSize'        : 1000000,
     'maxShowPrimes'    : 100,
