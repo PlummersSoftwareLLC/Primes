@@ -10,15 +10,15 @@ procedure Main is
    type Prime_Count is array (Natural range <>) of Long_Long_Integer;
 
    function Create_Bit_List (Size : Long_Long_Integer := 0) return Bit_List is
-      Ret : Bit_List (0 .. Size) := (others => True);
+      Ret : constant Bit_List (0 .. Size) := (others => True);
    begin
       return Ret;
    end Create_Bit_List;
 
-   Sieve_Size        : Long_Long_Integer    := 1_000_000;
-   Bits              : Bit_List             := Create_Bit_List (Sieve_Size);
+   Sieve_Size        : constant Long_Long_Integer := 1_000_000;
+   Bits              : Bit_List := Create_Bit_List (Sieve_Size);
    Validate_Map      : Long_Long_Set.Map;
-   Know_Prime_Counts : constant Prime_Count :=
+   Know_Prime_Counts : constant Prime_Count       :=
      (4, 25, 168, 1_229, 9_592, 78_498, 664_579, 5_761_455, 50_847_534,
       455_052_511);
 
@@ -32,10 +32,8 @@ procedure Main is
    end Fill_Validate_Map;
 
    procedure Run_Sieve is
-      use Ada.Numerics.Long_Long_Elementary_Functions;
-
-      Factor : Long_Long_Integer := 3;
-      Q      : Long_Long_Integer :=
+      Factor : Long_Long_Integer          := 3;
+      Q      : constant Long_Long_Integer :=
         Long_Long_Integer
           (Ada.Numerics.Long_Long_Elementary_Functions.Sqrt
              (Long_Long_Float (Sieve_Size)));
@@ -81,7 +79,7 @@ procedure Main is
    is
       count : Long_Long_Integer := 1;
       Num   : Long_Long_Integer := 3;
-      Avg   : Duration          := Dur / Passes;
+      Avg   : constant Duration := Dur / Passes;
    begin
       if Show_Result then
          Put ("2, ");
@@ -102,21 +100,23 @@ procedure Main is
       Put_Line
         ("Passes:" & Passes'Image & ", Time:" & Dur'Image & ", Avg: " &
          Avg'Image & ", Limit :" & Sieve_Size'Image & ", Count1 :" &
-         count'Image & ", Count2:" & Long_Long_Integer'Image(Count_Primes) & ", Valid :" &
-         Boolean'Image(Validate_Results));
+         count'Image & ", Count2:" & Long_Long_Integer'Image (Count_Primes) &
+         ", Valid :" & Boolean'Image (Validate_Results));
 
 -- Following 2 lines added by rbergen to conform to drag race output format
       Put_Line ("");
-      Put_Line ("BoopBeepBoopBeep;" & Passes'Image & ";" & Dur'Image & ";1;algorithm=base,faithful=no");
+      Put_Line
+        ("BoopBeepBoopBeep;" & Passes'Image & ";" & Dur'Image &
+         ";1;algorithm=base,faithful=no");
 
    end Print_Result;
-   Passes     : Integer := 0;
-   Time_Start : Time    := Clock;
-   Time_End   : Time    := Time_Start + Seconds (5);
+   Passes     : Integer       := 0;
+   Time_Start : constant Time := Clock;
+   Time_End   : constant Time := Time_Start + Seconds (5);
 
 begin
    Fill_Validate_Map;
-   while Clock < Time_End  loop
+   while Clock < Time_End loop
 
       Bits := Create_Bit_List (Sieve_Size);
       Run_Sieve;
