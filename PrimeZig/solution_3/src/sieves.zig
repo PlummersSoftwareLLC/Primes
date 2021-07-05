@@ -109,7 +109,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             u32 => 5,
             u16 => 4,
             u8 => 3,
-            else => unreachable
+            else => unreachable,
         };
         const smallint_t = std.meta.Int(.unsigned, bit_shift);
         const bit_mask: T = (1 << bit_shift) - 1;

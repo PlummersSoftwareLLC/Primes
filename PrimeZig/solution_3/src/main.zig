@@ -12,7 +12,6 @@ const ParallelGustafsonRunner = runners.GustafsonRunner;
 const Allocator = @import("alloc.zig").EnvironmentallyFriendlyBlockAllocator;
 
 const SIZE = 1_000_000;
-const expected_result = 78_498;
 
 var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
 
@@ -20,7 +19,7 @@ pub fn main() anyerror!void {
     @setEvalBranchQuota(100000);
 
     const run_for = 5; // Seconds
-    var single_threaded_allocator = Allocator(.{.single_threaded = true}).init(std.heap.page_allocator);
+    var single_threaded_allocator = Allocator(.{ .single_threaded = true }).init(std.heap.page_allocator);
     defer single_threaded_allocator.deinit();
     var multithreaded_allocator = Allocator(.{}).init(std.heap.page_allocator);
     defer multithreaded_allocator.deinit();
@@ -34,12 +33,12 @@ pub fn main() anyerror!void {
     comptime const specs = .{
         .{ SingleThreadedRunner, IntSieve, .{}, false },
         //.{ ParallelAmdahlRunner, IntSieve, .{}, false },
-        .{ ParallelGustafsonRunner, IntSieve, .{}, false },
         //.{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false },
+        .{ ParallelGustafsonRunner, IntSieve, .{}, false },
         .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false },
         .{ SingleThreadedRunner, BitSieve, .{}, false },
-        //.{ ParallelGustafsonRunner, BitSieve, .{}, false },
-        //.{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false },
+        .{ ParallelGustafsonRunner, BitSieve, .{}, false },
+        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false },
         //.{ SingleThreadedRunner, IntSieve, .{}, true },
         //.{ SingleThreadedRunner, BitSieve, .{}, true },
         //.{ ParallelGustafsonRunner, BitSieve, .{}, true },
@@ -95,6 +94,7 @@ fn selected_runs(comptime Runner: type) bool {
         "parallel-amdahl-sieve-u8",
         "parallel-gustafson-sieve-u8",
         "single-bitSieve-u8",
+        "parallel-gustafson-bitSieve-u8",
         "parallel-gustafson-bitSieve-u32",
         "parallel-gustafson-bitSieve-u64",
         "single-sieve-u8-480of2310",
@@ -129,14 +129,14 @@ fn runSieveTest(
     const timer = try time.Timer.start();
     var passes: u64 = 0;
 
-    var runner = try Runner.init(allocator, sieve_size);
+    var runner = try Runner.init(allocator, sieve_size, &passes);
     defer runner.deinit();
 
-    while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
+    while (timer.read() < run_for * time.ns_per_s) {
         try runner.sieveInit();
         defer runner.sieveDeinit();
 
-        runner.run(&passes);
+        runner.run();
     }
 
     const elapsed = timer.read();
@@ -150,7 +150,5 @@ fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, threads: us
     const stdout = std.io.getStdOut().writer();
     const algo = if (wheel) "wheel" else "base";
 
-    try stdout.print("{s};{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{
-        backing, passes, elapsed, threads, algo, bits
-    });
+    try stdout.print("{s};{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{ backing, passes, elapsed, threads, algo, bits });
 }

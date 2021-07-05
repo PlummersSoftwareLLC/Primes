@@ -14,10 +14,10 @@ const PreGenerated = @import("pregen.zig").PreGenerated;
 const allocator = std.testing.allocator;
 
 fn runSieve(comptime Runner: type, field_size: usize, expected_primes: usize, boosted: bool) !u64 {
-    var runner = try Runner.init(allocator, field_size);
+    var passes: u64 = 0;
+    var runner = try Runner.init(allocator, field_size, &passes);
     const initial_count: usize = field_size >> 1;
     defer runner.deinit();
-    var passes: u64 = 0;
 
     try runner.sieveInit();
     defer runner.sieveDeinit();
@@ -26,7 +26,7 @@ fn runSieve(comptime Runner: type, field_size: usize, expected_primes: usize, bo
         try std.testing.expectEqual(initial_count, runner.sieve.primeCount());
     }
 
-    runner.run(&passes);
+    runner.run();
 
     try std.testing.expectEqual(@as(usize, expected_primes), runner.sieve.primeCount());
 

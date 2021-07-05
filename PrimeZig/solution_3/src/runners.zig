@@ -2,6 +2,8 @@ const std = @import("std");
 const Mutex = std.Thread.Mutex.AtomicMutex;
 const Allocator = std.mem.Allocator;
 
+const expected_1M_result = 78_498;
+
 pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
     return struct {
         const Self = @This();
@@ -9,12 +11,14 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         factor: usize = undefined,
         sieve_size: usize = undefined,
         allocator: *Allocator = undefined,
+        passes: *u64 = undefined,
 
         // no special thread-related things to do
-        pub fn init(allocator: *Allocator, sieve_size: usize) !Self {
+        pub fn init(allocator: *Allocator, sieve_size: usize, passes: *u64) !Self {
             return Self{
                 .sieve_size = sieve_size,
                 .allocator = allocator,
+                .passes = passes,
             };
         }
 
@@ -29,9 +33,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
             self.sieve.deinit();
         }
 
-        pub fn reset(self: *Self) void {}
-
-        pub fn run(self: *Self, passes: *u64) void {
+        pub fn run(self: *Self) void {
             @setAlignStack(256);
             const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, self.sieve_size)));
             var factor = self.factor;
@@ -41,17 +43,19 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
             }
 
             if (std.builtin.mode == .Debug) {
-                if (sieve_size == 1_000_000) {
-                    std.debug.assert(self.sieve.primeCount() == count);
+                if (self.sieve_size == 1_000_000) {
+                    std.debug.assert(self.sieve.primeCount() == expected_1M_result);
                 }
             }
 
             // increment the number of passes.
-            passes.* += 1;
+            self.passes.* += 1;
         }
 
         pub const name = "single-" ++ Sieve.name;
-        pub fn threads() !usize { return 1; }
+        pub fn threads() !usize {
+            return 1;
+        }
     };
 }
 
@@ -236,15 +240,16 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
         const Self = @This();
         const field_size = sieve_size >> 1;
 
-        allocator: *Allocator = undefined,
-        passes: *u64 = undefined,
+        allocator: *Allocator,
+        passes: *u64,
+        sieve_size: usize,
         started: bool = false,
         finished: bool = false,
+        // main thread sieve info
         sieve: Sieve = undefined,
-        // the factor for the main loop.
         factor: usize = undefined,
 
-        pub fn init(self: *Self, allocator: *Allocator) !void {
+        pub fn init(allocator: *Allocator, sieve_size: usize, passes: *u64) !Self {
             // set up the global worker pool, by abstracting a slice out of the available slots.
             var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction) - 1;
             worker_pool = worker_slots[0..totalWorkers];
@@ -252,15 +257,11 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             // lock all of the workers before launching.
             init_hold = init_mutex.acquire();
 
-            // create the main thread's sieve and initialize the threadpool
-            var sieve = try Sieve.init(allocator);
-            errdefer sieve.deinit();
-            self.sieve = sieve;
-            self.allocator = allocator;
-
-            for (worker_pool) |*thread_ptr, index| {
-                thread_ptr.* = try std.Thread.spawn(workerLoop, self);
-            }
+            return Self{
+                .allocator = allocator,
+                .passes = passes,
+                .sieve_size = sieve_size,
+            };
         }
 
         pub fn deinit(self: *Self) void {
@@ -270,37 +271,47 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             for (worker_pool) |thread_ptr, index| {
                 thread_ptr.wait();
             }
-            // destroy the main thread's sieve
+        }
+
+        pub fn sieveInit(self: *Self) !void {
+            if (!self.started) {
+                // spawn worker sieves on the first init call.
+                for (worker_pool) |*thread_ptr, index| {
+                    thread_ptr.* = try std.Thread.spawn(workerLoop, self);
+                }
+
+                // unlock the worker pool.
+                self.started = true;
+                init_hold.?.release();
+            }
+
+            // reset the sieve
+            self.sieve = try Sieve.init(self.allocator, self.sieve_size);
+            errdefer sieve.deinit();
+
+            self.factor = self.sieve.reset();
+        }
+
+        pub fn sieveDeinit(self: *Self) void {
             self.sieve.deinit();
         }
 
-        pub fn sieveInit(self: *Self, allocator: *Allocator) !void {}
-        pub fn sieveDeinit(self: *Self) void {}
-
-        pub fn reset() void {}
-
-        pub fn run(self: *Self, passes: *u64) void {
-            if (!self.started) {
-                init_hold.?.release();
-                self.passes = passes;
-                self.started = true;
-                init_hold = null;
-            }
-
-            runSieve(&self.sieve, self.factor);
+        pub fn run(self: *Self) void {
+            runSieve(&self.sieve, self.sieve_size, self.factor);
 
             // increment the number of passes.
-            _ = @atomicRmw(u64, passes, .Add, 1, .Monotonic);
+            _ = @atomicRmw(u64, self.passes, .Add, 1, .Monotonic);
         }
 
         pub fn workerLoop(runner: *Self) void {
             blockOnInit();
-            var sieve = Sieve.init(runner.allocator) catch unreachable;
-            defer sieve.deinit();
 
             while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
+                var sieve = Sieve.init(runner.allocator, runner.sieve_size) catch unreachable;
+                defer sieve.deinit();
+
                 var factor = sieve.reset();
-                runSieve(&sieve, factor);
+                runSieve(&sieve, runner.sieve_size, factor);
 
                 // increment the number of passes.
                 _ = @atomicRmw(u64, runner.passes, .Add, 1, .Monotonic);
@@ -309,9 +320,9 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
 
         // utility functions
 
-        fn runSieve(sieve: *Sieve, starting_factor: usize) void {
+        fn runSieve(sieve: *Sieve, sieve_size: usize, starting_factor: usize) void {
             @setAlignStack(256);
-            comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+            const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
 
             var factor = starting_factor;
             var field = sieve.field;
@@ -322,7 +333,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
 
             if (std.builtin.mode == .Debug) {
                 if (sieve_size == 1_000_000) {
-                    std.debug.assert(self.sieve.primeCount() == count);
+                    std.debug.assert(sieve.primeCount() == expected_1M_result);
                 }
             }
         }

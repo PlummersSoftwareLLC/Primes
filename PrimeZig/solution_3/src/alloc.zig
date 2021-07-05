@@ -198,7 +198,7 @@ test "allocator can allocate and deallocate stuff out of order" {
 }
 
 test "also for the singlethreaded case." {
-    var a = EnvironmentallyFriendlyBlockAllocator(.{.single_threaded = true}).init(backing_allocator);
+    var a = EnvironmentallyFriendlyBlockAllocator(.{ .single_threaded = true }).init(backing_allocator);
     defer a.deinit();
 
     var alloc = &a.allocator;
