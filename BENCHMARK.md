@@ -33,13 +33,11 @@ Take the following steps to run all benchmarks:
 
 1. Make sure you have installed the [required software](#linux-installation-and-prerequisites)
 2. Open a terminal.
-3. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.
-   For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
-4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
-5. `cd Primes`
-6. `make`
-7. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
-8. Once complete a report is written to the terminal, see [example output](#example-output).
+3. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
+4. `cd Primes`
+5. `make`
+6. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
+7. Once complete a report is written to the terminal, see [example output](#example-output).
 
 ### Linux installation and prerequisites
 
@@ -48,7 +46,6 @@ The following software must be installed:
 - /bin/bash
 - make
 - git
-- Node.js
 - Docker
 
 The details for each required software are described below.
@@ -89,18 +86,6 @@ Fedora based distributions:
 sudo dnf git
 ```
 
-#### Node.js for Linux
-
-The benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that are included in many OS-provided package managers are too old. This means that it will generally be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.
-
-Take the following steps to install Node.js on Linux:
-
-1. Navigate to <https://nodejs.org/en/download/>
-2. Download the Linux Binaries, depending on your CPU architecture
-3. Unzip the downloaded file: `tar -xf /path/to/downloaded/file.xz>`
-   For example: `tar -xf ~/Downloads/node-v14.17.0-linux-x64.tar.xz`
-4. The Node.js binaries are now extracted to a directory. This directory is referred to as `/path/to/node` in the run instructions.
-
 #### Docker for Linux
 
 For the installation of Docker first follow the instructions as described in <https://docs.docker.com/engine/install/>.
@@ -127,14 +112,12 @@ The preferred method to run the benchmark is with native Linux. Running the benc
 Take the following steps to run all benchmarks:
 
 1. Make sure you have installed the [required software](#windows-installation-and-prerequisites)
-2. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.
-   For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
-3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
-4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
-5. `cd Primes`
-6. `make`
-7. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
-8. Once complete a report is written to the terminal, see [example output](#example-output).
+2. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+3. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
+4. `cd Primes`
+5. `make`
+6. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
+7. Once complete a report is written to the terminal, see [example output](#example-output).
 
 ### Windows installation and prerequisites
 
@@ -142,7 +125,6 @@ The following software must be installed:
 
 - Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 20.04 LST distribution
 - make
-- Node.js
 - Docker Desktop for Windows
 
 WSL2 has special [hardware requirements](https://docs.microsoft.com/en-us/windows-server/virtualization/hyper-v/system-requirements-for-hyper-v-on-windows).
@@ -157,20 +139,6 @@ Take the following steps to install make inside the Ubuntu distribution:
 
 1. Open an Ubuntu terminal
 2. `sudo apt-get install make`
-
-#### Install Node.js inside the Ubuntu distribution
-
-The benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that is included in Ubuntu 20.04 is too old. This means that it will be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.
-
-Take the following steps to install Node.js inside the Ubuntu distribution:
-
-1. Navigate to <https://nodejs.org/en/download/>
-2. Download the Linux Binaries, depending on your CPU architecture
-3. Copy the downloaded file inside the Ubuntu distribution home directory. For example:
-   `\\wsl$\Ubuntu-20.04\home\user`
-4. Open an Ubuntu terminal
-5. Unzip the downloaded file: `tar -xf ~/file.xz>`. For example: `tar -xf ~/node-v14.17.0-linux-x64.tar.xz`
-6. The Node.js binaries are now extracted to a directory. This directory is referred to as `/path/to/node` in the run instructions.
 
 #### Docker Desktop for Windows
 
@@ -213,7 +181,6 @@ Take the following steps to run all benchmarks:
 The following software must be installed:
 
 - xcode-select (make and git)
-- nodejs
 - Docker Desktop for macOS
 
 The details for each required software are described below.
@@ -227,22 +194,6 @@ Take the following steps to install make and git on macOS:
 3. A popup window appears, select install
 4. In the next window accept the terms
 5. The installation now starts, wait until it completes
-
-#### Node.js for macOs
-
-The benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that are included in many OS-provided package managers are too old. This means that it will generally be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.
-
-Take the following steps to install Node.js on macOS:
-
-1. Navigate to <https://nodejs.org/en/download/>
-2. Download the macOS Installer (.pkg)
-3. Start the installer
-4. Click Continue
-5. Click Continue, accept the licence agreement
-6. Click Install
-7. Provide your password to confirm
-8. The installation now starts
-9. Close the installer
 
 #### Docker Desktop for macOS
 

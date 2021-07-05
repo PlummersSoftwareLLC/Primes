@@ -23,16 +23,14 @@ benchmark: $(SOLUTIONS)
 	done
 
 report: benchmark
-	@cd tools/; \
-	npm ci && npm start -- report -d "$(OUTPUT_DIR)"
+	@docker run --rm -v "$(CURDIR)/tools":/tools -v "$(OUTPUT_DIR)":/out -w /tools -e CI=true node:alpine sh -c "npm ci && npm start -- report -d /out"
 
 one:
 	@if [[ ! -z "$${SOLUTION}" ]]; then \
 		NAME=$$(echo $${SOLUTION//\//-} | tr '[:upper:]' '[:lower:]'); \
 		OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
 		echo "[*] Running $${NAME}" && docker run --rm $$(docker build -q $$SOLUTION) | tee "$${OUTPUT}"; \
-		cd tools/; \
-		npm ci && npm start -- report -d "$(OUTPUT_DIR)" \
+		docker run --rm -v "$(CURDIR)/tools":/tools -v "$(OUTPUT_DIR)":/out -w /tools -e CI=true node:alpine sh -c "npm ci && npm start -- report -d /out" \
 	else \
 		echo "Not specified!"; \
 	fi
