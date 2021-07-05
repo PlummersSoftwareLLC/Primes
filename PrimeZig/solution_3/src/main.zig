@@ -32,8 +32,8 @@ pub fn main() anyerror!void {
 
     comptime const specs = .{
         .{ SingleThreadedRunner, IntSieve, .{}, false },
-        //.{ ParallelAmdahlRunner, IntSieve, .{}, false },
-        //.{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false },
+        .{ ParallelAmdahlRunner, IntSieve, .{}, false },
+        .{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false },
         .{ ParallelGustafsonRunner, IntSieve, .{}, false },
         .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false },
         .{ SingleThreadedRunner, BitSieve, .{}, false },

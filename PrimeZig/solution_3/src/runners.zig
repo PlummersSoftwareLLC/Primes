@@ -96,6 +96,7 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
         stop: usize,
         sieve: Sieve = undefined,
         current_job: ?Job = null,
+        started: bool = false,
         finished: bool = false,
         passes: *u64,
         allocator: *Allocator,
@@ -112,7 +113,7 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
                 .stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size))),
                 .sieve_size = sieve_size,
                 .passes = passes,
-                .allocator = allocator
+                .allocator = allocator,
             };
         }
 
@@ -130,12 +131,16 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             var sieve = try Sieve.init(self.allocator, self.sieve_size);
             errdefer sieve.deinit();
 
-            for (worker_pool) |*thread_ptr, index| {
-                thread_ptr.* = try std.Thread.spawn(workerLoop, ThreadInfo{ .self = self, .index = index });
+            if (! self.started) {
+                for (worker_pool) |*thread_ptr, index| {
+                    thread_ptr.* = try std.Thread.spawn(workerLoop, ThreadInfo{ .self = self, .index = index });
+                }
+                self.started = true;
             }
 
             self.sieve = sieve;
-            self.current_job = Job{.factor = self.sieve.reset()};
+            var factor = self.sieve.reset();
+            self.current_job = Job{.factor = factor};
         }
 
         pub fn sieveDeinit(self: *Self) void {
@@ -144,13 +149,13 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
 
         pub fn run(self: *Self) void {
             // unlock the workers.
-            init_hold.?.release();
-            init_hold = null;
+            if (init_hold) | hold | {
+                init_hold.?.release();
+                init_hold = null;
+            }
 
-            var maybe_job = self.fetchJob();
-            while (maybe_job) |job| {
+            while (self.fetchJob()) |job| {
                 self.runJob(job);
-                maybe_job = self.fetchJob();
             }
 
             // spinlock till everyone else has finished.
@@ -161,6 +166,7 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             // in debug mode, verify that we got the right answer.
             if (std.builtin.mode == .Debug) {
                 if (self.sieve_size == 1_000_000) {
+                    var primecount = self.sieve.primeCount();
                     std.debug.assert(self.sieve.primeCount() == expected_1M_result);
                 }
             }
@@ -181,19 +187,6 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
                     std.time.sleep(1000);
                 }
             }
-        }
-
-        pub fn reset(self: *Self) void {
-            init_hold = if (init_hold) |hold| hold else init_mutex.acquire();
-
-            // reset all of the workers.
-            for (worker_pool) |_, index| {
-                worker_started[index] = false;
-                worker_finished[index] = false;
-            }
-
-            // set up the current job to be the first.
-            self.current_job = Job{ .factor = first_job };
         }
 
         /////// UTILITY FUNCTIONS
