@@ -45,7 +45,7 @@ Architecture:
 
 - `src/alloc.zig` an allocator that prioritizes use of scratch space set aside in .bss
 - `src/main.zig` entrypoint for the program; builds the drag race layout
-- `src/pregen.zig` uses the sieve program to generate wheel LUTs at compile-time
+- `src/wheel.zig` uses the sieve program to generate wheel LUTs at compile-time
 - `src/runners.zig` generic "runner" framework.  Impls:
   - `SingleThreadedRunner`
   - `AmdahlRunner`

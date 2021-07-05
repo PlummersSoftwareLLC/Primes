@@ -1,13 +1,13 @@
-//! implementation of the ability to pregenerate primes and use them.
-//! should generate into the compiled artifact exactly the memory layout
-//! to be copied in as a "wheel" for the first (n) primes
+//! implementation of the ability to pregenerate primes at compile-time
+//! and use them. should generate into the compiled artifact exactly the
+//! memory layout to be copied in as a "wheel" for the first (n) primes
 
 const std = @import("std");
 const OEIS_PRIMES = [_]comptime_int{ 3, 5, 7, 11, 13, 17, 19 };
 const IntSieve = @import("sieves.zig").IntSieve;
 const Unit = enum { byte, bit };
 
-pub fn PreGenerated(comptime count: usize, comptime gsize: Unit) type {
+pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
     var prods = std.mem.zeroes([OEIS_PRIMES.len]comptime usize);
     var source_primes = std.mem.zeroes([count]comptime_int);
 
@@ -117,7 +117,7 @@ fn relatively_prime(a: usize, b: usize) bool {
 
 test "the generation of a byte table is correct" {
     inline for (seeds) |seed| {
-        const T = PreGenerated(seed, .byte);
+        const T = Wheel(seed, .byte);
         for (T.template) |v, index| {
             var this = 2 * index + 1;
             var maybe_prime = true;
@@ -141,7 +141,7 @@ test "the generation of a byte table is correct" {
 
 test "the generation of a bit table is correct" {
     inline for (seeds) |seed| {
-        const T = PreGenerated(seed, .bit);
+        const T = Wheel(seed, .bit);
         for (T.template) |v, index| {
             var subindex: usize = 0;
             while (subindex < 8) : (subindex += 1) {

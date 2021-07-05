@@ -1,6 +1,6 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const PreGenerated = @import("pregen.zig").PreGenerated;
+const Wheel = @import("wheel.zig").Wheel;
 
 const SieveOpts = struct { pregen: ?comptime_int = null };
 
@@ -30,7 +30,7 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
 
         pub fn reset(self: *Self) usize {
             if (opts.pregen) |pregen| {
-                const Lookup = PreGenerated(pregen, .byte);
+                const Lookup = Wheel(pregen, .byte);
                 var index: usize = 0;
 
                 for (self.field) |*slot| {
@@ -97,7 +97,7 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
             }
         }
 
-        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ PreGenerated(pregen, .byte).name) else "";
+        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ Wheel(pregen, .byte).name) else "";
         pub const name = "sieve-" ++ @typeName(T) ++ lookup_name;
     };
 }
@@ -146,7 +146,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             var starting_point: usize = 0;
 
             if (opts.pregen) |pregen| {
-                const Lookup = PreGenerated(pregen, .bit);
+                const Lookup = Wheel(pregen, .bit);
                 var index: usize = 0;
 
                 copyBits(self.field, &Lookup.template);
@@ -189,8 +189,8 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             return count;
         }
 
-        const src_units = if (opts.pregen) |pregen| PreGenerated(pregen, .bit).template.len else 1;
-        // TODO: move this to PreGenerated?
+        const src_units = if (opts.pregen) |pregen| Wheel(pregen, .bit).template.len else 1;
+        // TODO: move this to Wheel?
 
         fn copyBits(bit_field: []T, src: *const *[src_units]u8) void {
             const field_len = bit_field.len;
@@ -310,7 +310,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             return masks;
         }
 
-        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ PreGenerated(pregen, .bit).name) else "";
+        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ Wheel(pregen, .bit).name) else "";
         pub const name = "bitSieve-" ++ @typeName(T) ++ lookup_name;
     };
 }

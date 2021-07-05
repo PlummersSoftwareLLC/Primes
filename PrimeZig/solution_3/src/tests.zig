@@ -9,7 +9,7 @@ const IntSieve = sieves.IntSieve;
 const SingleThreadedRunner = runners.SingleThreadedRunner;
 const ParallelAmdahlRunner = runners.AmdahlRunner;
 const ParallelGustafsonRunner = runners.GustafsonRunner;
-const PreGenerated = @import("pregen.zig").PreGenerated;
+const Wheel = @import("wheel.zig").Wheel;
 
 const allocator = std.testing.allocator;
 
