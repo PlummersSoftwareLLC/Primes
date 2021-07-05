@@ -235,7 +235,7 @@ void runSingleThreaded()
     
     auto s = new Sieve!PRIME_COUNT;
     s.runSieve();
-    s.printResults("BradleyChatha", "algorithm=base,faithful=yes,bits=1,parallel=no", 1, false, elapsedTime, passes);
+    s.printResults("BradleyChatha", "algorithm=base,faithful=yes,bits=1", 1, false, elapsedTime, passes);
 }
 
 void runMultiThreaded()
@@ -271,7 +271,7 @@ void runMultiThreaded()
     s.runSieve();
     s.printResults(
         "BradleyChatha-Multi", 
-        "algorithm=base,faithful=yes,bits=1,parallel=yes", 
+        "algorithm=base,faithful=yes,bits=1", 
         totalCPUs, 
         false, 
         elapsedTime, 
