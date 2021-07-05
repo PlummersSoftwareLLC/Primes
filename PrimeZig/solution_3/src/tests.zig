@@ -58,16 +58,16 @@ test "Test single threaded" {
     }
 }
 
-//test "Test multithreaded-amdahl" {
-//    inline for (expected_results) |result| {
-//        const field_size = result[0];
-//        const expected_primes = result[1];
-//        const Sieve = IntSieve(bool, field_size, .{});
-//
-//        var passes = try runSieve(ParallelAmdahlRunner(Sieve, .{}), expected_primes, false);
-//        std.testing.expectEqual(@as(u64, 2), passes);
-//    }
-//}
+test "Test multithreaded-amdahl" {
+    inline for (expected_results) |result| {
+        const field_size = result[0];
+        const expected_primes = result[1];
+        const Sieve = IntSieve(bool, .{});
+
+        var passes = try runSieve(ParallelAmdahlRunner(Sieve, .{}), field_size, expected_primes, false);
+        try std.testing.expectEqual(passes, 1);
+    }
+}
 
 test "Test mulithreaded-gustafson" {
     inline for (expected_results) |result| {
@@ -90,16 +90,16 @@ test "Single threaded with bitsieve/8" {
     }
 }
 
-//test "Single threaded with bitsieve/64" {
-//    inline for (expected_results) |result| {
-//        const field_size = result[0];
-//        const expected_primes = result[1];
-//        const Sieve = BitSieve(u64, field_size, .{});
-//
-//        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, false);
-//        std.testing.expectEqual(@as(u64, 2), passes);
-//    }
-//}
+test "Single threaded with bitsieve/64" {
+    inline for (expected_results) |result| {
+        const field_size = result[0];
+        const expected_primes = result[1];
+        const Sieve = BitSieve(u64, .{});
+
+        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
+        try std.testing.expectEqual(passes, 1);
+    }
+}
 
 //const pregens = [_]comptime_int{2}; //, 3, 4, 5};
 //const OEIS_PRIMES = [_]usize{ 3, 5, 7, 11, 13, 17, 19 };
