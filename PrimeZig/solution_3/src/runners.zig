@@ -39,19 +39,19 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
             while (factor <= stop) : (factor = self.sieve.findNextFactor(factor)) {
                 self.sieve.runFactor(factor);
             }
+
+            if (std.builtin.mode == .Debug) {
+                if (sieve_size == 1_000_000) {
+                    std.debug.assert(self.sieve.primeCount() == count);
+                }
+            }
+
             // increment the number of passes.
             passes.* += 1;
         }
 
         pub const name = "single-" ++ Sieve.name;
         pub fn threads() !usize { return 1; }
-
-        pub fn verifyPrimeCount(self: *Self, count: usize) void {
-            var primecount = self.sieve.primeCount();
-
-            if (primecount != count) {std.debug.print("prime count: {}\n", .{primecount});}
-            std.debug.assert(self.sieve.primeCount() == count);
-        }
     };
 }
 
@@ -230,8 +230,6 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
 
 /// embarassing parallism
 pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
-    const sieve_size = Sieve.size;
-    const field_size = sieve_size >> 1;
     const ht_reduction = if (opt.no_ht) 1 else 0;
 
     return struct {
@@ -320,6 +318,12 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
 
             while (factor <= stop) : (factor = sieve.findNextFactor(factor)) {
                 sieve.runFactor(factor);
+            }
+
+            if (std.builtin.mode == .Debug) {
+                if (sieve_size == 1_000_000) {
+                    std.debug.assert(self.sieve.primeCount() == count);
+                }
             }
         }
 

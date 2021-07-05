@@ -34,9 +34,9 @@ pub fn main() anyerror!void {
     comptime const specs = .{
         .{ SingleThreadedRunner, IntSieve, .{}, false },
         //.{ ParallelAmdahlRunner, IntSieve, .{}, false },
-        //.{ ParallelGustafsonRunner, IntSieve, .{}, false },
+        .{ ParallelGustafsonRunner, IntSieve, .{}, false },
         //.{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false },
-        //.{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false },
+        .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false },
         .{ SingleThreadedRunner, BitSieve, .{}, false },
         //.{ ParallelGustafsonRunner, BitSieve, .{}, false },
         //.{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false },
@@ -137,13 +137,6 @@ fn runSieveTest(
         defer runner.sieveDeinit();
 
         runner.run(&passes);
-
-        if (std.builtin.mode == .Debug) {
-            if (sieve_size == 1_000_000) {
-                // verify that the sieve has the correct number of primes.
-                runner.verifyPrimeCount(78_498);
-            }
-        }
     }
 
     const elapsed = timer.read();

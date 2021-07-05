@@ -68,16 +68,16 @@ test "Test single threaded" {
 //        std.testing.expectEqual(@as(u64, 2), passes);
 //    }
 //}
-//
-//test "Test mulithreaded-gustafson" {
-//    inline for (expected_results) |result| {
-//        const field_size = result[0];
-//        const expected_primes = result[1];
-//        const Sieve = IntSieve(bool, field_size, .{});
-//
-//        _ = try runSieve(ParallelGustafsonRunner(Sieve, .{}), expected_primes, false);
-//    }
-//}
+
+test "Test mulithreaded-gustafson" {
+    inline for (expected_results) |result| {
+        const field_size = result[0];
+        const expected_primes = result[1];
+        const Sieve = IntSieve(bool, .{});
+
+        _ = try runSieve(ParallelGustafsonRunner(Sieve, .{}), field_size, expected_primes, false);
+    }
+}
 
 test "Single threaded with bitsieve/8" {
     inline for (expected_results) |result| {
