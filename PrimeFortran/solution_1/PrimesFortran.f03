@@ -5,12 +5,15 @@ program primes_fortran
   ! All bits are set to 1 for an integer value of -1 as in Fortran there are only signed numbers
   ! and the two's complement is used
   
-  integer(int64) , parameter :: all_true = int((-1), kind=int64)
+
   integer(int64), parameter:: num_possible_upper_limits = 8_int64
+  integer(int8) , parameter :: all_true = -1
+  integer, parameter:: bitfield_unit = 8
+  integer(kind=int8), dimension (:), allocatable :: array_of_bits ! Mapping for Bit-array
   integer(int64):: time_start, time_now, count_rate, count_max
-  integer(int64):: sieve_size
+  integer(int32):: sieve_size
   integer(int32):: passes
-  integer(kind=int64), dimension (:), allocatable :: array_of_bits ! Mapping for Bit-array
+  
 
   character(len=255), dimension(1:3) :: command_arguments
   
@@ -38,7 +41,7 @@ program primes_fortran
                               664579_int32,&        ! 10000000
                               5761455_int32/)       ! 100000000
 
-  sieve_size = int(1000000, kind = int64)
+  sieve_size = 1000000
       
   call allocate_bitfield(sieve_size)
 
@@ -51,7 +54,7 @@ program primes_fortran
      array_of_bits = all_true   ! sets each element of the array to the same value
      
      call run_sieve
-     passes = passes +1_int64
+     passes = passes + 1
      call system_clock(time_now, count_rate, count_max)
      if ((1.0_real64*(time_now-time_start)) / count_rate .ge. 5.0_real64  ) then        
         exit
@@ -63,35 +66,34 @@ program primes_fortran
 contains
 
   subroutine allocate_bitfield (n)
-    integer(kind=int64) :: n
-    if ( mod(n, 64) .eq. 0) then
-       allocate (array_of_bits(0:n/64-1))                !integer division
+    integer(int32) :: n
+    if ( mod(n, bitfield_unit) .eq. 0) then
+       allocate (array_of_bits(0:n/bitfield_unit - 1))                !integer division
     else
-       allocate (array_of_bits(0:n/64))
+       allocate (array_of_bits(0:n/bitfield_unit))
     endif
     array_of_bits = all_true
   end subroutine allocate_bitfield
 
-  logical function getbit(a,n)
+  logical function getbit(n)
     implicit none
-    integer(int64), dimension (0:sieve_size-1) :: a
     integer(int32) :: n
-    getbit = btest(a(n/64), mod(n,64) )
+    getbit = btest(array_of_bits(n/bitfield_unit), mod(n,bitfield_unit))
   end function getbit
 
   subroutine setbit_false(n)
     implicit none
     integer(int32) :: n
-    array_of_bits(n/64)= ibclr(array_of_bits(n/64), mod(n,64) )
+    array_of_bits(n/bitfield_unit) = ibclr(array_of_bits(n/bitfield_unit), mod(n,bitfield_unit))
   end subroutine setbit_false
 
 
-  integer(int64) function count_primes()
+  integer(int32) function count_primes()
     implicit none
     integer(int32):: i
     count_primes = 1_int32
     do i=3, sieve_size-1, 2
-       if (getbit(array_of_bits,i))&
+       if (getbit(i))&
             count_primes = count_primes+1
     enddo
   end function count_primes
@@ -122,7 +124,8 @@ contains
     logical, intent(in):: show_results
     real(real64), intent(in) :: duration
     integer(int32),intent(in):: passes
-    integer(int32):: count,num,j
+    integer(int32):: count,j
+    integer(int32):: num
     character(len=50) :: raw_string
     character(len=50) :: info_string
     
@@ -137,7 +140,7 @@ contains
     endif
     
     do num = 3, sieve_size, 2
-       if (getbit(array_of_bits, num)) then
+       if (getbit(num)) then
           if (show_results) then 
              write(ERROR_UNIT,'(I10)', advance= 'NO') num          
           endif
@@ -163,17 +166,17 @@ contains
   
   subroutine run_sieve
     implicit none
-    integer(kind = int32) :: factor 
+    integer(kind=int32) :: factor 
     integer(kind=int32) :: q
     integer(kind=int32) :: num
     
-    factor=3_int32
-    q=int(sqrt(1.0_real64* sieve_size), kind=int64)
+    factor = 3
+    q=int(sqrt(1.0_real64* sieve_size), kind=int32)
     
     do while (factor .le. q)
        
-       do num = factor , sieve_size-1, 2
-          if (getbit(array_of_bits, num)) then
+       do num = factor, sieve_size - 1, 2
+          if (getbit(num)) then
              factor=num
              exit
           endif
