@@ -112,7 +112,7 @@ class Sieve {
         $this.BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList ([int] (($Size + 1) / 2)), $true)
     }
     [int]$SieveSize
-    [System.Collections.BitArray]$BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList $count, $true)
+    [System.Collections.BitArray]$BitArray
 }
 
 ################################################################################
