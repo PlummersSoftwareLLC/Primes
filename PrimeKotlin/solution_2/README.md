@@ -1,5 +1,5 @@
 # Prime Sieve Algorithms
-## Kotlin solution by wulkanat
+## Idiomatic Kotlin solution by wulkanat
 
 This version is more focused on a readable, idiomatic way to write Kotlin code,
 avoiding compiler workarounds and thus probably more representative of what you
