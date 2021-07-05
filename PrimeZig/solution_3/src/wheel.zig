@@ -7,6 +7,10 @@ const OEIS_PRIMES = [_]comptime_int{ 3, 5, 7, 11, 13, 17, 19 };
 const IntSieve = @import("sieves.zig").IntSieve;
 const Unit = enum { byte, bit };
 
+// since wheel is comptime-only this scratchpad won't appear in the
+// final binary.
+// var scratchpad: [1024 * 1024]comptime u8 = undefined;
+
 pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
     var prods = std.mem.zeroes([OEIS_PRIMES.len]comptime usize);
     var source_primes = std.mem.zeroes([count]comptime_int);
@@ -14,9 +18,7 @@ pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
     var prod: comptime_int = 1;
 
     // fail if we are trying too hard.
-    if (count > 6) {
-        unreachable;
-    }
+    if (count > 5) unreachable;
 
     for (OEIS_PRIMES) |prime, index| {
         prod *= prime;
@@ -26,7 +28,7 @@ pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
         }
     }
     const max_prime = prods[count - 1];
-    var field: [max_prime]comptime u8 = undefined;
+    var field: [max_prime]u8 = undefined;
 
     // fill out key values to make the generator usable.  Note we are not using
     // an allocator here (because you don't get one at comptime), so instead od using
@@ -37,7 +39,7 @@ pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
     };
 
     // this takes a bunch of computational power:  Let it happen.
-    @setEvalBranchQuota(100000);
+    @setEvalBranchQuota(1000000);
 
     _ = generator.reset();
 

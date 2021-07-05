@@ -1,13 +1,16 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const Wheel = @import("wheel.zig").Wheel;
+const WheelFn = @import("wheel.zig").Wheel;
 
 const SieveOpts = struct { pregen: ?comptime_int = null };
 
 pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
+    // store the wheel type
+    const Wheel: ?type = if (opts.pregen) | pregen | WheelFn(pregen, .byte) else null;
+
     return struct {
-        pub const TRUE = if (T == bool) true else 1;
-        pub const FALSE = if (T == bool) false else 0;
+        pub const TRUE = if (T == bool) true else @as(T, 1);
+        pub const FALSE = if (T == bool) false else @as(T, 0);
 
         const Self = @This();
 
@@ -29,26 +32,25 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
         }
 
         pub fn reset(self: *Self) usize {
-            if (opts.pregen) |pregen| {
-                const Lookup = Wheel(pregen, .byte);
+            if (Wheel) |W| {
                 var index: usize = 0;
 
                 for (self.field) |*slot| {
-                    slot.* = Lookup.template[index];
+                    slot.* = W.template[index];
                     index += 1;
-                    if (index == Lookup.template.len) {
+                    if (index == W.template.len) {
                         index = 0;
                     }
                 }
 
-                inline for (Lookup.primes) |prime| {
+                inline for (W.primes) |prime| {
                     const prime_index = prime >> 1;
                     if (prime_index < self.field.len) {
                         self.field[prime_index] = 1;
                     }
                 }
 
-                return Lookup.first_prime;
+                return W.first_prime;
             } else {
                 for (self.field) |*slot| {
                     slot.* = TRUE;
@@ -97,12 +99,15 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
             }
         }
 
-        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ Wheel(pregen, .byte).name) else "";
-        pub const name = "sieve-" ++ @typeName(T) ++ lookup_name;
+        pub const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
+        pub const name = "sieve-" ++ @typeName(T) ++ wheel_name;
     };
 }
 
 pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
+    // store the wheel type
+    const Wheel: ?type = if (opts.pregen) | pregen | WheelFn(pregen, .bit) else null;
+
     return struct {
         // values
         const Self = @This();
@@ -145,14 +150,13 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
 
             var starting_point: usize = 0;
 
-            if (opts.pregen) |pregen| {
-                const Lookup = Wheel(pregen, .bit);
+            if (Wheel) |W| {
                 var index: usize = 0;
 
-                copyBits(self.field, &Lookup.template);
+                copyBits(self.field, &W.template);
 
                 // make the primes prime
-                inline for (Lookup.primes) |prime| {
+                inline for (W.primes) |prime| {
                     const mask = (@as(T, 1) << bit_shift) - @as(T, 1);
                     const prime_index = prime >> 1;
                     const byte_index = prime_index >> bit_shift;
@@ -162,7 +166,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
                     self.field[byte_index] |= bit_flip;
                 }
 
-                starting_point = Lookup.first_prime;
+                starting_point = W.first_prime;
             } else {
                 for (self.field) |*number| {
                     number.* = @as(T, 0) -% 1;
@@ -189,7 +193,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             return count;
         }
 
-        const src_units = if (opts.pregen) |pregen| Wheel(pregen, .bit).template.len else 1;
+        const src_units = if (Wheel) |W| W.template.len else 1;
         // TODO: move this to Wheel?
 
         fn copyBits(bit_field: []T, src: *const *[src_units]u8) void {
@@ -310,7 +314,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             return masks;
         }
 
-        pub const lookup_name = if (opts.pregen) |pregen| ("-" ++ Wheel(pregen, .bit).name) else "";
-        pub const name = "bitSieve-" ++ @typeName(T) ++ lookup_name;
+        pub const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
+        pub const name = "bitSieve-" ++ @typeName(T) ++ wheel_name;
     };
 }
