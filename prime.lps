@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="11"/>
+    <BuildModes Active="Release64"/>
+    <Units Count="1">
+      <Unit0>
+        <Filename Value="prime.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="118"/>
+        <CursorPos X="72" Y="144"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit0>
+    </Units>
+    <JumpHistory Count="4" HistoryIndex="3">
+      <Position1>
+        <Filename Value="prime.pas"/>
+        <Caret Line="3" Column="74"/>
+      </Position1>
+      <Position2>
+        <Filename Value="prime.pas"/>
+        <Caret Line="139" Column="12" TopLine="96"/>
+      </Position2>
+      <Position3>
+        <Filename Value="prime.pas"/>
+        <Caret Line="78" Column="9" TopLine="54"/>
+      </Position3>
+      <Position4>
+        <Filename Value="prime.pas"/>
+        <Caret Line="90" Column="26" TopLine="70"/>
+      </Position4>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
