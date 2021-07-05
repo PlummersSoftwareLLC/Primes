@@ -47,6 +47,9 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         pub fn threads() !usize { return 1; }
 
         pub fn verifyPrimeCount(self: *Self, count: usize) void {
+            var primecount = self.sieve.primeCount();
+
+            if (primecount != count) {std.debug.print("prime count: {}\n", .{primecount});}
             std.debug.assert(self.sieve.primeCount() == count);
         }
     };
