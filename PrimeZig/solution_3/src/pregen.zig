@@ -13,7 +13,7 @@ pub fn PreGenerated(comptime count: usize, comptime gsize: Unit) type {
 
     var prod: comptime_int = 1;
 
-    // fail if we are tryng too hard.
+    // fail if we are trying too hard.
     if (count > 6) {
         unreachable;
     }
@@ -31,8 +31,8 @@ pub fn PreGenerated(comptime count: usize, comptime gsize: Unit) type {
     // fill out key values to make the generator usable.  Note we are not using
     // an allocator here (because you don't get one at comptime), so instead od using
     // the init function, we must set the field directly.
-    var generator = IntSieve(comptime u8, max_prime * 2, .{}){
-        .field = &field,
+    var generator = IntSieve(comptime u8, .{}){
+        .field = field[0..],
         .allocator = std.heap.page_allocator, //just as a placeholder.  won't be used.
     };
 
@@ -59,7 +59,7 @@ pub fn PreGenerated(comptime count: usize, comptime gsize: Unit) type {
 
     return struct {
         pub const primes = source_primes;
-        pub const template = generator.field;
+        pub const template: *[max_prime]u8 = generator.field[0..max_prime];
         pub const first_prime = OEIS_PRIMES[count];
         pub const name = bigenoughbuf[0..buf_len];
     };
@@ -121,9 +121,15 @@ test "the generation of a byte table is correct" {
         for (T.template) |v, index| {
             var this = 2 * index + 1;
             var maybe_prime = true;
+
+            // note that our table should NOT show the primes themselves to be flagged
+            // because in "higher generations" of the recurring sequence we want them
+            // to not be set.  The prime numbers in the wheel themselves should be set
+            // manually during initialization.
             inline for (T.primes) |prime| {
                 maybe_prime = maybe_prime and relatively_prime(prime, this);
             }
+
             if (v == 1) {
                 std.debug.assert(maybe_prime);
             } else {
@@ -158,5 +164,5 @@ test "compression function works" {
     var uncompressed: [3]u8 = .{ 1, 0, 1 };
     var compressed: [3]u8 = .{ 0b01_101_101, 0b1_101_101_1, 0b101_101_10 };
     compress(uncompressed[0..]);
-    std.testing.expectEqual(compressed, uncompressed);
+    try std.testing.expectEqual(compressed, uncompressed);
 }

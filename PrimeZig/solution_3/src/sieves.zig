@@ -32,7 +32,8 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
             if (opts.pregen) |pregen| {
                 const Lookup = PreGenerated(pregen, .byte);
                 var index: usize = 0;
-                for (self.field.*) |*slot| {
+
+                for (self.field) |*slot| {
                     slot.* = Lookup.template[index];
                     index += 1;
                     if (index == Lookup.template.len) {
@@ -41,7 +42,10 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
                 }
 
                 inline for (Lookup.primes) |prime| {
-                    self.field.*[prime >> 1] = 1;
+                    const prime_index = prime >> 1;
+                    if (prime_index < self.field.len) {
+                        self.field[prime_index] = 1;
+                    }
                 }
 
                 return Lookup.first_prime;
@@ -188,9 +192,10 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
         const src_units = if (opts.pregen) |pregen| PreGenerated(pregen, .bit).template.len else 1;
         // TODO: move this to PreGenerated?
 
-        fn copyBits(bit_field: *[field_units]T, src: *const *[src_units]u8) void {
+        fn copyBits(bit_field: []T, src: *const *[src_units]u8) void {
+            const field_len = bit_field.len;
             if (T == u8) {
-                const dest_len = field_units * @sizeOf(T);
+                const dest_len = field_len * @sizeOf(T);
                 var start: usize = 0;
                 var finish: usize = src_units;
                 //var u8_field = @ptrCast([*] u8, bit_field);
@@ -200,10 +205,10 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
                 }) {
                     copy(bit_field[start..finish], src.*[0..]);
                 }
-                copy(bit_field[start..field_units], src.*[0 .. field_units - start]);
+                copy(bit_field[start..field_len], src.*[0 .. field_len - start]);
             } else {
                 var src_index: usize = 0;
-                for (bit_field.*) |*dest| {
+                for (bit_field) |*dest| {
                     dest.* = findBits(src, &src_index);
                 }
             }
