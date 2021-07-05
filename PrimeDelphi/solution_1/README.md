@@ -8,13 +8,14 @@ implemented in Delphi by Jake Tapper about 3-4 times faster than the original.
 ## Run Instructions 
 
 
+```
 Usage:
        PrmDelphi [runtime in seconds] [thread lag in milliseconds]
            Runtime defaults to 10 seconds and
            thread lag defaults to 50 milliseconds.
            The thread lag is subtracted from the runtime to allow
            lagging threads to finish within the allocated time.
-
+```
 ## Output
 
 ```
