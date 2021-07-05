@@ -27,6 +27,8 @@ final class Sieve(uint SieveSize)
     private
     {
         // Because SieveSize is a templated value, we know what it is at compile-time, so can stack allocate here.
+        // Most D functions can be ran at compile-time. This is called Compile Time Function Execution (CTFE).
+        // `alignTo` is being used in CTFE here.
         ubyte[alignTo!8(SieveSize) / 8] _bits = ubyte.max;
     }
 
