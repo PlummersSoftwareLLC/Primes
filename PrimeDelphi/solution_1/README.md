@@ -1,5 +1,26 @@
-# Delphi solution by JakeTapper
+# Delphi solution by Navid Madani (modifies solution by Jake Tapper)
 
-![Category](https://img.shields.io/badge/Category-faithful-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 
-*Note from the maintainers: this solution is not included in the drag race due to a dependency on Delphi. Delphi is a commercial product that does provide a free Community Edition, but the limitations on its use are such that we cannot guarantee we would stay within the conditions of the license if we were to indeed use it.
+This application takes advantage of Delphi's support for parallel processing and runs the algorithm that was 
+implemented in Delphi by Jake Tapper about 3-4 times faster than the original.
+
+## Run Instructions 
+
+
+Usage:
+       PrmDelphi [runtime in seconds] [thread lag in milliseconds]
+           Runtime defaults to 10 seconds and
+           thread lag defaults to 50 milliseconds.
+           The thread lag is subtracted from the runtime to allow
+           lagging threads to finish within the allocated time.
+
+## Output
+
+```
+Starting 10 second run with 50 millisecond thread lag ...
+
+Passes: 14432, Time: 10.052 sec, Avg: 0.6965 ms, Limit: 1000000, Count: 78498, Valid: Yes
+
+Press enter to close...
+```
