@@ -3,20 +3,25 @@ const Mutex = std.Thread.Mutex.AtomicMutex;
 const Allocator = std.mem.Allocator;
 
 pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
-    const sieve_size = Sieve.size;
-    const field_size = sieve_size >> 1;
-
     return struct {
         const Self = @This();
         sieve: Sieve = undefined,
         factor: usize = undefined,
+        sieve_size: usize = undefined,
+        allocator: *Allocator = undefined,
 
         // no special thread-related things to do
-        pub fn init(self: *Self, allocator: *Allocator) !void {}
+        pub fn init(allocator: *Allocator, sieve_size: usize) !Self {
+            return Self{
+                .sieve_size = sieve_size,
+                .allocator = allocator,
+            };
+        }
+
         pub fn deinit(self: *Self) void {}
 
-        pub fn sieveInit(self: *Self, allocator: *Allocator) !void {
-            self.sieve = try Sieve.init(allocator);
+        pub fn sieveInit(self: *Self) !void {
+            self.sieve = try Sieve.init(self.allocator, self.sieve_size);
             self.factor = self.sieve.reset();
         }
 
@@ -28,7 +33,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
 
         pub fn run(self: *Self, passes: *u64) void {
             @setAlignStack(256);
-            comptime const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+            const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, self.sieve_size)));
             var factor = self.factor;
 
             while (factor <= stop) : (factor = self.sieve.findNextFactor(factor)) {

@@ -40,8 +40,8 @@ pub fn main() anyerror!void {
         .{ SingleThreadedRunner, BitSieve, .{}, false },
         //.{ ParallelGustafsonRunner, BitSieve, .{}, false },
         //.{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false },
-        .{ SingleThreadedRunner, IntSieve, .{}, true },
-        .{ SingleThreadedRunner, BitSieve, .{}, true },
+        //.{ SingleThreadedRunner, IntSieve, .{}, true },
+        //.{ SingleThreadedRunner, BitSieve, .{}, true },
         //.{ ParallelGustafsonRunner, BitSieve, .{}, true },
         //.{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, true },
     };
@@ -62,7 +62,7 @@ pub fn main() anyerror!void {
             inline for (DataTypes) |Type| {
                 comptime const typebits = if (SieveFn == IntSieve) @bitSizeOf(Type) else 1;
                 inline for (pregens) |pregen| {
-                    comptime const Sieve = SieveFn(Type, SIZE, .{ .pregen = pregen });
+                    comptime const Sieve = SieveFn(Type, .{ .pregen = pregen });
                     comptime const Runner = RunnerFn(Sieve, runner_opts);
                     comptime const selected = selected_runs(Runner);
                     if (all or selected) {
@@ -75,7 +75,7 @@ pub fn main() anyerror!void {
 
             inline for (DataTypes) |Type| {
                 comptime const typebits = if (SieveFn == IntSieve) @bitSizeOf(Type) else 1;
-                comptime const Sieve = SieveFn(Type, SIZE, .{});
+                comptime const Sieve = SieveFn(Type, .{});
                 comptime const Runner = RunnerFn(Sieve, runner_opts);
                 comptime const selected = selected_runs(Runner);
                 if (all or selected) {
@@ -129,13 +129,12 @@ fn runSieveTest(
 ) anyerror!void {
     const timer = try time.Timer.start();
     var passes: u64 = 0;
-    var runner = Runner{};
 
-    try runner.init(allocator);
+    var runner = try Runner.init(allocator, sieve_size);
     defer runner.deinit();
 
     while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        try runner.sieveInit(allocator);
+        try runner.sieveInit();
         defer runner.sieveDeinit();
 
         runner.run(&passes);
