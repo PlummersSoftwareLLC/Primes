@@ -157,7 +157,6 @@ test "the generation of a bit table is correct" {
 test "compression function works" {
     var uncompressed: [3]u8 = .{ 1, 0, 1 };
     var compressed: [3]u8 = .{ 0b01_101_101, 0b1_101_101_1, 0b101_101_10 };
-    std.debug.print("\n", .{});
     compress(uncompressed[0..]);
     std.testing.expectEqual(compressed, uncompressed);
 }

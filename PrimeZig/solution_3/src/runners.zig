@@ -11,17 +11,20 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         sieve: Sieve = undefined,
         factor: usize = undefined,
 
-        pub fn init(self: *Self, allocator: *Allocator) !void {
-            self.sieve = try Sieve.create(allocator);
-        }
+        // no special thread-related things to do
+        pub fn init(self: *Self, allocator: *Allocator) !void {}
+        pub fn deinit(self: *Self) void {}
 
-        pub fn deinit(self: *Self) void {
-            self.sieve.destroy();
-        }
-
-        pub fn reset(self: *Self) void {
+        pub fn sieveInit(self: *Self, allocator: *Allocator) !void {
+            self.sieve = try Sieve.init(allocator);
             self.factor = self.sieve.reset();
         }
+
+        pub fn sieveDeinit(self: *Self) void {
+            self.sieve.deinit();
+        }
+
+        pub fn reset(self: *Self) void {}
 
         pub fn run(self: *Self, passes: *u64) void {
             @setAlignStack(256);
@@ -87,8 +90,8 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             init_hold = init_mutex.acquire();
 
             // create the sieve and initialize the threadPool
-            var sieve = try Sieve.create(allocator);
-            errdefer sieve.destroy();
+            var sieve = try Sieve.init(allocator);
+            errdefer sieve.deinit();
             self.sieve = sieve;
 
             for (worker_pool) |*thread_ptr, index| {
@@ -104,8 +107,11 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
                 thread_ptr.wait();
             }
             // deinit the sieve.
-            self.sieve.destroy();
+            self.sieve.deinit();
         }
+
+        pub fn sieveInit(self: *Self, allocator: *Allocator) !void {}
+        pub fn sieveDeinit(self: *Self) void {}
 
         pub fn run(self: *Self, passes: *u64) void {
             // the main loop.
@@ -150,8 +156,6 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
                 worker_started[index] = false;
                 worker_finished[index] = false;
             }
-
-            var first_job = self.sieve.reset();
 
             // set up the current job to be the first.
             self.current_job = Job{ .factor = first_job };
@@ -239,8 +243,8 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             init_hold = init_mutex.acquire();
 
             // create the main thread's sieve and initialize the threadpool
-            var sieve = try Sieve.create(allocator);
-            errdefer sieve.destroy();
+            var sieve = try Sieve.init(allocator);
+            errdefer sieve.deinit();
             self.sieve = sieve;
             self.allocator = allocator;
 
@@ -257,8 +261,13 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
                 thread_ptr.wait();
             }
             // destroy the main thread's sieve
-            self.sieve.destroy();
+            self.sieve.deinit();
         }
+
+        pub fn sieveInit(self: *Self, allocator: *Allocator) !void {}
+        pub fn sieveDeinit(self: *Self) void {}
+
+        pub fn reset() void {}
 
         pub fn run(self: *Self, passes: *u64) void {
             if (!self.started) {
@@ -276,8 +285,8 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
 
         pub fn workerLoop(runner: *Self) void {
             blockOnInit();
-            var sieve = Sieve.create(runner.allocator) catch unreachable;
-            defer sieve.destroy();
+            var sieve = Sieve.init(runner.allocator) catch unreachable;
+            defer sieve.deinit();
 
             while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
                 var factor = sieve.reset();
@@ -286,11 +295,6 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
                 // increment the number of passes.
                 _ = @atomicRmw(u64, runner.passes, .Add, 1, .Monotonic);
             }
-        }
-
-        // NB only resets the main thread.
-        pub fn reset(self: *Self) void {
-            self.factor = self.sieve.reset();
         }
 
         // utility functions

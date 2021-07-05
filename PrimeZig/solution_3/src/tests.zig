@@ -119,8 +119,8 @@ test "Int Sieve boost produces correct byte values" {
             const count = result[0];
             const Sieve = IntSieve(u8, count, .{ .pregen = pregen });
 
-            var sieve = try Sieve.create(allocator);
-            defer sieve.destroy();
+            var sieve = try Sieve.init(allocator);
+            defer sieve.deinit();
 
             _ = sieve.reset();
 

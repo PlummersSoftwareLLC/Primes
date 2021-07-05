@@ -1,6 +1,5 @@
 const std = @import("std");
 const heap = std.heap;
-const print = std.debug.print;
 const time = std.time;
 const sieves = @import("./sieves.zig");
 const IntSieve = sieves.IntSieve;
@@ -10,9 +9,10 @@ const SingleThreadedRunner = runners.SingleThreadedRunner;
 const ParallelAmdahlRunner = runners.AmdahlRunner;
 const ParallelGustafsonRunner = runners.GustafsonRunner;
 
-const Allocator = @import("alloc.zig").SnappyAllocator;
+const Allocator = @import("alloc.zig").EnvironmentallyFriendlyBlockAllocator;
 
 const SIZE = 1_000_000;
+const expected_result = 78_498;
 
 var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
 
@@ -20,7 +20,10 @@ pub fn main() anyerror!void {
     @setEvalBranchQuota(100000);
 
     const run_for = 5; // Seconds
-    var allocator = &Allocator(SIZE).init(std.heap.page_allocator, &scratchpad).allocator;
+    var single_threaded_allocator = Allocator(.{.single_threaded = true}).init(std.heap.page_allocator);
+    defer single_threaded_allocator.deinit();
+    var multithreaded_allocator = Allocator(.{}).init(std.heap.page_allocator);
+    defer multithreaded_allocator.deinit();
 
     // check for the --all flag.
     const all = (std.os.argv.len == 2) and (std.mem.eql(u8, std.mem.spanZ(std.os.argv[1]), "--all"));
@@ -30,17 +33,17 @@ pub fn main() anyerror!void {
 
     comptime const specs = .{
         .{ SingleThreadedRunner, IntSieve, .{}, false },
-        .{ ParallelAmdahlRunner, IntSieve, .{}, false },
-        .{ ParallelGustafsonRunner, IntSieve, .{}, false },
-        .{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false },
-        .{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false },
+        //.{ ParallelAmdahlRunner, IntSieve, .{}, false },
+        //.{ ParallelGustafsonRunner, IntSieve, .{}, false },
+        //.{ ParallelAmdahlRunner, IntSieve, .{ .no_ht = true }, false },
+        //.{ ParallelGustafsonRunner, IntSieve, .{ .no_ht = true }, false },
         .{ SingleThreadedRunner, BitSieve, .{}, false },
-        .{ ParallelGustafsonRunner, BitSieve, .{}, false },
-        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false },
+        //.{ ParallelGustafsonRunner, BitSieve, .{}, false },
+        //.{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, false },
         .{ SingleThreadedRunner, IntSieve, .{}, true },
         .{ SingleThreadedRunner, BitSieve, .{}, true },
-        .{ ParallelGustafsonRunner, BitSieve, .{}, true },
-        .{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, true },
+        //.{ ParallelGustafsonRunner, BitSieve, .{}, true },
+        //.{ ParallelGustafsonRunner, BitSieve, .{ .no_ht = true }, true },
     };
 
     // number of pregenerated primes in the wheel
@@ -51,6 +54,7 @@ pub fn main() anyerror!void {
         comptime const SieveFn = spec[1];
         comptime const runner_opts = spec[2];
         comptime const wheel = spec[3];
+        var allocator = if (RunnerFn == SingleThreadedRunner) &single_threaded_allocator.allocator else &multithreaded_allocator.allocator;
 
         if (wheel) {
             comptime const DataTypes = if (SieveFn == IntSieve) .{u8} else BitSieveDataTypes;
@@ -130,7 +134,9 @@ fn runSieveTest(
     defer runner.deinit();
 
     while (timer.read() < run_for * time.ns_per_s) : (passes += 1) {
-        runner.reset();
+        try runner.sieveInit(allocator);
+        defer runner.sieveDeinit();
+
         runner.run(&passes);
     }
 

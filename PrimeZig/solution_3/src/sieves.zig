@@ -20,13 +20,13 @@ pub fn IntSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
 
         // member functions
 
-        pub fn create(allocator: *Allocator) !Self {
+        pub fn init(allocator: *Allocator) !Self {
             // allocates an array of data.
             var field: *[field_size]T = try allocator.create([field_size]T);
             return Self{ .field = field, .allocator = allocator };
         }
 
-        pub fn destroy(self: *Self) void {
+        pub fn deinit(self: *Self) void {
             self.allocator.destroy(self.field);
         }
 
@@ -118,13 +118,13 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
 
         // member functions
 
-        pub fn create(allocator: *Allocator) !Self {
+        pub fn init(allocator: *Allocator) !Self {
             // allocates an array of data.
             var field: *[field_units]T = try allocator.create([field_units]T);
             return Self{ .field = field, .allocator = allocator };
         }
 
-        pub fn destroy(self: *Self) void {
+        pub fn deinit(self: *Self) void {
             self.allocator.destroy(self.field);
         }
 
