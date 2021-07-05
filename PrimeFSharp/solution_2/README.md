@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 Port of the original C++ prime number sieve to F#. Matching as closely as possible by using while loops. 
 
@@ -18,7 +18,7 @@ A Dockerfile has been provided.
 
 ## Output
 ```
-dmannock_fsharp_port;5248;5.000992;1;algorithm=base,faithful=yes,bits=1
+dmannock_fsharp_port;9669;5.000318;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Original Output
@@ -27,15 +27,25 @@ CPU Used: 3700x (4.3GHz boost)
 
 ### F# [Recursion](PrimeSieveFsharp_Recursion)
 ```
-Passes: 5585, Time: 5.000537, Avg: 0.000895, Limit: 1000000, Count: 78498, Valid: true
+Passes: 9839, Time: 5.000479, Avg: 0.000508, Limit: 1000000, Count: 78498, Valid: true
 ```
 
 ### F# [Port from C++](PrimeSieveFsharp_Port) (_this solution_)
 ```
-Passes: 5248, Time: 5.000992, Avg: 0.000953, Limit: 1000000, Count: 78498, Valid: true
+Passes: 9669, Time: 5.000318, Avg: 0.000517, Limit: 1000000, Count: 78498, Valid: true
 ```
 
-### C#
+### C# (raw bits)
+```
+Passes: 6201, Time: 5.00026 s, Per Loop: 0.806322 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+```
+
+### C# (bool array)
+```
+Passes: 5106, Time: 5.00088 s, Per Loop: 0.979240 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid
+```
+
+### C# (original)
 ```
 Passes: 3545, Time: 5.0012068, Avg: 0.0014107776586741892, Limit: 1000000, Count: 78498, Valid: True
 ```
