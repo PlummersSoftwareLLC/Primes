@@ -16,7 +16,7 @@ unittest
 
 // Final can't be inherited from. This also means that the functions of a final class are non-virtual.
 // The parenthesis indicates that this is a templated class.
-final class Sieve(uint _sieveSize)
+final class Sieve(uint SieveSize)
 {
     // D allows nesting imports into _any_ scope, in order to avoid symbol pollution, and
     // it also allows D to write more "file-portable" code.
@@ -26,37 +26,13 @@ final class Sieve(uint _sieveSize)
     // but less annoying.
     private
     {
-        // Similar to C#'s `readonly`, we can initialise otherwise-const data inside of the ctor.
-        //
-        // `uint[uint]` is an associative array in D. It has the form `VALUE_TYPE[KEY_TYPE]`.
-        //
-        // Because _sieveSize is a templated value, we know what it is at compile-time, so can stack allocate here.
-        ubyte[_sieveSize] _bits = ubyte.max;
-        const uint[uint]  _historicalData;
+        // Because SieveSize is a templated value, we know what it is at compile-time, so can stack allocate here.
+        ubyte[SieveSize] _bits = ubyte.max;
     }
 
     // You can of course also do the C/C++ style to avoid a level of indentation.
     // `@safe` is a built-in attribute that specifies "the compiler can guarentee(citation needed) this code is memory safe".
     @safe:
-
-    // This is a constructor in D.
-    // `nothrow` of course means that this function doesn't throw exceptions, which allows the compiler
-    // to remove any exception handling code it'd otherwise generate.
-    this() nothrow
-    {
-        // D allows for underscores within a number to provide clarity.
-        this._historicalData = 
-        [
-            10          : 4,
-            100         : 25,
-            1_000       : 168,
-            10_000      : 1229,
-            100_000     : 9592,
-            1_000_000   : 78_498,
-            10_000_000  : 664_579,
-            100_000_000 : 5_761_455
-        ];
-    }
 
     // Members are public by default.
     void runSieve()
@@ -80,7 +56,7 @@ final class Sieve(uint _sieveSize)
         //  `.to!int` and `.to!int()` are exactly the same.
 
         auto factor = 3;
-        const q = sqrt(_sieveSize.to!float).round.to!uint;
+        const q = sqrt(SieveSize.to!float).round.to!uint;
 
         while(factor < q)
         {
@@ -97,7 +73,7 @@ final class Sieve(uint _sieveSize)
             // This is a more functional style of for each.
             // Note that we create and pass a delegate/lambda into a _template_ parameter.
             // This can allow D compilers to perform optimisations, including inlining.
-            iota(factor * 3, _sieveSize, factor * 2)
+            iota(factor * 3, SieveSize, factor * 2)
                 .each!(num => this.clearBit(num));
 
             factor += 2;
@@ -118,7 +94,7 @@ final class Sieve(uint _sieveSize)
             output.put("2, ");
 
         auto count = 1;
-        foreach(num; 3.._sieveSize)
+        foreach(num; 3..SieveSize)
         {
             if(this.getBit(num))
             {
@@ -143,7 +119,7 @@ final class Sieve(uint _sieveSize)
             passes,
             duration,
             duration / passes,
-            _sieveSize,
+            SieveSize,
             count,
             this.validateResults()
         );
@@ -159,10 +135,34 @@ final class Sieve(uint _sieveSize)
     }
 
     // Since this function is only ever called after all data mutations are done, it seems appropriate to state that it's `pure`.
-    private bool validateResults() pure
+    private bool validateResults()
     {
-        // .get(key, default_value)
-        return this._historicalData.get(_sieveSize, uint.max) == this.countPrimes();
+        // We can embed structs directly into functions.
+        // By marking it 'static' we're saying that it doesn't need access to the function context.
+        static struct PrimeCountPair
+        {
+            uint primeLimit;
+            uint primeCount;
+        }
+
+        // Dynamically generate code.
+        // The foreach body is duplicated (unrolled) for every value inside the array.
+        // D lets us use underscores to make numbers easier to read.
+        static foreach(pair; [
+                PrimeCountPair(10,              4),
+                PrimeCountPair(100,             25),
+                PrimeCountPair(1000,            168),
+                PrimeCountPair(10_000,          1229),
+                PrimeCountPair(100_000,         9592),
+                PrimeCountPair(1_000_000,       78_498),
+                PrimeCountPair(10_000_000,      664_579),
+                PrimeCountPair(100_000_000,     5_761_455)
+        ])
+        {
+            // Conditionally compile code.
+            static if(SieveSize == pair.primeLimit)
+                return this.countPrimes() == pair.primeCount;
+        }
     }
 
     private bool getBit(uint index) @nogc nothrow
@@ -178,10 +178,10 @@ final class Sieve(uint _sieveSize)
         this._bits[index / 8] &= ~(1 << (index % 8));
     }
 
-    private uint countPrimes() @nogc nothrow pure
+    private uint countPrimes() nothrow pure
     {
-        import core.bitop : popcnt;
         import std.algorithm : map, sum;
+        import std.range     : iota;
 
         // D has a concept called `ranges`, which are (usually) lightweight structs
         // which provide a .popFront(), .front(), and .empty() functions.
@@ -195,12 +195,12 @@ final class Sieve(uint _sieveSize)
         // `$` within a slice means "length", so 0..length (exclusive).
         //
         // So essentially all we're doing is making a lazily evaluated, allocationless pipeline:
-        //  Take all the bytes we have from _bits.
-        //  Evaluate popcnt(n) where `n` is the next byte.
-        //  Find the sum of all the `popcnt(n)` evaluations.
-        return this._bits[0..$]
-                    .map!popcnt
-                    .sum;
+        //  Get every number in the range [0..size] exclusive.
+        //  Map it to 1 if it is a prime, map it to 0 otherwise.
+        //  Find the sum of all the mapped results.
+        return iota(0, SieveSize)
+                .map!(num => this.getBit(num) ? 1 : 0) // Ternary operator is just to make it more clear, not actually needed.
+                .sum;
     }
 }
 
