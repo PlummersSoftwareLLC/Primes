@@ -52,10 +52,18 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
 
                 return W.first_prime;
             } else {
-                for (self.field) |*slot| {
-                    slot.* = TRUE;
-                }
+                zero_out(self.field);
                 return 3;
+            }
+        }
+
+        fn zero_out(field: []T) void {
+            if (T == u8) {
+                @memset(@ptrCast([*]u8, field), TRUE, field.len);
+            } else {
+                for (field) |*elem| {
+                    elem.* = TRUE;
+                }
             }
         }
 
