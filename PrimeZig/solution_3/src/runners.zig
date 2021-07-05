@@ -40,6 +40,10 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
 
         pub const name = "single-" ++ Sieve.name;
         pub fn threads() !usize { return 1; }
+
+        pub fn verifyPrimeCount(self: *Self, count: usize) void {
+            std.debug.assert(self.sieve.primeCount() == count);
+        }
     };
 }
 

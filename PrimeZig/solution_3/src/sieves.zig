@@ -188,17 +188,23 @@ pub fn BitSieve(comptime T: type, sieve_size: comptime_int, opts: SieveOpts) typ
             if (T == u8) {
                 const dest_len = field_units * @sizeOf(T);
                 var start: usize = 0;
-                var u8_field = @ptrCast([*] u8, bit_field);
-                while (start + src_units < dest_len) : (start += src_units) {
-                    @memcpy(u8_field, @ptrCast([*] const u8, src), @sizeOf(T));
+                var finish: usize = src_units;
+                //var u8_field = @ptrCast([*] u8, bit_field);
+                while (finish < dest_len) : ({start += src_units; finish += src_units;}) {
+                    copy(bit_field.*[start..finish], src.*[0..]);
                 }
-                @memcpy(u8_field, @ptrCast([*] const u8, src), dest_len - start);
+                copy(bit_field.*[start..field_units], src.*[0..field_units - start]);
             } else {
                 var src_index: usize = 0;
                 for (bit_field.*) |*dest| {
                     dest.* = findBits(src, &src_index);
                 }
             }
+        }
+
+        fn copy(dst: []u8, src: []const u8) void {
+            std.debug.assert(dst.len == src.len);
+            std.mem.copy(u8, dst, src);
         }
 
         inline fn findBits(src: *const *[src_units]u8, src_index: *usize) T {

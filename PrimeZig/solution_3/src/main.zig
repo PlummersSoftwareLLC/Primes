@@ -66,7 +66,7 @@ pub fn main() anyerror!void {
                     comptime const Runner = RunnerFn(Sieve, runner_opts);
                     comptime const selected = selected_runs(Runner);
                     if (all or selected) {
-                        try runSieveTest(Runner, run_for, allocator, wheel, typebits);
+                        try runSieveTest(Runner, run_for, allocator, wheel, typebits, SIZE);
                     }
                 }
             }
@@ -79,7 +79,7 @@ pub fn main() anyerror!void {
                 comptime const Runner = RunnerFn(Sieve, runner_opts);
                 comptime const selected = selected_runs(Runner);
                 if (all or selected) {
-                    try runSieveTest(Runner, run_for, allocator, wheel, typebits);
+                    try runSieveTest(Runner, run_for, allocator, wheel, typebits, SIZE);
                 }
             }
         }
@@ -124,7 +124,8 @@ fn runSieveTest(
     run_for: comptime_int,
     allocator: *std.mem.Allocator,
     wheel: bool,
-    bits: usize
+    bits: usize,
+    sieve_size: usize,
 ) anyerror!void {
     const timer = try time.Timer.start();
     var passes: u64 = 0;
@@ -138,6 +139,13 @@ fn runSieveTest(
         defer runner.sieveDeinit();
 
         runner.run(&passes);
+
+        if (std.builtin.mode == .Debug) {
+            if (sieve_size == 1_000_000) {
+                // verify that the sieve has the correct number of primes.
+                runner.verifyPrimeCount(78_498);
+            }
+        }
     }
 
     const elapsed = timer.read();
