@@ -1,17 +1,35 @@
-# Primes | A Software Drag Race
+# Lazarus IDE 2.0.12 64bit with FPC 3.2.0 on Windows10 solution by ralfes
+Original FPC pascal code created by: Rutger van Bergen [rbergen] see the PrimePascal folder for source.
+Modified slightly for Lazarus and FPC 3.2.0 by Rex Alfes [ralfes]. Inluded Int64 for prme counts.
+I also tested compiling for 32bit and it ran about 10% slower.
 
-**Note:** You're currently looking at the community contribution branch of this repo, which is now the default. The original branch can be found [here](https://github.com/plummerssoftwarellc/Primes/tree/original). 
-<br/>
-<br/>
-Source code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video
-benchmarking the same prime number sieve in Python, C#, and C++.
+## Run instructions
+.\prime.exe
 
-[![Software Drag Racing | Dave's Garage](https://img.youtube.com/vi/D3h62rgewZM/0.jpg)](https://youtu.be/D3h62rgewZM)
+##Build instructions
+create a project folder and save the project files to the project folder:
+prime.lpi
+prime.lps
+prime.res
+prime.pas
 
-## Community contributions
+Project Options:
+Optimization settng at O+3
+Target Win64
+CPU Family set to your target cpu Default/x86_64/i386/AMD etc
 
-Community contributions, fixes and improvements are accepted on this branch. If you want to add your own solution, please read [CONTRIBUTING.md](CONTRIBUTING.md).
+Select Run -> Clean Up and Build
 
-## Running all benchmarks
+## Output
+Company: https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimePascal/solution_1
+File description: Dave's Garage Prime Speed Test
+File version: 0.1.1.15
+Internal name: prime
+Legal copyright: hahahahaha
+Original filename: prime
+Product name: Prime Test modified by ralfes[ralfes@relikr.net]
+Product version: beta
+------------------------------------------------------------
+ralfes;4966;5.02;1;algorithm=base,faithful=yes
+------------------------------------------------------------
 
-All benchmarks (solutions) in this repository can be built and run with one Makefile. This is described in [BENCHMARK.md](BENCHMARK.md).
