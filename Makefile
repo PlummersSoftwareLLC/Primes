@@ -47,12 +47,12 @@ check-env: check-docker-works check-node-works
 .PHONY: check-node-works
 check-node-works:
 	@# Check if Node.js is installed. Needed to generate report.
-	@npm --version >/dev/null 2>&1 || (echo 'Please install Node.js. https://nodejs.org/en/download' && exit 1)
+	@npm --version >/dev/null 2>&1 || (echo 'Please install Node.js. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)
 
 .PHONY: check-docker-works
 check-docker-works:
 	@# Check if docker engine is installed
-	@docker --version >/dev/null 2>&1 || (echo 'Please install docker. https://docs.docker.com/engine/install' && exit 1)
+	@docker --version >/dev/null 2>&1 || (echo 'Please install docker. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)
 	
 	@# Check if docker is running and that we can connect to it
 	@docker ps >/dev/null
