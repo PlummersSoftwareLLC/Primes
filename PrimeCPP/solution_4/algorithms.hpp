@@ -4,7 +4,10 @@
 #include <string>
 #include <vector>
 
+#include <climits>
 #include <cstddef>
+
+#include "compile_time.hpp"
 
 struct Config {
     const std::string name;
@@ -110,4 +113,39 @@ class Base {
   private:
     const SieveSize m_sieveSize;
     Storage m_bits;
+};
+
+template<std::size_t SieveSize>
+class PreGenerated {
+  public:
+    PreGenerated(const std::size_t) {}
+
+    inline void runSieve() { m_bits = genSieve<SieveSize>(); }
+
+    inline std::size_t countPrimes() { return getPrimes().size(); }
+
+    inline std::vector<std::size_t> getPrimes()
+    {
+        auto primes = std::vector<std::size_t>{};
+        if(SieveSize >= 2) {
+            primes.push_back(2);
+        }
+        for(auto i = std::size_t{3}; i <= SieveSize; i += 2) {
+            if(m_bits[i]) {
+                primes.push_back(i);
+            }
+        }
+        return primes;
+    }
+
+    inline Config getConfig() const
+    {
+        auto name = std::string{"BlackMark"};
+        name += "-pregenerated-";
+        name += "array<bool>";
+        return {name, 1, "base", false, sizeof(typename decltype(m_bits)::value_type) * CHAR_BIT};
+    }
+
+  private:
+    decltype(genSieve<SieveSize>()) m_bits;
 };

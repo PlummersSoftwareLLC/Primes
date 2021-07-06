@@ -62,7 +62,8 @@ int main()
                                  Base<BitStorage<std::uint32_t, true>>,
                                  Base<BitStorage<std::uint32_t, false>>,
                                  Base<BitStorage<std::uint64_t, true>>,
-                                 Base<BitStorage<std::uint64_t, false>>>;
+                                 Base<BitStorage<std::uint64_t, false>>,
+                                 PreGenerated<SIEVE_SIZE>>;
     // clang-format on
 
 #ifdef RUN_TESTS
