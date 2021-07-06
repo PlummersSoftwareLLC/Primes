@@ -16,7 +16,7 @@ template<typename... Ts>
 inline constexpr auto always_false_v = always_false<Ts...>::value;
 
 template<typename Fn, std::size_t... Idxs>
-decltype(auto) for_constexpr(Fn&& func, std::index_sequence<Idxs...>)
+constexpr decltype(auto) for_constexpr(Fn&& func, std::index_sequence<Idxs...>)
 {
     if constexpr((std::is_void_v<std::invoke_result_t<Fn, std::integral_constant<std::size_t, Idxs>>> && ...)) {
         (func(std::integral_constant<std::size_t, Idxs>{}), ...);
@@ -35,7 +35,7 @@ decltype(auto) for_constexpr(Fn&& func, std::index_sequence<Idxs...>)
 }
 
 template<typename Fn, typename Tuple>
-decltype(auto) for_constexpr(Fn&& func, Tuple&& tuple)
+constexpr decltype(auto) for_constexpr(Fn&& func, Tuple&& tuple)
 {
     return for_constexpr([&](const auto& idx) { return func(std::get<idx.value>(tuple)); },
                          std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
