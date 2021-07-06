@@ -52,12 +52,12 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
 
                 return W.first_prime;
             } else {
-                zero_out(self.field);
+                fill_memory(self.field);
                 return 3;
             }
         }
 
-        fn zero_out(field: []T) void {
+        fn fill_memory(field: []T) void {
             if (T == u8) {
                 @memset(@ptrCast([*]u8, field), TRUE, field.len);
             } else {
@@ -176,9 +176,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
 
                 starting_point = W.first_prime;
             } else {
-                for (self.field) |*number| {
-                    number.* = @as(T, 0) -% 1;
-                }
+                fill_memory(self.field);
                 starting_point = 3;
             }
 
@@ -188,6 +186,10 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
                 self.field[self.field.len - 1] &= finalmask;
             }
             return starting_point;
+        }
+
+        fn fill_memory(field: []T) void {
+            @memset(@ptrCast([*]u8, field.ptr), 0xFF, @sizeOf(T) * field.len);
         }
 
         pub fn primeCount(self: *Self) usize {

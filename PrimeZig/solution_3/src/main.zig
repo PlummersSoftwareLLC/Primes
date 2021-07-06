@@ -131,6 +131,7 @@ fn runSieveTest(
     bits: usize,
     sieve_size: usize,
 ) anyerror!void {
+    @setAlignStack(256);
     const timer = try time.Timer.start();
     var passes: u64 = 0;
 

@@ -331,7 +331,6 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
         // utility functions
 
         fn runSieve(sieve: *Sieve, sieve_size: usize, starting_factor: usize) void {
-            @setAlignStack(256);
             const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
 
             var factor = starting_factor;
