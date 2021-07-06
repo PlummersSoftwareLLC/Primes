@@ -15,13 +15,13 @@ type
         NotPrimeArray: PackedBoolArray;
 
     public
-        constructor Create(Size: Integer);
+        constructor Create(Size: Int64);
         function RunSieve(): PackedBoolArray;
         function CountPrimes(): Integer;
         function ValidateResults(var ReferenceResults: CheckMap): Boolean;
 end;
 
-constructor PrimeSieve.Create(Size: Integer);
+constructor PrimeSieve.Create(Size: Int64);
 begin
     SieveSize := Size;
     SetLength(NotPrimeArray, (Size + 1) Div 2);
@@ -29,9 +29,9 @@ end;
 
 function PrimeSieve.RunSieve(): PackedBoolArray;
 var
-    Factor: Integer;
-    Number: Integer;
-    SieveSqrt: Integer;
+    Factor   : Integer = Default(Integer);
+    Number   : Integer = Default(Integer);
+    SieveSqrt: Integer = Default(Integer);
 
 begin
     SieveSqrt := Trunc(Sqrt(SieveSize));
@@ -71,10 +71,9 @@ end;
 
 function PrimeSieve.CountPrimes(): Integer;
 var
-    Count: Integer;
-    I: Integer;
+    Count: Integer = Default(Integer);
+    I    : Integer = Default(Integer);
 begin
-    Count := 0;
     for I := Low(NotPrimeArray) to High(NotPrimeArray) do
     begin
         if not NotPrimeArray[I] then 
@@ -86,11 +85,9 @@ end;
 
 function PrimeSieve.ValidateResults(var ReferenceResults: CheckMap): Boolean;
 var
-    ReferenceValue: Integer;
+    ReferenceValue: Integer = Default(Integer);
 
 begin
-    ReferenceValue := 0;
-
     if ReferenceResults.TryGetData(SieveSize, ReferenceValue) then
        ValidateResults := ReferenceValue = CountPrimes()
     else
@@ -98,9 +95,10 @@ begin
 end;
 
 var
-    ReferenceResults: CheckMap;
-    StartTickCount, DurationTickCount: QWord;
-    PassCount: Integer;
+    ReferenceResults : CheckMap;
+    StartTickCount   : QWord = Default(QWord);
+    DurationTickCount: QWord = Default(QWord);
+    PassCount        : Integer = Default(Integer);
     Sieve: PrimeSieve;
 
 begin
@@ -114,7 +112,6 @@ begin
     ReferenceResults.Add(10000000, 664579);
     ReferenceResults.Add(100000000, 5761455);
 
-    PassCount := 0;
     StartTickCount := GetTickCount64();
     Sieve := nil;
 
