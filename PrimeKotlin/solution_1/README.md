@@ -1,6 +1,7 @@
 # Kotlin solution by Jakob K
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 
 An implementation of the base algorithm using Kotlin. The first test runs concurrently using coroutines, the other one

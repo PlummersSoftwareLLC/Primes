@@ -24,7 +24,7 @@ fun main() = runBlocking(Dispatchers.Default) {
     withContext(Dispatchers.IO) {
         delay(5000)
         primeSieveJobs.forEach { it.cancel() }
-        println("jakobk_kotlin_coroutines;${iterations.get()};5;${cores};algorithm=base")
+        println("jakobk_kotlin_coroutines;${iterations.get()};5;${cores};algorithm=base,faithful=yes")
     }
 
     // cool down
