@@ -53,4 +53,4 @@ for i = 1, realBuf.max, 2 do
 	end
 end
 assert(realNum == checkNum, "realNum: " .. tostring(realNum))
-print(string.format("ben1jen_luajit1;%d;%.6f;1;algorithm=base,faithful=no,bits=1", passes, endTime-startTime))
+print(string.format("ben1jen_luajit1;%d;%d;1;algorithm=base,faithful=no,bits=1", passes, endTime-startTime))
