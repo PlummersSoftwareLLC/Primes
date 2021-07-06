@@ -1,5 +1,7 @@
 #include <chrono>
+#include <iostream>
 #include <map>
+#include <numeric>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -13,7 +15,9 @@
 #include <cstring>
 
 #include "algorithms.hpp"
+#include "compile_time.hpp"
 #include "storages.hpp"
+#include "tests.hpp"
 #include "utils.hpp"
 #include "validator.hpp"
 
@@ -60,6 +64,10 @@ int main()
                                  Base<BitStorage<std::uint64_t, true>>,
                                  Base<BitStorage<std::uint64_t, false>>>;
     // clang-format on
+
+#ifdef RUN_TESTS
+    return runTests<runners_t, 50000>();
+#endif
 
     utils::for_constexpr(
         [&](const auto& idx) {
