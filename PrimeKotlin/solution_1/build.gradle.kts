@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.5.20"
+    application
 }
 
 repositories {
@@ -8,6 +9,10 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+}
+
+application {
+    mainClass.set("PrimeSieveKt")
 }
 
 tasks {
