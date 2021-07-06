@@ -318,3 +318,19 @@ found 0 vulnerabilities
 │   1   │ crystal        │ 1        │ marghidanu │  4232  │ 5.00019  │    1    │   base    │   yes    │ 1    │   846.36716   │
 └───────┴────────────────┴──────────┴────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
+
+## Output formats
+
+The benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format. 
+Here are the supported values:
+
+* table
+* csv
+* json (this also includes the machine information data)
+
+The output format can be controlled via the `FORMATTER` variable like this:
+
+```
+make FORMATTER=json
+make one SOLUTION=PrimeCrystal/solution_1 FORMATTER=csv
+```
