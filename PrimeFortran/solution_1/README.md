@@ -43,10 +43,7 @@ when using a UNIX-like command line or just
 when using a DOS-like command line.
 
 
-For the output of the results the switch `.false.` in the call of
-`print_results` (line 60) has to be changed to `.true.`.
-(Note: In Fortran the periods before and after `true` and `false`
-are part of the boolean constants and must not be omitted.)
+For the output of the results, set the parameter `show_results` (line 5) to `.true.`.
 
 ## Dockerfile
 
