@@ -1,31 +1,47 @@
 import kotlinx.coroutines.*
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.sqrt
 
 const val n = 1_000_000
 
 fun main() = runBlocking(Dispatchers.Default) {
-    var iterations = 0
-    val primeSieveJob = launch {
-        while (true) {
-            val indices = Array(n) { true } // amount of primes = indices.size - 2
-            (2 until sqrt(n.toDouble()).toInt()).map {
-                launch { sieveIndex(it, indices) }
-            }.joinAll()
-            iterations++
+    val cores = Runtime.getRuntime().availableProcessors()
+
+    val primeSieveJobs = ArrayList<Job>()
+
+    val iterations = AtomicInteger()
+    repeat(cores) {
+        primeSieveJobs += launch {
+            while (isActive) {
+                PrimeSieve(n).runSieve()
+                iterations.incrementAndGet()
+            }
         }
     }
 
-    delay(5000)
-    primeSieveJob.cancel()
-    println("JakobK;$iterations;5;${Runtime.getRuntime().availableProcessors()}")
+    withContext(Dispatchers.IO) {
+        delay(5000)
+        primeSieveJobs.forEach { it.cancel() }
+        println("jakobk_kotlin_coroutines;${iterations.get()};5;${cores};algorithm=base")
+    }
 }
 
-fun sieveIndex(i: Int, indices: Array<Boolean>) {
-    if (indices[i]) {
-        var j = i * i
-        while (j < indices.size) {
-            indices[j] = false
-            j += i
+class PrimeSieve(private val size: Int) {
+    private val bits = BooleanArray((size + 1) / 2) { true }
+
+    fun runSieve() {
+        var factor = 3
+        while (factor < sqrt(size.toDouble()).toInt()) {
+            for (num in factor until size step 2)
+                if (bits[num / 2]) {
+                    factor = num
+                    break
+                }
+
+            for (num in factor * 3 until size step factor * 2)
+                bits[num / 2] = false
+
+            factor += 2
         }
     }
 }
