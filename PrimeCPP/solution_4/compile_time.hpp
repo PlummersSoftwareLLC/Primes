@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <numeric>
 
 #include <cstddef>
 
@@ -58,13 +59,60 @@ consteval auto genPrimes()
 }
 
 template<std::size_t WheelSize, std::size_t SieveSize = 0>
-consteval auto genWheel()
+consteval auto genWheelPrimes()
 {
     constexpr auto primes = genPrimes<SieveSize>();
     if constexpr(primes.size() == WheelSize) {
         return primes;
     }
     else {
-        return genWheel<WheelSize, SieveSize + 1>();
+        return genWheelPrimes<WheelSize, SieveSize + 1>();
     }
+}
+
+template<std::size_t BaseSize, const std::array<std::size_t, BaseSize> Base, bool GetSize = false>
+consteval auto calcWheel()
+{
+    constexpr auto limit = std::accumulate(Base.begin(), Base.end(), std::size_t{1}, std::multiplies<std::size_t>()) + 1;
+    auto numbers = std::array<std::size_t, limit>{};
+    std::iota(numbers.begin(), numbers.end(), std::size_t{1});
+    auto elements = limit;
+    for(auto& number: numbers) {
+        for(const auto& baseElem: Base) {
+            if(number % baseElem == 0) {
+                number = 0;
+                --elements;
+                break;
+            }
+        }
+    }
+
+    if constexpr(GetSize) {
+        return elements;
+    }
+    else {
+        constexpr auto numElements = calcWheel<BaseSize, Base, true>();
+        auto result = std::array<std::size_t, numElements>{};
+        std::copy_if(numbers.begin(), numbers.end(), result.begin(), [](const auto& elem) { return elem != 0; });
+        return result;
+    }
+}
+
+template<std::size_t WheelSize, const std::array<std::size_t, WheelSize> Wheel, bool GetSize = false>
+consteval auto calcWheelIncrements()
+{
+    auto increments = Wheel;
+    std::adjacent_difference(Wheel.begin(), Wheel.end(), increments.begin());
+    auto truncIncrements = std::array<std::size_t, WheelSize - 1>{};
+    std::copy(increments.begin() + 1, increments.end(), truncIncrements.begin());
+    return truncIncrements;
+}
+
+template<std::size_t WheelSize>
+consteval auto genWheel()
+{
+    constexpr auto wheelBase = genWheelPrimes<WheelSize>();
+    constexpr auto wheel = calcWheel<wheelBase.size(), wheelBase>();
+    constexpr auto wheelIncs = calcWheelIncrements<wheel.size(), wheel>();
+    return wheelIncs;
 }

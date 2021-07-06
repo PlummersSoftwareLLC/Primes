@@ -149,3 +149,63 @@ class PreGenerated {
   private:
     decltype(genSieve<SieveSize>()) m_bits;
 };
+
+template<typename Storage, std::size_t WheelSize, typename SieveSize = std::size_t>
+class Wheel {
+  public:
+    Wheel(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize + 1) {}
+
+    inline void runSieve()
+    {
+        for(auto i = BASE_PRIMES[BASE_PRIMES.size() - 1], incIdx = std::size_t{0}; i * i <= m_sieveSize;) {
+            if(!m_bits[i]) {
+                i += WHEEL_INC[advanceIdx(incIdx)];
+                continue;
+            }
+            for(auto num = i * i; num <= m_sieveSize; num += i) {
+                m_bits[num] = false;
+            }
+            i += WHEEL_INC[advanceIdx(incIdx)];
+        }
+    }
+
+    inline std::size_t countPrimes() { return getPrimes().size(); }
+
+    inline std::vector<std::size_t> getPrimes()
+    {
+        auto primes = std::vector<std::size_t>(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1);
+        for(auto i = BASE_PRIMES[BASE_PRIMES.size() - 1], incIdx = std::size_t{0}; i <= m_sieveSize;) {
+            if(m_bits[i]) {
+                primes.push_back(i);
+            }
+            i += WHEEL_INC[advanceIdx(incIdx)];
+        }
+        return primes;
+    }
+
+    inline Config getConfig() const
+    {
+        constexpr auto check = WHEEL_INC.size();
+        constexpr auto total = std::accumulate(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1, std::size_t{1}, std::multiplies<std::size_t>());
+
+        auto name = std::string{"BlackMark"};
+        name += "-" + std::to_string(check) + "of" + std::to_string(total) + "-";
+        name += m_bits;
+        return {name, 1, "wheel", true, m_bits.getBitCount()};
+    }
+
+  private:
+    static constexpr auto BASE_PRIMES = genWheelPrimes<WheelSize + 1>();
+    static constexpr auto WHEEL_INC = genWheel<WheelSize>();
+
+    const std::size_t m_sieveSize;
+    Storage m_bits;
+
+    static inline std::size_t advanceIdx(std::size_t& idx)
+    {
+        if(++idx >= WHEEL_INC.size()) {
+            idx = 0;
+        }
+        return idx;
+    }
+};
