@@ -27,7 +27,7 @@ module PrimeModule
     type PrimeSieve
         private
         integer(kind=1), dimension(:), allocatable :: raw_bits
-        integer :: sieve_size
+        integer(kind=8) :: sieve_size
     contains
         procedure, public :: initialize => primesieve_initialize
         procedure, public :: run_sieve => primesieve_run_sieve
@@ -43,7 +43,7 @@ contains
 
     subroutine primesieve_initialize(this, sieve_size)
         class(PrimeSieve), intent(inout) :: this
-        integer, intent(in) :: sieve_size
+        integer(kind=8), intent(in) :: sieve_size
 
         this%sieve_size = sieve_size
 
@@ -59,7 +59,7 @@ contains
 
     subroutine primesieve_run_sieve(this)
         class(PrimeSieve), intent(inout) :: this
-        integer :: factor, q, num
+        integer(kind=8) :: factor, q, num
 
         factor = 3
         q = int(sqrt(real(this%sieve_size)))
@@ -80,12 +80,12 @@ contains
 
     function primesieve_get_bit(this, num) result(bit)
         class(PrimeSieve), intent(in) :: this
-        integer, intent(in) :: num
+        integer(kind=8), intent(in) :: num
         logical :: bit
 
-        if (and(num, 1) == 1) then
+        if (iand(num, 1_8) == 1_8) then
             ! odd number
-            bit = btest(this%raw_bits(num/16 + 1), iand(num/2, 7))
+            bit = btest(this%raw_bits(num/16 + 1), iand(num/2, 7_8))
         else
             ! even number
             bit = .false.
@@ -94,8 +94,8 @@ contains
 
     subroutine primesieve_clear_bits(this, first, last, step)
         class(PrimeSieve), intent(inout) :: this
-        integer, intent(in) :: first, last, step
-        integer :: bitidx, idx, bitstep, last_bitidx
+        integer(kind=8), intent(in) :: first, last, step
+        integer(kind=8) :: bitidx, idx, bitstep, last_bitidx
         integer(kind=1) :: bitmask
 
         ! There is one bit per two natural numbers as we're not keeping track
@@ -106,7 +106,7 @@ contains
 
         ! Rather than calculating the bit mask separately each time, we can just
         ! shift it on every iteration
-        bitmask = not(int(lshift(1, iand(bitidx, 7)), kind=1))
+        bitmask = not(int(lshift(1, iand(bitidx, 7_8)), kind=1))
 
         do while (bitidx <= last_bitidx)
             idx = rshift(bitidx, 3) + 1 ! bitidx / 8 + 1
@@ -121,7 +121,7 @@ contains
     function primesieve_validate_results(this) result(is_valid)
         class(PrimeSieve), intent(in) :: this
         logical :: is_valid
-        integer :: count, i
+        integer(kind=8) :: count, i
 
         is_valid = .false.
         count = this%count_primes()
@@ -135,7 +135,7 @@ contains
 
     subroutine primesieve_print_results(this)
         class(PrimeSieve), intent(in) :: this
-        integer :: i
+        integer(kind=8) :: i
 
         if (this%sieve_size < 2) then
             return
@@ -152,7 +152,7 @@ contains
 
     function primesieve_count_primes(this) result(count)
         class(PrimeSieve), intent(in) :: this
-        integer :: count, i
+        integer(kind=8) :: count, i
 
         if (this%sieve_size < 2) then
             count = 0
@@ -174,14 +174,14 @@ program PrimeFortran
     use PrimeModule
     implicit none
 
-    integer, parameter :: sieve_size = 1000000
-    integer, parameter :: benchmark_secs = 5
+    integer(kind=8), parameter :: sieve_size = 1000000
+    integer(kind=8), parameter :: benchmark_secs = 5
     ! type(PrimeSieve) :: main_sieve
 
     integer(kind=8) :: start_clock, end_clock, cur_clock, &
                        clock_count_rate, clock_count_max
     ! logical :: valid
-    integer :: iters = 0
+    integer(kind=8) :: iters = 0
     real :: time_elapsed
 
     ! call main_sieve%initialize(sieve_size)

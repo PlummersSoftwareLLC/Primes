@@ -21,7 +21,6 @@ There are three versions:
 
 ## Output
 
-    tjol-bits;9478;5.00024557;1;algorithm=base,faithful=yes,bits=1
-    tjol-8bit;15241;5.00017738;1;algorithm=base,faithful=yes,bits=8
-    tjol-logical;8691;5.00012016;1;algorithm=base,faithful=yes,bits=unknown
-
+    tjol-bits;10847;5.00003624;1;algorithm=base,faithful=yes,bits=1
+    tjol-8bit;15269;5.00031376;1;algorithm=base,faithful=yes,bits=8
+    tjol-logical;10110;5.00005150;1;algorithm=base,faithful=yes,bits=unknown

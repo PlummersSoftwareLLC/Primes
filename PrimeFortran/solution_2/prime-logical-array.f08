@@ -83,7 +83,7 @@ contains
         integer, intent(in) :: num
         logical :: bit
 
-        if (and(num, 1) == 1) then
+        if (iand(num, 1) == 1) then
             ! odd number
             bit = this%raw_bits(num/2)
         else
