@@ -7,25 +7,11 @@ jobs:
   test:
     executor: local
     commands:
-      - for i in $(seq $ITERATIONS); do ./primes; done
+      - for i in $(seq $ITERATIONS); do echo "--- Iteration ${i}" && ./primes; done
     needs:
       - build
 
   build:
     executor: local
     commands:
-      - crystal build primes.cr --release --no-debug
-
-  test:m1:
-    executor: local
-    commands:
-      - for i in $(seq $ITERATIONS); do ./primes; done
-    needs:
-      - build:m1
-
-  build:m1:
-    executor: local
-    commands:
-      - crystal build primes.cr --cross-compile --target arm64-apple-darwin --release --no-debug
-      - arch -arm64e /bin/sh -c "cc primes.o -v -o primes -L/opt/homebrew/opt/pcre/lib -L/opt/homebrew/opt/bdw-gc/lib -L/opt/homebrew/opt/libevent/lib /Volumes/Data/Projects/crystal/libcrystal.a -levent -liconv -lpthread -ldl -lgc -lpcre"
-      - rm *.o
+      - crystal build primes.cr --release --no-debug --progress

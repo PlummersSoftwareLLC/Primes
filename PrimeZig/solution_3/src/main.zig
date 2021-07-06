@@ -43,6 +43,7 @@ pub fn main() anyerror!void {
         .{ SingleThreadedRunner, BitSieve, false, true },
         .{ ParallelGustafsonRunner, BitSieve, false, true },
         .{ ParallelGustafsonRunner, BitSieve, true, true },
+
     };
 
     // number of pregenerated primes in the wheel
@@ -87,6 +88,7 @@ pub fn main() anyerror!void {
         }
     }
 }
+
 
 const widthstring = switch (std.builtin.target.cpu.arch.ptrBitWidth()) {
     32 => "u32",

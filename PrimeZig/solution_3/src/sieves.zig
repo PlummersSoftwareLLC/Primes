@@ -196,6 +196,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             var count: usize = 0;
             var idx: usize = 0;
 
+
             for (self.field) |value| {
                 count += @popCount(T, value);
             }

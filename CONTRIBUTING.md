@@ -87,7 +87,7 @@ The collection of solutions in this repository have come to use different approa
 | Name | Description |
 |-|-|
 | [algorithm](#algorithm) | The algorithm used to find the primes in the prime number sieve. |
-| [faithfulness](#faitfhulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
+| [faithfulness](#faithfulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
 | [parallelism](#parallelism) | If the implementation uses any type of multi-threaded processing/calculation. |
 | [storage](#flag-storage) | The number of bits used to indicate if a number in the sieve is a prime number, or not. |
 
@@ -162,6 +162,7 @@ At a technical level, an implementation is considered faithful if it complies wi
 
 * It uses no external dependencies to calculate the actual sieve.
 * It uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
+* The sieve size and corresponding prime candidate memory buffer (or language equivalent) are set/allocated dynamically at runtime. The size of the memory buffer must correspond to the size of the sieve.
 * It conforms to the base [rules](#Rules).
 
 All other implementations are considered unfaithful. Note that they still need to conform to the base [rules](#Rules). 

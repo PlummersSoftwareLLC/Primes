@@ -16,11 +16,7 @@ crystal build primes.cr --release --no-debug
 ./primes
 ```
 
-The `--release` flag will turn on all optimizations; this ensures we run as fast as possible. For convenience, I've included the `run.sh` script; this should make things easier:
-
-```
-./run.sh
-```
+The `--release` flag will turn on all optimizations; this ensures we run as fast as possible.
 
 ### Docker
 

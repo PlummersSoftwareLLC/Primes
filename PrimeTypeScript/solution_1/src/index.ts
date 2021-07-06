@@ -13,11 +13,11 @@ const DICT: { [size: number]: number } = {
 
 class PrimeSieve {
   private readonly sieveSize: number;
-  private bits: Array<boolean>;
+  private bits: Buffer;
 
   constructor(sieveSize: number) {
     this.sieveSize = sieveSize;
-    this.bits = new Array<boolean>(this.sieveSize).fill(false);
+    this.bits = Buffer.alloc(sieveSize);
   }
 
   public runSieve() {
@@ -33,7 +33,7 @@ class PrimeSieve {
       }
 
       for (let num = factor * factor; num < this.sieveSize; num += factor * 2) {
-        this.bits[num] = true;
+        this.bits[num] = 1;
       }
 
       factor += 2;
@@ -46,7 +46,7 @@ class PrimeSieve {
     let count = 1;
     for (let num = 3; num < this.sieveSize; num += 2) {
       if (!this.bits[num]) {
-        if (showResults) process.stdout.write(num.toString());
+        if (showResults) process.stdout.write(`${num}, `);
         count++;
       }
     }

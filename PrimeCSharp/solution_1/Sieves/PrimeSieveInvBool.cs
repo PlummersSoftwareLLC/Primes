@@ -7,6 +7,7 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "ibool";
         public string Name => "Inverted Bool Array";
+        public bool IsBaseAlgorithm => true;
 
         public int SieveSize { get; }
         private readonly bool[] boolArray;

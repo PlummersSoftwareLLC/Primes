@@ -9,7 +9,7 @@ namespace PrimeCSharp
     {
         public string QuickName => "bench+mod";
         public string Name => "Benchmark BitArray 'mod'";
-
+        public int? BitsPerPrime => 1;
         public int SieveSize { get; }
         private readonly BitArray bitArray;
 
