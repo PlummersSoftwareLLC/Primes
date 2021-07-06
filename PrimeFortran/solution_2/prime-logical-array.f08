@@ -158,6 +158,7 @@ contains
 end module
 
 program PrimeFortran
+    use iso_fortran_env
     use PrimeModule
     implicit none
 
@@ -165,7 +166,7 @@ program PrimeFortran
     integer, parameter :: benchmark_secs = 5
     ! type(PrimeSieve) :: main_sieve
 
-    integer(kind=8) :: start_clock, end_clock, cur_clock, &
+    integer(kind=int64) :: start_clock, end_clock, cur_clock, &
                        clock_count_rate, clock_count_max
     ! logical :: valid
     integer :: iters = 0

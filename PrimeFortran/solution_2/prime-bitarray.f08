@@ -1,7 +1,8 @@
 module PrimeModule
+    use iso_fortran_env
     implicit none
 
-    integer, dimension(9), parameter :: validated_sieve_sizes = (/ &
+    integer(kind=int64), dimension(9), parameter :: validated_sieve_sizes = (/ &
         10, &
         100, &
         1000, &
@@ -12,7 +13,7 @@ module PrimeModule
         100000000, &
         1000000000 &
     /)
-    integer, dimension(9), parameter :: valid_prime_counts = (/ &
+    integer(kind=int64), dimension(9), parameter :: valid_prime_counts = (/ &
         4, &
         25, &
         168, &
@@ -26,8 +27,8 @@ module PrimeModule
 
     type PrimeSieve
         private
-        integer(kind=1), dimension(:), allocatable :: raw_bits
-        integer(kind=8) :: sieve_size
+        integer(kind=int8), dimension(:), allocatable :: raw_bits
+        integer(kind=int64) :: sieve_size
     contains
         procedure, public :: initialize => primesieve_initialize
         procedure, public :: run_sieve => primesieve_run_sieve
@@ -43,12 +44,12 @@ contains
 
     subroutine primesieve_initialize(this, sieve_size)
         class(PrimeSieve), intent(inout) :: this
-        integer(kind=8), intent(in) :: sieve_size
+        integer(kind=int64), intent(in) :: sieve_size
 
         this%sieve_size = sieve_size
 
         allocate(this%raw_bits(sieve_size / 16 + 1))
-        this%raw_bits = -1_1
+        this%raw_bits = -1_int8
     end subroutine
 
     subroutine primesieve_destructor(this)
@@ -59,7 +60,7 @@ contains
 
     subroutine primesieve_run_sieve(this)
         class(PrimeSieve), intent(inout) :: this
-        integer(kind=8) :: factor, q, num
+        integer(kind=int64) :: factor, q, num
 
         factor = 3
         q = int(sqrt(real(this%sieve_size)))
@@ -80,12 +81,12 @@ contains
 
     function primesieve_get_bit(this, num) result(bit)
         class(PrimeSieve), intent(in) :: this
-        integer(kind=8), intent(in) :: num
+        integer(kind=int64), intent(in) :: num
         logical :: bit
 
-        if (iand(num, 1_8) == 1_8) then
+        if (iand(num, 1_int64) == 1_int64) then
             ! odd number
-            bit = btest(this%raw_bits(num/16 + 1), iand(num/2, 7_8))
+            bit = btest(this%raw_bits(num/16 + 1), iand(num/2, 7_int64))
         else
             ! even number
             bit = .false.
@@ -94,9 +95,9 @@ contains
 
     subroutine primesieve_clear_bits(this, first, last, step)
         class(PrimeSieve), intent(inout) :: this
-        integer(kind=8), intent(in) :: first, last, step
-        integer(kind=8) :: bitidx, idx, bitstep, last_bitidx
-        integer(kind=1) :: bitmask
+        integer(kind=int64), intent(in) :: first, last, step
+        integer(kind=int64) :: bitidx, idx, bitstep, last_bitidx
+        integer(kind=int8) :: bitmask
 
         ! There is one bit per two natural numbers as we're not keeping track
         ! of the evens.
@@ -106,7 +107,7 @@ contains
 
         ! Rather than calculating the bit mask separately each time, we can just
         ! shift it on every iteration
-        bitmask = not(int(lshift(1, iand(bitidx, 7_8)), kind=1))
+        bitmask = not(int(lshift(1, iand(bitidx, 7_int64)), kind=1))
 
         do while (bitidx <= last_bitidx)
             idx = rshift(bitidx, 3) + 1 ! bitidx / 8 + 1
@@ -121,7 +122,7 @@ contains
     function primesieve_validate_results(this) result(is_valid)
         class(PrimeSieve), intent(in) :: this
         logical :: is_valid
-        integer(kind=8) :: count, i
+        integer(kind=int64) :: count, i
 
         is_valid = .false.
         count = this%count_primes()
@@ -135,7 +136,7 @@ contains
 
     subroutine primesieve_print_results(this)
         class(PrimeSieve), intent(in) :: this
-        integer(kind=8) :: i
+        integer(kind=int64) :: i
 
         if (this%sieve_size < 2) then
             return
@@ -152,7 +153,7 @@ contains
 
     function primesieve_count_primes(this) result(count)
         class(PrimeSieve), intent(in) :: this
-        integer(kind=8) :: count, i
+        integer(kind=int64) :: count, i
 
         if (this%sieve_size < 2) then
             count = 0
@@ -171,17 +172,18 @@ contains
 end module
 
 program PrimeFortran
+    use iso_fortran_env
     use PrimeModule
     implicit none
 
-    integer(kind=8), parameter :: sieve_size = 1000000
-    integer(kind=8), parameter :: benchmark_secs = 5
+    integer(kind=int64), parameter :: sieve_size = 1000000
+    integer(kind=int64), parameter :: benchmark_secs = 5
     ! type(PrimeSieve) :: main_sieve
 
-    integer(kind=8) :: start_clock, end_clock, cur_clock, &
+    integer(kind=int64) :: start_clock, end_clock, cur_clock, &
                        clock_count_rate, clock_count_max
     ! logical :: valid
-    integer(kind=8) :: iters = 0
+    integer(kind=int64) :: iters = 0
     real :: time_elapsed
 
     ! call main_sieve%initialize(sieve_size)
