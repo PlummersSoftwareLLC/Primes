@@ -1,4 +1,4 @@
-# Kotlin solution by bluefireoly
+# Kotlin solution by Jakob K
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
