@@ -197,7 +197,7 @@ program PrimeFortran
     ! print *, "time:", time_elapsed
     ! print *, ""
 
-    write (*, "(A,I0,A,F0.8,A)") "tjol-logical;", iters, ";", time_elapsed, ";1;algorithm=base,faithful=yes,bits=unknown"
+    write (*, "(A,I0,A,F0.8,A)") "tjol-logical;", iters, ";", time_elapsed, ";1;algorithm=base,faithful=yes"
 
 contains
 
