@@ -5,10 +5,15 @@ MyFirstPython Program (tm) Dave Plummer 8/9/2018
 Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 """
 
-from math import sqrt
+# from math import sqrt
+from libc.math cimport sqrt
+from libc.string cimport strlen
 
 
-class PrimeSieve:
+cdef bytearray byte_0 = bytearray(b'\x00')
+cdef bytearray byte_1 = bytearray(b'\x01')
+
+cdef class PrimeSieve:
 
     """This is the main PrimeSieve class. Call it with the number you wish as
     an upper limit, then call the run_sieve method to do the calculation.
@@ -24,9 +29,12 @@ class PrimeSieve:
                     100000000 : 5761455
                   }
 
-    def __init__(self, limit):
+    cdef int _size
+    cdef bytearray _bits
+
+    def __cinit__(self, limit):
         self._size = limit
-        self._bits = bytearray(b"\x01") * ((self._size + 1) // 2)
+        self._bits = byte_1 * ((self._size + 1) // 2)
 
     def validate_results(self):                      # Check to see if this is an upper_limit we can
 
@@ -40,22 +48,25 @@ class PrimeSieve:
     def run_sieve(self):
 
         """Calculate the primes up to the specified limit"""
+        cdef int factor, bitslen, start, step, size, index
+        cdef float q
+
 
         factor = 1
         # sqrt doesn't seem to make any difference in CPython,
         # but works much faster than "x**.5" in Pypy
         q = sqrt(self._size) / 2
-        bitslen = len(self._bits)
+        bitslen = strlen(self._bits)
 
         while factor <= q:
-            factor = self._bits.index(b"\x01", factor)
+            factor = self._bits.index(byte_1, factor)
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
             start = 2 * factor * (factor + 1)
             step  = factor * 2 + 1
             size  = bitslen - start
-            self._bits[start :: step] = b"\x00" * (size // step + bool(size % step))  # bool is (a subclass of) int in python
+            self._bits[start :: step] = byte_0 * (size // step + bool(size % step))  # bool is (a subclass of) int in python
 
             factor += 1
 
@@ -96,7 +107,7 @@ class PrimeSieve:
 
         # Following 2 lines added by rbergen to conform to drag race output format
         print();
-        print("ssovest; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
+        print("rpkak; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
 
 
 # MAIN Entry

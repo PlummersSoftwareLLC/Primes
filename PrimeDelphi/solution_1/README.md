@@ -1,4 +1,4 @@
-# Delphi solution by JakeTapper
+# Delphi solution by JackTrapper
 
 ![Category](https://img.shields.io/badge/Category-faithful-green)
 
