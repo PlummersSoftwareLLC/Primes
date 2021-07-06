@@ -1,5 +1,15 @@
 defmodule PrimeSieve do
 
+  @reference_results %{
+      10 => 4,
+      100 => 25,
+      1000 => 168,
+      10000 => 1229,
+      100000 => 9592,
+      1000000 => 78498,
+      10000000 => 664579,
+      100000000 => 5761455
+  }
 
   @doc """
   Count true values in list
@@ -47,32 +57,21 @@ defmodule PrimeSieve do
     if Time.diff(Time.utc_now(), start_time, :second) > 5 do
       pass_count
     else
-      run_sieve(prime_list, 3, sieve_size)
+      results = run_sieve(prime_list, 3, sieve_size)
+      validate_results(sieve_size, results, @reference_results)
       pass(prime_list, sieve_size, start_time, pass_count + 1)
     end
   end
 end
 
-reference_results = %{
-    10 => 4,
-    100 => 25,
-    1000 => 168,
-    10000 => 1229,
-    100000 => 9592,
-    1000000 => 78498,
-    10000000 => 664579,
-    100000000 => 5761455
-}
-
+# Setup
 size = 1000000
 primes = Enum.map(1..size, fn(_x) -> true end)
-# results = PrimeSieve.run_sieve(primes, 3, size)
-#   |> Enum.drop_every(2)
-#   |> PrimeSieve.count_primes()
-# IO.inspect results
-# IO.inspect PrimeSieve.validate_results(size, results, reference_results)
 
+# Run
 start_time = Time.utc_now()
 pass_count = PrimeSieve.start(primes, size, start_time)
 duration  = Time.diff(Time.utc_now(), start_time, :microsecond)
+
+# Print
 IO.puts "cdesch;#{pass_count};#{Float.round(duration/1000000, 3)};1;algorithm=base,faithful=no"
