@@ -5,6 +5,8 @@ import kotlin.math.sqrt
 const val n = 1_000_000
 
 fun main() = runBlocking(Dispatchers.Default) {
+    // MULTI THREADED
+
     val cores = Runtime.getRuntime().availableProcessors()
 
     val primeSieveJobs = ArrayList<Job>()
@@ -24,6 +26,23 @@ fun main() = runBlocking(Dispatchers.Default) {
         primeSieveJobs.forEach { it.cancel() }
         println("jakobk_kotlin_coroutines;${iterations.get()};5;${cores};algorithm=base")
     }
+
+    // cool down
+    delay(5000)
+
+    // SINGLE THREADED
+
+    val startTime = System.currentTimeMillis()
+
+    var iterationsSingleThreaded = 0
+    while (System.currentTimeMillis() - startTime < 5000) {
+        PrimeSieve(n).runSieve()
+        iterationsSingleThreaded++
+    }
+
+    val duration = System.currentTimeMillis() - startTime
+
+    println("jakobk_kotlin_singlethreaded;${iterationsSingleThreaded};${duration / 1000.0};1;algorithm=base")
 }
 
 class PrimeSieve(private val size: Int) {
