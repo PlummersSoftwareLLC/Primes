@@ -1,9 +1,26 @@
-import { Result } from '../models';
-
 import { Table } from 'console-table-printer';
+import { Report, Result } from '../models';
+import { IFormatter } from '../formatter';
 
-export default class ResultService {
-  public printResults(title: string, data: Result[]): void {
+export class TableFormatter implements IFormatter {
+  render(report: Report): string {
+    const results = report.results;
+    const output = new Array<string>();
+
+    const singleThreadedResults = results.filter(
+      (value) => value.threads === 1
+    );
+    if (singleThreadedResults.length > 0)
+      output.push(this.printResults('Single-threaded', singleThreadedResults));
+
+    const multiThreadedResults = results.filter((result) => result.threads > 1);
+    if (multiThreadedResults.length > 0)
+      output.push(this.printResults('Multi-threaded', multiThreadedResults));
+
+    return output.join('\n');
+  }
+
+  private printResults(title: string, data: Result[]): string {
     const table = new Table({
       title,
       columns: [
@@ -51,6 +68,6 @@ export default class ResultService {
         })
     );
 
-    table.printTable();
+    return table.render();
   }
 }
