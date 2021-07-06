@@ -105,7 +105,7 @@ class Base {
     inline Config getConfig() const
     {
         auto name = std::string{"BlackMark"};
-        name += "-1of2-";
+        name += "-half_storage-";
         name += m_bits;
         return {name, 1, "base", true, m_bits.getBitCount()};
     }
