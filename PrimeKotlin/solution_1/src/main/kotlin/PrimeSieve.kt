@@ -42,7 +42,7 @@ fun main() = runBlocking(Dispatchers.Default) {
 
     val duration = System.currentTimeMillis() - startTime
 
-    println("jakobk_kotlin_singlethreaded;${iterationsSingleThreaded};${duration / 1000.0};1;algorithm=base")
+    println("jakobk_kotlin_singlethreaded;${iterationsSingleThreaded};${duration / 1000.0};1;algorithm=base,faithful=yes")
 }
 
 class PrimeSieve(private val size: Int) {
