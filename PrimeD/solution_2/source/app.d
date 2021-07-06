@@ -17,6 +17,7 @@ unittest
 // Final can't be inherited from. This also means that the functions of a final class are non-virtual.
 // The parenthesis indicates that this is a templated class.
 final class Sieve(uint SieveSize)
+if(SieveSize > 0) // We can attach constraints onto templated things that must succeed, otherwise the compiler will raise an error.
 {
     // D allows nesting imports into _any_ scope, in order to avoid symbol pollution, and
     // it also allows D to write more "file-portable" code.
@@ -31,6 +32,17 @@ final class Sieve(uint SieveSize)
         // `alignTo` is being used in CTFE here.
         ubyte[alignTo!8(SieveSize) / 8] _bits = ubyte.max;
     }
+
+    // We'll use this helper func at compile-time to ensure that the user passes
+    // a valid value into the `SieveSize` template parameter for our class below.
+    static bool isValidSieveSize(uint size)
+    {
+        import std.algorithm : canFind;
+        return [10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000].canFind(size);
+    }
+
+    // This then allows us to perform our own compile-time checks with custom error messages!
+    static assert(isValidSieveSize(SieveSize), "You have provided an invalid sieve size.");
 
     // You can of course also do the C/C++ style to avoid a level of indentation.
     // `@safe` is a built-in attribute that specifies "the compiler can guarentee(citation needed) this code is memory safe".
@@ -137,7 +149,7 @@ final class Sieve(uint SieveSize)
     }
 
     // Since this function is only ever called after all data mutations are done, it seems appropriate to state that it's `pure`.
-    private bool validateResults()
+    private bool validateResults() pure
     {
         // We can embed structs directly into functions.
         // By marking it 'static' we're saying that it doesn't need access to the function context.
@@ -193,8 +205,6 @@ final class Sieve(uint SieveSize)
         //
         // The standard library provides a bunch of ranges which can be composed together to form
         // pipelines.
-        //
-        // `$` within a slice means "length", so 0..length (exclusive).
         //
         // So essentially all we're doing is making a lazily evaluated, allocationless pipeline:
         //  Get every number in the range [0..size] exclusive.
