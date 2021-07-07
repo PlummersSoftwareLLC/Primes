@@ -1,7 +1,8 @@
 # AWK Solution
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 ## What is AWK?
 [AWK](https://en.wikipedia.org/wiki/AWK) is a scripting language created by Alfred **A**ho, Peter **W**einberger and Brian **K**ernighan for simple text processing.
