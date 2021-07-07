@@ -146,7 +146,7 @@ valid-prime-counts 16 dup cells allot store-multiple
 : print-benchmark-results ( timeout sieve-size -- )
         benchmark-prime-sieve
         1e6 f/
-        ." tjol-8bit;" . ." ;" f. ." ;1;algorithm=base,faithful=no" cr
+        ." tjol-8bit;" . ." ;" f. ." ;1;algorithm=base,faithful=no,bits=8" cr
         ;
 
 : print-primes ( sieve-size -- )

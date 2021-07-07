@@ -2,6 +2,6 @@ FROM mtrute/gforth-container:latest
 
 WORKDIR /opt/app
 
-COPY prime-bitarray.fs .
+COPY prime-bitarray.fs prime-bytearray.fs run.sh ./
 
-ENTRYPOINT [ "gforth-fast", "prime-bitarray.fs", "-e", "5 1000000 print-benchmark-results bye" ]
+ENTRYPOINT [ "sh", "run.sh" ]

@@ -15,37 +15,27 @@ There are two versions:
  * `prime-bitarray.fs`, storing the state in a bit field
  * `prime-bytearray.fs`, storing every prime/not prime flag in a byte
 
-`prime-bitarray` is closest to the original, `prime-bytearray.fs` is faster. The docker
-container runs `prime-bitarray.fs`.
+`prime-bitarray` is closest to the original, `prime-bytearray.fs` is faster.
 
 ## How to run
 
-The program doesn't have a convenient command-line interface.
-
- * For the 5 second benchmark: `gforth-fast prime-bitarray.fs -e "5 1000000 print-benchmark-results bye"`
- * To print the primes up to (e.g.) 1000: `gforth-fast prime-bitarray.fs -e "1000 print-primes bye"`
- * To check the result for a sieve size of (e.g.) 100'000'000: `gforth-fast prime-bitarray.fs -e "100000000 run-validation bye"`
+    ./run.sh
 
 ## Output
 
-Bit-array version, gforth 0.7.3:
+gforth 0.7.3:
 
-    tjol-1bit;175 ;5.020695 ;1;algorithm=base,faithful=no
+    tjol-1bit;173 ;5.018379 ;1;algorithm=base,faithful=no,bits=1
+    tjol-8bit;265 ;5.001464 ;1;algorithm=base,faithful=no,bits=8
 
-Byte-array version, gforth 0.7.3:
-
-    tjol-8bit;284 ;5.00106 ;1;algorithm=base,faithful=no
-
-Bit-array version, gforth 0.7.9_20210701:
+gforth 0.7.9_20210701:
     
-    tjol-1bit;426 ;5.000673 ;1;algorithm=base,faithful=no
+    tjol-1bit;465 ;5.002018 ;1;algorithm=base,faithful=no,bits=1
+    tjol-8bit;475 ;5.000922 ;1;algorithm=base,faithful=no,bits=8
 
-Byte-array version, gforth 0.7.9_20210701:
-    
-    tjol-8bit;481 ;5.008582 ;1;algorithm=base,faithful=no
+gforth 0.7.9_20190627 in the Docker container
 
-Bit-array version in docker, gforth 0.7.9_20190627:
-
-    tjol-1bit;259 ;5.000519 ;1;algorithm=base,faithful=no
+    tjol-1bit;256 ;5.001076 ;1;algorithm=base,faithful=no,bits=1
+    tjol-8bit;418 ;5.0083 ;1;algorithm=base,faithful=no,bits=8
 
 This is on a Ryzen 5 2600 running OpenSUSE Tumbleweed.
