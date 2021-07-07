@@ -16,118 +16,107 @@ using namespace std::chrono;
 
 class prime_sieve
 {
-private:
+  private:
 
-    long sieveSize = 0, count = -1;
-    vector<bool> Bits;
-    const std::map<const long long, const int> resultsDictionary =
-    {
-          {          10LL, 4         },               // Historical data for validating our results - the number of primes
-          {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
-          {        1000LL, 168       },
-          {       10000LL, 1229      },
-          {      100000LL, 9592      },
-          {     1000000LL, 78498     },
-          {    10000000LL, 664579    },
-          {   100000000LL, 5761455   },
-          {  1000000000LL, 50847534  },
-          { 10000000000LL, 455052511 },
+      long sieveSize = 0;
+      vector<bool> Bits;
+      const std::map<const long long, const int> resultsDictionary = 
+      {
+            {          10LL, 4         },               // Historical data for validating our results - the number of primes
+            {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
+            {        1000LL, 168       },
+            {       10000LL, 1229      },
+            {      100000LL, 9592      },
+            {     1000000LL, 78498     },
+            {    10000000LL, 664579    },
+            {   100000000LL, 5761455   },
+            {  1000000000LL, 50847534  },
+            { 10000000000LL, 455052511 },
 
-    };
+      };
 
-    bool validateResults()
-    {
-        auto result = resultsDictionary.find(sieveSize);
-        if (resultsDictionary.end() == result)
-            return false;
-        countPrimes();
-        return result->second == count;
-    }
+      bool validateResults()
+      {
+          auto result = resultsDictionary.find(sieveSize);
+          if (resultsDictionary.end() == result)
+              return false;
+          return result->second == countPrimes();
+      }
 
-public:
+   public:
 
-    prime_sieve(long n)
+      prime_sieve(long n) 
         : Bits(n, true), sieveSize(n)
-    {
-    }
+      {
+      }
 
-    ~prime_sieve()
-    {
-    }
+      ~prime_sieve()
+      {
+      }
 
-    void runSieve()
-    {
-        int factor = 3;
-        int q = (int)sqrt(sieveSize);
+      void runSieve()
+      {
+          int factor = 3;
+          int q = (int) sqrt(sieveSize);
 
-        while (factor <= q)
-        {
-            if (Bits[factor])
-            {
-                for (int num = factor * factor; num < sieveSize; num += factor * 2)
-                    Bits[num] = false;
-            }
+          while (factor <= q)
+          {
+              for (int num = factor; num < sieveSize; num += 2)
+              {
+                  if (Bits[num])
+                  {
+                      factor = num;
+                      break;
+                  }
+              }
+              for (int num = factor * factor; num < sieveSize; num += factor * 2)
+                  Bits[num] = false;
 
-            if (factor % 10 == 3)
-            {
-                factor += 2;
-            }
-            factor += 2;
-        }
-    }
+              factor += 2;
+          }
+      }
 
-    void printResults(bool showResults, double duration, int passes)
-    {
-        if (showResults)
-        {
-            printf("2, 3, 5, ");
+      void printResults(bool showResults, double duration, int passes)
+      {
+          if (showResults)
+              printf("2, ");
 
-            for (int num = 7; num <= sieveSize; num += 2)
-            {
-                if (Bits[num])
-                {
-                    printf("%d, ", num);
-                }
-                if (num % 10 == 3)
-                {
-                    num += 2;
-                }
-            }
+          int count = (sieveSize >= 2);                             // Starting count (2 is prime)
+          for (int num = 3; num <= sieveSize; num+=2)
+          {
+              if (Bits[num])
+              {
+                  if (showResults)
+                      printf("%d, ", num);
+                  count++;
+              }
+          }
 
-            printf("\n");
-        }
+          if (showResults)
+              printf("\n");
 
-        countPrimes();
+          printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
+                 passes,
+                 duration,
+                 duration / passes,
+                 sieveSize,
+                 count,
+                 countPrimes(),
+                 validateResults());
 
-        printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count: %ld, Valid: %d\n",
-            passes,
-            duration,
-            duration / passes,
-            sieveSize,
-            count,
-            validateResults());
+          // Following 2 lines added by rbergen to conform to drag race output format
+          printf("\n");       
+          printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
+      }
 
-        // Following 2 lines added by rbergen to conform to drag race output format
-        printf("\n");
-        printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
-    }
-
-    void countPrimes()
-    {
-        if (count == -1)
-        {
-            count = (sieveSize >= 2) + (sieveSize >= 5);
-            for (int i = 3; i < sieveSize; i += 2)
-            {
-                if (Bits[i])
-                    count++;
-                if (i % 10 == 3)
-                {
-                    i += 2;
-                }
-            }
-        }
-    }
+      int countPrimes()
+      {
+          int count =  (sieveSize >= 2);;
+          for (int i = 3; i < sieveSize; i+=2)
+              if (Bits[i])
+                  count++;
+          return count;
+      }
 };
 
 int main()
@@ -145,5 +134,5 @@ int main()
             sieve.printResults(false, duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000.0, passes);
             break;
         }
-    }
+    } 
 }
