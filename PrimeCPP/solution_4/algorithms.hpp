@@ -152,16 +152,18 @@ class PreGenerated {
     decltype(genSieve<SieveSize>()) m_bits;
 };
 
-template<typename Storage, std::size_t WheelSize, bool ConstantStride = false>
+template<typename Storage, std::size_t WheelSize, bool ConstantStride = false, bool HalfStorage = false>
 class Wheel {
   public:
-    Wheel(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize + 1) {}
+    Wheel(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / (HalfStorage ? 2 : 1) + 1) {}
 
     inline void runSieve()
     {
+        const auto sieveSize = m_sieveSize / (HalfStorage ? 2 : 1);
+
         auto wheelIdx = idx_t{};
-        for(auto i = START_NUM; i * i <= m_sieveSize; i += WHEEL_INC[++wheelIdx]) {
-            for(auto num = i; i <= m_sieveSize; num += WHEEL_INC[++wheelIdx]) {
+        for(auto i = START_NUM; i * i <= sieveSize; i += WHEEL_INC[++wheelIdx]) {
+            for(auto num = i; i <= sieveSize; num += WHEEL_INC[++wheelIdx]) {
                 if(m_bits[num]) {
                     i = num;
                     break;
@@ -170,13 +172,15 @@ class Wheel {
             auto strideIdx = wheelIdx;
             const auto stride = [&strideIdx] {
                 if constexpr(ConstantStride) {
-                    return (WheelSize > 0) ? 2 : 1;
+                    return (WheelSize > 0 && !HalfStorage) ? 2 : 1;
                 }
                 else {
                     return WHEEL_INC[++strideIdx];
                 }
             };
-            for(auto num = i * i; num <= m_sieveSize; num += i * stride()) {
+            const auto factor = HalfStorage ? (i * 2 + 1) : i;
+            const auto start = (factor * factor) / (HalfStorage ? 2 : 1);
+            for(auto num = start; num <= sieveSize; num += factor * stride()) {
                 m_bits[num] = false;
             }
         }
@@ -186,12 +190,15 @@ class Wheel {
 
     inline std::vector<std::size_t> getPrimes()
     {
+        const auto sieveSize = (m_sieveSize + 1) / (HalfStorage ? 2 : 1);
+
         auto primes = std::vector<std::size_t>{};
         std::copy_if(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1, std::back_inserter(primes), [&](const auto& prime) { return prime <= m_sieveSize; });
         auto wheelIdx = idx_t{};
-        for(auto i = START_NUM; i <= m_sieveSize; i += WHEEL_INC[++wheelIdx]) {
+        for(auto i = START_NUM; i < sieveSize; i += WHEEL_INC[++wheelIdx]) {
             if(m_bits[i]) {
-                primes.push_back(i);
+                const auto prime = HalfStorage ? (2 * i + 1) : i;
+                primes.push_back(prime);
             }
         }
         return primes;
@@ -203,8 +210,9 @@ class Wheel {
         constexpr auto total = std::accumulate(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1, std::size_t{1}, std::multiplies<std::size_t>());
 
         auto name = std::string{"BlackMark"};
-        name += "-" + std::to_string(check) + "of" + std::to_string(total);
-        name += (ConstantStride) ? "-const_stride-" : "-dyn_stride-";
+        name += "-" + std::to_string(check) + "of" + std::to_string(total) + "-";
+        name += (ConstantStride) ? "const_stride-" : "dyn_stride-";
+        name += (HalfStorage) ? "half_storage-" : "full_storage-";
         name += m_bits;
         const auto algorithm = (check == 1) ? "base" : "wheel";
         return {name, 1, algorithm, true, m_bits.getBitCount()};
@@ -212,8 +220,8 @@ class Wheel {
 
   private:
     static constexpr auto BASE_PRIMES = genWheelPrimes<WheelSize + 1>();
-    static constexpr auto START_NUM = BASE_PRIMES[BASE_PRIMES.size() - 1];
-    static constexpr auto WHEEL_INC = genWheel<WheelSize>();
+    static constexpr auto START_NUM = BASE_PRIMES[BASE_PRIMES.size() - 1] / (HalfStorage ? 2 : 1);
+    static constexpr auto WHEEL_INC = genWheel<WheelSize, HalfStorage>();
 
     using idx_t = utils::ModIndex<std::size_t, WHEEL_INC.size()>;
 

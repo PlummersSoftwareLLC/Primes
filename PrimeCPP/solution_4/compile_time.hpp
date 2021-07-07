@@ -108,11 +108,19 @@ consteval auto calcWheelIncrements()
     return truncIncrements;
 }
 
-template<std::size_t WheelSize>
+template<std::size_t WheelSize, bool HalfStorage = false>
 consteval auto genWheel()
 {
+    static_assert(!(HalfStorage && WheelSize == 0), "Half storage does not work with the trivial wheel");
     constexpr auto wheelBase = genWheelPrimes<WheelSize>();
     constexpr auto wheel = calcWheel<wheelBase.size(), wheelBase>();
     constexpr auto wheelIncs = calcWheelIncrements<wheel.size(), wheel>();
-    return wheelIncs;
+    if constexpr(HalfStorage) {
+        auto halvedWheelIncs = wheelIncs;
+        std::for_each(halvedWheelIncs.begin(), halvedWheelIncs.end(), [](auto& val) { val /= 2; });
+        return halvedWheelIncs;
+    }
+    else {
+        return wheelIncs;
+    }
 }
