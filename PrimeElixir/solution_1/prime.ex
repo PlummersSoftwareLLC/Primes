@@ -45,20 +45,33 @@ defmodule PrimeSieve do
     Enum.concat(left_primes, converted_list)
   end
 
-  def validate_results(sieve_size, count, reference) do
-    Map.get(reference, sieve_size) == count
+  @doc """
+  Validate the prime count for the sieve_size with the reference results
+  """
+  def validate_results(sieve_size, count) do
+    Map.get(@reference_results, sieve_size) == count
   end
 
+  @doc """
+  Start the sieve with the first pass
+  """
   def start(prime_list, sieve_size, start_time) do
     pass(prime_list, sieve_size, start_time, 0)
   end
 
+  @doc """
+  Recursively run passes of the sieve until time expires and count the number of passes
+  """
   def pass(prime_list, sieve_size, start_time, pass_count) do
+    # Check the while loop condition
     if Time.diff(Time.utc_now(), start_time, :second) > 5 do
       pass_count
     else
+      # Run Sieve
       results = run_sieve(prime_list, 3, sieve_size)
-      validate_results(sieve_size, results, @reference_results)
+      # Validate Results
+      validate_results(sieve_size, results)
+      # Move on to the next pass as part of the while loop
       pass(prime_list, sieve_size, start_time, pass_count + 1)
     end
   end
