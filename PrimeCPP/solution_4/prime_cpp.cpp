@@ -24,7 +24,12 @@
 int main()
 {
     constexpr auto RUN_TIME = std::chrono::seconds(5);
+
+#ifdef RUN_TESTS
+    constexpr auto SIEVE_SIZE = 50'000;
+#else
     constexpr auto SIEVE_SIZE = 1'000'000;
+#endif
 
     // clang-format off
     using runners_t = std::tuple<NaiveBase<VectorStorage<bool, true>>,
@@ -91,9 +96,8 @@ int main()
     // clang-format on
 
 #ifdef RUN_TESTS
-    return runTests<runners_t, 50000>();
-#endif
-
+    return runTests<runners_t, SIEVE_SIZE>();
+#else
     utils::for_constexpr(
         [&](const auto& idx) {
             using runner_t = std::tuple_element_t<idx.value, runners_t>;
@@ -122,4 +126,5 @@ int main()
         std::make_index_sequence<std::tuple_size_v<runners_t>>{});
 
     return 0;
+#endif
 }
