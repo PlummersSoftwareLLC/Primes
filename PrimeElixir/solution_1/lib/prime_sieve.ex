@@ -14,10 +14,11 @@ defmodule PrimeSieve do
       100_000_000 => 5_761_455
   }
   @pass_time_threshold 5
+  @default_sieve_size 1_000_000
 
   def main(_args) do
     # Setup
-    sieve_size = 1_000
+    sieve_size = @default_sieve_size
     prime_list = Enum.map(1..sieve_size, fn(_x) -> true end)
 
     # Run
