@@ -1,4 +1,4 @@
-# Erastosthenes sieve in functional R
+# Sieve of Eratosthenes implemented in (functional) R
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
@@ -14,6 +14,7 @@ leading to muchmore efficient code. More on this [here](https://adv-r.hadley.nz/
 As mentioned by Frank van Bakel, the author of R [solution 1](../solution_1), R's variables are all stored as vectors, and hence
 are of variable size depending on the size of the vector (due to the overhead of the vector structure itself). For a vector of length 1,000,000,
 each stored int takes 32 bits.
+
 
 ## Run
 
