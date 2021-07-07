@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -46,5 +47,49 @@ constexpr auto ceildiv(const T& dividend, const U& divisor)
 {
     return static_cast<std::common_type_t<T, U>>(std::ceil(static_cast<double>(dividend) / divisor));
 }
+
+template<typename T, T Width>
+class ModIndex {
+    static_assert(Width > T{}, "Width must be at least 1");
+
+  public:
+    constexpr ModIndex() : m_idx(T{}) {}
+    constexpr ModIndex(const T& idx) : m_idx(std::clamp(idx, T{}, Width - 1)) {}
+
+    constexpr inline T& operator++()
+    {
+        if(++m_idx >= Width) {
+            m_idx = T{};
+        }
+        return m_idx;
+    }
+
+    constexpr inline T operator++(int)
+    {
+        const auto curIdx = m_idx;
+        ++(*this);
+        return curIdx;
+    }
+
+    constexpr inline T& operator--()
+    {
+        if(m_idx < T{1}) {
+            return (m_idx = Width - 1);
+        }
+        return --m_idx;
+    }
+
+    constexpr inline T operator--(int)
+    {
+        const auto curIdx = m_idx;
+        --(*this);
+        return curIdx;
+    }
+
+    constexpr inline operator T() const { return m_idx; }
+
+  private:
+    T m_idx;
+};
 
 } // namespace utils
