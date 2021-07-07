@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"math/bits"
 	"time"
 )
 
@@ -29,17 +30,15 @@ func (s Sieve) RunSieve() {
 	q := uint64(math.Sqrt(float64(s.size)) / 2)
 
 	for factor = 1; factor <= q; factor++ {
-		for ; factor < end; factor++ {
-			if (s.bits[factor/8] & (1 << (factor % 8))) == 0 {
-				break
-			}
+		if (s.bits[factor/8] & bits.RotateLeft8(1, int(factor))) != 0 {
+			continue
 		}
 
 		start = 2 * (factor*factor + factor)
 		step = factor*2 + 1
 
 		for ; start < end; start += step {
-			s.bits[start/8] |= (1 << (start % 8))
+			s.bits[start/8] |= bits.RotateLeft8(1, int(start))
 		}
 	}
 }
@@ -48,7 +47,7 @@ func (s Sieve) CountPrimes() uint64 {
 	t := uint64(0)
 	end := (s.size + 1) / 2
 	for i := uint64(0); i < end; i++ {
-		t += uint64((^s.bits[i/8] >> (i % 8)) & 1)
+		t += uint64(bits.RotateLeft8(^s.bits[i/8], -int(i)) & 1)
 	}
 	return t
 }
