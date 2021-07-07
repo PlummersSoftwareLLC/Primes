@@ -2,11 +2,12 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const WheelFn = @import("wheel.zig").Wheel;
 
-const SieveOpts = struct { pregen: ?comptime_int = null };
+const SieveOpts = struct { pregen: ?comptime_int = null, bulksearch: bool = false };
 
 pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
     // store the wheel type
     const Wheel: ?type = if (opts.pregen) | pregen | WheelFn(pregen, .byte) else null;
+    const bulksearch = opts.bulksearch;
 
     return struct {
         pub const TRUE = if (T == bool) true else @as(T, 1);
@@ -23,8 +24,19 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
         pub fn init(allocator: *Allocator, sieve_size: usize) !Self {
             // allocates an array of data.
             const field_size = sieve_size >> 1;
-            var field = try allocator.alloc(T, field_size);
-            return Self{ .field = field, .allocator = allocator };
+            var field = try allocator.alloc(T, pad(field_size));
+            return Self{ .field = field[0..field_size], .allocator = allocator };
+        }
+
+        // adds a little bit of extra padding onto the allocation, to make safer fast-searches.
+        // 4-byte alignment of slice on 32-bit arches, 8-byte on 64-bit arches.
+        const arch_width = std.builtin.target.cpu.arch.ptrBitWidth();
+        const pad_factor = arch_width >> 3;
+        const pad_mask: usize = pad_factor - 1;
+
+        inline fn pad(field_size: usize) usize {
+            const rem = (field_size & pad_mask);
+            return if (rem != 0) field_size + rem else field_size;
         }
 
         pub fn deinit(self: *Self) void {
@@ -82,21 +94,57 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
             return count;
         }
 
+        // uses a higher-order integer type (32- or 64-bit) to speed up searches
+        const search_t = switch (arch_width) {
+            32 => u32,
+            64 => u64,
+            else => unreachable
+        };
+
+        const bit_shift = switch(arch_width) {
+            32 => 2,
+            64 => 3,
+            else => unreachable
+        };
+
         pub fn findNextFactor(self: *Self, factor: usize) usize {
-            const field = self.field;
-            var num = factor + 2;
-            while (num < self.field.len) : (num += 2) {
-                if (T == bool) {
-                    if (field[num >> 1]) {
-                        return num;
-                    }
-                } else {
-                    if (field[num >> 1] == TRUE) {
-                        return num;
+            if (bulksearch) {
+                // uses a "bulk search" mechanism that is similar to what bitsieve uses.
+                comptime const masks = trailing_masks();
+                const limit = pad(self.field.len) >> bit_shift;
+                const field = @ptrCast([*] const search_t, @alignCast(pad_factor, self.field.ptr))[0..limit];  // danger, will robinson!!
+                const num = (factor + 2) >> 1;
+                var index = num >> bit_shift;
+
+                var slot = field[index] & masks[num & pad_mask];
+
+                if (slot == 0) {
+                    for (field[index + 1 ..]) |s| {
+                        index += 1;
+                        slot = s;
+                        if (s != 0) {
+                            break;
+                        }
                     }
                 }
+
+                return (((index << bit_shift) + (@ctz(search_t, slot) >> 3)) * 2) + 1;
+            } else {
+                const field = self.field;
+                var num = factor + 2;
+                while (num < self.field.len) : (num += 2) {
+                    if (T == bool) {
+                        if (field[num >> 1]) {
+                            return num;
+                        }
+                    } else {
+                        if (field[num >> 1] == TRUE) {
+                            return num;
+                        }
+                    }
+                }
+                return num;
             }
-            return num;
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
@@ -105,6 +153,27 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
             while (num < self.field.len) : (num += factor) {
                 field[num] = FALSE;
             }
+        }
+
+        const shift_t = switch (arch_width) {
+            32 => u2,
+            64 => u3,
+            else => unreachable
+        };
+        const mask_count = arch_width >> 3;
+        const filled_byte:u8 = 0xFF;
+        fn trailing_masks() comptime [mask_count]search_t {
+            @setEvalBranchQuota(10000);
+            var masks = std.mem.zeroes([mask_count]search_t);
+            for (masks) |*mask, index| {
+                var as_u8 = @ptrCast(*[pad_factor]u8, mask);
+                for (as_u8.*) |*foo, u8_index| {
+                    if (u8_index >= index) {
+                        foo.* = 0xFF;
+                    }
+                }
+            }
+            return masks;
         }
 
         pub const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
@@ -138,7 +207,6 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
         needs_pad: bool,
 
         // member functions
-
         pub fn init(allocator: *Allocator, field_size: usize) !Self {
             const needs_pad: bool = ((field_size >> 1) & bit_mask) != 0;
             const padding: usize = (if (needs_pad) 1 else 0);
@@ -146,7 +214,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
 
             // allocates an array of data.
             var field = try allocator.alloc(T, field_units);
-            return Self{ .field = field, .allocator = allocator, .field_size = field_size, .needs_pad = needs_pad };
+            return Self{ .field = field[0..], .allocator = allocator, .field_size = field_size, .needs_pad = needs_pad };
         }
 
         pub fn deinit(self: *Self) void {
@@ -212,7 +280,6 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
                 const dest_len = field_len * @sizeOf(T);
                 var start: usize = 0;
                 var finish: usize = src_units;
-                //var u8_field = @ptrCast([*] u8, bit_field);
                 while (finish < dest_len) : ({
                     start += src_units;
                     finish += src_units;
@@ -273,7 +340,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
         pub fn findNextFactor(self: *Self, factor: usize) usize {
             comptime const masks = trailing_masks();
             const field = self.field;
-            var num = (factor + 2) >> 1;
+            const num = (factor + 2) >> 1;
             var index = num >> bit_shift;
             var slot = field[index] & masks[num & residue_mask];
             if (slot == 0) {

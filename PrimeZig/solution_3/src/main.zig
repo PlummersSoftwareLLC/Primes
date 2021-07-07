@@ -16,6 +16,7 @@ const SIZE = 1_000_000;
 var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
 
 pub fn main() anyerror!void {
+    // exists so that we don't run out of compiler credits.  Zig compiler is stingier than AWS.
     @setEvalBranchQuota(100000);
 
     const run_for = 5; // Seconds

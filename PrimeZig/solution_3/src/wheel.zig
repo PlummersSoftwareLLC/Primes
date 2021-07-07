@@ -7,10 +7,6 @@ const OEIS_PRIMES = [_]comptime_int{ 3, 5, 7, 11, 13, 17, 19 };
 const IntSieve = @import("sieves.zig").IntSieve;
 const Unit = enum { byte, bit };
 
-// since wheel is comptime-only this scratchpad won't appear in the
-// final binary.
-// var scratchpad: [1024 * 1024]comptime u8 = undefined;
-
 pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
     var prods = std.mem.zeroes([OEIS_PRIMES.len]comptime usize);
     var source_primes = std.mem.zeroes([count]comptime_int);
