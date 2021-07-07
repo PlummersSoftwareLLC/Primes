@@ -9,7 +9,8 @@ local function ruleOut(primes, max)
 	local sqrtMax = math.ceil(math.sqrt(max))
 	local prime = 3
 	while prime <= sqrtMax do
-		for num = prime^2, max, prime do
+		local step = prime + prime
+		for num = prime^2, max, step do
 			primes[bit.rshift(num, 6)] = bit.bor(
 				primes[bit.rshift(num, 6)],
 				bit.band(
