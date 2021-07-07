@@ -1,4 +1,7 @@
 # Prime sieve from Dave Plummer's C++ code, converted to a functional R style
+# Some of this is very similar to the original C++ implementation, other functions
+# make use of R's vectorisation capability for speed.
+
 
 # Store known primes in a dataframe for comparison
 
@@ -12,8 +15,10 @@ knownPrimes <- data.frame(t(matrix(c(10, 4,
                                  100000000, 5761455,
                                  1000000000, 50847534,
                                  10000000000, 455052511), nrow = 2)))
-
+# Name the data frame 
 names(knownPrimes) <- c("size", "nPrimes")
+
+
 
 validateResults <- function() {
   result <- knownPrimes$nPrimes[knownPrimes$size == sieveSize] 
@@ -24,9 +29,11 @@ validateResults <- function() {
 
 runSieve <- function() {
   fac <- 3
+  # Maximum number of factors
   q <- floor(sqrt(sieveSize))
-  
+  # Walk through each factor, cross off multiples, and increment
   while (fac <= q) {
+    # Vectorised assignment because R for loops are slow
     notPrime <- seq.int(fac*fac, sieveSize, fac*2)
     Bits[notPrime] <<- FALSE
 
@@ -34,39 +41,40 @@ runSieve <- function() {
   }
 }
 
-printResults <- function(bShowResults, fDuration, iPasses) {
-  if (bShowResults)
-    print(sprintf("2, "))
+printResults <- function(showResults, duration, passes) {
+  if (showResults)
+    nOutput <- "2"
   
   count <- (sieveSize >= 2)
   
   for (i in seq(3, sieveSize+1, 2)) {
     if (Bits[i] %in% TRUE) {
-      if (bShowResults)
-        print(sprintf("%d, ", i))
+      if (showResults)
+        nOutput <- paste(nOutput, i, sep = ", ")
       count <- count + 1
     }
   }
-  if (bShowResults)
-    print(sprintf("\n"))
+
+  if (showResults)
+    print(nOutput)
   
   print(sprintf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %s, Count2: %d, Valid: %s\n",
-          iPasses,
-          fDuration,
-          fDuration/passes,
+          passes,
+          duration,
+          duration/passes,
           sieveSize,
           count,
           countPrimes(),
           validateResults()))
   
   print(sprintf("\n"))
-  print(sprintf("nobrien97;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", iPasses, fDuration))
+  print(sprintf("nobrien97;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration))
 }
 
 countPrimes <- function() {
   count <- (sieveSize >= 2)
   isPrimeSeq <- seq(3, sieveSize, 2)
-  count <- sum(count, Bits[isPrimeSeq] %in% NA)
+  count <- sum(count, Bits[isPrimeSeq] %in% TRUE)
   return(count)
 }
 
@@ -79,7 +87,7 @@ tStart <- proc.time()
 
 while(T) {
   sieveSize <- 1000000
-  Bits <- rep(NA, sieveSize)
+  Bits <- rep(T, sieveSize)
   
   runSieve()
   passes <- passes + 1
