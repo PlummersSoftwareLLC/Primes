@@ -42,7 +42,7 @@ docker run primes-r
 
 ## Output
 
-For full output with all prime numbers, set the first argument of `printResults()` on line 100 in [primes.R](./primes.R) to `TRUE`.
+For full output with all prime numbers, set the first argument of `printResults()` on line 100 in [primes.R](./primes.R#L100) to `TRUE`.
 This will output the primes to stderr.
 
 Example Docker output from my machine:
