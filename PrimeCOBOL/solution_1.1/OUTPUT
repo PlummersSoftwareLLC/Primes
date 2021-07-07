@@ -1,0 +1,4 @@
+Passes: 02355, Time: 50, Avg: 000212 (sec/pass), Limit: 1000000, Count: 0078498,
+ Valid: True
+
+fvbakel_Cobol;02355;50;1;algorithm=base,faithful=no,bits=8

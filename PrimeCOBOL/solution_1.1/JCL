@@ -1,0 +1,16 @@
+//PRIMES   JOB 1,NOTIFY=&SYSUID
+//***************************************************/
+//COBRUN  EXEC IGYWCL
+//COBOL.SYSIN  DD DSN=&SYSUID..DGARAGE(PRIMES),DISP=SHR
+//LKED.SYSLMOD DD DSN=&SYSUID..LOAD(PRIMES),DISP=SHR
+//***************************************************/
+// IF RC = 0 THEN
+//***************************************************/
+//RUN     EXEC PGM=PRIMES
+//STEPLIB     DD DSN=&SYSUID..LOAD,DISP=SHR
+//CEEDUMP     DD DUMMY
+//SYSUDUMP    DD DUMMY
+//SYSOUT      DD DSN=&SYSUID..DGARAGE(OUTPUT),DISP=SHR
+//***************************************************/
+// ELSE
+// ENDIF
