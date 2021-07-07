@@ -78,10 +78,10 @@ func (s Sieve) Results(showResults bool, duration time.Duration, passes int) {
 		fmt.Println()
 	}
 
-	fmt.Printf("Passes: %d, Time: %d, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %v\n",
+	fmt.Printf("Passes: %d, Time: %s, Avg: %s, Limit: %d, Count1: %d, Count2: %d, Valid: %v\n",
 		passes,
 		duration,
-		float64(duration.Milliseconds()/int64(passes)),
+		fmt.Sprintf("%fms", float64((int64(duration)/int64(passes)))/float64(time.Millisecond)),
 		s.sieveSize,
 		count,           /* count */
 		s.countPrimes(), /* countPrimes() */
