@@ -1,4 +1,4 @@
-# Erostosthenes sieve in functional R
+# Erastosthenes sieve in functional R
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
@@ -7,11 +7,12 @@
 
 
 This implementation of the prime sieve is less faithful to the original C++ object-oriented design, going for a more 
-functional design, which is more commonplace for R. Part of R's power is through vectorisation rather than R's built-in for loops, 
-which are usually slow. Vectorised R code typically translates to C-style for loops rather than R's, leading to much
-more efficient code. More on this [here](https://adv-r.hadley.nz/perf-improve.html#vectorise).
+functional design, which is more commonplace for R. Part of R's power comes through vectorised operations rather than
+relying on R's built-in for loops, which are usually slow. Vectorised R code typically translates to C-style for loops, 
+leading to muchmore efficient code. More on this [here](https://adv-r.hadley.nz/perf-improve.html#vectorise).
+
 As mentioned by Frank van Bakel, the author of R [solution 1](../solution_1), R's variables are all stored as vectors, and hence
-are of variable size depending on the size of the vector (due to the overhead of the vector scaffold). For a vector of length 1,000,000,
+are of variable size depending on the size of the vector (due to the overhead of the vector structure itself). For a vector of length 1,000,000,
 each stored int takes 32 bits.
 
 ## Run
@@ -19,8 +20,9 @@ each stored int takes 32 bits.
 ### Run locally
 
 R is available on Linux, MacOSX and, Windows via [a variety of mirrors](https://cran.r-project.org/mirrors.html).
-The script was tested using R version 4.1.0 on Ubuntu 20.04 LTS, and R version 3.6.3 on Windows 10 20H2.
-On Ubuntu, you can install base R using
+The script was tested using R version 4.1.0 on Ubuntu 20.04 LTS, and R version 3.6.3 on Windows 10 20H2. It should 
+run on ARM machines as well via the Docker image, however this is untested.
+On Ubuntu, you can install base R using:
 ```
 sudo apt install r-base
 ```
@@ -39,7 +41,8 @@ docker run primes-r
 
 ## Output
 
-For full output with all prime numbers, set the first argument of `printResults()` on line 100 to `TRUE`
+For full output with all prime numbers, set the first argument of `printResults()` on line 100 in [primes.R](./primes.R) to `TRUE`.
+This will output the primes to stderr.
 
 Example Docker output from my machine:
 ```
