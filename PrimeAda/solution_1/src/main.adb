@@ -42,6 +42,7 @@ procedure Main is
       Num : Long_Long_Integer := Factor;
    begin
       while Factor <= Q loop
+         Num := Factor;
          while Num < Sieve_Size loop
             if Bits (Num) then
                Factor := Num;
@@ -49,6 +50,9 @@ procedure Main is
             end if;
             Num := Num + 2;
          end loop;
+
+         exit when Num > Q;
+
          Num := Factor * Factor;
          while Num < Sieve_Size loop
             Bits (Num) := False;

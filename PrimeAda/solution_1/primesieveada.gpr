@@ -5,6 +5,7 @@ project PrimeSieveAda is
    for Main use ("main.adb");
 
    package Compiler is
+      for Default_Switches ("Ada") use ("-Ofast");
    end Compiler;
 
 end PrimeSieveAda;
