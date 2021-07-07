@@ -13,28 +13,54 @@ This is an implementation in Elixir. This implementation uses recursion in place
 
 Execute the following commands from the implementation directory:
 
-Build
+Setup
+
+```sh
+mix deps.get
 ```
+
+Build
+
+```sh
 MIX_ENV=prod mix escript.build
 ```
+
 Run
-```
+
+```sh
 ./prime_sieve
 ```
+
+Test
+
+```sh
+mix test
+```
+
+Static Analysis
+
+```sh
+mix credo
+```
+
 ### Docker
+
 A Dockerfile has been provided.
 
 Build Dockerfile
-```
+
+```sh
 docker build -t elixir-prime .
 ```
 
-Run 
-```
+Run
+
+```sh
 docker run --rm elixir-prime . 
 ```
 
 ## Output
-```
+
+```sh
 cdesch;1;32.212;1;algorithm=base,faithful=no
 ```

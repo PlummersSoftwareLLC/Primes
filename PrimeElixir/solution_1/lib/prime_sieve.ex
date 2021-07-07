@@ -7,15 +7,15 @@ defmodule PrimeSieve do
       10 => 4,
       100 => 25,
       1000 => 168,
-      10000 => 1229,
-      100000 => 9592,
-      1000000 => 78498,
-      10000000 => 664579,
-      100000000 => 5761455
+      10_000 => 1_229,
+      100_000 => 9_592,
+      1_000_000 => 78_498,
+      10_000_000 => 664_579,
+      100_000_000 => 5_761_455
   }
+  @pass_time_threshold 5
 
   def main(_args) do
-
     # Setup
     size = 1_000_000
     primes = Enum.map(1..size, fn(_x) -> true end)
@@ -27,7 +27,6 @@ defmodule PrimeSieve do
 
     # Print
     IO.puts "cdesch;#{pass_count};#{Float.round(duration/1000000, 3)};1;algorithm=base,faithful=no"
-
   end
 
   @doc """
@@ -42,7 +41,7 @@ defmodule PrimeSieve do
   """
   def pass(prime_list, sieve_size, start_time, pass_count) do
     # Check the while loop condition
-    if Time.diff(Time.utc_now(), start_time, :second) > 5 do
+    if exceeded_time_threshold?(start_time) do
       pass_count
     else
       # Run Sieve
@@ -52,6 +51,13 @@ defmodule PrimeSieve do
       # Move on to the next pass as part of the while loop
       pass(prime_list, sieve_size, start_time, pass_count + 1)
     end
+  end
+
+  @doc """
+  Check if the pass time has exceeded the threshold
+  """
+  def exceeded_time_threshold?(start_time) do
+    Time.diff(Time.utc_now(), start_time, :second) > @pass_time_threshold
   end
 
   @doc """
@@ -99,7 +105,6 @@ defmodule PrimeSieve do
     Enum.concat(left_primes, converted_list)
   end
 
-
   @doc """
   Validate sieve results
   """
@@ -116,6 +121,4 @@ defmodule PrimeSieve do
   def validate_prime_count(count, sieve_size) do
     Map.get(@reference_results, sieve_size) == count
   end
-
-
 end
