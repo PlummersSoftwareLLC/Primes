@@ -1,8 +1,6 @@
 # Prime sieve from Dave Plummer's C++ code, converted to a functional R style
 
-sieveSize <- 0
-
-Bits <- T
+# Store known primes in a dataframe for comparison
 
 knownPrimes <- data.frame(t(matrix(c(10, 4,
                                  100, 25,
@@ -29,16 +27,9 @@ runSieve <- function() {
   q <- floor(sqrt(sieveSize))
   
   while (fac <= q) {
-    for (i in seq(fac, sieveSize, 2)) {
-      if (Bits[i] %in% TRUE) {
-        fac <- i
-        break
-      }
-    }
-    for (i in seq(fac*fac, sieveSize, fac*2)) {
-      Bits[i] <<- FALSE
-    }
-    
+    notPrime <- seq.int(fac*fac, sieveSize, fac*2)
+    Bits[notPrime] <<- FALSE
+
     fac <- fac + 2
   }
 }
@@ -59,7 +50,7 @@ printResults <- function(bShowResults, fDuration, iPasses) {
   if (bShowResults)
     print(sprintf("\n"))
   
-  print(sprintf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %s\n",
+  print(sprintf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %s, Count2: %d, Valid: %s\n",
           iPasses,
           fDuration,
           fDuration/passes,
@@ -74,9 +65,8 @@ printResults <- function(bShowResults, fDuration, iPasses) {
 
 countPrimes <- function() {
   count <- (sieveSize >= 2)
-  for (i in seq(3, sieveSize, 2))
-    if (Bits[i] %in% TRUE | Bits[i] %in% NA)
-      count <- count + 1
+  isPrimeSeq <- seq(3, sieveSize, 2)
+  count <- sum(count, Bits[isPrimeSeq] %in% NA)
   return(count)
 }
 
@@ -89,13 +79,13 @@ tStart <- proc.time()
 
 while(T) {
   sieveSize <- 1000000
-  Bits <- T
+  Bits <- rep(NA, sieveSize)
   
   runSieve()
   passes <- passes + 1
-  if((proc.time()[3] - tStart[3]) >= 5) {
-     printResults(TRUE, (proc.time()[3] - tStart[3]) / 1000000, passes)
+  tPass <- proc.time()
+  if((tPass[3] - tStart[3]) >= 5) {
+     printResults(TRUE, (tPass[3] - tStart[3]) / 1000000, passes)
     break
   }
-  
 }
