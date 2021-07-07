@@ -1,5 +1,5 @@
-# Prime sieve based on Dave Plummer's C++ code, converted to a functional R style
-# Some of this is very similar to the original C++ implementation, other functions
+# Prime sieve based on Dave Plummer's algorithm, converted to a functional R style
+# Some of this is similar to the original C++ implementation, other functions
 # make use of R's vectorisation capability for speed.
 # Author: Nick O'Brien
 
@@ -58,21 +58,21 @@ printResults <- function(showResults, duration, passes) {
     }
   }
   
-  if (showResults) {
-    print(nOutput)
-  }
-  
-  
-  print(sprintf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %s, Count2: %d, Valid: %s",
+  cat(sprintf("Passes: %i, Time: %f, Avg: %f, Limit: %i, Count: %s, Valid: %s\n",
           passes,
           duration,
           duration/passes,
           sieveSize,
-          count,
           countPrimes(),
-          validateResults()))
+          validateResults()), file = stdout())
   
-  print(sprintf("nobrien97;%d;%f;1;algorithm=base,faithful=yes,bits=1", passes, duration))
+  cat(sprintf("nobrien97;%d;%f;1;algorithm=base,faithful=no,bits=32\n", passes, duration), file = stdout())
+  
+  if (showResults) {
+    cat(nOutput, "\n", file = stderr())
+  }
+  
+  
 }
 
 countPrimes <- function(showResults) {

@@ -1,5 +1,54 @@
-# Base R implementation of prime sieve
+# Erostosthenes sieve in functional R
+
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
+
 
 This implementation of the prime sieve is less faithful to the original C++ object-oriented design, going for a more 
-functional design, which is more common for R. Part of R's power is through vectorisation (which translates closer to 
-C-style for loops) rather than R's built-in for loops, which are usually pretty slow.
+functional design, which is more commonplace for R. Part of R's power is through vectorisation rather than R's built-in for loops, 
+which are usually slow. Vectorised R code typically translates to C-style for loops rather than R's, leading to much
+more efficient code. More on this [here](https://adv-r.hadley.nz/perf-improve.html#vectorise).
+As mentioned by Frank van Bakel, the author of R [solution 1](../solution_1), R's variables are all stored as vectors, and hence
+are of variable size depending on the size of the vector (due to the overhead of the vector scaffold). For a vector of length 1,000,000,
+each stored int takes 32 bits.
+
+## Run
+
+### Run locally
+
+R is available on Linux, MacOSX and, Windows via [a variety of mirrors](https://cran.r-project.org/mirrors.html).
+The script was tested using R version 4.1.0 on Ubuntu 20.04 LTS, and R version 3.6.3 on Windows 10 20H2.
+On Ubuntu, you can install base R using
+```
+sudo apt install r-base
+```
+
+
+### Docker
+
+1. Build the Docker image
+```
+docker build -t primes-r .
+```
+2. Run the Docker image
+```
+docker run primes-r
+```
+
+## Output
+
+For full output with all prime numbers, set the first argument of `printResults()` on line 100 to `TRUE`
+
+Example Docker output from my machine:
+```
+sudo docker run primes-r
+"Passes: 336, Time: 5.010000, Avg: 0.014911, Limit: 1000000, Count: 78498, Valid: TRUE"
+"nobrien97;336;5.010000;1;algorithm=base,faithful=no,bits=32"
+```
+
+Running on:
+- i7 4770 @ 3.4GHz
+- Ubuntu 20.04 LTS via WSL 2 on Windows 10 20H2
+- Docker 20.10.2
