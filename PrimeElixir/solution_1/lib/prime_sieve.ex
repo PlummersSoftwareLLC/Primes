@@ -17,12 +17,12 @@ defmodule PrimeSieve do
 
   def main(_args) do
     # Setup
-    size = 1_000_000
-    primes = Enum.map(1..size, fn(_x) -> true end)
+    sieve_size = 1_000
+    prime_list = Enum.map(1..sieve_size, fn(_x) -> true end)
 
     # Run
     start_time = Time.utc_now()
-    pass_count = PrimeSieve.start(primes, size, start_time)
+    pass_count = start(prime_list, sieve_size, start_time)
     duration = Time.diff(Time.utc_now(), start_time, :microsecond)
 
     # Print
@@ -47,7 +47,7 @@ defmodule PrimeSieve do
       # Run Sieve
       results = run_sieve(prime_list, 3, sieve_size)
       # Validate Results
-      validate_results(sieve_size, results)
+      validate_results(results, sieve_size)
       # Move on to the next pass as part of the while loop
       pass(prime_list, sieve_size, start_time, pass_count + 1)
     end

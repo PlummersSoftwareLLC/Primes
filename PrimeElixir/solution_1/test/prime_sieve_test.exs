@@ -26,4 +26,16 @@ defmodule PrimeSieveTest do
     # Validate Results
     assert PrimeSieve.validate_results(results, sieve_size) == true
   end
+
+  test "pass" do
+    # Setup
+    sieve_size = 1_000
+    prime_list = Enum.map(1..sieve_size, fn(_x) -> true end)
+
+    # Run
+    start_time = Time.utc_now()
+    pass_count = PrimeSieve.start(prime_list, sieve_size, start_time)
+    # Validate Results
+    assert pass_count >= 1
+  end
 end

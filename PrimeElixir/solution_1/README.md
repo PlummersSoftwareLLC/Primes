@@ -56,7 +56,7 @@ docker build -t elixir-prime .
 Run
 
 ```sh
-docker run --rm elixir-prime . 
+docker run --rm elixir-prime .
 ```
 
 ## Output
