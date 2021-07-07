@@ -158,15 +158,16 @@ class Wheel {
 
     inline void runSieve()
     {
-        for(auto i = BASE_PRIMES[BASE_PRIMES.size() - 1], incIdx = std::size_t{0}; i * i <= m_sieveSize;) {
-            if(!m_bits[i]) {
-                i += WHEEL_INC[advanceIdx(incIdx)];
-                continue;
+        for(auto i = BASE_PRIMES[BASE_PRIMES.size() - 1], incIdx = std::size_t{0}; i * i <= m_sieveSize; i += WHEEL_INC[advanceIdx(incIdx)]) {
+            for(auto num = i; i <= m_sieveSize; num += WHEEL_INC[advanceIdx(incIdx)]) {
+                if(m_bits[num]) {
+                    i = num;
+                    break;
+                }
             }
-            for(auto num = i * i; num <= m_sieveSize; num += i) {
+            for(auto num = i * i; num <= m_sieveSize; num += 2 * i) {
                 m_bits[num] = false;
             }
-            i += WHEEL_INC[advanceIdx(incIdx)];
         }
     }
 
@@ -176,11 +177,10 @@ class Wheel {
     {
         auto primes = std::vector<std::size_t>{};
         std::copy_if(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1, std::back_inserter(primes), [&](const auto& prime) { return prime <= m_sieveSize; });
-        for(auto i = BASE_PRIMES[BASE_PRIMES.size() - 1], incIdx = std::size_t{0}; i <= m_sieveSize;) {
+        for(auto i = BASE_PRIMES[BASE_PRIMES.size() - 1], incIdx = std::size_t{0}; i <= m_sieveSize; i += WHEEL_INC[advanceIdx(incIdx)]) {
             if(m_bits[i]) {
                 primes.push_back(i);
             }
-            i += WHEEL_INC[advanceIdx(incIdx)];
         }
         return primes;
     }
