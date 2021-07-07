@@ -165,8 +165,7 @@ class Wheel {
                     break;
                 }
             }
-            constexpr auto stride = (WheelSize > 0) ? 2 : 1;
-            for(auto num = i * i; num <= m_sieveSize; num += i * stride) {
+            for(auto num = i * i, strideIdx = incIdx; num <= m_sieveSize; num += i * WHEEL_INC[advanceIdx(strideIdx)]) {
                 m_bits[num] = false;
             }
         }
