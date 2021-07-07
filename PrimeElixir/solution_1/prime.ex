@@ -30,7 +30,7 @@ defmodule PrimeSieve do
   end
 
   # Returns index of start of true
-  def find_start_of_list(prime_list, factor, sieve_size) do
+  def find_start_of_list(prime_list) do
     Enum.find_index(prime_list, fn x -> x end)
   end
 
@@ -40,7 +40,7 @@ defmodule PrimeSieve do
     # Split the list
     {left_primes, right_primes} = Enum.split(prime_list, range_bottom)
     # Convert the multiple by stepping through the list
-    converted_list = Enum.map_every(right_primes, (factor * 2), fn x -> false end)
+    converted_list = Enum.map_every(right_primes, (factor * 2), fn _x -> false end)
     # join them back together and return
     Enum.concat(left_primes, converted_list)
   end
