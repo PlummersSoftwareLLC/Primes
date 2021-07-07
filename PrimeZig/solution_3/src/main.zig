@@ -62,7 +62,7 @@ pub fn main() anyerror!void {
             comptime const DataTypes = if (SieveFn == IntSieve) .{u8} else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
-                comptime const typebits = if (SieveFn == IntSieve) @bitSizeOf(Type) else 1;
+                comptime const typebits = if (SieveFn == IntSieve) 8 * @sizeOf(Type) else 1;
                 inline for (pregens) |pregen| {
                     comptime const Sieve = SieveFn(Type, .{ .pregen = pregen });
                     comptime const Runner = RunnerFn(Sieve, runner_opts);
@@ -76,7 +76,7 @@ pub fn main() anyerror!void {
             comptime const DataTypes = if (SieveFn == IntSieve) AllDataTypes else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
-                comptime const typebits = if (SieveFn == IntSieve) @bitSizeOf(Type) else 1;
+                comptime const typebits = if (SieveFn == IntSieve) 8 * @sizeOf(Type) else 1;
                 comptime const Sieve = SieveFn(Type, .{});
                 comptime const Runner = RunnerFn(Sieve, runner_opts);
                 comptime const selected = selected_runs(Runner, no_ht_opt);
