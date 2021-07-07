@@ -1,5 +1,8 @@
 defmodule PrimeSieve do
-
+  @moduledoc """
+  Elixir solution by cdesch for the Primes Software Drag Race
+  Reference: https://github.com/PlummersSoftwareLLC/Primes
+  """
   @reference_results %{
       10 => 4,
       100 => 25,
@@ -10,47 +13,6 @@ defmodule PrimeSieve do
       10000000 => 664579,
       100000000 => 5761455
   }
-
-  @doc """
-  Count true values in list
-  """
-  def count_primes(prime_list) do
-    Enum.count(prime_list, fn x -> x end)
-  end
-
-  def run_sieve(prime_list,factor, sieve_size) do
-    sieve_sqrt = :math.sqrt(sieve_size)
-    # Use recursion instead of while loop
-    if factor >= sieve_sqrt do
-      prime_list
-    else
-      new_prime_list = clear_multiples(prime_list, factor)
-      run_sieve(new_prime_list, factor + 2, sieve_size)
-    end
-  end
-
-  # Returns index of start of true
-  def find_start_of_list(prime_list) do
-    Enum.find_index(prime_list, fn x -> x end)
-  end
-
-  def clear_multiples(prime_list, factor) do
-    range_bottom = factor * 3
-    # range  = (factor * 3)..sieve_size//(factor *2)
-    # Split the list
-    {left_primes, right_primes} = Enum.split(prime_list, range_bottom)
-    # Convert the multiple by stepping through the list
-    converted_list = Enum.map_every(right_primes, (factor * 2), fn _x -> false end)
-    # join them back together and return
-    Enum.concat(left_primes, converted_list)
-  end
-
-  @doc """
-  Validate the prime count for the sieve_size with the reference results
-  """
-  def validate_results(sieve_size, count) do
-    Map.get(@reference_results, sieve_size) == count
-  end
 
   @doc """
   Start the sieve with the first pass
@@ -75,16 +37,69 @@ defmodule PrimeSieve do
       pass(prime_list, sieve_size, start_time, pass_count + 1)
     end
   end
+
+  @doc """
+  Count true values in list
+  """
+  def count_primes(prime_list) do
+    Enum.count(prime_list, fn x -> x end)
+  end
+
+  @doc """
+  Run the prime sieve by recusrively increasing the factor
+  until it is greater than the square root of the sieve_size
+  """
+  def run_sieve(prime_list, factor, sieve_size) do
+    sieve_sqrt = :math.sqrt(sieve_size)
+    # Use recursion instead of while loop
+    if factor >= sieve_sqrt do
+      prime_list
+    else
+      # Clear the multiples for this factor
+      new_prime_list = clear_multiples(prime_list, factor)
+      # Run recursively by adding 2 to the factor
+      run_sieve(new_prime_list, factor + 2, sieve_size)
+    end
+  end
+
+  @doc """
+  Returns index of start of true
+  """
+  def find_start_of_list(prime_list) do
+    Enum.find_index(prime_list, fn x -> x end)
+  end
+
+  @doc """
+  Clear the multiples of the factor by turning them to true
+  """
+  def clear_multiples(prime_list, factor) do
+    range_bottom = factor * 3
+    # range  = (factor * 3)..sieve_size//(factor *2)
+    # Split the list
+    {left_primes, right_primes} = Enum.split(prime_list, range_bottom)
+    # Convert the multiple by stepping through the list
+    converted_list = Enum.map_every(right_primes, (factor * 2), fn _x -> false end)
+    # join them back together and return
+    Enum.concat(left_primes, converted_list)
+  end
+
+  @doc """
+  Validate the prime count for the sieve_size with the reference results
+  """
+  def validate_results(sieve_size, count) do
+    Map.get(@reference_results, sieve_size) == count
+  end
+
 end
 
 # Setup
-size = 1000000
+size = 1000
 primes = Enum.map(1..size, fn(_x) -> true end)
 
 # Run
 start_time = Time.utc_now()
 pass_count = PrimeSieve.start(primes, size, start_time)
-duration  = Time.diff(Time.utc_now(), start_time, :microsecond)
+duration = Time.diff(Time.utc_now(), start_time, :microsecond)
 
 # Print
 IO.puts "cdesch;#{pass_count};#{Float.round(duration/1000000, 3)};1;algorithm=base,faithful=no"
