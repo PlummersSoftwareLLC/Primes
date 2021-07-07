@@ -10,33 +10,14 @@ function count=run_sieve(limit)
   % Only store information about odd numbers, as all even numbers are
   % automatically prime
   % rbergen: wrapped 2 in int32() to fix idivide integer input error in Octave 6.2.0
-  raw_bits = ones(1,idivide(limit,int32(2)));
+  raw_bits = true(1,idivide(limit,int32(2)));
   
-  % Check if 'index' has been eliminated as non-prime yet. Returns 1 if
-  % it has not yet been eliminated (still considered a prime candidate)
-  function bit = get_bit(index)
-    if rem(index,2) == 0
-      % If multiple of 2, automatically return false and warn the user 
-      % that he is checking even numbers unnecessarily
-      'checking even bits!'
-      bit = 0;
-      return
-    else
-      bit = raw_bits((index+1)/2);
-      return
-    endif
-  endfunction
-
-  function clear_bits(range)
-    raw_bits((range + 1) / 2) = 0;
-  endfunction
-
   factor = 3;
   q = sqrt(limit);
   while(factor<=q)
     % Find the next prime (look for the first bit in raw_bits that is still set
     for num=factor:2:limit
-      if get_bit(num)
+      if raw_bits((num+1)/2)
         factor = num;
         break
       endif
@@ -44,8 +25,7 @@ function count=run_sieve(limit)
 
     % Mark all odd multiples of 'factor' as non-prime
     % Even multiples are already known to be non-prime
-
-    clear_bits(factor*3:factor*2:limit);
+	raw_bits((factor*3+1)/2:factor:end) = false;
     
     % Increment 'factor' to the next prime candidate
     factor += 2;
