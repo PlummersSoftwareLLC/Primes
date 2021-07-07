@@ -1,6 +1,7 @@
-# Prime sieve from Dave Plummer's C++ code, converted to a functional R style
+# Prime sieve based on Dave Plummer's C++ code, converted to a functional R style
 # Some of this is very similar to the original C++ implementation, other functions
 # make use of R's vectorisation capability for speed.
+# Author: Nick O'Brien
 
 
 # Store known primes in a dataframe for comparison
@@ -41,24 +42,28 @@ runSieve <- function() {
   }
 }
 
+
 printResults <- function(showResults, duration, passes) {
-  if (showResults)
-    nOutput <- "2"
-  
   count <- (sieveSize >= 2)
+  
+  if (showResults) {
+    nOutput <- 2
+  }
   
   for (i in seq(3, sieveSize+1, 2)) {
     if (Bits[i] %in% TRUE) {
-      if (showResults)
-        nOutput <- paste(nOutput, i, sep = ", ")
       count <- count + 1
+      if (showResults)
+        nOutput <- c(nOutput, i)
     }
   }
-
-  if (showResults)
-    print(nOutput)
   
-  print(sprintf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %s, Count2: %d, Valid: %s\n",
+  if (showResults) {
+    print(nOutput)
+  }
+  
+  
+  print(sprintf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %s, Count2: %d, Valid: %s",
           passes,
           duration,
           duration/passes,
@@ -67,11 +72,10 @@ printResults <- function(showResults, duration, passes) {
           countPrimes(),
           validateResults()))
   
-  print(sprintf("\n"))
-  print(sprintf("nobrien97;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration))
+  print(sprintf("nobrien97;%d;%f;1;algorithm=base,faithful=yes,bits=1", passes, duration))
 }
 
-countPrimes <- function() {
+countPrimes <- function(showResults) {
   count <- (sieveSize >= 2)
   isPrimeSeq <- seq(3, sieveSize, 2)
   count <- sum(count, Bits[isPrimeSeq] %in% TRUE)
@@ -93,7 +97,7 @@ while(T) {
   passes <- passes + 1
   tPass <- proc.time()
   if((tPass[3] - tStart[3]) >= 5) {
-     printResults(TRUE, (tPass[3] - tStart[3]) / 1000000, passes)
+     printResults(FALSE, (tPass[3] - tStart[3]), passes)
     break
   }
 }
