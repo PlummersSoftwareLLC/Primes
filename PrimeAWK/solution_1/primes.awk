@@ -1,5 +1,7 @@
 
+# This runs before scanning the input file (counts.csv)
 BEGIN {
+
     # There are no classes or structs in Awk, so variables are global
     size = 1000000;
     for (i = 0; i < size; i++)
@@ -18,7 +20,8 @@ function reset()
     }
 }
 
-# Set the counts array
+# AWK needs an input file to operate on, so we use "counts.csv" to set hashmap of known prime counts
+# This is setting the value of the first column ($1) to the second column ($2)
 { counts[$1] = $2; }
 
 function validate_results()
@@ -26,6 +29,7 @@ function validate_results()
     return counts[size] == count_primes();
 }
 
+# Same count method as Dave's CPP implementation
 function count_primes()
 {
     counter = 1;
@@ -76,6 +80,7 @@ function print_results(show_results, passes, duration)
     {
         if (rawbits[i] == 1)
         {
+            # AWK has support for some functions from the C library, such as printf
             if (show_results) printf("%i, ", i);
             count++;
         }
@@ -83,6 +88,7 @@ function print_results(show_results, passes, duration)
 
     if (count != count_primes())
     {
+        # Assert the count
         print "Wrong count of primes";
         exit;
     }
@@ -98,9 +104,13 @@ END {
     passes = 0;
 
     do {
+        # Reset the bitarray each iteration
         reset();
+
+        # Run
         run_sieve();
         passes++;
+        
         now = systime();
     } while ((now - start) < 5);
 
