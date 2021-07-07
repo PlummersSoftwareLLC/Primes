@@ -18,7 +18,7 @@ class prime_sieve
 {
   private:
 
-      long sieveSize = 0;
+      long sieveSize = 0, count = -1;
       vector<bool> Bits;
       const std::map<const long long, const int> resultsDictionary = 
       {
@@ -40,7 +40,8 @@ class prime_sieve
           auto result = resultsDictionary.find(sieveSize);
           if (resultsDictionary.end() == result)
               return false;
-          return result->second == countPrimes();
+          countPrimes();
+          return result->second == count;
       }
 
    public:
@@ -61,17 +62,16 @@ class prime_sieve
 
           while (factor <= q)
           {
-              for (int num = factor; num < sieveSize; num += 2)
+              if (Bits[factor])
               {
-                  if (Bits[num])
-                  {
-                      factor = num;
-                      break;
-                  }
+                  for (int num = factor * factor; num < sieveSize; num += factor * 2)
+                      Bits[num] = false;
               }
-              for (int num = factor * factor; num < sieveSize; num += factor * 2)
-                  Bits[num] = false;
 
+              if (factor % 10 == 3)
+              {
+                  factor += 2;
+              }
               factor += 2;
           }
       }
@@ -79,29 +79,31 @@ class prime_sieve
       void printResults(bool showResults, double duration, int passes)
       {
           if (showResults)
-              printf("2, ");
-
-          int count = (sieveSize >= 2);                             // Starting count (2 is prime)
-          for (int num = 3; num <= sieveSize; num+=2)
           {
-              if (Bits[num])
+              printf("2, 3, 5, ");
+
+              for (int num = 7; num <= sieveSize; num += 2)
               {
-                  if (showResults)
+                  if (Bits[num])
+                  {
                       printf("%d, ", num);
-                  count++;
+                  }
+                  if (num % 10 == 3)
+                  {
+                      num += 2;
+                  }
               }
+
+              printf("\n");
           }
 
-          if (showResults)
-              printf("\n");
-
-          printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count1: %d, Count2: %d, Valid: %d\n", 
+          countPrimes();
+          printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %ld, Count: %ld, Valid: %d\n", 
                  passes,
                  duration,
                  duration / passes,
                  sieveSize,
                  count,
-                 countPrimes(),
                  validateResults());
 
           // Following 2 lines added by rbergen to conform to drag race output format
@@ -109,13 +111,12 @@ class prime_sieve
           printf("davepl;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
       }
 
-      int countPrimes()
+      void countPrimes()
       {
-          int count =  (sieveSize >= 2);;
+          count = (sieveSize >= 2);
           for (int i = 3; i < sieveSize; i+=2)
               if (Bits[i])
                   count++;
-          return count;
       }
 };
 
