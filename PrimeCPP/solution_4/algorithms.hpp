@@ -118,7 +118,7 @@ class Base {
 template<std::size_t SieveSize>
 class PreGenerated {
   public:
-    PreGenerated(const std::size_t) {}
+    PreGenerated(const std::size_t sieveSize) : m_sieveSize(sieveSize) {}
 
     inline void runSieve() { m_bits = genSieve<SieveSize>(); }
 
@@ -127,10 +127,10 @@ class PreGenerated {
     inline std::vector<std::size_t> getPrimes()
     {
         auto primes = std::vector<std::size_t>{};
-        if(SieveSize >= 2) {
+        if(m_sieveSize >= 2) {
             primes.push_back(2);
         }
-        for(auto i = std::size_t{3}; i <= SieveSize; i += 2) {
+        for(auto i = std::size_t{3}; i <= m_sieveSize; i += 2) {
             if(m_bits[i]) {
                 primes.push_back(i);
             }
@@ -147,6 +147,7 @@ class PreGenerated {
     }
 
   private:
+    const std::size_t m_sieveSize;
     decltype(genSieve<SieveSize>()) m_bits;
 };
 
@@ -173,7 +174,8 @@ class Wheel {
 
     inline std::vector<std::size_t> getPrimes()
     {
-        auto primes = std::vector<std::size_t>(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1);
+        auto primes = std::vector<std::size_t>{};
+        std::copy_if(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1, std::back_inserter(primes), [&](const auto& prime) { return prime <= m_sieveSize; });
         for(auto i = BASE_PRIMES[BASE_PRIMES.size() - 1], incIdx = std::size_t{0}; i <= m_sieveSize;) {
             if(m_bits[i]) {
                 primes.push_back(i);
