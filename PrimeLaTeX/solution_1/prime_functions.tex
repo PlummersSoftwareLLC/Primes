@@ -1,0 +1,133 @@
+\ExplSyntaxOn
+% Input parameters
+% \int_new:N \g_prime_sieve_size
+% \int_set:Nn \g_prime_sieve_size { 1000000 }
+
+% Result variables
+\int_new:N \g_prime_count      % result of \prime_count_primes
+\clist_new:N \g_prime_list     % result of \prime_get_primes
+\bool_new:N \g_prime_valid     % result of \prime_
+
+% Variables used locally in the various functions
+\int_new:N \l_i
+\int_new:N \l_factor
+\int_new:N \l_q
+\int_new:N \l_num
+\int_new:N \l_step
+
+% Create the raw bits array
+\intarray_new:Nn \l_rawbits { \int_div_truncate:nn { \g_prime_sieve_size + 1 } 2 }
+
+% Function to reset the prime sieve by setting all bits to 1
+\cs_set:Npn \prime_reset_sieve {
+    \int_set:Nn \l_i {\intarray_count:N \l_rawbits}
+    \int_while_do:nNnn \l_i > 0 {
+        \intarray_gset:Nnn \l_rawbits \l_i 1
+        \int_decr:N \l_i
+    }
+}
+
+% Define get and clear functions
+\cs_set:Npn \prime_get_bit:n #1 {
+    \int_compare:nNnTF { \int_mod:nn #1 2 } = 0 
+    { 0 }
+    {
+        % note these arrays are 1-indexed
+        \intarray_item:Nn \l_rawbits { \int_eval:n { 1 + \int_div_truncate:nn #1 2 } }
+    }
+}
+
+\cs_set:Npn \prime_clear_bit:n #1 {
+    \int_compare:nNnTF { \int_mod:nn #1 2 } = 0 
+    { \msg_error:nn {} {prime_clear_bit requires odd argument} }
+    { \intarray_gset:Nnn \l_rawbits { 1 + \int_div_truncate:nn #1 2 } 0 }
+}
+
+% Main sieve function
+\cs_set:Npn \prime_run_sieve {
+    % Run sieve
+
+    \int_set:Nn \l_factor 3
+    \int_set:Nn \l_q { \fp_to_int:n { sqrt ( \g_prime_sieve_size ) } }
+
+    \int_while_do:nNnn \l_factor < \l_q {
+        \int_set:Nn \l_num \l_factor
+        \int_while_do:nNnn \l_num < \g_prime_sieve_size {
+            \int_compare:nNnTF { \prime_get_bit:n \l_num } = {1}
+            {
+                \int_set:Nn \l_factor {\l_num}
+                % break
+                \int_set:Nn \l_num {\g_prime_sieve_size}
+            }
+            {
+                \int_incr:N \l_num
+            }
+        }
+
+        % If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
+        % We can then step by factor * 2 because every second one is going to be even by definition
+        
+        \int_set:Nn \l_step { \l_factor * 2 }
+        \int_set:Nn \l_num { \l_factor * 3 }
+        \int_while_do:nNnn \l_num < \g_prime_sieve_size {
+            \prime_clear_bit:n \l_num
+            \int_set:Nn \l_num { \l_num + \l_step }
+        }
+
+        \int_set:Nn \l_factor { \l_factor + 2 }
+    }
+}
+
+\cs_set:Npn \prime_count_primes {
+    \int_set:Nn \g_prime_count {0}
+    \int_set:Nn \l_i { \intarray_count:N \l_rawbits }
+    \int_while_do:nNnn \l_i > 0 {
+        \int_compare:nNnTF 1 = { \intarray_item:Nn \l_rawbits \l_i }
+        {
+            \int_incr:N \g_prime_count
+        }
+        {
+        }
+        \int_decr:N \l_i
+    }
+}
+
+\cs_set:Npn \prime_get_primes {
+    \clist_clear:N \g_prime_list
+    \int_set:Nn \l_i { \intarray_count:N \l_rawbits }
+    \int_while_do:nNnn \l_i > 1 {
+        \int_compare:nNnTF 1 = { \intarray_item:Nn \l_rawbits \l_i }
+        {
+            \clist_put_left:Nx \g_prime_list {\int_eval:n {\l_i * 2 - 1}}
+        }
+        {
+        }
+        \int_decr:N \l_i
+    }
+    \clist_put_left:Nn \g_prime_list 2
+}
+
+\cs_set:Npn \prime_print_primes:n #1 {
+    \prime_get_primes
+
+    \clist_use:Nn \g_prime_list {#1}
+}
+
+\cs_set:Npn \prime_validate_results {
+    \bool_set:Nn \g_prime_valid {
+        \int_case:nnF
+            { \g_prime_sieve_size }
+            {
+                {10}        {\int_compare_p:nNn {4}       = \g_prime_count}
+                {100}       {\int_compare_p:nNn {25}      = \g_prime_count}
+                {1000}      {\int_compare_p:nNn {168}     = \g_prime_count}
+                {10000}     {\int_compare_p:nNn {1229}    = \g_prime_count}
+                {100000}    {\int_compare_p:nNn {9592}    = \g_prime_count}
+                {1000000}   {\int_compare_p:nNn {78498}   = \g_prime_count}
+                {10000000}  {\int_compare_p:nNn {664579}  = \g_prime_count}
+                {100000000} {\int_compare_p:nNn {5761455} = \g_prime_count}
+            }
+            { \c_false_bool }
+    }
+}
+\ExplSyntaxOff

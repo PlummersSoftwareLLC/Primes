@@ -1,0 +1,77 @@
+\documentclass[a4paper]{article}
+\usepackage{expl3}
+\usepackage{l3benchmark}
+
+\ExplSyntaxOn
+\int_const:Nn \g_prime_sieve_size {1000000}
+\ExplSyntaxOff
+
+\include{prime_functions.tex}
+
+\title{Results of Dave Plummer's Prime Sieve benchmark in \LaTeX}
+\author{Code by tjol}
+
+
+\ExplSyntaxOn
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Run the benchmark
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\int_new:N \l_start_time
+\int_new:N \l_end_time
+\int_new:N \l_loop_counter
+\int_const:Nn \one_second {65536} % one second = 2^16 increments of \sys_timer:
+
+\int_set:Nn \l_start_time \sys_timer:
+\int_set:Nn \l_loop_counter 0
+\int_while_do:nNnn {\sys_timer:} < {\l_start_time + 10 * \one_second} {
+    \prime_reset_sieve
+    \prime_run_sieve
+    \int_incr:N \l_loop_counter
+}
+\int_set:Nn \l_end_time \sys_timer:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Get the stats
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\fp_new:N \l_total_time
+\fp_new:N \l_avg_time
+\fp_set:Nn \l_total_time { ( \l_end_time - \l_start_time ) / \one_second }
+\fp_set:Nn \l_avg_time { \l_total_time / \l_loop_counter }
+
+\prime_count_primes
+\prime_validate_results
+
+\ExplSyntaxOff
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Write the result to the document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\begin{tabular}{rl}
+    \textbf{Primes found} & \ExplSyntaxOn {\int_use:N \g_prime_count} \ExplSyntaxOff \\
+    \textbf{Limit} & \ExplSyntaxOn {\int_use:N \g_prime_sieve_size} \ExplSyntaxOff \\
+    \textbf{Total time} & \ExplSyntaxOn {\fp_eval:n { 0.01 * round(100 * \l_total_time) } } \ExplSyntaxOff{~s} \\
+    \textbf{Passes} & \ExplSyntaxOn {\int_use:N \l_loop_counter} \ExplSyntaxOff \\
+    \textbf{Avg time} & \ExplSyntaxOn {\fp_eval:n { 0.01 * round(100 * \l_avg_time) } } \ExplSyntaxOff{~s} \\
+    \textbf{Valid} &
+        \ExplSyntaxOn
+            \bool_if:NTF \g_prime_valid { Yes } { No }
+        \ExplSyntaxOff \\
+\end{tabular}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Write the result to result.txt in the standard format
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\ExplSyntaxOn
+\iow_new:N \l_outfile
+\iow_open:Nn \l_outfile {result.txt}
+\iow_now:Nx \l_outfile {tjol;\int_use:N \l_loop_counter;\fp_to_tl:N \l_total_time;1;algorithm=base,faithful=no,bits=32}
+\iow_close:N \l_outfile
+\ExplSyntaxOff
+
+\end{document}

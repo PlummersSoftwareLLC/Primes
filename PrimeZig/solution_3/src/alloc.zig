@@ -22,6 +22,7 @@ pub fn EnvironmentallyFriendlyBlockAllocator(config: Config) type {
         allocator: Allocator,
         backing_allocator: *Allocator,
         mutex: Mutex,
+
         // no WAY we'll need more than 256 of these!
         used_blocks: [256]?[]u8 = [1]?[]u8{null} ** 256,
         free_blocks: [256]?[]u8 = [1]?[]u8{null} ** 256,
@@ -62,7 +63,7 @@ pub fn EnvironmentallyFriendlyBlockAllocator(config: Config) type {
                     this.save(new_block);
                 }
                 return new_block;
-            }
+           }
         }
 
         fn resize(

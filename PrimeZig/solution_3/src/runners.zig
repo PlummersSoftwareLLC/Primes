@@ -332,7 +332,6 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
 
         fn runSieve(sieve: *Sieve, sieve_size: usize, starting_factor: usize) void {
             const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
-
             var factor = starting_factor;
             var field = sieve.field;
 

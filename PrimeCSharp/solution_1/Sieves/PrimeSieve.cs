@@ -8,6 +8,8 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "standard";
         public string Name => "Standard";
+        public bool IsBaseAlgorithm => true;
+        public int? BitsPerPrime => 1;
 
         public int SieveSize { get; }
         private readonly BitArray bitArray;
