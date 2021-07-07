@@ -14,6 +14,22 @@ defmodule PrimeSieve do
       100000000 => 5761455
   }
 
+  def main(_args) do
+
+    # Setup
+    size = 1_000_000
+    primes = Enum.map(1..size, fn(_x) -> true end)
+
+    # Run
+    start_time = Time.utc_now()
+    pass_count = PrimeSieve.start(primes, size, start_time)
+    duration = Time.diff(Time.utc_now(), start_time, :microsecond)
+
+    # Print
+    IO.puts "cdesch;#{pass_count};#{Float.round(duration/1000000, 3)};1;algorithm=base,faithful=no"
+
+  end
+
   @doc """
   Start the sieve with the first pass
   """
@@ -32,7 +48,7 @@ defmodule PrimeSieve do
       # Run Sieve
       results = run_sieve(prime_list, 3, sieve_size)
       # Validate Results
-      validate_results(results, sieve_size)
+      validate_results(sieve_size, results)
       # Move on to the next pass as part of the while loop
       pass(prime_list, sieve_size, start_time, pass_count + 1)
     end
@@ -83,6 +99,7 @@ defmodule PrimeSieve do
     Enum.concat(left_primes, converted_list)
   end
 
+
   @doc """
   Validate sieve results
   """
@@ -100,16 +117,5 @@ defmodule PrimeSieve do
     Map.get(@reference_results, sieve_size) == count
   end
 
+
 end
-
-# Setup
-size = 1000000
-primes = Enum.map(1..size, fn(_x) -> true end)
-
-# Run
-start_time = Time.utc_now()
-pass_count = PrimeSieve.start(primes, size, start_time)
-duration = Time.diff(Time.utc_now(), start_time, :microsecond)
-
-# Print
-IO.puts "cdesch;#{pass_count};#{Float.round(duration/1000000, 3)};1;algorithm=base,faithful=no"

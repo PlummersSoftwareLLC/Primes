@@ -10,11 +10,17 @@ This is an implementation in Elixir. This implementation uses recursion in place
 ## Run instructions
 
 ### Elixir
-Execute the following command from the implementation directory:
-```
-elixir prime.ex
-```
 
+Execute the following commands from the implementation directory:
+
+Build
+```
+MIX_ENV=prod mix escript.build
+```
+Run
+```
+./prime_sieve
+```
 ### Docker
 A Dockerfile has been provided.
 

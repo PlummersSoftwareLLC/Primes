@@ -1,6 +1,7 @@
 FROM elixir:1.12-alpine
 
 WORKDIR /opt/app
-COPY *.ex .
+COPY . .
+RUN MIX_ENV=prod mix escript.build
 
-ENTRYPOINT [ "elixir", "prime.ex" ]
+ENTRYPOINT [ "./prime_sieve" ]
