@@ -37,9 +37,10 @@ procedure Main is
         Long_Long_Integer
           (Ada.Numerics.Long_Long_Elementary_Functions.Sqrt
              (Long_Long_Float (Sieve_Size)));
-      Num : Long_Long_Integer := Factor;
+      Num : Long_Long_Integer;
    begin
       while Factor <= Q loop
+         Num := Factor;
          while Num < Sieve_Size loop
             if Bits (Num) then
                Factor := Num;
