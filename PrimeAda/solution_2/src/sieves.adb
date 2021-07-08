@@ -23,7 +23,8 @@ begin
          if Cal.Clock - Start_Time >= Seconds_To_Loop then
             Sieve.Print_Results
                (Verbose        => False,
-                Total_Duration => (Cal.Clock - Start_Time) / Duration (Sieve.Size),
+                --  The C++ version of this seem to convert it's time from secons to ms and then back to seconds.
+                Total_Duration => Cal.Clock - Start_Time,
                 Total_Passes   => Passes_Completed);
             exit Main_Loop;
          end if;
