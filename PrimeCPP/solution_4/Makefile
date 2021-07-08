@@ -1,4 +1,13 @@
-CXXFLAGS = -std=c++20 -Wall -Wextra -pedantic -pthread -O3 -march=native -mtune=native -funroll-all-loops -fconstexpr-loop-limit=2000000 -fconstexpr-ops-limit=200000000
+CXXFLAGS = -std=c++20 -Wall -Wextra -pedantic -pthread -O3 -march=native -mtune=native
+
+ifeq "$(CXX)" "g++-11"
+	CXXFLAGS += -funroll-all-loops -fconstexpr-loop-limit=2000000 -fconstexpr-ops-limit=200000000
+endif
+
+ifeq "$(CXX)" "clang++-12"
+	CXXFLAGS += -fconstexpr-steps=50000000 -fbracket-depth=1024
+endif
+
 LDLIBS = -pthread
 
 .PHONY: all
