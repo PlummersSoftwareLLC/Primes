@@ -7,9 +7,6 @@ package body Prime_Sieves is
    package Float_Ops is new Ada.Numerics.Generic_Elementary_Functions (Float);
    use Float_Ops;
 
-   function "<" (Left : Integer; Right : Index_Type) return Boolean is (Index_Type (Left) < Right);
-   function "<=" (Left : Integer; Right : Index_Type) return Boolean is (Index_Type (Left) <= Right);
-
    procedure Run (Sieve : in out Prime_Sieve) is
       Factor : Integer := 3;
       Q      : Integer := Integer (Sqrt (Float (Sieve.Size)));
@@ -19,7 +16,7 @@ package body Prime_Sieves is
             Number : Integer := Factor;
          begin
             --  Ada's for loops don't have a by keyword like Pascal does.
-            Is_Prime : while Number < Sieve.Size loop
+            Is_Prime : while Index_Type (Number) < Sieve.Size loop
                if Sieve.Bits (Index_Type (Number)) then
                   Factor := Number;
 
@@ -32,7 +29,7 @@ package body Prime_Sieves is
             --  Probably not a good idea to re-use this loop counter!
             Number := Factor * Factor;
 
-            Is_Not_Prime : while Number < Sieve.Size loop
+            Is_Not_Prime : while Index_Type (Number) < Sieve.Size loop
                Sieve.Bits (Index_Type (Number)) := False;
 
                Number := Number + (Factor * 2);
@@ -57,7 +54,7 @@ package body Prime_Sieves is
          Count  : Integer := (if Sieve.Size >= 2 then 1 else 0);
          Number : Integer := 3;
       begin
-         while Number <= Sieve.Size loop
+         while Index_Type (Number) <= Sieve.Size loop
             if Sieve.Bits (Index_Type (Number)) then
                if Verbose then
                   Put (Number, Width => 0);
@@ -106,7 +103,7 @@ package body Prime_Sieves is
       declare
          Prime : Integer := 3;
       begin
-         while Prime < Sieve.Size loop
+         while Index_Type (Prime) < Sieve.Size loop
             if Sieve.Bits (Index_Type (Prime)) then
                Count := Count + 1;
             end if;
