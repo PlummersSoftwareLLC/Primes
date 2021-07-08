@@ -1,7 +1,20 @@
 with Ada.Calendar;
 with Ada.Numerics.Generic_Elementary_Functions;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Prime_Sieves is
+   package IIO is new Integer_IO (Integer);
+   use IIO;
+
+   package Index_IO is new Integer_IO (Index_Type);
+   use Index_IO;
+
+   package DIO is new Fixed_IO (Duration);
+   use DIO;
+
+   package BIO is new Enumeration_IO (Boolean);
+   use BIO;
+
    use type Result_Maps.Cursor;
 
    package Float_Ops is new Ada.Numerics.Generic_Elementary_Functions (Float);

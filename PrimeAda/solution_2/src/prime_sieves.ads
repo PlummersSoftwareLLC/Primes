@@ -1,4 +1,3 @@
-with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Containers.Ordered_Maps;
 
 generic
@@ -9,18 +8,6 @@ generic
 
    Sieve_Size : Index_Type := 1_000_000;
 package Prime_Sieves is
-   package IIO is new Integer_IO (Integer);
-   use IIO;
-
-   package Index_IO is new Integer_IO (Index_Type);
-   use Index_IO;
-
-   package DIO is new Fixed_IO (Duration);
-   use DIO;
-
-   package BIO is new Enumeration_IO (Boolean);
-   use BIO;
-
    package Result_Maps is new Ada.Containers.Ordered_Maps
       (Key_Type     => Long_Long_Integer,
        Element_Type => Integer);
