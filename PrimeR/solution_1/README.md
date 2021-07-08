@@ -21,7 +21,7 @@ It turns out that 32 bits per logical value are used when a vector has the size 
 
 ### Special findings and performance tweaks
 
-It turns out that finding the next prime in R is really slow if you use, `which`, `Position` or `match`. Even a second while loop is much faster, but still slow. In the latest code is solved this by adding `if (bit_array[factor] == TRUE) {`. This implements the search loop in the same while loop and somehow this makes a difference in R.
+It turns out that finding the next prime in R is really slow if you use, `which`, `Position` or `match`. Even a second while loop is much faster, but still slow. In the latest code this is solved by adding `if (bit_array[factor] == TRUE) {`. This implements the search for the next prime in the main while loop with out the need of an inner loop. Somehow this makes a difference in R.
 
 ### Credits
 
