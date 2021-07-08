@@ -19,6 +19,14 @@ The number of bits that are used per logical value in R is difficult to determin
 
 It turns out that 32 bits per logical value are used when a vector has the size of one million logical values. More information on the memory management by R is described [here](http://adv-r.had.co.nz/memory.html).
 
+### Special findings and performance tweaks
+
+It turns out that finding the next prime in R is really slow if you use, `which`, `Position` or `match`. Even a second while loop is much faster, but still slow. In the latest code is solved this by adding `if (bit_array[factor] == TRUE) {`. This implements the search loop in the same while loop and somehow this makes a difference in R.
+
+### Credits
+
+Special thanks to @nobrien97 for pointing out the possible code improvement in my original code an better Dockerfile.
+
 ## Run instructions
 
 ### Run native
