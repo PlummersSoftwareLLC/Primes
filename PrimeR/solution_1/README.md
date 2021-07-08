@@ -62,15 +62,14 @@ Or do step 2 and 3 with `go.sh`.
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-docker run --rm -it  r:latest 
-Passes: 5, Time: 5.021000, Avg: 1.004200 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
+Passes: 463, Time: 5.001000, Avg: 0.010801 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-fvbakel_R;5;5.021000;1;algorithm=base,faithful=yes,bits=32
+fvbakel_R;463;5.001000;1;algorithm=base,faithful=yes,bits=32
 ```
 
 These results are with the following conditions:
 
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
-- R: 4.0.3
+- R: 4.1.0
 - running in Docker container alpine:3.13
 - Docker version 20.10.2, build 20.10.2-0ubuntu2
