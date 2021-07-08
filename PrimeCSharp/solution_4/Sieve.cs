@@ -9,12 +9,21 @@ namespace FastSieve
 	public static unsafe class Sieve
 	{
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieve(nint max)
+		public static nint CalculateSieve(nint max, out bool[] values)
 		{
-			if (max < 2) return 0;
-			if (max == 2) return 1;
+			if (max < 2)
+			{
+				values = null;
+				return 0;
+			}
+			if (max == 2)
+			{
+				values = null;
+				return 1;
+			}
 
 			bool[] notPrime = new bool[max + 1];
+			values = notPrime;
 
 			nint factor = 3;
 			nint q = (nint)Math.Sqrt(max);
@@ -48,12 +57,17 @@ namespace FastSieve
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieveOptimized(nint max, bool vectorize)
+		public static nint CalculateSieveOptimized(nint max, bool vectorize, out bool[] values)
 		{
-			if (max <= 2) return max == 2 ? 1 : 0;
+			if (max <= 2)
+			{
+				values = null;
+				return max == 2 ? 1 : 0;
+			}
 
 			var halfMax = (max - 1) >> 1;
 			bool[] notPrimeEvery2nd = new bool[halfMax]; //index 0 = 3, index 1 = 5, etc.   |    represented as 0 or 1 in memory
+			values = notPrimeEvery2nd;
 
 			nint factorIndex = 0; //equal to (factor - 3) / 2
 			nint q;
@@ -134,13 +148,14 @@ namespace FastSieve
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieveOptimizedUnmanaged(nint max, bool vectorize)
+		public static nint CalculateSieveOptimizedUnmanaged(nint max, bool vectorize, bool** values)
 		{
 			if (max <= 2) return max == 2 ? 1 : 0;
 
 			var halfMax = (max - 1) >> 1;
 			bool* notPrimeEvery2nd = (bool*)Marshal.AllocHGlobal(halfMax); //index 0 = 3, index 1 = 5, etc.   |    represented as 0 or 1 in memory
 			{
+				if (values != null) *values = notPrimeEvery2nd;
 				if (vectorize)
 				{
 					var loops = halfMax >> 5;
@@ -235,12 +250,12 @@ namespace FastSieve
 					}
 				}
 			}
-			Marshal.FreeHGlobal((IntPtr)notPrimeEvery2nd);
+			if (values == null) Marshal.FreeHGlobal((IntPtr)notPrimeEvery2nd);
 			return primeCount;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieveOptimizedUnmanaged1Bit(nint max, bool vectorize)
+		public static nint CalculateSieveOptimizedUnmanaged1Bit(nint max, bool vectorize, byte** values)
 		{
 			if (max <= 2) return max == 2 ? 1 : 0;
 
@@ -248,6 +263,7 @@ namespace FastSieve
 			var bytesMax = (halfMax + 7) >> 3;
 			byte* notPrimeEvery2nd = (byte*)Marshal.AllocHGlobal(bytesMax); //packed bits that represent the primes, starting in index 0: (low to high bit is 3, 5, 7, 9, 11, 13, 15, 17), etc.
 			{
+				if (values != null) *values = notPrimeEvery2nd;
 				if (vectorize)
 				{
 					var loops = bytesMax >> 5;
@@ -387,7 +403,7 @@ namespace FastSieve
 					}
 				}
 			}
-			Marshal.FreeHGlobal((IntPtr)notPrimeEvery2nd);
+			if (values == null) Marshal.FreeHGlobal((IntPtr)notPrimeEvery2nd);
 			return primeCount - ((bytesMax << 3) - halfMax);
 		}
 

@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace FastSieve
 {
-	class Program
+	unsafe class Program
 	{
 		static void Main(string[] args)
 		{
@@ -19,10 +19,10 @@ namespace FastSieve
 			Sieve.InitializeNextPrime();
 
 			//Jit each method by calling so metrics aren't scewed by first-time run of method:
-			Sieve.CalculateSieve(0);
-			Sieve.CalculateSieveOptimized(0, false);
-			Sieve.CalculateSieveOptimizedUnmanaged(0, false);
-			Sieve.CalculateSieveOptimizedUnmanaged1Bit(0, false);
+			Sieve.CalculateSieve(0, out _);
+			Sieve.CalculateSieveOptimized(0, false, out _);
+			Sieve.CalculateSieveOptimizedUnmanaged(0, false, null);
+			Sieve.CalculateSieveOptimizedUnmanaged1Bit(0, false, null);
 
 			//args = new string[] { "runallchecks" };
 
@@ -83,13 +83,13 @@ namespace FastSieve
 			while (watch.ElapsedTicks < durationLimit)
 			{
 				nint value;
-				if (method == 1) value = Sieve.CalculateSieve(max);
-				else if (method == 2) value = Sieve.CalculateSieveOptimized(max, false);
-				else if (method == 3) value = Sieve.CalculateSieveOptimized(max, true);
-				else if (method == 4) value = Sieve.CalculateSieveOptimizedUnmanaged(max, false);
-				else if (method == 5) value = Sieve.CalculateSieveOptimizedUnmanaged(max, true);
-				else if (method == 6) value = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, false);
-				else /*if (method == 7)*/ value = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, true);
+				if (method == 1) value = Sieve.CalculateSieve(max, out _);
+				else if (method == 2) value = Sieve.CalculateSieveOptimized(max, false, out _);
+				else if (method == 3) value = Sieve.CalculateSieveOptimized(max, true, out _);
+				else if (method == 4) value = Sieve.CalculateSieveOptimizedUnmanaged(max, false, null);
+				else if (method == 5) value = Sieve.CalculateSieveOptimizedUnmanaged(max, true, null);
+				else if (method == 6) value = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, false, null);
+				else /*if (method == 7)*/ value = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, true, null);
 				if (value != 78498)
 				{
 					Console.WriteLine("Invalid result (method " + method.ToString() + ") " + value.ToString() + ", expected 78498");
@@ -112,7 +112,7 @@ namespace FastSieve
 		{
 			if (max <= 0X7FFFFFC7L) //array based implementations
 			{
-				nint value1 = Sieve.CalculateSieve(max);
+				nint value1 = Sieve.CalculateSieve(max, out _);
 				if (value1 != expected)
 				{
 					Console.WriteLine("Invalid result (method 1) with max " + max.ToString() + ", got " + value1.ToString() + ", expected " + expected.ToString());
@@ -120,33 +120,33 @@ namespace FastSieve
 			}
 			if (max <= (0X7FFFFFC7L * 2 + 1)) //array based implementations
 			{
-				nint value2 = Sieve.CalculateSieveOptimized(max, false);
+				nint value2 = Sieve.CalculateSieveOptimized(max, false, out _);
 				if (value2 != expected)
 				{
 					Console.WriteLine("Invalid result (method 2) with max " + max.ToString() + ", got " + value2.ToString() + ", expected " + expected.ToString());
 				}
-				nint value3 = Sieve.CalculateSieveOptimized(max, true);
+				nint value3 = Sieve.CalculateSieveOptimized(max, true, out _);
 				if (value3 != expected)
 				{
 					Console.WriteLine("Invalid result (method 3) with max " + max.ToString() + ", got " + value3.ToString() + ", expected " + expected.ToString());
 				}
 			}
-			nint value4 = Sieve.CalculateSieveOptimizedUnmanaged(max, false);
+			nint value4 = Sieve.CalculateSieveOptimizedUnmanaged(max, false, null);
 			if (value4 != expected)
 			{
 				Console.WriteLine("Invalid result (method 4) with max " + max.ToString() + ", got " + value4.ToString() + ", expected " + expected.ToString());
 			}
-			nint value5 = Sieve.CalculateSieveOptimizedUnmanaged(max, true);
+			nint value5 = Sieve.CalculateSieveOptimizedUnmanaged(max, true, null);
 			if (value5 != expected)
 			{
 				Console.WriteLine("Invalid result (method 5) with max " + max.ToString() + ", got " + value5.ToString() + ", expected " + expected.ToString());
 			}
-			nint value6 = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, false);
+			nint value6 = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, false, null);
 			if (value6 != expected)
 			{
 				Console.WriteLine("Invalid result (method 6) with max " + max.ToString() + ", got " + value6.ToString() + ", expected " + expected.ToString());
 			}
-			nint value7 = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, true);
+			nint value7 = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, true, null);
 			if (value7 != expected)
 			{
 				Console.WriteLine("Invalid result (method 7) with max " + max.ToString() + ", got " + value7.ToString() + ", expected " + expected.ToString());
