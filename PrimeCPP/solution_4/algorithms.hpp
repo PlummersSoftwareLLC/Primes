@@ -72,7 +72,7 @@ class Sieve {
                 }
             }
             auto strideIdx = wheelIdx;
-            const auto stride = [&strideIdx] {
+            const auto stride = [&] {
                 if constexpr(ConstantStride) {
                     return (WheelSize > 0 && !HalfStorage) ? 2 : 1;
                 }
