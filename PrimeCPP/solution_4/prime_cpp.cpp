@@ -99,7 +99,7 @@ int main()
     return runTests<runners_t, SIEVE_SIZE>();
 #else
     utils::for_constexpr(
-        [&](const auto& idx) {
+        [&](const auto idx) {
             using runner_t = std::tuple_element_t<idx.value, runners_t>;
 
             auto passes = std::size_t{0};
