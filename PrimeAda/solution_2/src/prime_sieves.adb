@@ -16,8 +16,6 @@ package body Prime_Sieves is
          begin
             --  Ada's for loops don't have a by keyword like Pascal does.
             loop
-               exit when Number >= Sieve.Size;
-
                if Sieve.Bits (Number) then
                   Factor := Number;
 
@@ -25,14 +23,16 @@ package body Prime_Sieves is
                end if;
 
                Number := Number + 2;
+
+               exit when Number >= Sieve.Size;
             end loop;
 
             loop
-               exit when Number >= Sieve.Size;
-
                Sieve.Bits (Number) := False;
 
                Number := Number + Factor * 2;
+
+               exit when Number >= Sieve.Size;
             end loop;
 
             Factor := Factor + 2;
@@ -93,11 +93,19 @@ package body Prime_Sieves is
    function Count_Primes (Sieve : Prime_Sieve) return Integer is
       Count : Integer := (if Sieve.Size >= 2 then 1 else 0);
    begin
-      for P in 3 .. Sieve.Size loop
-         if Sieve.Bits (P) then
-            Count := Count + 1;
-         end if;
-      end loop;
+      declare
+         Prime : Integer := 3;
+      begin
+         loop
+            if Sieve.Bits (Prime) then
+               Count := Count + 1;
+            end if;
+
+            Prime := Prime + 2;
+
+            exit when Prime >= Sieve.Size;
+         end loop;
+      end;
 
       return Count;
    end Count_Primes;
