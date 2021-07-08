@@ -1,7 +1,0 @@
-Dockerfile
-.dockerignore
-.gitattributes
-.gitignore
-README.md
-gradlew.bat
-run-sieve.sh

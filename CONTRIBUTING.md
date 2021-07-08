@@ -50,7 +50,7 @@ Please add a `Dockerfile` that is configured to build and run your solution. It 
 When composing the Dockerfile, please use the following as a reference for selecting the base image:
 * If an official image exists on [Docker Hub](https://hub.docker.com/) for the language you chose, use that. If multiple images are available with different underlying Linux distributions, select the one to use in accordance with the next steps in this list.
 * Otherwise, if it is possible to get the solution to build and run on Alpine 3.13 using Alpine 3.13 packages, use that.
-* Otherwise, if it is possible to get the solution to build and run on Ubuntu 18.04, use that. Employ standard packages to the extent possible.
+* Otherwise, if it is possible to get the solution to build and run on a supported LTS release of Ubuntu (currently 18.04 or 20.04), use that. Employ standard packages to the extent possible.
 * Otherwise, choose another base image that you can get the solution to build and run in.
 
 Also:
