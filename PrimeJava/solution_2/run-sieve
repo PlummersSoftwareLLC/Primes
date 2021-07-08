@@ -5,5 +5,5 @@ if java -version 2>&1 >/dev/null | grep -q "version" ; then
   java "./src/PrimeSieveJavaBitSet.java"
   echo
 else
-  echo "Requires Java 11+"
+  echo "Requires JDK 11+"
 fi

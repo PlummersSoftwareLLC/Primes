@@ -26,3 +26,5 @@ buildNumber.properties
 .factorypath
 .project
 .vscode/
+
+.editorconfig

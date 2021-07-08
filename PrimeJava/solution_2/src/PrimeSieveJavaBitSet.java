@@ -3,12 +3,9 @@
  */
 
 import static java.lang.System.currentTimeMillis;
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.BitSet;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class PrimeSieveJavaBitSet {
 
@@ -17,24 +14,16 @@ public class PrimeSieveJavaBitSet {
 
   public static void main(final String[] args) {
 
-    final ExecutorService cachedPool = newCachedThreadPool();
-    final AtomicLong passes = new AtomicLong(0);
+    long passes = 0;
     final PrimeSieve sieve = new PrimeSieve(LIMIT);
     final long tStart = currentTimeMillis();
 
     while (MILLISECONDS.toSeconds(currentTimeMillis() - tStart) < TIME) {
-      cachedPool.execute(() -> sieve.runSieve(passes));
+      sieve.runSieve();
+      passes++;
     }
 
-    sieve.printResults(false, MILLISECONDS.toSeconds(currentTimeMillis() - tStart), passes.get());
-
-    try {
-      cachedPool.awaitTermination(1, MILLISECONDS);
-    } catch (final InterruptedException e) {
-      // nothing to do
-    } finally {
-      cachedPool.shutdown();
-    }
+    sieve.printResults(false, MILLISECONDS.toSeconds(currentTimeMillis() - tStart), passes);
   }
 
   public static class PrimeSieve {
@@ -92,7 +81,7 @@ public class PrimeSieveJavaBitSet {
     }
 
     // Calculate the primes up to the specified limit
-    public void runSieve(final AtomicLong passes) {
+    public void runSieve() {
       var factor = 3;
       final var q = (int) Math.sqrt(this.sieveSize);
 
@@ -112,7 +101,6 @@ public class PrimeSieveJavaBitSet {
 
         factor += 2; // No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
       }
-      passes.incrementAndGet();
     }
 
     // Displays the primes found (or just the total count, depending on what you ask for)
