@@ -5,5 +5,8 @@ RUN apk --update add --no-cache sbcl
 WORKDIR /opt/app
 
 COPY *.lisp .
+COPY run.sh .
 
-ENTRYPOINT [ "sbcl", "--script", "PrimeSieve.lisp" ]
+RUN chmod +x run.sh
+
+ENTRYPOINT [ "./run.sh" ]
