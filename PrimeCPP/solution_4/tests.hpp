@@ -65,7 +65,7 @@ static inline auto compareResults(const auto& name, const auto& computed, const 
 
 template<typename Sieve, std::size_t SieveSize, typename Time>
 struct TestRunner {
-    inline auto operator()(const Time&)
+    inline auto operator()(const Time&, const std::size_t)
     {
         constexpr auto limitPrimes = [](const auto& primes, const auto& limit) {
             auto limitedPrimes = std::vector<std::size_t>{};
@@ -74,6 +74,7 @@ struct TestRunner {
         };
 
         return std::async(std::launch::async, [&limitPrimes]() {
+            auto sieveName = std::string{};
             const auto& referencePrimes = detail::getReferencePrimes(SieveSize);
             auto error = false;
             for(auto i = std::size_t{0}; i <= SieveSize; ++i) {
@@ -84,11 +85,12 @@ struct TestRunner {
                 if(!compareResults(sieve.getConfig().name, sievedPrimes, refPrimes)) {
                     error = true;
                 }
+                sieveName = sieve.getConfig().name;
             }
             if(!error) {
-                std::cout << Sieve{0}.getConfig().name << ": Success" << std::endl;
+                std::cout << sieveName << ": Success" << std::endl;
             }
-            return std::size_t{!error};
+            return !error;
         });
     }
 };

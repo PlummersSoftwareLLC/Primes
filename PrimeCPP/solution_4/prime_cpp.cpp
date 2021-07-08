@@ -5,6 +5,7 @@
 #include <map>
 #include <numeric>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -25,34 +26,61 @@
 
 template<typename Sieve, std::size_t SieveSize, typename Time>
 struct Runner {
-    inline auto operator()(const Time& runTime)
+    inline auto operator()(const Time& runTime, const std::size_t numThreads = 1)
     {
-        auto run = std::async([&] {
+        const auto start = std::chrono::high_resolution_clock::now();
+
+        const auto runThread = [&] {
+            auto error = false;
             auto passes = std::size_t{0};
-            const auto start = std::chrono::high_resolution_clock::now();
+            auto end = std::chrono::high_resolution_clock::now();
             while(true) {
                 Sieve sieve(SieveSize);
                 sieve.runSieve();
                 ++passes;
-                if(const auto end = std::chrono::high_resolution_clock::now(); end - start >= runTime) {
+                if(end = std::chrono::high_resolution_clock::now(); end - start >= runTime) {
                     if(!validate(SieveSize, sieve.countPrimes())) {
                         std::printf("Error: Results not valid!\n");
-                    }
-                    else {
-                        const auto duration = end - start;
-                        const auto durationS = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() / 1'000'000.0;
-                        const auto config = sieve.getConfig();
-                        std::printf("%s;%lu;%f;%lu;algorithm=%s,faithful=%s,bits=%lu\n", config.name.c_str(), passes, durationS, config.threads,
-                                    config.algorithm.c_str(), config.faithful ? "yes" : "no", config.bits);
-                        std::fflush(stdout);
+                        error = true;
                     }
                     break;
                 }
             }
-            return passes;
+            return std::tuple{error, passes, end, Sieve{}.getConfig()};
+        };
+
+        auto runs = std::vector<std::future<std::invoke_result_t<decltype(runThread)>>>{};
+        while(runs.size() < numThreads) {
+            runs.push_back(std::async(std::launch::async, runThread));
+        }
+
+        auto res = std::async([&] {
+            auto totalPasses = std::size_t{0};
+            auto latestEnd = std::chrono::high_resolution_clock::now();
+
+            const auto [config, error] = [&] {
+                auto error = false;
+                for(auto i = std::size_t{0}; i < runs.size(); ++i) {
+                    const auto [runError, passes, end, cfg] = runs[i].get();
+                    error |= runError;
+                    totalPasses += passes;
+                    latestEnd = std::max(latestEnd, end);
+                    if(i + 1 >= runs.size()) {
+                        return std::pair{cfg, error};
+                    }
+                }
+                return std::pair{Config{}, true};
+            }();
+
+            const auto duration = latestEnd - start;
+            const auto durationS = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() / 1'000'000.0;
+            std::printf("%s;%lu;%f;%lu;algorithm=%s,faithful=%s,bits=%lu\n", config.name.c_str(), totalPasses, durationS, numThreads, config.algorithm.c_str(),
+                        config.faithful ? "yes" : "no", config.bits);
+            std::fflush(stdout);
+            return !error;
         });
-        run.wait();
-        return run;
+        res.wait();
+        return res;
     }
 };
 
@@ -65,7 +93,7 @@ static inline auto run(const Time& runTime)
     constexpr auto inverted = std::tuple{true, false};
     using types_t = std::tuple<bool, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t>;
 
-    auto runThreads = std::vector<std::future<std::size_t>>{};
+    auto runnerResults = std::vector<std::future<bool>>{};
 
     utils::for_constexpr(
         [&](const auto wheelIdx) {
@@ -85,11 +113,14 @@ static inline auto run(const Time& runTime)
                                                 using type_t = std::tuple_element_t<typeIdx.value, types_t>;
                                                 using vector_runner_t = GenericSieve<VectorStorage<type_t, inv>, wheelSize, stride, storage>;
                                                 using bit_runner_t = GenericSieve<BitStorage<type_t, inv>, wheelSize, stride, storage>;
+                                                const auto threads = std::thread::hardware_concurrency();
 
-                                                runThreads.push_back(RunnerT<vector_runner_t, SieveSize, Time>{}(runTime));
+                                                for(auto numThreads = std::size_t{1}; numThreads <= 2 * threads; numThreads *= 2) {
+                                                    runnerResults.push_back(RunnerT<vector_runner_t, SieveSize, Time>{}(runTime, numThreads));
 
-                                                if constexpr(!std::is_same_v<type_t, bool>) {
-                                                    runThreads.push_back(RunnerT<bit_runner_t, SieveSize, Time>{}(runTime));
+                                                    if constexpr(!std::is_same_v<type_t, bool>) {
+                                                        runnerResults.push_back(RunnerT<bit_runner_t, SieveSize, Time>{}(runTime, numThreads));
+                                                    }
                                                 }
                                             }
                                         },
@@ -103,7 +134,7 @@ static inline auto run(const Time& runTime)
         },
         std::make_index_sequence<std::tuple_size_v<decltype(wheels)>>{});
 
-    return std::all_of(runThreads.begin(), runThreads.end(), [](auto& runFuture) { return runFuture.get(); }) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return std::all_of(runnerResults.begin(), runnerResults.end(), [](auto& runFuture) { return runFuture.get(); }) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int main()

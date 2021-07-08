@@ -34,3 +34,5 @@ run: prime_cpp prime_cpp_pregen
 
 test: prime_cpp_test
 	./prime_cpp_test
+
+run_and_test: run test

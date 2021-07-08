@@ -12,7 +12,6 @@
 
 struct Config {
     const std::string name;
-    const std::size_t threads;
     const std::string algorithm;
     const bool faithful;
     const std::size_t bits;
@@ -21,6 +20,7 @@ struct Config {
 template<std::size_t SieveSize>
 class PreGenerated {
   public:
+    PreGenerated() : m_sieveSize(0) {}
     PreGenerated(const std::size_t sieveSize) : m_sieveSize(sieveSize) {}
 
     inline void runSieve() { m_bits = genSieve<SieveSize>(); }
@@ -46,7 +46,7 @@ class PreGenerated {
         auto name = std::string{"BlackMark"};
         name += "-pregenerated-";
         name += "array<bool>";
-        return {name, 1, "base", false, sizeof(typename decltype(m_bits)::value_type) * CHAR_BIT};
+        return {name, "base", false, sizeof(typename decltype(m_bits)::value_type) * CHAR_BIT};
     }
 
   private:
@@ -57,6 +57,7 @@ class PreGenerated {
 template<typename Storage, std::size_t WheelSize, bool ConstantStride = false, bool HalfStorage = false>
 class GenericSieve {
   public:
+    GenericSieve() : m_sieveSize(0), m_bits(0) {}
     GenericSieve(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / (HalfStorage ? 2 : 1) + 1) {}
 
     inline void runSieve()
@@ -117,7 +118,7 @@ class GenericSieve {
         name += (HalfStorage) ? "half_storage-" : "full_storage-";
         name += m_bits;
         const auto algorithm = (check == 1) ? "base" : "wheel";
-        return {name, 1, algorithm, true, m_bits.getBitCount()};
+        return {name, algorithm, true, m_bits.getBitCount()};
     }
 
   private:

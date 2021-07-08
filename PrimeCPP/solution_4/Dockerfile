@@ -11,4 +11,4 @@ COPY *.hpp ./
 ENV CXX_CLANG=clang++-12
 ENV CXX_GCC=g++-11
 
-ENTRYPOINT [ "/usr/bin/make", "run" ]
+ENTRYPOINT [ "/usr/bin/make", "run_and_test" ]
