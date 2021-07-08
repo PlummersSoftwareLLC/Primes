@@ -21,8 +21,8 @@ package body Prime_Sieves is
    use Float_Ops;
 
    procedure Run (Sieve : in out Prime_Sieve) is
-      Factor : Integer := 3;
-      Q      : Integer := Integer (Sqrt (Float (Sieve.Size)));
+      Factor :          Integer := 3;
+      Q      : constant Integer := Integer (Sqrt (Float (Sieve.Size)));
    begin
       while Factor <= Q loop
          declare
@@ -129,7 +129,7 @@ package body Prime_Sieves is
    end Count_Primes;
 
    function Validate_Results (Sieve : Prime_Sieve) return Boolean is
-      Result : Result_Maps.Cursor := Results.Find (Long_Long_Integer (Sieve.Size));
+      Result : constant Result_Maps.Cursor := Results.Find (Long_Long_Integer (Sieve.Size));
    begin
       if Result = Result_Maps.No_Element then
          return False;
