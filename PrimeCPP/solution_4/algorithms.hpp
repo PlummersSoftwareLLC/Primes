@@ -55,9 +55,9 @@ class PreGenerated {
 };
 
 template<typename Storage, std::size_t WheelSize, bool ConstantStride = false, bool HalfStorage = false>
-class Sieve {
+class GenericSieve {
   public:
-    Sieve(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / (HalfStorage ? 2 : 1) + 1) {}
+    GenericSieve(const std::size_t sieveSize) : m_sieveSize(sieveSize), m_bits(sieveSize / (HalfStorage ? 2 : 1) + 1) {}
 
     inline void runSieve()
     {

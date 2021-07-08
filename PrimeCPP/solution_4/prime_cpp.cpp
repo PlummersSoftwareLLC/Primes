@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <chrono>
+#include <future>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -21,95 +23,19 @@
 #include "utils.hpp"
 #include "validator.hpp"
 
-int main()
-{
-    constexpr auto RUN_TIME = std::chrono::seconds(5);
-
-#ifdef RUN_TESTS
-    constexpr auto SIEVE_SIZE = 50'000;
-#else
-    constexpr auto SIEVE_SIZE = 1'000'000;
-#endif
-
-    // clang-format off
-    using runners_t = std::tuple<Sieve<VectorStorage<bool>, 0, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 0, true, false>,
-                                 Sieve<VectorStorage<bool>, 1, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 1, true, false>,
-                                 Sieve<VectorStorage<bool>, 2, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 2, true, false>,
-                                 Sieve<VectorStorage<bool>, 3, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 3, true, false>,
-                                 Sieve<VectorStorage<bool>, 4, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 4, true, false>,
-                                 Sieve<VectorStorage<bool>, 5, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 5, true, false>,
-                                 Sieve<VectorStorage<bool>, 6, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 6, true, false>,
-                                 Sieve<VectorStorage<bool>, 7, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 7, true, false>,
-                                 Sieve<VectorStorage<bool>, 0, true, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 0, false, false>,
-                                 Sieve<VectorStorage<bool>, 1, false, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 1, false, false>,
-                                 Sieve<VectorStorage<bool>, 2, false, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 2, false, false>,
-                                 Sieve<VectorStorage<bool>, 3, false, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 3, false, false>,
-                                 Sieve<VectorStorage<bool>, 4, false, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 4, false, false>,
-                                 Sieve<VectorStorage<bool>, 5, false, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 5, false, false>,
-                                 Sieve<VectorStorage<bool>, 6, false, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 6, false, false>,
-                                 Sieve<VectorStorage<bool>, 7, false, false>,
-                                 Sieve<BitStorage<std::uint8_t>, 7, false, false>,
-                                 Sieve<VectorStorage<bool>, 1, true, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 1, true, true>,
-                                 Sieve<VectorStorage<bool>, 2, true, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 2, true, true>,
-                                 Sieve<VectorStorage<bool>, 3, true, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 3, true, true>,
-                                 Sieve<VectorStorage<bool>, 4, true, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 4, true, true>,
-                                 Sieve<VectorStorage<bool>, 5, true, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 5, true, true>,
-                                 Sieve<VectorStorage<bool>, 6, true, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 6, true, true>,
-                                 Sieve<VectorStorage<bool>, 7, true, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 7, true, true>,
-                                 Sieve<VectorStorage<bool>, 1, false, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 1, false, true>,
-                                 Sieve<VectorStorage<bool>, 2, false, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 2, false, true>,
-                                 Sieve<VectorStorage<bool>, 3, false, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 3, false, true>,
-                                 Sieve<VectorStorage<bool>, 4, false, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 4, false, true>,
-                                 Sieve<VectorStorage<bool>, 5, false, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 5, false, true>,
-                                 Sieve<VectorStorage<bool>, 6, false, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 6, false, true>,
-                                 Sieve<VectorStorage<bool>, 7, false, true>,
-                                 Sieve<BitStorage<std::uint8_t>, 7, false, true>,
-                                 PreGenerated<SIEVE_SIZE>>;
-    // clang-format on
-
-#ifdef RUN_TESTS
-    return runTests<runners_t, SIEVE_SIZE>();
-#else
-    utils::for_constexpr(
-        [&](const auto idx) {
-            using runner_t = std::tuple_element_t<idx.value, runners_t>;
-
+template<typename Sieve, std::size_t SieveSize, typename Time>
+struct Runner {
+    inline auto operator()(const Time& runTime)
+    {
+        auto run = std::async([&] {
             auto passes = std::size_t{0};
             const auto start = std::chrono::high_resolution_clock::now();
             while(true) {
-                runner_t sieve(SIEVE_SIZE);
+                Sieve sieve(SieveSize);
                 sieve.runSieve();
                 ++passes;
-                if(const auto end = std::chrono::high_resolution_clock::now(); end - start >= RUN_TIME) {
-                    if(!validate(SIEVE_SIZE, sieve.countPrimes())) {
+                if(const auto end = std::chrono::high_resolution_clock::now(); end - start >= runTime) {
+                    if(!validate(SieveSize, sieve.countPrimes())) {
                         std::printf("Error: Results not valid!\n");
                     }
                     else {
@@ -123,9 +49,69 @@ int main()
                     break;
                 }
             }
-        },
-        std::make_index_sequence<std::tuple_size_v<runners_t>>{});
+            return passes;
+        });
+        run.wait();
+        return run;
+    }
+};
 
-    return 0;
+template<std::size_t SieveSize, template<typename, auto, typename> typename RunnerT, typename Time>
+static inline auto run([[maybe_unused]] const Time& runTime)
+{
+    constexpr auto wheels = std::tuple{0, 1, 2, 3, 4, 5, 6, 7};
+    constexpr auto strides = std::tuple{true, false};
+    constexpr auto storages = std::tuple{true, false};
+    constexpr auto inverted = std::tuple{true, false};
+    using types_t = std::tuple<bool, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t>;
+
+    auto runThreads = std::vector<std::future<std::size_t>>{};
+
+    utils::for_constexpr(
+        [&](const auto wheelIdx) {
+            constexpr auto wheelSize = std::get<wheelIdx.value>(wheels);
+            utils::for_constexpr(
+                [&](const auto strideIdx) {
+                    constexpr auto stride = std::get<strideIdx.value>(strides);
+                    utils::for_constexpr(
+                        [&](const auto storageIdx) {
+                            constexpr auto storage = std::get<storageIdx.value>(storages);
+                            utils::for_constexpr(
+                                [&](const auto invertedIdx) {
+                                    constexpr auto inv = std::get<invertedIdx.value>(inverted);
+                                    utils::for_constexpr(
+                                        [&](const auto typeIdx) {
+                                            if constexpr(!(storage && wheelSize == 0)) {
+                                                using type_t = std::tuple_element_t<typeIdx.value, types_t>;
+                                                using vector_runner_t = GenericSieve<VectorStorage<type_t, inv>, wheelSize, stride, storage>;
+                                                using bit_runner_t = GenericSieve<BitStorage<type_t, inv>, wheelSize, stride, storage>;
+
+                                                runThreads.push_back(RunnerT<vector_runner_t, SieveSize, Time>{}(runTime));
+
+                                                if constexpr(!std::is_same_v<type_t, bool>) {
+                                                    runThreads.push_back(RunnerT<bit_runner_t, SieveSize, Time>{}(runTime));
+                                                }
+                                            }
+                                        },
+                                        std::make_index_sequence<std::tuple_size_v<types_t>>{});
+                                },
+                                std::make_index_sequence<std::tuple_size_v<decltype(inverted)>>{});
+                        },
+                        std::make_index_sequence<std::tuple_size_v<decltype(storages)>>{});
+                },
+                std::make_index_sequence<std::tuple_size_v<decltype(strides)>>{});
+        },
+        std::make_index_sequence<std::tuple_size_v<decltype(wheels)>>{});
+
+    return std::all_of(runThreads.begin(), runThreads.end(), [](auto& runFuture) { return runFuture.get(); }) ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+int main()
+{
+    constexpr auto RUN_TIME = std::chrono::seconds(5);
+#ifdef RUN_TESTS
+    return run<50'000, TestRunner>(RUN_TIME);
+#else
+    return run<1'000'000, Runner>(RUN_TIME);
 #endif
 }
