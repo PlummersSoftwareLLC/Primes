@@ -35,4 +35,44 @@ gprbuild -p -XMODE=speed
 
 ## Output
 
-*Show the output you got on your machine(s) here, in code blocks*
+### Build configuration: debug0
+
+```bash
+Passes: 413, Time:  5.001606, Avg:  0.012110426, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;413; 5.001606;algorithm=base,faithful=yes,bits=1
+```
+
+### Build configuration: debug1
+
+```bash
+Passes: 1379, Time:  5.003487, Avg:  0.003628344, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1379; 5.003487;algorithm=base,faithful=yes,bits=1
+```
+
+### Build configuration: debug2
+
+```bash
+Passes: 1732, Time:  5.000402, Avg:  0.002887068, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1732; 5.000402;algorithm=base,faithful=yes,bits=1
+```
+
+### Build configuration: debug3
+
+```bash
+Passes: 1741, Time:  5.001630, Avg:  0.002872848, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1741; 5.001630;algorithm=base,faithful=yes,bits=1
+```
+
+### Build configuration: release
+
+```bash
+Passes: 1748, Time:  5.000009, Avg:  0.002860417, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1748; 5.000009;algorithm=base,faithful=yes,bits=1
+```
+
+### Build configuration: optimised
+
+```bash
+Passes: 1820, Time:  5.000495, Avg:  0.002747524, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1820; 5.000495;algorithm=base,faithful=yes,bits=1
+``
