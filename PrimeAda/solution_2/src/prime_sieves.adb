@@ -90,7 +90,9 @@ package body Prime_Sieves is
          Put (Total_Passes, Width => 0);
          Put (";");
          Put (Total_Duration, Fore => 2, Aft => 6);
-         Put_Line (";algorithm=base,faithful=yes,bits=1");
+         Put (";algorithm=base,faithful=yes,bits=");
+         Put (Sieve.Bits (Sieve.Bits'First)'Size, Width => 0);
+         New_Line;
       end;
    end Print_Results;
 
