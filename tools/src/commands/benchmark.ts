@@ -25,6 +25,7 @@ export const command = new Command('benchmark')
       return;
     }
 
+    // Search for all Dockerfiles within the base directory
     const files = glob.sync(path.join(directory, '**/Dockerfile'));
     if (!files.length) {
       console.error('No implementations have been found!');
@@ -37,6 +38,7 @@ export const command = new Command('benchmark')
       const [implementation, solution] = dirname.split(path.sep).slice(-2);
       const imageName = `${implementation}_${solution}`.toLocaleLowerCase();
 
+      // Build the Docker image for the current solution
       try {
         console.log(`[${implementation}][${solution}] Building ...`);
         dockerService.buildImage(dirname, imageName);
@@ -45,6 +47,7 @@ export const command = new Command('benchmark')
         return;
       }
 
+      // Run the benchmark container and retrieve output from it
       try {
         console.log(`[${implementation}][${solution}] Running ...`);
         const output = dockerService.runContainer(imageName);
@@ -67,6 +70,7 @@ export const command = new Command('benchmark')
       return;
     }
 
+    // Convert report to the correct format and print everything out.
     const report = await reportService.createReport(results);
     const formatter = FormatterFactory.getFormatter(args.formatter);
     console.log(formatter.render(report));
