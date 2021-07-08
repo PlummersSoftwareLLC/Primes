@@ -1,7 +1,7 @@
 project Prime_Sieve is
-   type Mode_Type is ("debug", "release", "speed");
+   type Mode_Type is ("debug0", "debug1", "debug2", "debug3", "release", "optimised");
 
-   Mode : Mode_Type := external ("MODE", "debug");
+   Mode : Mode_Type := external ("MODE", "debug0");
 
    for Source_Dirs use ("./src");
    for Object_Dir  use "./obj";
@@ -10,18 +10,33 @@ project Prime_Sieve is
 
    package Compiler is
       Common_Switches := ("-ffunction-sections", "-fdata-sections");
-      Ada_Switches    := ("-gnat2012", "-gnata", "-gnato", "-gnatE", "-gnatwa",
+      Enable_Symbols  := ("-g", "-ggdb");
+      Ada_Switches    := ("-gnat2012",
                           "-gnaty", "-gnaty-s", "-gnatyO", "-gnatyM120", "-gnatyx");
+      Ada_Checks      := ("-gnata", "-gnato", "-gnatE", "-gnatwa");
 
       case Mode is
-         when "debug" =>
-            Common_Switches := Common_Switches  & ("-O0", "-g", "-ggdb");
+         when "debug0" =>
+            --  No optimisation.
+            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O0");
+
+         when "debug1" =>
+            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O1");
+
+         when "debug2" =>
+            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O2");
+
+         when "debug3" =>
+            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O3");
 
          when "release" =>
-            Common_Switches := Common_Switches & ("-O2");
+            Common_Switches := Common_Switches & Ada_Checks & ("-O3");
 
-         when "speed" =>
-            Common_Switches := Common_Switches & ("-march=native", "-mtune=native", "-Ofast");
+         when "optimised" =>
+            Common_Switches := Common_Switches &
+               ("-march=native", "-mtune=native", "-Ofast", "-funroll-all-loops",
+                "-gnato0" --  Disable overflow checking.
+               );
       end case;
 
       for Default_Switches ("Ada") use Common_Switches & Ada_Switches;
