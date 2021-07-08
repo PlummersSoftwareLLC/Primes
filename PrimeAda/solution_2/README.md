@@ -164,4 +164,15 @@ Passes: 1826, Time:  5.000397, Avg:  0.002738443, Limit: 1000000, Count1: 78498,
 Lucretia;1826; 5.000397;algorithm=base,faithful=yes,bits=1
 Passes: 3652, Time:  5.000872, Avg:  0.001369351, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;3652; 5.000872;algorithm=base,faithful=yes,bits=8
+
+# Added imperative version, first OO, then Imperative.
+Passes: 1816, Time:  5.000059, Avg:  0.002753336, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1816; 5.000059;algorithm=base,faithful=yes,bits=1
+Passes: 3643, Time:  5.000827, Avg:  0.001372722, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3643; 5.000827;algorithm=base,faithful=yes,bits=8
+
+Passes: 1793, Time:  5.002627, Avg:  0.002790087, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1793; 5.002627;algorithm=base,faithful=yes,bits=1
+Passes: 3650, Time:  5.001195, Avg:  0.001370190, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3650; 5.001195;algorithm=base,faithful=yes,bits=8
 ```
