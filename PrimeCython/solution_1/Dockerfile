@@ -4,9 +4,8 @@ WORKDIR /root
 
 RUN [ "pip", "install", "cython"]
 
-COPY PrimeCY.pyx .
+COPY PrimeCY.pyx PrimeCY_bitarray.pyx PrimeCY_pointers.pyx buildall.sh ./
 
-RUN [ "cython", "-3", "--embed", "PrimeCY.pyx", "-o", "PrimeCY.c" ]
-RUN [ "gcc", "-I", "/usr/local/include/python3.9", "-l", "python3.9", "-lm", "PrimeCY.c", "-o", "PrimeCY"]
+RUN [ "./buildall.sh" ]
 
-ENTRYPOINT [ "./PrimeCY" ]
+ENTRYPOINT ./PrimeCY && ./PrimeCY_pointers && ./PrimeCY_bitarray

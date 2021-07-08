@@ -4,19 +4,34 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This is a copy of the [second implementation of the python prime sieve](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimePython/solution_2) with cython implemented.
 
+There are three versions of the program:
+
+ * `PrimeCY.pyx` is a copy of the Python version with minimal changes, such as
+   adding types, showing what Cython can do for the performance of already fast
+   Python code with minimal effort.
+ * `PrimeCY_pointers.pyx` is a version that uses C-level pointers to access the bit
+   array rather than Python-level functions
+ * `PrimeCY_bitarray.pyx` stores flags as individual bits rather than as bytes.
+
 ## Run instructions
 
-```
-pip install cython
-cython -3 --embed PrimeCY.pyx -o PrimeCY.c
-gcc -I /usr/local/include/python3.9 -l python3.9 -lm PrimeCY.c -o PrimeCY
-./PrimeCY
-```
+To build:
 
-Belonging to your python installation the python include path may be different and the linker may not found the library by default. So to avoid these problems you can use docker:
+    pip3 install cython
+    sh buildall.sh
+
+To run the different versions:
+
+    ./PrimeCY
+    ./PrimeCY_pointers
+    ./PrimeCY_bitarray
+
+You may not have the Python development headers and library installed. It may be
+easier to use docker:
 
 ```
 docker build . -t primecy
@@ -32,20 +47,20 @@ docker run --rm primecy
 # Output
 
 ```
-Passes: 3592, Time: 10.001709000000119, Avg: 0.00278444014476618, Limit: 1000000, Count: 78498, Valid: True
+Passes: 4996, Time: 5.000531282001248, Avg: 0.0010009069819858383, Limit: 1000000, Count: 78498, Valid: True
 
-ssovest; 3592;10.001709000000119;1;algorithm=base,faithful=yes,bits=8
+rpkak; 4996;5.000531282001248;1;algorithm=base,faithful=yes,bits=8
 ```
 
 # Cython and Python compared
 
-| Limit | Passes in Cython | Passes in Python |
-|-|-|-|
-| 10 | 2093636 | 982066 |
-| 100 | 939333 | 461066 |
-| 1000 | 396187 | 206818 |
-| 10000 | 112930 | 70036 |
-| 100000 | 17217 | 8741 |
-| 1000000 | 1836 | 1022 |
-| 10000000 | 63 | 45 |
-| 100000000 | 5 | 5 |
+| Limit | Cython (minimal changes) | Python (original) | Cython with pointers | Cython with bit field |
+|-----------|------------|-----------|------------|-----------|
+| 10        | 4_131_936  | 1_873_498 | 11_478_593 | 7_647_607 |
+| 100       | 1_796_127  | 783_782   | 10_084_268 | 6_980_296 |
+| 1000      | 833_749    | 373_348   | 6_616_337  | 4_873_550 |
+| 10000     | 227_157    | 139_545   | 1_835_678  | 943_339   |
+| 100000    | 58_797     | 39_563    | 180_550    | 92_413    |
+| 1000000   | 5_079      | 2_364     | 13_800     | 8_398     |
+| 10000000  | 284        | 209       | 856        | 742       |
+| 100000000 | 10         | 11        | 13         | 51        |
