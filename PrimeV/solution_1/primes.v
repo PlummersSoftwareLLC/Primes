@@ -1,6 +1,12 @@
 import time
 import math
 
+const (
+	sieve_size = 1_000_000
+	q = math.sqrt(sieve_size)	
+	all_bits_true_array = []bool{len: sieve_size, init: true}	
+)
+
 struct Sieve {
 	sieve_size u64
 mut:
@@ -26,9 +32,9 @@ fn get_dict_value(key string) int {
 	return dictionary[key]
 }
 
+[direct_array_access]
 fn (mut sieve Sieve) run_sieve() {
 	mut factor := u64(3)
-	q := math.sqrt(sieve.sieve_size)
 
 	for factor <= q {
 		for num := factor; num < sieve.sieve_size; num += u64(2) {
@@ -92,8 +98,8 @@ fn main() {
 
 	for {
 		mut sieve := Sieve{
-			sieve_size: u64(1_000_000)
-			bits: [true].repeat(u64(1_000_000))
+			sieve_size: 1_000_000
+			bits: all_bits_true_array
 		}
 		sieve.run_sieve()
 
