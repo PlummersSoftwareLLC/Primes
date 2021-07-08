@@ -13,9 +13,11 @@ defmodule PrimeSieve do
 
   def main(opts \\ []) do
     size = Keyword.get(opts, :size, 1_000_000)
-    threads = Keyword.get(opts, :threads, System.schedulers())
+    threads = opts
+    |> Keyword.get(:threads, [1, System.schedulers()])
+    |> List.wrap
 
-    Enum.each(1..threads, &threaded_launch(&1, size))
+    Enum.each(threads, &threaded_launch(&1, size))
   end
 
   def threaded_launch(threads, size) do
