@@ -29,6 +29,8 @@ gprbuild -p -XMODE=optimised
 ./prime_sieve
 ```
 
+See the TODO inside [sieves.adb](./src/sieves.adb) as I think I converted it correctly.
+
 ## Output
 
 ### Build configuration: debug0
