@@ -35,7 +35,7 @@ project Prime_Sieve is
          when "optimised" =>
             Common_Switches := Common_Switches &
                ("-march=native", "-mtune=native", "-Ofast", "-funroll-all-loops",
-                "-gnato0" --  Disable overflow checking.
+                "-gnatp"   --  Suppress all checks
                );
       end case;
 

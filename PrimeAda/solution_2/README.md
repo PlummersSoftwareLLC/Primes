@@ -138,4 +138,30 @@ Passes: 1813, Time:  5.000515, Avg:  0.002758143, Limit: 1000000, Count1: 78498,
 Lucretia;1813; 5.000515;algorithm=base,faithful=yes,bits=1
 Passes: 3331, Time:  5.001093, Avg:  0.001501378, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;3331; 5.001093;algorithm=base,faithful=yes,bits=8
+
+## Supress all checks - 5 successive runs, very odd.
+Passes: 1810, Time:  5.000556, Avg:  0.002762738, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1810; 5.000556;algorithm=base,faithful=yes,bits=1
+Passes: 3650, Time:  5.000006, Avg:  0.001369864, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3650; 5.000006;algorithm=base,faithful=yes,bits=8
+
+Passes: 1816, Time:  5.001252, Avg:  0.002753993, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1816; 5.001252;algorithm=base,faithful=yes,bits=1
+Passes: 3592, Time:  5.000154, Avg:  0.001392025, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3592; 5.000154;algorithm=base,faithful=yes,bits=8
+
+Passes: 1827, Time:  5.000615, Avg:  0.002737063, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1827; 5.000615;algorithm=base,faithful=yes,bits=1
+Passes: 3650, Time:  5.000388, Avg:  0.001369969, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3650; 5.000388;algorithm=base,faithful=yes,bits=8
+
+Passes: 1830, Time:  5.002268, Avg:  0.002733479, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1830; 5.002268;algorithm=base,faithful=yes,bits=1
+Passes: 3653, Time:  5.001124, Avg:  0.001369045, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3653; 5.001124;algorithm=base,faithful=yes,bits=8
+
+Passes: 1826, Time:  5.000397, Avg:  0.002738443, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1826; 5.000397;algorithm=base,faithful=yes,bits=1
+Passes: 3652, Time:  5.000872, Avg:  0.001369351, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3652; 5.000872;algorithm=base,faithful=yes,bits=8
 ```
