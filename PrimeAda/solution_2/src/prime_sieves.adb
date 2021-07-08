@@ -10,33 +10,36 @@ package body Prime_Sieves is
       Factor : Integer := 3;
       Q      : Integer := Integer (Sqrt (Float (Sieve.Size)));
    begin
-      while Factor < Q loop
+      while Factor <= Q loop
          declare
             Number : Integer := Factor;
          begin
             --  Ada's for loops don't have a by keyword like Pascal does.
-            loop
+            Is_Prime : loop
                if Sieve.Bits (Number) then
                   Factor := Number;
 
-                  exit;
+                  exit Is_Prime;
                end if;
 
                Number := Number + 2;
 
-               exit when Number >= Sieve.Size;
-            end loop;
+               exit Is_Prime when Number >= Sieve.Size;
+            end loop Is_Prime;
 
-            loop
+            --  Probably not a good idea to re-use this loop counter!
+            Number := Factor * Factor;
+
+            Is_Not_Prime : loop
+               exit Is_Not_Prime when Number >= Sieve.Size;
+
                Sieve.Bits (Number) := False;
 
-               Number := Number + Factor * 2;
-
-               exit when Number >= Sieve.Size;
-            end loop;
-
-            Factor := Factor + 2;
+               Number := Number + (Factor * 2);
+            end loop Is_Not_Prime;
          end;
+
+         Factor := Factor + 2;
       end loop;
    end Run;
 
