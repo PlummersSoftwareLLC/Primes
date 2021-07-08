@@ -1,3 +1,4 @@
+with Ada.Calendar;
 with Ada.Numerics.Generic_Elementary_Functions;
 
 package body Prime_Sieves is
@@ -126,6 +127,34 @@ package body Prime_Sieves is
 
       return (Result_Maps.Element (Result) = Sieve.Count_Primes);
    end Validate_Results;
+
+   procedure Generate is
+      use Ada.Calendar;
+
+      Seconds_To_Loop  : constant Duration := 5.0;
+      Passes_Completed :          Natural  := Natural'First;
+      Start_Time       : constant Time     := Clock;
+   begin
+      Main_Loop : loop
+         declare
+            Sieve : Prime_Sieve (Size => Sieve_Size);
+         begin
+            Sieve.Run;
+
+            Passes_Completed := Passes_Completed + 1;
+
+            if Clock - Start_Time >= Seconds_To_Loop then
+               Sieve.Print_Results
+                  (Verbose        => False,
+                  --  TODO: Is this correct??
+                  --  The C++ version of this seem to convert it's time from secons to ms and then back to seconds.
+                  Total_Duration => Clock - Start_Time,
+                  Total_Passes   => Passes_Completed);
+               exit Main_Loop;
+            end if;
+         end;
+      end loop Main_Loop;
+   end Generate;
 begin
    Results.Insert (            10,           4);
    Results.Insert (           100,          25);

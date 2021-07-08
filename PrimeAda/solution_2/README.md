@@ -42,6 +42,12 @@ Lucretia;413; 5.001606;algorithm=base,faithful=yes,bits=1
 # Generic
 Passes: 325, Time:  5.013335, Avg:  0.015425646, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;325; 5.013335;algorithm=base,faithful=yes,bits=1
+
+# Generic Generator
+Passes: 320, Time:  5.000179, Avg:  0.015625559, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;320; 5.000179;algorithm=base,faithful=yes,bits=1
+Passes: 792, Time:  5.004842, Avg:  0.006319244, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;792; 5.004842;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Build configuration: debug1
@@ -53,6 +59,12 @@ Lucretia;1379; 5.003487;algorithm=base,faithful=yes,bits=1
 # Generic
 Passes: 1165, Time:  5.001849, Avg:  0.004293432, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;1165; 5.001849;algorithm=base,faithful=yes,bits=1
+
+# Generic Generator
+Passes: 1251, Time:  5.000866, Avg:  0.003997494, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1251; 5.000866;algorithm=base,faithful=yes,bits=1
+Passes: 2503, Time:  5.000539, Avg:  0.001997818, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;2503; 5.000539;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Build configuration: debug2
@@ -64,6 +76,12 @@ Lucretia;1732; 5.000402;algorithm=base,faithful=yes,bits=1
 # Generic
 Passes: 1604, Time:  5.001909, Avg:  0.003118397, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;1604; 5.001909;algorithm=base,faithful=yes,bits=1
+
+# Generic Generator
+Passes: 1739, Time:  5.000676, Avg:  0.002875604, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1739; 5.000676;algorithm=base,faithful=yes,bits=1
+Passes: 2499, Time:  5.000513, Avg:  0.002001005, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;2499; 5.000513;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Build configuration: debug3
@@ -75,6 +93,12 @@ Lucretia;1741; 5.001630;algorithm=base,faithful=yes,bits=1
 # Generic
 Passes: 1589, Time:  5.000123, Avg:  0.003146710, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;1589; 5.000123;algorithm=base,faithful=yes,bits=1
+
+# Generic Generator
+Passes: 1737, Time:  5.001220, Avg:  0.002879228, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1737; 5.001220;algorithm=base,faithful=yes,bits=1
+Passes: 3218, Time:  5.001153, Avg:  0.001554118, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3218; 5.001153;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Build configuration: release
@@ -86,6 +110,12 @@ Lucretia;1748; 5.000009;algorithm=base,faithful=yes,bits=1
 # Generic
 Passes: 1590, Time:  5.000290, Avg:  0.003144836, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;1590; 5.000290;algorithm=base,faithful=yes,bits=1
+
+# Generic Generator
+Passes: 1737, Time:  5.001094, Avg:  0.002879156, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1737; 5.001094;algorithm=base,faithful=yes,bits=1
+Passes: 3203, Time:  5.000005, Avg:  0.001561038, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3203; 5.000005;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Build configuration: optimised
@@ -97,4 +127,10 @@ Lucretia;1820; 5.000495;algorithm=base,faithful=yes,bits=1
 # Generic
 Passes: 1838, Time:  5.001230, Avg:  0.002721017, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;1838; 5.001230;algorithm=base,faithful=yes,bits=1
+
+# Generic Generator
+Passes: 1813, Time:  5.000515, Avg:  0.002758143, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;1813; 5.000515;algorithm=base,faithful=yes,bits=1
+Passes: 3331, Time:  5.001093, Avg:  0.001501378, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia;3331; 5.001093;algorithm=base,faithful=yes,bits=8
 ```

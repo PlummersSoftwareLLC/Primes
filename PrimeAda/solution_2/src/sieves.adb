@@ -1,41 +1,19 @@
-with Ada.Calendar;
 with Prime_Sieves;
 
 procedure Sieves is
-   package Cal renames Ada.Calendar;
-
    type Packed_Boolean_Array_Type is array (Positive range <>) of Boolean with
      Pack;
 
-   package PS is new Prime_Sieves
+   type Unpacked_Boolean_Array_Type is array (Positive range <>) of Boolean;
+
+   package Packed_Sieves is new Prime_Sieves
       (Index_Type         => Positive,
        Boolean_Array_Type => Packed_Boolean_Array_Type);
-   use type Cal.Time;
 
-   Seconds_To_Loop  : constant Duration := 5.0;
-   Sieve_Size       : constant          := 1_000_000;
-   Passes_Completed :          Natural  := Natural'First;
-   Start_Time       : constant Cal.Time := Cal.Clock;
+   package Unpacked_Sieves is new Prime_Sieves
+      (Index_Type         => Positive,
+       Boolean_Array_Type => Unpacked_Boolean_Array_Type);
 begin
-   Main_Loop : loop
-      declare
-         Sieve : PS.Prime_Sieve (Size => Sieve_Size);
-      begin
-         Sieve.Run;
-
-         Passes_Completed := Passes_Completed + 1;
-
-         if Cal.Clock - Start_Time >= Seconds_To_Loop then
-            Sieve.Print_Results
-               (Verbose        => False,
-                --  TODO: Is this correct??
-                --  The C++ version of this seem to convert it's time from secons to ms and then back to seconds.
-                Total_Duration => Cal.Clock - Start_Time,
-                Total_Passes   => Passes_Completed);
-            exit Main_Loop;
-         end if;
-      end;
-   end loop Main_Loop;
-
-   --  Put_Line (Duration (Cal.Clock - Start_Time)'Image);
+   Packed_Sieves.Generate;
+   Unpacked_Sieves.Generate;
 end Sieves;
