@@ -22,4 +22,8 @@ begin
    Put ("Packed_Boolean_Array (Packed_Boolean_Array'First)'Size: ");
    Put (PBA (PBA'First)'Size);
    New_Line;
+
+   Put ("Duration'Size: ");
+   Put (Duration'Size, Width => 53);
+   New_Line;
 end Bits;
