@@ -5,4 +5,4 @@ java -version 1>nul 2>nul || (
    exit /b 2
 )
 
-java "./src/main/java/PrimeSieveJavaBitSet.java"
+java "./src/PrimeSieveJavaBitSet.java"

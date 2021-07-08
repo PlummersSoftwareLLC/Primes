@@ -3,27 +3,38 @@
  */
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.BitSet;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class PrimeSieveJavaBitSet {
 
+  private static final int LIMIT = 1000000;
+  private static final int TIME = 5;
+
   public static void main(final String[] args) {
 
-    long passes = 0;
-    PrimeSieve sieve = null;
+    final ExecutorService cachedPool = newCachedThreadPool();
+    final AtomicLong passes = new AtomicLong(0);
+    final PrimeSieve sieve = new PrimeSieve(LIMIT);
     final long tStart = currentTimeMillis();
 
-    while (MILLISECONDS.toSeconds(currentTimeMillis() - tStart) < 5) {
-      sieve = new PrimeSieve(1000000);
-      sieve.runSieve();
-      passes++;
+    while (MILLISECONDS.toSeconds(currentTimeMillis() - tStart) < TIME) {
+      cachedPool.execute(() -> sieve.runSieve(passes));
     }
 
-    final long tD = currentTimeMillis() - tStart;
-    if (sieve != null)
-      sieve.printResults(false, MILLISECONDS.toSeconds(tD), passes);
+    sieve.printResults(false, MILLISECONDS.toSeconds(currentTimeMillis() - tStart), passes.get());
+
+    try {
+      cachedPool.awaitTermination(1, MILLISECONDS);
+    } catch (final InterruptedException e) {
+      // nothing to do
+    } finally {
+      cachedPool.shutdown();
+    }
   }
 
   public static class PrimeSieve {
@@ -81,7 +92,7 @@ public class PrimeSieveJavaBitSet {
     }
 
     // Calculate the primes up to the specified limit
-    public void runSieve() {
+    public void runSieve(final AtomicLong passes) {
       var factor = 3;
       final var q = (int) Math.sqrt(this.sieveSize);
 
@@ -101,6 +112,7 @@ public class PrimeSieveJavaBitSet {
 
         factor += 2; // No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
       }
+      passes.incrementAndGet();
     }
 
     // Displays the primes found (or just the total count, depending on what you ask for)
@@ -122,7 +134,8 @@ public class PrimeSieveJavaBitSet {
       System.out.printf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %s%n", passes,
           duration, duration / passes, sieveSize, count, this.validateResults());
       System.out.println();
-      System.out.printf("PratimGhosh86;%d;%f;1;algorithm=base,faithful=yes\n", passes, duration);
+      System.out.printf("PratimGhosh86;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes,
+          duration);
     }
   }
 

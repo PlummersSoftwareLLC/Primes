@@ -2,7 +2,7 @@
 
 if java -version 2>&1 >/dev/null | grep -q "version" ; then
   echo
-  java "./src/main/java/PrimeSieveJavaBitSet.java"
+  java "./src/PrimeSieveJavaBitSet.java"
   echo
 else
   echo "Requires Java 11+"
