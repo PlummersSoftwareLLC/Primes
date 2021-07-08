@@ -6,6 +6,9 @@ package body Prime_Sieves is
    package Float_Ops is new Ada.Numerics.Generic_Elementary_Functions (Float);
    use Float_Ops;
 
+   function "<" (Left : Integer; Right : Index_Type) return Boolean is (Index_Type (Left) < Right);
+   function "<=" (Left : Integer; Right : Index_Type) return Boolean is (Index_Type (Left) <= Right);
+
    procedure Run (Sieve : in out Prime_Sieve) is
       Factor : Integer := 3;
       Q      : Integer := Integer (Sqrt (Float (Sieve.Size)));
@@ -16,7 +19,7 @@ package body Prime_Sieves is
          begin
             --  Ada's for loops don't have a by keyword like Pascal does.
             Is_Prime : while Number < Sieve.Size loop
-               if Sieve.Bits (Number) then
+               if Sieve.Bits (Index_Type (Number)) then
                   Factor := Number;
 
                   exit Is_Prime;
@@ -29,7 +32,7 @@ package body Prime_Sieves is
             Number := Factor * Factor;
 
             Is_Not_Prime : while Number < Sieve.Size loop
-               Sieve.Bits (Number) := False;
+               Sieve.Bits (Index_Type (Number)) := False;
 
                Number := Number + (Factor * 2);
             end loop Is_Not_Prime;
@@ -54,7 +57,7 @@ package body Prime_Sieves is
          Number : Integer := 3;
       begin
          while Number <= Sieve.Size loop
-            if Sieve.Bits (Number) then
+            if Sieve.Bits (Index_Type (Number)) then
                if Verbose then
                   Put (Number, Width => 0);
                end if;
@@ -91,7 +94,7 @@ package body Prime_Sieves is
          Put (";");
          Put (Total_Duration, Fore => 2, Aft => 6);
          Put (";algorithm=base,faithful=yes,bits=");
-         Put (Sieve.Bits (Sieve.Bits'First)'Size, Width => 0);
+         IIO.Put (Sieve.Bits (Sieve.Bits'First)'Size, Width => 0);
          New_Line;
       end;
    end Print_Results;
@@ -103,7 +106,7 @@ package body Prime_Sieves is
          Prime : Integer := 3;
       begin
          while Prime < Sieve.Size loop
-            if Sieve.Bits (Prime) then
+            if Sieve.Bits (Index_Type (Prime)) then
                Count := Count + 1;
             end if;
 

@@ -3,8 +3,13 @@ with Prime_Sieves;
 
 procedure Sieves is
    package Cal renames Ada.Calendar;
-   package PS renames Prime_Sieves;
 
+   type Packed_Boolean_Array_Type is array (Positive range <>) of Boolean with
+     Pack;
+
+   package PS is new Prime_Sieves
+      (Index_Type         => Positive,
+       Boolean_Array_Type => Packed_Boolean_Array_Type);
    use type Cal.Time;
 
    Seconds_To_Loop  : constant Duration := 5.0;
