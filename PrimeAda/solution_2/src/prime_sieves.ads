@@ -1,3 +1,4 @@
+--  Object-Oriented version.
 with Ada.Containers.Ordered_Maps;
 
 generic
