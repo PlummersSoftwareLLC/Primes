@@ -118,6 +118,7 @@ int main()
                         const auto config = sieve.getConfig();
                         std::printf("%s;%lu;%f;%lu;algorithm=%s,faithful=%s,bits=%lu\n", config.name.c_str(), passes, durationS, config.threads,
                                     config.algorithm.c_str(), config.faithful ? "yes" : "no", config.bits);
+                        std::fflush(stdout);
                     }
                     break;
                 }
