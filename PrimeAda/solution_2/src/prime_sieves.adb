@@ -44,21 +44,26 @@ package body Prime_Sieves is
        Total_Duration : Duration;
        Total_Passes   : Integer;
        Verbose        : Boolean := False) is
-
-      Count : Integer := (if Sieve.Size >= 2 then 1 else 0);
    begin
       if Verbose then
          Put ("2, ");
       end if;
 
-      for Number in 3 .. Sieve.Size loop
-         if Sieve.Bits (Number) then
-            if Verbose then
-               Put (Number, Width => 0);
+      declare
+         Count  : Integer := (if Sieve.Size >= 2 then 1 else 0);
+         Number : Integer := 3;
+      begin
+         while Number <= Sieve.Size loop
+            if Sieve.Bits (Number) then
+               if Verbose then
+                  Put (Number, Width => 0);
+               end if;
+
+               Count := Count + 1;
             end if;
 
-            Count := Count + 1;
-         end if;
+            Number := Number + 2;
+         end loop;
 
          if Verbose then
             New_Line;
@@ -86,7 +91,7 @@ package body Prime_Sieves is
          Put (";");
          Put (Total_Duration, Fore => 2, Aft => 6);
          Put_Line (";algorithm=base,faithful=yes,bits=1");
-      end loop;
+      end;
    end Print_Results;
 
    function Count_Primes (Sieve : Prime_Sieve) return Integer is
