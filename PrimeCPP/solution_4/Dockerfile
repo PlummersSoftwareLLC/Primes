@@ -8,7 +8,7 @@ COPY Makefile ./
 COPY *.cpp ./
 COPY *.hpp ./
 
-ENV CXX=clang++-12
-#ENV CXX=g++-11
+ENV CXX_CLANG=clang++-12
+ENV CXX_GCC=g++-11
 
 ENTRYPOINT [ "/usr/bin/make", "run" ]

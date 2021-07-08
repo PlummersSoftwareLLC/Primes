@@ -57,7 +57,7 @@ struct Runner {
 };
 
 template<std::size_t SieveSize, template<typename, auto, typename> typename RunnerT, typename Time>
-static inline auto run([[maybe_unused]] const Time& runTime)
+static inline auto run(const Time& runTime)
 {
     constexpr auto wheels = std::tuple{0, 1, 2, 3, 4, 5, 6, 7};
     constexpr auto strides = std::tuple{true, false};
@@ -109,9 +109,15 @@ static inline auto run([[maybe_unused]] const Time& runTime)
 int main()
 {
     constexpr auto RUN_TIME = std::chrono::seconds(5);
+
 #ifdef RUN_TESTS
     return run<50'000, TestRunner>(RUN_TIME);
 #else
-    return run<1'000'000, Runner>(RUN_TIME);
+    constexpr auto SIEVE_SIZE = 1'000'000;
+    #ifdef RUN_PREGEN
+    return Runner<PreGenerated<SIEVE_SIZE>, SIEVE_SIZE, decltype(RUN_TIME)>{}(RUN_TIME).get() ? EXIT_SUCCESS : EXIT_FAILURE;
+    #else
+    return run<SIEVE_SIZE, Runner>(RUN_TIME);
+    #endif
 #endif
 }
