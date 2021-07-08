@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.Numerics;
-using System.Runtime.Intrinsics;
 using System.Threading;
 
 namespace FastSieve
