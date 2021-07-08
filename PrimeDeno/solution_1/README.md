@@ -1,15 +1,24 @@
-# Deno implementation of Primes drag-race.
+# Deno solution by GerbenRampaart
 
-# Note 1
+## Run instructions
+
+## Deno
+With Deno (https://deno.land/) installed do 'deno run PrimeDeno.ts'
+
+## Docker
+docker build . -t primedeno
+docker run primedeno:latest
+
+### Note 1
 This is almost a one to one copy of the TypeScript solution of Primes.
 Basically only the Buffer is an Uint8Array in Deno and writing to stdout is a promise.
 
-# Note 2
+### Note 2
 Since Deno uses TypeScript you need to tell vscode that the Deno language service needs to 
 parse the .ts files instead of the tsc if you have that installed. That's why the .vscode is
 included because that tells the Deno vscode plugin that the current project is a Deno project.
 
-# Note 3
+## Output
 Developed using Deno 1.11.5 as of 2021-7-8
 
 My output on a mac mini 2018 i5:
