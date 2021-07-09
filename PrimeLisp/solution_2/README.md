@@ -14,6 +14,7 @@ Uses a bit-vector (one-dimensional arrays are called vector in Lisp)
 for storage.
 
 `PrimeSieveWheel.lisp` is a Common Lisp port of sieve_5760of30030_only_write_read_bits.c
+by Daniel Spangberg.
 
 The state of the sieve is stored in a Lisp struct (closest to a class in Lisp).
 
@@ -33,8 +34,7 @@ Then
 `sbcl --script PrimeSieveWheel.lisp 2> /dev/null` (Unix)
 will do the same but only output the CSV result data.
 
-Or use `docker` or `podman` to build and run the provided dockerfile
-(the image will only be like 45M):
+Or use `docker` or `podman` to build and run the provided dockerfile:
 
     $ cd PrimeLisp/solution_2
     $ podman build --name lisp2 .
