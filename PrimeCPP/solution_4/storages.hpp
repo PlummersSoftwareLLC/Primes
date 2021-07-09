@@ -44,7 +44,8 @@ class VectorStorage {
 
     inline operator std::string() const
     {
-        auto desc = std::string{"vector"};
+        auto desc = Invert ? std::string{"inv_"} : std::string{""};
+        desc += "vec";
         if constexpr(std::is_same_v<std::remove_cv_t<T>, bool>) {
             desc += "<bool>";
         }
@@ -63,7 +64,6 @@ class VectorStorage {
         else {
             static_assert(utils::always_false_v<T>, "Unknown vector element type");
         }
-        desc += Invert ? "-inv" : "";
 
         return desc;
     }
@@ -149,7 +149,8 @@ class BitStorage {
 
     inline operator std::string() const
     {
-        auto desc = std::string{"bits"};
+        auto desc = Invert ? std::string{"inv_"} : std::string{""};
+        desc += std::string{"bits"};
         if constexpr(std::is_same_v<std::remove_cv_t<T>, std::uint8_t>) {
             desc += "<u8>";
         }
@@ -165,7 +166,6 @@ class BitStorage {
         else {
             static_assert(utils::always_false_v<T>, "Unknown storage element type");
         }
-        desc += Invert ? "-inv" : "";
 
         return desc;
     }

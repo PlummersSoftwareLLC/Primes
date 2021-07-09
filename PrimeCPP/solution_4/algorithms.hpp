@@ -144,8 +144,8 @@ class GenericSieve {
 
         auto name = std::string{"BlackMark"};
         name += "-" + std::to_string(check) + "of" + std::to_string(total) + "-";
-        name += (ConstantStride) ? "const_stride-" : "dyn_stride-";
-        name += (HalfStorage) ? "half_storage-" : "full_storage-";
+        name += (ConstantStride) ? "cs-" : "ds-";
+        name += (HalfStorage) ? "hs-" : "fs-";
         name += m_bits;
         const auto algorithm = (check == 1) ? "base" : "wheel";
         return {name, algorithm, true, m_bits.getBitCount()};
