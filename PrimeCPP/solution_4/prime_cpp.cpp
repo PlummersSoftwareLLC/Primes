@@ -179,7 +179,54 @@ int main()
     #ifdef RUN_PREGEN
     auto res = parallelRunner<Runner<PreGenerated<SIEVE_SIZE>, SIEVE_SIZE, decltype(RUN_TIME)>>(RUN_TIME);
     #else
-    auto res = run<SIEVE_SIZE, Runner>(RUN_TIME);
+    // auto res = run<SIEVE_SIZE, Runner>(RUN_TIME, false);
+    auto res = std::vector<std::future<bool>>{};
+    // clang-format off
+    using runners_t = std::tuple<
+                                 GenericSieve<VectorStorage<bool>, 1, true, true>,
+                                 GenericSieve<VectorStorage<bool>, 1, true, false>,
+                                 GenericSieve<VectorStorage<std::uint8_t>, 1, true, true>,
+                                 GenericSieve<VectorStorage<std::uint8_t>, 1, true, false>,
+                                 GenericSieve<VectorStorage<std::uint16_t>, 1, true, true>,
+                                 GenericSieve<VectorStorage<std::uint16_t>, 1, true, false>,
+                                 GenericSieve<VectorStorage<std::uint32_t>, 1, true, true>,
+                                 GenericSieve<VectorStorage<std::uint32_t>, 1, true, false>,
+                                 GenericSieve<VectorStorage<std::uint64_t>, 1, true, true>,
+                                 GenericSieve<VectorStorage<std::uint64_t>, 1, true, false>,
+                                 GenericSieve<BitStorage<std::uint8_t>, 1, true, true>,
+                                 GenericSieve<BitStorage<std::uint8_t>, 1, true, false>,
+                                 GenericSieve<BitStorage<std::uint16_t>, 1, true, true>,
+                                 GenericSieve<BitStorage<std::uint16_t>, 1, true, false>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 1, true, true>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 1, true, false>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 1, true, true>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 1, true, false>,
+                                 GenericSieve<VectorStorage<bool>, 1, false, true>,
+                                 GenericSieve<VectorStorage<bool>, 1, false, false>,
+                                 GenericSieve<VectorStorage<std::uint8_t>, 1, false, true>,
+                                 GenericSieve<VectorStorage<std::uint8_t>, 1, false, false>,
+                                 GenericSieve<VectorStorage<std::uint16_t>, 1, false, true>,
+                                 GenericSieve<VectorStorage<std::uint16_t>, 1, false, false>,
+                                 GenericSieve<VectorStorage<std::uint32_t>, 1, false, true>,
+                                 GenericSieve<VectorStorage<std::uint32_t>, 1, false, false>,
+                                 GenericSieve<VectorStorage<std::uint64_t>, 1, false, true>,
+                                 GenericSieve<VectorStorage<std::uint64_t>, 1, false, false>,
+                                 GenericSieve<BitStorage<std::uint8_t>, 1, false, true>,
+                                 GenericSieve<BitStorage<std::uint8_t>, 1, false, false>,
+                                 GenericSieve<BitStorage<std::uint16_t>, 1, false, true>,
+                                 GenericSieve<BitStorage<std::uint16_t>, 1, false, false>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 1, false, true>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 1, false, false>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 1, false, true>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 1, false, false>
+                                >;
+    // clang-format on
+    utils::for_constexpr(
+        [&](const auto idx) {
+            using runner_t = std::tuple_element_t<idx.value, runners_t>;
+            moveAppend(res, parallelRunner<Runner<runner_t, SIEVE_SIZE, decltype(RUN_TIME)>>(RUN_TIME, false));
+        },
+        std::make_index_sequence<std::tuple_size_v<runners_t>>{});
     #endif
 #endif
     return std::all_of(res.begin(), res.end(), [](auto& run) { return run.get(); }) ? EXIT_SUCCESS : EXIT_FAILURE;
