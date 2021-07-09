@@ -100,7 +100,7 @@ package body Prime_Sieves_Imp is
 
          New_Line;
 
-         Put ("Lucretia;");
+         Put ("Lucretia - Imperative;");
          Put (Total_Passes, Width => 0);
          Put (";");
          Put (Total_Duration, Fore => 2, Aft => 6);

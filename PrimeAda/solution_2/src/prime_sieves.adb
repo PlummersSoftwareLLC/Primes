@@ -100,7 +100,7 @@ package body Prime_Sieves is
 
          New_Line;
 
-         Put ("Lucretia;");
+         Put ("Lucretia - Object-Oriented;");
          Put (Total_Passes, Width => 0);
          Put (";");
          Put (Total_Duration, Fore => 2, Aft => 6);
