@@ -113,7 +113,7 @@ Module PrimeVB
 			Console.WriteLine("WARNING: result is incorrect!")
 		End If
 
-		Console.WriteLine($"rbergen_vb;{Pass_count};{Duration};1;algorithm=base,faithful=yes,bits=1")
+		Console.WriteLine($"rbergen_vb;{Pass_count};{Duration};1;algorithm=base,faithful=no,bits=1")
 	End Sub
 
 	Sub Main()
