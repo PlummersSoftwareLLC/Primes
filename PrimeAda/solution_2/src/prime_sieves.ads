@@ -7,6 +7,8 @@ generic
 
    with function "<" (LHS, RHS : Bit_Index_Type) return Boolean is <>;
 package Prime_Sieves is
+   Sieve_Size : Bit_Index_Type := Bit_Index_Type'Last;
+
    package Result_Maps is new Ada.Containers.Ordered_Maps
       (Key_Type     => Long_Long_Integer,
        Element_Type => Integer);
@@ -14,7 +16,7 @@ package Prime_Sieves is
    Results   :          Result_Maps.Map;
    True_Bits : constant Boolean_Array_Type := (others => True);
 
-   type Prime_Sieve (Size : Bit_Index_Type) is tagged record
+   type Prime_Sieve is tagged record
       Bits : Boolean_Array_Type := True_Bits;
    end record;
 
