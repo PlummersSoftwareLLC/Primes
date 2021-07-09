@@ -123,7 +123,7 @@ static inline void moveAppend(auto& dst, auto&& src)
 }
 
 template<std::size_t SieveSize, template<typename, auto, typename> typename RunnerT, typename Time>
-static inline auto run(const Time& runTime, const bool parallelize = true)
+static inline auto runAll(const Time& runTime, const bool parallelize = true)
 {
     constexpr auto wheels = std::tuple{0, 1, 2, 3, 4, 5, 6, 7};
     constexpr auto strides = std::tuple{true, false};
@@ -177,7 +177,7 @@ static inline auto run(const Time& runTime, const bool parallelize = true)
     using run_time_t = std::remove_cvref_t<decltype(runTime)>;
     constexpr auto SIEVE_SIZE = 50'000;
 
-    auto res = run<SIEVE_SIZE, TestRunner>(runTime, false);
+    auto res = runAll<SIEVE_SIZE, TestRunner>(runTime, false);
     moveAppend(res, parallelRunner<TestRunner<PreGenerated<SIEVE_SIZE>, SIEVE_SIZE, run_time_t>>(runTime, false));
     return res;
 }
@@ -249,7 +249,7 @@ template<std::size_t SieveSize>
 template<std::size_t SieveSize>
 [[maybe_unused]] static inline auto runSuite(const auto& runTime)
 {
-    return run<SieveSize, Runner>(runTime, false);
+    return runAll<SieveSize, Runner>(runTime, false);
 }
 
 int main()
