@@ -24,6 +24,19 @@
 #include "utils.hpp"
 #include "validator.hpp"
 
+namespace detail {
+[[maybe_unused]] static inline auto getCompilerName()
+{
+#if defined(__GNUG__) && !defined(__clang__)
+    return "g++";
+#elif defined(__clang__)
+    return "clang++";
+#else
+    return "unknown";
+#endif
+}
+} // namespace detail
+
 template<typename Sieve, std::size_t SieveSize, typename Time>
 struct Runner {
     inline auto operator()(const Time& runTime, const std::size_t numThreads = 1)
@@ -74,7 +87,9 @@ struct Runner {
 
             const auto duration = latestEnd - start;
             const auto durationS = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() / 1'000'000.0;
-            std::printf("%s;%lu;%f;%lu;algorithm=%s,faithful=%s,bits=%lu\n", config.name.c_str(), totalPasses, durationS, numThreads, config.algorithm.c_str(),
+
+            const auto name = config.name + "-" + detail::getCompilerName();
+            std::printf("%s;%lu;%f;%lu;algorithm=%s,faithful=%s,bits=%lu\n", name.c_str(), totalPasses, durationS, numThreads, config.algorithm.c_str(),
                         config.faithful ? "yes" : "no", config.bits);
             std::fflush(stdout);
             return !error;
