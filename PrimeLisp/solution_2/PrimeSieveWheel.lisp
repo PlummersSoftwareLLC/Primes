@@ -3,19 +3,16 @@
 ;;; approx. 2.4x speedup over solution_2, approx. 300x speedup over solution_1
 ;;;
 ;;; run as:
-;;;     sbcl --script PrimeSieve.lisp
+;;;     sbcl --script PrimeSieveWheel.lisp
 ;;;
 ;;;
 ;;; I have no idea how this works I just stole the algorithm.
 ;;;
 ;;; For Common Lisp bit ops see https://lispcookbook.github.io/cl-cookbook/numbers.html#bit-wise-operation
 ;;;
-;;; (compile-file "PrimeSieve.lisp" :trace-file t) will show lots of info during the compilation
+;;; (compile-file "PrimeSieveWheel.lisp") will show lots of info during the compilation
 ;;; regarding inefficient code that can't be optimized.
 
-
-(when (< most-positive-fixnum (ash 1 32))
-  (error "Sorry, this program needs a Lisp that can store 32bits in a fixnum"))
 
 (declaim
   (optimize (speed 3) (safety 0) (debug 0)))
@@ -270,7 +267,7 @@
     :maxints maxints
     :a (make-array
          (1+ (floor maxints +bits-per-word+))
-         :element-type 'fixnum
+         :element-type '(unsigned-byte 32)
          :initial-element 0)))
 
 
@@ -305,8 +302,8 @@
               ((> i maxintsh))
             (declare (fixnum i))
             (setf (aref a (ash i +SHIFT+))
-                  (logior (the fixnum (aref a (ash i +SHIFT+)))
-                          (the fixnum (ash 1 (logand i +MASK+)))))
+                  (logior (the (unsigned-byte 32) (aref a (ash i +SHIFT+)))
+                          (the (unsigned-byte 32) (ash 1 (logand i +MASK+)))))
             (incf i (the fixnum (* factor ninc)))
             (when (= (incf istep) 5760) (setq istep 0))
             (setq ninc (aref steps istep)))
@@ -326,8 +323,8 @@
          (inc (ash (aref +steps+ step) 1)))
     (declare (fixnum maxints ncount factor inc) (simple-vector a))
     (do () ((> factor maxints))
-      (when (zerop (logand (aref a (the fixnum (ash factor (+ -1 +SHIFT+))))
-                           (ash 1 (the fixnum (logand (ash factor -1) +MASK+)))))
+      (when (zerop (logand (aref a (the (unsigned-byte 32) (ash factor (+ -1 +SHIFT+))))
+                           (ash 1 (the (unsigned-byte 32) (logand (ash factor -1) +MASK+)))))
         (incf ncount))
       (incf factor inc)
       (when (= (incf step) 5760) (setq step 0))
@@ -353,4 +350,4 @@
          (avg (/ duration passes)))
     (format *error-output* "Passes: ~d  Time: ~f Avg: ~f ms Count: ~d~%" passes duration (* 1000 avg)  (count-primes result))
 
-    (format t "mayerrobert-cl-wheel;~d;~f;1;algorithm=wheel,faithful=no,bits=2~%" passes duration)))
+    (format t "mayerrobert-cl-wheel;~d;~f;1;algorithm=wheel,faithful=no,bits=1~%" passes duration)))
