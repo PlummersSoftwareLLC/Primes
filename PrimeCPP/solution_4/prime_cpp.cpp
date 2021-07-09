@@ -24,13 +24,19 @@
 #include "utils.hpp"
 #include "validator.hpp"
 
+#if defined(__GNUG__) && !defined(__clang__)
+    #define COMPILER_GCC
+#elif defined(__clang__)
+    #define COMPILER_CLANG
+#endif
+
 namespace detail {
 [[maybe_unused]] static inline auto getCompilerName()
 {
-#if defined(__GNUG__) && !defined(__clang__)
-    return "g++";
-#elif defined(__clang__)
-    return "clang++";
+#if defined(COMPILER_GCC)
+    return "gcc";
+#elif defined(COMPILER_CLANG)
+    return "clang";
 #else
     return "unknown";
 #endif
