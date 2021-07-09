@@ -37,7 +37,7 @@ will do the same but only output the CSV result data.
 Or use `docker` or `podman` to build and run the provided dockerfile:
 
     $ cd PrimeLisp/solution_2
-    $ podman build --name lisp2 .
+    $ podman build -t lisp2 .
     $ podman run lisp2
 
 ## Output
