@@ -8,6 +8,7 @@ Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 # from math import sqrt
 from libc.math cimport sqrt
 
+cdef char[8] BITMASKS = [-2, -3, -5, -9, -17, -33, -65, 127]
 
 cdef class PrimeSieve:
 
@@ -32,7 +33,7 @@ cdef class PrimeSieve:
     def __cinit__(self, limit):
         self._size = limit
         self._nbits = ((self._size + 1) // 2)
-        self._bits = bytearray(b'\xff' * (self._nbits // 2 + 1))
+        self._bits = bytearray(b'\xff' * ((self._nbits + 7) // 8))
 
     def validate_results(self):                      # Check to see if this is an upper_limit we can
 
@@ -47,7 +48,7 @@ cdef class PrimeSieve:
 
         """Calculate the primes up to the specified limit"""
         cdef int factor, bitslen
-        cdef int start, step, stop, size, index
+        cdef int start, step, index
         cdef int byteindex, bitindex
         cdef char bitmask
         cdef float q
@@ -62,26 +63,14 @@ cdef class PrimeSieve:
         bitslen = self._nbits
 
         while factor <= q:
-            for index in range(factor, bitslen):
-                byteindex = index // 8
-                bitindex = index % 8
-                bitmask = <char>(1 << bitindex)
-                if bits[byteindex] & bitmask:
-                    factor = index
-                    break
-
-            # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-            # We can then step by factor * 2 because every second one is going to be even by definition
-            start = 2 * factor * (factor + 1)
-            step  = factor * 2 + 1
-            size  = bitslen - start
-            stop = start + size
-            # Cython doesn't understand range(start, stop, step), but provides special syntax:
-            for index from start <= index < stop by step:
-                byteindex = index // 8
-                bitindex = index % 8
-                bitmask = ~<char>(1 << bitindex)
-                bits[byteindex] &= bitmask
+            if bits[factor // 8] & ~BITMASKS[factor % 8]:
+                # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
+                # We can then step by factor * 2 because every second one is going to be even by definition
+                start = 2 * factor * (factor + 1)
+                step  = factor * 2 + 1
+                # Cython doesn't understand range(start, stop, step), but provides special syntax:
+                for index from start <= index < bitslen by step:
+                    bits[index // 8] &= BITMASKS[index % 8]
 
             factor += 1
 
