@@ -48,9 +48,10 @@ class PrimeSieve
                 }
             }
 
-            $ft2 = $factor * 2;
-            for ($i = $factor * $factor; $i <= $sieveSize; $i += $ft2) {
-                $rb[$i / 2] = 0;
+            $ft2 = $factor * 1;
+            $start = ($factor * $factor) / 2;
+            for ($i = $start; $i <= $this->rawBitsSize; $i += $ft2) {
+                $rb[$i] = 0;
             }
 
             $factor += 2;
