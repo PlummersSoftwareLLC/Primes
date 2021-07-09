@@ -1,6 +1,6 @@
 ;;;; Common Lisp port of PrimeC/solution_2/sieve_5760of30030_only_write_read_bits.c by Daniel Spangberg
 ;;;
-;;; approx. 2.4x speedup over solution_2, approx. 300x speedup over solution_1
+;;; approx. 2.6x speedup over solution_2, approx. 325x speedup over solution_1
 ;;;
 ;;; run as:
 ;;;     sbcl --script PrimeSieveWheel.lisp
