@@ -75,7 +75,7 @@ class PrimeSieve {
     }
 
     runSieve() {
-        const q = Math.ceil( Math.sqrt(this.oddsize) );                  // convert to integer with ceil
+        const q = Math.ceil( Math.sqrt(this.oddsize) );                 // convert to integer with ceil
 
         for (let factor = 1; factor <= q ; factor++ ) {
             if (!this.bitarray.testBitTrue(factor)) {
@@ -199,8 +199,6 @@ main procedure
 */
 
 if (cluster.isMaster) {
-//    console.log("version", process.version,'os', require('os').cpus());
-
     main(   config['sieveSize'],
             config['timeLimitSeconds'],
             config['workers']
@@ -208,7 +206,6 @@ if (cluster.isMaster) {
 }
 
 if (cluster.isWorker) { // is worker for multithreaded
-    // worker for multithreaded scheduler
     process.on('message', msg => {
         let workerData = msg['workerData'];
         let sieveSize        = workerData['sieveSize'];
