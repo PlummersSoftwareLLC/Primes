@@ -45,7 +45,15 @@ constexpr decltype(auto) for_constexpr(Fn&& func, Tuple&& tuple)
 template<typename T, typename U>
 constexpr auto ceildiv(const T& dividend, const U& divisor)
 {
-    return static_cast<std::common_type_t<T, U>>(std::ceil(static_cast<double>(dividend) / divisor));
+    constexpr auto ceil = [](const auto& num) {
+        const auto trunc = static_cast<std::int64_t>(num);
+        if(num == trunc) {
+            return num;
+        }
+        return static_cast<std::remove_cvref_t<decltype(num)>>(trunc + 1);
+    };
+
+    return static_cast<std::common_type_t<T, U>>(ceil(static_cast<double>(dividend) / divisor));
 }
 
 template<typename T, T Width>
