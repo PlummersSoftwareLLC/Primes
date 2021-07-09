@@ -1,4 +1,4 @@
-# Visual Basic solution by rbergen revision by RevensofT
+# Visual Basic solution by rbergen, revision by RevensofT
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
