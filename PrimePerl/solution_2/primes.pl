@@ -19,50 +19,42 @@ package PrimeSieve {
 
     sub new {
         my ( $class, $sieve_size ) = @_;
-	bless {
+        bless {
             sieve_size => $sieve_size,
-	    bits       => '0' x $sieve_size,
+            bits       => 0 x $sieve_size,
         }, $class;
     }
 
     sub run_sieve {
-        my $self = shift;
-
-        my $factor = 3;
-	my $bits   = \$self->{bits};
-	my $size   = $self->{sieve_size};
+        my $self   = shift;
+        my $size   = $self->{sieve_size};
+        my $bits   = \$self->{bits};
         my $q      = sqrt $size;
-
+        my $factor = 1;
         while ( $factor <= $q ) {
-            my $num = $factor;
-	    while ( $num < $size ) {
-		$factor = $num, last unless substr($$bits,$num,1);
-		$num += 2;
-	    }
-
-            my $num2 = $factor * $factor;
-	    my $factor2 = $factor * 2;
-            while ( $num2 < $size ) {
-                substr $$bits, $num2, 1, '1';
-                $num2 += $factor2;
-            }
             $factor += 2;
+            $factor += 2 while $factor < $size and substr($$bits,$factor,1);
+            my $repeat = 1  .  0 x (2*$factor-1);
+            my $times = (length($$bits)-$factor**2)/2/$factor + 1;
+            my $s = 0 x $factor**2  .  $repeat x $times;
+            $$bits |= $s;
         }
     }
 
     sub primes {
         my $self = shift;
-	my $bits=\ $self->{bits};
-	grep!substr($$bits,$_,1),2,grep$_%2,3..$self->{sieve_size};
+        my $bits=\ $self->{bits};
+        grep!substr($$bits,$_,1),2,grep$_%2,3..$self->{sieve_size};
     }
 
     sub print_results {
         my ( $self, $show_results, $duration, $passes ) = @_;
-	my @primes = $self->primes();
-	my $count = 0 + @primes;
-	print join", ", @primes if $show_results;
-        printf "kjetillll;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
-#	printf STDERR "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
+        my @primes = $self->primes();
+        my $count = 0 + @primes;
+        print join", ", @primes if $show_results;
+        my $f = $DICT{$self->{sieve_size}} == $count ? 'yes' : 'no';
+        printf "kjetillll;%d;%f;%d;algorithm=base,faithful=%s\n", $passes, $duration, 1, $f;
+#        printf STDERR "Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n",
 #           $passes, $duration, $duration / $passes,
 #           $self->{sieve_size}, $count, $self->count_primes(),
 #           $self->validate_results();
@@ -70,7 +62,7 @@ package PrimeSieve {
 
     sub count_primes {
         my $self = shift;
-	0 + $self->primes();
+        0 + $self->primes();
     }
 
     sub validate_results {

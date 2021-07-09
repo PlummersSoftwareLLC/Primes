@@ -34,7 +34,16 @@ Up to around twice as fast as solution_1 by doing:
 
 * perhaps a more idiomatic Perl style
 
-On my computer solution_1 had 18 passes and solution_2 had 42.
+* using perls bitwise or-operator on two large "bit-strings" with
+  operator |= instead  of stepping through
+
+On my computer solution_1 had 18 passes and solution_2 now has 122.
+
+TODO if time: further speedup can probably be achieved by using the
+|= on real bit-vectors instead of strings of bit chars '0' and '1'.
+Since memory handled by |= would be 8 times less. Requires more
+"bit-fiddling" with perhaps pack("N*",...) or vec() on building
+the var $repeat.
 
 ## Author
 
