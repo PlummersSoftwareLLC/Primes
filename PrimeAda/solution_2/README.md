@@ -175,4 +175,14 @@ Passes: 1793, Time:  5.002627, Avg:  0.002790087, Limit: 1000000, Count1: 78498,
 Lucretia;1793; 5.002627;algorithm=base,faithful=yes,bits=1
 Passes: 3650, Time:  5.001195, Avg:  0.001370190, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
 Lucretia;3650; 5.001195;algorithm=base,faithful=yes,bits=8
+
+# Made the true bit array constant.
+Passes: 4027, Time:  5.001204, Avg:  0.001241918, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia - Object-Oriented;4027; 5.001204;algorithm=base,faithful=yes,bits=1
+Passes: 3523, Time:  5.001179, Avg:  0.001419579, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia - Object-Oriented;3523; 5.001179;algorithm=base,faithful=yes,bits=8
+Passes: 2900, Time:  5.000070, Avg:  0.001724162, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia - Imperative;2900; 5.000070;algorithm=base,faithful=yes,bits=1
+Passes: 3524, Time:  5.001057, Avg:  0.001419142, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: TRUE
+Lucretia - Imperative;3524; 5.001057;algorithm=base,faithful=yes,bits=8
 ```
