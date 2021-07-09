@@ -249,7 +249,7 @@ template<std::size_t SieveSize>
 template<std::size_t SieveSize>
 [[maybe_unused]] static inline auto runSuite(const auto& runTime)
 {
-    return runAll<SieveSize, Runner>(runTime, false);
+    return runAll<SieveSize, Runner>(runTime);
 }
 
 int main()
