@@ -2,97 +2,6 @@ Imports System
 Imports Extension = System.Runtime.CompilerServices.ExtensionAttribute
 Imports BitArray = System.Collections.BitArray
 
-Public Module Prime_sieve_unfaithful
-	<Extension>
-	Private Function check_prim(Primes As BitArray,
-						   Sieve_sqrt As Integer,
-						   ByRef Factor As Integer) As Integer
-		Dim Number = Factor
-
-		'Pure "Do" compile difference then "Do Unitl" or "While" in JIT ASM
-		Do
-			If Number > Sieve_sqrt Then Return Number
-			If Primes(Number \ 2) Then
-				Factor = Number
-				Return Number
-			End If
-			Number = Number + 2
-		Loop
-	End Function
-
-	<Extension>
-	Private Sub find_prim(Primes As BitArray,
-						  Size As Integer,
-						  Factor As Integer)
-		Dim Number = Factor * 3
-		Do
-			If Number > Size Then Return
-			Primes(Number \ 2) = False
-			Number = Number + Factor * 2
-		Loop
-	End Sub
-
-	<Extension>
-	Private Sub run_prim(Primes As BitArray,
-						 Size As Integer,
-						 Factor As Integer)
-		Dim Sieve_sqrt = Math.Sqrt(Size)
-		Primes.SetAll(True)
-
-		Do
-			If Factor > Sieve_sqrt Then Return
-			If Primes.check_prim(Sieve_sqrt, Factor) > Sieve_sqrt Then Return
-
-			Primes.find_prim(Size, Factor)
-			Factor = Factor + 2
-		Loop
-	End Sub
-
-	<Extension>
-	Public Sub prime_sieve_initialize(Primes As BitArray, Size As Integer)
-		Primes.run_prim(Size, 3)
-	End Sub
-
-	<Extension>
-	Public Function count_primes(Primes As BitArray) As Integer
-		Dim Count = 0
-
-		For Each Bit As Boolean In Primes
-			Count += Bit And 1
-		Next
-
-		Return Count
-	End Function
-End Module
-
-Public Module Unfaithful
-	Public Function primes() As BitArray
-
-		Dim Pass_count = 0,
-			Sieve As New BitArray((sieve_size + 1) \ 2),
-			Start_time = DateTime.UtcNow
-		Do
-			If (DateTime.UtcNow - Start_time).TotalSeconds > 5.0 Then
-				Call (DateTime.UtcNow - Start_time).TotalSeconds.
-					  report(Sieve.count_primes, Pass_count)
-				Return Sieve
-			End If
-
-			Sieve.prime_sieve_initialize(sieve_size)
-			Pass_count += 1
-		Loop
-	End Function
-	<Extension>
-	Private Sub report(Duration As Double, Sieve_count As Integer, Pass_count As Integer)
-		If Not Sieve_count.is_correct_result(sieve_size) Then
-			Console.WriteLine("WARNING: result is incorrect!")
-		End If
-
-		Console.WriteLine($"rbergen_vb;{Pass_count};{Duration};1;algorithm=base,faithful=no,bits=1")
-	End Sub
-
-End Module
-
 Module PrimeVB
 	<Extension>
 	Public Function is_correct_result(Result_count As Integer,
@@ -125,7 +34,6 @@ Module PrimeVB
 		Globalization.CultureInfo.CurrentCulture = New Globalization.CultureInfo("en-US", False)
 
 		Dim Faithful = primes_faintful()
-		Dim Unfaithful = primes()
 	End Sub
 End Module
 
