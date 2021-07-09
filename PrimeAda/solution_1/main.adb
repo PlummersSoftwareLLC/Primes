@@ -9,14 +9,8 @@ procedure Main is
    type Bit_List is array (Long_Long_Integer range <>) of Boolean;
    type Prime_Count is array (Natural range <>) of Long_Long_Integer;
 
-   function Create_Bit_List (Size : Long_Long_Integer := 0) return Bit_List is
-      Ret : constant Bit_List (0 .. Size) := (others => True);
-   begin
-      return Ret;
-   end Create_Bit_List;
-
    Sieve_Size        : constant Long_Long_Integer := 1_000_000;
-   Bits              : Bit_List := Create_Bit_List (Sieve_Size);
+   Bits              : Bit_List (0 .. Sieve_Size);
    Validate_Map      : Long_Long_Set.Map;
    Know_Prime_Counts : constant Prime_Count       :=
      (4, 25, 168, 1_229, 9_592, 78_498, 664_579, 5_761_455, 50_847_534,
@@ -119,7 +113,7 @@ begin
    Fill_Validate_Map;
    while Clock < Time_End loop
 
-      Bits := Create_Bit_List (Sieve_Size);
+      Bits := (others => True);
       Run_Sieve;
       Passes := Passes + 1;
 
