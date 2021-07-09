@@ -25,6 +25,7 @@ Below is an example of the verbose output
 
 ```bash
 rogiervandam;4063;5.000575601999997;1;algorithm=base,faithful=yes,bits=1
+healyunit;5041;5.04;1;algorithm=base,faithful=yes,bits=1
 
 The first 100 found primes are: [
     2,   3,   5,   7,  11,  13,  17,  19,  23,  29,  31,  37,
@@ -37,4 +38,4 @@ The first 100 found primes are: [
   439, 443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503,
   509, 521, 523, 541
 ]
-Passes: 4063, Time: 5.00, Avg: 0.00123076 (sec/pass), Sieve size: 1000000, Primes: 78498, Valid: true
+Passes: 5041, Time: 5.04, Avg: 0.00100059 (sec/pass), Sieve size: 1000000, Primes: 78498, Valid: true

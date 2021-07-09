@@ -11,20 +11,20 @@ Date:      2021-07-08
 'use strict';
 
 // get performance API (for older node versions)
-const { performance }                                  = require('perf_hooks');
+// const { performance } = require('perf_hooks'); //Why would we include this if node already has high rez time?
 
 // Historical data for validating our results - the number of primes
 // to be found under some limit, such as 168 primes under 1000
 const knownPrimeCounts = {
-    10 : 4,
-    100 : 25,
-    1000 : 168,
-    10000 : 1229,
-    100000 : 9592,
-    1000000 : 78498,
-    10000000 : 664579,
-    100000000 : 5761455
-  }
+    10: 4,
+    100: 25,
+    1000: 168,
+    10000: 1229,
+    100000: 9592,
+    1000000: 78498,
+    10000000: 664579,
+    100000000: 5761455
+}
 
 // 32-bit bitarray for javascript, with only needed functions
 // int32, not uint and not 64bit because: javascript uses 32int
@@ -37,13 +37,13 @@ class BitArray {
 
     setBitTrue(index) {
         const wordOffset = index >>> 5;                                 // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
-        const bitOffset  = index & 31;                                  // use & (and) for remainder, faster than modulus of /32
+        const bitOffset = index & 31;                                  // use & (and) for remainder, faster than modulus of /32
         this.wordArray[wordOffset] |= (1 << bitOffset);
     }
 
     testBitTrue(index) {
         const wordOffset = index >>> 5;
-        const bitOffset  = index & 31;
+        const bitOffset = index & 31;
         return this.wordArray[wordOffset] & (1 << bitOffset);           // use a mask to only get the bit at position bitOffset. >0=true, 0=false
     }
 
@@ -59,18 +59,18 @@ class PrimeSieve {
     constructor(sieveSize) {
         this.sieveSize = sieveSize;
         this.oddsize = sieveSize >>> 1;
-        this.bitarray  = new BitArray(1+this.oddsize);
+        this.bitarray = new BitArray(1 + this.oddsize);
     }
 
     runSieve() {
-        const q = Math.ceil( Math.sqrt(this.oddsize) );                  // convert to integer with ceil
+        const q = Math.ceil(Math.sqrt(this.oddsize));                  // convert to integer with ceil
 
-        for (let factor = 1; factor <= q ; factor++ ) {
+        for (let factor = 1; factor <= q; factor++) {
             if (!this.bitarray.testBitTrue(factor)) {
-                const step  = factor * 2 + 1 ;
+                const step = factor * 2 + 1;
                 const start = factor * factor * 2 + factor + factor;
 
-                for (let multiple = start ; multiple < this.oddsize ; multiple = multiple + step) {
+                for (let multiple = start; multiple < this.oddsize; multiple += step) {
                     this.bitarray.setBitTrue(multiple);                 // mark every multiple of this prime
                 }
             }
@@ -79,72 +79,85 @@ class PrimeSieve {
 
     countPrimes() {
         let total = 1;                                                  // account for prime 2
-        for (let index = 1; index < this.oddsize; index++ ) {
+        // for (let index = 1; index < this.oddsize; index++) {
+        for (let index = this.oddsize-1; index; index--) {
             if (!this.bitarray.testBitTrue(index)) {                    // if bit is false, it's a prime, because non-primes are marked true
                 total++;
             }
         }
         return total;
-      }
+    }
 
     getPrimes(max = 100) {
         let primes = [2];                                               // 2 is a special prime
         let count = 0;
-        for (let factor = 1; factor < this.oddsize; factor++ ) {
+        for (let factor = 1; factor < this.oddsize; factor++) {
             if (count >= max) break;
             if (!this.bitarray.testBitTrue(factor)) {
-                count = primes.push( factor * 2 + 1 );
+                count = primes.push(factor * 2 + 1);
             }
         }
         return primes;
     }
 
+    clear(){
+        this.bitarray = new BitArray(1 + this.oddsize)
+    }
+
 }
 
-// run the sieve for timeLimitSeconds
-function runSieveBatch(sieveSize, timeLimitSeconds=5) {
+/**
+ * Run a sieve batch for n seconds.
+ * @param {Number} sieveSize 
+ * @param {Number} timeLimitSeconds How many seconds to run the sieve
+ * @returns 
+ */
+function runSieveBatch(sieveSize, timeLimitSeconds = 5) {
     let nrOfPasses = 0;                                                 // Counter for the number of passes in a from timestart to timefinish
 
-    const timeStart = performance.now();                                // Record starting time
-    const timeFinish = timeStart + timeLimitSeconds * 1000;             // Calculate finish time before, so we don't repeat
+    const timeStart = process.hrtime()[0];                              //start time in seconds (high res)
+    const timeFinish = timeStart + timeLimitSeconds;                    // Calculate finish time before, so we don't repeat
 
-    let sieve;                                                          // outside do loop to reference the last instance in verbose output
+    let sieve = new PrimeSieve(sieveSize);                              //move instantiation outside so we don't waste time building it
     do {
-        sieve = new PrimeSieve(sieveSize);
+        sieve.clear();
         sieve.runSieve();
         nrOfPasses++;
-    } while (performance.now() < timeFinish);                           // keep going for timeLimitSeconds
+    } while (process.hrtime()[0] < timeFinish);                           // keep going for timeLimitSeconds
 
     return nrOfPasses;
 }
 
 // get a single sieve (for validation and statistics)
-function evalSieve(sieveSize, maxShowPrimes=100) {
+function evalSieve(sieveSize, maxShowPrimes = 100) {
     let sieve = new PrimeSieve(sieveSize);
     sieve.runSieve();
     return {
         "countedPrimes": sieve.countPrimes(),
-        "primeArray"   : sieve.getPrimes(maxShowPrimes)
+        "primeArray": sieve.getPrimes(maxShowPrimes)
     }
 }
 
-/*
-main procedure
-*/
+function hrTimeToNum(arr){
+    return parseFloat(arr.join('.'));
+}
 
+
+/**
+ * Main testing procedure
+ */
 function main() {
     // run once, without threads
-    let sieveSize        = 1000000;
+    let sieveSize = 1000000;
     let timeLimitSeconds = 5;
-    let verbose          = false;
+    let verbose = true;    
     let maxShowPrimes    = verbose ? 100 : 0;
 
     //measure time running the batch
-    let timeStart        = performance.now();
-    let totalPasses      = runSieveBatch(sieveSize, timeLimitSeconds);
-    let timeEnd          = performance.now();
-    let durationInMs     = timeEnd - timeStart;
-    let durationInSec    = durationInMs / 1000;
+    let timeStart = process.hrtime();
+    let totalPasses = runSieveBatch(sieveSize, timeLimitSeconds);
+    let timeEnd = process.hrtime();
+    let durationInSec = hrTimeToNum(timeEnd) - hrTimeToNum(timeStart);
 
     // validate algorithm - run one final time on the result
     let sieveResult = evalSieve(sieveSize);
@@ -161,10 +174,10 @@ function main() {
     }
 
     if (verbose) {
-        console.log(`\nThe first ${config['maxShowPrimes']} found primes are:`, sieveResult['primeArray']);
-        console.log(`Passes: ${nrOfPasses}, Time: ${parseFloat(durationInSec).toFixed(2)},`,
-                    `Avg: ${parseFloat(durationInSec/nrOfPasses).toFixed(8)} (sec/pass),`,
-                    `Sieve size: ${sieveSize}, Primes: ${sieveResult['countedPrimes']}, Valid: ${validResult}`);
+        console.log(`\nThe first ${maxShowPrimes} found primes are:`, sieveResult['primeArray']);
+        console.log(`Passes: ${totalPasses}, Time: ${parseFloat(durationInSec).toFixed(2)},`,
+            `Avg: ${parseFloat(durationInSec / totalPasses).toFixed(8)} (sec/pass),`,
+            `Sieve size: ${sieveSize}, Primes: ${sieveResult['countedPrimes']}, Valid: ${validResult}`);
     }
 }
 
