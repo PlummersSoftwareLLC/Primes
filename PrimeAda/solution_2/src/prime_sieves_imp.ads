@@ -6,7 +6,7 @@ generic
    type Bit_Index_Type is range <>;
    type Boolean_Array_Type is array (Bit_Index_Type) of Boolean;
 
-   with function "<" (LHS, RHS : Bit_Index_Type) return Boolean is <>;
+   -- with function "<" (LHS, RHS : Bit_Index_Type) return Boolean is <>;
 package Prime_Sieves_Imp is
    package Long_Float_Ops is new Ada.Numerics.Generic_Elementary_Functions (Long_Float);
    use Long_Float_Ops;
