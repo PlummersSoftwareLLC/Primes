@@ -11,10 +11,11 @@ package Prime_Sieves is
       (Key_Type     => Long_Long_Integer,
        Element_Type => Integer);
 
-   Results : Result_Maps.Map;
+   Results   :          Result_Maps.Map;
+   True_Bits : constant Boolean_Array_Type := (others => True);
 
    type Prime_Sieve (Size : Bit_Index_Type) is tagged record
-      Bits : Boolean_Array_Type := (others => True);
+      Bits : Boolean_Array_Type := True_Bits;
    end record;
 
    procedure Run (Sieve : in out Prime_Sieve);
