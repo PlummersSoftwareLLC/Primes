@@ -37,3 +37,19 @@ run_all: all
 	./prime_cpp_pregen_clang
 	./prime_cpp_test_gcc
 	./prime_cpp_test_clang
+	./prime_cpp_suite_clang
+
+run: prime_cpp_gcc prime_cpp_clang
+	./prime_cpp_gcc
+	./prime_cpp_clang
+
+run_pregen: prime_cpp_pregen_gcc prime_cpp_pregen_clang
+	./prime_cpp_pregen_gcc
+	./prime_cpp_pregen_clang
+
+run_tests: prime_cpp_test_gcc prime_cpp_test_clang
+	./prime_cpp_test_gcc
+	./prime_cpp_test_clang
+
+run_suite: prime_cpp_suite_clang
+	./prime_cpp_suite_clang
