@@ -32,5 +32,5 @@ rbergen_vb;1139;5.003093;1;algorithm=base,faithful=yes,bits=1
 
 ### Last update - AMD Fx-6300
 ```
-rbergen_vb;1986;5.0021087;1;algorithm=base,faithful=yes,bits=1
+rbergen_vb;1986;5.0021087;1;algorithm=base,faithful=no,bits=1
 ```
