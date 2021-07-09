@@ -27,7 +27,8 @@ package body Prime_Sieves is
             Number : Long_Integer := Factor;
          begin
             --  Ada's for loops don't have a by keyword like Pascal does.
-            Is_Prime : while Number < Long_Integer (Sieve_Size) loop
+            --  Make sure we don't bother with anything even and > 2.
+            Is_Prime : while Number mod 2 /= 0 and then Number < Long_Integer (Sieve_Size) loop
                if Sieve.Bits (Bit_Index_Type (Number)) then
                   Factor := Number;
 
@@ -40,7 +41,8 @@ package body Prime_Sieves is
             --  Probably not a good idea to re-use this loop counter!
             Number := Factor * Factor;
 
-            Is_Not_Prime : while Number < Long_Integer (Sieve_Size) loop
+            --  Make sure we don't bother with anything even and > 2.
+            Is_Not_Prime : while Number mod 2 /= 0 and then Number < Long_Integer (Sieve_Size) loop
                Sieve.Bits (Bit_Index_Type (Number)) := False;
 
                Number := Number + (Factor * 2);
@@ -65,7 +67,8 @@ package body Prime_Sieves is
          Count  : Integer      := (if Sieve_Size >= 2 then 1 else 0);
          Number : Long_Integer := 3;
       begin
-         while Number <= Long_Integer (Sieve_Size) loop
+         --  Make sure we don't bother with anything even and > 2.
+         while Number mod 2 /= 0 and then Number <= Long_Integer (Sieve_Size) loop
             if Sieve.Bits (Bit_Index_Type (Number)) then
                if Verbose then
                   Put (Number, Width => 0);
@@ -114,7 +117,8 @@ package body Prime_Sieves is
       declare
          Prime : Long_Integer := 3;
       begin
-         while Prime < Long_Integer (Sieve_Size) loop
+         --  Make sure we don't bother with anything even and > 2.
+         while Prime mod 2 /= 0 and then Prime < Long_Integer (Sieve_Size) loop
             if Sieve.Bits (Bit_Index_Type (Prime)) then
                Count := Count + 1;
             end if;
