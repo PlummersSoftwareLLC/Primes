@@ -6,7 +6,7 @@ package body Prime_Sieves is
    package IIO is new Integer_IO (Integer);
    use IIO;
 
-   package Index_IO is new Integer_IO (Index_Type);
+   package Index_IO is new Integer_IO (Bit_Index_Type);
    use Index_IO;
 
    package DIO is new Fixed_IO (Duration);
@@ -29,8 +29,8 @@ package body Prime_Sieves is
             Number : Integer := Factor;
          begin
             --  Ada's for loops don't have a by keyword like Pascal does.
-            Is_Prime : while Index_Type (Number) < Sieve.Size loop
-               if Sieve.Bits (Index_Type (Number)) then
+            Is_Prime : while Bit_Index_Type (Number) < Sieve.Size loop
+               if Sieve.Bits (Bit_Index_Type (Number)) then
                   Factor := Number;
 
                   exit Is_Prime;
@@ -42,8 +42,8 @@ package body Prime_Sieves is
             --  Probably not a good idea to re-use this loop counter!
             Number := Factor * Factor;
 
-            Is_Not_Prime : while Index_Type (Number) < Sieve.Size loop
-               Sieve.Bits (Index_Type (Number)) := False;
+            Is_Not_Prime : while Bit_Index_Type (Number) < Sieve.Size loop
+               Sieve.Bits (Bit_Index_Type (Number)) := False;
 
                Number := Number + (Factor * 2);
             end loop Is_Not_Prime;
@@ -67,8 +67,8 @@ package body Prime_Sieves is
          Count  : Integer := (if Sieve.Size >= 2 then 1 else 0);
          Number : Integer := 3;
       begin
-         while Index_Type (Number) <= Sieve.Size loop
-            if Sieve.Bits (Index_Type (Number)) then
+         while Bit_Index_Type (Number) <= Sieve.Size loop
+            if Sieve.Bits (Bit_Index_Type (Number)) then
                if Verbose then
                   Put (Number, Width => 0);
                end if;
@@ -116,8 +116,8 @@ package body Prime_Sieves is
       declare
          Prime : Integer := 3;
       begin
-         while Index_Type (Prime) < Sieve.Size loop
-            if Sieve.Bits (Index_Type (Prime)) then
+         while Bit_Index_Type (Prime) < Sieve.Size loop
+            if Sieve.Bits (Bit_Index_Type (Prime)) then
                Count := Count + 1;
             end if;
 
@@ -147,7 +147,7 @@ package body Prime_Sieves is
    begin
       Main_Loop : loop
          declare
-            Sieve : Prime_Sieve (Size => Sieve_Size);
+            Sieve : Prime_Sieve (Size => Bit_Index_Type'Last);
          begin
             Sieve.Run;
 
