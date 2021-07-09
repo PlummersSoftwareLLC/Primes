@@ -6,7 +6,9 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-`PrimeSieve.lisp` is based on the solution by mikehw, algorithm is base.
+`PrimeSieve.lisp` is based on the solution by mikehw,
+with lots of type declarations to allow sbcl's optimizer do it's thing.
+Algorithm is base.
 
 Uses a bit-vector (one-dimensional arrays are called vector in Lisp)
 for storage.
@@ -15,13 +17,16 @@ for storage.
 
 The state of the sieve is stored in a Lisp struct (closest to a class in Lisp).
 
-Algorythm is _wheel_, see PrimeC/solution_2/README.md for a better explanation than I would be able to give.
+Algorithm is _wheel_, see PrimeC/solution_2/README.md for a better explanation than I would be able to give.
 
-PrimeLisp.lisp stores bits in an array of (unsigned-byte 32),
-much like Daniel's code uses an array of uint32_t when compiled without -DCOMPILE_64_BIT.
+PrimeLisp.lisp stores bits in an array of `(unsigned-byte 32)`,
+much like Daniel's code uses an array of `uint32_t` when compiled without `-DCOMPILE_64_BIT`.
 
 ## Run instructions
 
+First install Steel Bank Common Lisp, see http://www.sbcl.org/platform-table.html.
+
+Then
 `sbcl --script PrimeSieve.lisp` will compile and run the program in one step,
 `sbcl --script PrimeSieve.lisp 2>nul` (Windows)
 or `sbcl --script PrimeSieve.lisp 2> /dev/null` (Unix)
