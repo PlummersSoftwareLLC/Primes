@@ -115,7 +115,7 @@ static inline auto run(const Time& runTime)
                                                 using bit_runner_t = GenericSieve<BitStorage<type_t, inv>, wheelSize, stride, storage>;
                                                 const auto threads = std::thread::hardware_concurrency();
 
-                                                for(auto numThreads = std::size_t{1}; numThreads <= 2 * threads; numThreads *= 2) {
+                                                for(auto numThreads = threads; numThreads >= 1; numThreads /= 2) {
                                                     runnerResults.push_back(RunnerT<vector_runner_t, SieveSize, Time>{}(runTime, numThreads));
 
                                                     if constexpr(!std::is_same_v<type_t, bool>) {
