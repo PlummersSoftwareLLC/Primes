@@ -1,7 +1,7 @@
 # Visual Basic solution by rbergen, revision by RevensofT
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
@@ -32,5 +32,5 @@ rbergen_vb;1139;5.003093;1;algorithm=base,faithful=yes,bits=1
 
 ### Last update - AMD Fx-6300
 ```
-rbergen_vb;1986;5.0021087;1;algorithm=base,faithful=no,bits=1
+rbergen_vb;2053;5.0011727;1;algorithm=base,faithful=yes,bits=1
 ```
