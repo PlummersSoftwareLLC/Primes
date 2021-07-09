@@ -1,5 +1,5 @@
 project Prime_Sieve is
-   type Mode_Type is ("debug0", "debug1", "debug2", "debug3", "release", "optimised");
+   type Mode_Type is ("debug0", "debug1", "debug2", "debug3", "release", "opt-debug", "optimised");
 
    Mode : Mode_Type := external ("MODE", "debug0");
 
@@ -9,36 +9,40 @@ project Prime_Sieve is
    for Main        use ("bits.adb", "sieves.adb");
 
    package Compiler is
-      Common_Switches := ("-ffunction-sections", "-fdata-sections");
-      Enable_Symbols  := ("-g", "-ggdb");
-      Ada_Switches    := ("-gnat2012",
-                          "-gnaty", "-gnaty-s", "-gnatyO", "-gnatyM120", "-gnatyx");
-      Ada_Checks      := ("-gnata", "-gnato", "-gnatE", "-gnatwa");
+      Common_Switches      := ("-ffunction-sections", "-fdata-sections");
+      Debug_Switches       := ("-g", "-ggdb");
+      Ada_Style_Switches   := ("-gnat2012",
+                               "-gnaty", "-gnaty-s", "-gnatyO", "-gnatyM120", "-gnatyx");
+      Enable_Ada_Checks    := ("-gnata", "-gnato", "-gnatE", "-gnatwa");
+      Opt_Switches         := ("-Ofast", "-march=native", "-mtune=native", "-funroll-all-loops",
+                               "-gnatp"   --  Suppress all checks
+                              );
+      Debug_Level_Switches := ("");
 
       case Mode is
          when "debug0" =>
             --  No optimisation.
-            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O0");
+            Debug_Level_Switches := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O0");
 
          when "debug1" =>
-            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O1");
+            Debug_Level_Switches := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O1");
 
          when "debug2" =>
-            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O2");
+            Debug_Level_Switches := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O2");
 
          when "debug3" =>
-            Common_Switches := Common_Switches & Enable_Symbols & Ada_Checks & ("-O3");
+            Debug_Level_Switches := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O3");
 
          when "release" =>
-            Common_Switches := Common_Switches & Ada_Checks & ("-O3");
+            Debug_Level_Switches := Debug_Level_Switches & Enable_Ada_Checks & ("-O3");
+
+         when "opt-debug" =>
+            Debug_Level_Switches := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & Opt_Switches;
 
          when "optimised" =>
-            Common_Switches := Common_Switches &
-               ("-march=native", "-mtune=native", "-Ofast", "-funroll-all-loops",
-                "-gnatp"   --  Suppress all checks
-               );
+            Debug_Level_Switches := Debug_Level_Switches & Opt_Switches;
       end case;
 
-      for Default_Switches ("Ada") use Common_Switches & Ada_Switches;
+      for Default_Switches ("Ada") use Common_Switches & Debug_Level_Switches & Ada_Style_Switches;
    end Compiler;
 end Prime_Sieve;
