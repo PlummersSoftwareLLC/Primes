@@ -1,10 +1,11 @@
 import time
 from .sieve import PrimeSieve
+from .tools import sieveModule
 
 def main():
     start_time = time.time()
     passes = 0
-    while time.time() - start_time < 5:
+    while sieveModule.check_time(start_time, 5):
         sieve = PrimeSieve(1_000_000)
         sieve.run_sieve()
         passes += 1

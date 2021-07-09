@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <math.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 int count_primes(int* array, int n) {
     int sum = 0;
@@ -65,12 +66,32 @@ static PyObject* _run_sieve(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject* _check_time(PyObject *self, PyObject *args) {
+    struct timeval current_time;
+    double start_time;
+    double time_limit;
+
+    if(!PyArg_ParseTuple(args, "dd", &start_time, &time_limit)) {
+        return NULL;
+    }
+
+    gettimeofday(&current_time, NULL);
+    double current_time_as_double = current_time.tv_sec+(current_time.tv_usec/1000000.0);
+
+    if (current_time_as_double - start_time < time_limit) {
+        return Py_BuildValue("i", 1);
+    }
+    return Py_BuildValue("i", 0);
+}
+
+
 static char runSieveDocs[] = 
     "determine which numbers are prime up to an upper bound";
 
 
 static PyMethodDef sieveMethods[] = {
     {"_run_sieve", _run_sieve, METH_VARARGS, runSieveDocs},
+    {"check_time", _check_time, METH_VARARGS, "check if time has elapsed"},
     {NULL, NULL, 0, NULL}
 };
 
