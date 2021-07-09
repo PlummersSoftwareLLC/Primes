@@ -166,20 +166,28 @@ static inline auto run(const Time& runTime, const bool parallelize = true)
     return runnerResults;
 }
 
-int main()
+[[maybe_unused]] static inline auto runTests(const auto& runTime)
 {
-    constexpr auto RUN_TIME = std::chrono::seconds(5);
-
-#ifdef RUN_TESTS
+    using run_time_t = std::remove_cvref_t<decltype(runTime)>;
     constexpr auto SIEVE_SIZE = 50'000;
-    auto res = run<SIEVE_SIZE, TestRunner>(RUN_TIME, false);
-    moveAppend(res, parallelRunner<TestRunner<PreGenerated<SIEVE_SIZE>, SIEVE_SIZE, decltype(RUN_TIME)>>(RUN_TIME, false));
-#else
-    constexpr auto SIEVE_SIZE = 1'000'000;
-    #ifdef RUN_PREGEN
-    auto res = parallelRunner<Runner<PreGenerated<SIEVE_SIZE>, SIEVE_SIZE, decltype(RUN_TIME)>>(RUN_TIME);
-    #else
-    // auto res = run<SIEVE_SIZE, Runner>(RUN_TIME, false);
+
+    auto res = run<SIEVE_SIZE, TestRunner>(runTime, false);
+    moveAppend(res, parallelRunner<TestRunner<PreGenerated<SIEVE_SIZE>, SIEVE_SIZE, run_time_t>>(runTime, false));
+    return res;
+}
+
+template<std::size_t SieveSize>
+[[maybe_unused]] static inline auto runPregen(const auto& runTime)
+{
+    using run_time_t = std::remove_cvref_t<decltype(runTime)>;
+    return parallelRunner<Runner<PreGenerated<SieveSize>, SieveSize, run_time_t>>(runTime);
+}
+
+template<std::size_t SieveSize>
+[[maybe_unused]] static inline auto runBenchmark(const auto& runTime)
+{
+    using run_time_t = std::remove_cvref_t<decltype(runTime)>;
+
     auto res = std::vector<std::future<bool>>{};
     // clang-format off
     using runners_t = std::tuple<
@@ -221,13 +229,39 @@ int main()
                                  GenericSieve<BitStorage<std::uint64_t>, 1, false, false>
                                 >;
     // clang-format on
+
     utils::for_constexpr(
         [&](const auto idx) {
             using runner_t = std::tuple_element_t<idx.value, runners_t>;
-            moveAppend(res, parallelRunner<Runner<runner_t, SIEVE_SIZE, decltype(RUN_TIME)>>(RUN_TIME, false));
+            moveAppend(res, parallelRunner<Runner<runner_t, SieveSize, run_time_t>>(runTime));
         },
         std::make_index_sequence<std::tuple_size_v<runners_t>>{});
+
+    return res;
+}
+
+template<std::size_t SieveSize>
+[[maybe_unused]] static inline auto runSuite(const auto& runTime)
+{
+    return run<SieveSize, Runner>(runTime, false);
+}
+
+int main()
+{
+    constexpr auto RUN_TIME = std::chrono::seconds(5);
+
+#ifdef RUN_TESTS
+    auto res = runTests(RUN_TIME);
+#else
+    constexpr auto SIEVE_SIZE = 1'000'000;
+    #ifdef RUN_PREGEN
+    auto res = runPregen<SIEVE_SIZE>(RUN_TIME);
+    #elif RUN_SUITE
+    auto res = runSuite<SIEVE_SIZE>(RUN_TIME);
+    #else
+    auto res = runBenchmark<SIEVE_SIZE>(RUN_TIME);
     #endif
 #endif
+
     return std::all_of(res.begin(), res.end(), [](auto& run) { return run.get(); }) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

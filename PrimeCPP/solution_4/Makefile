@@ -3,11 +3,11 @@ CXXFLAGS_CLANG = $(CXXFLAGS_COMMON) -fconstexpr-steps=50000000 -fbracket-depth=1
 CXXFLAGS_GCC = $(CXXFLAGS_COMMON) -funroll-all-loops -fconstexpr-loop-limit=10000000 -fconstexpr-ops-limit=1000000000
 
 .PHONY: all
-all: prime_cpp_gcc prime_cpp_clang prime_cpp_pregen_gcc prime_cpp_pregen_clang prime_cpp_test_gcc prime_cpp_test_clang
+all: prime_cpp_gcc prime_cpp_clang prime_cpp_pregen_gcc prime_cpp_pregen_clang prime_cpp_test_gcc prime_cpp_test_clang prime_cpp_suite_clang
 
 .PHONY: clean
 clean:
-	$(RM) prime_cpp_gcc prime_cpp_clang prime_cpp_pregen_gcc prime_cpp_pregen_clang prime_cpp_test_gcc prime_cpp_test_clang
+	$(RM) prime_cpp_gcc prime_cpp_clang prime_cpp_pregen_gcc prime_cpp_pregen_clang prime_cpp_test_gcc prime_cpp_test_clang prime_cpp_suite_clang
 
 prime_cpp_gcc: prime_cpp.cpp
 	$(CXX_GCC) $(CXXFLAGS_GCC) $(CXXFLAGS_GCC) $^ -o $@
@@ -26,6 +26,9 @@ prime_cpp_test_gcc: prime_cpp.cpp
 
 prime_cpp_test_clang: prime_cpp.cpp
 	$(CXX_CLANG) $(CXXFLAGS_CLANG) -DRUN_TESTS $^ -o $@
+
+prime_cpp_suite_clang: prime_cpp.cpp
+	$(CXX_CLANG) $(CXXFLAGS_CLANG) -DRUN_SUITE $^ -o $@
 
 run_all: all
 	./prime_cpp_gcc
