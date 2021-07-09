@@ -2,9 +2,9 @@ with Prime_Sieves;
 with Prime_Sieves_Imp;
 
 procedure Sieves is
-   Sieve_Size : Positive := 1_000_000;
+   Sieve_Size : constant Long_Integer := 1_000_000;
 
-   type Boolean_Array_Range is new Positive range 1 .. Sieve_Size;
+   type Boolean_Array_Range is new Long_Integer range 1 .. Sieve_Size;
 
    type Packed_Boolean_Array_Type is array (Boolean_Array_Range) of Boolean with
      Pack;

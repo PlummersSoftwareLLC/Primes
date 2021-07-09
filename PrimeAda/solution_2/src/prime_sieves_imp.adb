@@ -1,10 +1,12 @@
 with Ada.Calendar;
-with Ada.Numerics.Generic_Elementary_Functions;
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Prime_Sieves_Imp is
    package IIO is new Integer_IO (Integer);
    use IIO;
+
+   package LIIO is new Integer_IO (Long_Integer);
+   use LIIO;
 
    package Index_IO is new Integer_IO (Bit_Index_Type);
    use Index_IO;
@@ -17,19 +19,15 @@ package body Prime_Sieves_Imp is
 
    use type Result_Maps.Cursor;
 
-   package Float_Ops is new Ada.Numerics.Generic_Elementary_Functions (Float);
-   use Float_Ops;
-
    procedure Run (Sieve : in out Prime_Sieve) is
-      Factor :          Integer := 3;
-      Q      : constant Integer := Integer (Sqrt (Float (Sieve_Size)));
+      Factor : Long_Integer := 3;
    begin
-      while Factor <= Q loop
+      while Factor <= Long_Integer (Q) loop
          declare
-            Number : Integer := Factor;
+            Number : Long_Integer := Factor;
          begin
             --  Ada's for loops don't have a by keyword like Pascal does.
-            Is_Prime : while Bit_Index_Type (Number) < Sieve_Size loop
+            Is_Prime : while Number < Long_Integer (Sieve_Size) loop
                if Sieve.Bits (Bit_Index_Type (Number)) then
                   Factor := Number;
 
@@ -42,7 +40,7 @@ package body Prime_Sieves_Imp is
             --  Probably not a good idea to re-use this loop counter!
             Number := Factor * Factor;
 
-            Is_Not_Prime : while Bit_Index_Type (Number) < Sieve_Size loop
+            Is_Not_Prime : while Number < Long_Integer (Sieve_Size) loop
                Sieve.Bits (Bit_Index_Type (Number)) := False;
 
                Number := Number + (Factor * 2);
@@ -64,10 +62,10 @@ package body Prime_Sieves_Imp is
       end if;
 
       declare
-         Count  : Integer := (if Sieve_Size >= 2 then 1 else 0);
-         Number : Integer := 3;
+         Count  : Integer      := (if Sieve_Size >= 2 then 1 else 0);
+         Number : Long_Integer := 3;
       begin
-         while Bit_Index_Type (Number) <= Sieve_Size loop
+         while Number <= Long_Integer (Sieve_Size) loop
             if Sieve.Bits (Bit_Index_Type (Number)) then
                if Verbose then
                   Put (Number, Width => 0);
@@ -110,13 +108,13 @@ package body Prime_Sieves_Imp is
       end;
    end Print_Results;
 
-   function Count_Primes (Sieve : Prime_Sieve) return Integer is
-      Count : Integer := (if Sieve_Size >= 2 then 1 else 0);
+   function Count_Primes (Sieve : Prime_Sieve) return Long_Integer is
+      Count : Long_Integer := (if Sieve_Size >= 2 then 1 else 0);
    begin
       declare
-         Prime : Integer := 3;
+         Prime : Long_Integer := 3;
       begin
-         while Bit_Index_Type (Prime) < Sieve_Size loop
+         while Prime < Long_Integer (Sieve_Size) loop
             if Sieve.Bits (Bit_Index_Type (Prime)) then
                Count := Count + 1;
             end if;
@@ -129,7 +127,7 @@ package body Prime_Sieves_Imp is
    end Count_Primes;
 
    function Validate_Results (Sieve : Prime_Sieve) return Boolean is
-      Result : constant Result_Maps.Cursor := Results.Find (Long_Long_Integer (Sieve_Size));
+      Result : constant Result_Maps.Cursor := Results.Find (Long_Integer (Sieve_Size));
    begin
       if Result = Result_Maps.No_Element then
          return False;
