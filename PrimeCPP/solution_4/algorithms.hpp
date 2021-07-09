@@ -90,28 +90,30 @@ class GenericSieve {
 
     inline void runSieve()
     {
+        constexpr auto strider = [](auto& idx) {
+            if constexpr(ConstantStride) {
+                return (WheelSize > 0 && !HalfStorage) ? 2 : 1;
+            }
+            else {
+                return WHEEL_INC[++idx];
+            }
+        };
+
         const auto sieveSize = m_sieveSize / (HalfStorage ? 2 : 1);
 
         auto wheelIdx = idx_t{};
-        for(auto i = START_NUM; i * i <= sieveSize; i += WHEEL_INC[++wheelIdx]) {
-            for(auto num = i; i <= sieveSize; num += WHEEL_INC[++wheelIdx]) {
+        for(auto i = START_NUM; i * i <= sieveSize; i += strider(wheelIdx)) {
+            for(auto num = i; i <= sieveSize; num += strider(wheelIdx)) {
                 if(m_bits[num]) {
                     i = num;
                     break;
                 }
             }
+
             auto strideIdx = wheelIdx;
-            const auto stride = [&] {
-                if constexpr(ConstantStride) {
-                    return (WheelSize > 0 && !HalfStorage) ? 2 : 1;
-                }
-                else {
-                    return WHEEL_INC[++strideIdx];
-                }
-            };
             const auto factor = HalfStorage ? (i * 2 + 1) : i;
             const auto start = (factor * factor) / (HalfStorage ? 2 : 1);
-            for(auto num = start; num <= sieveSize; num += factor * stride()) {
+            for(auto num = start; num <= sieveSize; num += factor * strider(strideIdx)) {
                 m_bits[num] = false;
             }
         }
