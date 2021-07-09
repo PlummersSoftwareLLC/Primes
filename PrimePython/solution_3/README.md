@@ -13,9 +13,10 @@ This implementation makes use of that dynamic, by interfacing with the parameter
 
 ## Run instructions
 this module runs in docker, simply build and run.
+
 ```
-docker build -t PrimePython-Solution3 .
-docker run PrimePython-Solution3
+docker build -t primepython-solution3 .
+docker run primepython-solution3
 ```
 
 ## Output

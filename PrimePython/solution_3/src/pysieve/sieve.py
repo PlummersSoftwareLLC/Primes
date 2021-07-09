@@ -1,22 +1,21 @@
 from pysieve.tools import sieveModule
 
+# Historical data for validating our results
+PRIME_COUNTS = {
+    10: 4,  
+    100: 25,
+    1000: 168,
+    10000: 1229,
+    100000: 9592,
+    1000000: 78498,
+    10000000: 664579,
+    100000000: 5761455,
+}
 
 UPPER_LIMIT = 0
 
 class PrimeSieve:
-
-    # Historical data for validating our results
-    prime_counts = {
-        10: 4,  
-        100: 25,
-        1000: 168,
-        10000: 1229,
-        100000: 9592,
-        1000000: 78498,
-        10000000: 664579,
-        100000000: 5761455,
-    }
-
+    
     def __init__(self, limit=UPPER_LIMIT) -> None:
         self.sieve_size = limit
         self._results = None
@@ -27,8 +26,8 @@ class PrimeSieve:
         return self._results
 
     def validate_results(self):
-        if self.sieve_size in self.prime_counts:
-            return self.prime_counts[self.sieve_size] == self._results
+        if self.sieve_size in PRIME_COUNTS:
+            return PRIME_COUNTS[self.sieve_size] == self._results
         return False
 
     def print_results(self, duration, passes):
