@@ -11,6 +11,15 @@ Python as an implementation however has some tricks available for devs when the 
 
 This implementation makes use of that dynamic, by interfacing with the parameters of the problem in the Python layer and crunching the numbers in the C layer. The result is a ~6600% boost over the original interpretation. No other optimizations have been applied.
 
+## Run instructions
+this module runs in docker, simply build and run.
+```
+docker build -t PrimePython-Solution3 .
+docker run PrimePython-Solution3
+```
+
+## Output
+
 ```
 1mikegrn;1853;5.001447677612305;1;valid=True,algorithm=base,faithful=yes,bits=32
 ```
