@@ -1,84 +1,124 @@
-Imports System
-Imports System.Globalization
+Imports Extension = System.Runtime.CompilerServices.ExtensionAttribute
+
+Public Module Prime_sieve
+	<Extension>
+	Private Function check_prim(Primes As BitArray,
+						   Sieve_sqrt As Integer,
+						   ByRef Factor As Integer) As Integer
+		Dim Number = Factor
+
+		'Pure "Do" compile difference then "Do Unitl" or "While" in JIT ASM
+		Do
+			If Number > Sieve_sqrt Then Return Number
+			If Primes(Number \ 2) Then
+				Factor = Number
+				Return Number
+			End If
+			Number = Number + 2
+		Loop
+	End Function
+
+	<Extension>
+	Private Sub find_prim(Primes As BitArray,
+						  Size As Integer,
+						  Factor As Integer)
+		Dim Number = Factor * 3
+		Do
+			If Number > Size Then Return
+			Primes(Number \ 2) = False
+			Number = Number + Factor * 2
+		Loop
+	End Sub
+
+	<Extension>
+	Private Sub run_prim(Primes As BitArray,
+						 Size As Integer,
+						 Factor As Integer)
+		Dim Sieve_sqrt = Math.Sqrt(Size)
+
+		Do
+			If Factor > Sieve_sqrt Then Return
+			If Primes.check_prim(Sieve_sqrt, Factor) > Sieve_sqrt Then Return
+
+			Primes.find_prim(Size, Factor)
+			Factor = Factor + 2
+		Loop
+	End Sub
+
+	<Extension>
+	Public Sub prime_sieve(Primes As BitArray, Size As Integer)
+		Primes.run_prim(Size, 3)
+	End Sub
+
+	<Extension>
+	Public Function count_primes(Primes As BitArray) As Integer
+		Dim Count = 0
+
+		For Each Bit As Boolean In Primes
+			Count += Bit And 1
+		Next
+
+		Return Count
+	End Function
+End Module
 
 Module PrimeVB
-	Public Class PrimeSieve
-		Private ReadOnly sieveSize As Integer
-		Private ReadOnly primesArray As BitArray
 
-		Public Sub New(size As Integer)
-			sieveSize = size
-			primesArray = New BitArray((size + 1) \ 2, True)
-		End Sub
+	<Extension>
+	Function is_correct_result(Result_count As Integer,
+							   Sieve_size As Integer) As Boolean
+		Select Case Sieve_size
+			Case 10
+				Return Result_count = 4
+			Case 100
+				Return Result_count = 25
+			Case 1000
+				Return Result_count = 168
+			Case 10000
+				Return Result_count = 1229
+			Case 100000
+				Return Result_count = 9592
+			Case 1000000
+				Return Result_count = 78498
+			Case 10000000
+				Return Result_count = 664579
+			Case 100000000
+				Return Result_count = 5761455
+		End Select
+		Return False
+	End Function
 
-		Public Function CountPrimes() As Integer
-			Dim Count = 0
 
-			For Each bit In primesArray
-				If bit Then Count += 1
-			Next
+	Private Const sieve_size = 1000000
+	Sub primes()
 
-			Return Count
-		End Function
+		Dim Pass_count = 0,
+			Sieve As New BitArray((sieve_size + 1) \ 2),
+			Start_time = DateTime.UtcNow
+		Do
+			If (DateTime.UtcNow - Start_time).TotalSeconds > 5.0 Then
+				Call (DateTime.UtcNow - Start_time).TotalSeconds.
+					  report(Sieve, Pass_count)
+				Return
+			End If
 
-		Public Function RunSieve() As BitArray
-			Dim sieveSqrt As Integer = Math.Sqrt(sieveSize)
-			Dim number As Integer
-
-			For factor = 3 To sieveSqrt Step 2
-
-				For number = factor To sieveSqrt Step 2
-					If primesArray(number \ 2) Then
-						factor = number
-						Exit For
-					End If
-				Next
-
-				If number > sieveSqrt Then Exit For
-
-				For number = factor * 3 To sieveSize Step factor * 2
-					primesArray(number \ 2) = False
-				Next
-
-			Next
-
-			Return primesArray
-
-		End Function
-
-	End Class
-
-	Sub Main()
-
-		CultureInfo.CurrentCulture = New CultureInfo("en-US", False)
-
-		Dim referenceResults = New Dictionary(Of Integer, Integer) From
-			{{10, 4},
-			{100, 25},
-			{1000, 168},
-			{10000, 1229},
-			{100000, 9592},
-			{1000000, 78498},
-			{10000000, 664579},
-			{100000000, 5761455}}
-
-		Dim sieveSize = 1000000
-		Dim passCount = 0
-		Dim sieve As PrimeSieve = Nothing
-		Dim startTime = DateTime.UtcNow
-
-		While (DateTime.UtcNow - startTime).TotalSeconds <= 5.0
-			sieve = New PrimeSieve(sieveSize)
-			sieve.RunSieve()
-			passCount += 1
-		End While
-
-		Dim duration = (DateTime.UtcNow - startTime).TotalSeconds
-
-		If sieve.CountPrimes <> referenceResults(sieveSize) Then
+			Sieve.SetAll(True)
+			Sieve.prime_sieve(sieve_size)
+			Pass_count += 1
+		Loop
+	End Sub
+	<Extension>
+	Sub report(Duration As Double, Sieve As BitArray, Pass_count As Integer)
+		If Not Sieve.count_primes.is_correct_result(sieve_size) Then
 			Console.WriteLine("WARNING: result is incorrect!")
 		End If
 
-		Console.WriteLine("rbergen_vb;{0};{1};1;algorithm=base,faithful=yes,bits=1", passCount, duration)
+		Console.WriteLine($"rbergen_vb;{Pass_count};{Duration};1;algorithm=base,faithful=yes,bits=1")
+	End Sub
+
+	Sub Main()
+		Globalization.CultureInfo.CurrentCulture = New Globalization.CultureInfo("en-US", False)
+
+		primes()
 	End Sub
 End Module
