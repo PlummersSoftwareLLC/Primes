@@ -85,10 +85,10 @@ struct Runner {
 };
 
 template<typename RunnerT, typename Time>
-static inline auto parallelRunner(const Time& runTime)
+static inline auto parallelRunner(const Time& runTime, const bool parallelize = true)
 {
     auto runnerResults = std::vector<std::invoke_result_t<RunnerT, Time, std::size_t>>{};
-    const auto threads = std::thread::hardware_concurrency();
+    const auto threads = parallelize ? std::thread::hardware_concurrency() : 1;
 
     for(auto numThreads = threads; numThreads >= 1; numThreads /= 2) {
         runnerResults.push_back(RunnerT{}(runTime, numThreads));
@@ -96,8 +96,13 @@ static inline auto parallelRunner(const Time& runTime)
     return runnerResults;
 }
 
+static inline void moveAppend(auto& dst, auto&& src)
+{
+    dst.insert(dst.end(), std::make_move_iterator(src.begin()), std::make_move_iterator(src.end()));
+}
+
 template<std::size_t SieveSize, template<typename, auto, typename> typename RunnerT, typename Time>
-static inline auto run(const Time& runTime)
+static inline auto run(const Time& runTime, const bool parallelize = true)
 {
     constexpr auto wheels = std::tuple{0, 1, 2, 3, 4, 5, 6, 7};
     constexpr auto strides = std::tuple{true, false};
@@ -126,14 +131,10 @@ static inline auto run(const Time& runTime)
                                                 using vector_runner_t = GenericSieve<VectorStorage<type_t, inv>, wheelSize, stride, storage>;
                                                 using bit_runner_t = GenericSieve<BitStorage<type_t, inv>, wheelSize, stride, storage>;
 
-                                                constexpr auto moveAppend = [](auto& dst, auto&& src) {
-                                                    dst.insert(dst.end(), std::make_move_iterator(src.begin()), std::make_move_iterator(src.end()));
-                                                };
-
-                                                moveAppend(runnerResults, parallelRunner<RunnerT<vector_runner_t, SieveSize, Time>>(runTime));
+                                                moveAppend(runnerResults, parallelRunner<RunnerT<vector_runner_t, SieveSize, Time>>(runTime, parallelize));
 
                                                 if constexpr(!std::is_same_v<type_t, bool>) {
-                                                    moveAppend(runnerResults, parallelRunner<RunnerT<bit_runner_t, SieveSize, Time>>(runTime));
+                                                    moveAppend(runnerResults, parallelRunner<RunnerT<bit_runner_t, SieveSize, Time>>(runTime, parallelize));
                                                 }
                                             }
                                         },
@@ -155,7 +156,9 @@ int main()
     constexpr auto RUN_TIME = std::chrono::seconds(5);
 
 #ifdef RUN_TESTS
-    auto res = run<50'000, TestRunner>(RUN_TIME);
+    constexpr auto SIEVE_SIZE = 50'000;
+    auto res = run<SIEVE_SIZE, TestRunner>(RUN_TIME, false);
+    moveAppend(res, parallelRunner<TestRunner<PreGenerated<SIEVE_SIZE>, SIEVE_SIZE, decltype(RUN_TIME)>>(RUN_TIME, false));
 #else
     constexpr auto SIEVE_SIZE = 1'000'000;
     #ifdef RUN_PREGEN
