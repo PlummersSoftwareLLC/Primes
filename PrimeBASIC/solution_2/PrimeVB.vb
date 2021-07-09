@@ -28,7 +28,7 @@ Module PrimeVB
 			For factor = 3 To sieveSqrt Step 2
 
 				For number = factor To sieveSqrt Step 2
-					If primesArray(number \ 2) Then
+					If primesArray(number >> 1) Then
 						factor = number
 						Exit For
 					End If
@@ -37,7 +37,7 @@ Module PrimeVB
 				If number > sieveSqrt Then Exit For
 
 				For number = factor * 3 To sieveSize Step factor * 2
-					primesArray(number \ 2) = False
+					primesArray(number >> 1) = False
 				Next
 
 			Next
@@ -65,15 +65,17 @@ Module PrimeVB
 		Dim sieveSize = 1000000
 		Dim passCount = 0
 		Dim sieve As PrimeSieve = Nothing
-		Dim startTime = DateTime.UtcNow
+		Dim timer As New Stopwatch
 
-		While (DateTime.UtcNow - startTime).TotalSeconds <= 5.0
+		timer.Start()
+		Do
 			sieve = New PrimeSieve(sieveSize)
 			sieve.RunSieve()
 			passCount += 1
-		End While
+		Loop While timer.Elapsed.TotalSeconds <= 5.0
+		timer.Stop()
 
-		Dim duration = (DateTime.UtcNow - startTime).TotalSeconds
+		Dim duration = timer.Elapsed.TotalSeconds
 
 		If sieve.CountPrimes <> referenceResults(sieveSize) Then
 			Console.WriteLine("WARNING: result is incorrect!")
