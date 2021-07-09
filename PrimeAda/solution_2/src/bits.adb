@@ -11,6 +11,26 @@ procedure Bits is
      Pack;
    PBA : constant Packed_Boolean_Array := (others => False);
 begin
+   Put ("Integer'Size: ");
+   Put (Integer'Size, Width => 54);
+   New_Line;
+
+   Put ("Long_Integer'Size: ");
+   Put (Long_Integer'Size, Width => 49);
+   New_Line;
+
+   Put ("Long_Long_Integer'Size: ");
+   Put (Long_Long_Integer'Size, Width => 44);
+   New_Line;
+
+   Put ("Float'Size: ");
+   Put (Float'Size, Width => 56);
+   New_Line;
+
+   Put ("Long_Float'Size: ");
+   Put (Long_Float'Size, Width => 51);
+   New_Line;
+
    Put ("Boolean'Size: ");
    Put (Boolean'Size, Width => 53);
    New_Line;
