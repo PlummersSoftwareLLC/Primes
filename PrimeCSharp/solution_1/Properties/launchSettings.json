@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "PrimeCSharp": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

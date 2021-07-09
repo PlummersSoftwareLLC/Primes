@@ -1,0 +1,4 @@
+name "solution_2"
+authors "Bradley Chatha"
+
+dflags "--boundscheck=off" "--mcpu=native" "--ffast-math" platform="ldc"

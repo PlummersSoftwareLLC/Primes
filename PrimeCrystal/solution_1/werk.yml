@@ -1,0 +1,17 @@
+version: "1.0"
+
+variables:
+  ITERATIONS: 5
+
+jobs:
+  test:
+    executor: local
+    commands:
+      - for i in $(seq $ITERATIONS); do echo "--- Iteration ${i}" && ./primes; done
+    needs:
+      - build
+
+  build:
+    executor: local
+    commands:
+      - crystal build primes.cr --release --no-debug --progress
