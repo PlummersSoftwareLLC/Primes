@@ -2,8 +2,19 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>PrimeVB</RootNamespace>
+    <RootNamespace></RootNamespace>
     <TargetFramework>net5.0</TargetFramework>
+    <StartupObject>Sub Main</StartupObject>
+    <Configurations>Debug;Release;Release free</Configurations>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release free|AnyCPU'">
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+    <Optimize>true</Optimize>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>false</DefineTrace>
   </PropertyGroup>
 
 </Project>
