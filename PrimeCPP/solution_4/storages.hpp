@@ -1,10 +1,12 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <vector>
 
 #include <climits>
 #include <cstdint>
+#include <cstring>
 
 #include "utils.hpp"
 
@@ -115,11 +117,30 @@ class BitStorage {
     };
 
   public:
+    BitStorage() : m_size(0), m_storage(nullptr) {}
+
+    template<std::size_t SieveSize>
+    explicit BitStorage(const std::array<T, SieveSize>& bitSieve) : m_size(SieveSize)
+                                                                  , m_storage(new T[m_size])
+    {
+        std::memcpy(m_storage, bitSieve.data(), m_size * sizeof(T));
+    }
+
     explicit BitStorage(const std::size_t size) : m_size(utils::ceildiv(size, STORAGE_WIDTH)), m_storage(new T[m_size])
     {
         for(auto i = std::size_t{0}; i < m_size; ++i) {
             m_storage[i] = Invert ? T{} : ~T{};
         }
+    }
+
+    BitStorage& operator=(BitStorage&& other)
+    {
+        m_size = other.m_size;
+        m_storage = other.m_storage;
+
+        other.m_size = 0;
+        other.m_storage = nullptr;
+        return *this;
     }
 
     ~BitStorage() { delete[] m_storage; }
@@ -152,6 +173,6 @@ class BitStorage {
     std::size_t getBitCount() const { return 1; }
 
   private:
-    const std::size_t m_size;
+    std::size_t m_size;
     T* m_storage = nullptr;
 };
