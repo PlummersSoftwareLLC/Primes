@@ -17,8 +17,8 @@ type
 		FBitArray: array of ByteBool; //ByteBool: 4644. WordBool: 4232. LongBool: 3673
 		FMyDict: TDictionary<Integer, Integer>;
 
-		function GetBit(Index: Integer): Boolean;
-		procedure ClearBit(Index: Integer);
+		function GetBit(Index: Integer): Boolean; inline;
+		procedure ClearBit(Index: Integer); inline;
 		procedure InitializeBits;
 	public
 		constructor Create(Size: Integer);
