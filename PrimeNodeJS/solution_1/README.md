@@ -1,16 +1,9 @@
 # NodeJS solution by rogiervandam
-
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
-PrimeNode
-
-![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
-PrimeNode_cluster
 
 Implementation in nodeJS, with a 32 bit integer array as buffer for the bit array.
 This implementation is based on the logic from:
