@@ -47,6 +47,6 @@ project Prime_Sieve is
    end Compiler;
 
    package Linker is
-      for Default_Switches ("Ada") use ("-Wl,--gc-sections", "-v");
+      for Default_Switches ("Ada") use ("-Wl,--gc-sections");
    end Linker;
 end Prime_Sieve;
