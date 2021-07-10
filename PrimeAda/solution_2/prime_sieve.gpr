@@ -6,7 +6,7 @@ project Prime_Sieve is
    for Source_Dirs use ("./src");
    for Object_Dir  use "./obj";
    for Exec_Dir    use ".";
-   for Main        use ("bits.adb", "sieves.adb");
+   for Main        use ("sieves.adb");
 
    package Compiler is
       Common_Switches      := ("-ffunction-sections", "-fdata-sections");
@@ -37,12 +37,16 @@ project Prime_Sieve is
             Debug_Level_Switches := Debug_Level_Switches & Enable_Ada_Checks & ("-O3");
 
          when "opt-debug" =>
-            Debug_Level_Switches := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & Opt_Switches;
+            Debug_Level_Switches := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & Opt_Switches & ("-gnatec=../optimised.adc");
 
          when "optimised" =>
-            Debug_Level_Switches := Debug_Level_Switches & Opt_Switches;
+            Debug_Level_Switches := Debug_Level_Switches & Opt_Switches & ("-gnatec=../optimised.adc");
       end case;
 
       for Default_Switches ("Ada") use Common_Switches & Debug_Level_Switches & Ada_Style_Switches;
    end Compiler;
+
+   package Linker is
+      for Default_Switches ("Ada") use ("-Wl,--gc-sections", "-v");
+   end Linker;
 end Prime_Sieve;
