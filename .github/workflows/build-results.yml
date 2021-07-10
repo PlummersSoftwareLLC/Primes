@@ -21,4 +21,4 @@ jobs:
           git add images/ RESULTS.md
           git commit -m "Update results"
 
-          git push origin master
+          git push origin deploy
