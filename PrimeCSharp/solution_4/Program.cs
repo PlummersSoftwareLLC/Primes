@@ -19,10 +19,32 @@ namespace FastSieve
 			Sieve.InitializeNextPrime();
 
 			//Jit each method by calling so metrics aren't scewed by first-time run of method:
-			Sieve.CalculateSieve(0, out _);
-			Sieve.CalculateSieveOptimized(0, false, out _);
-			Sieve.CalculateSieveOptimizedUnmanaged(0, false, null);
-			Sieve.CalculateSieveOptimizedUnmanaged1Bit(0, false, null);
+			{
+				{
+					using Sieve sieve = new Sieve();
+					sieve.Initialize(1, 0);
+					sieve.RunSieve();
+					sieve.CountPrimes();
+				}
+				{
+					using Sieve sieve = new Sieve();
+					sieve.Initialize(2, 0);
+					sieve.RunSieve();
+					sieve.CountPrimes();
+				}
+				{
+					using Sieve sieve = new Sieve();
+					sieve.Initialize(4, 0);
+					sieve.RunSieve();
+					sieve.CountPrimes();
+				}
+				{
+					using Sieve sieve = new Sieve();
+					sieve.Initialize(6, 0);
+					sieve.RunSieve();
+					sieve.CountPrimes();
+				}
+			}
 
 			//args = new string[] { "runallchecks" };
 
@@ -82,14 +104,10 @@ namespace FastSieve
 
 			while (watch.ElapsedTicks < durationLimit)
 			{
-				nint value;
-				if (method == 1) value = Sieve.CalculateSieve(max, out _);
-				else if (method == 2) value = Sieve.CalculateSieveOptimized(max, false, out _);
-				else if (method == 3) value = Sieve.CalculateSieveOptimized(max, true, out _);
-				else if (method == 4) value = Sieve.CalculateSieveOptimizedUnmanaged(max, false, null);
-				else if (method == 5) value = Sieve.CalculateSieveOptimizedUnmanaged(max, true, null);
-				else if (method == 6) value = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, false, null);
-				else /*if (method == 7)*/ value = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, true, null);
+				using var sieve = new Sieve();
+				sieve.Initialize(method, max);
+				sieve.RunSieve();
+				nint value = sieve.CountPrimes();
 				if (value != 78498)
 				{
 					Console.WriteLine("Invalid result (method " + method.ToString() + ") " + value.ToString() + ", expected 78498");
@@ -105,14 +123,17 @@ namespace FastSieve
 			else if (method == 3) methodName = "optimized,vectorized";
 			else if (method == 4 || method == 6) methodName = "optimized,unmanaged";
 			else /*if (method == 5 || method == 7)*/ methodName = "optimized,unmanaged,vectorized";
-			Console.WriteLine($"hamarb123_{ methodName }{ (method < 6 ? "" : ",onebit") };{ passes };{ watch.Elapsed.TotalSeconds };1;algorithm=base,faithful=yes,bits={ (method < 6 ? 8 : 1) }");
+			Console.WriteLine($"hamarb123_{ methodName }{ (method < 6 ? "" : ",onebit") };{ passes };{ watch.Elapsed.TotalSeconds };1;algorithm=base,faithful={ (methodName.Contains("vectorized") ? "no" : "yes") },bits={ (method < 6 ? 8 : 1) }");
 		}
 
 		public static void RunTest(nint max, nint expected)
 		{
 			if (max <= 0X7FFFFFC7L) //array based implementations
 			{
-				nint value1 = Sieve.CalculateSieve(max, out _);
+				var sieve1 = new Sieve();
+				sieve1.Initialize(1, max);
+				sieve1.RunSieve();
+				nint value1 = sieve1.CountPrimes();
 				if (value1 != expected)
 				{
 					Console.WriteLine("Invalid result (method 1) with max " + max.ToString() + ", got " + value1.ToString() + ", expected " + expected.ToString());
@@ -120,33 +141,51 @@ namespace FastSieve
 			}
 			if (max <= (0X7FFFFFC7L * 2 + 1)) //array based implementations
 			{
-				nint value2 = Sieve.CalculateSieveOptimized(max, false, out _);
+				var sieve2 = new Sieve();
+				sieve2.Initialize(2, max);
+				sieve2.RunSieve();
+				nint value2 = sieve2.CountPrimes();
 				if (value2 != expected)
 				{
 					Console.WriteLine("Invalid result (method 2) with max " + max.ToString() + ", got " + value2.ToString() + ", expected " + expected.ToString());
 				}
-				nint value3 = Sieve.CalculateSieveOptimized(max, true, out _);
+				var sieve3 = new Sieve();
+				sieve3.Initialize(3, max);
+				sieve3.RunSieve();
+				nint value3 = sieve3.CountPrimes();
 				if (value3 != expected)
 				{
 					Console.WriteLine("Invalid result (method 3) with max " + max.ToString() + ", got " + value3.ToString() + ", expected " + expected.ToString());
 				}
 			}
-			nint value4 = Sieve.CalculateSieveOptimizedUnmanaged(max, false, null);
+			var sieve4 = new Sieve();
+			sieve4.Initialize(4, max);
+			sieve4.RunSieve();
+			nint value4 = sieve4.CountPrimes();
 			if (value4 != expected)
 			{
 				Console.WriteLine("Invalid result (method 4) with max " + max.ToString() + ", got " + value4.ToString() + ", expected " + expected.ToString());
 			}
-			nint value5 = Sieve.CalculateSieveOptimizedUnmanaged(max, true, null);
+			var sieve5 = new Sieve();
+			sieve5.Initialize(5, max);
+			sieve5.RunSieve();
+			nint value5 = sieve5.CountPrimes();
 			if (value5 != expected)
 			{
 				Console.WriteLine("Invalid result (method 5) with max " + max.ToString() + ", got " + value5.ToString() + ", expected " + expected.ToString());
 			}
-			nint value6 = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, false, null);
+			var sieve6 = new Sieve();
+			sieve6.Initialize(6, max);
+			sieve6.RunSieve();
+			nint value6 = sieve6.CountPrimes();
 			if (value6 != expected)
 			{
 				Console.WriteLine("Invalid result (method 6) with max " + max.ToString() + ", got " + value6.ToString() + ", expected " + expected.ToString());
 			}
-			nint value7 = Sieve.CalculateSieveOptimizedUnmanaged1Bit(max, true, null);
+			var sieve7 = new Sieve();
+			sieve7.Initialize(7, max);
+			sieve7.RunSieve();
+			nint value7 = sieve7.CountPrimes();
 			if (value7 != expected)
 			{
 				Console.WriteLine("Invalid result (method 7) with max " + max.ToString() + ", got " + value7.ToString() + ", expected " + expected.ToString());

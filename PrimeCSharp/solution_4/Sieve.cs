@@ -6,25 +6,182 @@ using System.Runtime.Intrinsics.X86;
 
 namespace FastSieve
 {
-	public static unsafe class Sieve
+	public unsafe sealed class Sieve : IDisposable
 	{
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieve(nint max, out bool[] values)
+		private bool initialized;
+		private bool run;
+		private nint max;
+		private void* dataPtr;
+		private bool[] dataArray;
+		private bool vectorize;
+		private int type;
+
+		//only used for some algorithms:
+		private nint halfMax;
+		private nint bytesMax;
+
+		public Sieve()
 		{
-			if (max < 2)
+
+		}
+
+		public void Initialize(int algorithm, nint max)
+		{
+			if (disposedValue) throw new ObjectDisposedException("this", "Sieve is already disposed");
+
+			if (algorithm < 1 || algorithm > 7) throw new Exception("Invalid algorithm");
+			if (initialized) throw new Exception("Already initialized");
+
+			switch (algorithm)
 			{
-				values = null;
-				return 0;
-			}
-			if (max == 2)
-			{
-				values = null;
-				return 1;
+				case 1:
+				{
+					InitializeSieve(max);
+					break;
+				}
+				case 2:
+				{
+					InitializeSieveOptimized(max, false);
+					break;
+				}
+				case 3:
+				{
+					InitializeSieveOptimized(max, true);
+					break;
+				}
+				case 4:
+				{
+					InitializeSieveOptimizedUnmanaged(max, false);
+					break;
+				}
+				case 5:
+				{
+					InitializeSieveOptimizedUnmanaged(max, true);
+					break;
+				}
+				case 6:
+				{
+					InitializeSieveOptimizedUnmanaged1Bit(max, false);
+					break;
+				}
+				case 7:
+				{
+					InitializeSieveOptimizedUnmanaged1Bit(max, true);
+					break;
+				}
 			}
 
-			bool[] notPrime = new bool[max + 1];
-			values = notPrime;
+			initialized = true;
+		}
 
+		private void InitializeSieve(nint max)
+		{
+			type = 0;
+			this.max = max;
+			this.vectorize = false;
+
+			dataArray = max > 2 ? new bool[max + 1] : null;
+		}
+
+		private void InitializeSieveOptimized(nint max, bool vectorize)
+		{
+			type = 1;
+			this.max = max;
+			this.vectorize = vectorize;
+
+			if (max > 2)
+			{
+				halfMax = (max - 1) >> 1;
+				dataArray = new bool[halfMax]; //index 0 = 3, index 1 = 5, etc.   |    represented as 0 or 1 in memory
+			}
+		}
+
+		private void InitializeSieveOptimizedUnmanaged(nint max, bool vectorize)
+		{
+			type = 2;
+			this.max = max;
+			this.vectorize = vectorize;
+
+			if (max > 2)
+			{
+				halfMax = (max - 1) >> 1;
+				bool* notPrimeEvery2nd = (bool*)Marshal.AllocHGlobal(halfMax); //index 0 = 3, index 1 = 5, etc.   |    represented as 0 or 1 in memory
+				{
+					if (vectorize)
+					{
+						var loops = halfMax >> 5;
+						for (nint i = 0; i < loops; i++)
+						{
+							((Vector256<byte>*)notPrimeEvery2nd)[i] = default;
+						}
+						Unsafe.InitBlockUnaligned(notPrimeEvery2nd + (loops << 5), 0, (uint)(halfMax - (loops << 5)));
+					}
+					else
+					{
+						for (nint i = 0; i < halfMax; i++)
+						{
+							notPrimeEvery2nd[i] = default;
+						}
+					}
+				}
+				dataPtr = notPrimeEvery2nd;
+			}
+		}
+
+		private void InitializeSieveOptimizedUnmanaged1Bit(nint max, bool vectorize)
+		{
+			type = 3;
+			this.max = max;
+			this.vectorize = vectorize;
+
+			if (max > 2)
+			{
+				halfMax = (max - 1) >> 1;
+				bytesMax = (halfMax + 7) >> 3;
+				byte* notPrimeEvery2nd = (byte*)Marshal.AllocHGlobal(bytesMax); //packed bits that represent the primes, starting in index 0: (low to high bit is 3, 5, 7, 9, 11, 13, 15, 17), etc.
+				{
+					if (vectorize)
+					{
+						var loops = bytesMax >> 5;
+						for (nint i = 0; i < loops; i++)
+						{
+							((Vector256<byte>*)notPrimeEvery2nd)[i] = default;
+						}
+						Unsafe.InitBlockUnaligned(notPrimeEvery2nd + (loops << 5), 0, (uint)(bytesMax - (loops << 5)));
+					}
+					else
+					{
+						for (nint i = 0; i < bytesMax; i++)
+						{
+							notPrimeEvery2nd[i] = default;
+						}
+					}
+				}
+				dataPtr = notPrimeEvery2nd;
+			}
+		}
+
+		public void RunSieve()
+		{
+			if (disposedValue) throw new ObjectDisposedException("this", "Sieve is already disposed");
+			if (!initialized) throw new Exception("Not initialized");
+			if (run) throw new Exception("Already run");
+
+			if (max > 2)
+			{
+				if (type == 0) RunSieve0();
+				else if (type == 1) RunSieve1();
+				else if (type == 2) RunSieve2();
+				else /*if (type == 3)*/ RunSieve3();
+			}
+
+			run = true;
+		}
+
+		private void RunSieve0()
+		{
+			var notPrime = dataArray;
+			
 			nint factor = 3;
 			nint q = (nint)Math.Sqrt(max);
 
@@ -46,28 +203,11 @@ namespace FastSieve
 
 				factor += 2;
 			}
-
-			nint primeCount = 1;
-			for (nint i = 3; i <= max; i += 2)
-			{
-				if (!notPrime[i]) primeCount++;
-			}
-
-			return primeCount;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieveOptimized(nint max, bool vectorize, out bool[] values)
+		private void RunSieve1()
 		{
-			if (max <= 2)
-			{
-				values = null;
-				return max == 2 ? 1 : 0;
-			}
-
-			var halfMax = (max - 1) >> 1;
-			bool[] notPrimeEvery2nd = new bool[halfMax]; //index 0 = 3, index 1 = 5, etc.   |    represented as 0 or 1 in memory
-			values = notPrimeEvery2nd;
+			var notPrimeEvery2nd = dataArray;
 
 			nint factorIndex = 0; //equal to (factor - 3) / 2
 			nint q;
@@ -95,84 +235,11 @@ namespace FastSieve
 
 				factorIndex++;
 			}
-
-			nint primeCount = 1;
-			if (!vectorize) //same as 1 value at a time (fallback)
-			{
-				for (nint i = 0; i < halfMax; i++)
-				{
-					if (!notPrimeEvery2nd[i]) primeCount++;
-				}
-			}
-			else
-			{
-				if (Popcnt.X64.IsSupported) //8 values at a time (x64 + intrinsics)
-				{
-					fixed (bool* ptr = notPrimeEvery2nd)
-					{
-						var loops = halfMax >> 3;
-						for (nint i = 0; i < loops; i++)
-						{
-							primeCount += 8 - (nint)Popcnt.X64.PopCount(((ulong*)ptr)[i]);
-						}
-						for (nint i = loops << 3; i < halfMax; i++)
-						{
-							if (!notPrimeEvery2nd[i]) primeCount++;
-						}
-					}
-				}
-				else if (Popcnt.IsSupported) //4 values at a time (x86 + intrinsics)
-				{
-					fixed (bool* ptr = notPrimeEvery2nd)
-					{
-						var loops = halfMax >> 2;
-						for (nint i = 0; i < loops; i++)
-						{
-							primeCount += 4 - (nint)Popcnt.PopCount(((uint*)ptr)[i]);
-						}
-						for (nint i = loops << 2; i < halfMax; i++)
-						{
-							if (!notPrimeEvery2nd[i]) primeCount++;
-						}
-					}
-				}
-				else //1 value at a time (fallback)
-				{
-					for (nint i = 0; i < halfMax; i++)
-					{
-						if (!notPrimeEvery2nd[i]) primeCount++;
-					}
-				}
-			}
-			return primeCount;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieveOptimizedUnmanaged(nint max, bool vectorize, bool** values)
+		private void RunSieve2()
 		{
-			if (max <= 2) return max == 2 ? 1 : 0;
-
-			var halfMax = (max - 1) >> 1;
-			bool* notPrimeEvery2nd = (bool*)Marshal.AllocHGlobal(halfMax); //index 0 = 3, index 1 = 5, etc.   |    represented as 0 or 1 in memory
-			{
-				if (values != null) *values = notPrimeEvery2nd;
-				if (vectorize)
-				{
-					var loops = halfMax >> 5;
-					for (nint i = 0; i < loops; i++)
-					{
-						((Vector256<byte>*)notPrimeEvery2nd)[i] = default;
-					}
-					Unsafe.InitBlockUnaligned(notPrimeEvery2nd + (loops << 5), 0, (uint)(halfMax - (loops << 5)));
-				}
-				else
-				{
-					for (nint i = 0; i < halfMax; i++)
-					{
-						notPrimeEvery2nd[i] = default;
-					}
-				}
-			}
+			var notPrimeEvery2nd = (bool*)dataPtr;
 
 			nint factorIndex = 0; //equal to (factor - 3) / 2
 			nint q;
@@ -198,90 +265,15 @@ namespace FastSieve
 				{
 					notPrimeEvery2nd[num] = true;
 				}
-				
+
 				factorIndex++;
 			}
-
-			nint primeCount = 1;
-			if (!vectorize) //same as 1 value at a time (fallback)
-			{
-				for (nint i = 0; i < halfMax; i++)
-				{
-					if (!notPrimeEvery2nd[i]) primeCount++;
-				}
-			}
-			else
-			{
-				if (Popcnt.X64.IsSupported) //8 values at a time (x64 + intrinsics)
-				{
-					var ptr = notPrimeEvery2nd;
-					{
-						var loops = halfMax >> 3;
-						for (nint i = 0; i < loops; i++)
-						{
-							primeCount += 8 - (nint)Popcnt.X64.PopCount(((ulong*)ptr)[i]);
-						}
-						for (nint i = loops << 3; i < halfMax; i++)
-						{
-							if (!notPrimeEvery2nd[i]) primeCount++;
-						}
-					}
-				}
-				else if (Popcnt.IsSupported) //4 values at a time (x86 + intrinsics)
-				{
-					var ptr = notPrimeEvery2nd;
-					{
-						var loops = halfMax >> 2;
-						for (nint i = 0; i < loops; i++)
-						{
-							primeCount += 4 - (nint)Popcnt.PopCount(((uint*)ptr)[i]);
-						}
-						for (nint i = loops << 2; i < halfMax; i++)
-						{
-							if (!notPrimeEvery2nd[i]) primeCount++;
-						}
-					}
-				}
-				else //1 value at a time (fallback)
-				{
-					for (nint i = 0; i < halfMax; i++)
-					{
-						if (!notPrimeEvery2nd[i]) primeCount++;
-					}
-				}
-			}
-			if (values == null) Marshal.FreeHGlobal((IntPtr)notPrimeEvery2nd);
-			return primeCount;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)] //not sure if this does anything for this method or not
-		public static nint CalculateSieveOptimizedUnmanaged1Bit(nint max, bool vectorize, byte** values)
+		private void RunSieve3()
 		{
-			if (max <= 2) return max == 2 ? 1 : 0;
-
-			var halfMax = (max - 1) >> 1;
-			var bytesMax = (halfMax + 7) >> 3;
-			byte* notPrimeEvery2nd = (byte*)Marshal.AllocHGlobal(bytesMax); //packed bits that represent the primes, starting in index 0: (low to high bit is 3, 5, 7, 9, 11, 13, 15, 17), etc.
-			{
-				if (values != null) *values = notPrimeEvery2nd;
-				if (vectorize)
-				{
-					var loops = bytesMax >> 5;
-					for (nint i = 0; i < loops; i++)
-					{
-						((Vector256<byte>*)notPrimeEvery2nd)[i] = default;
-					}
-					Unsafe.InitBlockUnaligned(notPrimeEvery2nd + (loops << 5), 0, (uint)(bytesMax - (loops << 5)));
-				}
-				else
-				{
-					for (nint i = 0; i < bytesMax; i++)
-					{
-						notPrimeEvery2nd[i] = default;
-					}
-				}
-			}
-
+			var notPrimeEvery2nd = (byte*)dataPtr;
+			
 			nint factorIndex = 0; //equal to (factor - 3) / 2
 			nint q;
 			if (max <= 16_777_216)
@@ -354,8 +346,154 @@ namespace FastSieve
 
 				factorIndex++;
 			}
+		}
+
+		public nint CountPrimes()
+		{
+			if (disposedValue) throw new ObjectDisposedException("this", "Sieve is already disposed");
+			if (!initialized) throw new Exception("Not initialized");
+			if (!run) throw new Exception("Not run");
+
+			if (max <= 2) return max == 2 ? 1 : 0;
+			if (type == 0) return Count0();
+			else if (type == 1) return Count1();
+			else if (type == 2) return Count2();
+			else /*if (type == 3)*/ return Count3();
+		}
+
+		private nint Count0()
+		{
+			var notPrime = dataArray;
 
 			nint primeCount = 1;
+			for (nint i = 3; i <= max; i += 2)
+			{
+				if (!notPrime[i]) primeCount++;
+			}
+
+			return primeCount;
+		}
+
+		private nint Count1()
+		{
+			var notPrimeEvery2nd = dataArray;
+
+			nint primeCount = 1;
+
+			if (!vectorize) //same as 1 value at a time (fallback)
+			{
+				for (nint i = 0; i < halfMax; i++)
+				{
+					if (!notPrimeEvery2nd[i]) primeCount++;
+				}
+			}
+			else
+			{
+				if (Popcnt.X64.IsSupported) //8 values at a time (x64 + intrinsics)
+				{
+					fixed (bool* ptr = notPrimeEvery2nd)
+					{
+						var loops = halfMax >> 3;
+						for (nint i = 0; i < loops; i++)
+						{
+							primeCount += 8 - (nint)Popcnt.X64.PopCount(((ulong*)ptr)[i]);
+						}
+						for (nint i = loops << 3; i < halfMax; i++)
+						{
+							if (!notPrimeEvery2nd[i]) primeCount++;
+						}
+					}
+				}
+				else if (Popcnt.IsSupported) //4 values at a time (x86 + intrinsics)
+				{
+					fixed (bool* ptr = notPrimeEvery2nd)
+					{
+						var loops = halfMax >> 2;
+						for (nint i = 0; i < loops; i++)
+						{
+							primeCount += 4 - (nint)Popcnt.PopCount(((uint*)ptr)[i]);
+						}
+						for (nint i = loops << 2; i < halfMax; i++)
+						{
+							if (!notPrimeEvery2nd[i]) primeCount++;
+						}
+					}
+				}
+				else //1 value at a time (fallback)
+				{
+					for (nint i = 0; i < halfMax; i++)
+					{
+						if (!notPrimeEvery2nd[i]) primeCount++;
+					}
+				}
+			}
+
+			return primeCount;
+		}
+
+		private nint Count2()
+		{
+			var notPrimeEvery2nd = (bool*)dataPtr;
+
+			nint primeCount = 1;
+
+			if (!vectorize) //same as 1 value at a time (fallback)
+			{
+				for (nint i = 0; i < halfMax; i++)
+				{
+					if (!notPrimeEvery2nd[i]) primeCount++;
+				}
+			}
+			else
+			{
+				if (Popcnt.X64.IsSupported) //8 values at a time (x64 + intrinsics)
+				{
+					var ptr = notPrimeEvery2nd;
+					{
+						var loops = halfMax >> 3;
+						for (nint i = 0; i < loops; i++)
+						{
+							primeCount += 8 - (nint)Popcnt.X64.PopCount(((ulong*)ptr)[i]);
+						}
+						for (nint i = loops << 3; i < halfMax; i++)
+						{
+							if (!notPrimeEvery2nd[i]) primeCount++;
+						}
+					}
+				}
+				else if (Popcnt.IsSupported) //4 values at a time (x86 + intrinsics)
+				{
+					var ptr = notPrimeEvery2nd;
+					{
+						var loops = halfMax >> 2;
+						for (nint i = 0; i < loops; i++)
+						{
+							primeCount += 4 - (nint)Popcnt.PopCount(((uint*)ptr)[i]);
+						}
+						for (nint i = loops << 2; i < halfMax; i++)
+						{
+							if (!notPrimeEvery2nd[i]) primeCount++;
+						}
+					}
+				}
+				else //1 value at a time (fallback)
+				{
+					for (nint i = 0; i < halfMax; i++)
+					{
+						if (!notPrimeEvery2nd[i]) primeCount++;
+					}
+				}
+			}
+
+			return primeCount;
+		}
+
+		private nint Count3()
+		{
+			var notPrimeEvery2nd = (byte*)dataPtr;
+
+			nint primeCount = 1;
+
 			if (!vectorize) //same as 1 value at a time (fallback)
 			{
 				for (nint i = 0; i < bytesMax; i++)
@@ -403,9 +541,44 @@ namespace FastSieve
 					}
 				}
 			}
-			if (values == null) Marshal.FreeHGlobal((IntPtr)notPrimeEvery2nd);
+
 			return primeCount - ((bytesMax << 3) - halfMax);
 		}
+
+		private bool disposedValue;
+
+		private void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					//Dispose managed state (managed objects)
+				}
+
+				//Free unmanaged resources (unmanaged objects) and override finalizer
+				//Set large fields to null
+				dataArray = null;
+				if (dataPtr != null) Marshal.FreeHGlobal((IntPtr)dataPtr);
+
+				disposedValue = true;
+			}
+		}
+
+		~Sieve()
+		{
+		    //Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		    Dispose(disposing: false);
+		}
+
+		public void Dispose()
+		{
+			//Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+
+		//Static (essentially compile-time) constants:
 
 		//returns the popcount
 		private static readonly byte* PopcountByte = (byte*)Marshal.AllocHGlobal(256);

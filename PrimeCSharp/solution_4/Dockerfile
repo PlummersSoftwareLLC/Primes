@@ -10,10 +10,12 @@ COPY ["Program.cs", "."]
 COPY ["Sieve.cs", "."]
 RUN dotnet restore "./FastSieve.csproj"
 WORKDIR "/src/."
-RUN dotnet build "FastSieve.csproj" -c Release -o /app/publish
+RUN dotnet build "FastSieve.csproj" -c Release -o /app/build
 
-#Publish step intentionally removed as I got better perf w/o it
+FROM build AS publish
+RUN dotnet publish "FastSieve.csproj" -c Release -o /app/publish
+
 FROM base AS final
 WORKDIR /app
-COPY --from=build /app/publish .
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "FastSieve.dll"]

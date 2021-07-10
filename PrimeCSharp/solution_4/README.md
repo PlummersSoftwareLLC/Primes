@@ -1,18 +1,18 @@
 
 # C# solution by hamarb123
 
-![Algorithm](https://img.shields.io/badge/Algorithm-base-green) ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green) ![Parallelism](https://img.shields.io/badge/Parallel-no-green) ![Bit count](https://img.shields.io/badge/Bits-8-green) ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green) ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green) ![Faithfulness](https://img.shields.io/badge/Faithful-no-green) ![Parallelism](https://img.shields.io/badge/Parallel-no-green) ![Bit count](https://img.shields.io/badge/Bits-8-green) ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 # Speed
 On my MBP 15in 2018 with i9 8950HK (in docker), the results are as follows for 5 seconds:
 ```
-hamarb123_optimized,unmanaged,vectorized,onebit => 6837 repeats
-hamarb123_optimized,unmanaged,onebit => 6112 repeats
-hamarb123_optimized,unmanaged,vectorized => 7458 repeats
-hamarb123_optimized,unmanaged => 3017 repeats
-hamarb123_optimized,vectorized => 6172 repeats
-hamarb123_optimized => 2993 repeats
-hamarb123_standard => 2490 repeats
+hamarb123_optimized,unmanaged,vectorized,onebit => 6759 repeats
+hamarb123_optimized,unmanaged,onebit => 6254 repeats
+hamarb123_optimized,unmanaged,vectorized => 7393 repeats
+hamarb123_optimized,unmanaged => 2940 repeats
+hamarb123_optimized,vectorized => 5624 repeats
+hamarb123_optimized => 2859 repeats
+hamarb123_standard => 2492 repeats
 ```
 
 # Variants:
