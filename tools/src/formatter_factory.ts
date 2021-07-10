@@ -1,5 +1,6 @@
 import { IFormatter } from './formatter';
 import { JSONFormatter } from './formatters/json';
+import { MarkdownFormatter } from './formatters/markdown';
 import { TableFormatter } from './formatters/table';
 import { CsvFormatter } from './formatters/text';
 
@@ -12,6 +13,9 @@ export default class FormatterFactory {
         return new TableFormatter();
       case 'csv':
         return new CsvFormatter();
+      case 'markdown':
+      case 'md':
+        return new MarkdownFormatter();
       default:
         return new TableFormatter();
     }

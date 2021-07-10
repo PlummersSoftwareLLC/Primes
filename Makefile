@@ -30,6 +30,11 @@ report: check-node-works benchmark
 	@cd tools/; \
 	npm ci && npm start -- report -d "$(OUTPUT_DIR)" -f "$(FORMATTER)"
 
+.PHONY: results
+results: check-node-works benchmark
+	@cd tools/; \
+	npm ci && npm start -- report -d "$(OUTPUT_DIR)" -f markdown
+
 .PHONY: one
 one: check-env
 	@if [[ ! -z "$${SOLUTION}" ]]; then \
