@@ -12,7 +12,10 @@ let primeCounts = Map.ofList([
     100000000, 5761455
 ]) 
 
-let initPrimeSieve sieveSize = Array.init sieveSize (fun _ -> true)
+let inline initPrimeSieve sieveSize = 
+    let raw = GC.AllocateUninitializedArray(sieveSize, true).AsSpan()
+    raw.Fill(true)
+    raw
 
 let filterPrimes bitArray =
     [|3..2..Array.length bitArray|]
@@ -25,20 +28,20 @@ let validateResults primeCounts sieveSize primes =
     | Some expected -> expected = countPrimes primes
     | None -> false
 
-let runSieve sieveSize (bitArray: byref<bool[]>) =
+let runSieve sieveSize (bitArray: Span<bool>) =
     let mutable factor = 3
     let mutable num = 0
     let q = sieveSize |> float |> sqrt |> int
 
     while factor <= q do
         num <- factor
-        while not (Array.get bitArray num) && num < sieveSize do
+        while not (bitArray.Item num) && num < sieveSize do
             num <- num + 2
         factor <- num
 
         num <- factor * factor
         while num < sieveSize do
-            Array.set bitArray num false
+            bitArray.Item num <- false
             num <- num + factor * 2
 
         factor <- factor + 2
@@ -52,7 +55,7 @@ let printResults showResults duration passes sieveSize bitArray =
     printfn $"Passes: %d{passes}, Time: %f{duration}, Avg: %f{duration / (float passes)}, Limit: %d{sieveSize}, Count: %d{countPrimes primes}, Valid: %b{isValid}\n"
 
     if isValid then
-        printfn $"dmannock_fsharp_port;%d{passes};%f{duration};1;algorithm=base,faithful=yes,bits=1"
+        printfn $"dmannock_fsharp_port;%d{passes};%f{duration};1;algorithm=base,faithful=yes"
     else
         printfn "ERROR: invalid results"
 
@@ -66,9 +69,9 @@ let main _ =
 
     while (DateTime.UtcNow - tStart).TotalSeconds < 5. do
         sieve <- initPrimeSieve sieveSize
-        runSieve sieveSize &sieve
+        runSieve sieveSize sieve
         passes <- passes + 1
 
     let duration = (DateTime.UtcNow - tStart).TotalSeconds
-    printResults false duration passes sieveSize sieve
+    printResults false duration passes sieveSize (sieve.ToArray())
     0 // return an integer exit code

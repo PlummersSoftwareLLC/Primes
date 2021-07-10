@@ -12,7 +12,10 @@ let primeCounts = Map.ofList([
     100000000, 5761455
 ]) 
 
-let initPrimeSieve sieveSize = Array.init sieveSize (fun _ -> true)
+let inline initPrimeSieve sieveSize = 
+    let raw = GC.AllocateUninitializedArray(sieveSize, true)
+    raw.AsSpan().Fill(true)
+    raw
 
 let filterPrimes bitArray =
     [|3..2..Array.length bitArray|]
@@ -25,7 +28,7 @@ let validateResults primeCounts sieveSize primes =
     | Some expected -> expected = countPrimes primes
     | None -> false
 
-let runSieve sieveSize (bitArray: bool[]) =
+let inline runSieve sieveSize (bitArray: bool[]) =
     let q = sieveSize |> float |> sqrt |> int
 
     let rec findNext num =
@@ -33,12 +36,11 @@ let runSieve sieveSize (bitArray: bool[]) =
         then num
         else findNext (num + 2)
 
-    let eliminate factor =
+    let inline eliminate factor =
         let rec loop num =
             if num < sieveSize then
                 Array.set bitArray num false
                 loop (num + factor * 2)
-            else ()
         loop (factor * factor)
       
     let rec run factor =
@@ -46,7 +48,6 @@ let runSieve sieveSize (bitArray: bool[]) =
             let factor = findNext factor
             eliminate factor
             run (factor +  2)
-        else ()
     run 3
 
 let printResults showResults duration passes sieveSize bitArray =
@@ -58,7 +59,7 @@ let printResults showResults duration passes sieveSize bitArray =
     printfn $"Passes: %d{passes}, Time: %f{duration}, Avg: %f{duration / (float passes)}, Limit: %d{sieveSize}, Count: %d{countPrimes primes}, Valid: %b{isValid}\n"
 
     if isValid then
-        printfn $"dmannock_fsharp_recursion;%d{passes};%f{duration};1;algorithm=base,faithful=yes,bits=1"
+        printfn $"dmannock_fsharp_recursion;%d{passes};%f{duration};1;algorithm=base,faithful=yes"
     else
         printfn "ERROR: invalid results"
 

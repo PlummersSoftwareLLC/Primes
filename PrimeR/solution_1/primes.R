@@ -15,7 +15,10 @@ knownPrimeCounts <- c(
 
 prime_sieve <- setRefClass("prime_sieve",
     fields = list (
-        limit_input="numeric"
+        limit_input="numeric",
+        limit="numeric",
+        bit_size="numeric",
+        bit_array="vector"
     ),
     methods = list (
         # constructor workaround
@@ -43,19 +46,19 @@ prime_sieve <- setRefClass("prime_sieve",
 
             factor <- 1
             while(factor <= maxroot_index){
-                # cross out all factors
-                prime <- factor * 2 +1
-                start <- ( ((prime * prime) -1) /2 )
-                step <- factor * 2 + 1
-                
-                # propagate
-                bit_array[seq.int(from=start, to=bit_size, by=step)] <- FALSE
-
-                # determine new factor
-                factor <- factor + min(which(bit_array[(factor + 1) : bit_size]))
+                if (bit_array[factor] == TRUE) {
+                    # cross out all factors
+                    prime <- factor * 2 +1
+                    start <- ( ((prime * prime) -1) /2 )
+                    step <- factor * 2 + 1
+                    
+                    # propagate
+                    bit_array[seq.int(from=start, to=bit_size, by=step)] <- FALSE
+                } 
+                factor <- factor + 1
             }
             # store the calculated new array
-            bit_array <<-bit_array
+           bit_array <<-bit_array
         },
         # hard coded add 2
         # convert bit index mumbers back to prime numbers
@@ -102,14 +105,14 @@ prime_sieve <- setRefClass("prime_sieve",
 
 main <-function(time_limit,limit,show_results) {
     # get time in sec
-    start <- as.numeric(format(Sys.time(), "%OS3"))
+    start <- proc.time()[3]
     passes <- 0
     while (TRUE) {
         passes <- passes + 1
         sieve <- prime_sieve$new()
         sieve$init_fields(limit)
         sieve$run_sieve()
-        now <- as.numeric(format(Sys.time(), "%OS3"))
+        now <- proc.time()[3]
         duration <- now - start
         if (duration > time_limit) {
             sieve$print_results(limit, show_results, duration, passes)
