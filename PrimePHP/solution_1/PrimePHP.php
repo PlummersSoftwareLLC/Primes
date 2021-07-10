@@ -60,11 +60,13 @@ class PrimeSieve
 
     public function printResults(): void
     {
+        echo "2, ";
         for ($i = 3; $i < $this->sieveSize; $i++) {
             if ($i % 2 && $this->rawbits[$i / 2]) {
                 echo $i . ", ";
             }
         }
+        echo "\n";
     }
 
     public function getRawbitCount(): int
