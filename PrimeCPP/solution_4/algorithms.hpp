@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <climits>
@@ -82,7 +83,13 @@ class PreGenerated {
     }
 };
 
-template<typename Storage, std::size_t WheelSize, bool ConstantStride = false, bool HalfStorage = false>
+enum class DynStride {
+    NONE,
+    OUTER,
+    BOTH,
+};
+
+template<typename Storage, std::size_t WheelSize, DynStride Stride = DynStride::OUTER, bool HalfStorage = true>
 class GenericSieve {
   public:
     GenericSieve() : m_sieveSize(0), m_bits(0) {}
@@ -90,20 +97,23 @@ class GenericSieve {
 
     inline void runSieve()
     {
-        constexpr auto strider = [](auto& idx) {
-            if constexpr(ConstantStride) {
-                return (WheelSize > 0 && !HalfStorage) ? 2 : 1;
+        constexpr auto true_v = std::bool_constant<true>{};
+        constexpr auto false_v = std::bool_constant<false>{};
+
+        constexpr auto strider = []<bool Outer>(auto& idx, std::bool_constant<Outer>) {
+            if constexpr(Stride == DynStride::BOTH || (Outer && Stride == DynStride::OUTER)) {
+                return WHEEL_INC[++idx];
             }
             else {
-                return WHEEL_INC[++idx];
+                return (WheelSize > 0 && !HalfStorage) ? 2 : 1;
             }
         };
 
         const auto sieveSize = m_sieveSize / (HalfStorage ? 2 : 1);
 
         auto wheelIdx = idx_t{};
-        for(auto i = START_NUM; i * i <= sieveSize; i += strider(wheelIdx)) {
-            for(auto num = i; i <= sieveSize; num += strider(wheelIdx)) {
+        for(auto i = START_NUM; i * i <= sieveSize; i += strider(wheelIdx, true_v)) {
+            for(auto num = i; i <= sieveSize; num += strider(wheelIdx, true_v)) {
                 if(m_bits[num]) {
                     i = num;
                     break;
@@ -113,7 +123,7 @@ class GenericSieve {
             auto strideIdx = wheelIdx;
             const auto factor = HalfStorage ? (i * 2 + 1) : i;
             const auto start = (factor * factor) / (HalfStorage ? 2 : 1);
-            for(auto num = start; num <= sieveSize; num += factor * strider(strideIdx)) {
+            for(auto num = start; num <= sieveSize; num += factor * strider(strideIdx, false_v)) {
                 m_bits[num] = false;
             }
         }
@@ -144,7 +154,9 @@ class GenericSieve {
 
         auto name = std::string{"BlackMark"};
         name += "-" + std::to_string(check) + "of" + std::to_string(total) + "-";
-        name += (ConstantStride) ? "cs-" : "ds-";
+        name += (Stride == DynStride::NONE) ? "cs-" : "";
+        name += (Stride == DynStride::OUTER) ? "os-" : "";
+        name += (Stride == DynStride::BOTH) ? "bs-" : "";
         name += (HalfStorage) ? "hs-" : "fs-";
         name += m_bits;
         const auto algorithm = (check == 1) ? "base" : "wheel";

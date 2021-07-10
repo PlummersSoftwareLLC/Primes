@@ -124,9 +124,9 @@ template<std::size_t SieveSize, template<typename, auto, typename> typename Runn
 static inline auto runAll(const Time& runTime, const bool parallelize = true)
 {
     constexpr auto wheels = std::tuple{0, 1, 2, 3, 4, 5, 6, 7};
-    constexpr auto strides = std::tuple{true, false};
-    constexpr auto storages = std::tuple{true, false};
-    constexpr auto inverted = std::tuple{true, false};
+    constexpr auto strides = std::tuple{DynStride::NONE, DynStride::OUTER, DynStride::BOTH};
+    constexpr auto sizes = std::tuple{true, false};
+    constexpr auto inverts = std::tuple{true, false};
     using types_t = std::tuple<bool, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t>;
 
     auto runnerResults = std::vector<std::future<bool>>{};
@@ -138,17 +138,17 @@ static inline auto runAll(const Time& runTime, const bool parallelize = true)
                 [&](const auto strideIdx) {
                     constexpr auto stride = std::get<strideIdx.value>(strides);
                     utils::for_constexpr(
-                        [&](const auto storageIdx) {
-                            constexpr auto storage = std::get<storageIdx.value>(storages);
+                        [&](const auto sizeIdx) {
+                            constexpr auto size = std::get<sizeIdx.value>(sizes);
                             utils::for_constexpr(
-                                [&](const auto invertedIdx) {
-                                    constexpr auto inv = std::get<invertedIdx.value>(inverted);
+                                [&](const auto invertIdx) {
+                                    constexpr auto inverted = std::get<invertIdx.value>(inverts);
                                     utils::for_constexpr(
                                         [&](const auto typeIdx) {
-                                            if constexpr(!(storage && wheelSize == 0)) {
+                                            if constexpr(!(size && wheelSize == 0)) {
                                                 using type_t = std::tuple_element_t<typeIdx.value, types_t>;
-                                                using vector_runner_t = GenericSieve<VectorStorage<type_t, inv>, wheelSize, stride, storage>;
-                                                using bit_runner_t = GenericSieve<BitStorage<type_t, inv>, wheelSize, stride, storage>;
+                                                using vector_runner_t = GenericSieve<VectorStorage<type_t, inverted>, wheelSize, stride, size>;
+                                                using bit_runner_t = GenericSieve<BitStorage<type_t, inverted>, wheelSize, stride, size>;
 
                                                 moveAppend(runnerResults, parallelRunner<RunnerT<vector_runner_t, SieveSize, Time>>(runTime, parallelize));
 
@@ -159,9 +159,9 @@ static inline auto runAll(const Time& runTime, const bool parallelize = true)
                                         },
                                         std::make_index_sequence<std::tuple_size_v<types_t>>{});
                                 },
-                                std::make_index_sequence<std::tuple_size_v<decltype(inverted)>>{});
+                                std::make_index_sequence<std::tuple_size_v<decltype(inverts)>>{});
                         },
-                        std::make_index_sequence<std::tuple_size_v<decltype(storages)>>{});
+                        std::make_index_sequence<std::tuple_size_v<decltype(sizes)>>{});
                 },
                 std::make_index_sequence<std::tuple_size_v<decltype(strides)>>{});
         },
@@ -195,42 +195,24 @@ template<std::size_t SieveSize>
     auto res = std::vector<std::future<bool>>{};
     // clang-format off
     using runners_t = std::tuple<
-                                 GenericSieve<VectorStorage<bool>, 1, true, true>,
-                                 GenericSieve<VectorStorage<bool>, 1, true, false>,
-                                 GenericSieve<VectorStorage<std::uint8_t>, 1, true, true>,
-                                 GenericSieve<VectorStorage<std::uint8_t>, 1, true, false>,
-                                 GenericSieve<VectorStorage<std::uint16_t>, 1, true, true>,
-                                 GenericSieve<VectorStorage<std::uint16_t>, 1, true, false>,
-                                 GenericSieve<VectorStorage<std::uint32_t>, 1, true, true>,
-                                 GenericSieve<VectorStorage<std::uint32_t>, 1, true, false>,
-                                 GenericSieve<VectorStorage<std::uint64_t>, 1, true, true>,
-                                 GenericSieve<VectorStorage<std::uint64_t>, 1, true, false>,
-                                 GenericSieve<BitStorage<std::uint8_t>, 1, true, true>,
-                                 GenericSieve<BitStorage<std::uint8_t>, 1, true, false>,
-                                 GenericSieve<BitStorage<std::uint16_t>, 1, true, true>,
-                                 GenericSieve<BitStorage<std::uint16_t>, 1, true, false>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 1, true, true>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 1, true, false>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 1, true, true>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 1, true, false>,
-                                 GenericSieve<VectorStorage<bool>, 1, false, true>,
-                                 GenericSieve<VectorStorage<bool>, 1, false, false>,
-                                 GenericSieve<VectorStorage<std::uint8_t>, 1, false, true>,
-                                 GenericSieve<VectorStorage<std::uint8_t>, 1, false, false>,
-                                 GenericSieve<VectorStorage<std::uint16_t>, 1, false, true>,
-                                 GenericSieve<VectorStorage<std::uint16_t>, 1, false, false>,
-                                 GenericSieve<VectorStorage<std::uint32_t>, 1, false, true>,
-                                 GenericSieve<VectorStorage<std::uint32_t>, 1, false, false>,
-                                 GenericSieve<VectorStorage<std::uint64_t>, 1, false, true>,
-                                 GenericSieve<VectorStorage<std::uint64_t>, 1, false, false>,
-                                 GenericSieve<BitStorage<std::uint8_t>, 1, false, true>,
-                                 GenericSieve<BitStorage<std::uint8_t>, 1, false, false>,
-                                 GenericSieve<BitStorage<std::uint16_t>, 1, false, true>,
-                                 GenericSieve<BitStorage<std::uint16_t>, 1, false, false>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 1, false, true>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 1, false, false>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 1, false, true>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 1, false, false>
+                                 GenericSieve<VectorStorage<bool>, 6, DynStride::NONE, true>,
+                                 GenericSieve<VectorStorage<bool>, 6, DynStride::NONE, false>,
+                                 GenericSieve<VectorStorage<bool>, 6, DynStride::OUTER, true>,
+                                 GenericSieve<VectorStorage<bool>, 6, DynStride::OUTER, false>,
+                                 GenericSieve<VectorStorage<bool>, 6, DynStride::BOTH, true>,
+                                 GenericSieve<VectorStorage<bool>, 6, DynStride::BOTH, false>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::NONE, true>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::NONE, false>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::OUTER, true>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::OUTER, false>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::BOTH, true>,
+                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::BOTH, false>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::NONE, true>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::NONE, false>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::OUTER, true>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::OUTER, false>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::BOTH, true>,
+                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::BOTH, false>
                                 >;
     // clang-format on
 
