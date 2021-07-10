@@ -147,6 +147,7 @@ export class MarkdownFormatter implements IFormatter {
       }
     });
     chart.setWidth(838);
+    chart.setHeight(results.length * 25 + 38)
     return chart;
   }
 }
