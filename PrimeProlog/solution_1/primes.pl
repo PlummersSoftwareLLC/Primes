@@ -16,14 +16,15 @@ main(Argv) :-
 timed_primes(_, RemT, 0) :-
   RemT < 0,
   !.
-timed_primes(N, RemT, I0+1) :-
+timed_primes(N, RemT, I1) :-
   statistics(walltime, [T0|_]),
   primes(N, Ps),
   length(Ps, Count),
   prime_count(N, Count),
   statistics(walltime, [T1|_]),
   RemT1 is RemT - T1 + T0,
-  timed_primes(N, RemT1, I0).
+  timed_primes(N, RemT1, I0),
+  I1 is I0 + 1.
 
 prime_count(10, 4).
 prime_count(100, 25).
@@ -43,7 +44,7 @@ primes(N, Ps) :-
 sieve(State0, P0, [P0|Ps1]) :-
   state(N, Bs0) = State0,
   P0 =< N,
-  0 is getbit(Bs0, P0 div 2),
+  0 is getbit(Bs0, P0 div 2 - 1),
   !,
   Start is P0 * P0,
   Skip is P0 * 2,
@@ -63,6 +64,6 @@ setbits(Skip, M0, State0, State1) :-
   ( M0 > N ->
     State1 = State0
   ; M1 is M0 + Skip,
-    Bs1 is Bs0 \/ (1 << (M0 div 2)), 
+    Bs1 is Bs0 \/ (1 << (M0 div 2 - 1)), 
     setbits(Skip, M1, state(N, Bs1), State1)
   ).
