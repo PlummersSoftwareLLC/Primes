@@ -27,11 +27,11 @@ In passes per second per thread
 
 * cpu:
   * manufacturer: Intel®
-  * brand: Xeon® Platinum 8272CL
+  * brand: Xeon® Platinum 8171M
   * vendor: GenuineIntel
   * family: 6
   * model: 85
-  * stepping: 7
+  * stepping: 4
   * revision: 
   * voltage: 
   * speed: 2.6
