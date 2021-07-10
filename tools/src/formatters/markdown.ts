@@ -114,6 +114,10 @@ export class MarkdownFormatter implements IFormatter {
   }
 
   private makeChart(results: Result[], logarithmic: boolean): QuickChart {
+    results = results.sort(
+      (a, b) =>
+        b.passes / b.duration / b.threads - a.passes / a.duration / a.threads
+    );
     const chart = new QuickChart();
     chart.setConfig({
       type: 'horizontalBar',
@@ -147,7 +151,7 @@ export class MarkdownFormatter implements IFormatter {
       }
     });
     chart.setWidth(838);
-    chart.setHeight(results.length * 25 + 38)
+    chart.setHeight(results.length * 25 + 38);
     return chart;
   }
 }
