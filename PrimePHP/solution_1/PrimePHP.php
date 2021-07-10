@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 class PrimeSieve
 {
-    private array $rawbits;
+    private array $rawbits = array();
 
     private int $sieveSize;
     private int $rawBitsSize;
@@ -48,9 +48,8 @@ class PrimeSieve
                 }
             }
 
-            $ft2 = $factor * 1;
             $start = ($factor * $factor) / 2;
-            for ($i = $start; $i <= $this->rawBitsSize; $i += $ft2) {
+            for ($i = $start; $i <= $this->rawBitsSize; $i += $factor) {
                 $rb[$i] = 0;
             }
 
@@ -61,7 +60,7 @@ class PrimeSieve
 
     public function printResults(): void
     {
-        for ($i = 0; $i < $this->sieveSize; $i++) {
+        for ($i = 3; $i < $this->sieveSize; $i++) {
             if ($i % 2 && $this->rawbits[$i / 2]) {
                 echo $i . ", ";
             }
@@ -70,7 +69,7 @@ class PrimeSieve
 
     public function getRawbitCount(): int
     {
-        return array_sum($this->rawbits);
+        return isset($this->rawbits) ? array_sum($this->rawbits) : 0;
     }
 }
 
