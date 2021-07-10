@@ -1,0 +1,24 @@
+name: Build Results
+
+on: [ push, workflow_dispatch ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Render Markdown"
+        run: make results
+
+      - name: "Push to GitHub"
+        run: |
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git config user.name github-actions[bot]
+
+          git add images/ RESULTS.md
+          git commit -m "Update results"
+
+          git push origin master
