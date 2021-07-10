@@ -14,7 +14,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <cstring>
 
 #include "algorithms.hpp"
@@ -59,7 +58,7 @@ struct Runner {
                 ++passes;
                 if(end = std::chrono::high_resolution_clock::now(); end - start >= runTime) {
                     if(!validate(SieveSize, sieve.countPrimes())) {
-                        std::printf("Error: Results not valid!\n");
+                        std::cout << "Error: Results not valid!" << std::endl;
                         error = true;
                     }
                     break;
@@ -95,9 +94,8 @@ struct Runner {
             const auto durationS = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() / 1'000'000.0;
 
             const auto name = config.name + "-" + detail::getCompilerName();
-            std::printf("%s;%lu;%f;%lu;algorithm=%s,faithful=%s,bits=%lu\n", name.c_str(), totalPasses, durationS, numThreads, config.algorithm.c_str(),
-                        config.faithful ? "yes" : "no", config.bits);
-            std::fflush(stdout);
+            std::cout << name << ";" << totalPasses << ";" << durationS << ";" << numThreads << ";algorithm=" << config.algorithm
+                      << ";faithful=" << (config.faithful ? "yes" : "no") << ";bits=" << config.bits << std::endl;
             return !error;
         });
         res.wait();
