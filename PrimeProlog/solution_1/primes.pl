@@ -40,26 +40,29 @@ primes(N, Ps) :-
   ; sieve(state(N, 0), 3, Ps1), Ps = [2|Ps1]
   ).
 
-sieve(state(N, Bs0), P0, [P0|Ps1]) :-
+sieve(State0, P0, [P0|Ps1]) :-
+  state(N, Bs0) = State0,
   P0 =< N,
   0 is getbit(Bs0, P0 div 2),
   !,
   Start is P0 * P0,
   Skip is P0 * 2,
-  setbits(N, Skip, Start, Bs0, Bs1),
+  setbits(Skip, Start, State0, State1),
   P1 is P0 + 2,
-  sieve(state(N, Bs1), P1, Ps1).
-sieve(state(N, Bs), P0, Ps) :-
+  sieve(State1, P1, Ps1).
+sieve(State, P0, Ps) :-
+  state(N, _) = State, 
   P0 =< N,
   !,
   P1 is P0 + 2,
-  sieve(state(N, Bs), P1, Ps).
+  sieve(State, P1, Ps).
 sieve(_, _, []).
 
-setbits(N, Skip, M0, Bs0, Bs) :-
+setbits(Skip, M0, State0, State1) :-
+  state(N, Bs0) = State0,
   ( M0 > N ->
-    Bs = Bs0
+    State1 = State0
   ; M1 is M0 + Skip,
     Bs1 is Bs0 \/ (1 << (M0 div 2)), 
-    setbits(N, Skip, M1, Bs1, Bs)
+    setbits(Skip, M1, state(N, Bs1), State1)
   ).
