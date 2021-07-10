@@ -4,6 +4,7 @@ on: [ push, workflow_dispatch ]
 
 jobs:
   build:
+    if: github.repository == 'PlummersSoftwareLLC/Primes'
     runs-on: ubuntu-20.04
 
     steps:
