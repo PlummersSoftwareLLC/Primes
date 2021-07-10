@@ -30,7 +30,7 @@ $ docker run --rm prolog-primes
 ```
 $ swipl -O -o primes -c ./primes.pl
 $ ./primes
-jimbxb_prolog;1;7.271000;1;algorithm=base,faithful=no,bits=1
+jimbxb_prolog;1;7.271000;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Author
