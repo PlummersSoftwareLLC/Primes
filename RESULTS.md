@@ -27,14 +27,14 @@ In passes per second per thread
 
 * cpu:
   * manufacturer: Intel®
-  * brand: Xeon® Platinum 8171M
+  * brand: Xeon® E5-2673 v4
   * vendor: GenuineIntel
   * family: 6
-  * model: 85
-  * stepping: 4
+  * model: 79
+  * stepping: 1
   * revision: 
   * voltage: 
-  * speed: 2.6
+  * speed: 2.3
   * speedMin: NaN
   * speedMax: NaN
   * governor: 
@@ -44,13 +44,13 @@ In passes per second per thread
   * performanceCores: unknown
   * processors: 1
   * socket: 
-  * flags: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single pti fsgsbase bmi1 hle avx2 smep bmi2 erms invpcid rtm mpx avx512f avx512dq rdseed adx smap clflushopt avx512cd avx512bw avx512vl xsaveopt xsavec xsaves md_clear
+  * flags: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single pti fsgsbase bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt md_clear
   * virtualization: False
   * cache:
     * l1d: 65536
     * l1i: 65536
-    * l2: 2
-    * l3: 35
+    * l2: 524288
+    * l3: 50
 * os:
   * platform: linux
   * distro: Ubuntu
@@ -80,5 +80,5 @@ In passes per second per thread
   * osType: linux
   * architecture: x86_64
   * ncpu: 2
-  * memTotal: 7291699200
+  * memTotal: 7291695104
   * serverVersion: 20.10.6+azure
