@@ -195,24 +195,12 @@ template<std::size_t SieveSize>
     auto res = std::vector<std::future<bool>>{};
     // clang-format off
     using runners_t = std::tuple<
-                                 GenericSieve<VectorStorage<bool>, 6, DynStride::NONE, true>,
-                                 GenericSieve<VectorStorage<bool>, 6, DynStride::NONE, false>,
-                                 GenericSieve<VectorStorage<bool>, 6, DynStride::OUTER, true>,
-                                 GenericSieve<VectorStorage<bool>, 6, DynStride::OUTER, false>,
-                                 GenericSieve<VectorStorage<bool>, 6, DynStride::BOTH, true>,
-                                 GenericSieve<VectorStorage<bool>, 6, DynStride::BOTH, false>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::NONE, true>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::NONE, false>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::OUTER, true>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::OUTER, false>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::BOTH, true>,
-                                 GenericSieve<BitStorage<std::uint32_t>, 6, DynStride::BOTH, false>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::NONE, true>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::NONE, false>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::OUTER, true>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::OUTER, false>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::BOTH, true>,
-                                 GenericSieve<BitStorage<std::uint64_t>, 6, DynStride::BOTH, false>
+                                 GenericSieve<VectorStorage<std::uint8_t, true>, 7, DynStride::OUTER, true>,
+                                 GenericSieve<BitStorage<std::uint32_t, true>, 7, DynStride::OUTER, true>,
+                                 GenericSieve<VectorStorage<std::uint8_t, true>, 6, DynStride::OUTER, true>,
+                                 GenericSieve<BitStorage<std::uint32_t, true>, 6, DynStride::OUTER, true>,
+                                 GenericSieve<VectorStorage<std::uint8_t, true>, 1, DynStride::NONE, true>,
+                                 GenericSieve<BitStorage<std::uint32_t, true>, 1, DynStride::OUTER, false>
                                 >;
     // clang-format on
 
