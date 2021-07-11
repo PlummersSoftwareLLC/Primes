@@ -1,5 +1,6 @@
 with Ada.Calendar;
 with Ada.Text_IO; use Ada.Text_IO;
+with Results;
 
 package body Prime_Sieves_Imp is
    package IIO is new Integer_IO (Integer);
@@ -16,8 +17,6 @@ package body Prime_Sieves_Imp is
 
    package BIO is new Enumeration_IO (Boolean);
    use BIO;
-
-   use type Result_Maps.Cursor;
 
    procedure Run (Sieve : in out Prime_Sieve) is
       Factor : Long_Integer := 3;
@@ -130,13 +129,13 @@ package body Prime_Sieves_Imp is
    end Count_Primes;
 
    function Validate_Results (Sieve : Prime_Sieve) return Boolean is
-      Result : constant Result_Maps.Cursor := Results.Find (Long_Integer (Sieve_Size));
+      Result : constant Long_Integer := Results.Find (Long_Integer (Sieve_Size));
    begin
-      if Result = Result_Maps.No_Element then
+      if Result = Results.No_Element then
          return False;
       end if;
 
-      return (Result_Maps.Element (Result) = Count_Primes (Sieve));
+      return (Result = Count_Primes (Sieve));
    end Validate_Results;
 
    procedure Generate is
@@ -167,15 +166,4 @@ package body Prime_Sieves_Imp is
          end;
       end loop Main_Loop;
    end Generate;
-begin
-   Results.Insert (            10,           4);
-   Results.Insert (           100,          25);
-   Results.Insert (         1_000,         168);
-   Results.Insert (        10_000,       1_229);
-   Results.Insert (       100_000,       9_592);
-   Results.Insert (     1_000_000,      78_498);
-   Results.Insert (    10_000_000,     664_579);
-   Results.Insert (   100_000_000,   5_761_455);
-   Results.Insert ( 1_000_000_000,  50_847_534);
-   Results.Insert (10_000_000_000, 455_052_511);
 end Prime_Sieves_Imp;
