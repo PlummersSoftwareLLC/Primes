@@ -25,7 +25,5 @@ package body Results is
          when others =>
             return No_Element;
       end case;
-
-      return No_Element; --  Won't ever get here.
    end Find;
 end Results;
