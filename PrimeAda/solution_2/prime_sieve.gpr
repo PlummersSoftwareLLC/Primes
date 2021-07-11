@@ -14,7 +14,7 @@ project Prime_Sieve is
       Ada_Style_Switches   := ("-gnat2012",
                                "-gnaty", "-gnaty-s", "-gnatyO", "-gnatyM120", "-gnatyx");
       Enable_Ada_Checks    := ("-gnata", "-gnato", "-gnatE", "-gnatwa");
-      Opt_Switches         := ("-Ofast", "-march=native", "-mtune=native", "-funroll-all-loops",
+      Opt_Switches         := ("-Ofast", "-march=native", "-mtune=native", "-funroll-all-loops", "-flto",
                                "-gnatp"   --  Suppress all checks
                               );
       Debug_Level_Switches := ("");
