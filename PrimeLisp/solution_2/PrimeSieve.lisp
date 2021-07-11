@@ -28,8 +28,8 @@
                    (floor (1+ sieve-size) 2)
                    :element-type 'bit
                    :initial-element 1))
-        (q (sqrt sieve-size)))
-    (declare (float q))
+        (q (floor (sqrt sieve-size))))
+    (declare (fixnum q))
     (do ((factor 3 (+ factor 2))) ((> factor q))
       (declare (fixnum factor))
 
@@ -52,16 +52,15 @@
 
 (let* ((passes 0)
        (start (get-internal-real-time))
-       (end (+ start (* internal-time-units-per-second 5))))
+       (end (+ start (* internal-time-units-per-second 5)))
+       result)
 
-  (prog (result)
-    (do () ((>= (get-internal-real-time) end))
-      (setq result (run-sieve 1000000))
-      (incf passes))
-  
-    (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
-           (avg (/ duration passes)))
-      (print (list "Passes:" passes "Time:" duration "Avg" avg "Count" (count-primes result)) *error-output*)
-      (terpri *error-output*)
-  
-      (format t "mayerrobert-cl;~d;~f;1;algorithm=base,faithful=no,bits=1~%" passes duration))))
+  (do () ((>= (get-internal-real-time) end))
+    (setq result (run-sieve 1000000))
+    (incf passes))
+
+  (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
+         (avg (/ duration passes)))
+    (format *error-output* "Passes: ~d  Time: ~f Avg: ~f ms Count: ~d~%" passes duration (* 1000 avg)  (count-primes result))
+
+    (format t "mayerrobert-cl;~d;~f;1;algorithm=base,faithful=no,bits=1~%" passes duration)))
