@@ -6,12 +6,14 @@
 ![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
 
 
-This implementation of the prime sieve is less faithful to the original C++ object-oriented design, going for a more 
+This implementation of the prime sieve is less faithful to the original C++ object-oriented design, going for a 
 functional design, which is more commonplace for R. Part of R's power comes through vectorised operations rather than
 relying on R's built-in for loops, which are usually slow. Vectorised R code typically translates to C-style for loops, 
-leading to muchmore efficient code. More on this [here](https://adv-r.hadley.nz/perf-improve.html#vectorise).
+leading to much more efficient code. More on this [here](https://adv-r.hadley.nz/perf-improve.html#vectorise).
+I'd like to thank @fvbakel for his [R solution](../solution_1), which is similar, but with a OOP design. I have adapted his
+`runSieve()` function into my solution for efficiency.
 
-As mentioned by Frank van Bakel, the author of R [solution 1](../solution_1), R's variables are all stored as vectors, and hence
+As mentioned by @fvbakel, the author of R [solution 1](../solution_1), R's variables are all stored as vectors, and hence
 are of variable size depending on the size of the vector (due to the overhead of the vector structure itself). For a vector of length 1,000,000,
 each stored int takes 32 bits.
 
@@ -42,14 +44,14 @@ docker run primes-r
 
 ## Output
 
-For full output with all prime numbers, set the first argument of `printResults()` on line 100 in [primes.R](./primes.R#L100) to `TRUE`.
-This will output the primes to stderr.
+For full output with all prime numbers, set the first argument of `printResults()` on line 104 in [primes.R](./primes.R#L104) to `TRUE`.
+This will output the primes to stderr. Regular output (with number of passes etc.) is output to stdout.
 
 Example Docker output from my machine:
 ```
 sudo docker run primes-r
-"Passes: 336, Time: 5.010000, Avg: 0.014911, Limit: 1000000, Count: 78498, Valid: TRUE"
-"nobrien97;336;5.010000;1;algorithm=base,faithful=no,bits=32"
+"Passes: 673, Time: 5.000000, Avg: 0.007429, Limit: 1000000, Count: 78498, Valid: TRUE"
+"nobrien97;673;5.000000;1;algorithm=base,faithful=no,bits=32"
 ```
 
 Running on:

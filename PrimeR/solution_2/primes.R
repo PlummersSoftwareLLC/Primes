@@ -29,41 +29,46 @@ validateResults <- function() {
 }
 
 runSieve <- function() {
-  fac <- 3
   # Maximum number of factors
-  q <- floor(sqrt(sieveSize))
-  # Walk through each factor, cross off multiples, and increment
-  while (fac <= q) {
-    # Vectorised assignment because R for loops are slow
-    notPrime <- seq.int(fac*fac, sieveSize, fac*2)
-    Bits[notPrime] <<- FALSE
+  maxfactor <- floor(sqrt(sieveSize))
+  # Maximum index to look for
+  maxfactor_index <- floor(maxfactor*0.5)
 
-    fac <- fac + 2
+  if (maxfactor %% 2 == 0)
+    maxfactor_index <- maxfactor_index - 1
+
+  # Walk through each factor, cross off multiples, and increment
+  # Here we treat 'factors' as indices in the bit array, which already excludes even numbers 
+  # This means we have to transform factors to the actual primes to evaluate them, but this is
+  # well worth it for the reduction in comparisons - courtesy of @fvbakel's solution
+  # I've changed the while loop to a for loop to reduce conditional checking, which somewhat
+  # improves performance
+
+  for (fac in seq.int(from=1, to=maxfactor_index)) {
+    if (Bits[fac] == TRUE) {
+      # Set factors to false
+      prime <- fac * 2 + 1
+      start <- ( ((prime * prime )-1)*0.5 )
+    # Vectorised subset because R for loops are slow
+      Bits[seq.int(from=start, to=bitSize, by=prime)] <<- FALSE
+    }
   }
 }
 
 
 printResults <- function(showResults, duration, passes) {
-  count <- (sieveSize >= 2)
-  
+  count <- sum(Bits) + 1
   if (showResults) {
-    nOutput <- 2
+    nOutput <- c(2L, which(Bits) * 2 + 1)
   }
   
-  for (i in seq(3, sieveSize+1, 2)) {
-    if (Bits[i] %in% TRUE) {
-      count <- count + 1
-      if (showResults)
-        nOutput <- c(nOutput, i)
-    }
-  }
-  
+
   cat(sprintf("Passes: %i, Time: %f, Avg: %f, Limit: %i, Count: %s, Valid: %s\n",
           passes,
           duration,
           duration/passes,
           sieveSize,
-          countPrimes(),
+          count,
           validateResults()), file = stdout())
   
   cat(sprintf("nobrien97;%d;%f;1;algorithm=base,faithful=no,bits=32\n", passes, duration), file = stdout())
@@ -71,33 +76,32 @@ printResults <- function(showResults, duration, passes) {
   if (showResults) {
     cat(nOutput, "\n", file = stderr())
   }
-  
-  
 }
 
 countPrimes <- function(showResults) {
-  count <- (sieveSize >= 2)
-  isPrimeSeq <- seq(3, sieveSize, 2)
-  count <- sum(count, Bits[isPrimeSeq] %in% TRUE)
-  return(count)
+  return(sum(Bits) + 1)
 }
 
 
 # Run the program
 
 passes <- 0
-tStart <- proc.time()
-
+tStart <- proc.time()[3]
 
 while(T) {
   sieveSize <- 1000000
-  Bits <- rep(T, sieveSize)
+  # Since we don't need to worry about even numbers we can remove them from our bit array
+  bitSize <- floor(sieveSize*0.5)
+  if (bitSize %% 2 == 0) {
+    bitSize <- bitSize - 1
+  }
+  Bits <- rep(T, bitSize)
   
   runSieve()
   passes <- passes + 1
-  tPass <- proc.time()
-  if((tPass[3] - tStart[3]) >= 5) {
-     printResults(FALSE, (tPass[3] - tStart[3]), passes)
+  tPass <- proc.time()[3]
+  if((tPass - tStart) >= 5) {
+     printResults(FALSE, (tPass - tStart), passes)
     break
   }
 }
