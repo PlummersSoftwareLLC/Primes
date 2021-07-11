@@ -113,7 +113,7 @@ cdef class PrimeSieve:
 
         # Following 2 lines added by rbergen to conform to drag race output format
         print();
-        print("rpkak+pointers; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
+        print("rpkak+byte-array; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
 
 
 # MAIN Entry

@@ -4,8 +4,8 @@ WORKDIR /root
 
 RUN [ "pip", "install", "cython"]
 
-COPY PrimeCY.pyx PrimeCY_bitarray.pyx PrimeCY_pointers.pyx buildall.sh ./
+COPY PrimeCY_bytearray.pyx PrimeCY_bitarray.pyx buildall.sh ./
 
 RUN [ "./buildall.sh" ]
 
-ENTRYPOINT ./PrimeCY && ./PrimeCY_pointers && ./PrimeCY_bitarray
+ENTRYPOINT ./PrimeCY_bytearray && ./PrimeCY_bitarray
