@@ -20,7 +20,7 @@ package body Results is
             return 5_761_455;
          when 1_000_000_000 =>
             return 50_847_534;
-         when 0_000_000_000 =>
+         when 10_000_000_000 =>
             return 455_052_511;
          when others =>
             return No_Element;
