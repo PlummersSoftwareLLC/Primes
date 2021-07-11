@@ -1,0 +1,25 @@
+name:                PrimeSieveHaskell
+author:              "Fabian Thorand"
+license:             "BSD-3"
+version:             0.1.0.0
+
+dependencies:
+- base >= 4.7 && < 5
+- clock
+- vector
+- primitive
+
+library:
+  source-dirs: src
+
+executables:
+  Sieve:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -Wall
+    - -Werror
+    # Remove ccomment if LLVM is available
+    # - -fllvm
+    dependencies:
+    - PrimeSieveHaskell

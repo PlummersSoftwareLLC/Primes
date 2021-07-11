@@ -6,14 +6,13 @@ import { Command } from 'commander';
 
 import { Result } from '../models';
 import ReportService from '../services/report';
-import ResultService from '../services/result';
+import FormatterFactory from '../formatter_factory';
 
 const reportService = new ReportService();
-const resultService = new ResultService();
 
 export const command = new Command('report')
   .requiredOption('-d, --directory <directory>', 'Results directory')
-  .option('--json', 'Output JSON report')
+  .option('-f, --formatter <type>', 'Output formatter', 'table')
   .action(async (args) => {
     const directory = path.resolve(args.directory as string);
 
@@ -82,22 +81,7 @@ export const command = new Command('report')
       return;
     }
 
-    if (args.json) {
-      const report = await reportService.createReport(results);
-      console.log(JSON.stringify(report, undefined, 4));
-
-      return;
-    }
-
-    const singleThreadedResults = results.filter((value) => value.threads === 1);
-    if (singleThreadedResults.length > 0) {
-      console.log('');
-      resultService.printResults('Single-threaded', singleThreadedResults);
-    }
-
-    const multiThreadedResults = results.filter((result) => result.threads > 1);
-    if (multiThreadedResults.length > 0) {
-      console.log('');
-      resultService.printResults('Multi-threaded', multiThreadedResults);
-    }
+    const report = await reportService.createReport(results);
+    const formatter = FormatterFactory.getFormatter(args.formatter);
+    console.log(formatter.render(report));
   });

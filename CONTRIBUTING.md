@@ -50,7 +50,7 @@ Please add a `Dockerfile` that is configured to build and run your solution. It 
 When composing the Dockerfile, please use the following as a reference for selecting the base image:
 * If an official image exists on [Docker Hub](https://hub.docker.com/) for the language you chose, use that. If multiple images are available with different underlying Linux distributions, select the one to use in accordance with the next steps in this list.
 * Otherwise, if it is possible to get the solution to build and run on Alpine 3.13 using Alpine 3.13 packages, use that.
-* Otherwise, if it is possible to get the solution to build and run on Ubuntu 18.04, use that. Employ standard packages to the extent possible.
+* Otherwise, if it is possible to get the solution to build and run on a supported LTS release of Ubuntu (currently 18.04 or 20.04), use that. Employ standard packages to the extent possible.
 * Otherwise, choose another base image that you can get the solution to build and run in.
 
 Also:
@@ -162,6 +162,7 @@ At a technical level, an implementation is considered faithful if it complies wi
 
 * It uses no external dependencies to calculate the actual sieve.
 * It uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
+* The sieve size and corresponding prime candidate memory buffer (or language equivalent) are set/allocated dynamically at runtime. The size of the memory buffer must correspond to the size of the sieve.
 * It conforms to the base [rules](#Rules).
 
 All other implementations are considered unfaithful. Note that they still need to conform to the base [rules](#Rules). 

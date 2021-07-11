@@ -1,17 +1,20 @@
-FROM ubuntu:18.04 AS build
+FROM alpine:3.13 AS build
 
-RUN apt-get update -qq \
-    && apt-get install -y gprbuild gnat
+RUN apk add --no-cache gcc-gnat libc-dev
 
-COPY . /opt/app/
-WORKDIR /opt/app
-RUN mkdir obj
-RUN gprbuild -P primesieveada.gpr
+COPY main.adb .
 
-FROM ubuntu:18.04
+RUN gnatmake -gnatwa -gnatn -gnatp \
+    -Ofast \
+    -funroll-all-loops \
+    -march=native \
+    -mtune=native \
+    main.adb \
+    -bargs -static \
+    -largs -static
 
-RUN apt-get update -qq \
-    && apt-get install -y libgnat-7
+FROM alpine:3.13
 
-COPY --from=build /opt/app/obj/main /usr/local/bin/prime
-ENTRYPOINT [ "prime" ]
+COPY --from=build /main /main
+
+ENTRYPOINT ["/main"]
