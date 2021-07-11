@@ -1,8 +1,11 @@
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO;            use Ada.Text_IO;
+with System.Multiprocessors; use System.Multiprocessors;
 
-procedure Bits is
+procedure Info is
    package IIO is new Integer_IO (Integer);
    use IIO;
+
+   package CIO is new Integer_IO (CPU_Range);
 
    type Boolean_Array is array (1 .. 10) of Boolean;
    BA : constant Boolean_Array := (others => False);
@@ -46,4 +49,8 @@ begin
    Put ("Duration'Size: ");
    Put (Duration'Size, Width => 53);
    New_Line;
-end Bits;
+
+   Put ("Total CPU's: ");
+   CIO.Put (Number_Of_CPUs, Width => 54);
+   New_Line;
+end Info;
