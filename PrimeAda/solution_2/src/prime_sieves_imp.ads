@@ -32,7 +32,9 @@ package Prime_Sieves_Imp is
        Total_Duration : Duration;
        Total_Passes   : Integer;
        Verbose        : Boolean := False);
-   function Count_Primes (Sieve : Prime_Sieve) return Long_Integer;
-   function Validate_Results (Sieve : Prime_Sieve) return Boolean;
+   function Count_Primes (Sieve : Prime_Sieve) return Long_Integer with
+     Inline;
+   function Validate_Results (Sieve : Prime_Sieve) return Boolean with
+     Inline;
    procedure Generate;
 end Prime_Sieves_Imp;
