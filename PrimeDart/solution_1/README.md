@@ -70,23 +70,23 @@ platform, but Dart will generate a standard ELF binary on *nix systems.
 ### Docker Results
 
 ```
-Passes: 4548, Time: 5.000984, Avg: 0.0010996007036059806, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 4710, Time: 5.000252, Avg: 0.0010616246284501061, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf&mmcdon20;4548;5.000984;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20;4710;5.000252;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Dart SDK
 
 ```
-Passes: 4150, Time: 5.000978, Avg: 0.001205054939759036, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 5213, Time: 5.000862, Avg: 0.0009593059658545943, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf&mmcdon20;4150;5.000978;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20;5213;5.000862;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Dart Compiled
 
 ```
-Passes: 4610, Time: 5.000347, Avg: 0.0010846739696312364, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 5588, Time: 5.000777, Avg: 0.0008949135647816751, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf&mmcdon20;4610;5.000347;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20;5588;5.000777;1;algorithm=base,faithful=yes,bits=8
 ```
