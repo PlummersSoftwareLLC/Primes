@@ -9,7 +9,7 @@ const primeCounts = Dict( 10 => 4,
 
 struct prime_sieve
 	sieveSize::Int
-	rawbits::BitArray
+	rawbits::BitVector
 
 	prime_sieve(limit::Int) = new(  limit, trues( floor(Int,(limit+1)/2) )  )
 end
