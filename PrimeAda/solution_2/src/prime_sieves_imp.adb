@@ -82,6 +82,7 @@ package body Prime_Sieves_Imp is
             New_Line;
          end if;
 
+         New_Line;
          Put ("Passes: ");
          Put (Total_Passes, Width => 0);
          Put (", Time: ");
@@ -98,12 +99,13 @@ package body Prime_Sieves_Imp is
          Put (Validate_Results (Sieve));
 
          New_Line;
+         New_Line;
 
          Put ("Lucretia - Imperative;");
          Put (Total_Passes, Width => 0);
          Put (";");
          Put (Total_Duration, Fore => 2, Aft => 6);
-         Put (";algorithm=base,faithful=yes,bits=");
+         Put (";1;algorithm=base,faithful=yes,bits=");
          IIO.Put (Sieve.Bits (Sieve.Bits'First)'Size, Width => 0);
          New_Line;
       end;
