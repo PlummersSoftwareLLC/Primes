@@ -53,17 +53,19 @@ package PrimeSieve {
     sub print_results {
         my ( $self, $show_results, $duration, $passes ) = @_;
 
-        print "2, " if ($show_results);
+        if ($show_results) {
+            print "2, ";
 
-        my $count = ( $self->{sieve_size} >= 2 );
-        for ( my $num = 3 ; $num <= $self->{sieve_size} ; $num += 2 ) {
-            unless ( $self->{bits}[$num] ) {
-                printf( "%d, ", $num ) if ($show_results);
-                $count++;
+            my $count = ( $self->{sieve_size} >= 2 );
+            for ( my $num = 3 ; $num <= $self->{sieve_size} ; $num += 2 ) {
+                unless ( $self->{bits}[$num] ) {
+                    printf( "%d, ", $num );
+                    $count++;
+                }
             }
-        }
 
-        print "" if ($show_results);
+            print "\n";
+        }
 
         printf "marghidanu;%d;%f;%d;algorithm=base,faithful=yes\n", $passes, $duration, 1;
 #         printf STDERR
