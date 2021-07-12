@@ -7,7 +7,7 @@ RUN mkdir -p /opt/app/src
 WORKDIR /opt/app/src
 
 WORKDIR /opt/app
-COPY src/prime_sieves.ad[sb] src/prime_sieves_imp.ad[sb] src/sieves.adb src/
+COPY src/prime_sieves.ad[sb] src/prime_sieves_imp.ad[sb] src/sieves.adb src/results.ad[sb] src/
 COPY ./optimised.adc ./prime_sieve.gpr ./
 
 RUN /usr/bin/gprbuild -p -XMODE=optimised
