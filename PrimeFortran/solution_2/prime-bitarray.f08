@@ -107,7 +107,7 @@ contains
 
         ! Rather than calculating the bit mask separately each time, we can just
         ! shift it on every iteration
-        bitmask = not(int(lshift(1, iand(bitidx, 7_int64)), kind=1))
+        bitmask = not(int(lshift(1, iand(bitidx, 7_int64)), kind=int8))
 
         do while (bitidx <= last_bitidx)
             idx = rshift(bitidx, 3) + 1 ! bitidx / 8 + 1
