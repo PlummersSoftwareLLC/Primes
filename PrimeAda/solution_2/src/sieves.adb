@@ -1,15 +1,18 @@
 with Prime_Sieves;
 with Prime_Sieves_Imp;
+with System.Storage_Elements;
 
-procedure Sieves is
+procedure Sieves with CPU => 1 is
    Sieve_Size : constant Long_Integer := 1_000_000;
 
    type Boolean_Array_Range is new Long_Integer range 1 .. Sieve_Size;
 
    type Packed_Boolean_Array_Type is array (Boolean_Array_Range) of Boolean with
+     Alignment => (128 * 1024) / System.Storage_Elements.Storage_Element'Size,
      Pack;
 
-   type Unpacked_Boolean_Array_Type is array (Boolean_Array_Range) of Boolean;
+   type Unpacked_Boolean_Array_Type is array (Boolean_Array_Range) of Boolean with
+     Alignment => (128 * 1024) / System.Storage_Elements.Storage_Element'Size;
 
    package Packed_Sieves is new Prime_Sieves
       (Bit_Index_Type     => Boolean_Array_Range,
