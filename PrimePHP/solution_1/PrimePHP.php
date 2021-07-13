@@ -126,3 +126,4 @@ function validateResult($sieveSize): ?int
 {
     return PrimeSieve::$primeCounts[$sieveSize];
 }
+?>
