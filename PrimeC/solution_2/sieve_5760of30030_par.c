@@ -325,7 +325,7 @@ void run_sieve(struct sieve_state *sieve_state) {
 	    }
 	  }
 	  if (ithread==numthreads-1)
-	    mylastbit=lastbit;
+	    mylastbit=lastbit-1;
 	  else {
 	    // Make sure I continue with more bits until the next cpu can handle the bits
 	    while (1) {

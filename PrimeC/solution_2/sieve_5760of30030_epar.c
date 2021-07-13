@@ -297,7 +297,7 @@ void run_sieve(struct sieve_state *sieve_state) {
     unsigned int istep=step;
     unsigned int ninc=steps[istep];
     unsigned int factor=(factorh<<1U)+1U;
-    for (unsigned int i=(factor*factor)>>1U; i<=maxintsh; ) {
+    for (unsigned int i=(factor*factor)>>1U; i<maxintsh; ) {
       a[i>>SHIFT]|=(TYPE)1<<(i&MASK);
       i+=factor*ninc;
       if (++istep==5760U) istep=0U;
