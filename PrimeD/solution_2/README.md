@@ -1,4 +1,4 @@
-# D solution by Bradley Chatha, Paul Backus, Bastiaan Veelo
+# D solution by BradleyChatha, Paul Backus, Bastiaan Veelo
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
