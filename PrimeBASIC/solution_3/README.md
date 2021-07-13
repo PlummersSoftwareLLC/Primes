@@ -11,7 +11,7 @@ This is an implementation in Visual Basic.
 
 - Converted from `PrimeCSharp/solution_1/Sieves/PrimeSieveArrayPool8of30M.cs`
 - Original author: @Kinematics
-- Converter: @Nukepayload2
+- Converted by @Nukepayload2
 - It uses .NET 5, and can be compiled using Visual Studio 16.9 or later.
 
 ## Run 
@@ -25,7 +25,7 @@ CopyOf_CS_Kinematics_ArrayPool8of30M_vb;14979;5.0003292;1;algorithm=wheel,faithf
 ```
 
 Environment of the sample output:
-- CPU:         Intel Core i5 9600KF
+- CPU:         Intel Core i5 9600KF (base 3.7 GHz, boost 4.6 GHz)
 - RAM:         DDR4 2400 MHz, slots: 4/4
 - OS Name:     Windows
 - OS Version:  10.0.19043
