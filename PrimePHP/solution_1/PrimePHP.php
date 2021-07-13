@@ -35,17 +35,12 @@ class PrimeSieve
 
     private function getBit(int $index): bool
     {
-        if ($index % 2 !== 0) {
             return $this->rawbits[(int)$index / 2];
-        }
-        return false;
     }
 
     private function clearBit(int $index): void
     {
-        if ($index % 2 !== 0) {
             $this->rawbits[(int)$index / 2] = false;
-        }
     }
 
     public function runSieve()
@@ -54,7 +49,7 @@ class PrimeSieve
         $q = sqrt($this->sieveSize);
 
         while ($factor < $q) {
-            for ($i = $factor; $i <= $this->sieveSize; $i++) {
+            for ($i = $factor; $i <= $this->sieveSize; $i += 2) {
                 if ($this->getBit($i)) {
                     $factor = $i;
                     break;
