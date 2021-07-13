@@ -10,7 +10,8 @@ all: benchmark
 
 .PHONY: benchmark
 benchmark: check-env
-	@REALPATH=$$(cd "$${DIRECTORY}" && pwd); cd tools/; npm ci && npm start -- benchmark -d "$${REALPATH}" -f "$(FORMATTER)"
+	@REALPATH=$$(cd "$${DIRECTORY}" && pwd); cd tools/; \
+	npm ci --silent && npm start --silent -- benchmark -d "$${REALPATH}" -f "$(FORMATTER)"
 
 .PHONY: check-env
 check-env: check-docker-works check-node-works
