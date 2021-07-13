@@ -1,7 +1,4 @@
-FROM fedora
-
-RUN yum update -q -y \
-    && yum install -q -y gdl
+FROM primeimages/gdl:1.0.0-rc3 AS build
 
 COPY *.pro /opt/app/
 WORKDIR /opt/app
