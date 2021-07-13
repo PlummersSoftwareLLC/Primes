@@ -1,37 +1,46 @@
 PRO PRIMESIEVE::RUN
 
+  COMPILE_OPT IDL2
+
   factor = 3LL
   q = SQRT(self.sieve_size)
 
   WHILE factor LE q DO BEGIN
     FOR i = factor, self.sieve_size, 2 DO BEGIN
-      IF self->GET_BIT(i) THEN BEGIN
+      IF (*self.is_prime)[i/2LL] THEN BEGIN
         factor = i
         BREAK
       ENDIF
     ENDFOR
 
     FOR i = factor * 3LL, self.sieve_size, factor * 2LL DO $ 
-      self->CLEAR_BIT,i
+      (*self.is_prime)[i/2LL] = 0B
 
-    factor += 2
+    factor += 2LL
   ENDWHILE
 END
 
-FUNCTION PRIMESIEVE::GET_BIT,idx
-    RETURN,(*self.raw_bits)[idx/2LL]
-END
-
-PRO PRIMESIEVE::CLEAR_BIT,idx
-    (*self.raw_bits)[idx/2LL] = 0B
-END
-
 FUNCTION PRIMESIEVE::COUNT_PRIMES
+
+    COMPILE_OPT IDL2
+
     RETURN,LONG64( $
-             TOTAL(*self.raw_bits))
+             TOTAL(*self.is_prime))
+END
+
+PRO PRIMESIEVE::LIST_PRIMES
+
+    COMPILE_OPT IDL2
+
+    FOR i = 3LL, self.sieve_size, 2 DO $
+      IF (*self.is_prime)[i/2LL] THEN PRINT,FORMAT='(I0,",",$)',i
+    PRINT,FORMAT='(A1," ")',STRING(8B)
 END
 
 FUNCTION PRIMESIEVE::VALIDATE
+
+    COMPILE_OPT IDL2
+
     RETURN,self->count_primes() EQ self.prime_counts[self.sieve_size]
 END
 
@@ -50,25 +59,30 @@ FUNCTION PRIMESIEVE::INIT,n
                              1000000000LL, 50847534LL, $
                             10000000000LL, 455052511LL, /NO_COPY )
   self.sieve_size = n;
-  self.raw_bits = PTR_NEW( $
+  self.is_prime = PTR_NEW( $
                     MAKE_ARRAY((n+1LL)/2LL, /BYTE, VALUE=1B))
 
   RETURN,1
 END
 
 PRO PRIMESIEVE::CLEANUP
-    IF PTR_VALID(self.raw_bits) THEN $
-      PTR_FREE,self.raw_bits
+
+    COMPILE_OPT IDL2
+
+    IF PTR_VALID(self.is_prime) THEN $
+      PTR_FREE,self.is_prime
 END
 
 PRO PRIMESIEVE__DEFINE
 
   COMPILE_OPT IDL2
 
-  void = {PRIMESIEVE, prime_counts:HASH(), sieve_size:0LL, raw_bits:PTR_NEW()}
+  void = {PRIMESIEVE, prime_counts:HASH(), sieve_size:0LL, is_prime:PTR_NEW()}
 END
 
 PRO PRIMEIDL
+
+  COMPILE_OPT IDL2
 
   passes = 0LL
   time_start = SYSTIME(/SECONDS)
@@ -90,5 +104,4 @@ PRO PRIMEIDL
         BREAK
     ENDIF
   ENDWHILE
-
 END

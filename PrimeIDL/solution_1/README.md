@@ -32,10 +32,10 @@ docker run --rm primes 2>>/dev/null
 IDL 8.8:
 
 ```
-kriztioan;15;5.307548;1;algorithm=base;faithful=yes;bits=8
+kriztioan;23;5.196117;1;algorithm=base;faithful=yes;bits=unknown
 ```
 GDL 1.0.0-rc.3 git:
 
 ```
-kriztioan;5;5.417835;1;algorithm=base;faithful=yes;bits=8
+kriztioan;7;5.121231;1;algorithm=base;faithful=yes;bits=unknown
 ```
