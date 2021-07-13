@@ -11,31 +11,35 @@ Interactive Data Language ([IDL](https://www.l3harrisgeospatial.com/Software-Tec
 
 IDL (license required):
 
-```
+```shell
 idl -quiet -e primeidl
 ```
+
 GDL (free):
 
-```
+```shell
 gdl -quiet -e primeidl
 ```
+
 ### Docker
 
-No IDL or GDL Just run it in Docker.
+No IDL or GDL? Just run it in Docker.
 
-```
+```shell
 docker build -t primes .
 docker run --rm primes 2>>/dev/null
 ```
+
 ## Output
 
 IDL 8.8:
 
-```
+```shell
 kriztioan;23;5.196117;1;algorithm=base;faithful=yes;bits=unknown
 ```
+
 GDL 1.0.0-rc.3 git:
 
-```
+```shell
 kriztioan;7;5.121231;1;algorithm=base;faithful=yes;bits=unknown
 ```
