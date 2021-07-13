@@ -5,7 +5,6 @@ import "core:fmt"
 import "core:time"
 import "core:math"
 
-
 expected :: proc(upper: u64) -> u64 {
     switch upper {
     case 10:            return 4;
@@ -22,17 +21,17 @@ expected :: proc(upper: u64) -> u64 {
 
 Sieve :: struct {
     upper: u64,
-    bits: [dynamic]bool,
+    bits: []bool,
 }
 
-run_sieve :: proc(upper: u64) -> (sieve: Sieve) {
+run_sieve :: proc(upper: u64) -> (sieve: Sieve) #no_bounds_check {
     sieve.upper = upper;
-    sieve.bits = make([dynamic]bool, upper, upper);
-    factor : u64 = 3;
+    sieve.bits = make([]bool, upper, context.temp_allocator);
+    factor := u64(3);
     q := u64(math.sqrt(f64(upper)));
 
     // step by 2 to skip evens
-    #no_bounds_check for ; factor <= q; factor += 2 {
+    for ; factor <= q; factor += 2 {
         for num := factor; num < upper; num += 2 {
             if !sieve.bits[num] {
                 factor = num;
@@ -40,7 +39,6 @@ run_sieve :: proc(upper: u64) -> (sieve: Sieve) {
             }
         }
 
-        
         // every second multiple can be skipped since it will be even
         for num := factor * factor; num < upper; num += factor * 2 {
             // mark non-prime
@@ -51,9 +49,9 @@ run_sieve :: proc(upper: u64) -> (sieve: Sieve) {
     return sieve;
 }
 
-count_primes :: proc(using sieve: ^Sieve) -> (count: u64) {
-    count = u64(upper >= 2);
-    #no_bounds_check for i := 3; i < len(bits); i += 2 {
+count_primes :: proc(using sieve: ^Sieve) -> (count: u64) #no_bounds_check {
+    count = 1 if upper >= 2 else 0;
+    for i := 3; i < len(bits); i += 2 {
         if !bits[i] {
             count += 1;
         }
@@ -64,17 +62,17 @@ count_primes :: proc(using sieve: ^Sieve) -> (count: u64) {
 main :: proc() {
     size :: 1_000_000;
 
-    start_time := time.now();
+    start_time := time.tick_now();
 
     passes: u32 = 0;
-    for time.duration_seconds(time.diff(start_time, time.now())) < 5 {
+    // sieve_bits := make([]bool, size, context.temp_allocator);
+    for time.tick_since(start_time) < 5*time.Second {
         sieve := run_sieve(size);
         primes := count_primes(&sieve);
-        //assert(primes == expected(size));
+        // assert(primes == expected(size));
         passes += 1;
     }
 
-    total := time.duration_seconds(time.diff(start_time, time.now()));
-    fmt.printf("odin_moe;%v;%v1;algorithm=base;faithful=yes;bits=1", passes, total);
+    total := time.duration_seconds(time.tick_since(start_time));
+    fmt.printf("odin_moe;%v;%v;1;algorithm=base;faithful=yes;bits=8", passes, total);
 }
-
