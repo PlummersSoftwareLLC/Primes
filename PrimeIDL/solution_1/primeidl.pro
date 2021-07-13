@@ -60,7 +60,6 @@ FUNCTION PRIMESIEVE::VALIDATE
 
     ;; work-around for GDL quirk
     DEFSYSV,'!GDL',EXISTS=is_gdl
-    IF is_gdl THEN self.prime_counts = (self.prime_counts[0])
 
     counts = is_gdl ? (self.prime_counts[0])[self.sieve_size] $
                     : self.prime_counts[self.sieve_size]
