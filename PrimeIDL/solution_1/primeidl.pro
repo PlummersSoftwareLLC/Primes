@@ -58,7 +58,14 @@ FUNCTION PRIMESIEVE::VALIDATE
 
     COMPILE_OPT IDL2
 
-    RETURN,self->count_primes() EQ self.prime_counts[self.sieve_size]
+    ;; work-around for GDL quirk
+    DEFSYSV,'!GDL',EXISTS=is_gdl
+    IF is_gdl THEN self.prime_counts = (self.prime_counts[0])
+
+    counts = is_gdl ? (self.prime_counts[0])[self.sieve_size] $
+                    : self.prime_counts[self.sieve_size]
+
+    RETURN,self->count_primes() EQ counts
 END
 
 FUNCTION PRIMESIEVE::INIT,n
@@ -101,7 +108,7 @@ PRO PRIMEIDL
 
   COMPILE_OPT IDL2
 
-  CPU,TPOOL_NTHREADS=1B,VECTOR_ENABLE=1B
+  CPU,TPOOL_NTHREADS=1B
 
   passes = 0LL
   time_start = SYSTIME(/SECONDS)
@@ -116,7 +123,7 @@ PRO PRIMEIDL
           'kriztioan', $
           passes, $
           time_end - time_start, $
-          1, $
+          !CPU.TPOOL_NTHREADS, $
           'base', $
           'yes', $
           1

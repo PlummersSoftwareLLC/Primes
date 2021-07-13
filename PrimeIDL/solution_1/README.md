@@ -7,6 +7,8 @@
 
 Interactive Data Language ([IDL](https://www.l3harrisgeospatial.com/Software-Technology/IDL)) implementation of the prime sieve algorithm. A free and open-source IDL compiler is available as [GDL](https://gnudatalanguage.github.io/index.html).
 
+This solution has the least favorable [characteristics](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/CONTRIBUTING.md#characteristics); loops are slow, really slow, in IDL...See [solution 2](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeIDL/solution_2) for a significantly faster implementation that does things more the 'IDL-way'.
+
 ## Run instructions
 
 IDL (license required):
