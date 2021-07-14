@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+//if (function_exists("opcache_get_status")) { print_r(opcache_get_status()["jit"]); }
+//else { echo "PHP JIT not enabled!!!\n"; }
+//var_dump(ini_get("opcache.jit"));
+//die();
+
 /**
  * PHP Prime Sieve
  * Class PrimeSieve
@@ -9,7 +14,7 @@ declare(strict_types=1);
 
 class PrimeSieve
 {
-    private array $rawbits = array();
+    private SplFixedArray $rawbits;
 
     private int $sieveSize;
     private int $rawBitsSize;
@@ -25,9 +30,7 @@ class PrimeSieve
         100000000 => 5761455,
     ];
 
-    public function __construct(
-        $sieveSize = 1000000
-    )
+    public function __construct($sieveSize = 1000000)
     {
         $this->sieveSize = $sieveSize;
         $this->rawBitsSize = (int)(($this->sieveSize + 1) / 2);
@@ -38,19 +41,20 @@ class PrimeSieve
         $factor = 3;
         $sieveSize = $this->sieveSize;
         $q = sqrt($sieveSize);
-        $rb = array_fill(0, $this->rawBitsSize, 1);
+        $rb = new SplFixedArray($this->rawBitsSize);
 
         while ($factor < $q) {
             for ($i = $factor; $i <= $sieveSize; $i += 2) {
-                if ($rb[$i / 2]) {
+                if ($rb[$i / 2] === null) {
                     $factor = $i;
                     break;
                 }
             }
 
+            $ft2 = $factor;
             $start = ($factor * $factor) / 2;
-            for ($i = $start; $i <= $this->rawBitsSize; $i += $factor) {
-                $rb[$i] = 0;
+            for ($i = $start; $i <= $this->rawBitsSize; $i += $ft2) {
+                $rb[$i] = 1;
             }
 
             $factor += 2;
@@ -60,18 +64,23 @@ class PrimeSieve
 
     public function printResults(): void
     {
-        echo "2, ";
-        for ($i = 3; $i < $this->sieveSize; $i++) {
-            if ($i % 2 && $this->rawbits[$i / 2]) {
+        for ($i = 1; $i < $this->sieveSize; $i++) {
+            if ($i % 2 && $this->rawbits[$i / 2] === null) {
                 echo $i . ", ";
             }
         }
-        echo "\n";
     }
 
     public function getRawbitCount(): int
     {
-        return isset($this->rawbits) ? array_sum($this->rawbits) : 0;
+        $sum = 0;
+        $sz = $this->rawbits->getSize();
+        for ($i = 0; $i < $sz; $i++){
+            if ($this->rawbits[$i] === null){
+                $sum++;
+            }
+        }
+        return $sum;
     }
 }
 
