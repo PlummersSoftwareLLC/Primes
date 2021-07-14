@@ -43,7 +43,7 @@ t = time("E") /* close enough for algorithm run time */
 /*
 ** Sieve iterations are complete, print the results
 */
-call lineout 'stdout',"joss_REXX;"count";"t";1;algorithm=base,bits=8,faithful=yes,parallel=no"
+call lineout 'stdout',"joss_REXX;"count";"t";1;algorithm=base,bits=8,faithful=no"
 select
   when printSw = 0 then
     call lineOut 'stdout',"Sieve iterations: "count 

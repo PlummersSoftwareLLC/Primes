@@ -1,12 +1,11 @@
 # REXX solution by joss
 Sieve of Erastosthones for the REXX scripting language.
 Uses the Regina REXX interpreter to run the program /home/rexx/PrimeREXX.rex
-A Dockerfile has been supplied. It is based upon an Ubuntu container.
+A Dockerfile has been supplied. It is based upon an Ubuntu:20.04 image.
 
 Regina REXX processes standard REXX. Standard REXX does not have classes/objects.
 There is a separate REXX interpreter: oorexx that does support classes.
 
-I set faithful=yes even though the solution does not use a class to run the sieve.
 ## Run instructions
 The supplied Dockerfile runs the default test:
 
@@ -32,6 +31,7 @@ the "CONTRIBUTING.md" file.
 joss_REXX;21;5.001000;1;algorithm=base,bits=8,faithful=yes,parallel=no
 
 output mode 1 (partial)
+docker run --entrypoint "rexx" ubuntu_rexx .\PrimeREXX.rex 1000000 1
 joss_REXX;21;5.015000;1;algorithm=base,bits=8,faithful=yes,parallel=no
        2       3       5       7      11      13      17      19      23      29      31      37      41      43      47      53      59      61      67      71
       73      79      83      89      97     101     103     107     109     113     127     131     137     139     149     151     157     163     167     173
@@ -42,7 +42,7 @@ joss_REXX;21;5.015000;1;algorithm=base,bits=8,faithful=yes,parallel=no
      661     673     677     683 ...
 
 output mode 2
-rexx .\PrimeREXX.rex 1000000 2
+docker run --entrypoint "rexx" ubuntu_rexx .\PrimeREXX.rex 1000000 2
 joss_REXX;21;5.055000;1;algorithm=base,bits=8,faithful=yes,parallel=no
 25 primes less than 100
 168 primes less than 1,000
