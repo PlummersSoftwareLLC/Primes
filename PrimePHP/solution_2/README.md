@@ -5,9 +5,9 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-Implementation for PHP8 JIT with a faithful aproach to the algorithm presented in PrimeCPP by Dave Plummer almost line by line.
+Implementation based on the algorithm presented in PrimeCPP by Dave Plummer.
 
-This solution provides an expected **performance improvement between x3 and x4** over Solution #1.
+This solution uses PHP JIT and `SplFixedArray` with a **performance improvement over x5** in the result passes over Solution #1 (see performance below).
 
 The main code difference in comparison with the solution #1 or the CPP version is the use of `SplFixedArray` instead of raw arrays and the inverted values of the list.
 
@@ -57,9 +57,9 @@ PHP 8.0.8 (cli) (built: Jul  1 2021 15:26:46) ( NTS )
 
 ```bash
 $ ./run.sh
-Passes: 128, Time: 5.011532, Avg: 0.039153, Limit: 1000000, Count: 78498, Valid: 1
+Passes: 200, Time: 5.010664, Avg: 0.025053, Limit: 1000000, Count: 78498, Valid: 1
 
-HugoSantiagoBecerraAdan;128;5.011532;1;algorithm=base,faithful=yes
+HugoSantiagoBecerraAdan;200;5.010664;1;algorithm=base,faithful=yes
 ```
 
 Compared to other PHP implementations:
