@@ -45,8 +45,6 @@ t = time("E") /* close enough for algorithm run time */
 */
 call lineout 'stdout',"joss_REXX;"count";"t";1;algorithm=base,bits=8,faithful=no"
 select
-  when printSw = 0 then
-    call lineOut 'stdout',"Sieve iterations: "count 
   when printSw = 1 then
     call PrintDetail maxVal,printWidth
   when printSw = 2 then
