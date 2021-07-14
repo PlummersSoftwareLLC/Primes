@@ -7,7 +7,7 @@
     "build": "asc -O3",
     "build:bench": "asc -O3 --noAssert --converge --initialMemory 256",
     "build:debug": "asc --debug",
-    "bench": "node --experimental-wasi-unstable-preview1 --wasm-loop-unrolling index.js"
+    "bench": "node --experimental-wasi-unstable-preview1 --wasm-loop-unrolling --no-liftoff index.js"
   },
   "type": "module",
   "author": "",
