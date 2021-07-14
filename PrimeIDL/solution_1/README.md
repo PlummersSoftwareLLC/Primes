@@ -36,7 +36,7 @@ docker run --rm primes
 IDL 8.8:
 
 ```shell
-kriztioan_1bit;7;5.553826;1;algorithm=base;faithful=yes;bits=1
+kriztioan_1bit;7;5.553826;1;algorithm=base,faithful=yes,bits=1
 kriztioan_idlway;717;5.005487;12;algorithm=base,faithful=yes,bits=8
 ```
 
