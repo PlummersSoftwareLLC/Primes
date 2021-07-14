@@ -5,6 +5,7 @@ declare(strict_types=1);
 final class PrimeSieve
 {
     private int $sieveSize;
+    private int $rawBitsSize;
 
     /** @var SplFixedArray<bool> */
     private SplFixedArray $rawBits;
@@ -30,44 +31,54 @@ final class PrimeSieve
         return self::$resultsDictionary[$this->sieveSize] === $count;
     }
 
-    public function __construct(int $n)
+    public function __construct(int $sieveSize)
     {
-        // Creates the whole list of elements with 'null' as value
-        $this->rawBits = new SplFixedArray($n);
-        $this->sieveSize = $n;
+        $this->sieveSize = $sieveSize;
+        $this->rawBitsSize = (int)(($this->sieveSize + 1) / 2);
     }
 
     public function runSieve(): void
     {
         $factor = 3;
-        $q = \sqrt($this->sieveSize);
+        $sieveSize = $this->sieveSize;
+        $rawBitsSize = $this->rawBitsSize;
+        $q = (int) \sqrt($sieveSize);
+        $rawBits = new SplFixedArray($rawBitsSize);
 
         while ($factor < $q) {
-            for ($num = $factor; $num <= $this->sieveSize; $num += 2) {
+            for ($num = $factor; $num <= $sieveSize; $num += 2) {
                 // Invert the checks
-                if (null === $this->rawBits[$num]) {
+                if (null === $rawBits[$num / 2]) {
                     $factor = $num;
 
                     break;
                 }
             }
 
-            for ($num = $factor * $factor; $num <= $this->sieveSize; $num += $factor * 2) {
-                // Iinvert value asignment to keep main functionality intact with inverted checks
-                $this->rawBits[$num] = true;
+            $start = ($factor ** 2) / 2;
+
+            for ($num = $start; $num <= $rawBitsSize; $num += $factor) {
+                // Invert value asignment to keep main functionality intact with inverted checks
+                $rawBits[$num] = true;
             }
 
             $factor += 2;
         }
+
+        $this->rawBits = $rawBits;
     }
 
     public function printResults(bool $showResults, float $duration, int $passes): void
     {
         if ($showResults) {
             echo '2, ';
-        }
 
-        if ($showResults) {
+            for ($num = 3; $num < $this->sieveSize; $num += 2) {
+                if (($num & 1) === 1 && null === $this->rawBits[$num / 2]) {
+                    echo $num, ", ";
+                }
+            }
+
             echo "\n";
         }
 
@@ -92,9 +103,9 @@ final class PrimeSieve
     {
         $count = (int) ($this->sieveSize >= 2);
 
-        for ($num = 3; $num < $this->sieveSize; $num += 2) {
+        for ($num = 3; $num < $this->sieveSize; $num++) {
             // Invert the checks
-            if (null === $this->rawBits[$num]) {
+            if (($num & 1) === 1 && null === $this->rawBits[$num / 2]) {
                 ++$count;
             }
         }
