@@ -76,11 +76,7 @@ export const command = new Command('benchmark')
       // Build the Docker image for the current solution
       try {
         logger.info(`[${implementation}][${solution}] Building...`);
-        const buildOutput = dockerService.buildImage(
-          solutionDirectory,
-          imageName
-        );
-        logger.debug(buildOutput);
+        dockerService.buildImage(solutionDirectory, imageName);
       } catch (e) {
         logger.error(
           `[${implementation}][${solution}] Failed building solution!`
@@ -102,8 +98,6 @@ export const command = new Command('benchmark')
           .map((block: Buffer) => block.toString('utf8'))
           .join('');
       } finally {
-        logger.debug(output);
-        logger.info(`[${implementation}][${solution}] Parsing output....`);
         const localResults = reportService.parseOutput(
           output,
           implementation,
