@@ -38,7 +38,7 @@ final class Sieve(val size: Int) {
 
   def isPrime(k: Int): Boolean = k % 2 == 1 && !notPrime(k)
 
-  def getPrimes = for (i <- 2 until size if isPrime(i)) yield i
+  def getPrimes = Seq(2) ++ (for(i <- 3 until size if isPrime(i)) yield i ) 
 
 }
 
@@ -59,7 +59,7 @@ object Sieve{
     val dt = System.currentTimeMillis() - t0
     println(s"scilari;$passes;${dt / 1000.0};1;algorithm=base,faithful=yes")
     
-    // validate
+    validate
   }
 
   def validate = {
@@ -74,9 +74,9 @@ object Sieve{
       100000000 -> 5761455
     )
 
-    val sieve = new Sieve(100)
+    val sieve = new Sieve(200)
     sieve.run()
-    println(sieve.getPrimes.mkString("Primes up to 100: ", ", ", ""))
+    println(sieve.getPrimes.mkString("Primes up to 200: ", ", ", ""))
 
     for ((size, expectedCount) <- primeCounts) {
       val sieve = new Sieve(size)
