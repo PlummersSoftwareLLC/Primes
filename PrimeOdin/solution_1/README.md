@@ -35,6 +35,7 @@ docker run --rm odin-primes
 
 Both the 1-bit as well as the 8-bit storage version will be run.
 
+On a Ryzen 1600X using Odin version `dev-2021-07`:
 ```
 odin_bit_moe;8482;5.001;1;algorithm=base,faithful=yes,bits=1
 odin_byte_moe;9775;5.000;1;algorithm=base,faithful=yes,bits=8
