@@ -15,10 +15,8 @@ const reportService = new ReportService();
 const dockerService = new DockerService();
 const logger = winston.createLogger({
   level: 'info',
-  format: winston.format.printf(({ level, message, }) => `${level}: ${message}`),
-  transports: [
-    new winston.transports.Console
-  ],
+  format: winston.format.printf(({ level, message }) => `${level}: ${message}`),
+  transports: [new winston.transports.Console()]
 });
 
 const ARCHITECTURES: { [arch: string]: string } = {
@@ -48,7 +46,7 @@ export const command = new Command('benchmark')
 
     // Determine architecture
     const architecture = ARCHITECTURES[uname().machine] || 'amd64';
-    logger.info(`Detected architecture: ${architecture}`)
+    logger.info(`Detected architecture: ${architecture}`);
 
     // Processing files
     const results = new Array<Result>();
@@ -68,7 +66,9 @@ export const command = new Command('benchmark')
           .includes(architecture);
 
         if (!hasArch) {
-          logger.warn(`[${implementation}][${solution}] Skipping due to architecture mismatch!`);
+          logger.warn(
+            `[${implementation}][${solution}] Skipping due to architecture mismatch!`
+          );
           return;
         }
       }
@@ -76,24 +76,31 @@ export const command = new Command('benchmark')
       // Build the Docker image for the current solution
       try {
         logger.info(`[${implementation}][${solution}] Building...`);
-        const buildOutput = dockerService.buildImage(solutionDirectory, imageName);
+        const buildOutput = dockerService.buildImage(
+          solutionDirectory,
+          imageName
+        );
         logger.debug(buildOutput);
       } catch (e) {
-        logger.error(`[${implementation}][${solution}] Failed building solution!`);
+        logger.error(
+          `[${implementation}][${solution}] Failed building solution!`
+        );
         return;
       }
 
       // Run the benchmark container and retrieve output from it
-      let output = "";
+      let output = '';
       try {
         logger.info(`[${implementation}][${solution}] Running...`);
         output = dockerService.runContainer(imageName);
       } catch (e) {
-        logger.warn(`[${implementation}][${solution}] Exited with abnormal code: ${e.status}. Results might be partial...`);
+        logger.warn(
+          `[${implementation}][${solution}] Exited with abnormal code: ${e.status}. Results might be partial...`
+        );
         output = e.output
           .filter((block: Buffer | null) => block !== null)
           .map((block: Buffer) => block.toString('utf8'))
-          .join("");
+          .join('');
       } finally {
         logger.debug(output);
         logger.info(`[${implementation}][${solution}] Parsing output....`);
