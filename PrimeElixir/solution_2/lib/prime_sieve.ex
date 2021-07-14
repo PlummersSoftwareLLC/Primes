@@ -8,6 +8,11 @@ defmodule PrimeSieve do
     - counters is mutable!  Handle with care
   """
 
+  # it's really silly to have a struct with a single element.  But this is
+  # required for "compliance".  The performance penalty is 10%, because this incurs
+  # unnecessary map lookups.
+  defstruct [:sieve]
+
   # 5s = 5000 ms
   @time 5000
 
@@ -88,10 +93,12 @@ defmodule PrimeSieve do
     end
   end
 
+  @spec setup_sieve(integer) :: %__MODULE__{}
   defp setup_sieve(size) do
-    :counters.new(div(size, 2) - 1, [])
+    %__MODULE__{sieve: :counters.new(div(size, 2) - 1, [])}
   end
 
+  @spec filter(%__MODULE__{}, integer, integer, integer) :: %__MODULE__{}
   defp filter(sieve, prime, limit, _size) when prime > limit, do: sieve
   defp filter(sieve, prime, limit, size) do
     sieve
@@ -104,23 +111,26 @@ defmodule PrimeSieve do
     end
   end
 
+  @spec tag_composites(%__MODULE__{}, integer, integer, integer) :: integer
   defp tag_composites(sieve, exceeded, _prime, limit) when exceeded > limit, do: sieve
 
   defp tag_composites(sieve, index, prime, limit) do
-    :counters.add(sieve, index, 1)
+    :counters.add(sieve.sieve, index, 1)
     tag_composites(sieve, index + prime, prime, limit)
   end
 
+  @spec find_next(%__MODULE__{}, integer, integer) :: integer
   defp find_next(sieve, candidate, limit) when candidate > limit, do: sieve
   defp find_next(sieve, candidate, limit) do
-    case :counters.get(sieve, div(candidate, 2)) do
+    case :counters.get(sieve.sieve, div(candidate, 2)) do
       0 -> candidate
       _ -> find_next(sieve, candidate + 2, limit)
     end
   end
 
+  @spec count_primes(%__MODULE__{}) :: integer
   def count_primes(sieve) do
     # needs 1 + to account for the missing value "2" (the counters array is 1-indexed)
-    1 + Enum.count(1..:counters.info(sieve).size, &(:counters.get(sieve, &1) == 0))
+    1 + Enum.count(1..:counters.info(sieve.sieve).size, &(:counters.get(sieve.sieve, &1) == 0))
   end
 end
