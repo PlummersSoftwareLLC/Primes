@@ -8,10 +8,19 @@ defmodule PrimeSieve do
     - counters is mutable!  Handle with care
   """
 
-  # it's really silly to have a struct with a single element.  But this is
-  # required for "compliance".  The performance penalty is 10%, because this incurs
-  # unnecessary map lookups.
-  defstruct [:sieve]
+  # required "for compliance" to wrap sieve in an object, or object-like construct.
+  # Let's use Record (see: https://hexdocs.pm/elixir/1.12/Record.html), because that's
+  # the OG erlang VM equivalent of "C struct", (http://erlang.org/doc/reference_manual/records.html)
+  # I quote, " It has named fields and is similar to a struct in C" and is more performant
+  # than Elixir Struct, To hit the point home, we're going to call the record "object".  That way
+  # we are really *really* wrapping the sieve in an object.
+  #
+  # Note that if one-term structs are usually silly, one-term records are supremely silly, at
+  # least a one-term struct can actually take advantage of elixir protocol polymorphism (eg MapSet),
+  # and there is Still a non-neglible performance hit for having done extra, unnecessary tuple lookups.
+
+  require Record
+  Record.defrecord(:object, sieve: nil)
 
   # 5s = 5000 ms
   @time 5000
@@ -93,12 +102,10 @@ defmodule PrimeSieve do
     end
   end
 
-  @spec setup_sieve(integer) :: %__MODULE__{}
   defp setup_sieve(size) do
-    %__MODULE__{sieve: :counters.new(div(size, 2) - 1, [])}
+    object(sieve: :counters.new(div(size, 2) - 1, []))
   end
 
-  @spec filter(%__MODULE__{}, integer, integer, integer) :: %__MODULE__{}
   defp filter(sieve, prime, limit, _size) when prime > limit, do: sieve
   defp filter(sieve, prime, limit, size) do
     sieve
@@ -111,26 +118,23 @@ defmodule PrimeSieve do
     end
   end
 
-  @spec tag_composites(%__MODULE__{}, integer, integer, integer) :: integer
   defp tag_composites(sieve, exceeded, _prime, limit) when exceeded > limit, do: sieve
 
   defp tag_composites(sieve, index, prime, limit) do
-    :counters.add(sieve.sieve, index, 1)
+    :counters.add(object(sieve, :sieve), index, 1)
     tag_composites(sieve, index + prime, prime, limit)
   end
 
-  @spec find_next(%__MODULE__{}, integer, integer) :: integer
   defp find_next(sieve, candidate, limit) when candidate > limit, do: sieve
   defp find_next(sieve, candidate, limit) do
-    case :counters.get(sieve.sieve, div(candidate, 2)) do
+    case :counters.get(object(sieve, :sieve), div(candidate, 2)) do
       0 -> candidate
       _ -> find_next(sieve, candidate + 2, limit)
     end
   end
 
-  @spec count_primes(%__MODULE__{}) :: integer
   def count_primes(sieve) do
     # needs 1 + to account for the missing value "2" (the counters array is 1-indexed)
-    1 + Enum.count(1..:counters.info(sieve.sieve).size, &(:counters.get(sieve.sieve, &1) == 0))
+    1 + Enum.count(1..:counters.info(object(sieve, :sieve)).size, &(:counters.get(object(sieve, :sieve), &1) == 0))
   end
 end
