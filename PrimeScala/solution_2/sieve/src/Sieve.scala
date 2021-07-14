@@ -1,7 +1,7 @@
 import Math.sqrt
 import scala.annotation.tailrec
 
-final class PrimeSieve(val size: Int) {
+final class Sieve(val size: Int) {
   // Allocate one extra element for sentinel value
   private[this] val bits: Array[Boolean] =
     new Array[Boolean]((size + 1) / 2 + 1)
@@ -51,7 +51,7 @@ object Sieve{
     var passes = 0
 
     while (System.currentTimeMillis() - t0 < runTimeMs) {
-      val sieve = new PrimeSieve(sieveSize)
+      val sieve = new Sieve(sieveSize)
       sieve.run()
       passes += 1
     }
@@ -74,12 +74,12 @@ object Sieve{
       100000000 -> 5761455
     )
 
-    val sieve = new PrimeSieve(100)
+    val sieve = new Sieve(100)
     sieve.run()
     println(sieve.getPrimes.mkString("Primes up to 100: ", ", ", ""))
 
     for ((size, expectedCount) <- primeCounts) {
-      val sieve = new PrimeSieve(size)
+      val sieve = new Sieve(size)
       sieve.run()
       val count = sieve.primeCount
       assert(
