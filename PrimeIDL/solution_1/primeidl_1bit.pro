@@ -118,7 +118,7 @@ PRO PRIMEIDL_1BIT
     time_end = SYSTIME(/SECONDS)
     passes++
     IF time_end - time_start GE 5D THEN BEGIN
-        PRINT,FORMAT='(A0,";",I0,";",F0,";",I0,";algorithm=",A0,";faithful=",A0,";bits=",I1)', $
+        PRINT,FORMAT='(A0,";",I0,";",F0,";",I0,";algorithm=",A0,",faithful=",A0,",bits=",I1)', $
           'kriztioan_1bit', $
           passes, $
           time_end - time_start, $
