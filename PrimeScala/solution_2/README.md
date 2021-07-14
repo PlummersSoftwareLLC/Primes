@@ -26,7 +26,7 @@ NOTE: You can check the validity by uncommenting the "validate" line at the end 
 `scilari;3514;5.0;1;algorithm=base,faithful=yes`
 
 ## Implementation Notes
-* Follows the original algorithm faithfully
+* Follows the original base algorithm faithfully
 * Looping over stuff is implemented as tail recursive functions (these are compiled to while loops by the Scala compiler)
 * Uses sentinel in the bit (Boolean) array to avoid some checks
 * Uses false as the "isPrime" value for the bit array, as Scala (Java) arrays initialize to false as default
