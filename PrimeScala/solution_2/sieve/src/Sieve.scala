@@ -42,7 +42,7 @@ final class PrimeSieve(val size: Int) {
 
 }
 
-object Sieve {
+object Sieve{
   val sieveSize = 1000000
   val runTimeMs: Long = 5000
 
