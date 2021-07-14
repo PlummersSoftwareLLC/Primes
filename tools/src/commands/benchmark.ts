@@ -4,15 +4,22 @@ import fs from 'fs';
 
 import { Command } from 'commander';
 import { uname } from 'node-uname';
+import winston from 'winston';
 
 import ReportService from '../services/report';
 import DockerService from '../services/docker';
-
 import { Result } from '../models';
 import FormatterFactory from '../formatter_factory';
 
 const reportService = new ReportService();
 const dockerService = new DockerService();
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.printf(({ level, message, }) => `${level}: ${message}`),
+  transports: [
+    new winston.transports.Console
+  ],
+});
 
 const ARCHITECTURES: { [arch: string]: string } = {
   x86_64: 'amd64',
@@ -28,21 +35,22 @@ export const command = new Command('benchmark')
 
     // Making sure the outputs directory exists
     if (!fs.existsSync(directory)) {
-      console.error(`Directory ${directory} does not exist!`);
+      logger.error(`Directory ${directory} does not exist!`);
       return;
     }
 
     // Search for all Dockerfiles within the base directory
     const files = glob.sync(path.join(directory, '**/Dockerfile'));
     if (!files.length) {
-      console.error('No implementations have been found!');
+      logger.error('No implementations have been found!');
       return;
     }
 
     // Determine architecture
     const architecture = ARCHITECTURES[uname().machine] || 'amd64';
-    console.log(`[*] Detected architecture: ${architecture}`);
+    logger.info(`Detected architecture: ${architecture}`)
 
+    // Processing files
     const results = new Array<Result>();
     files.forEach((file) => {
       const solutionDirectory = path.dirname(file);
@@ -60,42 +68,46 @@ export const command = new Command('benchmark')
           .includes(architecture);
 
         if (!hasArch) {
-          console.warn(
-            `[${implementation}][${solution}] Skipping due to architecture mismatch!`
-          );
+          logger.warn(`[${implementation}][${solution}] Skipping due to architecture mismatch!`);
           return;
         }
       }
 
       // Build the Docker image for the current solution
       try {
-        console.log(`[${implementation}][${solution}] Building ...`);
-        dockerService.buildImage(solutionDirectory, imageName);
+        logger.info(`[${implementation}][${solution}] Building...`);
+        const buildOutput = dockerService.buildImage(solutionDirectory, imageName);
+        logger.debug(buildOutput);
       } catch (e) {
-        console.error('Failed building solution!');
+        logger.error(`[${implementation}][${solution}] Failed building solution!`);
         return;
       }
 
       // Run the benchmark container and retrieve output from it
+      let output = "";
       try {
-        console.log(`[${implementation}][${solution}] Running ...`);
-        const output = dockerService.runContainer(imageName);
-
-        console.log(`[${implementation}][${solution}] Parsing output ...`);
+        logger.info(`[${implementation}][${solution}] Running...`);
+        output = dockerService.runContainer(imageName);
+      } catch (e) {
+        logger.warn(`[${implementation}][${solution}] Exited with abnormal code: ${e.status}. Results might be partial...`);
+        output = e.output
+          .filter((block: Buffer | null) => block !== null)
+          .map((block: Buffer) => block.toString('utf8'))
+          .join("");
+      } finally {
+        logger.debug(output);
+        logger.info(`[${implementation}][${solution}] Parsing output....`);
         const localResults = reportService.parseOutput(
           output,
           implementation,
           solution
         );
         results.push(...localResults);
-      } catch (e) {
-        console.error('Error running solution!');
-        return;
       }
     });
 
     if (!results.length) {
-      console.error('No data was collected!');
+      logger.error('No data was collected!');
       return;
     }
 

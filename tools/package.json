@@ -31,6 +31,7 @@
     "glob": "^7.1.7",
     "node-uname": "^3.0.4",
     "systeminformation": "^5.7.4",
-    "ts-node": "^10.0.0"
+    "ts-node": "^10.0.0",
+    "winston": "^3.3.3"
   }
 }
