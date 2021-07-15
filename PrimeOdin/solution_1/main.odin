@@ -97,9 +97,9 @@ run_sieve_bit :: proc(upper: u64) -> (sieve: BitSieve) #no_bounds_check {
             }
         }
 
-        // every second multiple can be skipped since it will be even
-        // step by 1*factor and start/end at half the original values, since we don't
-        // store evens anymore
+        // when storing full bits: every second multiple can be skipped since it
+        // will be even, but since we're only storing half the bits:
+        // step by 1*factor and start/end at half the original values
         for num := factor * factor / 2; num < upper / 2; num += factor {
             // mark non-prime
             set_bit(&sieve, num, 1);
@@ -141,9 +141,9 @@ run_sieve_byte :: proc(upper: u64) -> (sieve: ByteSieve) #no_bounds_check {
             }
         }
 
-        // every second multiple can be skipped since it will be even
-        // step by 1*factor and start/end at half the original values, since we don't
-        // store evens anymore
+        // when storing full bits: every second multiple can be skipped since it
+        // will be even, but since we're only storing half the bits:
+        // step by 1*factor and start/end at half the original values
         for num := factor * factor / 2; num < upper / 2; num += factor {
             // mark non-prime
             sieve.bits[num] = true;

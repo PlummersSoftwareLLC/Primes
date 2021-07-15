@@ -1,8 +1,9 @@
-# Odin solution by omgitsmoe
+# Odin solution by [omgitsmoe](https://github.com/omgitsmoe), [Ginger Bill](https://github.com/gingerBill) and [Kelimion](https://github.com/Kelimion)
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
@@ -37,6 +38,8 @@ Both the 1-bit as well as the 8-bit storage version will be run.
 
 On a Ryzen 1600X using Odin version `dev-2021-07`:
 ```
-odin_bit_moe;8482;5.001;1;algorithm=base,faithful=yes,bits=1
-odin_byte_moe;9775;5.000;1;algorithm=base,faithful=yes,bits=8
+odin_bit_moe;8985;5.000;1;algorithm=base,faithful=yes,bits=1
+odin_byte_moe;14818;5.000;1;algorithm=base,faithful=yes,bits=8
+odin_bit_threaded_moe;57279;5.005;12;algorithm=base,faithful=yes,bits=1
+odin_byte_threaded_moe;77369;5.038;12;algorithm=base,faithful=yes,bits=8
 ```
