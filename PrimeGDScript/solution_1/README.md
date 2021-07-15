@@ -16,7 +16,9 @@ docker build -t primes-gdscript .
 docker run primes-gdscript
 ```
 
-This docker container is built on top of Alpine and downloads a headless version of The Godot Game Engine to run the script
+This docker container is built on top of Alpine and downloads a headless version of The Godot Game Engine to run the script.
+
+Thanks to [BearDooks](https://github.com/GodotNuts/GodotServer-Docker) for their Godot Docker implementation.
 
 ## Output
 ### Machine Specs
@@ -27,6 +29,11 @@ This docker container is built on top of Alpine and downloads a headless version
 ### Local Results
 ```
 Passes: 124, Time: 5509ms, Avg: 44.427419, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: True
+OrigamiDev-Pete;124;5.509;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Docker Results
+```
+Passes: 94, Time: 5132ms, Avg: 54.595745, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: True
+OrigamiDev-Pete;94;5.132;1;algorithm=base,faithful=yes,bits=8
+```
