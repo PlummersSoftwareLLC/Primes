@@ -11,21 +11,20 @@ export class PrimeSieve {
         .set(10000000, 664579)
         .set(100000000, 5761455);
 
-    @inline
-    constructor(size: u32) {
+    // @ts-ignore: decorator
+    @inline constructor(size: u32) {
         this.sieveSize = size;
         // StaticArray did look a bit faster than UInt8Array in testing
-        this.Bits = new StaticArray<bool>(size);
+        this.Bits = new StaticArray(size);
     }
 
     validateResults(): bool {
-        if (PrimeSieve.primeCounts[this.sieveSize])
-            return PrimeSieve.primeCounts[this.sieveSize] == this.countPrimes();
+        if (PrimeSieve.primeCounts.has(this.sieveSize))
+            return PrimeSieve.primeCounts.get(this.sieveSize) == this.countPrimes();
         return false;
     }
 
-    @inline
-    runSieve(): void {
+    @inline runSieve(): void {
         const size = this.sieveSize;
         const bits = this.Bits;
         let factor = 3;
