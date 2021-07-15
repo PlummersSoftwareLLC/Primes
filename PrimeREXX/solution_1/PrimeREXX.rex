@@ -1,4 +1,23 @@
 /* rexx */
+signal Main
+
+Sieve:
+count = 0
+do while time("E") <= 5
+  primes. = 1
+  do i = 3 to sqRt by 2
+    if primes.i then
+      do
+        incr = i + i; strt = i * i
+        do j = strt to maxVal by incr
+          primes.j = 0
+        end j
+      end
+  end i
+  count = count + 1
+end
+return
+
 /*
 ** Determine the prime numbers less than a number passed as a
 ** program parameter (maxVal). The default maxVal is 1,000,000
@@ -7,8 +26,7 @@
 ** use more memory.
 **
 */
-primes. = 1
-count = 0
+Main:
 parse arg maxVal printSw
 if maxVal = 0 | maxVal = 1 | maxVal = 2 | maxVal = 3 then
   do
@@ -58,22 +76,6 @@ select
     nop
 end /* select*/
 return 0
-
-
-Sieve:
-do while time("E") <= 5
-  do i = 3 to sqRt by 2
-    if primes.i then
-      do
-        incr = i + i; strt = i * i
-        do j = strt to maxVal by incr
-          primes.j = 0
-        end j
-      end
-  end i
-  count = count + 1
-end
-return
 
 
 PrintDetail: procedure expose primes.
