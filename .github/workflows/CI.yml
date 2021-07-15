@@ -28,7 +28,6 @@ jobs:
 
     needs: ["collect-solutions"]
 
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -45,7 +44,7 @@ jobs:
           echo "::set-output name=normalized::${NAME}"
       
       - name: Lint Dockefile
-        uses: hadolint/hadolint-action@v1.4.0
+        uses: hadolint/hadolint-action@v1.3.0
         with:
           dockerfile: "${{ matrix.solution }}/Dockerfile"
           failure-threshold: error
