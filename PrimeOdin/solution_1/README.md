@@ -32,6 +32,8 @@ docker build -t odin-primes .
 docker run --rm odin-primes
 ```
 
+Thanks to rbergen for helping me with the Docker image.
+
 ## Output
 
 Both the 1-bit as well as the 8-bit storage version will be run.
