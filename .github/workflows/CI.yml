@@ -41,6 +41,12 @@ jobs:
         run: |
           NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
           echo "::set-output name=normalized::${NAME}"
+      
+      - name: Dockefile lint
+        uses: hadolint/hadolint-action@v1.5.0
+        with:
+          dockerfile: "${{ matrix.solution }}/Dockerfile"
+          failure-threshold: warn
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
