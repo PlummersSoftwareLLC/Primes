@@ -60,23 +60,18 @@ function getBit {
 	(( $1 & 1 && !bitArray[\$1] ))
 }
 
-function clearBit {
-	# Mark as composite
-	bitArray[$1]=1
-}
-
 function runSieve {
 	local factor num q
 	sqrt q "$sieveSize"
 	for ((factor=3; factor <= q; factor+=2)); do
 		for ((num=factor; num < sieveSize; num+=2)); do
-			if getBit "$num"; then
+			if (( !bitArray[\$num] )); then
 				factor=$num
 				break
 			fi
 		done
 		for ((num=factor**2; num < sieveSize; num+=factor*2)); do
-			clearBit "$num"
+			bitArray[$num]=1
 		done
 	done
 }
@@ -127,7 +122,7 @@ function printResults {
 		"$count" "$valid"
 
 	# rbergen: added drag-race format output
-	printf "\nbash;%s;%s;1;algorithm=base,faithful=no\n" "$passes" "$dur_str"
+	printf "\nbash_inline;%s;%s;1;algorithm=base,faithful=no\n" "$passes" "$dur_str"
 }
 
 function main {

@@ -31,23 +31,28 @@ package PrimeSieve {
 
         my $factor = 3;
         my $q      = sqrt $self->{sieve_size};
+        my @bits   = @{$self->{bits}};
+        my $ss     = $self->{sieve_size};
+        $#bits     = $ss;
+
         while ( $factor <= $q ) {
-            my $num = $factor;
-            for ( my $num = $factor ; $num < $self->{sieve_size} ; $num += 2 ) {
-                unless ( $self->{bits}[$num] ) {
+            for ( my $num = $factor ; $num < $ss ; $num += 2 ) {
+                unless ( $bits[$num] ) {
                     $factor = $num;
                     last;
                 }
             }
 
-            my $num2 = $factor * $factor;
-            while ( $num2 < $self->{sieve_size} ) {
-                $self->{bits}[$num2] = 1;
+            my $num2 = $factor ** 2;
+            while ( $num2 < $ss ) {
+                $bits[$num2] = 1;
                 $num2 += $factor * 2;
             }
 
             $factor += 2;
         }
+
+        $self->{bits} = \@bits;
     }
 
     sub print_results {
