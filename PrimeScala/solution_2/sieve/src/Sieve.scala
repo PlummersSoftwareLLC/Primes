@@ -7,6 +7,18 @@ final class Sieve(val size: Int) {
     new Array[Boolean]((size + 1) / 2 + 1)
   bits(bits.size - 1) = true
 
+  private[this] val upperBound = sqrt(size).toInt + 1
+
+  @tailrec
+  def mainLoop(factor: Int): Unit = {
+    if (factor < upperBound) {
+      markMultiples(factor * factor, factor * 2)
+      mainLoop(nextPrime(factor + 2))
+    }
+  }
+
+  mainLoop(3)
+
   private[this] def markBit(index: Int): Unit = bits(index >> 1) = true
 
   private[this] def notPrime(k: Int): Boolean = bits(k >> 1)
@@ -21,18 +33,10 @@ final class Sieve(val size: Int) {
     if (i < size) {
       markBit(i)
       markMultiples(i + increment, increment)
-    } else ()
-  }
-
-  def run(): Unit = {
-    var factor = 3
-    val upperBound = (sqrt(size) + 1).toInt
-
-    while (factor < upperBound) {
-      markMultiples(factor * factor, factor * 2)
-      factor = nextPrime(factor + 2)
     }
   }
+
+  private[this] def run(): Unit = {}
 
   def primeCount: Int = bits.take(size / 2 + 1).count(_ == false)
 
@@ -52,7 +56,6 @@ object Sieve {
 
     while (System.currentTimeMillis() - t0 < runTimeMs) {
       val sieve = new Sieve(sieveSize)
-      sieve.run()
       passes += 1
     }
 
@@ -75,12 +78,10 @@ object Sieve {
     )
 
     val sieve = new Sieve(200)
-    sieve.run()
     println(sieve.getPrimes.mkString(s"Primes up to ${sieve.size}: ", ", ", ""))
 
     for ((size, expectedCount) <- primeCounts) {
       val sieve = new Sieve(size)
-      sieve.run()
       val count = sieve.primeCount
       assert(
         count == expectedCount,
