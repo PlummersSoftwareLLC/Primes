@@ -1,7 +1,3 @@
-/*
- * Java Prime Sieve
- */
-
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.BitSet;
@@ -12,13 +8,26 @@ public class PrimeSieveJavaBitSet {
   private static final int LIMIT = 1000000;
   private static final int TIME = 5;
 
+  // Historical data for validating our results - the number of primes to be found under some
+  // limit, such as 168 primes under 1000
+  private static final Map<Integer, Integer> MY_DICT = Map.of( //
+      10, 1, //
+      1000, 168, //
+      10000, 1229, //
+      100000, 9592, //
+      1000000, 78498, //
+      10000000, 664579, //
+      100000000, 5761455 //
+  );
+
   public static void main(final String[] args) {
 
-    long passes = 0;
-    final PrimeSieve sieve = new PrimeSieve(LIMIT);
-    final long tStart = currentTimeMillis();
+    var passes = 0;
+    var sieve = new PrimeSieve(LIMIT);
+    final var tStart = currentTimeMillis();
 
     while (MILLISECONDS.toSeconds(currentTimeMillis() - tStart) < TIME) {
+      sieve = new PrimeSieve(LIMIT);
       sieve.runSieve();
       passes++;
     }
@@ -28,56 +37,16 @@ public class PrimeSieveJavaBitSet {
 
   public static class PrimeSieve {
 
-    private int sieveSize = 0; // Storage for sieve - since we filter evens, just half as many bits
-    private final BitSet bitArray; // Upper limit, highest prime we'll consider
-
-    // Historical data for validating our results - the number of primes to be found under some
-    // limit, such as 168 primes under 1000
-    private final Map<Integer, Integer> myDict = Map.of( //
-        10, 1, //
-        1000, 168, //
-        10000, 1229, //
-        100000, 9592, //
-        1000000, 78498, //
-        10000000, 664579, //
-        100000000, 5761455 //
-    );
+    private final int sieveSize;
+    private final BitSet bitArray;
 
     public PrimeSieve(final int size) {
+      // Upper limit, highest prime we'll consider
       this.sieveSize = size;
+      // since we filter evens, just half as many bits
       final var bitArrayLength = (this.sieveSize + 1) / 2;
       this.bitArray = new BitSet(bitArrayLength);
       this.bitArray.set(0, bitArrayLength, true);
-    }
-
-    // Return the count of bits that are still set in the sieve. Assumes you've already called
-    // runSieve, of course!
-    public int countPrimes() {
-      return this.bitArray.cardinality();
-    }
-
-    // Look up our count of primes in the historical data (if we have it) to see if it matches
-    public boolean validateResults() {
-      if (this.myDict.containsKey(this.sieveSize))
-        return this.myDict.get(this.sieveSize) == this.countPrimes();
-      return false;
-    }
-
-    // Gets a bit from the array of bits, but automatically just filters out even numbers as
-    // false, and then only uses half as many bits for actual storage
-    private boolean getBit(final int index) {
-      if (index % 2 == 0)
-        return false;
-      return this.bitArray.get(index / 2);
-    }
-
-    // Reciprocal of GetBit, ignores even numbers and just stores the odds. Since the prime sieve
-    // work should never waste time clearing even numbers, this code will assert if you try to
-    private void clearBit(final int index) {
-      if (index % 2 == 0) {
-        System.out.println("You are setting even bits, which is sub-optimal");
-      }
-      this.bitArray.set(index / 2, false);
     }
 
     // Calculate the primes up to the specified limit
@@ -101,6 +70,36 @@ public class PrimeSieveJavaBitSet {
 
         factor += 2; // No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
       }
+    }
+
+    // Return the count of bits that are still set in the sieve. Assumes you've already called
+    // runSieve, of course!
+    public int countPrimes() {
+      return this.bitArray.cardinality();
+    }
+
+    // Look up our count of primes in the historical data (if we have it) to see if it matches
+    public boolean validateResults() {
+      if (MY_DICT.containsKey(this.sieveSize))
+        return MY_DICT.get(this.sieveSize) == this.countPrimes();
+      return false;
+    }
+
+    // Gets a bit from the array of bits, but automatically just filters out even numbers as
+    // false, and then only uses half as many bits for actual storage
+    private boolean getBit(final int index) {
+      if (index % 2 == 0)
+        return false;
+      return this.bitArray.get(index / 2);
+    }
+
+    // Reciprocal of GetBit, ignores even numbers and just stores the odds. Since the prime sieve
+    // work should never waste time clearing even numbers, this code will assert if you try to
+    private void clearBit(final int index) {
+      if (index % 2 == 0) {
+        System.out.println("You are setting even bits, which is sub-optimal");
+      }
+      this.bitArray.set(index / 2, false);
     }
 
     // Displays the primes found (or just the total count, depending on what you ask for)
