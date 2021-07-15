@@ -43,7 +43,7 @@ jobs:
           echo "::set-output name=normalized::${NAME}"
       
       - name: Dockefile lint
-        uses: hadolint/hadolint-action@v1.5.0
+        uses: hadolint/hadolint-action@v1.4.0
         with:
           dockerfile: "${{ matrix.solution }}/Dockerfile"
           failure-threshold: warn
