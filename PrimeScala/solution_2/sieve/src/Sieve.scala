@@ -59,7 +59,7 @@ object Sieve {
     val dt = System.currentTimeMillis() - t0
     println(s"scilari;$passes;${dt / 1000.0};1;algorithm=base,faithful=yes")
 
-    validate
+    // validate
   }
 
   def validate = {
