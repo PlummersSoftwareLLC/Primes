@@ -127,7 +127,7 @@ class PrimeSieve {
   /// This method constructs a new instance of the PrimeSieve object, where the
   /// [sieveSize] is set by the first positional argument, and the [bits] list
   /// will be initialized to 1/16 the [sieveSize] and filled with 0xff.
-  PrimeSieve(this._sieveSize) : _bits = Uint8List((_sieveSize + 1) >> 4) {
+  PrimeSieve(this._sieveSize) : _bits = Uint8List((_sieveSize + 15) >> 4) {
     for (var i = 0; i < _bits.length; i++) {
       _bits[i] = 0xff;
     }
