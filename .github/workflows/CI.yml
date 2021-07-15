@@ -44,10 +44,11 @@ jobs:
           echo "::set-output name=normalized::${NAME}"
       
       - name: Lint Dockefile
-        uses: hadolint/hadolint-action@v1.3.0
+        uses: jbergstroem/hadolint-gh-action@v1
         with:
           dockerfile: "${{ matrix.solution }}/Dockerfile"
-          failure-threshold: error
+          output_format: tty
+          error_level: 0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
