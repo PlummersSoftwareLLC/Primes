@@ -1,0 +1,4 @@
+override:
+  error:
+    - DL3006
+    - DL3020
