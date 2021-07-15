@@ -28,7 +28,9 @@ jobs:
 
     needs: ["collect-solutions"]
 
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
 
@@ -47,7 +49,7 @@ jobs:
         with:
           dockerfile: "${{ matrix.solution }}/Dockerfile"
           failure-threshold: warn
-        continue-on-error: true
+        # continue-on-error: true
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
