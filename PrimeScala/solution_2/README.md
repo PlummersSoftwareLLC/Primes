@@ -10,11 +10,11 @@ This tail recursive solution improves the current Scala solution_1 by both perfo
 ## Run Instructions
 * JVM
 
-`./mill sieve.run`
+`./mill sieveJVM.run`
 
 * Native
 
-`./mill sieveNative.run`
+`./mill sieve.run`
 
 * ScalaJS
 
