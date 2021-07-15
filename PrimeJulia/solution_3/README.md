@@ -28,6 +28,11 @@ also an "inverted" bit array, i.e., bits are set when the number is
 simplifies the set_bit operation slightly
 (`arr[i] |= mask vs. arr[i] &= ~mask`).
 
+If you see any room for improvement in the code or have any
+suggestions, don't hesitate to open an issue, pull request (PR), 
+discussion, or the like. Don't forget to tag me at `@louie-github` so I
+can be notified if my personal input is either wanted or needed.
+
 
 ## Run instructions
 
