@@ -4,4 +4,6 @@ WORKDIR /opt/app
 
 COPY . .
 
-ENTRYPOINT [ "swift", "run", "--configuration", "release" ]
+RUN swift build --configuration release
+
+ENTRYPOINT ["./.build/release/PrimeSieveSwift", "-n", "1000000", "-t", "5.0"]
