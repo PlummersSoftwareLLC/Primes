@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:time"
 import "core:math"
 import "core:thread"
+import "core:sync";
 
 import "core:c";
 foreign import sysinfo "system:c"
@@ -177,6 +178,32 @@ measure_run :: proc(size: u64, run_func: $T) -> (passes: u32, total_time: f64) {
     return passes, total_time;
 }
 
+run_threaded :: proc(thread_count: int, $size: u64, $run_func: $T) ->  (total_passes: u32, total_time: f64) {
+    start_time := time.tick_now();
+
+    @static wg: sync.Wait_Group;
+    sync.wait_group_init(&wg);
+    defer sync.wait_group_destroy(&wg);
+
+    sync.wait_group_add(&wg, thread_count);
+
+    local_passes := make([]u32, thread_count);
+    for pass, i in &local_passes {
+        thread.run_with_poly_data(&pass, proc(passes: ^u32) {
+            passes^, _ = measure_run(size, run_func);
+            sync.wait_group_done(&wg);
+        });
+    }
+
+    sync.wait_group_wait(&wg);
+
+    for c in local_passes {
+        total_passes += c;
+    }
+    total_time = time.duration_seconds(time.tick_since(start_time));
+    return total_passes, total_time;
+}
+
 main :: proc() {
     size :: 1_000_000;
 
@@ -189,27 +216,12 @@ main :: proc() {
 
     // threaded version
     thread_count := get_num_cores();
-    start_time := time.tick_now();
-    pool := thread.Pool{};
-    thread.pool_init(&pool, thread_count);
-    defer thread.pool_destroy(&pool);
-
-    local_passes := make([]u32, thread_count);
-    for pass, i in &local_passes {
-        thread.pool_add_task(&pool, proc(task: ^thread.Task) {
-            passes, _ := measure_run(size, run_sieve_bit);
-            (cast(^u32)task.data)^ = passes;
-        }, &pass, i);
-    }
-    thread.pool_start(&pool);
-    thread.pool_wait_and_process(&pool);
-
-    total_passes := u32(0);
-    for c in local_passes {
-        total_passes += c;
-    }
-    total = time.duration_seconds(time.tick_since(start_time));
+    passes, total = run_threaded(thread_count, size, run_sieve_bit);
+    fmt.printf(
+        "\nodin_bit_threaded_moe;%v;%v;%v;algorithm=base,faithful=yes,bits=1",
+        passes, total, thread_count);
+    passes, total = run_threaded(thread_count, size, run_sieve_byte);
     fmt.printf(
         "\nodin_byte_threaded_moe;%v;%v;%v;algorithm=base,faithful=yes,bits=8",
-        total_passes, total, thread_count);
+        passes, total, thread_count);
 }
