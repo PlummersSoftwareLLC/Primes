@@ -4,6 +4,30 @@ package main
 import "core:fmt"
 import "core:time"
 import "core:math"
+import "core:thread"
+
+import "core:c";
+foreign import sysinfo "system:c"
+import "core:sys/windows"
+
+@(default_calling_convention="c")
+foreign sysinfo {
+    // returns number of configured cores on linux
+    get_nprocs_conf :: proc() -> c.int ---;
+}
+
+get_num_cores :: proc() -> int {
+    when ODIN_OS == "windows" {
+        sys_info := windows.SYSTEM_INFO{};
+        windows.GetSystemInfo(&sys_info);
+        return int(sys_info.dwNumberOfProcessors);
+    } else when ODIN_OS == "linux" {
+        return int(get_nprocs_conf());
+    } else {
+        panic("Not implemented");
+    }
+}
+
 
 expected :: proc(upper: u64) -> u64 {
     switch upper {
@@ -142,6 +166,7 @@ measure_run :: proc(size: u64, run_func: $T) -> (passes: u32, total_time: f64) {
         sieve := run_func(size);
         primes = count_primes(&sieve);
         passes += 1;
+        free((^rawptr)(&sieve.bits)^, context.temp_allocator);
     }
     total_time = time.duration_seconds(time.tick_since(start_time));
 
@@ -154,8 +179,37 @@ measure_run :: proc(size: u64, run_func: $T) -> (passes: u32, total_time: f64) {
 
 main :: proc() {
     size :: 1_000_000;
+
     passes, total := measure_run(size, run_sieve_bit);
     fmt.printf("\nodin_bit_moe;%v;%v;1;algorithm=base,faithful=yes,bits=1", passes, total);
+    free_all(context.temp_allocator);
     passes, total = measure_run(size, run_sieve_byte);
     fmt.printf("\nodin_byte_moe;%v;%v;1;algorithm=base,faithful=yes,bits=8", passes, total);
+    free_all(context.temp_allocator);
+
+    // threaded version
+    thread_count := get_num_cores();
+    start_time := time.tick_now();
+    pool := thread.Pool{};
+    thread.pool_init(&pool, thread_count);
+    defer thread.pool_destroy(&pool);
+
+    local_passes := make([]u32, thread_count);
+    for pass, i in &local_passes {
+        thread.pool_add_task(&pool, proc(task: ^thread.Task) {
+            passes, _ := measure_run(size, run_sieve_bit);
+            (cast(^u32)task.data)^ = passes;
+        }, &pass, i);
+    }
+    thread.pool_start(&pool);
+    thread.pool_wait_and_process(&pool);
+
+    total_passes := u32(0);
+    for c in local_passes {
+        total_passes += c;
+    }
+    total = time.duration_seconds(time.tick_since(start_time));
+    fmt.printf(
+        "\nodin_byte_threaded_moe;%v;%v;%v;algorithm=base,faithful=yes,bits=8",
+        total_passes, total, thread_count);
 }
