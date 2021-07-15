@@ -23,7 +23,7 @@ This algorithm makes use of this repeating pattern. If we know the repeating pat
 
 - It is only efficient if it affects every word. So only primes are considered that are  smaller than half the word size. This means that in the cross-out phase each step would always affect every word because the step size is smaller than one word.
 - The copy of the pattern has to occur often enough to get benefit from the repeating pattern calculation. Therefor this code calculates a repeating pattern that is less than 1% of the total sieve size, so it can be copied 99 times. This results in a reduction in bit calculations for low primes with 99%.
-- To make the calculation fair, no knowledge of what the prime numbers are is included in the algorithm. In other words, the repeating pattern, what primes to use for that is calculated in each pass and depends on the word size and sieve size.
+- To make the calculation fair, no knowledge of what the prime numbers are is included in the algorithm. In other words, the repeating pattern and what primes to use for that pattern is calculated in each pass and depends on the word size and sieve size.
 
 ### Calculation steps
 
