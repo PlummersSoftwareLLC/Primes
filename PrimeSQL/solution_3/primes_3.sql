@@ -58,6 +58,30 @@ create table known_prime_counts (
   nr_of_primes  INT
 );
 
+create table primes_table_template (
+  n     INT
+);
+
+create table naturals_table (
+  n     INT
+);
+
+create table primes_first_segment (
+  n     INT
+);
+create table not_primes (
+  n     INT
+);
+create table primes (
+  n     INT
+);
+
+alter table naturals_table INMEMORY;
+alter table primes_first_segment INMEMORY;
+alter table not_primes INMEMORY;
+alter table primes INMEMORY;
+
+
 /*
   Purpose:
   - create a static table to validate the result
@@ -167,23 +191,17 @@ END;
     This procedure calculates the primes to the specified maxium number
 */
 CREATE or REPLACE procedure run_sieve (
-  max_limit  IN              INT
-  bit_array  IN OUT  NOCOPY  bit_tab;
+   max_limit  IN    INT
 ) as
-    flag_0          flag_t      default flag_t(0);
-    flag_1          flag_t      default flag_t(1);
 BEGIN
+    -- make sure we start with empty calculation tables
+    EXECUTE IMMEDIATE 'truncate table naturals_table';
+    EXECUTE IMMEDIATE 'truncate table primes_first_segment';
+    EXECUTE IMMEDIATE 'truncate table primes';
+    EXECUTE IMMEDIATE 'truncate table not_primes';
 
-    select flag_1
-        bulk collect
-    into
-        bit_array
-    from 
-        (
-          select level as n
-          from dual
-            connect by level <(max_limit/2)
-        )
+    insert into naturals_table
+      select n from primes_table_template
     ;
     
     -- first get the primes that are smaller than the square root of the limit

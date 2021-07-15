@@ -36,7 +36,7 @@ create table TIMING as (select systimestamp  as time from dual);
 
 select (time - systimestamp)  from TIMING;  
 
--- difference in time in seconds
+-- difference in time in seconds with a fraction
 CREATE OR REPLACE function timestamp_diff(a timestamp, b timestamp) return number is 
 begin
   return extract (day    from (a-b))*24*60*60 +
@@ -63,11 +63,8 @@ with naturals (n) as (
   select n from naturals
 ;
 
-
---
--- below is the basic calculation
-
-create table naturals_table as (
+-- private temp table
+create PRIVATE TEMPORARY table ORA$PTT_naturals_table as (
   select n as n from (  
     with naturals (n) as (
                     select 3 from dual
@@ -80,6 +77,17 @@ create table naturals_table as (
 )
 ;
 
+-- real slow:
+create PRIVATE TEMPORARY table ORA$PTT_naturals_table as (
+  select 2 as n from dual
+  union all
+  select ((rownum * 2) +1) as n
+  from ALL_OBJECTS
+  where ((rownum * 2) +1) < 1000000
+)
+;
+
+-- in one go the not primes:
 create table not_primes as (
   select n as n from ( 
     with
@@ -95,8 +103,99 @@ create table not_primes as (
 )
 ;
 
+set pagesize 1000
+set timing on
+--
+-- below is the basic calculation
+drop table naturals_table;
+create table naturals_table as (
+  select 2 as n from dual
+  union all
+  select n from (
+    select level, ((level * 2) +1) as n
+    from dual
+    connect by level <(1000000/2)
+  )
+)
+;
+alter table naturals_table INMEMORY;
+
+
 create index naturals_table_1 on naturals_table(n);
 
+
+create table primes_first_segment as (
+  select n from naturals_table where n <=1000
+  minus
+  select distinct(n) as n from ( 
+    with
+    product (num,not_prime) as (
+        select n as num,n*n as not_prime from naturals_table where n < 334
+      union all 
+        select num,not_prime + (2 * num) 
+        from product 
+        where (not_prime + (2 * num))<=1000
+    )
+    select not_prime as n from product
+  )
+)
+;
+
+alter table primes_first_segment INMEMORY;
+
+create index primes_first_segment_i on primes_first_segment(n);
+
+-- one one go, is slow in oracle
+create table primes as (
+  select n from primes_first_segment
+  union all 
+  select n from naturals_table where n >1000
+  minus
+  select n as n from ( 
+    with
+    product (num,not_prime) as (
+        select n,n*n from primes_first_segment
+      union all 
+        select num,not_prime + (2 * num) 
+        from product 
+        where (not_prime + (2 * num))<=1000000
+    )
+    select not_prime as n from product
+  )
+)
+;
+
+-- alternative:
+-- 7 seconds
+create table not_primes as (
+  select n as n from ( 
+    with
+    product (num,not_prime) as (
+        select n,n*n from primes_first_segment
+      union all 
+        select num,not_prime + (2 * num) 
+        from product 
+        where (not_prime + (2 * num))<=1000000
+    )
+    select not_prime as n from product
+  )
+)
+;
+
+alter table not_primes INMEMORY;
+create index not_primes_i on not_primes(n);
+
+-- this is fast
+create table primes as (
+  select n from primes_first_segment
+  union all 
+  select n from naturals_table where n >1000
+  minus
+  select n from not_primes
+)
+;
+
+-- if done in one go
 create table primes as (
   select n as n from (
           select n from naturals_table
@@ -110,7 +209,13 @@ select count(*) from naturals_table;
 select count(*) from primes;
 
 
+drop table primes_first_segment;
 drop table primes;
 drop table not_primes;
 drop table naturals_table;
 
+SELECT TABLE_NAME, INMEMORY FROM USER_TABLES
+where table_name like '%PRIME%';
+
+Alter system set inmemory_size = 20G scope=spfile;
+set autotrace traceonly;
