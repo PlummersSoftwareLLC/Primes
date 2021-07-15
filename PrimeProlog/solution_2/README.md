@@ -1,11 +1,13 @@
 # Prolog solution by jimbxb
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-A solution written in Prolog. This is probably far from optimal for the language, I just thought some Prolog representation would be nice!
+Another solution written in Prolog. 
+
+This solution differs from solution 1 by using a dynamically defined predicate to track which numbers are composite.
 
 ## Run
 
@@ -30,7 +32,7 @@ $ docker run --rm prolog-primes
 ```
 $ swipl -O -o primes -c ./primes.pl
 $ ./primes
-jimbxb_prolog_1;1;7.271000;1;algorithm=base,faithful=yes,bits=1
+jimbxb_prolog_2;4;5.586000;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Author

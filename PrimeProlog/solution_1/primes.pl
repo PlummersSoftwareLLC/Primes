@@ -8,7 +8,7 @@ main(Argv) :-
   timed_primes(N, 5000, Iters),
   statistics(walltime, [T1|_]),
   format(
-    "jimbxb_prolog;~d;~f;1;algorithm=base,faithful=yes,bits=1~n", 
+    "jimbxb_prolog_1;~d;~f;1;algorithm=base,faithful=yes,bits=1~n", 
     [Iters, (T1 - T0) / 1000]
   ),
   true.
