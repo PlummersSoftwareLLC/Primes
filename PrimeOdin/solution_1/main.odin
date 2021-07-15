@@ -26,11 +26,7 @@ when ODIN_OS == "windows" {
     }
 
     get_num_cores :: proc() -> int {
-        when ODIN_OS == "linux" {
-            return int(get_nprocs_conf());
-        } else {
-            panic("Not implemented");
-        }
+        return int(get_nprocs_conf());
     }
 } else {
     #assert(0);
@@ -220,10 +216,8 @@ main :: proc() {
 
     passes, total := measure_run(size, run_sieve_bit);
     fmt.printf("\nodin_bit_moe;%v;%v;1;algorithm=base,faithful=yes,bits=1", passes, total);
-    free_all(context.temp_allocator);
     passes, total = measure_run(size, run_sieve_byte);
     fmt.printf("\nodin_byte_moe;%v;%v;1;algorithm=base,faithful=yes,bits=8", passes, total);
-    free_all(context.temp_allocator);
 
     // threaded version
     thread_count := get_num_cores();

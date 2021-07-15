@@ -9,7 +9,7 @@
 
 Faithful [Odin](https://odin-lang.org/) implementation of the base algorithm ([based on davepl's
 C++ version](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeCPP/solution_1))
-with 1- and 8-bit versions.
+with 1- and 8-bit versions, which will be run in both single and multiple threads.
 
 ## Run instructions
 
