@@ -30,8 +30,11 @@ simplifies the set_bit operation slightly
 
 If you see any room for improvement in the code or have any
 suggestions, don't hesitate to open an issue, pull request (PR), 
-discussion, or the like. Don't forget to tag me at `@louie-github` so I
+Discussion, or the like. Don't forget to tag me at `@louie-github` so I
 can be notified if my personal input is either wanted or needed.
+I'm open to fixing stylistic issues or discussing cosmetic changes to
+the code, but for those, it might be best if you open a Discussion
+first before opening an issue or pull request.
 
 
 ## Run instructions
