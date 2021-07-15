@@ -2,9 +2,6 @@
     "entries": [
         "./src/index.ts"
     ],
-    "options": {
-        "importTable": true
-    },
     "targets": {
         "release": {
             "optimize": true,
