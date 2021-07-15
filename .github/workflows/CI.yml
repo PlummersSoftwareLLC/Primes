@@ -48,8 +48,7 @@ jobs:
         uses: hadolint/hadolint-action@v1.4.0
         with:
           dockerfile: "${{ matrix.solution }}/Dockerfile"
-          failure-threshold: warn
-        # continue-on-error: true
+          failure-threshold: error
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
