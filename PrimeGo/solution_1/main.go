@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"math/bits"
 	"time"
 )
 
@@ -23,13 +24,13 @@ func (s *Sieve) runSieve() {
 
 	for factor <= q {
 		for num := factor; num < s.sieveSize; num += 2 {
-			if s.bitArray[num] {
+			if s.getBit(num / 2) {
 				factor = num
 				break
 			}
 		}
 		for num := factor * factor; num < s.sieveSize; num += factor * 2 {
-			s.bitArray[num] = false
+			s.clearBit(num / 2)
 		}
 		factor += 2
 	}
@@ -37,7 +38,23 @@ func (s *Sieve) runSieve() {
 
 type Sieve struct {
 	sieveSize int
-	bitArray  []bool
+	bitArray  []uint8
+}
+
+func (s *Sieve) getBit(num int) bool {
+	// which BYTE is it in?
+	byte := num / 8
+	// which position in the byte is the bit stored?
+	position := num % 8
+	return (s.bitArray[byte] & bits.RotateLeft8(1, position)) != 0
+}
+
+func (s *Sieve) clearBit(num int) {
+	// which BYTE is it in?
+	byte := num / 8
+	// which position in the byte is the bit stored?
+	position := num % 8
+	s.bitArray[byte] = bits.RotateLeft8(254, position) & s.bitArray[byte]
 }
 
 func (s Sieve) Validate() bool {
@@ -52,7 +69,7 @@ func (s Sieve) Validate() bool {
 func (s Sieve) countPrimes() int {
 	count := 1
 	for i := 3; i < s.sieveSize; i += 2 {
-		if s.bitArray[i] {
+		if s.getBit(i / 2) {
 			count++
 		}
 	}
@@ -66,7 +83,7 @@ func (s Sieve) Results(showResults bool, duration time.Duration, passes int) {
 
 	count := 1
 	for num := 3; num <= s.sieveSize; num += 2 {
-		if s.bitArray[num] {
+		if s.getBit(num / 2) {
 			if showResults {
 				fmt.Printf("%d, ", num)
 			}
@@ -78,9 +95,9 @@ func (s Sieve) Results(showResults bool, duration time.Duration, passes int) {
 		fmt.Println()
 	}
 
-	fmt.Printf("Passes: %d, Time: %d, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %v\n",
+	fmt.Printf("Passes: %d, Time: %v, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %v\n",
 		passes,
-		duration,
+		duration.Seconds(),
 		float64(duration.Milliseconds()/int64(passes)),
 		s.sieveSize,
 		count,           /* count */
@@ -96,13 +113,22 @@ func main() {
 
 	passes := 0
 	startClock := time.Now()
-
-	initBitArray := make([]bool, 1e6)
+	limit := int(1e6)
+	// allocate the minimum required bytes for marking primes
+	// we do not need to track even numbers
+	// therefore we can half the number of bits
+	bytes := (limit / 2) / 8
+	if (limit/2)%8 != 0 {
+		bytes = bytes + 1
+	}
+	initBitArray := make([]uint8, bytes)
 	for {
 		for i := range initBitArray {
-			initBitArray[i] = true
+			initBitArray[i] = 255
 		}
-		sieve := Sieve{bitArray: initBitArray, sieveSize: 1e6}
+		sieve := Sieve{bitArray: initBitArray, sieveSize: limit}
+		// set any extra unused bits at the end to 0
+		sieve.bitArray[len(sieve.bitArray)-1] >>= ((8 * bytes) - (limit / 2))
 		sieve.runSieve()
 		passes++
 		if time.Since(startClock).Seconds() >= 5 {
