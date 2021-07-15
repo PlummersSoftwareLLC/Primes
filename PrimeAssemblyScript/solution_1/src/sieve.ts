@@ -11,6 +11,7 @@ export class PrimeSieve {
         .set(10000000, 664579)
         .set(100000000, 5761455);
 
+    @inline
     constructor(size: u32) {
         this.sieveSize = size;
         // StaticArray did look a bit faster than UInt8Array in testing

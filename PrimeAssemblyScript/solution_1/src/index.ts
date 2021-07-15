@@ -2,11 +2,11 @@ import "wasi";
 import { PrimeSieve } from './sieve';
 
 export function bench(): void {
-    let passes: u32 = 0;
-    const startTime: i64 = Date.now();
-    let sieve: PrimeSieve;
+    let passes = 0;
+    let sieve: PrimeSieve | null;
+    const startTime = Date.now();
     while (Date.now() - startTime < 10000) {
-        sieve = new PrimeSieve(1000000)
+        sieve = new PrimeSieve(1000000);
         sieve.runSieve();
         ++passes;
     }
