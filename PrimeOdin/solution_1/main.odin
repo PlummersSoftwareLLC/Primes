@@ -7,27 +7,35 @@ import "core:math"
 import "core:thread"
 import "core:sync";
 
-import "core:c";
-foreign import sysinfo "system:c"
-import "core:sys/windows"
+when ODIN_OS == "windows" {
+    import "core:sys/windows"
 
-@(default_calling_convention="c")
-foreign sysinfo {
-    // returns number of configured cores on linux
-    get_nprocs_conf :: proc() -> c.int ---;
-}
-
-get_num_cores :: proc() -> int {
-    when ODIN_OS == "windows" {
+    get_num_cores :: proc() -> int {
         sys_info := windows.SYSTEM_INFO{};
         windows.GetSystemInfo(&sys_info);
         return int(sys_info.dwNumberOfProcessors);
-    } else when ODIN_OS == "linux" {
-        return int(get_nprocs_conf());
-    } else {
-        panic("Not implemented");
     }
+} else when ODIN_OS == "linux" {
+    import "core:c";
+    foreign import sysinfo "system:c"
+
+    @(default_calling_convention="c")
+    foreign sysinfo {
+        // returns number of configured cores on linux
+        get_nprocs_conf :: proc() -> c.int ---;
+    }
+
+    get_num_cores :: proc() -> int {
+        when ODIN_OS == "linux" {
+            return int(get_nprocs_conf());
+        } else {
+            panic("Not implemented");
+        }
+    }
+} else {
+    #assert(0);
 }
+
 
 
 expected :: proc(upper: u64) -> u64 {
@@ -181,21 +189,24 @@ measure_run :: proc(size: u64, run_func: $T) -> (passes: u32, total_time: f64) {
 run_threaded :: proc(thread_count: int, $size: u64, $run_func: $T) ->  (total_passes: u32, total_time: f64) {
     start_time := time.tick_now();
 
-    @static wg: sync.Wait_Group;
-    sync.wait_group_init(&wg);
-    defer sync.wait_group_destroy(&wg);
-
-    sync.wait_group_add(&wg, thread_count);
+    @static sem: sync.Semaphore;
+    sync.semaphore_init(&sem, thread_count);
+    defer sync.semaphore_destroy(&sem);
 
     local_passes := make([]u32, thread_count);
     for pass, i in &local_passes {
+        // wait/decrement sem here since loop below might otherwise execute
+        // before the wait in the thread
+        sync.semaphore_wait_for(&sem);
         thread.run_with_poly_data(&pass, proc(passes: ^u32) {
             passes^, _ = measure_run(size, run_func);
-            sync.wait_group_done(&wg);
+            sync.semaphore_post(&sem);
         });
     }
 
-    sync.wait_group_wait(&wg);
+    for i in 0..<thread_count {
+        sync.semaphore_wait_for(&sem);
+    }
 
     for c in local_passes {
         total_passes += c;

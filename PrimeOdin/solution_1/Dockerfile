@@ -5,8 +5,10 @@ RUN apt-get update -qq \
     && apt-get install -y llvm-11 clang git build-essential
 
 WORKDIR /opt/Odin
-# get tag dev-2021-07 and build it
-RUN git clone --depth 1 --branch dev-2021-07 https://github.com/odin-lang/Odin.git /opt/Odin && make
+# checkout specific commit so we have a tested version, since we're on the master branch
+RUN git clone https://github.com/odin-lang/Odin.git /opt/Odin \
+    && git checkout 481fc8a5b60cf15d \
+    && make
 
 COPY *.odin /opt/app/
 WORKDIR /opt/app
