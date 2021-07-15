@@ -49,6 +49,7 @@ jobs:
           dockerfile: "${{ matrix.solution }}/Dockerfile"
           output_format: tty
           error_level: 0
+          config_file: ./hadolint.yml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
