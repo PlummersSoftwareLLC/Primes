@@ -167,7 +167,7 @@ cdef class PrimeSieve:
 
         # Following 2 lines added by rbergen to conform to drag race output format
         print();
-        print("ssovest-cy;%s;%s;%s;algorithm=base,faithful=yes,bits=1" % (passes, duration, threads));
+        print("ssovest-cy;%s;%s;%s;algorithm=other,faithful=yes,bits=1" % (passes, duration, threads));
 
 
 cdef double dclock():
