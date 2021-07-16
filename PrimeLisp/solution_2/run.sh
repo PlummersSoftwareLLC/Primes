@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# run base
-sbcl --script PrimeSieve.lisp
-
-
-# run wheel
-sbcl --script PrimeSieveWheel.lisp
+for i in PrimeSieve*.lisp; do
+  sbcl --script $i
+done
