@@ -10,8 +10,7 @@
 ## Run instructions
 
 *Java 11+ should be available in the system path if you want to run manually*
-*For manual execution, `run-sieve` or `run-sieve.cmd` based on your enviroment*
-*Performance varies based on JVM. `GraalVM` provides the best performance, followed by `hotspot`. Although `openj9` is the slowest, it is the most memory efficient*
+*Performance varies based on JVM. `GraalVM` provides the best performance, followed by `hotspot`. `openj9` is the most memory efficient, and the slowest*
 
 ## Output
 
