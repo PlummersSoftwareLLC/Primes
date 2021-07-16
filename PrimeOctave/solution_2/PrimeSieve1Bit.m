@@ -1,23 +1,27 @@
 classdef PrimeSieve1Bit < handle
 properties (Access=private)
-    sieveSize(1,1) double {mustBePositive(sieveSize), mustBeInteger(sieveSize)} = 1000000
-    bits(1,:) uint8
+    sieveSize
+    bits
 end
 properties (Access=private, Constant=true)
-    resultsDictionary = containers.Map(...
-        10.^(1:10),...
-        [4, 25, 168, 1229, 9592, 78498, 664579, 5761455, 50847534, 455052511])
+    resultsDictionaryKey = 10.^(1:10)
+    resultsDictionaryVal = [4, 25, 168, 1229, 9592, 78498, 664579, 5761455, 50847534, 455052511]
 end
 
 methods (Access=public)
     function this = PrimeSieve1Bit(n)
+        % Input validation
+        % Upper bound, find all primes in range [1,n]
+        validateattributes(n, {"numeric"}, {"scalar", "integer", "positive", "real", "finite"})
+        
+        % Assign properties
         this.sieveSize = n;
         
         % Using inverted logic: 0=prime, 1=not prime
         % Exclude even numbers => bits = [1,3,5,...,n]
         % Edge case: 1 is not a prime, but 2 is
         % => must leave bit(1)=prime so that its value counts for the absense of 2
-        this.bits = zeros(ceil(n/16), 1);
+        this.bits = uint8(zeros(ceil(n/16), 1));
         
         % Clear out of range bits
         for idxClear = ceil(this.sieveSize/2)+1 : 8*length(this.bits)
@@ -45,37 +49,35 @@ methods (Access=public)
         end
     end
     
-    function PrintResults(this, duration, passes, output)
-        arguments
-            this
-            duration(1,1) double {mustBePositive(duration)} % Total duration of trials [seconds]
-            passes(1,1) double {mustBePositive(passes)} % Number of trials [count]
-            output(1,1) string {mustBeMember(output, ["basic","stats","all"])} = "basic"
-        end
+    function PrintResults(this, duration, passes, output="basic")
+        % Input validation
+        % Total duration of trials [seconds]
+        validateattributes(duration, {"numeric"}, {"scalar", "positive", "real", "finite"})
+        % Number of trials [count]
+        validateattributes(passes, {"numeric"}, {"scalar", "integer", "positive", "real", "finite"})
+        % Output options
+        validatestring(output, {"basic","stats","all"});
         
         if strcmp(output,"all")
             % Print all primes
-            fprintf(strjoin(compose("%d", this.PrimeArray), ",") + "\n\n");
+            fprintf("%d,", this.PrimeArray);
+            fprintf("\n\n");
         end
         
         if ~strcmp(output,"basic")
-            fprintf(...
-                compose("Passes: %d, ", passes) +...
-                compose("Time: %f, ", duration) +...
-                compose("Avg: %f, ", duration/passes) +...
-                compose("Limit: %d, ", this.sieveSize) +...
-                compose("Count: %d, ", this.CountPrimes) +...
-                compose("Valid: %d\n\n", this.ValidateResults)...
-                );
+            fprintf("Passes: %d, ", passes);
+            fprintf("Time: %f, ", duration);
+            fprintf("Avg: %f, ", duration/passes);
+            fprintf("Limit: %d, ", this.sieveSize);
+            fprintf("Count: %d, ", this.CountPrimes);
+            fprintf("Valid: %d\n\n", this.ValidateResults);
         end
         
-        fprintf(...
-            "Brandon-Johns_1bit;" +...
-            compose("%d;", passes) +...
-            compose("%f;", duration) +...
-            "1;" +...
-            "algorithm=base,faithful=yes,bits=1\n"...
-            );
+        fprintf("Brandon-Johns_1bit;");
+        fprintf("%d;", passes);
+        fprintf("%f;", duration);
+        fprintf("1;");
+        fprintf("algorithm=base,faithful=yes,bits=1\n");
     end
     
     function count = CountPrimes(this)
@@ -101,7 +103,7 @@ methods (Access=private)
         idx_byte = floor((n-1)/8) + 1;
         idx_bit = mod((n-1),8) + 1;
         % Invert on set
-        this.bits(idx_byte) = bitset(this.bits(idx_byte), idx_bit, 1); % <- the bottleneck
+        this.bits(idx_byte) = bitset(this.bits(idx_byte), idx_bit, 1);
     end
     
     function primeArray = PrimeArray(this)
@@ -115,8 +117,10 @@ methods (Access=private)
     end
     
     function isValid = ValidateResults(this)
-        if isKey(this.resultsDictionary, this.sieveSize)
-            isValid = this.resultsDictionary(this.sieveSize) == this.CountPrimes;
+        idx_key = find(this.resultsDictionaryKey==this.sieveSize);
+        if idx_key
+            % In dictionary
+            isValid = this.resultsDictionaryVal(idx_key) == this.CountPrimes;
         else
             % Not in dictionary => Check with inbuilt function
             primeArray = this.PrimeArray;
