@@ -5,14 +5,14 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-This tail recursive solution improves the current Scala solution_1 by both performance (~4X) and correctness. Used solution_1 as a base for the build and Docker files.
+Tail recursive Scala solution to the Primes Drag Race. Used solution_1 as a base for the build and Docker files.
 
 ## Run Instructions
 * JVM
 
 `./mill sieveJVM.run`
 
-* Native
+* Native (Note: full optimized compilation will take a long time)
 
 `./mill sieve.run`
 
@@ -20,7 +20,7 @@ This tail recursive solution improves the current Scala solution_1 by both perfo
 
 `./mill sieveJS.run`
 
-NOTE: You can check the validity by uncommenting the "validate" line at the end of the main method
+NOTE: You can disable and enable results validation and warmup by toggling the flags in the main method.
 
 ## Output
 `scilari;3514;5.0;1;algorithm=base,faithful=yes`
@@ -33,19 +33,14 @@ NOTE: You can check the validity by uncommenting the "validate" line at the end 
 
 ## Performance Notes
 * For some reason, the JVM version gets slightly better results on my machine (Year 2018 Ultrabook, WSL2 on Win10) than the Scala Native version
-* The performance on my machine varies wildly between runs (~3-4K passes on JVM)
+* The performance on my machine varies wildly between runs (~3-4K passes on JVM) and improves if even 5 sec warmup is allowed
 
-| Solution   | Passes JVM | Passes Native | Passes ScalaJS |
-| ---------- | :--------: | :-----------: | :------------: |
-| This       |    3-4K    |     ~ 3K      |     ~0.7K      |
-| solution_1 |   ~0.8K    |     ~1.5K     |      n/a       |
+| Solution      | Passes JVM      | Passes Native | Passes ScalaJS      |
+| ----------    | :--------:      | :-----------: | :------------:      |
+| This          | 3.0K (std .09K) |     ~2.7K     |     0.6K (std .04K) |
+|This (warm 5s) | 3.8K (std .25K) |     n/a       |     n/a             |
+| solution_1    |   ~1.8K         |     n/a       |      n/a            |
 
-* Note: Results compared to solution_1 are not really valid, as solution_1 seems to have some issues with the correctness. Below are the primes up to 100 produced by solution_1 (25 clearly not a prime, for example):
-
-```
-2, 3, 5, 7, 11, 13, 17, 19, 23, 25, 29, 31, 35, 37, 41, 43, 47, 49, 53, 55, 59, 61, 65, 67, 71, 73, 77, 79, 83, 85, 89, 91, 95, 97, 
-rom1dep;2059635;5.0;1;algorithm=base,faithful=yes
-```
 
 
 
