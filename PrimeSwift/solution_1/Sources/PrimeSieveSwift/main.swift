@@ -122,7 +122,7 @@ let start = Date()
 var passes = 0
 var sieve: PrimeSieveSwift!
 
-while start.distance(to: Date()) < 10 {
+while start.distance(to: Date()) < 5 {
     sieve = PrimeSieveSwift(limit: 1_000_000)
     sieve.runSieve()
     passes += 1

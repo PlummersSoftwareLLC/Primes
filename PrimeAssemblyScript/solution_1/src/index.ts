@@ -5,7 +5,7 @@ export function bench(): void {
     let passes = 0;
     let sieve: PrimeSieve | null;
     const startTime = Date.now();
-    while (Date.now() - startTime < 10000) {
+    while (Date.now() - startTime < 5000) {
         sieve = new PrimeSieve(1000000);
         sieve.runSieve();
         ++passes;
