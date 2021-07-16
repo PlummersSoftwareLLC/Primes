@@ -136,7 +136,7 @@ mixin template CommonSieveFunctions()
         while(factor < q)
         {
             // Semi-traditional style of a for each loop.
-            foreach(i; factor..q) // every number from `factor` to `q`(exclusive)
+            foreach(i; iota(factor, q, 2)) // every number from `factor` to `q`(exclusive)
             {
                 if(this.getBit(i))
                 {
@@ -168,6 +168,7 @@ mixin template CommonSieveFunctions()
         import std.conv   : to;
         import std.stdio  : writeln, writefln, stderr;
         import std.format : format;
+        import std.range  : iota;
 
         // Similar to `StringBuilder` from C#
         Appender!(char[]) output;
@@ -176,7 +177,7 @@ mixin template CommonSieveFunctions()
             output.put("2, ");
 
         auto count = 1;
-        foreach(num; 3..SieveSize)
+        foreach(num; iota(3, SieveSize, 2))
         {
             if(this.getBit(num))
             {
@@ -219,9 +220,8 @@ mixin template CommonSieveFunctions()
     private bool getBit(uint index) @nogc nothrow
     {
         // Fairly standard bitty stuff.
-        return (index % 2) == 0
-            ? false
-            : (this._bits[index / 8] & (1 << (index % 8))) != 0;
+        assert(index % 2 == 1, "Index is even?");
+        return (this._bits[index / 8] & (1 << (index % 8))) != 0;
     }
 
     private void clearBit(uint index) @nogc nothrow
@@ -248,9 +248,9 @@ mixin template CommonSieveFunctions()
         //  Map it to 1 if it is a prime, map it to 0 otherwise.
         // Then:
         //  Evalulate all values of the pipeline, and find the sum of all the mapped results.
-        return iota(0, SieveSize)
+        return iota(3, SieveSize, 2)
                 .map!(num => this.getBit(num) ? 1 : 0) // Ternary operator is just to make it more clear, not actually needed.
-                .sum;
+                .sum + 1; // + 1 is to account for '2' being a special case.
     }
 }
 
