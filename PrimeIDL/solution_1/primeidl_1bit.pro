@@ -40,6 +40,14 @@ FUNCTION PRIMESIEVE::COUNT_PRIMES
 
     COMPILE_OPT IDL2
 
+    ;; work-around for GDL not having BIT_POPULATION
+    DEFSYSV,'!GDL',EXISTS=is_gdl
+
+    IF NOT is_gdl THEN $
+      RETURN,TOTAL( $
+               BIT_POPULATION(*self.raw_bits), /INTEGER) - $
+               8LL * N_ELEMENTS(*self.raw_bits) + self.sieve_size / 2LL
+
     RETURN,TOTAL( $
              BIT_POPULATION(*self.raw_bits), /INTEGER) - $
              8LL * N_ELEMENTS(*self.raw_bits) + self.sieve_size / 2LL
