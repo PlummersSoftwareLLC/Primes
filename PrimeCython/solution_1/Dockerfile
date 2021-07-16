@@ -4,9 +4,11 @@ WORKDIR /root
 
 RUN [ "pip", "install", "cython"]
 
-COPY PrimeCY.pyx .
+COPY 8bit/PrimeCY.pyx .
+COPY 1bit/Prime32.pyx .
+COPY build.sh .
+COPY run.sh .
 
-RUN [ "cython", "-3", "--embed", "PrimeCY.pyx", "-o", "PrimeCY.c" ]
-RUN [ "gcc", "-I", "/usr/local/include/python3.9", "-l", "python3.9", "-lm", "PrimeCY.c", "-o", "PrimeCY"]
+RUN ["./build.sh"]
 
-ENTRYPOINT [ "./PrimeCY" ]
+ENTRYPOINT [ "./run.sh" ]
