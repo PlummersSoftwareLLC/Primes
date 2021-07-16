@@ -1,11 +1,33 @@
-# Prolog solution by jimbxb
+# Prolog solution by [jimbxb](https://github.com/jimbxb)
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-A solution written in Prolog. This is probably far from optimal for the language, I just thought some Prolog representation would be nice!
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+
+A collection of solutions written in Prolog. 
+
+### Solution 1.1 - Basic
+
+Uses Prolog's infinite-width integers to store the state of the sieve wrapped in the `bitvector/2` functor.
+
+### Solution 1.2 - Dynamic
+
+Uses a dynamically defined functor (`composite/2`) to track the state of the currently known composite numbers. 
+
+### Solution 1.3 - C Foreign Interface
+
+Uses SWI Prolog's foreign interface with C to implement a more optimised version of the `bitvector/2` functor.
 
 ## Run
 
@@ -13,8 +35,8 @@ A solution written in Prolog. This is probably far from optimal for the language
 
 ```sh
 $ cd path/to/prolog/solution
-$ swipl -O -o primes -c ./primes.pl
-$ ./primes
+$ swipl-ld -cc-options,-w,-O3 -shared -o bitvector bitvector.c
+$ ./run.sh
 ```
 
 ### Docker
@@ -28,13 +50,12 @@ $ docker run --rm prolog-primes
 ## Output
 
 ```sh
-$ swipl -O -o primes -c ./primes.pl
-$ ./primes
-jimbxb-prolog-1;1;7.271000;1;algorithm=base,faithful=yes,bits=1
+$ ./run.sh
+jimbxb-prolog-dynamic;4;5.586000;1;algorithm=base,faithful=no,bits=unknown
+jimbxb-prolog-basic;1;7.271000;1;algorithm=base,faithful=yes,bits=1
+jimbxb-prolog-c;56;5.056000;1;algorithm=base,faithful=yes,bits=1
 ```
 
-## Author
+## Acknowledgements
 
-James Barnes (jimbxb)
-
-https://github.com/jimbxb
+C Foreign Language Interface code is inspired by the SWI-PL examples [here](https://www.swi-prolog.org/pldoc/man?section=foreign).

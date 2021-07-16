@@ -11,7 +11,7 @@ main(Argv) :-
   timed_primes(N, 5000, Iters),
   statistics(walltime, [T1|_]),
   format(
-    "jimbxb_prolog_3;~d;~f;1;algorithm=base,faithful=yes,bits=1~n", 
+    "jimbxb-prolog-c;~d;~f;1;algorithm=base,faithful=yes,bits=1~n", 
     [Iters, (T1 - T0) / 1000]
   ),
   true.
