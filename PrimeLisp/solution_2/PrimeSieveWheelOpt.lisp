@@ -3,9 +3,6 @@
 ;;; run as:
 ;;;     sbcl --script PrimeSieveWheelOpt.lisp
 ;;;
-;;; Algorithm is _wheel_, see PrimeC/solution_2/README.md for a better explanation than I would be able to give.
-;;; I have no idea how the wheel algorithm works, I just stole the algorithm.
-;;;
 ;;; For Common Lisp bit ops see https://lispcookbook.github.io/cl-cookbook/numbers.html#bit-wise-operation,
 ;;; although most of the shifts were replaced by "normal" Lisp functions,
 ;;; e.g. x>>n -> (floor x m), a&b -> (mod a b), 1<<x -> (expt 2 x),
@@ -332,13 +329,6 @@
     (setf #1=(aref a q)
          (logior #1# (expt 2 r)))) 0)
 
-;(defun set-nth-bit (a n)
-;  (declare (type sieve-array-type a)
-;           (type nonneg-fixnum n))
-;  (multiple-value-bind (q r) (floor n +bits-per-word+)
-;    (declare (nonneg-fixnum q) (nonneg-fixnum r))
-;    (setf (ldb (byte 1 r) (aref a q)) 1)) 0)
-
 
 (defun run-sieve (sieve-state steps)
   (declare (sieve-state sieve-state) (simple-vector steps))
@@ -396,8 +386,6 @@
     (if (and hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
-;(require :sb-sprof) (sb-sprof:with-profiling (:max-samples 1000 :report :flat :loop nil)
-
 (let* ((passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
@@ -415,5 +403,3 @@
             passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
 
     (format t "mayerrobert-cl-wheel-opt;~d;~f;1;algorithm=wheel,faithful=no,bits=1~%" passes duration)))
-
-;) (disassemble 'run-sieve)

@@ -99,8 +99,6 @@
     (if (and hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
-;(require :sb-sprof) (sb-sprof:with-profiling (:max-samples 1000 :report :flat :loop nil)
-
 (let* ((passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
@@ -119,5 +117,3 @@
             passes duration (* 1000 avg) (count-primes result) (validate result))
 
     (format t "mayerrobert-cl;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration)))
-
-;) (disassemble 'run-sieve)

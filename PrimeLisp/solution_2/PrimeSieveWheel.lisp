@@ -311,14 +311,6 @@
       (when (zerop (logand (aref a (ash factorh +SHIFT+))
                            (ash 1 (logand factorh +MASK+))))
 
-;      (when (zerop (multiple-value-bind (q r) (floor factorh +bits-per-word+)
-;                     (declare (type nonneg-fixnum q) (type (integer 0 64) r))
-;                     (logand (aref a q) r)))
-
-;      (unless (multiple-value-bind (q r) (floor factorh +bits-per-word+)
-;                (declare (type nonneg-fixnum q) (type (integer 0 64) r))
-;                (logbitp r (aref a q)))
-
         (do* ((istep step (if (>= istep 5759) 0 (1+ istep)))
               (ninc (aref steps istep) (aref steps istep))
               (factor (1+ (ash factorh 1)))
@@ -328,12 +320,6 @@
 
           (setf #1=(aref a (ash i +SHIFT+))
                 (logior #1# (ash 1 (logand i +MASK+))))
-
-;          (multiple-value-bind (q r) (floor i +bits-per-word+)
-;            (declare (type nonneg-fixnum q) (type (integer 0 64) r))
-;            (setf #1=(aref a q)
-;                 (logior #1# (expt 2 r))))
-
           (incf i (the fixnum (* factor ninc)))))
 
       (incf factorh inc))))
@@ -370,8 +356,6 @@
     (if (and hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
-;(require :sb-sprof) (sb-sprof:with-profiling (:max-samples 1000 :report :flat :loop nil)
-
 (let* ((passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
@@ -389,5 +373,3 @@
             passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
 
     (format t "mayerrobert-cl-wheel;~d;~f;1;algorithm=wheel,faithful=no,bits=1~%" passes duration)))
-
-;) (disassemble 'run-sieve)

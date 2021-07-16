@@ -73,7 +73,6 @@
   (multiple-value-bind (q r) (floor n +bits-per-word+)
     (declare (fixnum q r))
     (setf #1=(aref a q)
-         ;(logandc2 #1# (expt 2 r)))) 0) ; this would clear the bit
          (logior #1# (expt 2 r)))) 0)
 
 
@@ -141,8 +140,6 @@
     (if (and hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
-;(require :sb-sprof) (sb-sprof:with-profiling (:max-samples 1000 :report :flat :loop nil)
-
 (let* ((passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
@@ -161,5 +158,3 @@
             passes duration (* 1000 avg) (count-primes result) (validate result))
 
     (format t "mayerrobert-clb;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration)))
-
-;) (disassemble 'run-sieve)
