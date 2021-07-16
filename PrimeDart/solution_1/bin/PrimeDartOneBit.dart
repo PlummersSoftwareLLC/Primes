@@ -199,7 +199,7 @@ class PrimeSieve {
     // These 2 lines are for the drag race format
     stderr.write('\n');
     stdout.write(
-        'eagerestwolf&mmcdon20;$passes;$duration;1;algorithm=base,faithful=yes,bits=1\n');
+        'eagerestwolf&mmcdon20_1bit;$passes;$duration;1;algorithm=base,faithful=yes,bits=1\n');
   }
 
   int countPrimes() {

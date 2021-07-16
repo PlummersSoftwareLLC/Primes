@@ -22,5 +22,5 @@ Future<void> main() async {
   final duration = timer.elapsedMicroseconds / 1000000;
   final passes = await pool.passes();
   stdout.writeln(
-      'eagerestwolf&mmcdon20;$passes;$duration;$processors;algorithm=base,faithful=yes,bits=8');
+      'eagerestwolf&mmcdon20_8bit_par;$passes;$duration;$processors;algorithm=base,faithful=yes,bits=8');
 }

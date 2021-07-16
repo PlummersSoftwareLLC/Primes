@@ -1,5 +1,12 @@
 # Dart solution by Eagerestwolf and mmcdon20
 
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+
 ### PrimeDart.dart
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
@@ -90,17 +97,10 @@ platform, but Dart will generate a standard ELF binary on *nix systems.
 ### Docker Results (runs all implementations)
 
 ```
-Passes: 4705, Time: 5.000055, Avg: 0.0010627109458023378, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-
-eagerestwolf&mmcdon20;4705;5.000055;1;algorithm=base,faithful=yes,bits=8
-
-eagerestwolf&mmcdon20;11397;5.000705;12;algorithm=base,faithful=yes,bits=8
-
-Passes: 3566, Time: 5.000364, Avg: 0.0014022333146382503, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-
-eagerestwolf&mmcdon20;3566;5.000364;1;algorithm=base,faithful=yes,bits=1
-
-eagerestwolf&mmcdon20;19782;5.000999;12;algorithm=base,faithful=yes,bits=1
+eagerestwolf&mmcdon20_8bit;4736;5.00113;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_8bit_par;10888;5.001292;12;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_1bit;3609;5.000836;1;algorithm=base,faithful=yes,bits=1
+eagerestwolf&mmcdon20_1bit_par;20329;5.000964;12;algorithm=base,faithful=yes,bits=1
 ```
 
 ### Dart SDK (running PrimeDart.dart)
@@ -108,7 +108,7 @@ eagerestwolf&mmcdon20;19782;5.000999;12;algorithm=base,faithful=yes,bits=1
 ```
 Passes: 5213, Time: 5.000862, Avg: 0.0009593059658545943, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf&mmcdon20;5213;5.000862;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_8bit;5213;5.000862;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Dart Compiled (running PrimeDart.exe)
@@ -116,5 +116,5 @@ eagerestwolf&mmcdon20;5213;5.000862;1;algorithm=base,faithful=yes,bits=8
 ```
 Passes: 5588, Time: 5.000777, Avg: 0.0008949135647816751, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf&mmcdon20;5588;5.000777;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_8bit;5588;5.000777;1;algorithm=base,faithful=yes,bits=8
 ```
