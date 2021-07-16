@@ -13,7 +13,7 @@ These guidelines have been drafted to facilitate a "fair" comparison between sol
 
 2. Before opening your pull request, check if another one is already open that aims to modify the same solution that yours does. If one exists, please discuss in that PR how your improvements can be added to it.
 
-3. Only if you're convinced that adding a new solution is the only appropriate way forward, open a pull requests that aims to achieve that. In that case, please keep reading.
+3. Only if you're convinced that adding a new solution is the only appropriate way forward, open a pull requests that aims to achieve that. In that case, a) explain clearly in your pull request description why you think a new solution is warranted, and b) please keep reading.
 
 ## Guide
 
