@@ -107,7 +107,7 @@ function run_sieve!(sieve::PrimeSieve)
     is_not_prime = sieve.is_not_prime
     sieve_size = sieve.sieve_size
     max_bits_index = _map_to_index(sieve_size)
-    max_factor_index = _map_to_index(@fastmath unsafe_trunc(UInt, sqrt(sieve_size)))
+    max_factor_index = _map_to_index(unsafe_trunc(UInt, sqrt(sieve_size)))
     factor_index = UInt(1) # 1 => 3, 2 => 5, 3 => 7, ...
     while factor_index <= max_factor_index
         factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_bits_index)
