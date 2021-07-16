@@ -55,14 +55,13 @@ function countPrimes {
 }
 
 function getBit {
-	# Return failure if even if bitArray is set (determined composite)
-	# Return success if known prime
-	(( $1 & 1 && !bitArray[\$1] ))
+	local index=$1 bit
+	(( index & 1 && !(bit=1<<(index>>1&63), index>>=7, bitArray[\$index] & bit) ))
 }
 
 function clearBit {
-	# Mark as composite
-	bitArray[$1]=1
+	local index=$1 bit
+	(( index & 1 && (bit=1<<(index>>1&63), index>>=7, bitArray[\$index] |= bit) ))
 }
 
 function runSieve {
@@ -127,7 +126,7 @@ function printResults {
 		"$count" "$valid"
 
 	# rbergen: added drag-race format output
-	printf "\nbash;%s;%s;1;algorithm=base,faithful=no\n" "$passes" "$dur_str"
+	printf "\nbash_packed;%s;%s;1;algorithm=base,faithful=no\n" "$passes" "$dur_str"
 }
 
 function main {
