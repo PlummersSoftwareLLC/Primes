@@ -229,7 +229,7 @@ begin
 	passes := 0;
 
 	sieve := nil;
-	while TTimeSpan.Subtract(Now, dtStart).TotalSeconds < 10 do
+	while TTimeSpan.Subtract(Now, dtStart).TotalSeconds < 5 do
 	begin
 		if Assigned(sieve) then
 			sieve.Free;
