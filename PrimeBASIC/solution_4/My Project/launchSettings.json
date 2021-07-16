@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "PrimeVB": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
