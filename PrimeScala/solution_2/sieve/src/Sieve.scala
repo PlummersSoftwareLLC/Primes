@@ -49,10 +49,25 @@ final class Sieve(val size: Int) {
 object Sieve {
   val sieveSize = 1000000
   val runTimeMs: Long = 5000
+  
+  val warmUp = false
+  val warmUpTimeMs: Long = 5000
+
+  val validate = false
 
   def main(args: Array[String]): Unit = {
-    val t0 = System.currentTimeMillis
+    if (warmUp) measurePasses(sieveSize, warmUpTimeMs)
+
+    val (passes, time) = measurePasses(sieveSize, runTimeMs)
+
+    println(s"scilari;$passes;$time;1;algorithm=base,faithful=yes")
+
+    if (validate) validateResults
+  }
+
+  def measurePasses(sieveSize: Int, runTimeMs: Long): (Int, Double) = {
     var passes = 0
+    val t0 = System.currentTimeMillis
 
     while (System.currentTimeMillis() - t0 < runTimeMs) {
       val sieve = new Sieve(sieveSize)
@@ -60,12 +75,10 @@ object Sieve {
     }
 
     val dt = System.currentTimeMillis() - t0
-    println(s"scilari;$passes;${dt / 1000.0};1;algorithm=base,faithful=yes")
-
-    // validate
+    (passes, dt / 1000.0)
   }
 
-  def validate = {
+  def validateResults = {
     val primeCounts: Map[Int, Int] = Map(
       10 -> 4,
       100 -> 25,
