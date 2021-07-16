@@ -11,7 +11,7 @@ A solution written in Prolog. This is probably far from optimal for the language
 
 ### Locally
 
-```
+```sh
 $ cd path/to/prolog/solution
 $ swipl -O -o primes -c ./primes.pl
 $ ./primes
@@ -19,7 +19,7 @@ $ ./primes
 
 ### Docker
 
-```
+```sh
 $ cd path/to/dockerfile
 $ docker build -t prolog-primes .
 $ docker run --rm prolog-primes
@@ -27,10 +27,10 @@ $ docker run --rm prolog-primes
 
 ## Output
 
-```
+```sh
 $ swipl -O -o primes -c ./primes.pl
 $ ./primes
-jimbxb_prolog_1;1;7.271000;1;algorithm=base,faithful=yes,bits=1
+jimbxb-prolog-1;1;7.271000;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Author
