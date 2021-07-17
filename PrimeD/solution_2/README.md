@@ -48,10 +48,10 @@ Windows 10 Build 19041 | i5-7600K @ 3.80 GHz
 <stderr> Passes: 7620, Time: 5 secs, 487 μs, and 6 hnsecs, Avg: 656 μs and 2 hnsecs, Limit: 1000000, Count: 78498, Valid: true
 <stderr> Passes: 24501, Time: 5 secs, 98 μs, and 9 hnsecs, Avg: 204 μs, Limit: 1000000, Count: 78498, Valid: true
 <stderr> Passes: 7523, Time: 5 secs, 42 μs, and 9 hnsecs, Avg: 664 μs and 6 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-<stderr> Passes: 12349, Time: 5 secs, 1 ms, 12 μs, and 8 hnsecs, Avg: 404 μs and 9 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+<stderr> Passes: 19221, Time: 5 secs, 601 ╬╝s, and 1 hnsec, Avg: 260 ╬╝s and 1 hnsec, Limit: 1000000, Count: 78498, Valid: true
 
 BradleyChatha-Single-SieveCT;7620;5.00049;1;algorithm=base,bits=1,faithful=no
 BradleyChatha-Multi-SieveCT;24501;5.0001;4;algorithm=base,bits=1,faithful=no
 BradleyChatha-Single-SieveRT;7523;5.00004;1;algorithm=base,bits=1,faithful=yes
-BradleyChatha-Multi-SieveRT;12349;5.00101;4;algorithm=base,bits=1,faithful=yes
+BradleyChatha-Multi-SieveRT;19221;5.0006;4;algorithm=base,bits=1,faithful=yes
 ```
