@@ -1,27 +1,24 @@
-# Prime Sieve Algorithms
+# VB solution by Nukepayload2
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation in Visual Basic.
-
-## VB solution
-
-- Converted from `PrimeCSharp/solution_1/Sieves/PrimeSieveArrayPool8of30M.cs`
-- Original author: @Kinematics
-- Converted by @Nukepayload2
+- A Visual Basic port of `PrimeCSharp/solution_1/Sieves/PrimeSieveArrayPool8of30M.cs` (original author: @Kinematics)
 - It uses .NET 5, and can be compiled using Visual Studio 16.9 or later.
 
-## Run 
+## Run instructions 
+
+- .NET SDK 5 or later is required. You can download it from https://dotnet.microsoft.com/download .
+- From the solution directory, run
 ```console
 dotnet run -c release
 ```
 
-## Sample output
+## Output
 ```
-CopyOf_CS_Kinematics_ArrayPool8of30M_vb;14979;5.0003292;1;algorithm=wheel,faithful=no,bits=1
+Nukepayload2_CsKinematicsArrayPool8of30M;14979;5.0003292;1;algorithm=wheel,faithful=no,bits=1
 ```
 
 Environment of the sample output:

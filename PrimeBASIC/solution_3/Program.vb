@@ -32,7 +32,7 @@ Module Program
 			Console.WriteLine("WARNING: result is incorrect!")
 		End If
 
-		Console.WriteLine($"CopyOf_CS_Kinematics_ArrayPool8of30M_vb;{passCount};{duration};1;algorithm=wheel,faithful=no,bits=1")
+		Console.WriteLine($"Nukepayload2_CsKinematicsArrayPool8of30M;{passCount};{duration};1;algorithm=wheel,faithful=no,bits=1")
 	End Sub
 
 End Module
