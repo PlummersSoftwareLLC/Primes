@@ -1,4 +1,4 @@
-FROM swipl
+FROM library/swipl:8.3.26
 
 RUN apt-get update && apt-get -y install gcc
 
