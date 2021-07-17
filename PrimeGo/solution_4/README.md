@@ -25,7 +25,7 @@ Usage of primes:
 
 ## How it works
 
-Check [HOW_IT_WORKS.md](HOW_IT_WORKS).
+Check [HOW_IT_WORKS](HOW_IT_WORKS.md).
 
 ## Output
 
