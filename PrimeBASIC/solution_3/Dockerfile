@@ -5,16 +5,13 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["PrimeCSharp.csproj", "."]
-RUN dotnet restore "./PrimeCSharp.csproj"
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "PrimeCSharp.csproj" -c Release -o /app/build
+RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "PrimeCSharp.csproj" -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "PrimeCSharp.dll", "--all"]
+ENTRYPOINT ["dotnet", "PrimeVB.dll"]
