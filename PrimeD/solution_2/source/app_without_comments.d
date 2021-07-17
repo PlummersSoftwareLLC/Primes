@@ -10,7 +10,7 @@ unittest
     assert(alignTo!16(31) == 32);
 }
 
-final class SieveCT(uint SieveSize)
+final class SieveCT(size_t SieveSize)
 if(SieveSize > 0) // We can attach constraints onto templated things that must succeed, otherwise the compiler will raise an error.
 {
     mixin CommonSieveFunctions;
@@ -20,7 +20,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
         ubyte[alignTo!8(SieveSize) / 8] _bits = ubyte.max;
     }
 
-    static bool isValidSieveSize(uint size)
+    static bool isValidSieveSize(size_t size)
     {
         import std.algorithm : canFind;
         return [10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000].canFind(size);
@@ -32,8 +32,8 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
     {
         static struct PrimeCountPair
         {
-            uint primeLimit;
-            uint primeCount;
+            size_t primeLimit;
+            size_t primeCount;
         }
 
         static foreach(pair; [
@@ -67,12 +67,12 @@ mixin template CommonSieveFunctions()
         import std.range     : iota;
 
 
-        auto factor = 3;
-        const q = sqrt(SieveSize.to!float).round.to!uint;
+        auto factor = 3UL;
+        const q = sqrt(SieveSize.to!float).round.to!size_t;
 
         while(factor < q)
         {
-            foreach(i; iota(factor, q, 2)) // every number from `factor` to `q`(exclusive), with a step of 2
+            foreach(i; iota(factor, q, 2UL)) // every number from `factor` to `q`(exclusive), with a step of 2
             {
                 if(this.getBit(i))
                 {
@@ -91,10 +91,10 @@ mixin template CommonSieveFunctions()
     void printResults(
         string tag,
         string attribs,
-        uint threadCount, 
+        size_t threadCount, 
         bool showResults,
         Duration duration,
-        uint passes
+        size_t passes
     ) @trusted // `stderr` is unsafe apparently
     {
         import std.array  : Appender;
@@ -142,18 +142,18 @@ mixin template CommonSieveFunctions()
         );
     }
 
-    private bool getBit(uint index) @nogc nothrow
+    private bool getBit(size_t index) @nogc nothrow
     {
         assert(index % 2 == 1, "Index is even?");
         return (this._bits[index / 8] & (1 << (index % 8))) != 0;
     }
 
-    private void clearBit(uint index) @nogc nothrow
+    private void clearBit(size_t index) @nogc nothrow
     {
         this._bits[index / 8] &= ~(1 << (index % 8));
     }
 
-    private uint countPrimes() nothrow
+    private size_t countPrimes() nothrow
     {
         import std.algorithm : map, sum;
         import std.range     : iota;
@@ -169,11 +169,11 @@ final class SieveRT
     mixin CommonSieveFunctions;
 
     private ubyte[] _bits;
-    private uint _sieveSize;
+    private size_t _sieveSize;
 
     private alias SieveSize = _sieveSize;
 
-    this(uint sieveSize)
+    this(size_t sieveSize)
     {
         this._bits.length = alignTo!8(sieveSize) / 8;
         this._bits[] = ubyte.max;
@@ -182,8 +182,8 @@ final class SieveRT
 
     static struct PrimePair
     {
-        uint sieveSize;
-        uint primeCount;
+        size_t sieveSize;
+        size_t primeCount;
     }
 
     @PrimePair(10_000, 1229)
@@ -194,7 +194,7 @@ final class SieveRT
         import std.algorithm : filter, map;
         import std.traits    : getUDAs;
 
-        uint[uint] primeList = 
+        size_t[size_t] primeList = 
         [
             100_000_000 : 5_761_455,
             10_000_000  : 664_579,
@@ -252,7 +252,7 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful)
     const elapsedTime    = timer.peek();
     const SieveClassName = __traits(identifier, SieveType); // __traits lets us learn a *lot* of useful info from the compiler, such as symbol names.
 
-    static if(is(SieveType == SieveCT!Param1, uint Param1))
+    static if(is(SieveType == SieveCT!Param1, size_t Param1))
         auto s = new SieveType();
     else
         auto s = new SieveType(PRIME_COUNT);

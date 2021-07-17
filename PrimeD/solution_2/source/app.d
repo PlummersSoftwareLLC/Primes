@@ -19,7 +19,7 @@ unittest
 // CT = Compile-Time, because this version uses compile-time stuff to reduce some of the work it has to do.
 //
 // `SieveCT` is unfaithful, `SieveRT` is faithful.
-final class SieveCT(uint SieveSize)
+final class SieveCT(size_t SieveSize)
 if(SieveSize > 0) // We can attach constraints onto templated things that must succeed, otherwise the compiler will raise an error.
 {
     // Because there's two sieves (compile-time+runtime, and a purely runtime one), they
@@ -42,7 +42,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
     // a valid value into the `SieveSize` template parameter.
     //
     // This is needed because `validateResults` only works on these specific values.
-    static bool isValidSieveSize(uint size)
+    static bool isValidSieveSize(size_t size)
     {
         import std.algorithm : canFind;
         return [10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000].canFind(size);
@@ -61,8 +61,8 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
         // By marking it 'static' we're saying that it doesn't need access to the function context.
         static struct PrimeCountPair
         {
-            uint primeLimit;
-            uint primeCount;
+            size_t primeLimit;
+            size_t primeCount;
         }
 
         // Dynamically generate code.
@@ -130,13 +130,13 @@ mixin template CommonSieveFunctions()
         // Also, also, if a function doesn't need any runtime parameters, you can just completely omit the parenthesis:
         //  `.to!int` and `.to!int()` are exactly the same.
 
-        auto factor = 3;
-        const q = sqrt(SieveSize.to!float).round.to!uint;
+        auto factor = 3UL;
+        const q = sqrt(SieveSize.to!float).round.to!size_t;
 
         while(factor < q)
         {
             // Semi-traditional style of a for each loop.
-            foreach(i; iota(factor, q, 2)) // every number from `factor` to `q`(exclusive), with a step of 2
+            foreach(i; iota(factor, q, 2UL)) // every number from `factor` to `q`(exclusive), with a step of 2
             {
                 if(this.getBit(i))
                 {
@@ -158,10 +158,10 @@ mixin template CommonSieveFunctions()
     void printResults(
         string tag,
         string attribs,
-        uint threadCount, 
+        size_t threadCount, 
         bool showResults,
         Duration duration,
-        uint passes
+        size_t passes
     ) @trusted // `stderr` is unsafe apparently
     {
         import std.array  : Appender;
@@ -217,19 +217,19 @@ mixin template CommonSieveFunctions()
         );
     }
 
-    private bool getBit(uint index) @nogc nothrow
+    private bool getBit(size_t index) @nogc nothrow
     {
         // Fairly standard bitty stuff.
         assert(index % 2 == 1, "Index is even?");
         return (this._bits[index / 8] & (1 << (index % 8))) != 0;
     }
 
-    private void clearBit(uint index) @nogc nothrow
+    private void clearBit(size_t index) @nogc nothrow
     {
         this._bits[index / 8] &= ~(1 << (index % 8));
     }
 
-    private uint countPrimes() nothrow
+    private size_t countPrimes() nothrow
     {
         import std.algorithm : map, sum;
         import std.range     : iota;
@@ -260,7 +260,7 @@ final class SieveRT
     mixin CommonSieveFunctions;
 
     private ubyte[] _bits;
-    private uint _sieveSize;
+    private size_t _sieveSize;
 
     // The functions in `CommonSieveFunctions` expects the sieve size to be called `SieveSize`, not `_sieveSize`,
     // so we can make an alias to it in order to keep both naming conventions.
@@ -268,7 +268,7 @@ final class SieveRT
     private alias SieveSize = _sieveSize;
 
     // In D, we use `this` as the name of constructors. Makes sense really.
-    this(uint sieveSize)
+    this(size_t sieveSize)
     {
         this._bits.length = alignTo!8(sieveSize) / 8;
         this._bits[] = ubyte.max;
@@ -280,8 +280,8 @@ final class SieveRT
     // of the historical prime list. It's hard trying to fit so many different things into a small problem T_T
     static struct PrimePair
     {
-        uint sieveSize;
-        uint primeCount;
+        size_t sieveSize;
+        size_t primeCount;
     }
 
     @PrimePair(10_000, 1229)
@@ -294,7 +294,7 @@ final class SieveRT
 
         // Create an associative array. I've used explicit typing to show what the AA type in
         // D is defined as: VALUE_TYPE[KEY_TYPE]
-        uint[uint] primeList = 
+        size_t[size_t] primeList = 
         [
             100_000_000 : 5_761_455,
             10_000_000  : 664_579,
@@ -345,7 +345,7 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful)
     while(timer.peek.total!"seconds" < MAX_SECONDS)
     {
         // We have one problem, if `SieveType` is an instance of `SieveCT`, then
-        // it doesn't have a constructor taking a `uint`.
+        // it doesn't have a constructor taking a `size_t`.
         //
         // If we have `SieveType` of `SieveRT`, then we *do* have that constructor.
         //
@@ -376,9 +376,9 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful)
     //     More reading of `is()`: https://dlang.org/spec/expression.html#IsExpression
     //
     // A very brief attempt of explaining it is:
-    //   "is SieveType a SieveCT with one template parameter Param1 where Param1 is a uint?"
+    //   "is SieveType a SieveCT with one template parameter Param1 where Param1 is a size_t?"
     //   (this also extracts the template parameter as `Param1` so you can evaluate it and use it for more shenanigans)
-    static if(is(SieveType == SieveCT!Param1, uint Param1))
+    static if(is(SieveType == SieveCT!Param1, size_t Param1))
         auto s = new SieveType();
     else
         auto s = new SieveType(PRIME_COUNT);
