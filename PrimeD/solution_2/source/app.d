@@ -275,23 +275,38 @@ final class SieveRT
         this._sieveSize = sieveSize;
     }
 
+    // This is super super forced, but I couldn't think of anywhere else to try and show off this feature.
+    // We'll be using `PrimePair` as a UDA (User defined attribute) to define half of the values
+    // of the historical prime list. It's hard trying to fit so many different things into a small problem T_T
+    static struct PrimePair
+    {
+        uint sieveSize;
+        uint primeCount;
+    }
+
+    @PrimePair(10_000, 1229)
+    @PrimePair(1_000,  168)
+    @(PrimePair(100, 25), PrimePair(10, 4)) // alternate syntax.
     private bool validateResults()
     {
         import std.algorithm : filter, map;
+        import std.traits    : getUDAs;
 
-        // Create an associative array. I've added the extra typing to show what the AA type in
+        // Create an associative array. I've used explicit typing to show what the AA type in
         // D is defined as: VALUE_TYPE[KEY_TYPE]
-        const uint[uint] primeList = 
+        uint[uint] primeList = 
         [
             100_000_000 : 5_761_455,
             10_000_000  : 664_579,
             1_000_000   : 78_498,
-            100_000     : 9592,
-            10_000      : 1229,
-            1_000       : 168,
-            100         : 25,
-            10          : 4,
+            100_000     : 9592
         ];
+
+        // `enum` here means `value that only exists at compile-time, and does not take up stack/memory space`
+        // Essentially all we're saying is `Find all the @PrimePair UDAs on the validateResults function`
+        enum Pairs = getUDAs!(validateResults, PrimePair);
+        static foreach(primePair; Pairs)
+            primeList[primePair.sieveSize] = primePair.primeCount;
 
         const primes = this.countPrimes();
         if(this._sieveSize in primeList)
@@ -301,7 +316,6 @@ final class SieveRT
     }
 }
 
-// `enum` here means `value that only exists at compile-time, and does not take up stack/memory space`
 enum PRIME_COUNT = 1_000_000;
 enum MAX_SECONDS = 5;
 
