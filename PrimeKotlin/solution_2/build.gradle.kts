@@ -18,15 +18,11 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnit()
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
 }
 
 tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "16"
 }
 
 tasks.withType<Jar>() {
