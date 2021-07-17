@@ -17,7 +17,6 @@ class Sieve {
 
     @inlinable func index(forNumber num: Int) -> Int {num >> 1 - 1}
 
-    /// Does @inlinable help here?
     func runSieve() {
         var factor = 3
         while factor <= factorLimit {
