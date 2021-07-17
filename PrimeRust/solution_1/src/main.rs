@@ -181,6 +181,14 @@ pub mod primes {
     /// I'm pretty sure it's not original: someone must have done this before, and it 
     /// probably has a name. If you happen to know, let me know :) 
     ///
+    /// The idea here is to store bits in a different order. First we make use of all the 
+    /// _first_ bits in each word. Then we come back to the start of the array and 
+    /// proceed to use the _second_ bit in each word, and so on.
+    ///
+    /// There is a computation / memory bandwidth tradeoff here. This works well
+    /// only for sieves that fit inside the processor cache. For processors with 
+    /// smaller caches or larger sieves, this algorithm will result in a lot of 
+    /// cache thrashing.
     const U8_BITS: usize = 8;
     pub struct FlagStorageBitVectorStriped {
         words: Vec<u8>,
