@@ -18,6 +18,12 @@ Tested with Octave 6.3.0 on Ubuntu 18.04 LTE (through VirtualBox - hence expect 
 
 Run from bash with
 ```bash
+# Nominal tests:
+#	'1bit',1000000,'basic'
+#	'8bit',1000000,'basic'
+octave -q -W --norc run.m
+
+# Individually
 $echo "PrimesRun('<Run Mode>', <Sieve Size>,'<Output Option>')" | octave -q -W --norc
 ```
 `<Run Mode>`  (default '8bit') chooses the implementation to run. Must be one of
@@ -43,7 +49,8 @@ $echo "PrimesRun('8bit',101,'all')" | octave -q -W --norc
 ### 1 bit
 ```bash
 $echo "PrimesRun('1bit',1000000,'stats')" | octave -q -W --norc
-# (Had to terminate this - VirtualBox didn't like it)
+# Output not recorded
+# Takes about 3min to run
 ```
 
 ```bash
