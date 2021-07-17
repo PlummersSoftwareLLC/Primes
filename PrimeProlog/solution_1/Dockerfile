@@ -8,4 +8,6 @@ COPY primes-*.pl bitvector.c run.sh .
 
 RUN swipl-ld -cc-options,-w,-O3 -shared -o bitvector bitvector.c
 
+RUN chmod a+x run.sh
+
 ENTRYPOINT [ "./run.sh" ]
