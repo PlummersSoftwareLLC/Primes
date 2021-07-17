@@ -136,7 +136,7 @@ mixin template CommonSieveFunctions()
         while(factor < q)
         {
             // Semi-traditional style of a for each loop.
-            foreach(i; iota(factor, q, 2)) // every number from `factor` to `q`(exclusive)
+            foreach(i; iota(factor, q, 2)) // every number from `factor` to `q`(exclusive), with a step of 2
             {
                 if(this.getBit(i))
                 {
