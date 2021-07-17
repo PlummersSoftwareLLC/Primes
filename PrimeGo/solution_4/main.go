@@ -178,12 +178,12 @@ func init() {
 	flag.IntVar(&N, "limit", 1e6, "calculate primes up to limit")
 	flag.DurationVar(&duration, "time", 5*time.Second, "sampling duration")
 	flag.IntVar(&routines, "routines", 3*runtime.NumCPU(), "number of workers to use")
-	flag.Parse()
 }
 
 // The main function
 func main() {
 	// parse the command line parameter
+	flag.Parse()
 	fmt.Printf("Run for %.1f seconds using %d workers to builing a sieve up to %d...\n\n", duration.Seconds(), routines, N)
 
 	// start the calculation
