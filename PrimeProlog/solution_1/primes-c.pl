@@ -11,7 +11,7 @@ main(Argv) :-
   timed_primes(N, 5000, Iters),
   statistics(walltime, [T1|_]),
   format(
-    "jimbxb-prolog-c;~d;~f;1;algorithm=base,faithful=yes,bits=1~n", 
+    "jimbxb-prolog-c;~d;~f;1;algorithm=base,faithful=no,bits=1~n", 
     [Iters, (T1 - T0) / 1000]
   ),
   true.
@@ -59,4 +59,3 @@ sieve(BV, P0, Ps) :-
   P1 is P0 + 2,
   sieve(BV, P1, Ps0).
 sieve(_, _, []).
-

@@ -9,7 +9,7 @@ main(Argv) :-
   timed_primes(N, 5000, Iters),
   statistics(walltime, [T1|_]),
   format(
-    "jimbxb-prolog-dynamic;~d;~f;1;algorithm=base,faithful=no,bits=unknown~n", 
+    "jimbxb-prolog-dynamic;~d;~f;1;algorithm=base,faithful=no~n", 
     [Iters, (T1 - T0) / 1000]
   ),
   true.
