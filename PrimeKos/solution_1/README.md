@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
-Prime number generator using Erastosthenes's sieve written in Kos.
+Prime number generator using Erastosthenes's sieve written in Kos scripting language.
 
 ## Run instructions
 
