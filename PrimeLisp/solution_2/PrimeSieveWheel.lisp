@@ -1,25 +1,45 @@
 ;;;; Common Lisp port of PrimeC/solution_2/sieve_5760of30030_only_write_read_bits.c by Daniel Spangberg
 ;;;
-;;; approx. 2.6x speedup over solution_2, approx. 325x speedup over solution_1
-;;;
 ;;; run as:
 ;;;     sbcl --script PrimeSieveWheel.lisp
 ;;;
-;;;
-;;; I have no idea how this works I just stole the algorithm.
-;;;
-;;; For Common Lisp bit ops see https://lispcookbook.github.io/cl-cookbook/numbers.html#bit-wise-operation
-;;;
-;;; (compile-file "PrimeSieveWheel.lisp") will show lots of info during the compilation
-;;; regarding inefficient code that can't be optimized.
 
 
 (declaim
   (optimize (speed 3) (safety 0) (debug 0)))
 
-(defconstant +bits-per-word+ 32)
-(defconstant +MASK+ #x1F)
-(defconstant +SHIFT+ -5)
+
+(defparameter *list-to* 100
+  "list primes up to that number, set to nil to disable listing")
+
+
+(defconstant +results+
+  '((         10 . 4        )
+    (        100 . 25       )
+    (       1000 . 168      )
+    (      10000 . 1229     )
+    (     100000 . 9592     )
+    (    1000000 . 78498    )
+    (   10000000 . 664579   )
+    (  100000000 . 5761455  )
+    ( 1000000000 . 50847534 )
+    (10000000000 . 455052511))
+  "Historical data for validating our results - the number of primes
+   to be found under some limit, such as 168 primes under 1000")
+
+
+#+64-bit (defconstant +bits-per-word+ 64)
+#-64-bit (defconstant +bits-per-word+ 32)
+
+(defconstant +MASK+ (1- +bits-per-word+))
+(defconstant +SHIFT+ (- (logcount +MASK+)))
+
+(deftype nonneg-fixnum ()
+  `(integer 0 ,most-positive-fixnum))
+
+(deftype sieve-element-type ()
+  `(unsigned-byte ,+bits-per-word+))
+
 
 (defconstant +steps+ #(
  8 1 2 3 1 3 2 1 2 3 3 1 3 2 1 3 2 3 4 2 1 2 1 2 7 
@@ -258,7 +278,7 @@
 
 (defstruct sieve-state
   (maxints -1 :type fixnum :read-only t)
-  (a nil :type simple-array))
+  (a nil :type simple-array :read-only t))
 
 
 (defun create-sieve (maxints)
@@ -266,8 +286,8 @@
   (make-sieve-state
     :maxints maxints
     :a (make-array
-         (1+ (floor maxints +bits-per-word+))
-         :element-type '(unsigned-byte 32)
+         (1+ (floor (floor maxints +bits-per-word+) 2))
+         :element-type 'sieve-element-type
          :initial-element 0)))
 
 
@@ -278,39 +298,31 @@
          (maxintsh (ash maxints -1))
          (a (sieve-state-a sieve-state))
          (q (1+ (isqrt maxints)))
-         (step 1)
-         (inc (aref steps step))
+         
          (factorh (ash 17 -1))
          (qh (ash q -1)))
-    (declare (fixnum maxints maxintsh q step inc factorh qh)
-             (simple-vector a))
-    (do () ((> factorh qh))
+    (declare (fixnum maxints maxintsh q factorh qh)
+             (type (simple-array sieve-element-type 1) a))
+    (do* ((step 1 (if (>= step 5759) 0 (1+ step)))
+          (inc (aref steps step) (aref steps step)))
+         ((> factorh qh))
+      (declare (fixnum step inc))
 
-      (if (not (zerop (logand (aref a (ash factorh +SHIFT+))
-                              (ash 1 (logand factorh +MASK+)))))
-            (progn
-              (incf factorh inc)
-              (when (= (incf step) 5760) (setq step 0))
-              (setq inc (aref steps step)))
+      (when (zerop (logand (aref a (ash factorh +SHIFT+))
+                           (ash 1 (logand factorh +MASK+))))
 
-        (let* ((istep step)
-               (ninc (aref steps istep))
-               (factor (1+ (ash factorh 1))))
-          (declare (fixnum istep ninc factor))
+        (do* ((istep step (if (>= istep 5759) 0 (1+ istep)))
+              (ninc (aref steps istep) (aref steps istep))
+              (factor (1+ (ash factorh 1)))
+              (i (ash (the fixnum (* factor factor)) -1)))
+             ((>= i maxintsh))
+          (declare (fixnum istep ninc factor i))
 
-          (do ((i (ash (the fixnum (* factor factor)) -1)))
-              ((> i maxintsh))
-            (declare (fixnum i))
-            (setf (aref a (ash i +SHIFT+))
-                  (logior (the (unsigned-byte 32) (aref a (ash i +SHIFT+)))
-                          (the (unsigned-byte 32) (ash 1 (logand i +MASK+)))))
-            (incf i (the fixnum (* factor ninc)))
-            (when (= (incf istep) 5760) (setq istep 0))
-            (setq ninc (aref steps istep)))
+          (setf #1=(aref a (ash i +SHIFT+))
+                (logior #1# (ash 1 (logand i +MASK+))))
+          (incf i (the fixnum (* factor ninc)))))
 
-          (incf factorh inc)
-          (if (= (incf step) 5760) (setq step 0))
-          (setq inc (aref steps step)))))))
+      (incf factorh inc))))
 
 
 (defun count-primes (sieve-state)
@@ -321,18 +333,27 @@
          (factor 17)
          (step 1)
          (inc (ash (aref +steps+ step) 1)))
-    (declare (fixnum maxints ncount factor inc) (simple-vector a))
+    (declare (fixnum maxints ncount factor inc) (type (simple-array sieve-element-type 1) a))
+    (when *list-to* (princ "2, 3, 5, 7, 11, 13, " *error-output*))
     (do () ((> factor maxints))
-      (when (zerop (logand (aref a (the (unsigned-byte 32) (ash factor (+ -1 +SHIFT+))))
-                           (ash 1 (the (unsigned-byte 32) (logand (ash factor -1) +MASK+)))))
-        (incf ncount))
+      (when (zerop (logand (aref a (ash factor (+ -1 +SHIFT+)))
+                           (ash 1 (logand (ash factor -1) +MASK+))))
+        (incf ncount)
+        (when (and *list-to* (<= factor *list-to*))
+          (format *error-output* "~d, " factor)))
       (incf factor inc)
-      (when (= (incf step) 5760) (setq step 0))
+      (setq step (if (>= step 5759) 0 (1+ step)))
       (setq inc (ash (the fixnum (aref +steps+ step)) 1)))
+    (when *list-to*
+      (when (< *list-to* (sieve-state-maxints sieve-state))
+        (princ "..." *error-output*))
+      (terpri *error-output*))
     ncount))
 
 
-;(disassemble 'run-sieve)
+(defun validate (sieve-state)
+  (let ((hist (cdr (assoc (sieve-state-maxints sieve-state) +results+ :test #'=))))
+    (if (and hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
 (let* ((passes 0)
@@ -348,6 +369,7 @@
 
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
-    (format *error-output* "Passes: ~d  Time: ~f Avg: ~f ms Count: ~d~%" passes duration (* 1000 avg)  (count-primes result))
+    (format *error-output* "Algorithm: wheel  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
+            passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
 
     (format t "mayerrobert-cl-wheel;~d;~f;1;algorithm=wheel,faithful=no,bits=1~%" passes duration)))

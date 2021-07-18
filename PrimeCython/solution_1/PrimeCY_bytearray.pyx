@@ -7,10 +7,8 @@ Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 
 # from math import sqrt
 from libc.math cimport sqrt
-from libc.string cimport strlen
 
 
-cdef bytearray byte_0 = bytearray(b'\x00')
 cdef bytearray byte_1 = bytearray(b'\x01')
 
 cdef class PrimeSieve:
@@ -48,25 +46,33 @@ cdef class PrimeSieve:
     def run_sieve(self):
 
         """Calculate the primes up to the specified limit"""
-        cdef int factor, bitslen, start, step, size, index
+        cdef int factor, bitslen, start, step, size, index, stop
         cdef float q
+        cdef char* bits
 
+        bits = <char*>(self._bits)
 
         factor = 1
         # sqrt doesn't seem to make any difference in CPython,
         # but works much faster than "x**.5" in Pypy
         q = sqrt(self._size) / 2
-        bitslen = strlen(self._bits)
+        bitslen = len(self._bits)
 
         while factor <= q:
-            factor = self._bits.index(byte_1, factor)
+            for index in range(factor, bitslen):
+                if bits[index]:
+                    factor = index
+                    break
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
             start = 2 * factor * (factor + 1)
             step  = factor * 2 + 1
             size  = bitslen - start
-            self._bits[start :: step] = byte_0 * (size // step + bool(size % step))  # bool is (a subclass of) int in python
+            stop = start + size
+            # Cython doesn't understand range(start, stop, step), but provides special syntax:
+            for index from start <= index < stop by step:
+                bits[index] = 0
 
             factor += 1
 
@@ -107,7 +113,7 @@ cdef class PrimeSieve:
 
         # Following 2 lines added by rbergen to conform to drag race output format
         print();
-        print("rpkak; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
+        print("rpkak+byte-array; %s;%s;1;algorithm=base,faithful=yes,bits=8" % (passes, duration));
 
 
 # MAIN Entry

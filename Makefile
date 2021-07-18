@@ -14,7 +14,11 @@ benchmark: check-env
 	npm ci --silent && npm start --silent -- benchmark -d "$${REALPATH}" -f "$(FORMATTER)"
 
 .PHONY: check-env
-check-env: check-docker-works check-node-works
+check-env: check-cc-works check-docker-works check-node-works
+
+.PHONY: check-cc-works
+check-cc-works:
+	@cc --version >/dev/null 2>&1 || (echo 'Please install a C compiler. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)
 
 .PHONY: check-node-works
 check-node-works:
