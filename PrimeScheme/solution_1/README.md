@@ -31,4 +31,4 @@ Using chezscheme 9.5.4 on Arch Linux, I get
 
     compiling sieve.ss with output to sieve.so
     compiling PrimeScheme.ss with output to PrimeScheme.so
-    William103;141;5.0155461;1;algorithm=base,bits=1
+    William103;134;5.030902191;1;algorithm=base,bits=1,faithful=yes
