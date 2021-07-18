@@ -39,6 +39,8 @@ class Sieve
                 }
             }
         }
+
+        return sieve
     }
 
     # Generator which yields subsequent primes from the sieve
