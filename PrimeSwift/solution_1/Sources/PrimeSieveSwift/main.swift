@@ -105,7 +105,7 @@ struct PrimeSieveSwift: ParsableCommand {
     private var upperLimit = 1_000_000
 
     @Option(name: [.customLong("time"), .customShort("t")], help: "Max time for number of passes.")
-    private var maxTime = 10.0
+    private var maxTime = 5.0
 
     @Option(name: [.customLong("list-results"), .customShort("l")], help: "List all computed primes.")
     private var listResults = false
