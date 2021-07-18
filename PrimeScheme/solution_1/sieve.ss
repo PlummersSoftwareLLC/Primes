@@ -73,5 +73,5 @@
 
   ; print the results in the expected format
   (define (print-results duration passes n)
-    (format #t "William103;~a;~a;1;algorithm=base,bits=1" passes (duration-to-seconds duration))
+    (format #t "William103;~a;~a;1;algorithm=base,bits=1,faithful=yes" passes (duration-to-seconds duration))
     (newline)))
