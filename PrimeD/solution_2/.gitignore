@@ -13,3 +13,4 @@ solution_2-test-*
 *.o
 *.obj
 *.lst
+app_without_comments.d
