@@ -20,9 +20,6 @@ class Sieve
     {
         const sieve = this.buf
 
-        # Count how many primes we've found
-        var num_primes = 1 # 2 is the first prime, we only count odd primes
-
         # We perform clearing up to sqrt of sieve size
         const max_clear_factor = integer(sqrt(sieve.size * 2)) / 2
 
@@ -33,8 +30,6 @@ class Sieve
             # If this slot has 0, it means it's not a multiple of a prime,
             # therefore it corresponds to a prime number
             if ! sieve[factor] {
-
-                num_primes += 1
 
                 const prime = factor * 2 + 1
 
