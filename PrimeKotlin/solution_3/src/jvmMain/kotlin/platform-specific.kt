@@ -38,11 +38,11 @@ actual inline fun <reified T : PrimeSieve> benchmarkPrimeSieve(
                     duration = 5000.0,
                     iterations = iterations.get(),
                     result = lastIteration.get(),
-                ).print("native", "multi")
+                ).print("jvm", "multi")
             }
         }
 
     } else {
-        runTest(newInstance).print("native", "single")
+        runTest(newInstance).print("jvm", "single")
     }
 }
