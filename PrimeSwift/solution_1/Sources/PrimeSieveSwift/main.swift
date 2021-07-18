@@ -112,6 +112,25 @@ struct PrimeSieveSwift: ParsableCommand {
 
     func run() throws {
         var passes = 0
+        //var sieve = Sieve(limit: upperLimit)
+
+        var stopWatch = StopWatch()
+        while true {
+            let sieve = Sieve(limit: upperLimit)
+            sieve.runSieve()
+            passes += 1
+
+            if stopWatch.lap() >= maxTime {
+                sieve.printResults(showingNumbers: listResults, duration: stopWatch.stop, passes: passes)
+                break
+            }
+        }
+
+    }
+
+    /*
+    func run() throws {
+        var passes = 0
         var sieve = Sieve(limit: upperLimit)
 
         var stopWatch = StopWatch()
@@ -124,5 +143,6 @@ struct PrimeSieveSwift: ParsableCommand {
         sieve.printResults(showingNumbers: listResults, duration: stopWatch.stop, passes: passes)
 
     }
+    */
 }
 PrimeSieveSwift.main()
