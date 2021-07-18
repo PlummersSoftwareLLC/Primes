@@ -39,7 +39,7 @@ Check [HOW_IT_WORKS](HOW_IT_WORKS.md).
 > go run .
 Run for 5.0 seconds using 24 workers to builing a sieve up to 1000000...
 
-Passes: 18724, Time: 5000 ms, Avg: 267064 ns/op, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 18592, Time: 5002 ms, Avg: 269078 ns/op, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-kpym-go-multi;18724;5.000507;4;algorithm=base,faithful=yes
+kpym-go-multi;18592;5.002708;4;algorithm=base,faithful=yes
 ```

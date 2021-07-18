@@ -18,35 +18,35 @@ var numPrimesTest = map[int]int{
 }
 
 func TestPrimeChacker(t *testing.T) {
-	NewSieve(10)
+	sieve := NewSieve(10)
 	wg.Add(1)
-	PrimeChacker(1, 1, 3)
-	if Sieve[0] || Sieve[1] || Sieve[2] {
-		t.Errorf("%v", Sieve)
+	sieve.PrimeChacker(1, 1, 3)
+	if sieve[0] || sieve[1] || sieve[2] {
+		t.Errorf("%v", sieve)
 	}
 	wg.Add(1)
-	PrimeChacker(3, 3, 10)
-	if Sieve[0] || Sieve[1] || Sieve[2] || !Sieve[3] || Sieve[4] || Sieve[5] || !Sieve[6] || Sieve[7] || Sieve[8] || !Sieve[9] {
-		t.Errorf("%v", Sieve)
+	sieve.PrimeChacker(3, 3, 10)
+	if sieve[0] || sieve[1] || sieve[2] || !sieve[3] || sieve[4] || sieve[5] || !sieve[6] || sieve[7] || sieve[8] || !sieve[9] {
+		t.Errorf("%v", sieve)
 	}
 }
 
 func TestPrimeChackerMulti(t *testing.T) {
-	NewSieve(10)
-	PrimeChackerMulti(4, 1, 3)
-	if Sieve[0] || Sieve[1] || Sieve[2] {
-		t.Errorf("%v", Sieve)
+	sieve := NewSieve(10)
+	sieve.PrimeChackerMulti(4, 1, 3)
+	if sieve[0] || sieve[1] || sieve[2] {
+		t.Errorf("%v", sieve)
 	}
-	PrimeChackerMulti(4, 3, 10)
-	if Sieve[0] || Sieve[1] || Sieve[2] || !Sieve[3] || Sieve[4] || Sieve[5] || !Sieve[6] || Sieve[7] || Sieve[8] || !Sieve[9] {
-		t.Errorf("%v", Sieve)
+	sieve.PrimeChackerMulti(4, 3, 10)
+	if sieve[0] || sieve[1] || sieve[2] || !sieve[3] || sieve[4] || sieve[5] || !sieve[6] || sieve[7] || sieve[8] || !sieve[9] {
+		t.Errorf("%v", sieve)
 	}
 }
 
 func TestDoSieveMulti(t *testing.T) {
 	for N, P := range numPrimesTest {
-		DoSieveMulti(N, 4)
-		C := CountPrimes()
+		sieve := DoSieveMulti(N, 4)
+		C := sieve.CountPrimes()
 		if C != P {
 			t.Errorf("Up to %d there are %d primes, but I count %d.", N, P, C)
 		}
@@ -54,10 +54,10 @@ func TestDoSieveMulti(t *testing.T) {
 }
 
 func ExampleDoSieveMulti() {
-	DoSieveMulti(10, runtime.NumCPU())
+	sieve := DoSieveMulti(10, runtime.NumCPU())
 	fmt.Print("2") // the only even prime
-	for p := 0; p < len(Sieve); p++ {
-		if Sieve[p] {
+	for p := 0; p < len(sieve); p++ {
+		if sieve[p] {
 			continue
 		}
 		fmt.Print(",", 2*p+3)
@@ -82,7 +82,7 @@ func BenchmarkDoSieveMulti(b *testing.B) {
 			numProc := 1 << i
 			b.Run(fmt.Sprintf("Multi %d using %d workers", max, numProc), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					DoSieveMulti(max, numProc)
+					_ = DoSieveMulti(max, numProc)
 				}
 			})
 		}
