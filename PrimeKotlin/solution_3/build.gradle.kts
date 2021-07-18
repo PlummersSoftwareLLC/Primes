@@ -1,22 +1,26 @@
+import org.jetbrains.kotlin.gradle.tasks.FatFrameworkTask
+
 plugins {
     kotlin("multiplatform") version "1.5.20"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
     application
 }
 
 group = "primes"
 version = "1.0"
 
+application {
+    mainClassName = "MainKt"
+}
+
 repositories {
     mavenCentral()
 }
 
 kotlin {
-    jvm {
+    val jvmTarget = jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "16"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnit()
         }
     }
     js(IR) {
@@ -39,10 +43,15 @@ kotlin {
         }
     }
 
-    sourceSets {
-        val commonMain by getting
-        val jvmMain by getting
-        val jsMain by getting
-        val nativeMain by getting
+    sourceSets["commonMain"].dependencies {
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1-native-mt")
+    }
+
+    tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+        from(jvmTarget.compilations.getByName("main").output)
+        configurations = mutableListOf(
+            jvmTarget.compilations.getByName("main").compileDependencyFiles as Configuration,
+            jvmTarget.compilations.getByName("main").runtimeDependencyFiles as Configuration
+        )
     }
 }

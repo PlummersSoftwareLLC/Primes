@@ -1,57 +1,15 @@
-import kotlin.math.sqrt
+inline val Int.double get() = this shl 1
+inline val Int.half get() = this shr 1
 
-expect fun getSystemTimeMillis(): Double
-expect val platformName: String
+abstract class PrimeSieve(val sieveSize: Int) {
+    abstract val primesCount: Int
+    abstract val foundPrimes: IntArray
+    abstract val implementationName: String
 
-fun main() {
-    val sieveSize = 1_000_000
-    val runTime = 5_000L
+    fun toString(passes: Int, duration: Double, threads: String) =
+        "kotlin_${implementationName}_$threads;$passes;$duration;1;algorithm=base,faithful=yes"
 
-    var passes = 0
-    var sieve: PrimeSieve = PrimeSieve(sieveSize).apply { findPrimes() } // warmup init
-
-    val start = getSystemTimeMillis()
-
-    while ((getSystemTimeMillis() - start) < runTime) {
-        sieve = PrimeSieve(sieveSize).apply { findPrimes() }
-        passes++
-    }
-
-    val duration = (getSystemTimeMillis() - start) / 1000.0
-    println(
-        """Passes: $passes, Time: $duration, Avg: ${
-            duration / passes
-        }, Limit: $sieveSize, Count: ${sieve.dataSet.primesCount}, Valid: ${sieve.dataSet.isValid}
-        
-        Kotlin/$platformName Idiomatic;$passes;$duration;1;algorithm=base,faithful=yes
-    """.trimIndent()
-    )
-}
-
-class PrimeSieve(private val sieveSize: Int) {
-    val dataSet = SieveMap(sieveSize)
-    private val sqrtOfSieveSize = sqrt(sieveSize.toDouble()).toInt()
-
-    tailrec fun findPrimes(factor: Int = 3) {
-        if (factor < sqrtOfSieveSize) findPrimes(
-            ((factor..sieveSize).firstOrNull { dataSet[it] }?.also { dataSet.clearFactor(it) } ?: factor) + 2
-        )
-    }
-
-    class SieveMap(private val sieveSize: Int) {
-        private val map = BooleanArray((sieveSize + 1) shr 1)
-        val primesCount get() = map.indices.count { !map[it] }
-        val isValid get() = VALIDATION_DATA[sieveSize] == primesCount
-
-        operator fun get(index: Int) = (index and 1) == 1 && !map[index shr 1]
-        fun clearFactor(factor: Int) {
-            for (i in (factor * factor)..sieveSize step (factor * 2))
-                map[i shr 1] = (i and 1) == 1
-        }
-
-        fun toNumbers() = map.indices.mapNotNull { it.takeIf { this[it] } }
-        override fun toString() = toNumbers().drop(3).joinToString(prefix = "2, ", separator = ", ")
-    }
+    val isValid get() = VALIDATION_DATA[sieveSize] == primesCount
 
     companion object {
         val VALIDATION_DATA = mapOf(

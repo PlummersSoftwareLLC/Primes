@@ -29,6 +29,6 @@ tasks.withType<Jar>() {
     archiveBaseName.set("prime-sieve")
 
     manifest {
-        attributes["Main-Class"] = "PrimeSieveKt"
+        attributes["Main-Class"] = "MainKt"
     }
 }
