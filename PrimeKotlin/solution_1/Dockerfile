@@ -12,4 +12,4 @@ FROM adoptopenjdk:${JDK_VERSION}-jdk-hotspot
 COPY --from=BUILD /src/build/libs/prime-sieve-1.0-SNAPSHOT-all.jar /bin/runner/run.jar
 WORKDIR /bin/runner
 
-ENTRYPOINT ["java", "-jar", "run.jar"]
+ENTRYPOINT ["java", "-jar", "run.jar -t -if -i -t:m -if:m -i:m"]

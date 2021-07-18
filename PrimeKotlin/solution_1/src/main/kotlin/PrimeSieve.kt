@@ -1,102 +1,15 @@
-import kotlinx.coroutines.*
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.sqrt
-
-const val PRIME_SIEVE_SIZE = 1_000_000
-const val ITERATION_TIME = 5_000
-const val SKIP_MULTI_THREAD = false
-
-fun main() {
-    if (!SKIP_MULTI_THREAD) {
-        /// ---------------
-        /// MULTI THREADED
-        /// ---------------
-
-        runBlocking(Dispatchers.Default) {
-            // MULTI THREADED
-
-            val cores = Runtime.getRuntime().availableProcessors()
-
-            val primeSieveJobs = ArrayList<Job>()
-
-            val iterations = AtomicInteger()
-            val lastIteration = AtomicReference<PrimeSieve>()
-
-            repeat(cores) {
-                primeSieveJobs += launch {
-                    while (isActive) {
-                        lastIteration.set(PrimeSieve(PRIME_SIEVE_SIZE).apply { runSieve() })
-                        iterations.incrementAndGet()
-                    }
-                }
-            }
-
-            withContext(Dispatchers.IO) {
-                delay(5000)
-                primeSieveJobs.forEach { it.cancel() }
-                println(lastIteration.get().toString(iterations.get(), ITERATION_TIME / 1000.0, "multithreaded"))
-            }
-
-            // cool down
-            delay(ITERATION_TIME.toLong())
-        }
-    }
-
-    /// ---------------
-    /// SINGLE THREADED
-    /// ---------------
-
-    val startTime = System.currentTimeMillis()
-
-    var iterations = 0
-    var lastIteration = PrimeSieve(0)
-    while (System.currentTimeMillis() - startTime < ITERATION_TIME) {
-        lastIteration = PrimeSieve(PRIME_SIEVE_SIZE).apply { runSieve() }
-        iterations++
-    }
-
-    val duration = System.currentTimeMillis() - startTime
-
-    println(lastIteration.toString(iterations, duration / 1000.0, "singlethreaded"))
-}
-
 inline val Int.double get() = this shl 1
 inline val Int.half get() = this shr 1
 
-private class PrimeSieve(private val sieveSize: Int) {
-    private val sqrtOfSieveSize = sqrt(sieveSize.toDouble()).toInt()
-    private val map = BooleanArray((sieveSize + 1).half)
-    private val foundPrimes get() = map.indices.mapNotNull { if (this[it]) it else null }
+abstract class PrimeSieve(val sieveSize: Int) {
+    abstract val primesCount: Int
+    abstract val foundPrimes: IntArray
+    abstract val implementationName: String
 
-    val primesCount get() = map.indices.count { !map[it] }
+    fun toString(passes: Int, duration: Double, threads: String) =
+        "kotlin_${implementationName}_$threads;$passes;$duration;1;algorithm=base,faithful=yes"
+
     val isValid get() = VALIDATION_DATA[sieveSize] == primesCount
-
-    fun runSieve() {
-        var factor = 3
-
-        while (factor < sqrtOfSieveSize) {
-            factor = ((factor..sieveSize step 2).firstOrNull { !this[it] }?.also { clear(it) } ?: factor) + 2
-        }
-    }
-
-    operator fun get(index: Int) = map[index.half]
-    operator fun set(index: Int, value: Boolean) { map[index.half] = value }
-
-    fun clear(factor: Int) {
-        val step = factor.double
-        var i = factor * 3
-        while (i <= sieveSize) {
-            this[i] = true
-            i += step
-        }
-    }
-
-    fun toString(passes: Int, duration: Double, threads: String) = """
-        Passes: $passes, Time: $duration, Avg: ${duration / passes}, Limit: $sieveSize, Count: $primesCount, Valid: $isValid
-        
-        kotlin_idiomatic_fast_$threads;$passes;$duration;1;algorithm=base,faithful=yes
-    """.trimIndent()
 
     companion object {
         val VALIDATION_DATA = mapOf(
