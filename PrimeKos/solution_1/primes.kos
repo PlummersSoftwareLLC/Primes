@@ -44,17 +44,9 @@ class Sieve
                 }
             }
         }
-
-        # Count remaining primes
-        for const factor in range(max_clear_factor + 1, sieve.size) {
-            if ! sieve[factor] {
-                num_primes += 1
-            }
-        }
-
-        return num_primes
     }
 
+    # Generator which yields subsequent primes from the sieve
     fun get_primes
     {
         # Yield the only even prime, which we don't record in the sieve
@@ -101,7 +93,11 @@ fun validate
     ]
 
     for const sieve_size, num_primes in prime_counts {
-        const found_primes = Sieve(sieve_size).run()
+
+        const sieve = Sieve(sieve_size)
+        sieve.run()
+        const found_primes = sieve.get_primes().count()
+
         if found_primes != num_primes {
             print("Error: at sieve size \(sieve_size) expected \(num_primes) primes, but found \(found_primes)")
         }

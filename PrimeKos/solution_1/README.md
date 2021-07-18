@@ -19,5 +19,5 @@ Prime number generator using Erastosthenes's sieve written in Kos scripting lang
 
 Intel(R) Core(TM) i5-3570K CPU @ 3.40GHz
 ```
-cdragan;62;5.07704;1;algorithm=base,faithful=yes,bits=8
+cdragan;75;5.045771;1;algorithm=base,faithful=yes,bits=8
 ```
