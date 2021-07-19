@@ -4,4 +4,4 @@ WORKDIR /opt/app
 
 COPY src/PrimeSieveJavaBitSetParallel.java .
 
-CMD "java" "PrimeSieveJavaBitSetParallel.java"
+CMD ["java", "PrimeSieveJavaBitSetParallel.java"]
