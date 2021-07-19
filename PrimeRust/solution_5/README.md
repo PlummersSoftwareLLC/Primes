@@ -10,11 +10,11 @@
 Contributors:
 - Kai Rese @Kulasko https://git.h3n.eu/Kulasko
 
-This solution aims to explore the effects of different multithreading approaches to an optimized version of the C++ algorithm, inspired by the solution of Mike Barber (solution_1). Currently, there are three algorithms:
+This solution aims to explore the effects of different multithreading approaches to an optimized version of the original C++ algorithm, inspired by the solution of Mike Barber (PrimeRust/solution_1). Currently, there are three algorithms:
 
 - Stock standard single threaded. Mostly useful for a baseline compared to the others.
 - Streaming. After finding a new prime number, all threads work together on a flag unset pass. This takes no advantage of data locality whatsoever, also threads can steal memory from each other's caches between passes, so it should be bottlenecked by cache bandwidth and crosstalk latency. Also, this isn't expected to scale well in any way.
-- Tiled. After a single thread fetches all the primes before the square root of the total number, a number of memory blocks receive the list of primes and each apply them on their memory. This has very good data locality, but as thread don't move to where the action happens, they are bound to run dry. If there are no other bottlenecks, this should approach around 50% of CPU core scaling.
+- Tiled. After a single thread fetches all the primes up to the square root of the total number, a number of threads on memory blocks receive the list of primes and each apply them on their memory. This has very good data locality, but as threads don't move to where the action happens, they are bound to run dry. If there are no other bottlenecks, this should approach around 50% of CPU core scaling.
 
 Each algorithm is run on a bit-based and a bool-based data set.
 
