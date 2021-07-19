@@ -1,0 +1,6 @@
+kulasko-rust-serial-bit;4094;5.000878526;1;algorithm=base,faithful=yes,bits=1
+kulasko-rust-serial-bool;4191;5.000533138;1;algorithm=base,faithful=yes,bits=8
+kulasko-rust-streamed-bit;1249;5.000794346;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-streamed-bool;1041;5.003056427;8;algorithm=base,faithful=yes,bits=8
+kulasko-rust-tiled-bit;16146;5.000183582;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-tiled-bool;2945;5.000977906;8;algorithm=base,faithful=yes,bits=8
