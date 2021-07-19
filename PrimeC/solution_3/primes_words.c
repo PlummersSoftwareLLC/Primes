@@ -14,11 +14,13 @@
 #define MASK 63U
 #define SHIFT 6U
 #define MEMSHIFT 7U
+#define SHIFTSIZE 3U
 #else
 #define TYPE uint32_t
 #define MASK 31U 
 #define SHIFT 5U
 #define MEMSHIFT 6U
+#define SHIFTSIZE 2U 
 #endif
 
 struct sieve_state {
@@ -47,7 +49,8 @@ void repeat_words_2_end (
     TYPE *word_values, 
     unsigned int size
     ) {
-    size_t mem_size = size * sizeof(TYPE);
+    // size * sizeof(TYPE) == size << SHIFTSIZE;    
+    size_t mem_size = size << SHIFTSIZE; 
     unsigned int start_at = word_offset;
 
     while ( (start_at + size ) < sieve_state->nr_of_words ) {
@@ -97,16 +100,16 @@ void run_sieve_segment(
 ) {
     unsigned int factor_index = start_nr_idx;
     unsigned int prime;
-    unsigned int max_index=end_nr>>1U;
+    unsigned int max_index=(end_nr>>1U)  - ((end_nr & 1U) == 1U ?  0U:1U);
     unsigned int q=(unsigned int)sqrt(end_nr);
     unsigned int q_index=q>>1U;
-  
+
     while (factor_index <= q_index) {
         // search next
         if ( getBit(sieve_state,factor_index) == ON ) {
             prime = (factor_index << 1U)+1U;
             // crossout
-            for (unsigned int num = (prime * prime)>>1U ; num <= max_index; num += prime) {
+            for (unsigned int num = ((prime * prime)>>1U) ; num <= max_index; num += prime) {
                 setBit(sieve_state,num);
             }  
             if (factor_index == stop_prime_idx) {
@@ -132,49 +135,54 @@ void run_sieve(struct sieve_state *sieve_state) {
     // for the repeating word calculation
     unsigned int max_product = (sieve_state->limit >> 1) / 100; 
 
+    if (sieve_state->limit < 100000) {
+        // for small sieve sizes, just calculate all in one go
+        run_sieve_segment(sieve_state,1,sieve_state->limit,0);
+    } else {
+        // STEP 1:
+        // First calculate all the primes in the first word
+        // sizeof(TYPE)<<3U == sizeof(TYPE) * 8
+        run_sieve_segment(sieve_state,1,(sizeof(TYPE)<<3U),0);
 
-    // STEP 1:
-    // First calculate all the primes in the first word
-    run_sieve_segment(sieve_state,1,8*sizeof(TYPE),0);
-
-    // STEP 2:
-    // find the optimal product of primes for repeat pattern
-    // in the first half word
-    for (unsigned int num = 1; num <= 4*sizeof(TYPE); num ++) {
-        if (getBit(sieve_state,num) == ON ) {
-            next_prime_product = prime_product * ((num << 1U)+1U);
-            if (next_prime_product < max_product) {
-                prime_product = next_prime_product;
-                prime_word_cpy_idx = num;
-            } else {
-                break;
+        // STEP 2:
+        // find the optimal product of primes for repeat pattern
+        // in the first half word
+        for (unsigned int num = 1; num <= (sizeof(TYPE)<<2U); num ++) {
+            if (getBit(sieve_state,num) == ON ) {
+                next_prime_product = prime_product * ((num << 1U)+1U);
+                if (next_prime_product < max_product) {
+                    prime_product = next_prime_product;
+                    prime_word_cpy_idx = num;
+                } else {
+                    break;
+                }
             }
         }
+
+        // STEP 3
+        // crossout from begin to product for up to found prime
+        // start with prime3
+        // 4*prime_product*8*sizeof(TYPE) == (prime_product*sizeof(TYPE)) << 5U
+        run_sieve_segment(sieve_state,1,(prime_product*sizeof(TYPE)) << 5U, prime_word_cpy_idx );
+
+        // STEP 4
+        // now we can do a word crossout for the first few primes that
+        // are determined by the logic above
+        repeat_words_2_end (
+            sieve_state,
+            prime_product+1, 
+            &(sieve_state->bit_array[1]), 
+            prime_product
+        );
+
+        // STEP 5
+        // crossout the remaining
+        run_sieve_segment(sieve_state,prime_word_cpy_idx +1,sieve_state->limit,0);
     }
-
-    // STEP 3
-    // crossout from begin to product for up to found prime
-    // start with prime3
-    // 4*prime_product*8*sizeof(TYPE) == (prime_product*sizeof(TYPE)) << 5U
-    run_sieve_segment(sieve_state,1,(prime_product*sizeof(TYPE)) << 5U, prime_word_cpy_idx );
-
-    // STEP 4
-    // now we can do a word crossout for the first few primes that
-    // are determined by the logic above
-    repeat_words_2_end (
-        sieve_state,
-        prime_product+1, 
-        &(sieve_state->bit_array[1]), 
-        prime_product
-    );
-
-    // STEP 5
-    // crossout the remaining
-    run_sieve_segment(sieve_state,prime_word_cpy_idx +1,sieve_state->limit,0);
 }
 
 void print_primes (struct sieve_state *sieve_state) {
-    unsigned int max_index=sieve_state->limit>>1U;
+    unsigned int max_index=(sieve_state->limit>>1U) - ((sieve_state->limit & 1U) == 1U ?  0U:1U);
     printf("%i,",2);
     for (unsigned int i = 1; i <= max_index; i++) {
         if (getBit(sieve_state,i) == ON ) {
@@ -186,7 +194,8 @@ void print_primes (struct sieve_state *sieve_state) {
 
 unsigned int count_primes (struct sieve_state *sieve_state) {
     unsigned int count = 1;
-    unsigned int max_index=sieve_state->limit>>1U;
+    unsigned int max_index=(sieve_state->limit>>1U) - ((sieve_state->limit & 1U) == 1U ?  0U:1U);
+
     for (unsigned int i = 1; i <=max_index; i++) {
         if (getBit(sieve_state,i) == ON ) {
             count++;   
