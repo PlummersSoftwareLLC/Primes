@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+//if (function_exists("opcache_get_status")) { print_r(opcache_get_status()["jit"]); }
+//else { echo "PHP JIT not enabled!!!\n"; }
+//var_dump(ini_get("opcache.jit"));
+//die();
+
 /**
  * PHP Prime Sieve
  * Class PrimeSieve
@@ -9,9 +14,10 @@ declare(strict_types=1);
 
 class PrimeSieve
 {
-    private array $rawbits;
+    private SplFixedArray $rawbits;
 
     private int $sieveSize;
+    private int $rawBitsSize;
 
     public static array $primeCounts = [
         10 => 4,
@@ -24,55 +30,42 @@ class PrimeSieve
         100000000 => 5761455,
     ];
 
-    public function __construct(
-        $sieveSize = 1000000
-    )
+    public function __construct($sieveSize = 1000000)
     {
         $this->sieveSize = $sieveSize;
-        $rawbitSize = (int)(($this->sieveSize + 1) / 2);
-        $this->rawbits = array_fill(0, $rawbitSize, true);
-    }
-
-    private function getBit(int $index): bool
-    {
-        if ($index % 2 !== 0) {
-            return $this->rawbits[(int)$index / 2];
-        }
-        return false;
-    }
-
-    private function clearBit(int $index): void
-    {
-        if ($index % 2 !== 0) {
-            $this->rawbits[(int)$index / 2] = false;
-        }
+        $this->rawBitsSize = (int)(($this->sieveSize + 1) / 2);
     }
 
     public function runSieve()
     {
         $factor = 3;
-        $q = sqrt($this->sieveSize);
+        $sieveSize = $this->sieveSize;
+        $q = sqrt($sieveSize);
+        $rb = new SplFixedArray($this->rawBitsSize);
 
         while ($factor < $q) {
-            for ($i = $factor; $i <= $this->sieveSize; $i++) {
-                if ($this->getBit($i)) {
+            for ($i = $factor; $i <= $sieveSize; $i += 2) {
+                if ($rb[$i / 2] === null) {
                     $factor = $i;
                     break;
                 }
             }
 
-            for ($i = $factor * 3; $i <= $this->sieveSize; $i += $factor * 2) {
-                $this->clearBit($i);
+            $ft2 = $factor;
+            $start = ($factor * $factor) / 2;
+            for ($i = $start; $i <= $this->rawBitsSize; $i += $ft2) {
+                $rb[$i] = 1;
             }
 
             $factor += 2;
         }
+        $this->rawbits = $rb;
     }
 
     public function printResults(): void
     {
-        for ($i = 0; $i < $this->sieveSize; $i++) {
-            if ($this->getBit($i)) {
+        for ($i = 1; $i < $this->sieveSize; $i++) {
+            if ($i % 2 && $this->rawbits[$i / 2] === null) {
                 echo $i . ", ";
             }
         }
@@ -80,7 +73,14 @@ class PrimeSieve
 
     public function getRawbitCount(): int
     {
-        return array_sum($this->rawbits);
+        $sum = 0;
+        $sz = $this->rawbits->getSize();
+        for ($i = 0; $i < $sz; $i++){
+            if ($this->rawbits[$i] === null){
+                $sum++;
+            }
+        }
+        return $sum;
     }
 }
 
@@ -89,19 +89,18 @@ $tStart = microtime(true);       //Init time
 $passes = 0;                            //Init passes
 $sieveSize = 1000000;                   //Set sieve size
 $printResults = false;                  //Print the prime numbers that are found
-$rawbitCount = null;                    //Init a rawbitCount to validate the result
-$runTime = 10;                          //The amount of seconds the script should be running for
+$rawbitCount;                           //Init a rawbitCount to validate the result
+$runTime = 5;                           //The amount of seconds the script should be running for
 
 while (getTimeDiffInMs($tStart) < $runTime * 1000) {
     $sieve = new PrimeSieve($sieveSize);
     $sieve->runSieve();
-    $rawbitCount = $sieve->getRawbitCount();
     $passes++;
-
-    if ($printResults) {
-        $sieve->printResults();
-        echo "\n";
-    }
+}
+$rawbitCount = $sieve->getRawbitCount();
+if ($printResults) {
+    $sieve->printResults();
+    echo "\n";
 }
 
 

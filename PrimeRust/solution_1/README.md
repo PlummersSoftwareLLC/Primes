@@ -12,7 +12,7 @@ Contributors:
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
-- `bit storage` is equivalent to the above C++ `vector<bool>` case and uses individual bits within a byte to store true/false
+- `bit storage` is equivalent to the above C++ `vector<bool>` case and uses individual bits within a byte to store true/false. I have three variations of this implemented, with comments in the code.
 - `byte storage` has a simple vector of bytes, and just has `0 == false` and `1 == true`. It's a lot faster. But only for small datasets, since it uses more memory.
 - this version still intends to be similar to the C++ implementations so it's easier to compare; it's not fully idiomatic Rust, and is not intended to be.
 - it runs both single-thread and multi-thread tests.
@@ -31,14 +31,18 @@ There are more notes for getting started with Rust at the bottom, under `Quick s
 
 ## Output
 
-Tested on a Ryzen 3900X, Rust 1.51, running on WSL2.
+Tested on a Ryzen 3900X, Rust 1.53, running on WSL2.
 
 This is as reported on `stdout`:
 ```
-mike-barber_byte-storage;18177;5.0000672340;1;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;11954;5.0003018379;1;algorithm=base,faithful=yes,bits=1
-mike-barber_byte-storage;169690;5.0010256767;24;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;151787;5.0007596016;24;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;18543;5.0002603531;1;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;12082;5.0004081726;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;12484;5.0002326965;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;15576;5.0002875328;1;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;168821;5.0012035370;24;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;134987;5.0009522438;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;159453;5.0008320808;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;182613;5.0009403229;24;algorithm=base,faithful=yes,bits=1
 ```
 
 We report more informative metrics to `stderr` too, but these don't go into the report, as recorded below.

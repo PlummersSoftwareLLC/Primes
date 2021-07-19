@@ -1,6 +1,6 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
-    FlagStorageByteVector, FlagStorageBitVectorRotate, PrimeSieve,
+    FlagStorageByteVector, FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, PrimeSieve,
 };
 use std::{thread, time::{Duration, Instant}};
 use structopt::StructOpt;
@@ -176,6 +176,78 @@ pub mod primes {
         }
     }
 
+    /// Storage using a vector of (8-bit) bytes, but individually addressing bits within
+    /// each byte for bit-level storage. This is a fun variation I made up myself, but 
+    /// I'm pretty sure it's not original: someone must have done this before, and it 
+    /// probably has a name. If you happen to know, let me know :) 
+    ///
+    /// The idea here is to store bits in a different order. First we make use of all the 
+    /// _first_ bits in each word. Then we come back to the start of the array and 
+    /// proceed to use the _second_ bit in each word, and so on.
+    ///
+    /// There is a computation / memory bandwidth tradeoff here. This works well
+    /// only for sieves that fit inside the processor cache. For processors with 
+    /// smaller caches or larger sieves, this algorithm will result in a lot of 
+    /// cache thrashing.
+    const U8_BITS: usize = 8;
+    pub struct FlagStorageBitVectorStriped {
+        words: Vec<u8>,
+        length_bits: usize,
+    }
+    impl FlagStorageBitVectorStriped {
+        fn ceiling(numerator: isize, denominator: isize) -> isize {
+            (numerator + denominator - 1) / denominator
+        }
+    }
+    impl FlagStorage for FlagStorageBitVectorStriped {
+        fn create_true(size: usize) -> Self {
+            let num_words = size / U8_BITS + (size % U8_BITS).min(1);
+            Self {
+                words: vec![0xff; num_words],
+                length_bits: size,
+            }
+        }
+
+        fn reset_flags(&mut self, start: usize, skip: usize) {
+            let chunk = self.words.len();
+            for bit in 0..8 {
+                // get mask for this bit position
+                let mask = !(1_u8 << bit);
+
+                // calculate start word for this stripe
+                let chunk_start = bit * chunk;
+                let earliest = start.max(chunk_start);
+                let diff = earliest as isize - start as isize;
+                let relative = Self::ceiling(diff, skip as isize) * skip as isize;
+                let chunk_start = relative as usize + start - chunk_start;
+
+                // for larger `skips`, not every bit will have any corresponding words
+                // take slice starting here, and reset the bit in every `skip`th word
+                if chunk_start < chunk {
+                    let slice = &mut self.words[chunk_start..];
+                    let mut i = 0;
+                    while i < slice.len() {
+                        slice[i] &= mask;
+                        i += skip;
+                    }
+                }
+            }
+        }
+
+        fn get(&self, index: usize) -> bool {
+            if index > self.length_bits {
+                return false;
+            }
+            let word_index = index % self.words.len();
+            let bit_index = index / self.words.len();
+            let word = self.words.get(word_index).unwrap();
+            *word & (1 << bit_index) != 0
+        }
+    }
+
+
+    /// The actual sieve implementation, generic over the storage. This allows us to 
+    /// include the storage type we want without re-writing the algorithm each time. 
     pub struct PrimeSieve<T: FlagStorage> {
         sieve_size: usize,
         flags: T,
@@ -315,6 +387,10 @@ struct CommandLineOptions {
     /// Run variant that uses bit-level storage, applied using rotate
     #[structopt(long)]
     bits_rotate: bool,
+
+    /// Run variant that uses bit-level storage, using striped storage
+    #[structopt(long)]
+    bits_striped: bool,
     
     /// Run variant that uses byte-level storage
     #[structopt(long)]
@@ -323,7 +399,7 @@ struct CommandLineOptions {
 
 fn main() {
     // command line options are handled by the `structopt` and `clap` crates, which
-    // makes life very pleasant indeed.
+    // makes life very pleasant indeed. At the cost of a bit of compile time :)
     let opt = CommandLineOptions::from_args();
 
     let limit = opt.limit;
@@ -335,13 +411,11 @@ fn main() {
         None => vec![1, num_cpus::get()],
     };
 
-    let (run_bits, run_bits_rotate, run_bytes) = match (opt.bits, opt.bits_rotate, opt.bytes) {
-        (false, false, false) => (true, true, true),
-        (bits, bits_rotate, bytes) => (bits, bits_rotate, bytes),
-    };
-
+    // run all implementations if no options are specified (default)
+    let run_all = [opt.bits, opt.bits_rotate, opt.bits_striped, opt.bytes].iter().all(|b| !b);
+    
     for threads in thread_options {
-        if run_bytes {
+        if opt.bytes || run_all {
             thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
@@ -356,7 +430,7 @@ fn main() {
             }
         }
 
-        if run_bits {
+        if opt.bits || run_all {
             thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
@@ -371,12 +445,27 @@ fn main() {
             }
         }
 
-        if run_bits_rotate {
+        if opt.bits_rotate || run_all {
             thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorRotate>(
                     "bit-storage-rotate",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+        }
+
+        if opt.bits_striped || run_all {
+            thread::sleep(Duration::from_secs(1));
+            print_header(threads, limit, run_duration);
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorStriped>(
+                    "bit-storage-striped",
                     1,
                     run_duration,
                     threads,
@@ -461,7 +550,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::{FlagStorage, FlagStorageBitVector, FlagStorageBitVectorRotate, FlagStorageByteVector, PrimeSieve, PrimeValidator};
+    use crate::primes::PrimeValidator;
 
     #[test]
     fn sieve_known_correct_bits() {
@@ -471,6 +560,11 @@ mod tests {
     #[test]
     fn sieve_known_correct_bits_rolling() {
         sieve_known_correct::<FlagStorageBitVectorRotate>();
+    }
+
+    #[test]
+    fn sieve_known_correct_bits_striped() {
+        sieve_known_correct::<FlagStorageBitVectorStriped>();
     }
 
     #[test]
