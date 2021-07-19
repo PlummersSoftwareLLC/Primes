@@ -10,8 +10,8 @@ FROM rust:1.53 AS build
 
 WORKDIR /app
 COPY . .
-RUN cargo test --release
-RUN cargo build --release
+RUN cargo test --release &&\
+    cargo build --release
 
 # 2. runtime stage
 #   - start from clean container
@@ -23,5 +23,5 @@ FROM debian:buster-slim AS runtime
 
 WORKDIR /app
 # app and configuration
-COPY --from=build /app/target/release/prime-sieve-rust prime-sieve-rust
-ENTRYPOINT [ "./prime-sieve-rust" ]
+COPY --from=build /app/target/release/rust-solution-5 rust-solution-5
+ENTRYPOINT [ "./rust-solution-5" ]
