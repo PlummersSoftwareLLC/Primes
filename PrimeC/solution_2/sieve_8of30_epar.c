@@ -35,7 +35,7 @@ struct sieve_state {
 struct sieve_state *create_sieve(int maxints) {
   struct sieve_state *sieve_state=malloc(sizeof *sieve_state);
   // We need to store only odd integers, so only half the number of integers
-  sieve_state->a=calloc(maxints/2/sizeof(TYPE)+1,sizeof(TYPE));
+  sieve_state->a=calloc((maxints + 16*sizeof(TYPE) - 1) / 16 / sizeof(TYPE), sizeof(TYPE));
   sieve_state->maxints=maxints;
   return sieve_state;
 }
@@ -67,7 +67,7 @@ void run_sieve(struct sieve_state *sieve_state) {
     unsigned int istep=step;
     unsigned int ninc=steps[istep];
     unsigned int factor=(factorh<<1U)+1U;
-    for (unsigned int i=(factor*factor)>>1U; i<=maxintsh; ) {
+    for (unsigned int i=(factor*factor)>>1U; i<maxintsh; ) {
       a[i>>SHIFT]|=(TYPE)1<<(i&MASK);
       i+=factor*ninc;
       if (++istep==8U) istep=0U;
