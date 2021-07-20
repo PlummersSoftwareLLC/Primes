@@ -1,3 +1,10 @@
+/*
+  Purpose:
+  This script makes use of Oracle specific features
+  and is an attempt to get the best possible performance
+  on Oracle SQL
+
+*/
 SET SERVEROUTPUT ON
 SET FEEDBACK OFF
 SET LINESIZE 200
@@ -42,12 +49,19 @@ END;
 */
 BEGIN
   save_drop('table','known_prime_counts');
-  save_drop('table','primes_table_template');
-  save_drop('table','primes_first_segment');
-  save_drop('table','primes');
-  save_drop('table','not_primes');
-  save_drop('table','naturals_table');
+
+  save_drop('type','bit_tab');
+  save_drop('type','flag_t');
+
 END;
+/
+
+
+
+CREATE or REPLACE TYPE flag_t as OBJECT (isPrime number(1));
+/
+
+CREATE or REPLACE TYPE bit_tab as TABLE of flag_t;
 /
 
 /*
@@ -61,10 +75,9 @@ create table known_prime_counts (
 /*
   Purpose:
   - create a static table to validate the result
-  - create a static table with 2 plus the odd natural numbers
 */
 CREATE OR REPLACE procedure init_tables(
-  max_limit  IN  INT
+  max_limit  IN  NATURAL
 ) as
 BEGIN
 
@@ -79,24 +92,13 @@ BEGIN
     union all select 100000000,5761455 from dual
   ;
   commit;
-
-  insert into primes_table_template
-    select 2 as n from dual
-    union all
-    select n from (
-      select level, ((level * 2) +1) as n
-      from dual
-      connect by level <(max_limit/2)
-    )
-  ;
-  commit;
-  
+ 
  END;
  /
 
 CREATE or REPLACE function isValid(
-    max_limit   INT,
-    count_nr    INT
+    max_limit_in  NATURAL,
+    count_nr      NATURAL
 ) return VARCHAR2 is
   valid     VARCHAR2(10);
 BEGIN
@@ -110,7 +112,7 @@ BEGIN
       select count(*) as result_found
       from known_prime_counts
       where 
-            known_prime_counts.max_limit = max_limit
+            known_prime_counts.max_limit = max_limit_in
         and nr_of_primes = count_nr 
     )
   ;
@@ -120,25 +122,29 @@ END;
 /
 
 CREATE or REPLACE procedure print_results(
-  max_limit       IN    INT,
+  bit_array       IN OUT  NOCOPY  bit_tab,
+  max_limit       IN    NATURAL,
   show_results    IN    BOOLEAN,
   duration        IN    REAL,
-  passes          IN    INT
+  passes          IN    NATURAL
 ) as
     speed       REAL;
-    count_nr    INT;
+    count_nr    NATURAL;
     valid       VARCHAR(10);
 BEGIN
   
     speed := duration / passes;
 
-    select count(*) into count_nr from primes;
+    select (count(*) +1) into count_nr from TABLE(bit_array) where isPrime=1;
     valid := isValid(max_limit,count_nr);
 
     if show_results then
-        for row in (select n from primes order by n asc)
+        dbms_output.put(2|| ', ');
+        for index_nr in 1..bit_array.COUNT
         loop
-            dbms_output.put(row.n || ', ');
+            if (bit_array(index_nr).isPrime = 1) then
+              dbms_output.put_line(((index_nr *2 ) +1 ));
+            end if;
         end loop;
         dbms_output.put(chr(10));
     END if;
@@ -154,9 +160,9 @@ BEGIN
 
     dbms_output.put(chr(10));
     dbms_output.put_line(
-                'fvbakel_Oracle3;' || passes ||
+                'fvbakel_Oracle1;' || passes ||
                 ';' || duration ||
-                ';1;algorithm=other,faithful=no,bits=32'
+                ';1;algorithm=base,faithful=yes,bits=32'
                 );
 
 END;
@@ -167,12 +173,24 @@ END;
     This procedure calculates the primes to the specified maxium number
 */
 CREATE or REPLACE procedure run_sieve (
-  max_limit  IN              INT
-  bit_array  IN OUT  NOCOPY  bit_tab;
+  bit_array  IN OUT  NOCOPY  bit_tab,
+  max_limit  IN              NATURAL
 ) as
     flag_0          flag_t      default flag_t(0);
     flag_1          flag_t      default flag_t(1);
+    index_nr        NATURAL     default 1;
+    max_index_nr    NATURAL;
+    q               NATURAL;
+    q_index_nr      NATURAL;
+    i               NATURAL;
+    prime           NATURAL;
 BEGIN
+    -- Fill the array with all flags to 1
+    -- also allocates the memory required
+    max_index_nr  := floor(max_limit / 2);
+    if mod(max_limit,2)=0 then
+      max_index_nr := max_index_nr -1;
+    end if;
 
     select flag_1
         bulk collect
@@ -180,52 +198,32 @@ BEGIN
         bit_array
     from 
         (
-          select level as n
+          select level
           from dual
-            connect by level <(max_limit/2)
+          connect by level <=max_index_nr
         )
     ;
-    
-    -- first get the primes that are smaller than the square root of the limit
-    insert into primes_first_segment
-      select n from naturals_table where n <=sqrt(max_limit)
-      minus
-      select distinct(n) as n from ( 
-        with
-        product (num,not_prime) as (
-            select n as num,n*n as not_prime from naturals_table where n < sqrt(sqrt(max_limit))
-          union all 
-            select num,not_prime + (2 * num) 
-            from product 
-            where (not_prime + (2 * num))<=sqrt(max_limit)
-        )
-        select not_prime as n from product
-      )
-    ;
-    
-    -- the statement below is taking most of the time
-    insert into not_primes
-      select distinct(n) as n from ( 
-        with
-        product (num,not_prime) as (
-            select n,n*n from primes_first_segment
-          union all 
-            select num,not_prime + (2 * num) 
-            from product 
-            where (not_prime + (2 * num))<=max_limit
-        )
-        select not_prime as n from product
-      )
-    ;
-    
-    insert into primes
-      select n from primes_first_segment
-      union all 
-      select n from naturals_table where n >sqrt(max_limit)
-      minus
-      select n from not_primes
-    ;
-    
+
+    q             := floor(sqrt(max_limit));
+    q_index_nr    := floor(q / 2);
+    if mod(q,2)=0 then
+      q_index_nr := q_index_nr -1;
+    end if;
+
+    while index_nr <= q_index_nr
+    loop
+      if bit_array(index_nr).isPrime = 1 then
+        -- crossout
+        prime := (index_nr * 2) + 1;
+        i := floor((prime * prime) / 2);
+        while i <= max_index_nr
+        loop
+          bit_array(i).isPrime := 0;
+          i := i + prime;
+        end loop;
+      end if;
+      index_nr := index_nr + 1;  
+    end loop;
 END;
 /
 
@@ -235,11 +233,12 @@ END;
    5 seconds
 */
 CREATE or REPLACE procedure main as
-  max_limit     INT         default 1000000;
+  max_limit     NATURAL     default 1000000;
   show_results  BOOLEAN     default FALSE;
-  max_time      INT         default 5;
+  max_time      NATURAL     default 5;
   duration      REAL        default 0.0;
-  passes        INT         default 0;
+  passes        NATURAL     default 0;
+  bit_array     bit_tab;
   start_time    TIMESTAMP;
   now           TIMESTAMP;
 BEGIN
@@ -248,18 +247,21 @@ BEGIN
     start_time := CURRENT_TIMESTAMP();
     while duration < max_time
     loop
-        run_sieve(max_limit);
+        bit_array := bit_tab(flag_t(1));
+        run_sieve(bit_array,max_limit);
         passes := passes + 1;
         now := CURRENT_TIMESTAMP();
         duration := TIMESTAMP_diff(now,start_time);
     end loop;
 
     print_results(
+        bit_array       => bit_array,
         max_limit       => max_limit,
         show_results    => show_results,
         duration        => duration,
         passes          => passes
     );
+    
 
 END;
 /

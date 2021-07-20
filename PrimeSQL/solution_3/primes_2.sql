@@ -1,3 +1,10 @@
+/*
+  Purpose:
+  This script is as close as possible to the SQLLite
+  solution_1. 
+
+*/
+
 SET SERVEROUTPUT ON
 SET FEEDBACK OFF
 SET LINESIZE 200
@@ -119,8 +126,8 @@ BEGIN
  /
 
 CREATE or REPLACE function isValid(
-    max_limit   INT,
-    count_nr    INT
+    max_limit_in  NATURAL,
+    count_nr      NATURAL
 ) return VARCHAR2 is
   valid     VARCHAR2(10);
 BEGIN
@@ -134,7 +141,7 @@ BEGIN
       select count(*) as result_found
       from known_prime_counts
       where 
-            known_prime_counts.max_limit = max_limit
+            known_prime_counts.max_limit = max_limit_in
         and nr_of_primes = count_nr 
     )
   ;
@@ -160,9 +167,9 @@ BEGIN
     valid := isValid(max_limit,count_nr);
 
     if show_results then
-        for row in (select n from primes order by n asc)
+        for rec in (select n from primes order by n asc)
         loop
-            dbms_output.put(row.n || ', ');
+            dbms_output.put_line(rec.n);
         end loop;
         dbms_output.put(chr(10));
     END if;
@@ -178,7 +185,7 @@ BEGIN
 
     dbms_output.put(chr(10));
     dbms_output.put_line(
-                'fvbakel_Oracle3;' || passes ||
+                'fvbakel_Oracle2;' || passes ||
                 ';' || duration ||
                 ';1;algorithm=other,faithful=no,bits=32'
                 );

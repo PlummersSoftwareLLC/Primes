@@ -9,4 +9,4 @@ COPY run.sh ./
 
 USER oracle
 
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["./run.sh"]
