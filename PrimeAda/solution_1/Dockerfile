@@ -17,6 +17,6 @@ RUN gnatmake -gnatwa -gnatn -gnatp \
 
 FROM alpine:3.13
 
-COPY --from=build /main /main
+COPY --from=build /opt/app/main /main
 
 ENTRYPOINT ["/main"]
