@@ -1,8 +1,9 @@
 /*
+  Author:   Frank van Bakel
+
   Purpose:
   This script is as close as possible to the SQLLite
   solution_1. 
-
 */
 
 SET SERVEROUTPUT ON
@@ -88,11 +89,10 @@ alter table primes_first_segment INMEMORY;
 alter table not_primes INMEMORY;
 alter table primes INMEMORY;
 
-
 /*
   Purpose:
-  - create a static table to validate the result
-  - create a static table with 2 plus the odd natural numbers
+  - Create a static table to validate the result
+  - Create a static table with 2 plus the odd natural numbers
 */
 CREATE OR REPLACE procedure init_tables(
   max_limit  IN  INT
@@ -125,16 +125,21 @@ BEGIN
  END;
  /
 
+/*
+  Purpose:
+  The procedure below is used to check if the caculation
+  outcome is a valid number, based on the known counts
+*/
 CREATE or REPLACE function isValid(
-    max_limit_in  NATURAL,
-    count_nr      NATURAL
+    max_limit_in  INT,
+    count_nr      INT
 ) return VARCHAR2 is
   valid     VARCHAR2(10);
 BEGIN
    select case
             when result_found = 1 then 'True'
             else 'False' 
-         END
+         end
     into valid 
   from
     (
@@ -150,6 +155,11 @@ BEGIN
 END;
 /
 
+/*
+  Purpose:
+  The procedure below is used to print the results after 
+  the calculation
+*/
 CREATE or REPLACE procedure print_results(
   max_limit       IN    INT,
   show_results    IN    BOOLEAN,
@@ -175,9 +185,9 @@ BEGIN
     END if;
 
     dbms_output.put_line(
-                'Passes: ' || passes ||
-                ', Time: ' || duration ||
-                ', Avg: ' || speed || ' (sec/pass)' ||
+                'Passes: '  || passes ||
+                ', Time: '  || duration ||
+                ', Avg: '   || speed || ' (sec/pass)' ||
                 ', Limit: ' || max_limit ||
                 ', Count: ' || count_nr ||
                 ', Valid: ' || valid

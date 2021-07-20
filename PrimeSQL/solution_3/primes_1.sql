@@ -1,9 +1,10 @@
 /*
+  Author:   Frank van Bakel
+  
   Purpose:
   This script makes use of Oracle specific features
-  and is an attempt to get the best possible performance
-  on Oracle SQL
-
+  and is an attempt to have an implementation as close as possible
+  to the original C++ program by Dave.
 */
 SET SERVEROUTPUT ON
 SET FEEDBACK OFF
@@ -56,8 +57,10 @@ BEGIN
 END;
 /
 
-
-
+/*
+  Purpose:
+  The types below are used to represent the bit array.
+*/
 CREATE or REPLACE TYPE flag_t as OBJECT (isPrime number(1));
 /
 
@@ -67,18 +70,16 @@ CREATE or REPLACE TYPE bit_tab as TABLE of flag_t;
 /*
   Create tables
 */
-create table known_prime_counts (
+CREATE TABLE known_prime_counts (
   max_limit     INT,
   nr_of_primes  INT
 );
 
 /*
   Purpose:
-  - create a static table to validate the result
+  Create a static table to validate the result
 */
-CREATE OR REPLACE procedure init_tables(
-  max_limit  IN  NATURAL
-) as
+CREATE OR REPLACE procedure init_tables as
 BEGIN
 
   insert into known_prime_counts 
@@ -96,6 +97,11 @@ BEGIN
  END;
  /
 
+/*
+  Purpose:
+  The procedure below is used to check if the caculation
+  outcome is a valid number, based on the known counts
+*/
 CREATE or REPLACE function isValid(
     max_limit_in  NATURAL,
     count_nr      NATURAL
@@ -105,7 +111,7 @@ BEGIN
    select case
             when result_found = 1 then 'True'
             else 'False' 
-         END
+         end
     into valid 
   from
     (
@@ -121,12 +127,17 @@ BEGIN
 END;
 /
 
+/*
+  Purpose:
+  The procedure below is used to print the results after 
+  the calculation
+*/
 CREATE or REPLACE procedure print_results(
   bit_array       IN OUT  NOCOPY  bit_tab,
-  max_limit       IN    NATURAL,
-  show_results    IN    BOOLEAN,
-  duration        IN    REAL,
-  passes          IN    NATURAL
+  max_limit       IN              NATURAL,
+  show_results    IN              BOOLEAN,
+  duration        IN              REAL,
+  passes          IN              NATURAL
 ) as
     speed       REAL;
     count_nr    NATURAL;
@@ -150,9 +161,9 @@ BEGIN
     END if;
 
     dbms_output.put_line(
-                'Passes: ' || passes ||
-                ', Time: ' || duration ||
-                ', Avg: ' || speed || ' (sec/pass)' ||
+                'Passes: '  || passes ||
+                ', Time: '  || duration ||
+                ', Avg: '   || speed || ' (sec/pass)' ||
                 ', Limit: ' || max_limit ||
                 ', Count: ' || count_nr ||
                 ', Valid: ' || valid
@@ -243,11 +254,11 @@ CREATE or REPLACE procedure main as
   now           TIMESTAMP;
 BEGIN
   
-    init_tables(max_limit);
+    init_tables();
     start_time := CURRENT_TIMESTAMP();
     while duration < max_time
     loop
-        bit_array := bit_tab(flag_t(1));
+        bit_array := bit_tab();
         run_sieve(bit_array,max_limit);
         passes := passes + 1;
         now := CURRENT_TIMESTAMP();
