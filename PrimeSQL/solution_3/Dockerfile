@@ -1,4 +1,4 @@
-FROM pvargacl/oracle-xe-18.4.0
+FROM fvbakel/oracle-xe:18.4.0
 
 ENV ORACLE_PWD=oracle
 
