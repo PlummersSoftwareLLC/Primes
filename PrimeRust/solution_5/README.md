@@ -39,10 +39,10 @@ There are some noteworthy exceptions:
 This is the output on `stdout` from my old trusty (slow) AMD FX 8350 running at 4.0 Ghz on Manjaro and Rust 1.53:
 
 ```
-kulasko-rust-serial-bit;4094;5.000878526;1;algorithm=base,faithful=yes,bits=1
-kulasko-rust-serial-bool;4191;5.000533138;1;algorithm=base,faithful=yes,bits=8
-kulasko-rust-streamed-bit;1249;5.000794346;8;algorithm=base,faithful=yes,bits=1
-kulasko-rust-streamed-bool;1041;5.003056427;8;algorithm=base,faithful=yes,bits=8
-kulasko-rust-tiled-bit;16146;5.000183582;8;algorithm=base,faithful=yes,bits=1
-kulasko-rust-tiled-bool;2945;5.000977906;8;algorithm=base,faithful=yes,bits=8
+kulasko-rust-serial-bit;4226;5.00062953;1;algorithm=base,faithful=yes,bits=1
+kulasko-rust-serial-bool;4085;5.001122404;1;algorithm=base,faithful=yes,bits=8
+kulasko-rust-streamed-bit;1351;5.00133669;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-streamed-bool;1121;5.004451363;8;algorithm=base,faithful=yes,bits=8
+kulasko-rust-tiled-bit;17927;5.000366164;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-tiled-bool;2785;5.000008863;8;algorithm=base,faithful=yes,bits=8
 ```

@@ -58,18 +58,18 @@ pub fn main() {
 
     eprintln!("Starting benchmark");
     eprintln!("Working set size is {} kB", arguments.set_size);
-    perform_bench::<BitSieve<Serial>, Serial>(Serial, 1_000_000, 5);
-    perform_bench::<BoolSieve<Serial>, Serial>(Serial, 1_000_000, 5);
-    perform_bench::<BitSieve<Streamed>, Streamed>(Streamed, 1_000_000, 5);
-    perform_bench::<BoolSieve<Streamed>, Streamed>(Streamed, 1_000_000, 5);
-    perform_bench::<BitSieve<Tiled>, Tiled>(Tiled(1024 * arguments.set_size), 1_000_000, 5);
-    perform_bench::<BoolSieve<Tiled>, Tiled>(Tiled(1024 * arguments.set_size), 1_000_000, 5);
+    perform_bench::<BitSieve<Serial>, Serial>(Serial, arguments.sieve_size, arguments.duration);
+    perform_bench::<BoolSieve<Serial>, Serial>(Serial, arguments.sieve_size, arguments.duration);
+    perform_bench::<BitSieve<Streamed>, Streamed>(Streamed, arguments.sieve_size, arguments.duration);
+    perform_bench::<BoolSieve<Streamed>, Streamed>(Streamed, arguments.sieve_size, arguments.duration);
+    perform_bench::<BitSieve<Tiled>, Tiled>(Tiled(1024 * arguments.set_size), arguments.sieve_size, arguments.duration);
+    perform_bench::<BoolSieve<Tiled>, Tiled>(Tiled(1024 * arguments.set_size), arguments.sieve_size, arguments.duration);
 }
 
 /// Executes a specific bench and prints the result.
 fn perform_bench<T: Sieve<A> + SieveDisplay, A: Copy>(
     algorithm: A,
-    numbers: usize,
+    sieve_size: usize,
     duration: usize,
 ) {
     let mut passes = 0;
@@ -79,14 +79,14 @@ fn perform_bench<T: Sieve<A> + SieveDisplay, A: Copy>(
     eprintln!(
         "Running {} with {} primes for {} seconds",
         sieve.get_id_string(),
-        numbers,
+        sieve_size,
         duration
     );
 
     let start = Instant::now();
 
     while elapsed < Duration::from_secs(duration as u64) {
-        sieve = T::new(numbers, algorithm);
+        sieve = T::new(sieve_size, algorithm);
         sieve.sieve();
 
         passes += 1;
@@ -96,14 +96,15 @@ fn perform_bench<T: Sieve<A> + SieveDisplay, A: Copy>(
     let result = sieve.count_primes();
 
     eprintln!(
-        "Time: {}, Passes: {}, Per second: {}, Threads: {}, Prime count: {}",
+        "Time: {}, Passes: {}, Per second: {}, Average time: {}, Threads: {}, Prime count: {}",
         elapsed.as_secs_f64(),
         passes,
         passes as f64 / elapsed.as_secs_f64(),
+        elapsed.as_secs_f64() / passes as f64,
         T::thread_count(),
         result
     );
-    if let Ok(index) = PRIMES_IN_SIEVE.binary_search_by_key(&result, |(key, _)| *key) {
+    if let Ok(index) = PRIMES_IN_SIEVE.binary_search_by_key(&sieve_size, |(key, _)| *key) {
         if PRIMES_IN_SIEVE[index].1 == result {
             eprintln!("This result is verified to be correct");
         } else {
@@ -148,6 +149,12 @@ trait SieveDisplay {
 #[derive(Debug, StructOpt)]
 #[structopt(name = "kulasko-rust")]
 struct Arguments {
+    /// The amount of numbers in a sieve.
+    #[structopt(short, long, default_value = "1000000")]
+    sieve_size: usize,
+    /// The test duration in seconds.
+    #[structopt(short, long, default_value = "5")]
+    duration: usize,
     /// The size of the working set in kibibytes. Is used by the tiling algorithm. Should not
     /// exceed your memory layer of choice.
     #[structopt(

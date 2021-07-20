@@ -5,7 +5,6 @@
 use crate::{BitSieve, BoolSieve, Sieve, Tiled};
 
 use rayon::prelude::*;
-use std::mem::MaybeUninit;
 
 impl Sieve<Tiled> for BitSieve<Tiled> {
     #[inline]
@@ -27,13 +26,18 @@ impl Sieve<Tiled> for BitSieve<Tiled> {
     #[inline]
     fn sieve(&mut self) {
         let sqrt = (self.size as f64).sqrt() as usize;
-        let initial_prime_count = (sqrt + usize::BITS as usize - 1) / usize::BITS as usize;
+        let usize_per_cache_line = 64 / std::mem::size_of::<usize>();
+        let initial_prime_count = ((sqrt + usize::BITS as usize) * usize_per_cache_line - 1)
+            / usize::BITS as usize
+            / usize_per_cache_line;
         let thread_chunk_size =
-            ((self.data.len() - initial_prime_count + rayon::current_num_threads() - 1)
-                / rayon::current_num_threads())
-            // limit working set to supplied memory size
-            .min(self.algorithm.0 * 8 / usize::BITS as usize)
-            .max(1);
+            (((self.data.len() - initial_prime_count + rayon::current_num_threads() - 1)
+                / rayon::current_num_threads()
+                + usize_per_cache_line)
+                & !(usize_per_cache_line - 1))
+                // limit working set to supplied memory size
+                .min(self.algorithm.0 * 8 / usize::BITS as usize)
+                .max(1);
         // Gathering of primes by a single thread
         let base_primes = self.find_primes(initial_prime_count);
 
@@ -67,17 +71,33 @@ impl Sieve<Tiled> for BoolSieve<Tiled> {
         assert!(size >= 2);
         // we know that multiples of two are no primes, so we don't need to save them
         let data_size = (size + 1) / 2;
+        // we want to have a multiple of the cache line size (which is assumed to be 64 bytes)
         let thread_chunk_size =
-            ((data_size + rayon::current_num_threads() - 1) / rayon::current_num_threads()).max(1);
-        let mut data = vec![MaybeUninit::<bool>::uninit(); data_size].into_boxed_slice();
+            (((data_size + rayon::current_num_threads() - 1) / rayon::current_num_threads() + 63)
+                & !63)
+                .max(1);
+        let mut data = unsafe {
+            Vec::from_raw_parts(
+                std::alloc::alloc(
+                    std::alloc::Layout::from_size_align(
+                        std::mem::size_of::<bool>() * data_size,
+                        64,
+                    )
+                    .unwrap(),
+                ) as *mut bool,
+                data_size,
+                data_size,
+            )
+            .into_boxed_slice()
+        };
         data.as_parallel_slice_mut()
             .par_chunks_mut(thread_chunk_size)
             .for_each(|slice| {
-                slice.fill(MaybeUninit::new(true));
+                slice.fill(true);
             });
 
         BoolSieve {
-            data: unsafe { std::mem::transmute(data) },
+            data,
             size,
             sieved: false,
             algorithm,
@@ -86,12 +106,15 @@ impl Sieve<Tiled> for BoolSieve<Tiled> {
 
     #[inline]
     fn sieve(&mut self) {
-        let sqrt = (self.size as f64).sqrt() as usize;
-        let thread_chunk_size = ((self.data.len() - sqrt + rayon::current_num_threads() - 1)
-            / rayon::current_num_threads())
-        // limit working set to supplied memory size
-        .min(self.algorithm.0)
-        .max(1);
+        // we want to have a multiple of the cache line size (which is assumed to be 64 bytes)
+        let sqrt = (((self.size as f64).sqrt() as usize + 63) & !63).min(self.data.len());
+        let thread_chunk_size = (((self.data.len() - sqrt + rayon::current_num_threads() - 1)
+            / rayon::current_num_threads()
+            + 63)
+            & !63)
+            // limit working set to supplied memory size
+            .min(self.algorithm.0)
+            .max(1);
         // Gathering of primes by a single thread
         let base_primes = self.find_primes(sqrt);
 
@@ -138,30 +161,31 @@ impl BitSieve<Tiled> {
     /// Initializes the array by giving each thread their own area, avoiding cross talk.
     #[inline(always)]
     fn initialize_data(size: usize, thread_chunk_size: usize) -> Box<[usize]> {
-        let mut data = vec![MaybeUninit::<usize>::uninit(); size].into_boxed_slice();
+        let mut data = unsafe {
+            Vec::from_raw_parts(
+                std::alloc::alloc(
+                    std::alloc::Layout::from_size_align(std::mem::size_of::<usize>() * size, 64)
+                        .unwrap(),
+                ) as *mut usize,
+                size,
+                size,
+            )
+            .into_boxed_slice()
+        };
         data.as_parallel_slice_mut()
             .par_chunks_mut(thread_chunk_size)
             .for_each(|slice| {
-                slice.fill(MaybeUninit::new(usize::MAX));
+                slice.fill(usize::MAX);
             });
 
         // Memory is initialized here
-        unsafe { std::mem::transmute(data) }
+        data
     }
 
     /// Basically the same algorithm as the single threaded one, but collects found primes.
     #[inline(always)]
     fn find_primes(&mut self, cutoff: usize) -> Vec<usize> {
-        // found this by trying out stuff in libreoffice
-        // Maybe replace this with something faster?
-        let log_length = ((cutoff * usize::BITS as usize) as f64).log10();
-        let space_amount = ((2.0_f64.powf((log_length * 0.04 + 2.49) * log_length) as usize
-            + usize::BITS as usize
-            - 1)
-            / usize::BITS as usize
-            + 1)
-            / 2;
-        let mut primes = Vec::with_capacity(space_amount);
+        let mut primes = Vec::with_capacity(cutoff);
 
         // The same algorithm
         let data_size = cutoff * usize::BITS as usize;
@@ -216,10 +240,7 @@ impl BoolSieve<Tiled> {
     /// Basically the same algorithm as the single threaded one, but collects found primes.
     #[inline(always)]
     fn find_primes(&mut self, cutoff: usize) -> Vec<usize> {
-        // found this by trying out stuff in libreoffice
-        let log_length = (cutoff as f64).log10();
-        let space_amount = (2.0_f64.powf((log_length * 0.04 + 2.49) * log_length) as usize + 1) / 2;
-        let mut primes = Vec::with_capacity(space_amount);
+        let mut primes = Vec::with_capacity(cutoff);
 
         // The same algorithm
         let sqrt = (self.size as f64).sqrt() as usize;
