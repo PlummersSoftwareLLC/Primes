@@ -208,7 +208,7 @@ function validateSieveAlgoritm(sieveSize, maxShowPrimes=100) {
     if (sieveSize in knownPrimeCounts) {
         validResult = (knownPrimeCounts[sieveSize] == countedPrimes);
         if (!validResult) {
-            validationMessage = `Error: invalid result. A sieve with limit ${sieveSize} should have ${knownPrimeCount} primes but result contains ${countedPrimes} primes`;
+            validationMessage = `Error: invalid result. A sieve with limit ${sieveSize} should have ${knownPrimeCounts[sieveSize]} primes but result contains ${countedPrimes} primes`;
         }
     }
     else {
