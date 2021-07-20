@@ -55,7 +55,7 @@ void repeat_words_2_end (
 
     while ( (start_at + size ) < sieve_state->nr_of_words ) {
         memcpy(&(sieve_state->bit_array[start_at]), word_values, mem_size);
-        start_at += (size );
+        start_at += size;
     }
     
     int i =0;
@@ -63,9 +63,6 @@ void repeat_words_2_end (
         sieve_state->bit_array[start_at] = word_values[i];
         start_at++;
         i++;
-        if (i == size) {
-            i = 0;
-        }
     }
 }
 
@@ -162,8 +159,8 @@ void run_sieve(struct sieve_state *sieve_state) {
         // STEP 3
         // crossout from begin to product for up to found prime
         // start with prime3
-        // 4*prime_product*8*sizeof(TYPE) == (prime_product*sizeof(TYPE)) << 5U
-        run_sieve_segment(sieve_state,1,(prime_product*sizeof(TYPE)) << 5U, prime_word_cpy_idx );
+        // ((2*(prime_product+1U)*8*sizeof(TYPE) == ((prime_product+1U)*sizeof(TYPE)) << 4U
+        run_sieve_segment(sieve_state,1,((prime_product+1U)*sizeof(TYPE)) << 4U, prime_word_cpy_idx );
 
         // STEP 4
         // now we can do a word crossout for the first few primes that
