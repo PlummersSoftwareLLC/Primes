@@ -7,7 +7,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
 
-This solution consists of 2 implementations of the prime calculation in SQL and PL/SQL using [Oracle Database XE](https://www.oracle.com/database/technologies/appdev/xe.html). This is a special edition of Oracle database that is free to use for educational and personal usage, with a number of limitations in place. Note that Oracle also provides different editions of their database engine that are not free and can therefor not be used in this solution. For example [Oracle Database Enterprise](https://www.oracle.com/database/enterprise/). This solution should also work on those editions and might have a better performance under these conditions. The characteristics of each implementation are described below.
+This solution consists of 2 implementations of the prime calculation in SQL (PL/SQL) using [Oracle Database XE](https://www.oracle.com/database/technologies/appdev/xe.html). This is a special edition of Oracle database that is free to use for educational and personal usage, with a number of limitations in place. Note that Oracle also provides different editions of their database engine that are not free and can therefor not be used in this solution. For example [Oracle Database Enterprise](https://www.oracle.com/database/enterprise/). This solution should also work on those editions and might have a better performance under these conditions. The characteristics of each implementation are described below.
 
 ## Implementation details
 
@@ -24,7 +24,7 @@ A new instance is created by `bit_array := bit_tab();`.
 
 ### Oracle2 implementation
 
-This implementation does not use the base algorithm. It is as close as possible to the [SQLite solution 1](../solution_1/) implementation and algorithm.
+This implementation does not use the base algorithm. It is as close as possible to the [SQLite solution 1](../solution_1/) implementation and algorithm. The actual calculation makes use of only SQL statements.
 
 ## Run instructions
 
