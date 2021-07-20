@@ -14,9 +14,9 @@
 ## Output
 
 ```
-> Executing task: docker run --rm -it  solution3:latest <
+> Executing task: docker run --rm -it  solution2:latest <
 
 Passes: 10150, Time: 5.000000, Avg: 0.000493, Limit: 1000000, Count: 78498, Valid: true
 
-PratimGhosh86-solution_3;10150;5.000000;212;algorithm=base,faithful=yes,bits=1
+PratimGhosh86;10150;5.000000;212;algorithm=base,faithful=yes,bits=1
 ```
