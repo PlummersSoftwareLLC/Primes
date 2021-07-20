@@ -1,7 +1,7 @@
 FROM ubuntu:focal
 RUN apt-get update && apt-get -y install gdc
 WORKDIR /app
-ADD . /app
+COPY . /app
 RUN gdc -o prime-d -O2 /app/source/app.d
 
 FROM ubuntu:focal
