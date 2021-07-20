@@ -2,6 +2,8 @@ FROM alpine:3.13 AS build
 
 RUN apk add --no-cache gcc-gnat libc-dev
 
+WORKDIR /opt/app
+
 COPY main.adb .
 
 RUN gnatmake -gnatwa -gnatn -gnatp \

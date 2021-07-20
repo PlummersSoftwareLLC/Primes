@@ -1,4 +1,4 @@
-FROM google/dart:2.13.4
+FROM google/dart:2.13.4 AS build
 WORKDIR /app
 COPY pubspec.* /app/
 RUN pub get
@@ -8,5 +8,5 @@ RUN dart2native /app/bin/PrimeDart.dart -o /app/bin/PrimeDart
 
 
 FROM ubuntu:20.04
-COPY --from=0 /app/bin/PrimeDart /app/bin/PrimeDart
+COPY --from=build /app/bin/PrimeDart /app/bin/PrimeDart
 ENTRYPOINT [ "/app/bin/PrimeDart" ]
