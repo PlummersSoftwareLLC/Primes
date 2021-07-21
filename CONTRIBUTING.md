@@ -5,6 +5,16 @@ Please follow the guidelines in this document if you want to submit a solution/i
 
 These guidelines have been drafted to facilitate a "fair" comparison between solutions, and to allow results to be processed and reported on, automatically. **Submissions that do not conform to these guidelines will, in principle, not be accepted.**
 
+## If (a) solution(s) already exists for your language...
+
+...then please:
+
+1. First see if your ideas/approach can be used to improve one of the existing solutions. If the [key characteristics](#characteristics) of your approach match those of an existing solution then that is a strong indication that improving is the way to go. If that is the case, structure your [pull request](#pull-request) to improve the solution in question. Include only those changes that objectively improve the performance of the benchmarked/timed part of the code. We will not merge changes in style, idiomatic improvements, whitespace optimizations, etc. unless you arrange approval from the original author of the solution you're aiming to improve.
+
+2. Before opening your pull request, check if another one is already open that aims to modify the same solution that yours does. If one exists, please discuss in that PR how your improvements can be added to it.
+
+3. Only if you're convinced that adding a new solution is the only appropriate way forward, open a pull requests that aims to achieve that. In that case, a) explain clearly in your pull request description why you think a new solution is warranted, and b) please keep reading.
+
 ## Guide
 
 ### Determining the implementation characteristics
@@ -161,7 +171,7 @@ If you choose to include badges in your `README.md`, then:
 At a technical level, an implementation is considered faithful if it complies with the following:
 
 * It uses no external dependencies to calculate the actual sieve.
-* It uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
+* It uses a class to encapsulate the sieve, or a (closest) equivalent feature in your language if a class construct is not available. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class from scratch.
 * The sieve size and corresponding prime candidate memory buffer (or language equivalent) are set/allocated dynamically at runtime. The size of the memory buffer must correspond to the size of the sieve.
 * It conforms to the base [rules](#Rules).
 

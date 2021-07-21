@@ -1,8 +1,8 @@
-FROM google/dart
+FROM google/dart:2.13.4 AS build
 WORKDIR /app
-ADD pubspec.* /app/
+COPY pubspec.* /app/
 RUN pub get
-ADD . /app
+COPY . /app
 RUN pub get --offline
 RUN dart compile exe /app/bin/Runner.dart -o /Runner
 RUN dart compile exe /app/bin/PrimeDart.dart -o /PrimeDart

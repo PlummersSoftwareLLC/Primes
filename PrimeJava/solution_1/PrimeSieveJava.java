@@ -119,7 +119,7 @@ public class PrimeSieveJava
 		int passes = 0;
 		PrimeSieveJava sieve = null;
 		
-		while ((System.currentTimeMillis() - start) < 10000)
+		while ((System.currentTimeMillis() - start) < 5000)
 		{
 			sieve = new PrimeSieveJava(1000000);
 			sieve.runSieve();
