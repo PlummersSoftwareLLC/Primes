@@ -11,7 +11,8 @@ public class PrimeSieveJavaBitSet {
   // Historical data for validating our results - the number of primes to be found under some
   // limit, such as 168 primes under 1000
   private static final Map<Integer, Integer> MY_DICT = Map.of( //
-      10, 1, //
+      10, 4, //
+      100, 25, //
       1000, 168, //
       10000, 1229, //
       100000, 9592, //
