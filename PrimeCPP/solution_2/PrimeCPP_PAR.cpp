@@ -1,5 +1,7 @@
 // ---------------------------------------------------------------------------
-// PrimeCPP.cpp : Dave's Garage Prime Sieve in C++ - No warranty for anything!
+// PrimeCPP.cpp : Pol Marcet's Modified version of Dave's Garage Prime Sieve
+// Some great ideas taken from Rust's implementation from Michael Barber
+// @mike-barber https://www.github.com/mike-barber (bit-storage-rotate)
 // ---------------------------------------------------------------------------
 
 #include <chrono>
@@ -18,6 +20,55 @@ using namespace std::chrono;
 
 const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
+class BitArray {
+    uint32_t *array;
+    size_t arrSize;
+
+    inline static size_t arraySize(size_t size) {
+        return (size >> 5) + ((size & 0x31) > 0);
+    }
+
+    inline static size_t index(size_t n) {
+        return (n >> 5);
+    }
+
+    inline static uint32_t getSubindex(size_t n, uint32_t d) {
+        return d & uint32_t(uint32_t(0x01) << (n % 32));
+    }
+
+    inline void setFalseSubindex(size_t n, uint32_t &d) {
+        d &= ~uint32_t(uint32_t(0x01) << (n % (8*sizeof(uint32_t))));
+    }
+public:
+    explicit BitArray(size_t size) : arrSize(size) {
+        array = new uint32_t[arraySize(size)];
+        std::memset(array, 0xFF, (size >> 3) + ((size & 0x07) > 0));
+    }
+
+    ~BitArray() {delete [] array;}
+
+    bool get(size_t n) const {
+        return getSubindex(n, array[index(n)]);
+    }
+
+    static constexpr uint32_t rol(uint32_t x, uint32_t n) {
+        return (x<<n) | (x>>(32-n));
+    }
+
+    void setFlagsFalse(size_t n, size_t skip) {
+        auto rolling_mask = ~uint32_t(1 << n % 32);
+        auto roll_bits = skip % 32;
+        while (n < arrSize) {
+            array[index(n)] &= rolling_mask;
+            n += skip;
+            rolling_mask = rol(rolling_mask, skip);
+        }
+    }
+    
+    inline size_t size() const {return arrSize;}
+};
+
+
 // prime_sieve
 //
 // Represents the data comprising the sieve (an array of N bits, where N is the upper limit prime being tested)
@@ -27,11 +78,11 @@ class prime_sieve
 {
   private:
 
-      vector<bool> Bits;                                        // Sieve data, where 1==prime, 0==not
+      BitArray Bits;                                        // Sieve data, where 1==prime, 0==not
 
    public:
 
-      prime_sieve(uint64_t n) : Bits(n, true)                  // Initialize all to true (potential primes)
+      prime_sieve(uint64_t n) : Bits(n)                     // Initialize all to true (potential primes)
       {
       }
 
@@ -53,14 +104,13 @@ class prime_sieve
           {
               for (uint64_t num = factor; num < Bits.size(); num += 2)
               {
-                  if (Bits[num])
+                  if (Bits.get(num))
                   {
                       factor = num;
                       break;
                   }
               }
-              for (uint64_t num = factor * factor; num < Bits.size(); num += factor * 2)
-                  Bits[num] = false;
+              Bits.setFlagsFalse(factor * factor, factor + factor);
 
               factor += 2;            
           }
@@ -74,7 +124,7 @@ class prime_sieve
       {
           size_t count = (Bits.size() >= 2);                   // Count 2 as prime if within range
           for (int i = 3; i < Bits.size(); i+=2)
-              if (Bits[i])
+              if (Bits.get(i))
                   count++;
           return count;
       }
@@ -86,7 +136,7 @@ class prime_sieve
       bool isPrime(uint64_t n) const
       {
           if (n & 1)
-              return Bits[n];
+              return Bits.get(n);
           else
               return false;
       }
@@ -128,7 +178,7 @@ class prime_sieve
           size_t count = (Bits.size() >= 2);                   // Count 2 as prime if in range
           for (uint64_t num = 3; num <= Bits.size(); num+=2)
           {
-              if (Bits[num])
+              if (Bits.get(num))
               {
                   if (showResults)
                       cout << num << ", ";
@@ -238,40 +288,37 @@ int main(int argc, char **argv)
             cSeconds == 1 ? "" : "s"
         );
     }
-    auto tStart       = steady_clock::now();
+    double duration;
 
     if (bOneshot)
     {
-        std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve();
+        auto tStart       = steady_clock::now();
+        prime_sieve(llUpperLimit).runSieve();
+        auto tEnd = steady_clock::now() - tStart;
+        duration = duration_cast<microseconds>(tEnd).count()/1000000.0;
     }
     else
     {
-        while (duration_cast<seconds>(steady_clock::now() - tStart).count() < cSeconds)
-        {
-            vector<thread> threadPool;
-            
-            // We create N threads and give them each the job of runing the 'runSieve' method on a sieve
-            // that we create on the heap, rather than the stack, due to their possible enormity.  By using
-            // a unique_ptr it will automatically free resources as soon as its torn down.
-
-            for (unsigned int i = 0; i < cThreads; i++)
-                threadPool.push_back(thread([llUpperLimit] 
-                { 
-                    std::unique_ptr<prime_sieve>(new prime_sieve(llUpperLimit))->runSieve(); 
-                }));
-
-            // Now we wait for all of the threads to finish before we repeat
-
-            for (auto &th : threadPool) 
-                th.join();
-
-            // Credit us with one pass for each of the threads we did work on
-            cPasses += cThreads;
+        auto tStart       = steady_clock::now();
+        std::thread threads[cThreads];
+        uint64_t l_passes[cThreads];
+        for (unsigned int i = 0; i < cThreads; i++)
+            threads[i] = std::thread([i, &l_passes, &tStart](size_t llUpperLimit)
+            {
+                l_passes[i] = 0;
+                while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5) {
+                    prime_sieve(llUpperLimit).runSieve();
+                    ++l_passes[i];
+                }
+            }, llUpperLimit);
+        for (auto i = 0; i < cThreads; i++) {
+            threads[i].join();
+            cPasses += l_passes[i];
         }
+        auto tEnd = steady_clock::now() - tStart;
+        duration = duration_cast<microseconds>(tEnd).count()/1000000.0;
     }
 
-    auto tEnd = steady_clock::now() - tStart;
-    auto duration = duration_cast<microseconds>(tEnd).count()/1000000.0;
 
     if (bOneshot)
     {
