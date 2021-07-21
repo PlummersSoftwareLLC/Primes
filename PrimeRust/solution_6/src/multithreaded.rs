@@ -13,6 +13,75 @@ pub struct PrimeSieve<const N: usize> {
     bits: [bool; N],
 }
 
+pub struct SieveResult {
+    primecount: i64,
+    valid: Option<bool>,
+    size: usize,
+    duration: f64,
+    passes: usize,
+    count: usize,
+}
+
+impl Default for SieveResult {
+    fn default() -> Self {
+        Self {
+            primecount: 0,
+            valid: Some(true),
+            size: 0,
+            duration: 0.0,
+            passes: 0,
+            count: 0,
+        }
+    }
+}
+
+impl SieveResult {
+    fn consolidate(input: Vec<Self>) -> Self {
+        input.iter().fold(Self::default(), |acc, x| Self {
+            primecount: x.primecount,
+            valid: match (acc.valid, x.valid) {
+                (None, None) => None,
+                (None, Some(_)) => None,
+                (Some(_), None) => None,
+                (Some(_), Some(false)) => Some(false),
+                (Some(false), Some(_)) => Some(false),
+                (Some(true), Some(true)) => Some(true),
+            },
+            size: x.size,
+            duration: if acc.duration < x.duration {
+                x.duration
+            } else {
+                acc.duration
+            },
+            passes: acc.passes + x.passes,
+            count: x.count,
+        })
+    }
+
+    fn print_results(&self) {
+        print!(
+            "Passes: {}, Time: {}, Avg: {}, Limit: {}, Count1: {}, Count2: {}",
+            self.passes,
+            self.duration,
+            self.duration / self.passes as f64,
+            self.size,
+            self.count,
+            self.primecount,
+        );
+
+        if let Some(valid) = self.valid {
+            println!(", Valid: {}", valid);
+        } else {
+            println!(", unable to validate")
+        }
+
+        println!(
+            "SycrationMultithreaded;{};{};8;algorithm=base,faithful=no\n",
+            self.passes, self.duration,
+        );
+    }
+}
+
 impl<const N: usize> PrimeSieve<N> {
     //constructor
     pub const fn new() -> Self {
@@ -42,8 +111,6 @@ impl<const N: usize> PrimeSieve<N> {
             break n;
         };
 
-        //array[idx]
-
         while factor <= q {
             let mut num = factor;
             while num < N {
@@ -64,12 +131,7 @@ impl<const N: usize> PrimeSieve<N> {
         bits
     }
 
-    pub fn gen_results(
-        &mut self,
-        show_results: bool,
-        duration: f64,
-        passes: usize,
-    ) -> (i64, Option<bool>, usize, f64, usize, usize) {
+    pub fn gen_results(&mut self, duration: f64, passes: usize) -> SieveResult {
         let primecount = self.count_primes();
         let valid = self.validate_results();
 
@@ -80,15 +142,6 @@ impl<const N: usize> PrimeSieve<N> {
             }
         }
 
-        //print!(
-        //    "Passes: {}, Time: {}, Avg: {}, Limit: {}, Count1: {}, Count2: {}",
-        //    passes,
-        //    duration,
-        //    duration / passes as f64,
-        //    self.sieve_size,
-        //    count,
-        //    primecount,
-        //);
         let nonzero_digits = format!("{}", N).chars().filter(|x| *x != '0').count();
         let first_digit = format!("{}", N).chars().nth(0);
         let valid = if nonzero_digits > 1 || first_digit != Some('1') {
@@ -96,7 +149,14 @@ impl<const N: usize> PrimeSieve<N> {
         } else {
             Some(valid)
         };
-        return (primecount, valid, self.sieve_size, duration, passes, count);
+        return SieveResult {
+            primecount,
+            valid,
+            size: self.sieve_size,
+            duration,
+            passes,
+            count,
+        };
     }
 
     pub const PRIME_COUNTS: [(i64, i64); 10] = [
@@ -135,17 +195,17 @@ impl<const N: usize> PrimeSieve<N> {
 
 fn main() {
     println!("running on eight cores");
+
     //if this is not a power of 10 the program will be unable to validate it
     //and if it is greater than about 2 million the compiler will crash
-    //dbg!((0..20).map(|_| optimize()).sum::<usize>() / 20);
-
     const SIZE: usize = 1_000_000;
     let t_start = Instant::now();
-    //(i64, Option<bool>, usize, f64)
-    let mut threads = (0..8)
+
+    let threads = (0..8)
         .map(|_| {
             let t_start = t_start.clone();
             std::thread::spawn(move || {
+                //we are now inside the thread
                 let mut passes = 0;
                 loop {
                     let mut sieve = PrimeSieve::<SIZE>::new();
@@ -153,60 +213,19 @@ fn main() {
                     sieve.bits = THIS_RESULT;
                     if std::time::Duration::as_secs(&(Instant::now() - t_start)) >= 5 {
                         let now = Instant::now();
-                        break sieve.gen_results(false, (now - t_start).as_secs_f64(), passes);
+                        break sieve.gen_results((now - t_start).as_secs_f64(), passes);
                     }
                     passes += 1;
                 }
             })
         })
         .collect::<Vec<_>>();
-    let (primecount, valid, size, duration, passes, count) = threads
+    let result_vector = threads
         .into_iter()
-        .map(|handle| handle.join().unwrap().clone())
-        .fold((0, Some(true), 0, 0., 0, 0), |acc, x| {
-            (
-                x.0,
-                {
-                    match (acc.1, x.1) {
-                        (None, None) => None,
-                        (None, Some(_)) => None,
-                        (Some(_), None) => None,
-                        (Some(_), Some(false)) => Some(false),
-                        (Some(false), Some(_)) => Some(false),
-                        (Some(true), Some(true)) => Some(true),
-                    }
-                },
-                x.2,
-                {
-                    if acc.3 < x.3 {
-                        x.3
-                    } else {
-                        acc.3
-                    }
-                },
-                acc.4 + x.4,
-                x.5,
-            )
-        });
+        .map(|handle| handle.join().unwrap())
+        .collect::<Vec<_>>();
 
-    print!(
-        "Passes: {}, Time: {}, Avg: {}, Limit: {}, Count1: {}, Count2: {}",
-        passes,
-        duration,
-        duration / passes as f64,
-        size,
-        count,
-        primecount,
-    );
+    let final_result = SieveResult::consolidate(result_vector);
 
-    if let Some(valid) = valid {
-        println!(", Valid: {}", valid);
-    } else {
-        println!(", unable to validate")
-    }
-
-    println!(
-        "SycrationMultithreaded;{};{};8;algorithm=base,faithful=no\n",
-        passes, duration,
-    );
+    final_result.print_results();
 }
