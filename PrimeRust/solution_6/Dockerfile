@@ -1,7 +1,8 @@
 FROM rustlang/rust:nightly as build
 WORKDIR /app
 COPY . .
-RUN rustc +nightly src/main.rs -Copt-level=3 -C target-cpu=native
+RUN rustc +nightly src/singlethreaded.rs -Copt-level=z -C target-cpu=native
+RUN rustc +nightly src/multithreaded.rs -Copt-level=z -C target-cpu=native
 
 
-ENTRYPOINT [ "./main" ]
+ENTRYPOINT [ "bash", "run-by-docker.sh"]
