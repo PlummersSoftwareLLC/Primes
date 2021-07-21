@@ -29,7 +29,10 @@ type Sieve []bool
 
 // NewSieve creates a new Sieve variable.
 func NewSieve(size int) Sieve {
-	return Sieve(make([]bool, size, size))
+	// calculate the length of the Sieve slice
+	N := In(size)
+	// return all false sieve
+	return Sieve(make([]bool, N, N))
 }
 
 // wg waits for all PrimeChercker() to finish
@@ -37,7 +40,7 @@ func NewSieve(size int) Sieve {
 var wg sync.WaitGroup
 
 // Pr converts a sieve index to the corresponing prime number.
-// This is also the size of the shift used by PrimeChacker().
+// This is also the size of the shift used by PrimeChecker().
 func Pr(i int) int {
 	return i*2 + 3
 }
@@ -51,15 +54,15 @@ func In(p int) int {
 // Sq calculate the index of the square of Pr(i).
 // Sq = In(Pr(i)*Pr(i))
 // It is used to establish the slices like [n+1, n^2]
-// that are filled consecutively by DoSieveMulti().
+// that are filled consecutively by Build().
 func Sq(i int) int {
 	return (i+3)*i*2 + 3
 }
 
-// PrimeChacker fill sieve[minT:maxT]
+// PrimeChecker fill sieve[minT:maxT]
 // using all primes found in sieve[0:maxP].
 // So sieve[0:maxP] should be ready and maxP <= minT < maxT.
-func (sieve Sieve) PrimeChacker(maxP, minT, maxT int) {
+func (sieve Sieve) PrimeChecker(maxP, minT, maxT int) {
 	var p, step, from, i int
 
 	for p = 0; p < maxP; p++ {
@@ -78,22 +81,19 @@ func (sieve Sieve) PrimeChacker(maxP, minT, maxT int) {
 			sieve[i] = true
 		}
 	}
-	// the slice sieve[minT:maxT] is ready
-	wg.Done()
 }
 
-// PrimeChackerMulti split the slice sieve[from:to]
-// to numProc (almost) equal parts and run numProc PrimeChacker workers
+// PrimeCheckerMulti split the slice sieve[from:to]
+// to numProc (almost) equal parts and run numProc PrimeChecker workers
 // to do the checking on this non overlaping slices.
 // All workers read from the shared sieve[0:from], but writes to
 // disjoint memory slices, so there is no cocnurency problem.
-func (sieve Sieve) PrimeChackerMulti(numProc, from, to int) {
+func (sieve Sieve) PrimeCheckerMulti(numProc, from, to int) {
 	length := (to - from) / numProc
 	// if the length is too small, non concurrency cheking is used
 	// (replacing 1 by 1024 do not change the results for me)
 	if length < 1 {
-		wg.Add(1)
-		sieve.PrimeChacker(from, from, to)
+		sieve.PrimeChecker(from, from, to)
 		return
 	}
 
@@ -101,30 +101,29 @@ func (sieve Sieve) PrimeChackerMulti(numProc, from, to int) {
 	var s, t int
 	for s, t = from, from+length; t < to; s, t = t, t+length {
 		wg.Add(1)
-		go sieve.PrimeChacker(from, s, t)
+		go func(s, t int) {
+			sieve.PrimeChecker(from, s, t)
+			wg.Done()
+		}(s, t)
 	}
 	// run the last worker on sieve[s:to]
 	wg.Add(1)
-	go sieve.PrimeChacker(from, s, to)
+	go func(s, t int) {
+		sieve.PrimeChecker(from, s, t)
+		wg.Done()
+	}(s, to)
 
 	// wait for all workers to finish
 	wg.Wait()
 	// now sieve[0:to] is ready
 }
 
-// DoSieveMulti create and fill Sieve corresponding
-// to all natural numbers up to maxNum.
-func DoSieveMulti(maxNum, numProc int) (sieve Sieve) {
-	// calculate the length of the Sieve slice
-	N := In(maxNum)
-	// allocate the global Sieve variable
-	// which is init with false values by default
-	sieve = NewSieve(N)
-
+// Build fill sieve with true for all non primes
+func (sieve Sieve) Build(numProc int) {
 	// evaluate the optimal first slice [9:q],
 	// that is included in [9:121] and
 	// such that q**(2k) is slightly bigger than maxNum
-	q := float64(maxNum)
+	q := float64(Pr(len(sieve) - 1))
 	for q > 121 {
 		q = math.Sqrt(q)
 	}
@@ -133,12 +132,10 @@ func DoSieveMulti(maxNum, numProc int) (sieve Sieve) {
 	// a subslice of sieve[3:59] that corresponds to
 	// a sub interval of [9,11^2).
 	var from, to int = 3, In(int(q)) + 1
-	for ; to < N; from, to = to, Sq(to) {
-		sieve.PrimeChackerMulti(numProc, from, to)
+	for ; to < len(sieve); from, to = to, Sq(to) {
+		sieve.PrimeCheckerMulti(numProc, from, to)
 	}
-	sieve.PrimeChackerMulti(numProc, from, N)
-
-	return sieve
+	sieve.PrimeCheckerMulti(numProc, from, len(sieve))
 }
 
 // CountPrimes return the number of primes + 1 encoded in sieve.
@@ -192,7 +189,8 @@ func main() {
 	passes := 0
 	startClock := time.Now()
 	for {
-		sieve := DoSieveMulti(N, routines)
+		sieve := NewSieve(N)
+		sieve.Build(routines)
 		passes++
 		if timeSince := time.Since(startClock); timeSince.Seconds() >= 5 {
 			sieve.PrintResults(timeSince, passes)
