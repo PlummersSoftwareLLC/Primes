@@ -1,6 +1,6 @@
 # C language solution by Rogier van Dam
 
-![Algorithm](https://img.shields.io/badge/Algorithm-other-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
@@ -17,7 +17,7 @@ I added this because it is the fastest C algorithm on my machine.
 ## Run instructions
 You can use the Dockerfile.
 
-First compile the code using the **run** script. Optimization parameters are at the beginning of the script. They are set up to use the gcc compiler.
+First compile the code using the **run.sh** script. Optimization parameters are at the beginning of the script. They are set up to use the gcc compiler.
 
 Then run the code using the run.sh script, with the command:
 ./run.sh
