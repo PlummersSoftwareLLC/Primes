@@ -6,6 +6,7 @@ ignored:
 override:
   error:
     - DL3006
+    - DL3007
     - DL3014
     - DL3020
     - DL3022
