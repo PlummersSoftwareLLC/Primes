@@ -59,11 +59,27 @@ pub fn main() {
     eprintln!("Starting benchmark");
     eprintln!("Working set size is {} kB", arguments.set_size);
     perform_bench::<BitSieve<Serial>, Serial>(Serial, arguments.sieve_size, arguments.duration);
+    perform_bench::<BitSieve<Streamed>, Streamed>(
+        Streamed,
+        arguments.sieve_size,
+        arguments.duration,
+    );
+    perform_bench::<BitSieve<Tiled>, Tiled>(
+        Tiled(1024 * arguments.set_size),
+        arguments.sieve_size,
+        arguments.duration,
+    );
     perform_bench::<BoolSieve<Serial>, Serial>(Serial, arguments.sieve_size, arguments.duration);
-    perform_bench::<BitSieve<Streamed>, Streamed>(Streamed, arguments.sieve_size, arguments.duration);
-    perform_bench::<BoolSieve<Streamed>, Streamed>(Streamed, arguments.sieve_size, arguments.duration);
-    perform_bench::<BitSieve<Tiled>, Tiled>(Tiled(1024 * arguments.set_size), arguments.sieve_size, arguments.duration);
-    perform_bench::<BoolSieve<Tiled>, Tiled>(Tiled(1024 * arguments.set_size), arguments.sieve_size, arguments.duration);
+    perform_bench::<BoolSieve<Streamed>, Streamed>(
+        Streamed,
+        arguments.sieve_size,
+        arguments.duration,
+    );
+    perform_bench::<BoolSieve<Tiled>, Tiled>(
+        Tiled(1024 * arguments.set_size),
+        arguments.sieve_size,
+        arguments.duration,
+    );
 }
 
 /// Executes a specific bench and prints the result.
@@ -101,7 +117,7 @@ fn perform_bench<T: Sieve<A> + SieveDisplay, A: Copy>(
         passes,
         passes as f64 / elapsed.as_secs_f64(),
         elapsed.as_secs_f64() / passes as f64,
-        T::thread_count(),
+        sieve.thread_count(),
         result
     );
     if let Ok(index) = PRIMES_IN_SIEVE.binary_search_by_key(&sieve_size, |(key, _)| *key) {
@@ -117,7 +133,7 @@ fn perform_bench<T: Sieve<A> + SieveDisplay, A: Copy>(
         sieve.get_id_string(),
         passes,
         elapsed.as_secs_f64(),
-        T::thread_count(),
+        sieve.thread_count(),
         T::flag_size()
     );
 }
@@ -132,7 +148,7 @@ pub trait Sieve<T> {
     /// A string literal for identification.
     fn get_id_string(&self) -> &'static str;
     /// How many thread are used by the algorithm.
-    fn thread_count() -> usize;
+    fn thread_count(&self) -> usize;
 }
 
 /// Methods for getting the sieve results. Implemented once for each data structure.

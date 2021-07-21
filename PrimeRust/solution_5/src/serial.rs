@@ -41,7 +41,7 @@ impl Sieve<Serial> for BitSieve<Serial> {
         "serial-bit"
     }
 
-    fn thread_count() -> usize {
+    fn thread_count(&self) -> usize {
         1
     }
 }
@@ -89,7 +89,7 @@ impl Sieve<Serial> for BoolSieve<Serial> {
         "serial-bool"
     }
 
-    fn thread_count() -> usize {
+    fn thread_count(&self) -> usize {
         1
     }
 }

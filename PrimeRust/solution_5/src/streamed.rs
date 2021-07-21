@@ -5,7 +5,8 @@
 use crate::{BitSieve, BoolSieve, Sieve, Streamed};
 
 use rayon::prelude::*;
-use std::mem::MaybeUninit;
+
+const USIZE_PER_CACHE_LINE: usize = 64 / std::mem::size_of::<usize>();
 
 impl Sieve<Streamed> for BitSieve<Streamed> {
     #[inline]
@@ -33,9 +34,13 @@ impl Sieve<Streamed> for BitSieve<Streamed> {
             let offset = start_number / usize::BITS as usize;
             // memory to set / thread count, rounding up so no threads needs to pick the last few
             // numbers up
-            let batch_size = ((self.data.len() - offset + rayon::current_num_threads() - 1)
-                / rayon::current_num_threads())
-            .max(1 << 6); // Too many threads shouldn't share too little memory
+            let batch_size = (((self.data.len() - offset + rayon::current_num_threads() - 1)
+                / rayon::current_num_threads()
+                + USIZE_PER_CACHE_LINE
+                - 1)
+                & !(USIZE_PER_CACHE_LINE - 1))
+                // each thread gets at least its own cache line
+                .max(USIZE_PER_CACHE_LINE);
 
             self.data[offset..]
                 .par_chunks_mut(batch_size)
@@ -74,8 +79,11 @@ impl Sieve<Streamed> for BitSieve<Streamed> {
         "streamed-bit"
     }
 
-    fn thread_count() -> usize {
-        rayon::current_num_threads()
+    fn thread_count(&self) -> usize {
+        std::cmp::min(
+            self.data.len() / USIZE_PER_CACHE_LINE,
+            rayon::current_num_threads(),
+        )
     }
 }
 
@@ -83,16 +91,30 @@ impl Sieve<Streamed> for BoolSieve<Streamed> {
     #[inline]
     fn new(size: usize, algorithm: Streamed) -> Self {
         assert!(size >= 2);
+        // we know that multiples of two are no primes, so we don't need to save them
         let data_size = (size + 1) / 2;
-        let mut data = vec![MaybeUninit::<bool>::uninit(); data_size].into_boxed_slice();
+        let mut data = unsafe {
+            Vec::from_raw_parts(
+                std::alloc::alloc(
+                    std::alloc::Layout::from_size_align(
+                        std::mem::size_of::<bool>() * data_size,
+                        64,
+                    )
+                    .unwrap(),
+                ) as *mut bool,
+                data_size,
+                data_size,
+            )
+            .into_boxed_slice()
+        };
         data.as_parallel_slice_mut()
-            .into_par_iter()
-            .for_each(|element| {
-                *element = MaybeUninit::new(true);
+            .par_chunks_mut(64)
+            .for_each(|slice| {
+                slice.fill(true);
             });
 
         BoolSieve {
-            data: unsafe { std::mem::transmute(data) },
+            data,
             size,
             sieved: false,
             algorithm,
@@ -107,9 +129,12 @@ impl Sieve<Streamed> for BoolSieve<Streamed> {
 
         while prime <= sqrt {
             let start_number = prime * prime / 2;
-            let batch_size = ((self.data.len() - start_number + rayon::current_num_threads() - 1)
-                / rayon::current_num_threads())
-            .max(1 << 12); // 4096 byte are the minimum working set
+            let batch_size = (((self.data.len() - start_number + rayon::current_num_threads()
+                - 1)
+                / rayon::current_num_threads()
+                + 63)
+                & !63)
+                .max(64);
 
             self.data[start_number..]
                 .par_chunks_mut(batch_size)
@@ -145,8 +170,8 @@ impl Sieve<Streamed> for BoolSieve<Streamed> {
         "streamed-bool"
     }
 
-    fn thread_count() -> usize {
-        rayon::current_num_threads()
+    fn thread_count(&self) -> usize {
+        std::cmp::min(self.data.len() / 64, rayon::current_num_threads())
     }
 }
 
@@ -155,13 +180,25 @@ impl BitSieve<Streamed> {
     /// memory bound.
     #[inline(always)]
     fn initialize_data(size: usize) -> Box<[usize]> {
-        let mut data = vec![MaybeUninit::<usize>::uninit(); size].into_boxed_slice();
+        let mut data = unsafe {
+            Vec::from_raw_parts(
+                std::alloc::alloc(
+                    std::alloc::Layout::from_size_align(std::mem::size_of::<usize>() * size, 64)
+                        .unwrap(),
+                ) as *mut usize,
+                size,
+                size,
+            )
+            .into_boxed_slice()
+        };
         data.as_parallel_slice_mut()
-            .into_par_iter()
-            .for_each(|element| {
-                *element = MaybeUninit::new(usize::MAX);
+            // for each cache line
+            .par_chunks_mut(USIZE_PER_CACHE_LINE)
+            .for_each(|slice| {
+                slice.fill(usize::MAX);
             });
 
-        unsafe { std::mem::transmute(data) }
+        // Memory is initialized here
+        data
     }
 }

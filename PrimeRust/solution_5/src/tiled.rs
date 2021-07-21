@@ -6,17 +6,17 @@ use crate::{BitSieve, BoolSieve, Sieve, Tiled};
 
 use rayon::prelude::*;
 
+const USIZE_PER_CACHE_LINE: usize = 64 / std::mem::size_of::<usize>();
+
 impl Sieve<Tiled> for BitSieve<Tiled> {
     #[inline]
     fn new(size: usize, algorithm: Tiled) -> Self {
         assert!(size >= 2);
         // we know that multiples of two are no primes, so we don't need to save them
         let data_size = ((size + 1) / 2 + usize::BITS as usize - 1) / usize::BITS as usize;
-        let thread_chunk_size =
-            ((data_size + rayon::current_num_threads() - 1) / rayon::current_num_threads()).max(1);
 
         BitSieve {
-            data: Self::initialize_data(data_size, thread_chunk_size),
+            data: Self::initialize_data(data_size),
             size,
             sieved: false,
             algorithm,
@@ -25,19 +25,7 @@ impl Sieve<Tiled> for BitSieve<Tiled> {
 
     #[inline]
     fn sieve(&mut self) {
-        let sqrt = (self.size as f64).sqrt() as usize;
-        let usize_per_cache_line = 64 / std::mem::size_of::<usize>();
-        let initial_prime_count = ((sqrt + usize::BITS as usize) * usize_per_cache_line - 1)
-            / usize::BITS as usize
-            / usize_per_cache_line;
-        let thread_chunk_size =
-            (((self.data.len() - initial_prime_count + rayon::current_num_threads() - 1)
-                / rayon::current_num_threads()
-                + usize_per_cache_line)
-                & !(usize_per_cache_line - 1))
-                // limit working set to supplied memory size
-                .min(self.algorithm.0 * 8 / usize::BITS as usize)
-                .max(1);
+        let (initial_prime_count, thread_chunk_size) = self.get_working_sizes();
         // Gathering of primes by a single thread
         let base_primes = self.find_primes(initial_prime_count);
 
@@ -60,8 +48,11 @@ impl Sieve<Tiled> for BitSieve<Tiled> {
         "tiled-bit"
     }
 
-    fn thread_count() -> usize {
-        rayon::current_num_threads()
+    fn thread_count(&self) -> usize {
+        std::cmp::min(
+            self.data.len() / USIZE_PER_CACHE_LINE,
+            rayon::current_num_threads(),
+        )
     }
 }
 
@@ -73,9 +64,8 @@ impl Sieve<Tiled> for BoolSieve<Tiled> {
         let data_size = (size + 1) / 2;
         // we want to have a multiple of the cache line size (which is assumed to be 64 bytes)
         let thread_chunk_size =
-            (((data_size + rayon::current_num_threads() - 1) / rayon::current_num_threads() + 63)
-                & !63)
-                .max(1);
+            ((data_size + rayon::current_num_threads() - 1) / rayon::current_num_threads() + 63)
+                & !63;
         let mut data = unsafe {
             Vec::from_raw_parts(
                 std::alloc::alloc(
@@ -106,24 +96,16 @@ impl Sieve<Tiled> for BoolSieve<Tiled> {
 
     #[inline]
     fn sieve(&mut self) {
-        // we want to have a multiple of the cache line size (which is assumed to be 64 bytes)
-        let sqrt = (((self.size as f64).sqrt() as usize + 63) & !63).min(self.data.len());
-        let thread_chunk_size = (((self.data.len() - sqrt + rayon::current_num_threads() - 1)
-            / rayon::current_num_threads()
-            + 63)
-            & !63)
-            // limit working set to supplied memory size
-            .min(self.algorithm.0)
-            .max(1);
+        let (initial_prime_count, thread_chunk_size) = self.get_working_sizes();
         // Gathering of primes by a single thread
-        let base_primes = self.find_primes(sqrt);
+        let base_primes = self.find_primes(initial_prime_count);
 
-        self.data[sqrt..]
+        self.data[initial_prime_count..]
             .par_chunks_mut(thread_chunk_size)
             .into_par_iter()
             .enumerate()
             .for_each(|(i, slice)| {
-                let offset = sqrt + i * thread_chunk_size;
+                let offset = initial_prime_count + i * thread_chunk_size;
                 for prime in &base_primes {
                     // Find the first prime number in the current memory region
                     let start_number = prime * prime / 2;
@@ -152,15 +134,20 @@ impl Sieve<Tiled> for BoolSieve<Tiled> {
         "tiled-bool"
     }
 
-    fn thread_count() -> usize {
-        rayon::current_num_threads()
+    fn thread_count(&self) -> usize {
+        std::cmp::min(self.data.len() / 64, rayon::current_num_threads())
     }
 }
 
 impl BitSieve<Tiled> {
-    /// Initializes the array by giving each thread their own area, avoiding cross talk.
+    /// Initializes the array by giving each thread its own area, avoiding cross talk.
     #[inline(always)]
-    fn initialize_data(size: usize, thread_chunk_size: usize) -> Box<[usize]> {
+    fn initialize_data(size: usize) -> Box<[usize]> {
+        let thread_chunk_size = ((size + rayon::current_num_threads() + 1)
+            / rayon::current_num_threads()
+            + USIZE_PER_CACHE_LINE
+            - 1)
+            & !(USIZE_PER_CACHE_LINE - 1);
         let mut data = unsafe {
             Vec::from_raw_parts(
                 std::alloc::alloc(
@@ -180,6 +167,26 @@ impl BitSieve<Tiled> {
 
         // Memory is initialized here
         data
+    }
+
+    /// Get the size of the initial prime sieving, as well as the working size of each thread in the
+    /// parallel part.
+    #[inline(always)]
+    fn get_working_sizes(&self) -> (usize, usize) {
+        let sqrt = (self.size as f64).sqrt() as usize;
+        let initial_prime_count = ((sqrt + usize::BITS as usize) * USIZE_PER_CACHE_LINE - 1)
+            / usize::BITS as usize
+            / USIZE_PER_CACHE_LINE;
+        let thread_chunk_size =
+            (((self.data.len() - initial_prime_count + rayon::current_num_threads() - 1)
+                / rayon::current_num_threads()
+                + USIZE_PER_CACHE_LINE
+                - 1)
+                & !(USIZE_PER_CACHE_LINE - 1))
+                // limit working set to supplied memory size
+                .min(self.algorithm.0 / std::mem::size_of::<usize>())
+                .max(USIZE_PER_CACHE_LINE);
+        (initial_prime_count, thread_chunk_size)
     }
 
     /// Basically the same algorithm as the single threaded one, but collects found primes.
@@ -237,6 +244,22 @@ impl BitSieve<Tiled> {
 }
 
 impl BoolSieve<Tiled> {
+    /// Get the size of the initial prime sieving, as well as the working size of each thread in the
+    /// parallel part.
+    #[inline(always)]
+    fn get_working_sizes(&self) -> (usize, usize) {
+        // we want to have a multiple of the cache line size (which is assumed to be 64 bytes)
+        let sqrt = (((self.size as f64).sqrt() as usize + 63) & !63).min(self.data.len());
+        let thread_chunk_size = (((self.data.len() - sqrt + rayon::current_num_threads() - 1)
+            / rayon::current_num_threads()
+            + 63)
+            & !63)
+            // limit working set to supplied memory size
+            .min(self.algorithm.0)
+            .max(64);
+        (sqrt, thread_chunk_size)
+    }
+
     /// Basically the same algorithm as the single threaded one, but collects found primes.
     #[inline(always)]
     fn find_primes(&mut self, cutoff: usize) -> Vec<usize> {
