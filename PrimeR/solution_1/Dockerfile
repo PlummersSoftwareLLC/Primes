@@ -1,6 +1,4 @@
-FROM alpine:3.13
-
-RUN apk add --no-cache R
+FROM rocker/r-base:4.1.0
 
 WORKDIR /opt/app
 

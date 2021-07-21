@@ -2,37 +2,29 @@ SHELL := /bin/bash
 
 .ONESHELL:
 
-SOLUTIONS  := $(shell find Prime* -type f -name Dockerfile -exec dirname {} \; | sed -e 's|^./||' | sort)
-OUTPUT_DIR := $(shell mktemp -d)
-ARCH_FILE  := ${shell case $$(uname -m) in x86_64) echo arch-amd64 ;; aarch64) echo arch-arm64 ;; esac}
+DIRECTORY := $(shell pwd)
+FORMATTER := "table"
 
-all: report
+.PHONY: all
+all: benchmark
 
-benchmark: $(SOLUTIONS)
-	@echo "--- Output files available in $(OUTPUT_DIR)"
+.PHONY: benchmark
+benchmark: check-env
+	@REALPATH=$$(cd "$${DIRECTORY}" && pwd); cd tools/; \
+	npm ci --silent && npm start --silent -- benchmark -d "$${REALPATH}" -f "$(FORMATTER)"
 
-	@for s in $(SOLUTIONS); do \
-		NAME=$$(echo "$${s}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]'); \
-		ls $${s}/arch-* > /dev/null 2>&1; \
-		if [[ -z "$(ARCH_FILE)" || -f "$${s}/$(ARCH_FILE)" || "$$?" -ne 0 ]]; then \
-			OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
-			echo "[*] Running $${NAME}" && docker run --rm $$(docker build -q $$s) | tee "$${OUTPUT}"; \
-		else \
-			echo "[*] Skipping $${NAME} due to architecture mismatch"; \
-		fi; \
-	done
+.PHONY: check-env
+check-env: check-cc-works check-docker-works check-node-works
 
-report: benchmark
-	@cd tools/; \
-	npm ci && npm start -- report -d "$(OUTPUT_DIR)"
+.PHONY: check-cc-works
+check-cc-works:
+	@cc --version >/dev/null 2>&1 || (echo 'Please install a C compiler. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)
 
-one:
-	@if [[ ! -z "$${SOLUTION}" ]]; then \
-		NAME=$$(echo "$${SOLUTION}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]'); \
-		OUTPUT="$(OUTPUT_DIR)/$${NAME}.out"; \
-		echo "[*] Running $${NAME}" && docker run --rm $$(docker build -q $$SOLUTION) | tee "$${OUTPUT}"; \
-		cd tools/; \
-		npm ci && npm start -- report -d "$(OUTPUT_DIR)" \
-	else \
-		echo "Not specified!"; \
-	fi
+.PHONY: check-node-works
+check-node-works:
+	@npm --version >/dev/null 2>&1 || (echo 'Please install Node.js. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)
+
+.PHONY: check-docker-works
+check-docker-works:
+	@docker --version >/dev/null 2>&1 || (echo 'Please install docker. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)
+	@docker ps >/dev/null

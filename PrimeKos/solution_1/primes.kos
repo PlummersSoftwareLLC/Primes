@@ -1,0 +1,117 @@
+#!/usr/bin/env kos
+
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2021 Chris Dragan
+
+import base.*
+import math.sqrt
+import datetime.now
+
+class Sieve
+{
+    constructor(sieve_size)
+    {
+        # Create buffer, one byte per flag for each odd number
+        # We don't bother checking even numbers
+        this.buf = buffer(sieve_size / 2)
+    }
+
+    fun run
+    {
+        const sieve = this.buf
+
+        # We perform clearing up to sqrt of sieve size
+        const max_clear_factor = integer(sqrt(sieve.size * 2)) / 2
+
+        # Look from primes starting with 3 up to square root of sieve size
+        # Note we divide by 2 since we keep only odd numbers
+        for const factor in range(1, max_clear_factor + 1) {
+
+            # If this slot has 0, it means it's not a multiple of a prime,
+            # therefore it corresponds to a prime number
+            if ! sieve[factor] {
+
+                const prime = factor * 2 + 1
+
+                # Mark multiples of this prime, starting at prime squared
+                for const clear_factor in range(prime * prime / 2, sieve.size, prime) {
+                    sieve[clear_factor] = 1
+                }
+            }
+        }
+
+        return sieve
+    }
+
+    # Generator which yields subsequent primes from the sieve
+    fun get_primes
+    {
+        # Yield the only even prime, which we don't record in the sieve
+        yield 2
+
+        for const factor in range(1, this.buf.size) {
+
+            # Yield values which were not sifted-out
+            if ! this.buf[factor] {
+                const prime = factor * 2 + 1
+                yield prime
+            }
+        }
+    }
+}
+
+fun run_timed_test(run_time_sec, sieve_size)
+{
+    const start      = now()
+    var   iterations = 0
+
+    while (now() - start < run_time_sec * 1_000_000) {
+        Sieve(sieve_size).run()
+        iterations += 1
+    }
+
+    const time_taken_sec = (now() - start) / 1_000_000.0
+
+    return [time_taken_sec, iterations]
+}
+
+fun validate
+{
+    const prime_counts = [
+        # sieve size, number of primes
+        [          10,         4 ],
+        [         100,        25 ],
+        [       1_000,       168 ],
+        [      10_000,     1_229 ],
+        [     100_000,     9_592 ],
+        [   1_000_000,    78_498 ],
+        [  10_000_000,   664_579 ],
+        [ 100_000_000, 5_761_455 ],
+    ]
+
+    for const sieve_size, num_primes in prime_counts {
+
+        const sieve = Sieve(sieve_size)
+        sieve.run()
+        const found_primes = sieve.get_primes().count()
+
+        if found_primes != num_primes {
+            print("Error: at sieve size \(sieve_size) expected \(num_primes) primes, but found \(found_primes)")
+        }
+        assert found_primes == num_primes
+    }
+}
+
+fun main
+{
+    validate()
+
+    const sieve_size   = 1_000_000
+    const run_time_sec = 5
+
+    const time_taken_sec, iterations = run_timed_test(run_time_sec, sieve_size)
+
+    print("cdragan;\(iterations);\(time_taken_sec);1;algorithm=base,faithful=yes,bits=8")
+}
+
+main()

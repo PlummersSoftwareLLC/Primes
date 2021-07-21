@@ -2,7 +2,7 @@
 # Compilation and execution on Git-Bash (GNU C Compiler)
 set -e
 
-OFLAGS="-Ofast -funroll-all-loops"
+OFLAGS="-Ofast -march=native -mtune=native -funroll-all-loops"
 SIZE=1000000
 
 while [[ $1 != "" ]]; do

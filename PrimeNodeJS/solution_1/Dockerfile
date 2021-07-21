@@ -5,5 +5,9 @@ FROM node:current-alpine3.13
 WORKDIR /opt/app
 
 COPY PrimeNode.js .
+COPY PrimeNode_cluster.js .
 
-ENTRYPOINT [ "node", "PrimeNode.js" ]
+COPY run.sh .
+RUN chmod +x run.sh
+
+ENTRYPOINT [ "./run.sh" ]

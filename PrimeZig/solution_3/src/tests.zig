@@ -9,31 +9,26 @@ const IntSieve = sieves.IntSieve;
 const SingleThreadedRunner = runners.SingleThreadedRunner;
 const ParallelAmdahlRunner = runners.AmdahlRunner;
 const ParallelGustafsonRunner = runners.GustafsonRunner;
-const PreGenerated = @import("pregen.zig").PreGenerated;
+const Wheel = @import("wheel.zig").Wheel;
 
 const allocator = std.testing.allocator;
 
-fn runSieve(comptime Runner: type, comptime expected_primes: usize, boosted: bool) !u64 {
-    var runner = Runner{};
-    try runner.init(allocator);
-    var initial_count: usize = @TypeOf(runner.sieve).size >> 1;
-    defer runner.deinit();
+fn runSieve(comptime Runner: type, field_size: usize, expected_primes: usize, boosted: bool) !u64 {
     var passes: u64 = 0;
+    var runner = try Runner.init(allocator, field_size, &passes);
+    const initial_count: usize = field_size >> 1;
+    defer runner.deinit();
 
-    runner.reset();
+    try runner.sieveInit();
+    defer runner.sieveDeinit();
+
     if (!boosted) {
-        std.testing.expectEqual(@as(usize, initial_count), runner.sieve.primeCount());
+        try std.testing.expectEqual(initial_count, runner.sieve.primeCount());
     }
-    runner.run(&passes);
 
-    std.testing.expectEqual(@as(usize, expected_primes), runner.sieve.primeCount());
+    runner.run();
 
-    runner.reset();
-    if (!boosted) {
-        std.testing.expectEqual(@as(usize, initial_count), runner.sieve.primeCount());
-    }
-    runner.run(&passes);
-    std.testing.expectEqual(@as(usize, expected_primes), runner.sieve.primeCount());
+    try std.testing.expectEqual(@as(usize, expected_primes), runner.sieve.primeCount());
 
     return passes;
 }
@@ -54,59 +49,59 @@ const expected_results = .{
 
 test "Test single threaded" {
     inline for (expected_results) |result| {
-        const count = result[0];
+        const field_size = result[0];
         const expected_primes = result[1];
-        const Sieve = IntSieve(bool, count, .{});
+        const Sieve = IntSieve(bool, .{});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, false);
-        std.testing.expectEqual(@as(u64, 2), passes);
+        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
+        try std.testing.expectEqual(passes, 1);
     }
 }
 
 test "Test multithreaded-amdahl" {
     inline for (expected_results) |result| {
-        const count = result[0];
+        const field_size = result[0];
         const expected_primes = result[1];
-        const Sieve = IntSieve(bool, count, .{});
+        const Sieve = IntSieve(bool, .{});
 
-        var passes = try runSieve(ParallelAmdahlRunner(Sieve, .{}), expected_primes, false);
-        std.testing.expectEqual(@as(u64, 2), passes);
+        var passes = try runSieve(ParallelAmdahlRunner(Sieve, .{}), field_size, expected_primes, false);
+        try std.testing.expectEqual(passes, 1);
     }
 }
 
 test "Test mulithreaded-gustafson" {
     inline for (expected_results) |result| {
-        const count = result[0];
+        const field_size = result[0];
         const expected_primes = result[1];
-        const Sieve = IntSieve(bool, count, .{});
+        const Sieve = IntSieve(bool, .{});
 
-        _ = try runSieve(ParallelGustafsonRunner(Sieve, .{}), expected_primes, false);
+        _ = try runSieve(ParallelGustafsonRunner(Sieve, .{}), field_size, expected_primes, false);
     }
 }
 
 test "Single threaded with bitsieve/8" {
     inline for (expected_results) |result| {
-        const count = result[0];
+        const field_size = result[0];
         const expected_primes = result[1];
-        const Sieve = BitSieve(u8, count, .{});
+        const Sieve = BitSieve(u8, .{});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, false);
-        std.testing.expectEqual(@as(u64, 2), passes);
+        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
+        try std.testing.expectEqual(passes, 1);
     }
 }
 
 test "Single threaded with bitsieve/64" {
     inline for (expected_results) |result| {
-        const count = result[0];
+        const field_size = result[0];
         const expected_primes = result[1];
-        const Sieve = BitSieve(u64, count, .{});
+        const Sieve = BitSieve(u64, .{});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, false);
-        std.testing.expectEqual(@as(u64, 2), passes);
+        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
+        try std.testing.expectEqual(passes, 1);
     }
 }
 
-const pregens = [_]comptime_int{2}; //, 3, 4, 5};
+const pregens = [_]comptime_int{2, 3, 4, 5};
 const OEIS_PRIMES = [_]usize{ 3, 5, 7, 11, 13, 17, 19 };
 
 fn divisible_by(a: usize, b: usize) bool {
@@ -116,11 +111,11 @@ fn divisible_by(a: usize, b: usize) bool {
 test "Int Sieve boost produces correct byte values" {
     inline for (expected_results) |result| {
         inline for (pregens) |pregen| {
-            const count = result[0];
-            const Sieve = IntSieve(u8, count, .{ .pregen = pregen });
+            const field_size = result[0];
+            const Sieve = IntSieve(u8, .{ .pregen = pregen });
 
-            var sieve = try Sieve.create(allocator);
-            defer sieve.destroy();
+            var sieve = try Sieve.init(allocator, field_size);
+            defer sieve.deinit();
 
             _ = sieve.reset();
 
@@ -131,7 +126,12 @@ test "Int Sieve boost produces correct byte values" {
                     maybe_prime = maybe_prime and !divisible_by(target, prime);
                     maybe_prime = maybe_prime or (prime == target);
                 }
-                std.testing.expectEqual(if (maybe_prime) @as(u8, 1) else @as(u8, 0), v);
+
+                if (maybe_prime) {
+                    try std.testing.expectEqual(v, 1);
+                } else {
+                    try std.testing.expectEqual(v, 0);
+                }
             }
         }
     }
@@ -168,8 +168,8 @@ test "Bit Sieve boost produces correct bit values" {
     inline for (intsizes) |int_t| {
         inline for (expected_results) |result| {
             inline for (pregens) |pregen| {
-                const count = result[0];
-                const Sieve = BitSieve(int_t, count, .{ .pregen = pregen });
+                const field_size = result[0];
+                const Sieve = BitSieve(int_t, field_size, .{ .pregen = pregen });
 
                 var sieve = try Sieve.create(allocator);
                 defer sieve.destroy();
@@ -195,12 +195,12 @@ test "Bit Sieve boost produces correct bit values" {
 test "Single threaded Int Sieve with a boost from pregeneration" {
     inline for (expected_results) |result| {
         inline for (pregens) |pregen| {
-            const count = result[0];
+            const field_size = result[0];
             const expected_primes = result[1];
-            const Sieve = IntSieve(u8, count, .{ .pregen = pregen });
+            const Sieve = IntSieve(u8, .{ .pregen = pregen });
 
-            var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, true);
-            std.testing.expectEqual(@as(u64, 2), passes);
+            var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+            try std.testing.expectEqual(passes, 1);
         }
     }
 }
@@ -208,9 +208,9 @@ test "Single threaded Int Sieve with a boost from pregeneration" {
 test "Single threaded Bit Sieve with a boost from pregeneration" {
     inline for (expected_results) |result| {
         inline for (pregens) |pregen| {
-            const count = result[0];
+            const field_size = result[0];
             const expected_primes = result[1];
-            const Sieve = BitSieve(u8, count, .{ .pregen = pregen });
+            const Sieve = BitSieve(u8, field_size, .{ .pregen = pregen });
 
             var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, true);
             std.testing.expectEqual(@as(u64, 2), passes);

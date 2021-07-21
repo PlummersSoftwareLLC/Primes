@@ -1,0 +1,95 @@
+🐇 🗑️ 🍇
+    🖍🆕 sieve_size 🔢
+    🖍🆕 bits 🍨🐚👌🍆
+
+    🆕 a_sieve_size 🔢 🍇
+        a_sieve_size ➡️ 🖍sieve_size
+        🆕🍨🐚👌🍆 👍 sieve_size❗️➡️ 🖍bits
+    🍉
+
+    ❗️♌ 🍇
+        3 ➡️ 🖍🆕 factor
+        🔢⛷💯sieve_size❗️❗️❗️ ➡️ q
+
+        🔁 factor ◀🙌 q 🍇
+            factor ➡️ 🖍🆕 num
+            👍 ➡️ 🖍🆕 running
+            🔁 running 🍇
+                ↪️ 🐽bits num❗️ 🍇
+                    num ➡️ 🖍factor
+                    👎 ➡️ 🖍running 
+                🍉
+                🙅 🍇
+                    num ⬅️➕ 2
+                    num ◀ sieve_size ➡️ 🖍running
+                🍉
+            🍉
+
+            factor ✖ factor ➡️ 🖍🆕 num2
+            🔁 num2 ◀ sieve_size 🍇
+                👎 ➡️ 🐽bits num2❗️
+                num2 ⬅️➕ factor ➕ factor
+            🍉
+
+            factor ⬅️➕ 2
+        🍉
+    🍉
+
+    ❗️♊ show_results👌 duration🔢 passes🔢 🍇
+        ↪️ show_results 🍇
+            😀 🔤2, 🔤❗️
+        🍉
+
+        1 ➡️ 🖍🆕 count
+        🔂 num 🆕⏩ 3 sieve_size 2❗️ 🍇
+            ↪️ 🐽bits num❗️ 🍇
+                ↪️ show_results 🍇
+                    😀 🔤🧲num🧲🔤❗️
+                🍉
+
+                count ⬅️➕ 1
+            🍉
+        🍉
+
+        ↪️ show_results 🍇
+            😀 🔤🔤❗️
+        🍉
+
+        duration ➗ passes ➡️ avg
+        ♋👇❗️ ➡️ count_primes
+        😀 🔤Passes: 🧲passes🧲, Time: 🧲duration🧲, Avg: 🧲avg🧲, Limit: 🧲sieve_size🧲, Count1: 🧲count_primes🧲, Count2: 🧲count🧲🔤❗️
+        😀 🔤marghidanu;🧲passes🧲;🧲duration🧲;1;algorithm=base,faithful=yes🔤❗️
+    🍉
+
+    ❗️♋ ➡️ 🔢 🍇
+        1 ➡️ 🖍🆕 count
+        🔂 num 🆕⏩ 3 sieve_size 2❗️ 🍇
+            ↪️ 🐽bits num❗️ 🍇
+                count ⬅️➕ 1
+            🍉
+        🍉
+
+        ↩️ count
+    🍉
+🍉
+
+🏁 🍇
+    0 ➡️ 🖍🆕 passes
+    🕰🐇💻❗️ ➡️ start_time
+
+    👍 ➡️ 🖍🆕 running
+    🔁 running 🍇
+        🆕🗑️ 1000000❗️ ➡️ sieve
+        ♌sieve❗️
+
+        passes ⬅️➕ 1
+        🕰🐇💻❗️ ➡️ now
+ 
+        now ➖ start_time ➡️ duration
+        ↪️ duration ▶️🙌 5 🍇
+            💭 Print results ...
+            ♊sieve 👎 duration passes❗️
+            👎 ➡️ 🖍running
+        🍉
+    🍉
+🍉
