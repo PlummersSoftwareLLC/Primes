@@ -5,7 +5,11 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-*This implementation keeps the sieve calculation mechanish as close to the original implementation, using BitSets rather than arrays. Instead of patitioning the sieve size, each thread is responsible of handling the entire range and emitting the resultant sieve size at completion. To validate, we use the average of the prime count from every thread against a predefined dictionary*
+*The implementations provided using BitSet are as follows:*
+
+*`PrimeSieveJavaBitSet.java`- This implementation follows the original implementation 1:1 by Dave and uses BitSet rather than arrays. Single threaded performance is slower compared to arrays but we are no longer limited to Integer.MAX_VALUE - 2 (Requested array size exceeds VM limit).*
+
+*`PrimeSieveJavaBitSetMT.java` - This implementation keeps the sieve calculation mechanism close to the original implementation, using BitSets rather than arrays. Instead of partitioning the sieve by a given size, each thread is responsible of handling the entire range and emitting the resultant sieve size at completion. To validate, we use the average of the prime count from every thread against a predefined dictionary*
 
 ## Run instructions
 
@@ -16,7 +20,6 @@
 ```
 > Executing task: docker run --rm -it  solution2:latest <
 
-Passes: 10150, Time: 5.000000, Avg: 0.000493, Limit: 1000000, Count: 78498, Valid: true
-
-PratimGhosh86;10150;5.000000;212;algorithm=base,faithful=yes,bits=1
+PratimGhosh86-JavaBitSet;1943;5.000000;1;algorithm=base,faithful=yes,bits=1
+PratimGhosh86-JavaBitSetMT;10738;5.000000;210;algorithm=base,faithful=yes,bits=1
 ```
