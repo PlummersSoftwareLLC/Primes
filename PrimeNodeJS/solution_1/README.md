@@ -1,6 +1,6 @@
 # NodeJS solution by rogiervandam
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Algorithm](https://img.shields.io/badge/Algorithm-other-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
