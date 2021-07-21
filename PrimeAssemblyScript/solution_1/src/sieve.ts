@@ -1,7 +1,8 @@
 export class PrimeSieve {
-    sieveSize: i32 = 0;
+    private sieveSize: i32 = 0;
     private Bits: StaticArray<bool>;
-    private static primeCounts: Map<i32, i32> = new Map<i32, i32>().set(10, 4)
+    private static primeCounts: Map<i32, i32> = new Map<i32, i32>()
+        .set(10, 4)
         .set(100, 25)
         .set(1000, 168)
         .set(10000, 1229)
@@ -9,41 +10,44 @@ export class PrimeSieve {
         .set(1000000, 78498)
         .set(10000000, 664579)
         .set(100000000, 5761455);
-    public constructor(size: u32) {
+
+    // @ts-ignore: decorator
+    @inline constructor(size: u32) {
         this.sieveSize = size;
         // StaticArray did look a bit faster than UInt8Array in testing
-        this.Bits = new StaticArray<bool>(size);
-
+        this.Bits = new StaticArray(size);
     }
+
     validateResults(): bool {
-        if (PrimeSieve.primeCounts[this.sieveSize])
-            return PrimeSieve.primeCounts[this.sieveSize] == this.countPrimes();
+        if (PrimeSieve.primeCounts.has(this.sieveSize))
+            return PrimeSieve.primeCounts.get(this.sieveSize) == this.countPrimes();
         return false;
     }
 
-    runSieve(): void {
-        const size: i32 = this.sieveSize;
-        let factor: i32 = 3;
-        let q: i32 = Math.sqrt(size) as i32;
+    @inline runSieve(): void {
+        const size = this.sieveSize;
+        const bits = this.Bits;
+        let factor = 3;
+        let q = Math.sqrt(size) as i32;
 
         while (factor <= q) {
-            for (let num: i32 = factor; num < size; num += 2) {
-                if (!this.Bits[num]) {
+            for (let num = factor; num < size; num += 2) {
+                if (!unchecked(bits[num])) {
                     factor = num;
                     break;
                 }
             }
-            for (let num: i32 = factor * factor; num < size; num += factor * 2)
-                this.Bits[num] = true;
+            for (let num = factor * factor; num < size; num += factor * 2)
+                unchecked(bits[num] = true);
 
             factor += 2;
         }
     }
 
     printResults(showResults: bool, duration: f32, passes: i32): void {
-
-        let count: i32 = (this.sieveSize >= 2);
-        for (let num: i32 = 3; num <= this.sieveSize; num += 2) {
+        const size = this.sieveSize;
+        let count = i32(size >= 2);
+        for (let num = 3; num <= size; num += 2) {
             if (!this.Bits[num]) {
                 if (showResults)
                     console.log(num.toString() + ", ");
@@ -66,8 +70,9 @@ export class PrimeSieve {
     }
 
     countPrimes(): i32 {
-        let count: i32 = i32(this.sieveSize >= 2);
-        for (let i: i32 = 3; i < this.sieveSize; i += 2)
+        const size = this.sieveSize;
+        let count = i32(size >= 2);
+        for (let i = 3; i < size; i += 2)
             if (this.Bits[i] == 0)
                 count++;
         return count;

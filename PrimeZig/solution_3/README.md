@@ -2,7 +2,7 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
-![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
@@ -45,7 +45,7 @@ Architecture:
 
 - `src/alloc.zig` an allocator that prioritizes use of scratch space set aside in .bss
 - `src/main.zig` entrypoint for the program; builds the drag race layout
-- `src/pregen.zig` uses the sieve program to generate wheel LUTs at compile-time
+- `src/wheel.zig` uses the sieve program to generate wheel LUTs at compile-time
 - `src/runners.zig` generic "runner" framework.  Impls:
   - `SingleThreadedRunner`
   - `AmdahlRunner`

@@ -11,9 +11,12 @@ let package = Package(
             name: "PrimeSieveSwift",
             targets: ["PrimeSieveSwift"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "0.0.1")
+    ],
     targets: [
         .target(
             name: "PrimeSieveSwift",
-            dependencies: []),
+            dependencies: [.product(name: "ArgumentParser", package: "swift-argument-parser"),]),
     ]
 )

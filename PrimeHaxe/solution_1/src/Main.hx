@@ -82,7 +82,7 @@ class Main {
         var tStart:Float = Sys.time();
         var passes:Int = 0;
         var sieve:PrimeSieve = null;
-        while (Sys.time() - tStart < 10) {
+        while (Sys.time() - tStart < 5) {
             sieve = new PrimeSieve(1000000);
             sieve.runSieve();
             passes += 1;
