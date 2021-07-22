@@ -21,6 +21,6 @@
 ```
 > Executing task: docker run --rm -it  solution2:latest <
 
-PratimGhosh86-JavaBitSet;1943;5.000000;1;algorithm=base,faithful=yes,bits=1
-PratimGhosh86-JavaBitSetMT;10738;5.000000;210;algorithm=base,faithful=yes,bits=1
+PratimGhosh86-JavaBitSet;1915;5.000000;1;algorithm=base,faithful=yes,bits=1
+PratimGhosh86-JavaBitSetMT;12496;5.000000;236;algorithm=base,faithful=yes,bits=1
 ```

@@ -36,7 +36,7 @@ public class PrimeSieveJavaBitSetMT {
     POOL.setCorePoolSize(Runtime.getRuntime().availableProcessors());
     final var tStart = System.currentTimeMillis();
     while (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - tStart) < TIME_IN_SECONDS) {
-      POOL.execute(() -> runSieve(SIEVE_SIZE, getBitArray(SIEVE_SIZE)));
+      POOL.execute(() -> runSieve(new PrimeSieve(SIEVE_SIZE)));
     }
     SHOULD_RUN.set(false);
     shutdownPool();
@@ -46,10 +46,12 @@ public class PrimeSieveJavaBitSetMT {
   }
 
   // Calculate the primes up to the specified limit
-  public static void runSieve(final int sieveSize, final BitSet bitSet) {
+  public static void runSieve(final PrimeSieve sieve) {
     // make sure any waiting threads are skipped in time limit is reached
     if (!SHOULD_RUN.get())
       return;
+    final var sieveSize = sieve.getSieveSize();
+    final var bitSet = sieve.getBitArray();
     var factor = 3;
     final var q = (int) Math.sqrt(sieveSize);
     while (factor < q) {
@@ -68,15 +70,6 @@ public class PrimeSieveJavaBitSetMT {
     }
     if (SHOULD_RUN.get())
       validateAndStoreResults(sieveSize, countPrimes(bitSet));
-  }
-
-  // generate a clean bit array
-  private static BitSet getBitArray(final int sieveSize) {
-    // since we filter evens, just half as many bits
-    final var bitArrayLength = (sieveSize + 1) / 2;
-    final var bitArray = new BitSet(bitArrayLength);
-    bitArray.set(0, bitArrayLength, true);
-    return bitArray;
   }
 
   // Gets a bit from the array of bits, but automatically just filters out even numbers as
@@ -142,6 +135,30 @@ public class PrimeSieveJavaBitSetMT {
     } finally {
       POOL.shutdownNow(); // Cancel currently executing tasks
     }
+  }
+
+  public static class PrimeSieve {
+
+    private final int sieveSize;
+    private final BitSet bitArray;
+
+    public PrimeSieve(final int size) {
+      // Upper limit, highest prime we'll consider
+      this.sieveSize = size;
+      // since we filter evens, just half as many bits
+      final var bitArrayLength = (this.sieveSize + 1) / 2;
+      this.bitArray = new BitSet(bitArrayLength);
+      this.bitArray.set(0, bitArrayLength, true);
+    }
+
+    public int getSieveSize() {
+      return sieveSize;
+    }
+
+    public BitSet getBitArray() {
+      return bitArray;
+    }
+
   }
 
   // Historical data for validating our results - the number of primes to be found under some
