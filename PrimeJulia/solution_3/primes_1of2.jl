@@ -86,7 +86,7 @@ function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, 
     # native bit rotate instruction. Requires at least Julia 1.5.
     bitmask = _get_bit_index_mask(start_index)
     for index in start_index:max_index
-        if unsafe_get_bit_at_index_with_bitmask(arr, index, bitmask) == 0
+        if iszero(unsafe_get_bit_at_index_with_bitmask(arr, index, bitmask))
             return index
         end
         bitmask = bitrotate(bitmask, 1)
@@ -129,7 +129,7 @@ function count_primes(sieve::PrimeSieve)
     # beforehand.
     count = 1
     for i in 1:max_bits_index
-        if unsafe_get_bit_at_index(arr, i) == 0
+        if iszero(unsafe_get_bit_at_index(arr, i))
             count += 1
         end
     end
@@ -144,7 +144,7 @@ function get_found_primes(sieve::PrimeSieve)
     # Int(sieve_size) may overflow if sieve_size is too large (most
     # likely only a problem for 32-bit systems)
     for (index, number) in zip(1:max_bits_index, 3:2:Int(sieve_size))
-        if unsafe_get_bit_at_index(arr, index) == 0
+        if iszero(unsafe_get_bit_at_index(arr, index))
             push!(output, number)
         end
     end
