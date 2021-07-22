@@ -193,6 +193,5 @@ function main(args::Vector{String}=ARGS)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    precompile(main_benchmark, (UInt, Int))
     main()
 end
