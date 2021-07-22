@@ -118,24 +118,36 @@ func (sieve Sieve) PrimeCheckerMulti(numProc, from, to int) {
 	// now sieve[0:to] is ready
 }
 
-// Build fill sieve with true for all non primes
+// Build fill sieve with true for all non primes.
+// We make no assumptions about the first odd primes.
+// We do not suppose that 3,5,7 or 11 are primes !
+// As the first odd prime is at least 3, so the base
+// algorithme starts at least at 3**2 = 9.
+// Using this we know that the sieve is ready upto 9 (excluded).
+// As 9 is a square, it is not prime, the smallest prime
+// above 9 is at least 11.
+// So we can start filling the sieve using the odd pries inside
+// [3,7] to build the sieve up to 11**2=121 (excluded).
+
 func (sieve Sieve) Build(numProc int) {
 	// evaluate the optimal first slice [9:q],
 	// that is included in [9:121] and
-	// such that q**(2k) is slightly bigger than maxNum
-	q := float64(Pr(len(sieve) - 1))
+	// such that q**(2k) is slightly bigger than sqrt(N).
+	q := math.Sqrt(float64(Pr(len(sieve) - 1)))
+	// to build the sieve we need to know all primes in [0:Pr(upto)]
+	upto := In(int(q)) + 1
 	for q > 121 {
 		q = math.Sqrt(q)
 	}
-	// as the first three odd numbers 3,5,7 are primes
-	// the sieve[0:3] is ok and we can start by filling
-	// a subslice of sieve[3:59] that corresponds to
-	// a sub interval of [9,11^2).
+	// the sieve[0:3] corrsponing to [3,9) is ok
+	// and we can start by filling a subslice of
+	// sieve[3:59] corresponding to sub interval of [9,11^2).
 	var from, to int = 3, In(int(q)) + 1
-	for ; to < len(sieve); from, to = to, Sq(to) {
+	for ; to < upto; from, to = to, Sq(to) {
 		sieve.PrimeCheckerMulti(numProc, from, to)
 	}
-	sieve.PrimeCheckerMulti(numProc, from, len(sieve))
+	sieve.PrimeCheckerMulti(numProc, from, upto)
+	sieve.PrimeCheckerMulti(numProc, upto, len(sieve))
 }
 
 // CountPrimes return the number of primes + 1 encoded in sieve.

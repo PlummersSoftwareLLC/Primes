@@ -12,9 +12,9 @@ var numPrimesTest = map[int]int{
 	1e3: 168,
 	1e4: 1229,
 	1e5: 9592,
-	// 1e6: 78498,
-	// 1e7: 664579,
-	// 1e8: 5761455,
+	1e6: 78498,
+	1e7: 664579,
+	1e8: 5761455,
 }
 
 func TestPrimeChecker(t *testing.T) {
@@ -78,8 +78,7 @@ var numPrimesBench = map[int]int{
 
 func BenchmarkBuildSieve(b *testing.B) {
 	for max, _ := range numPrimesBench {
-		for i := 2; i < 5; i++ {
-			numProc := 1 << i
+		for _, numProc := range []int{runtime.NumCPU() / 2, runtime.NumCPU(), 2 * runtime.NumCPU(), 3 * runtime.NumCPU(), 4 * runtime.NumCPU()} {
 			b.Run(fmt.Sprintf("Multi %d using %d workers", max, numProc), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					sieve := NewSieve(max)
