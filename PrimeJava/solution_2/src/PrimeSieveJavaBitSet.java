@@ -24,7 +24,7 @@ public class PrimeSieveJavaBitSet {
   public static void main(final String[] args) {
 
     var passes = 0;
-    var sieve = new PrimeSieve(LIMIT);
+    PrimeSieve sieve = null;
     final var tStart = currentTimeMillis();
 
     while (MILLISECONDS.toSeconds(currentTimeMillis() - tStart) < TIME) {
@@ -55,7 +55,7 @@ public class PrimeSieveJavaBitSet {
       var factor = 3;
       final var q = (int) Math.sqrt(this.sieveSize);
 
-      while (factor < q) {
+      while (factor <= q) {
         for (var num = factor; num <= this.sieveSize; num++) {
           if (getBit(num)) {
             factor = num;

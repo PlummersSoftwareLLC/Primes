@@ -42,7 +42,7 @@ public class PrimeSieveJavaBitSetMT {
     shutdownPool();
     final var tEnd = System.currentTimeMillis();
     printResults(SIEVE_SIZE, PASSES.get(), TimeUnit.MILLISECONDS.toSeconds(tEnd - tStart),
-        COUNT_OF_PRIMES_ACCUMULATOR.longValue(), POOL.getLargestPoolSize());
+        COUNT_OF_PRIMES_ACCUMULATOR.longValue(), Runtime.getRuntime().availableProcessors());
   }
 
   // Calculate the primes up to the specified limit
@@ -54,7 +54,7 @@ public class PrimeSieveJavaBitSetMT {
     final var bitSet = sieve.getBitArray();
     var factor = 3;
     final var q = (int) Math.sqrt(sieveSize);
-    while (factor < q) {
+    while (factor <= q) {
       for (var num = factor; num <= sieveSize; num++) {
         if (getBit(bitSet, num)) {
           factor = num;
