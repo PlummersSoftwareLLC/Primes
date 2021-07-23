@@ -66,7 +66,7 @@ public class PrimeSieveJavaBitSet {
         // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd
         // instance of this factor's multiple. We can then step by factor * 2 because every second
         // one is going to be even by definition
-        for (var num = factor * 3; num <= this.sieveSize; num += factor * 2)
+        for (var num = factor * factor; num <= this.sieveSize; num += factor * 2)
           this.clearBit(num);
 
         factor += 2; // No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
