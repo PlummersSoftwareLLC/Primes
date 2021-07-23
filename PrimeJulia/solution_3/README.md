@@ -6,11 +6,27 @@
 
 This solution is a port of [PrimeC/solution_2/sieve_1of2.c](../../PrimeC/solution_2/sieve_1of2.c)
 by Daniel Spångberg, with a few small tweaks and Julia-specific
-optimizations.
+optimizations. This is a sort-of "low-level" style implementation in
+Julia to get as much as speed as possible out of the language. It is
+*not* designed to be idiomatic Julia code.
+
+This solution requires at least **Julia 1.5** to run. Julia 1.6 is
+recommended and is used in the Docker image.
+
+### Things to note
+
+1. The `@simd` annotation on the loop inside `clear_factors!` may
+   actually hurt performance on older and/or slower systems for some
+   reason, such as on older x86 processors and on the Raspberry Pi.
+   You can safely remove the `@simd` annotation if you wish to.
+   Feedback is appreciated as to whether `@simd` helps or hurts
+   performance in your case.
+
+## Description
 
 Instead of using Julia's native `BitVector` type, this solution
 manually implements a bit array using a `Vector{UInt}` where `UInt`
-maps to the native unsigned integer type (native word size).
+maps to the unsigned integer type of the native word size.
 
 Manual bit shifting and bit masking is employed to both read and set
 bits in the bit array. Bitwise operations are used as much as possible
@@ -22,11 +38,10 @@ as `_div2` and `_mod_uint_size`. This is not unlike what Julia itself
 does with its native `BitVector` type (see
 [bitarray.jl](https://github.com/JuliaLang/julia/blob/master/base/bitarray.jl)).
 
-This implementation only stores bits for the odd numbers above 3. It is
-also an "inverted" bit array, i.e., bits are set when the number is
-*not prime* and bits are unset when the number is *prime*. This
-simplifies the set_bit operation slightly
-(`arr[i] |= mask vs. arr[i] &= ~mask`).
+This implementation only stores bits for the odd numbers above 3 in an
+"inverted" bit array, i.e., bits are set when the number is *not prime*
+and bits are unset when the number is *prime*. This simplifies the
+set_bit operation slightly (`arr[i] |= mask vs. arr[i] &= ~mask`).
 
 If you see any room for improvement in the code or have any
 suggestions, don't hesitate to open an issue, pull request (PR), 
@@ -40,6 +55,10 @@ first before opening an issue or pull request.
 ## Run instructions
 
 ### Running locally
+
+First, make sure that you have installed
+[Julia 1.5 or newer](https://julialang.org/downloads/) and have
+verified that your installation works.
 
 To build and run the solution locally, run the following command:
 ```
@@ -84,8 +103,8 @@ docker run -it --rm primejulia-3 1000000 10
 docker image rm primejulia-3
 ```
 
-This solution's [Dockerfile](Dockerfile) uses the `1.6-buster` image
-to provide maximum support for different architectures, most
+This solution's [Dockerfile](Dockerfile) uses the `julia:1.6-buster`
+image to provide maximum support for different architectures, most
 importantly ARM64 and x86_64. This also helps avoid any possible issues
 caused by Julia's [Tier 3 support for musl](https://julialang.org/downloads/#currently_supported_platforms),
 including Alpine Linux.
@@ -124,8 +143,8 @@ Core i5-9300H CPU and 24 GB of RAM running Windows 10 Home:
 PS D:\Office Files\Programming\Primes> julia primes_1of2.jl
 Settings: sieve_size = 1000000 | duration = 5
 Number of trues: 78498
-primes_main.jl: Passes: 8549 | Elapsed: 5.0 | Passes per second: 1709.8 | Average pass duration: 0.0005848637267516669
-louie-github_port_1of2;8549;5.0;1;algorithm=base,faithful=yes,bits=1
+primes_1of2.jl: Passes: 8588 | Elapsed: 5.0 | Passes per second: 1717.6 | Average pass duration: 0.0005822077317186772
+louie-github_port_1of2;8588;5.0;1;algorithm=base,faithful=yes,bits=
 ```
-On said machine, the number of passes usually ranges between 8300
-and 8600.
+On said machine, the number of passes usually ranges between 8200
+and 8700.
