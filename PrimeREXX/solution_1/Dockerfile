@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
-RUN apt update && apt upgrade -y \
-	&& apt install -y regina-rexx
+RUN apt-get update && apt-get upgrade -y \
+	&& apt-get install -y regina-rexx
 WORKDIR /home/rexx
 COPY ./PrimeREXX.rex .
 # Print the required output
