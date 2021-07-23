@@ -10,7 +10,7 @@ In the sieve we encode only the odd numbers bigger that 3. So an odd number `n` 
 
 We make no assumptions about the first odd primes. We do not suppose that 3,5,7 or 11 are primes !
 
-As the first odd prime is **at least** 3, so the base algorithm starts **at least** at 3<sup>2</sup> = 9. Using this we know that the sieve is ready upto 9 (excluded). And as 9 is a square, it is not prime, the smallest prime above 9 is **at least** 11. So we can start filling the sieve using the odd pries inside [3,9) to build the sieve up to 113<sup>2</sup>=121 (excluded), so by filling [9,121).
+As the first odd prime is **at least** 3, so the base algorithm starts **at least** at 3<sup>2</sup> = 9. Using this we know that the sieve is ready upto 9 (excluded). And as 9 is a square, it is not prime, the smallest prime above 9 is **at least** 11. So we can start filling the sieve using the odd pries inside [3,9) to build the sieve up to 11<sup>2</sup>=121 (excluded), so by filling [9,121).
 
 But it is more efficient if the last chunk is as biggest as possible, and so the best solution is to start filling `[9:q)` where q<sup>2r</sup> is slightly bigger then the maximal limit. The right choice of `q` is really important.
 
