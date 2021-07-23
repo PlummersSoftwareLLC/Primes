@@ -1,10 +1,18 @@
-import java.util.HashMap;
 import java.util.Map;
 
 public class PrimeSieveJava
 {
-	private static final Map<Integer, Integer> VALIDATION_DATA;
-	
+	private static final Map<Integer, Integer> VALIDATION_DATA = Map.of(
+			10, 4,
+			100, 25,
+			1000, 168,
+			10000, 1229,
+			100000, 9592,
+			1000000, 78498,
+			10000000, 664579,
+			100000000, 5761455
+	);
+
 	// Java has a BitSet class included but switching to a boolean array of size improves performance by a lot
 	// This brings the limitation of the sieve only being able to test numbers up to Integer.MAX_VALUE - 2 (Requested array size exceeds VM limit)
 	private final boolean[] dataSet;
@@ -131,18 +139,5 @@ public class PrimeSieveJava
 		{
 			sieve.printResults(false, delta / 1000d, passes);
 		}
-	}
-	
-	static
-	{
-		VALIDATION_DATA = new HashMap<>();
-		VALIDATION_DATA.put(10, 4);
-		VALIDATION_DATA.put(100, 25);
-		VALIDATION_DATA.put(1000, 168);
-		VALIDATION_DATA.put(10000, 1229);
-		VALIDATION_DATA.put(100000, 9592);
-		VALIDATION_DATA.put(1000000, 78498);
-		VALIDATION_DATA.put(10000000, 664579);
-		VALIDATION_DATA.put(100000000, 5761455);
 	}
 }
