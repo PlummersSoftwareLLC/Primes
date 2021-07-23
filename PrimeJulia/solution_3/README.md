@@ -8,10 +8,19 @@ This solution is a port of [PrimeC/solution_2/sieve_1of2.c](../../PrimeC/solutio
 by Daniel Spångberg, with a few small tweaks and Julia-specific
 optimizations. This is a sort-of "low-level" style implementation in
 Julia to get as much as speed as possible out of the language. It is
-*not* idiomatic Julia code.
+*not* designed to be idiomatic Julia code.
 
 This solution requires at least **Julia 1.5** to run. Julia 1.6 is
 recommended and is used in the Docker image.
+
+### Things to note
+
+1. The `@simd` annotation on the loop inside `clear_factors!` may
+   actually hurt performance on older and/or slower systems for some
+   reason, such as on older x86 processors and on the Raspberry Pi.
+   You can safely remove the `@simd` annotation if you wish to.
+   Feedback is appreciated as to whether `@simd` helps or hurts
+   performance in your case.
 
 ## Description
 

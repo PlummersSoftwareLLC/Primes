@@ -72,7 +72,7 @@ PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
 end
 
 # This is used in unsafe_find_next_factor_index since we bitrotate the
-# bitmask there instead of calling _get_bit_index_mask each time.
+# bitmask there instead of calling unsafe_get_bit_index_mask each time.
 @inline function unsafe_get_bit_at_index_with_bitmask(arr::Vector{UInt}, index::Integer, bitmask::Integer)
     return @inbounds arr[_get_chunk_index(index)] & bitmask
 end
@@ -115,7 +115,7 @@ function run_sieve!(sieve::PrimeSieve)
     while factor_index <= max_factor_index
         factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_bits_index)
         clear_factors!(is_not_prime, factor_index, max_bits_index)
-        factor_index += 1
+        factor_index += UInt(1)
     end
     return is_not_prime
 end
