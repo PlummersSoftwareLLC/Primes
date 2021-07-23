@@ -28,7 +28,7 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     *) echo "unsupported architecture"; exit 1 ;; \
   esac \
   && mkdir /bin/node \
-  && apt-get update && apt-get install xz-utils \
+  && apt-get update && apt-get -y install xz-utils \
   && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \
   && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /bin/node --strip-components=1
 
