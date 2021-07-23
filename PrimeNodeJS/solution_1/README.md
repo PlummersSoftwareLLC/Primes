@@ -1,5 +1,6 @@
 # NodeJS solution by rogiervandam
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
@@ -11,6 +12,12 @@ This implementation is based on the logic from:
 - Python/solution_2                            by ssovest
 - PrimeCPP                                     by Dave Plummer
 
+**PrimeNode.js** -The base algorithm follows the orginal one by Dave Plummer, the only exception being that the factors themselves are divided by 2 at the start.
+
+**PrimeNode_cluster.js** - Multiprocessor version using cluster API, running batches of sieves on each processor.
+
+**PrimeNode_memcopy** - New algorithm in which the product of a prime is only marked until a certain block range is reached. Thereafter, a block copy algorithm takes over and the reoccuring pattern 4 bytes at a time to different offsets, carefully trying to keep using cpu cache level 1. It follows the basic rules, but is not "base", because it does not follow the rule "*When clearing non-primes in the sieve (the second operation), the algorithm clears all non-primes individually, increasing the number with 2 * factor on each cycle.*"
+
 ## Run instructions
 Install nodeJS: <https://nodejs.org/en/download/>
 
@@ -18,12 +25,14 @@ Install nodeJS: <https://nodejs.org/en/download/>
 cd path/to/sieve
 node PrimeNode.js
 node PrimeNode_cluster.js
+node PrimeNode_memcopy.js
 ```
 
 ## Output
 Below is an example of the output
 
 ```bash
-rogiervandam;4063;5.000575601999997;1;algorithm=base,faithful=yes,bits=1
-rogiervandam;30382;5.060920399999945;6;algorithm=base,faithful=yes,bits=1
+rogiervandam;5578;5.000737900003791;1;algorithm=base,faithful=yes,bits=1
+rogiervandam;33316;5.0953555999994276;12;algorithm=base,faithful=yes,bits=1
+rogiervandam_memcopy;9593;5.000124500006438;1;algorithm=other,faithful=yes,bits=1
 ```
