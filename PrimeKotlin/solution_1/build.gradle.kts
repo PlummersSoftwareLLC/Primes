@@ -1,34 +1,57 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.FatFrameworkTask
 
 plugins {
-    kotlin("jvm") version "1.5.20"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    kotlin("multiplatform") version "1.5.20"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
     application
 }
 
-application {
-    mainClassName = "PrimeSieveKt"
-}
+group = "primes"
+version = "1.0"
 
-group = "me.wulkanat"
-version = "1.0-SNAPSHOT"
+application {
+    mainClassName = "MainKt"
+}
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
-}
+kotlin {
+    val jvmTarget = jvm {
+        compilations.all {
+            kotlinOptions.jvmTarget = "16"
+        }
+    }
+    js(IR) {
+        nodejs {
+        }
+        binaries.executable()
+    }
+    val hostOs = System.getProperty("os.name")
+    val isMingwX64 = hostOs.startsWith("Windows")
+    val nativeTarget = when {
+        hostOs == "Mac OS X" -> macosX64("native")
+        hostOs == "Linux" -> linuxX64("native")
+        isMingwX64 -> mingwX64("native")
+        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+    }
 
-tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "16"
-}
+    nativeTarget.binaries {
+        executable {
+            entryPoint = "main"
+        }
+    }
 
-tasks.withType<Jar>() {
-    archiveBaseName.set("prime-sieve")
+    sourceSets["commonMain"].dependencies {
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1-native-mt")
+    }
 
-    manifest {
-        attributes["Main-Class"] = "MainKt"
+    tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+        from(jvmTarget.compilations.getByName("main").output)
+        configurations = mutableListOf(
+            jvmTarget.compilations.getByName("main").compileDependencyFiles as Configuration,
+            jvmTarget.compilations.getByName("main").runtimeDependencyFiles as Configuration
+        )
     }
 }

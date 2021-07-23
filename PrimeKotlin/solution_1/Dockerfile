@@ -1,15 +1,40 @@
 ARG GRADLE_VERSION=6.8
 ARG JDK_VERSION=16
 
-FROM gradle:${GRADLE_VERSION}-jdk-hotspot as BUILD
+FROM fvbakel/kotlin-primes:1.0.0 as BUILD
 
-COPY . /src
 WORKDIR /src
-RUN gradle shadowJar
+COPY . /src
+
+RUN ./compile.sh
+
 
 FROM adoptopenjdk:${JDK_VERSION}-jdk-hotspot
 
-COPY --from=BUILD /src/build/libs/prime-sieve-1.0-SNAPSHOT-all.jar /bin/runner/run.jar
-WORKDIR /bin/runner
+WORKDIR /opt/app
+#
+# Add node to the JDK to allow to run all solutions for different targets in one
+# go
+ENV NODE_VERSION 16.5.0
 
-ENTRYPOINT ["java", "-jar", "run.jar -t -if -i -t:m -if:m -i:m"]
+RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
+  && case "${dpkgArch##*-}" in \
+    amd64) ARCH='x64';; \
+    ppc64el) ARCH='ppc64le';; \
+    s390x) ARCH='s390x';; \
+    arm64) ARCH='arm64';; \
+    armhf) ARCH='armv7l';; \
+    i386) ARCH='x86';; \
+    *) echo "unsupported architecture"; exit 1 ;; \
+  esac \
+  && mkdir /bin/node \
+  && apt-get update && apt-get install xz-utils \
+  && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \
+  && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /bin/node --strip-components=1
+
+COPY ./run.sh ./
+COPY --from=BUILD /src/build/libs/PrimeSieve-1.0-all.jar ./
+COPY --from=BUILD /src/build/compileSync/main/productionExecutable/kotlin/PrimeSieve.js ./
+COPY --from=BUILD /src/build/bin/native/releaseExecutable/PrimeSieve.kexe ./
+
+ENTRYPOINT ["./run.sh"]

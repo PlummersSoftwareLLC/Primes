@@ -1,0 +1,18 @@
+# Building Kotlin solutions with Gradle can take a while
+# This file is the base file for the docker build.
+#
+#
+ARG GRADLE_VERSION=6.8
+ARG JDK_VERSION=16
+
+FROM gradle:${GRADLE_VERSION}-jdk-hotspot
+
+COPY . /src
+WORKDIR /src
+
+RUN apt-get update && apt-get -y install libncurses5
+RUN ./compile.sh \
+    && gradle clean \
+    && rm -rf /src/src/*
+
+ENTRYPOINT ["bash"]
