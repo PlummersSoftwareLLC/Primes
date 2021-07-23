@@ -69,8 +69,8 @@ Results that I get, running these on a Ryzen 3700X.
 
 ```
 @Kinematics: Starting (original)...
-Passes: 2919, Time: 5.00151 s, Per Loop: 1.713258 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_original;2919;5.00151;1;algorithm=base,faithful=yes,bits=1
+Passes: 3524, Time: 5.00105 s, Per Loop: 1.419126 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_original;3524;5.00105;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (standard)...
 Passes: 3678, Time: 5.00021 s, Per Loop: 1.359434 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
