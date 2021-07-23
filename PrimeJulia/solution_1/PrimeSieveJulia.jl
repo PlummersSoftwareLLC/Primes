@@ -9,7 +9,7 @@ const primeCounts = Dict( 10 => 4,
 
 struct prime_sieve
 	sieveSize::Int
-	rawbits::BitArray
+	rawbits::BitVector # was BitArray before
 
 	prime_sieve(limit::Int) = new(  limit, trues( floor(Int,(limit+1)/2) )  )
 end
@@ -34,8 +34,8 @@ function runSieve!(sieve::prime_sieve)
 			end
 		end
 
-		for num in factor*3:factor*2:sieve.sieveSize
-			sieve.rawbits[Int((num+1)/2)] = false
+		for idx in div(factor*3+1,2):div(factor*2+1,2):div(sieve.sieveSize+1,2)
+    			@inbounds sieve.rawbits[idx] = false
 		end
 
 		factor += 2
@@ -70,6 +70,28 @@ function printResults(sieve::prime_sieve, showResults::Bool, duration::Number, p
 
 end
 
+function rangeTest(factor=3)
+	#=
+	This function is only valid for odd, positive, integer factors
+	=#
+	
+	sieveSize = 1000000
+
+	# original code used for indexing ########
+	numbers = []
+	for num in factor*3:factor*2:sieveSize
+	append!(numbers, Int((num+1)/2))
+	end
+	##########################################
+
+	# new code used for indexing #############
+	range = div(factor*3+1,2):div(factor*2+1,2):div(sieveSize+1,2)
+	rangeNumbers = collect(range)
+	##########################################
+
+	return numbers == rangeNumbers, numbers, rangeNumbers
+end
+
 function main()
 	t0 = time()
 	passes = 0
@@ -88,3 +110,4 @@ function main()
 end
 
 main()
+
