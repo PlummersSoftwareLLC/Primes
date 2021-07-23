@@ -9,7 +9,18 @@
 
 Speed should be pretty close to what you get with a plain Java implementation.
 
+The primary takeaway for the JVM solution should be that Kotlin can be slower if you
+don't pay attention. However, if you know what you are doing you don't
+have to sacrifice readability and still get excellent performance. If you write
+any performance critical code:
+* Avoid primitive boxing (don't use nullable `Int?`, `Boolean?` and use `BooleanArray` over
+  `Array<Boolean>`)
+* Make sure your output bytecode is clean by using IntelliJ `Tools` ➔ `Kotlin` ➔
+  `Show Kotlin Bytecode` ➔ `Decompile`
+
+
 All solutions are also available in Kotlin/JS and Kotlin/Native with Kotlin Multiplatform.
+The takeaway for this is don't expect them to be fast.
 
 ### Solutions
 
@@ -24,11 +35,9 @@ All solutions are also available in Kotlin/JS and Kotlin/Native with Kotlin Mult
 #### Docker/Build
 
 * [ ] Native should support multi-threading, but isn't fully implemented yet.
-* [ ] Native building in Docker is broken
 * [ ] Building using Gradle is rather slow as
    - [ ] Gradle Daemon needs to start for each task
    - [ ] Gradle needs to download various dependencies
-* [ ] Docker execution seems to be broken; only one result prints
 
 #### Common
 The Idiomatic Solution Mainly fails at two points:
@@ -57,6 +66,7 @@ inline fun fastFor(from: Int, to: Int, step: Int, block: (Int) -> Unit) {
 ----- |---------
 | wulkanat | Idiomatic & Idiomatic Fast Solution, Multiplatform, Build |
 | bluefireoly | Traditional Solution, Coroutines |
+| fvbakel | Docker & Build |
 
 ## Usage
 
