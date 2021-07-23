@@ -1,6 +1,7 @@
 ﻿Imports System.Runtime.CompilerServices
 
-Class PrimeSieve
+Class PrimeFaithfulSieve
+	Inherits SieveBase
 
 	Public ReadOnly Property SieveSize As Integer
 
@@ -28,7 +29,7 @@ Class PrimeSieve
 		ReDim data(Me.SieveSize >> IndexScale)
 	End Sub
 
-	Public Function CountPrimes() As Integer
+	Public Overrides Function CountPrimes() As Integer
 		' Get 2, 3, and 5 for free
 		Dim count As Integer = 3
 

@@ -2,23 +2,46 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-- A Visual Basic port of `PrimeCSharp/solution_1/Sieves/PrimeSieveArrayPool8of30M.cs` (original author: @Kinematics)
+- A Visual Basic .NET port of `PrimeCSharp/solution_1/Sieves/PrimeSieveArrayPool8of30M.cs` (original author: @Kinematics)
+- Added an option to control whether to run the faithful implementation.
 - It uses .NET 5, and can be compiled using Visual Studio 16.9 or later.
 
 ## Run instructions 
 
 - .NET SDK 5 or later is required. You can download it from https://dotnet.microsoft.com/download .
-- From the solution directory, run
+- Open terminal and set current directory to the solution directory
+
+If you want to run the faithful implementation, run:
 ```console
-dotnet run -c release
+dotnet run -c release -- --faithful yes
+```
+or
+```console
+docker run <image-name> --faithful yes
+```
+
+If you want to run the unfaithful implementation, run:
+```console
+dotnet run -c release -- --faithful no
+```
+or
+```console
+docker run <image-name> --faithful no
 ```
 
 ## Output
+Faithful:
 ```
-Nukepayload2_CsKinematicsArrayPool8of30M;14979;5.0003292;1;algorithm=wheel,faithful=no,bits=1
+Nukepayload2_CsKinematicsArrayPool8of30M;12217;5.0002745;1;algorithm=wheel,faithful=yes,bits=1
+```
+
+Unfaithful:
+```
+Nukepayload2_CsKinematicsArrayPool8of30M;14982;5.0002527;1;algorithm=wheel,faithful=no,bits=1
 ```
 
 Environment of the sample output:

@@ -1,8 +1,26 @@
-﻿Imports System.Globalization
+﻿Option Compare Text
+
+Imports System.ComponentModel.DataAnnotations
+Imports System.Globalization
 
 Module Program
-	Sub Main()
+	Sub Main(args As String())
 		CultureInfo.CurrentCulture = New CultureInfo("en-US", False)
+		CultureInfo.CurrentUICulture = CultureInfo.CurrentCulture
+		Nukepayload2.ConsoleFramework.Application.Run(args, New Action(Of String)(AddressOf Startup))
+	End Sub
+
+	Sub Startup(
+		<Display(ShortName:="f", Description:="Whether to use the faithful implementation. Valid values: yes or no.")>
+		faithful As String)
+
+		Dim isFaithful = faithful = "yes"
+		Dim isUnfaithful = faithful = "no"
+
+		If Not isFaithful AndAlso Not isUnfaithful Then
+			Console.Error.WriteLine("The parameter 'faithful' is incorrect. Use /? to view help.")
+			Return
+		End If
 
 		Dim referenceResults As New Dictionary(Of Integer, Integer) From {
 			{10, 4},
@@ -17,22 +35,36 @@ Module Program
 
 		Dim sieveSize = 1000000
 		Dim passCount = 0
-		Dim sieve As PrimeSieve = Nothing
-		Dim startTime = Date.UtcNow
+		Dim sieve As SieveBase
 
-		While (Date.UtcNow - startTime).TotalSeconds <= 5.0
-			sieve = New PrimeSieve(sieveSize)
-			sieve.Run()
-			passCount += 1
-		End While
+		Const TicksPerMillisecond = 10000L
+		Const TicksPerSecond = TicksPerMillisecond * 1000
+		Const FiveSeconds = TicksPerSecond * 5
 
-		Dim duration = (Date.UtcNow - startTime).TotalSeconds
+		Dim startTime = Date.UtcNow.Ticks
+		If isFaithful Then
+			Do
+				Dim sieveInner As New PrimeFaithfulSieve(sieveSize)
+				sieveInner.Run()
+				sieve = sieveInner
+				passCount += 1
+			Loop While Date.UtcNow.Ticks - startTime < FiveSeconds
+		Else
+			Do
+				Dim sieveInner As New PrimeSieve(sieveSize)
+				sieveInner.Run()
+				sieve = sieveInner
+				passCount += 1
+			Loop While Date.UtcNow.Ticks - startTime < FiveSeconds
+		End If
+
+		Dim duration = (Date.UtcNow.Ticks - startTime) / TicksPerSecond
 
 		If sieve.CountPrimes <> referenceResults(sieveSize) Then
 			Console.WriteLine("WARNING: result is incorrect!")
 		End If
 
-		Console.WriteLine($"Nukepayload2_CsKinematicsArrayPool8of30M;{passCount};{duration};1;algorithm=wheel,faithful=no,bits=1")
+		Console.WriteLine($"Nukepayload2_CsKinematicsArrayPool8of30M;{passCount};{duration};1;algorithm=wheel,faithful={faithful},bits=1")
 	End Sub
 
 End Module
