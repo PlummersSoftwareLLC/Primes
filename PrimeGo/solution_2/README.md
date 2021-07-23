@@ -10,8 +10,6 @@ Collection of 1-bit single-threaded Go solutions.
 
 *sieve_other.go* stores bits in []uint32 and uses unsafe pointers instead of slice indexing. Implements other algorithm, but is close to the base one.
 
-*sieve_cgo.go* stores bits in []uint32 and uses functions written in C (right there, in the comments) for sieve calculation. Implements the same algorithm as the solution above.
-
 Every file compiles in 2 versions: with and without "-B" flag, which disables bounds check.
 
 ## Run instructions
