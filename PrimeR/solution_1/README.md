@@ -19,6 +19,14 @@ The number of bits that are used per logical value in R is difficult to determin
 
 It turns out that 32 bits per logical value are used when a vector has the size of one million logical values. More information on the memory management by R is described [here](http://adv-r.had.co.nz/memory.html).
 
+### Special findings and performance tweaks
+
+It turns out that finding the next prime in R is really slow if you use, `which`, `Position` or `match`. Even a second while loop is much faster, but still slow. In the latest code this is solved by adding `if (bit_array[factor] == TRUE) {`. This implements the search for the next prime in the main while loop with out the need of an inner loop. Somehow this makes a difference in R.
+
+### Credits
+
+Special thanks to @nobrien97 for pointing out the possible code improvement in my original code an better Dockerfile.
+
 ## Run instructions
 
 ### Run native
@@ -54,15 +62,14 @@ Or do step 2 and 3 with `go.sh`.
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-docker run --rm -it  r:latest 
-Passes: 5, Time: 5.021000, Avg: 1.004200 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
+Passes: 463, Time: 5.001000, Avg: 0.010801 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-fvbakel_R;5;5.021000;1;algorithm=base,faithful=yes,bits=32
+fvbakel_R;463;5.001000;1;algorithm=base,faithful=yes,bits=32
 ```
 
 These results are with the following conditions:
 
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
-- R: 4.0.3
+- R: 4.1.0
 - running in Docker container alpine:3.13
 - Docker version 20.10.2, build 20.10.2-0ubuntu2

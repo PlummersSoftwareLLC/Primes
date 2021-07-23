@@ -132,7 +132,7 @@ namespace PrimeSieveCS
             var passes = 0;
             prime_sieve sieve = null;
 
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 10)
+            while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
             {
                 sieve = new prime_sieve(1000000);
                 sieve.runSieve();

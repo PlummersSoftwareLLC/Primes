@@ -1,0 +1,7 @@
+name "solution_2"
+authors "Bradley Chatha"
+
+sourceFiles "source/app.d"
+excludedSourceFiles "source/app_without_comments.d"
+
+dflags "--boundscheck=off" "--mcpu=native" "--ffast-math" platform="ldc"

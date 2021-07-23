@@ -15,14 +15,19 @@ knownPrimeCounts <- c(
 
 prime_sieve <- setRefClass("prime_sieve",
     fields = list (
-        limit_input="numeric"
+        # fields declaration as ANY avoids checks on each assignment of new values
+        # this matters alot for the performance of the bit_array
+        limit_input="ANY",
+        limit="ANY",
+        bit_size="ANY",
+        bit_array="ANY"
     ),
     methods = list (
         # constructor workaround
         init_fields = function(limit_input) {
             limit <<- limit_input
             # some extra logic to handle odd and even limits
-            bit_size <<- floor(limit_input / 2) 
+            bit_size <<- floor(limit_input * 0.5 ) 
             if (limit_input %% 2 == 0) {
                 bit_size <<- bit_size - 1
             }
@@ -33,29 +38,24 @@ prime_sieve <- setRefClass("prime_sieve",
             maxroot <- floor(sqrt(limit))
             # given the max root, what is the maxium index of the array
             # we need to propagate
-            maxroot_index <-floor(maxroot / 2)
-            if (maxroot %% 2 == 0) {
+            maxroot_index <-floor(maxroot * 0.5)
+            if (maxroot_index %% 2 == 0) {
                 # eg if limit=100, maxroot=10, even numbers have no index
                 # only the square root of one odd number below that have 
                 # to be propagated
                 maxroot_index <- maxroot_index - 1
             } 
 
-            factor <- 1
-            while(factor <= maxroot_index){
-                # cross out all factors
-                prime <- factor * 2 +1
-                start <- ( ((prime * prime) -1) /2 )
-                step <- factor * 2 + 1
-                
-                # propagate
-                bit_array[seq.int(from=start, to=bit_size, by=step)] <- FALSE
-
-                # determine new factor
-                factor <- factor + min(which(bit_array[(factor + 1) : bit_size]))
+            for (factor in seq.int(from=1, to=maxroot_index)) {
+                if (bit_array[factor] == TRUE) {
+                    # cross out all factors
+                    prime <- factor * 2 + 1 
+                    start <- ( ((prime * prime) -1) * 0.5 )
+                    
+                    # propagate
+                    bit_array[seq.int(from=start, to=bit_size, by=prime)] <<- FALSE
+                } 
             }
-            # store the calculated new array
-            bit_array <<-bit_array
         },
         # hard coded add 2
         # convert bit index mumbers back to prime numbers
@@ -102,14 +102,14 @@ prime_sieve <- setRefClass("prime_sieve",
 
 main <-function(time_limit,limit,show_results) {
     # get time in sec
-    start <- as.numeric(format(Sys.time(), "%OS3"))
+    start <- proc.time()[3]
     passes <- 0
     while (TRUE) {
         passes <- passes + 1
         sieve <- prime_sieve$new()
         sieve$init_fields(limit)
         sieve$run_sieve()
-        now <- as.numeric(format(Sys.time(), "%OS3"))
+        now <- proc.time()[3]
         duration <- now - start
         if (duration > time_limit) {
             sieve$print_results(limit, show_results, duration, passes)

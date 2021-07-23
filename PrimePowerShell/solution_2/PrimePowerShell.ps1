@@ -79,42 +79,55 @@ found.
 
 [CmdletBinding()] 
 param(
-    [Parameter(Position = 0)] [string] $SieveSize = 1000000,
-    [Parameter(Position = 1)] [int] $MinimumRuntime = 5,
+    [Parameter(Mandatory = $false,
+        Position = 0)]
+    [ValidateSet(10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000)]
+    [int]$SieveSize = 1000000,
+    
+    [Parameter(Mandatory = $false,
+        Position = 1)]
+    [int]$MinimumRuntime = 5,
+
     [switch] $ResetState,
+
     [switch] $ShowResults
 )
 
 
 # Known results for validating the output.
 $KnowResults = @{
-    10 = 1;
-    100 = 25;
-    1000 = 168;
-    10000 = 1229;
-    100000 = 9592;
-    1000000 = 78498;
-    10000000 = 664579;
+    10        = 1;
+    100       = 25;
+    1000      = 168;
+    10000     = 1229;
+    100000    = 9592;
+    1000000   = 78498;
+    10000000  = 664579;
     100000000 = 5761455
 }
 
+class Sieve {
+    Sieve([int]$Size) {
+        $this.SieveSize = $Size
+        $this.BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList ([int] (($Size + 1) / 2)), $true)
+    }
+    [int]$SieveSize
+    [System.Collections.BitArray]$BitArray
+}
 
 ################################################################################
 # BEGIN OF UTILITY FUNCTION DEFINITIONS                                        #
 ################################################################################
 
 # Initialises a new data structure holding the state of the prime sieve.
-function New-PrimeSieve([int] $Size) {
-    $count = [int] (($Size + 1) / 2)
-
-    return New-Object -TypeName PSObject -Property @{
-        SieveSize = $Size;
-        # Note: One could argue that BitArray should not be used here, because
-        # it is not a native PS data structure like an array of booleans.
-        # However, one of the key features of PS is that you can use any .NET
-        # code, so I decided to do so here.
-        BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList $count, $true)
-    }
+function New-PrimeSieve() {
+    [CmdletBinding()]
+    [OutputType([Sieve])]
+    param (
+        [Parameter(Mandatory)]
+        [int]$Size
+    )
+    return ([Sieve]::new($Size))
 }
 
 
@@ -122,7 +135,13 @@ function New-PrimeSieve([int] $Size) {
 # original 'countPrimes' method, which has been renamed to conform with standard
 # PS verbs
 # (https://docs.microsoft.com/de-de/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7.1).
-function Measure-Primes([PsObject] $Sieve) {
+function Measure-Primes {
+    [CmdletBinding()]
+    [OutputType([int])]
+    param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [Sieve]$Sieve
+    )
     $retval = 0
 
     for ($i = 0; $i -lt $Sieve.BitArray.Count; ++$i) {
@@ -138,10 +157,17 @@ function Measure-Primes([PsObject] $Sieve) {
 # Validates the results agains known results. Note that this is the original
 # 'validateResults' method, which has been renamed to conform with standard PS
 # verbs.
-function Test-Results([PsObject] $Sieve) {
+function Test-Results {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [Sieve] $Sieve
+    )
     if ($KnowResults.ContainsKey($Sieve.SieveSize)) {
         return ($KnowResults[$Sieve.SieveSize] -eq (Measure-Primes $Sieve))
-    } else {
+    }
+    else {
         return $false
     }
 }
@@ -149,7 +175,13 @@ function Test-Results([PsObject] $Sieve) {
 
 # Computes the primes up to the specified limit. Note this is the original
 # 'runSieve' method, which has been renamed to conform with standard PS verbs.
-function Invoke-Sieve([PsObject] $Sieve) {
+function Invoke-Sieve {
+    [CmdletBinding()]
+    [OutputType([Sieve])]
+    param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [Sieve] $Sieve
+    )
     $factor = 3
     $q = [int] [System.Math]::Sqrt($Sieve.SieveSize)
 
@@ -170,6 +202,8 @@ function Invoke-Sieve([PsObject] $Sieve) {
 
         $factor += 2
     }
+
+    return $Sieve
 }
 
 
@@ -177,8 +211,22 @@ function Invoke-Sieve([PsObject] $Sieve) {
 # method, which has been renamed to conform with standard PS verbs.
 # As an additional change, the function returns the primes that have been found,
 # which are used to generate the pipeline output.
-function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
-        [double] $Duration, [int] $Passes) {
+function Write-Results {
+    [CmdletBinding()]
+    [OutputType([System.Collections.Generic.List[int]])]
+    param (
+        [Parameter(Mandatory)]
+        [Sieve] $Sieve,
+        
+        [Parameter(Mandatory)]
+        [bool] $ShowResults,
+        
+        [Parameter(Mandatory)]
+        [double] $Duration,
+        
+        [Parameter(Mandatory)]
+        [int] $Passes
+    )
     $count = 1
     $retval = [System.Collections.Generic.List[int]]::New($Sieve.SieveSize)
     $retval.Add(2)
@@ -209,8 +257,16 @@ function Write-Results([PsObject] $Sieve, [bool] $ShowResults,
 }
 
 # Resets the sieve object in order to reuse it.
-function Reset-Sieve([PsObject] $Sieve) {
+function Reset-Sieve {
+    [CmdletBinding()]
+    [OutputType([Sieve])]
+    param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [Sieve] $Sieve
+    )
     $Sieve.BitArray.SetAll($true)
+
+    return $Sieve
 }
 
 
@@ -220,6 +276,7 @@ function Reset-Sieve([PsObject] $Sieve) {
 
 $stopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
 $passes = 0
+$sieve = $null
 
 if ($ResetState) {
     Write-Verbose "Starting benchmark with reusable state ..."
@@ -229,21 +286,20 @@ if ($ResetState) {
     $stopWatch.Start()
 
     while ($stopWatch.Elapsed.TotalSeconds -lt $MinimumRuntime) {
-        Reset-Sieve $sieve
-        Invoke-Sieve $sieve
+        $sieve | Reset-Sieve | Invoke-Sieve | Out-Null
         ++$passes
     }
 
     $stopWatch.Stop()
 
-} else {
+}
+else {
     Write-Verbose "Starting benchmark ..."
 
     $stopWatch.Start()
 
     while ($stopWatch.Elapsed.TotalSeconds -lt $MinimumRuntime) {
-        $sieve = New-PrimeSieve $SieveSize
-        Invoke-Sieve $sieve
+        $sieve = New-PrimeSieve $SieveSize | Invoke-Sieve
         ++$passes
     }
 
@@ -256,9 +312,9 @@ $primes = (Write-Results $sieve $ShowResults $stopWatch.Elapsed.TotalSeconds $pa
 
 New-Object -TypeName PsObject -Property @{
     AverageDuration = ($stopWatch.Elapsed.TotalSeconds / $passes)
-    Duration = $stopWatch.Elapsed;
-    Passes = $passes;
-    Primes = $primes;
-    SieveSize = $SieveSize;
-    Valid = (Test-Results $Sieve);
+    Duration        = $stopWatch.Elapsed;
+    Passes          = $passes;
+    Primes          = $primes;
+    SieveSize       = $SieveSize;
+    Valid           = ($sieve | Test-Results);
 }

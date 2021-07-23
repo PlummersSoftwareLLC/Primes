@@ -36,13 +36,12 @@ function Base.iterate(r::Iterators.Reverse{Primes}, i=length(r.itr.data))
     (2i-1, i-1)
 end
 
-# the following block executes only if this file is the main script
-if abspath(PROGRAM_FILE) == @__FILE__
-    local limit = something(map(s -> tryparse(Int, s), ARGS)..., 1_000_000)
+function main()
+    limit = something(map(s -> tryparse(Int, s), ARGS)..., 1_000_000)
 
-    local passes = 0
-    local start = time()
-    local primes, duration
+    passes = 0
+    start = time()
+    local primes
     while (duration = time()-start) < 5
         primes = Primes(limit)
         passes += 1
@@ -51,4 +50,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
     println(stderr, join(length(primes) > 10 ? [first(primes, 5)..., '…', last(primes, 5)...] : primes, ", "))
     println(stderr, "Passes: $passes, Time: $duration, Avg: $(duration/passes), Limit: $limit, Count: $(length(primes))")
     println("epithet-jl;$passes;$duration;1;algorithm=base,faithful=yes,bits=1")
+end
+
+# the following block executes only if this file is the main script
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
 end

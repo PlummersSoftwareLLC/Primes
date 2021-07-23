@@ -1,9 +1,10 @@
-FROM alpine:3.13
-
-RUN apk --update add --no-cache sbcl
+FROM daewok/sbcl:2.1.6-alpine3.13
 
 WORKDIR /opt/app
 
 COPY *.lisp .
+COPY run.sh .
 
-ENTRYPOINT [ "sbcl", "--script", "PrimeSieve.lisp" ]
+RUN chmod +x run.sh
+
+ENTRYPOINT [ "./run.sh" ]
