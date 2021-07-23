@@ -137,24 +137,24 @@ And results of running --benchmark
 ```
 BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
 AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
-.NET Core SDK=5.0.201
-  [Host]     : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
-  DefaultJob : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
+.NET Core SDK=6.0.100-preview.3.21202.5
+  [Host]     : .NET Core 5.0.8 (CoreCLR 5.0.821.31504, CoreFX 5.0.821.31504), X64 RyuJIT
+  DefaultJob : .NET Core 5.0.8 (CoreCLR 5.0.821.31504, CoreFX 5.0.821.31504), X64 RyuJIT
 
 
 |             Method | SieveSize |       Mean |   Error |  StdDev | Ratio |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |
 |------------------- |---------- |-----------:|--------:|--------:|------:|---------:|---------:|---------:|----------:|
-|           Original |   1000000 | 1,381.3 us | 2.37 us | 2.10 us |  1.01 |   5.8594 |        - |        - |   62592 B |
-|           Standard |   1000000 | 1,361.7 us | 4.89 us | 4.57 us |  1.00 |   5.8594 |        - |        - |   62592 B |
-|               Bool |   1000000 |   988.7 us | 7.98 us | 7.47 us |  0.73 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
-|       InvertedBool |   1000000 |   794.6 us | 4.71 us | 4.41 us |  0.58 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
-| DirectInvertedBool |   1000000 |   565.9 us | 2.02 us | 1.79 us |  0.42 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
-|            RawBits |   1000000 |   806.8 us | 2.69 us | 2.39 us |  0.59 |  19.5313 |  19.5313 |  19.5313 |   62560 B |
-|     ArrayPoolClass |   1000000 |   821.6 us | 2.67 us | 2.50 us |  0.60 |        - |        - |        - |      32 B |
-|      ArrayPool2Of6 |   1000000 |   519.0 us | 3.33 us | 2.78 us |  0.38 |        - |        - |        - |      32 B |
-|      ArrayPool6Par |   1000000 |   722.8 us | 4.36 us | 3.87 us |  0.53 |  35.1563 |        - |        - |  295840 B |
-|     ArrayPool8of30 |   1000000 |   398.9 us | 1.98 us | 1.86 us |  0.29 |        - |        - |        - |      96 B |
-|    ArrayPool8of30M |   1000000 |   320.7 us | 0.81 us | 0.67 us |  0.24 |        - |        - |        - |     912 B |
+|           Original |   1000000 | 1,347.4 us | 3.70 us | 3.46 us |  1.00 |   5.8594 |        - |        - |   62592 B |
+|           Standard |   1000000 | 1,346.5 us | 3.80 us | 3.56 us |  1.00 |   5.8594 |        - |        - |   62592 B |
+|               Bool |   1000000 |   806.7 us | 4.94 us | 4.62 us |  0.60 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+|       InvertedBool |   1000000 |   569.9 us | 3.35 us | 3.13 us |  0.42 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+| DirectInvertedBool |   1000000 |   567.0 us | 4.73 us | 4.43 us |  0.42 | 142.5781 | 142.5781 | 142.5781 |  500056 B |
+|            RawBits |   1000000 |   777.4 us | 5.70 us | 5.33 us |  0.58 |  19.5313 |  19.5313 |  19.5313 |   62560 B |
+|     ArrayPoolClass |   1000000 |   895.5 us | 3.35 us | 3.13 us |  0.67 |        - |        - |        - |      32 B |
+|      ArrayPool2Of6 |   1000000 |   529.4 us | 2.29 us | 2.03 us |  0.39 |        - |        - |        - |      32 B |
+|      ArrayPool6Par |   1000000 |   714.7 us | 4.65 us | 4.12 us |  0.53 |  35.1563 |        - |        - |  295790 B |
+|     ArrayPool8of30 |   1000000 |   401.8 us | 3.38 us | 3.16 us |  0.30 |        - |        - |        - |      96 B |
+|    ArrayPool8of30M |   1000000 |   313.0 us | 1.54 us | 1.29 us |  0.23 |        - |        - |        - |     912 B |
 ```
 
 
