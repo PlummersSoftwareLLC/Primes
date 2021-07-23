@@ -89,12 +89,12 @@ Passes: 8964, Time: 5.00047 s, Per Loop: 0.557787 ms, Sieve Size: 1000000, Threa
 kinematics_dbool;8964;5.00047;1;algorithm=base,faithful=yes
 
 @Kinematics: Starting (raw bits)...
-Passes: 6187, Time: 5.00047 s, Per Loop: 0.808146 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw;6187;5.00047;1;algorithm=base,faithful=yes,bits=1
+Passes: 6422, Time: 5.00017 s, Per Loop: 0.778574 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 156994, Valid: False
+kinematics_raw;6422;5.00017;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (raw bits uint)...
-Passes: 6366, Time: 5.00003 s, Per Loop: 0.785423 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw32;6366;5.00003;1;algorithm=base,faithful=yes,bits=1
+Passes: 6562, Time: 5.00024 s, Per Loop: 0.761963 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 156994, Valid: False
+kinematics_raw32;6562;5.00024;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (raw bits direct)...
 Passes: 6416, Time: 5.00043 s, Per Loop: 0.779302 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
