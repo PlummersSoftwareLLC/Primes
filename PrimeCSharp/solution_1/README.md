@@ -77,12 +77,12 @@ Passes: 3678, Time: 5.00021 s, Per Loop: 1.359434 ms, Sieve Size: 1000000, Threa
 kinematics_standard;3678;5.00021;1;algorithm=base,faithful=yes,bits=1
 
 @Kinematics: Starting (bool array)...
-Passes: 5102, Time: 5.00011 s, Per Loop: 0.980008 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_bool;5102;5.00011;1;algorithm=base,faithful=yes
+Passes: 6643, Time: 5.00014 s, Per Loop: 0.752672 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_bool;6643;5.00014;1;algorithm=base,faithful=yes
 
 @Kinematics: Starting (inverted bool array)...
-Passes: 6313, Time: 5.00056 s, Per Loop: 0.792016 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_ibool;6313;5.00056;1;algorithm=base,faithful=yes
+Passes: 8800, Time: 5.00048 s, Per Loop: 0.568182 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
+kinematics_ibool;8800;5.00048;1;algorithm=base,faithful=yes
 
 @Kinematics: Starting (direct access inverted bool array)...
 Passes: 8964, Time: 5.00047 s, Per Loop: 0.557787 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
