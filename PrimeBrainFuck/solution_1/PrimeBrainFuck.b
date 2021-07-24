@@ -115,5 +115,69 @@ https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
         >+>-[>>>]<[[>+<-]>>+>]<<<< same as previous division
     -]< <<<< <<<< go to 0
 
-print result of division
+start with second iteration
+>>>> >>>> >>>> >>>> go to 16
+
+set x = (1'000'000)
+    ++ ++ ++ ++ ++ start with (10) at 0
+     [>++ ++ ++ ++ ++<-] mul by (10) with result at 1
+    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 2
+    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 3
+    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 4
+    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 5
+    >[ copy value of 5
+        <<<<+<+>>>>> to 0 and 1 (x and dividend)
+    -]<<<<< go to 0
+
+copy previous result to divisor and copy_of_y1
+    <<<<[ copy value of 12
+        >>>> go to 0
+        >>>+<<< to 3 (divisor)
+        >>>> >>>> >>>> >>>+<<< <<<< <<<< <<<< to 15 (copy of y1)
+        <<<< go to previous 12
+    -]>>>> go to 0
+
+do first division (credit goes to u/danielcristofani)
+https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
+    >[ while dividend != 0
+        >+ add remainder
+        >- sub divisor
+
+        [>>>] if divisor == 0: go to last_zero
+        < go to remainder or to first_zero
+
+        [ if at remainder: run the following code once
+            [ while remainder != 0
+                >+ add divisor
+                <- sub remainder
+            ]
+            >>+ add quotient
+            > go to first_zero
+        ]
+        <<<<- sub dividend
+    ]<
+
+copy quotient and copy_of_y1 to add
+effectively adding quotient and copy_of_y1
+    >>>>[ copy value of 4
+        >>>>+<<<< to 8
+    -]<<<< go to 0
+    >>>> >>>> >>>> >>>[ copy value of 15
+        <<<< <<<+>>> >>>> to 8
+    -]<<< <<<< <<<< <<<< go to 0
+
+copy add to dividend
+    >>>> >>>>[ copy value of 8
+        >+< to 9
+    -]<<<< <<<< go to 0
+
+set divisor to 2
+    >>>> >>>> >>>++<<< <<<< <<<<
+
+do second division (credit goes to u/danielcristofani)
+https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
+    >>>> >>>> >[ go to 9 (second dividend)
+        >+>-[>>>]<[[>+<-]>>+>]<<<< same as previous division
+    -]< <<<< <<<< go to 0
+
 >>>> >>>> >>>>
