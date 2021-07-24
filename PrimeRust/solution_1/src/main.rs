@@ -431,7 +431,7 @@ fn main() {
     // run all implementations if no options are specified (default)
     let run_all = [opt.bits, opt.bits_rotate, opt.bits_striped, opt.bytes]
         .iter()
-        .all(|b| !b);
+        .all(|b| !*b);
 
     for threads in thread_options {
         if opt.bytes || run_all {
