@@ -3,7 +3,7 @@ import { IBitArray } from "./IBitArray";
 import { BitNumArray } from "./BitNumArray";
 import { BitByteArray } from "./BitByteArray";
 import { Bit32Array } from "./Bit32Array";
-import { BitBuffer } from './BitBuffer'
+import { Solution1ByteBuffer } from './Solution1ByteBuffer'
 
 const DICT: { [size: number]: number } = {
   10: 4,
@@ -138,7 +138,7 @@ function main() {
 
   doGC();
 
-  runOne((sieveSize: number) => {return new BitBuffer(sieveSize)}, sieveSize);
+  runOne((sieveSize: number) => {return new Solution1ByteBuffer(sieveSize)}, sieveSize);
 
   doGC();
   
@@ -146,7 +146,7 @@ function main() {
   
   doGC();
   
-  runOne((sieveSize: number) => {return new BitBuffer(sieveSize)}, sieveSize);
+  runOne((sieveSize: number) => {return new Solution1ByteBuffer(sieveSize)}, sieveSize);
   
   doGC();
   

@@ -4,7 +4,7 @@ import { IBitArray } from "./IBitArray";
  * This is equivalent to Solution_1
  * Solution_1 is classified wrong in there code, since it is 8 bits / flag and not 1 bit / flag
  */
-export class BitBuffer implements IBitArray {
+export class Solution1ByteBuffer implements IBitArray {
   private readonly bits: Buffer;
   
   constructor(
