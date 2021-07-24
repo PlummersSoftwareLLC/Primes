@@ -55,8 +55,8 @@ pub mod primes {
         }
 
         #[cfg(test)]
-        pub fn known_results(&self) -> &HashMap<usize, usize> {
-            &self.0
+        pub fn known_results_iter(&self) -> impl Iterator<Item = (&usize, &usize)> {
+            self.0.iter()
         }
     }
 
@@ -599,7 +599,7 @@ mod tests {
 
     fn sieve_known_correct<T: FlagStorage>() {
         let validator = PrimeValidator::default();
-        for (sieve_size, expected_primes) in validator.known_results().iter() {
+        for (sieve_size, expected_primes) in validator.known_results_iter() {
             let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(*sieve_size);
             sieve.run_sieve();
             assert_eq!(
