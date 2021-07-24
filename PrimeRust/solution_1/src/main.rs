@@ -224,7 +224,7 @@ pub mod primes {
             let chunk = self.words.len();
             for bit in 0..8 {
                 // get mask for this bit position
-                let mask = !(1_u8 << bit);
+                let mask = !(1 << bit);
 
                 // calculate start word for this stripe
                 let chunk_start = bit * chunk;
