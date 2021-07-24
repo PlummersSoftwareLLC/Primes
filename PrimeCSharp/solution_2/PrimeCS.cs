@@ -14,7 +14,7 @@ namespace PrimeSieveCS
         class prime_sieve
         {
             private readonly int sieveSize = 0;
-            private readonly BitArray oddNumbersBitArray; //making it readonly so we tell the compiler that the variable reference cant change. around 5% increase in performance
+            private readonly BitArray bitArray; //making it readonly so we tell the compiler that the variable reference cant change. around 5% increase in performance
             private Dictionary<int, int> myDict = new Dictionary<int, int> 
             { 
                 { 10 , 4 },                 // Historical data for validating our results - the number of primes
@@ -30,14 +30,14 @@ namespace PrimeSieveCS
             public prime_sieve(int size) 
             {
                 sieveSize = size;
-                oddNumbersBitArray = new BitArray((int)((this.sieveSize + 1) / 2), true);
+                bitArray = new BitArray(((this.sieveSize + 1) / 2), true);
             }
 
             public int countPrimes()
             {
                 int count = 0;
-                for (int i = 0; i < this.oddNumbersBitArray.Count; i++)
-                    if (oddNumbersBitArray[i])
+                for (int i = 0; i < this.bitArray.Count; i++)
+                    if (bitArray[i])
                         count++;
                 return count;
             }
@@ -53,7 +53,7 @@ namespace PrimeSieveCS
             {
                 if (index % 2 == 0)
                     return false;
-                return oddNumbersBitArray[index / 2];
+                return bitArray[index / 2];
             }
 
             // primeSieve
@@ -67,9 +67,9 @@ namespace PrimeSieveCS
 
                 while (factor < q)
                 {
-                    for (int num = factor / 2; num <= oddNumbersBitArray.Count; num++)
+                    for (int num = factor / 2; num <= this.bitArray.Count; num++)
                     {
-                        if (oddNumbersBitArray[num])
+                        if (bitArray[num])
                         {
                             factor = num * 2 + 1;
                             break;
@@ -78,10 +78,10 @@ namespace PrimeSieveCS
 
                     // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
                     // We can then step by factor * 2 because every second one is going to be even by definition.
-                    // Note that we are working with an odd number array and an increment of "num" by "factor" is actually an increment of 2 * "factor"
+                    // Note that bitArray is only storing odd numbers. That means an increment of "num" by "factor" is actually an increment of 2 * "factor"
 
-                    for (int num = factor * 3 / 2; num < oddNumbersBitArray.Count; num += factor)
-                        oddNumbersBitArray[num] = false;
+                    for (int num = factor * 3 / 2; num < this.bitArray.Count; num += factor)
+                        this.bitArray[num] = false;
 
                     factor += 2;
                 }
