@@ -70,7 +70,7 @@ unsigned int nextPrime( SIEVE const *pSieve, unsigned int primeCandidate )
     {
         word = buffer[++wordIndex];
     }
-    
+
     primeCandidate = primeOf( wordIndex * BITS_PER_WORD + leastSetBit( word ) );
 
     // Now primeCandidate is really PRIME!
@@ -89,19 +89,15 @@ void sieveOnePrime( SIEVE const *pSieve, unsigned int prime, unsigned int maxNum
     while( (int)wordIndexOf( prime ) <= wordIndex )
     {
         WORD word = buffer[wordIndex];
-        if( 0u != word )
+        while( 0u != word )
         {
-            do
-            {
-                unsigned int bitIndex = firstSetBit( word );
-                WORD const mask = 1uLL << bitIndex;
-                unsigned int factor = bitIndex * 2 + 1 + wordIndex * BITS_PER_WORD * 2;
-                if( factor < prime ) break;
-                word &= ~mask;
-                if( maxFactor < factor ) continue;
-                clearBit( buffer, factor * prime );
-            }
-            while( 0u != word );
+            unsigned int bitIndex = firstSetBit( word );
+            WORD const mask = 1uLL << bitIndex;
+            unsigned int factor = bitIndex * 2 + 1 + wordIndex * BITS_PER_WORD * 2;
+            if( factor < prime ) break;
+            word &= ~mask;
+            if( maxFactor < factor ) continue;
+            clearBit( buffer, factor * prime );
         }
         --wordIndex;
     }
@@ -180,7 +176,7 @@ void primes( SIEVE const *pSieve )
 
     // One is not prime
     buffer[0] &= ones << 1;
-    
+
 #if defined DEBUG
     printf( "2 " );
     for( i = 3u; i < maxNumber; i += 2u )
