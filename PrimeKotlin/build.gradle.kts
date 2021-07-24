@@ -1,5 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "1.5.0-M2"
+    kotlin("multiplatform") version "1.5.21"
+    java
 }
 
 group = "org.xvolks"
@@ -52,25 +53,59 @@ kotlin {
             else -> null
         }
 
-        jvm {
-            kotlin
-        }
-
         target.apply {
             binaries {
                 executable {
                     entryPoint = "prime_kotlin"
                 }
+
             }
             compilations["main"].kotlinOptions.freeCompilerArgs += "-opt"
         }
 
-        val jvmMain by getting {
-            this.kotlin.forEach { l ->
-                println("Source: $l")
+
+        jvm {
+            kotlin
+
+
+            val jvmMain by getting {
+                this.kotlin.forEach { l ->
+                    println("Source: $l")
+                }
+                dependsOn(commonMain)
             }
-            dependsOn(commonMain)
+
+            compilations {
+                val mainJ = getByName("main")
+                mainJ.source(jvmMain)
+                println("FAT JAR")
+                tasks {
+                    register<Jar>("fatJar") {
+                        group = "application"
+                        manifest {
+                            attributes["Implementation-Title"] = "Gradle Jar File for Primes"
+                            attributes["Implementation-Version"] = archiveVersion
+                            attributes["Main-Class"] = "PrimeKotlinKt"
+                        }
+                        archiveBaseName.set("${project.name}-fat")
+                        from(configurations.runtimeClasspath.get().map {
+                            if (it.isDirectory)
+                                it
+                            else
+                                zipTree(it) }
+                        )
+                        from(mainJ.output.classesDirs, mainJ.compileDependencyFiles.map {
+                            if (it.isDirectory)
+                                it
+                            else
+                                zipTree(it)
+                        })
+                        with(getByName("jar") as CopySpec)
+                    }
+                }
+            }
         }
 
     }
 }
+
