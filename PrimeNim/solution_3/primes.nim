@@ -181,3 +181,4 @@ isValid = isValid and primeCount == RESULT
 
 stderr.writeLine(&"Passes: {passes}, Time: {duration.float64 / 1e9}, Avg: {(elapsed / passes.float64)}, Limit: {LIMIT}, Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
 echo &"GordonBGood_1of2;{passes};{elapsed};1;algorithm=base,faithful=yes,bits=1"
+
