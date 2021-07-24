@@ -394,8 +394,6 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
 
         pub const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
         pub const name = "bitSieve-" ++ @typeName(T) ++ wheel_name;
-<<<<<<< HEAD
-=======
     };
 }
 
@@ -425,7 +423,6 @@ pub const FastSieve = struct {
             value.* = -%(@as(u8, 1) << index);
         }
         break :blk masks;
->>>>>>> zig-kitchen-sink
     };
 
     // member functions
