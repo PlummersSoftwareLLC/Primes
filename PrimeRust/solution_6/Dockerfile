@@ -1,4 +1,4 @@
-FROM rustlang/rust:nightly as build
+FROM rustlang/rust@sha256:5bb8064b932c22a51677008d8454a95148801e6c4ae25d245f7248a4ea3c1944 as build
 WORKDIR /app
 COPY . .
 RUN rustc +nightly src/singlethreaded.rs -Copt-level=z -C target-cpu=native
