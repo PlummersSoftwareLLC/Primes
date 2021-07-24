@@ -2,7 +2,7 @@
   "profiles": {
     "PrimeVB": {
       "commandName": "Project",
-      "commandLineArgs": "-f yes"
+      "commandLineArgs": "-f all"
     },
     "Docker": {
       "commandName": "Docker"

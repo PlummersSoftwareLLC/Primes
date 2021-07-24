@@ -19,18 +19,10 @@ If you want to run the faithful implementation, run:
 ```console
 dotnet run -c release -- --faithful yes
 ```
-or
-```console
-docker run <image-name> --faithful yes
-```
 
 If you want to run the unfaithful implementation, run:
 ```console
 dotnet run -c release -- --faithful no
-```
-or
-```console
-docker run <image-name> --faithful no
 ```
 
 ## Output
