@@ -115,7 +115,7 @@ pub mod primes {
         fn create_true(size: usize) -> Self {
             let num_words = size / U32_BITS + (size % U32_BITS).min(1);
             FlagStorageBitVector {
-                words: vec![0xffffffff; num_words],
+                words: vec![u32::MAX; num_words],
                 length_bits: size,
             }
         }
@@ -155,7 +155,7 @@ pub mod primes {
         fn create_true(size: usize) -> Self {
             let num_words = size / U32_BITS + (size % U32_BITS).min(1);
             FlagStorageBitVectorRotate {
-                words: vec![0xffffffff; num_words],
+                words: vec![u32::MAX; num_words],
                 length_bits: size,
             }
         }
@@ -215,7 +215,7 @@ pub mod primes {
         fn create_true(size: usize) -> Self {
             let num_words = size / U8_BITS + (size % U8_BITS).min(1);
             Self {
-                words: vec![0xff; num_words],
+                words: vec![u8::MAX; num_words],
                 length_bits: size,
             }
         }
