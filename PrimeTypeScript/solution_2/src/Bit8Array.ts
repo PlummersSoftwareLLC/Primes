@@ -1,4 +1,3 @@
-import { BitByteArray } from "./BitByteArray";
 import { IBitArray } from "./IBitArray";
 
 function dec2bin(dec: number) {
