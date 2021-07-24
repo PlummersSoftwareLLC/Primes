@@ -281,15 +281,10 @@ pub mod primes {
             }
         }
 
-        #[inline(always)]
-        fn is_num_flagged(&self, number: usize) -> bool {
-            self.flags.get(number)
-        }
-
         // count number of primes (not optimal, but doesn't need to be)
         pub fn count_primes(&self) -> usize {
             (0..self.sieve_size / 2)
-                .filter(|v| self.is_num_flagged(*v))
+                .filter(|v| self.flags.get(*v))
                 .count()
         }
 
@@ -303,8 +298,10 @@ pub mod primes {
             while factor <= q {
                 // find next factor - next still-flagged number
                 factor = (factor / 2..self.sieve_size / 2)
-                    .find(|n| self.is_num_flagged(*n))
-                    .unwrap() * 2 + 1;
+                    .find(|n| self.flags.get(*n))
+                    .unwrap()
+                    * 2
+                    + 1;
 
                 // reset flags starting at `start`, every `factor`'th flag
                 let start = factor * factor / 2;
@@ -328,7 +325,7 @@ pub mod primes {
     ) {
         if show_results {
             eprint!("2,");
-            for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.is_num_flagged(*n)) {
+            for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.flags.get(*n)) {
                 print!("{},", num);
             }
             eprintln!();
