@@ -1,8 +1,6 @@
-import org.jetbrains.kotlin.gradle.tasks.FatFrameworkTask
-
 plugins {
-    kotlin("multiplatform") version "1.5.20"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    kotlin("multiplatform") version "1.5.21"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
     application
 }
 
@@ -10,7 +8,7 @@ group = "primes"
 version = "1.0"
 
 application {
-    mainClassName = "MainKt"
+    mainClass.set("MainKt")
 }
 
 repositories {
