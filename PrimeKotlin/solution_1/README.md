@@ -12,6 +12,8 @@ As an example, I have included in the `build.gradle.kts` file
 the generation of macOS, Linux and Windows executables and 
 a version for the JVM.
 
+## Author 
+Xvolks (https://github.com/xvolks)
 
 
 ## Run instructions
