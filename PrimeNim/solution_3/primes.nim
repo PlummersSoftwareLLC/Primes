@@ -22,8 +22,6 @@ const RESULT = DICT[LIMIT]
 
 const CPUL1CACHE {.intdefine.} = 16384 # in bytes
 
-const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
-
 # ca is the pointer to the array as int; sz is size of sieving buffer in byts;
 # bp is base prime int; strtndx0 is the cull pass start bit index...
 macro unrollLoops(ca, sz, bp, strtndx0: untyped) = # strtndx0 must be var
@@ -112,16 +110,16 @@ func newPrimeSieve(lmt: Prime): PrimeSieve = # seq size rounded up to uint64
 
   var numbps = 0
   for bp in countup(3, sqrtndx, 2): # first just cull the base primes...
-    if (cmpstsp[bp shr 3] and BITMASK[bp and 7]) == 0'u8: # for base prime
+    if (cmpstsp[bp shr 3] and (1'u8 shl (bp and 7))) == 0'u8: # for base prime
       numbps.inc
       for c in countup(bp * bp, sqrtndx, bp shl 1):
         let cp = cast[ptr uint16](cmpstsa + (c shr 3))
-        cp[] = cp[] or BITMASK[c and 7] # pointer is 10% faster
+        cp[] = cp[] or (1'u8 shl (c and 7))
 
   # then fill arrays of base primes/start indexes...
   var swis = newSeq[int](numbps); var bps = newSeq[int](numbps); var j = 0
   for bp in countup(3, sqrtndx, 2):
-    if (cmpstsp[bp shr 3] and BITMASK[bp and 7]) == 0'u8: # for base prime
+    if (cmpstsp[bp shr 3] and (1'u8 shl (bp and 7))) == 0'u8: # for base prime
       bps[j] = bp; swis[j] = bp * bp; j.inc
 
   # finally, cull by CPU L1 cache sizes...
@@ -135,7 +133,7 @@ func newPrimeSieve(lmt: Prime): PrimeSieve = # seq size rounded up to uint64
       let dlta = bp + bp
       while c <= clmt:
         let cp = cast[ptr byte](cmpstsa + (c shr 3))
-        cp[] = cp[] or BITMASK[c and 7]; c += dlta # pointer is 10% faster
+        cp[] = cp[] or (1'u8 shl (c and 7)); c += dlta
       swis[i] = c - CPUL1CACHE * 8 # store last index for next cache page
     # moving each sieved cache size into the final result...
     copyMem(result.sieveBuffer[pgbs].addr, cmpsts[0].addr, remsz)
@@ -145,7 +143,7 @@ iterator primes(this: PrimeSieve): Prime {.closure.} =
     yield 2
     let cmpstsp = cast[ptr UncheckedArray[byte]](this.sieveBuffer[0].addr)
     for i in countup(3, this.limit.int, 2):
-      if (cmpstsp[i shr 3] and BITMASK[i and 7]) == 0'u16:
+      if (cmpstsp[i shr 3] and (1'u8 shl (i and 7))) == 0'u16:
         yield i.Prime
 
 # alternate very fast counting by 64 bit popCount...
@@ -161,12 +159,12 @@ method countPrimes(this: PrimeSieve): int64 {.base.} =
 
 # showing results...
 
-var rslts = ""
-for p in 100.newPrimeSieve.primes: rslts &= $p & " "
+var rslts = ""; let ps0 = 100.newPrimeSieve
+for p in ps0.primes: rslts &= $p & " "
 var isValid = rslts == "2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 "
 
-var count = 0
-for p in LIMIT.newPrimeSieve.primes: count.inc
+var count = 0; let ps1 = LIMIT.newPrimeSieve
+for p in ps1.primes: count.inc
 isValid = isValid and count == RESULT
 
 let start = getMonoTime().ticks; var duration = 0'i64
@@ -175,10 +173,9 @@ while duration < 5_000_000_000:
   rslt = LIMIT.newPrimeSieve
   GC_FullCollect() # so garbage collection is equivalent to reference counting!
   duration = getMonoTime().ticks - start; passes += 1
-let elapsed = duration.float64 / 1_000_000_000'f64
+let elapsed = duration.float64 / 1e9
 let primeCount = rslt.countPrimes
 isValid = isValid and primeCount == RESULT
 
-stderr.writeLine(&"Passes: {passes}, Time: {duration.float64 / 1e9}, Avg: {(elapsed / passes.float64)}, Limit: {LIMIT}, Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
+stderr.writeLine(&"Passes: {passes}, Time: {elapsed}, Avg: {(elapsed / passes.float64)}, Limit: {LIMIT}, Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
 echo &"GordonBGood_1of2;{passes};{elapsed};1;algorithm=base,faithful=yes,bits=1"
-
