@@ -329,7 +329,7 @@ pub mod primes {
             for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.is_num_flagged(*n)) {
                 print!("{},", num);
             }
-            eprint!("\n");
+            eprintln!();
         }
 
         let count = prime_sieve.count_primes();
