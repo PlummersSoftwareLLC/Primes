@@ -12,6 +12,12 @@ use structopt::StructOpt;
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
 
+    /// Shorthand for the `u8` bit count to avoid additional conversions.
+    const U8_BITS: usize = u8::BITS as usize;
+
+    /// Shorthand for the `u32` bit count to avoid additional conversions.
+    const U32_BITS: usize = u32::BITS as usize;
+
     /// Validator to compare against known primes.
     /// Pulled this out into a separate struct, as it's defined
     /// `const` in C++. There are various ways to do this in Rust, including
@@ -105,8 +111,6 @@ pub mod primes {
         length_bits: usize,
     }
 
-    const U32_BITS: usize = 32;
-
     impl FlagStorage for FlagStorageBitVector {
         fn create_true(size: usize) -> Self {
             let num_words = size / U32_BITS + (size % U32_BITS).min(1);
@@ -196,8 +200,6 @@ pub mod primes {
     /// only for sieves that fit inside the processor cache. For processors with
     /// smaller caches or larger sieves, this algorithm will result in a lot of
     /// cache thrashing.
-    const U8_BITS: usize = 8;
-
     pub struct FlagStorageBitVectorStriped {
         words: Vec<u8>,
         length_bits: usize,
