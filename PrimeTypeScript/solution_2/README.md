@@ -45,16 +45,18 @@ mikevdbokke/32bit-array;4230;5;1;algorithm=base,faithful=yes
 Running on Windows 10, nodejs: (all)
 npm run start-all
 ```
-Passes: 203, Time: 5.019, Avg: 0.024724137931034482, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-mikevdbokke/number-array;203;5.019;32;algorithm=base,faithful=yes
-Passes: 3282, Time: 5, Avg: 0.0015234613040828763, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-mikevdbokke/byte-array;3282;5;8;algorithm=base,faithful=yes
-Passes: 3302, Time: 5.001, Avg: 0.0015145366444579045, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-mikevdbokke/Solution_1;3302;5.001;8;algorithm=base,faithful=yes
-Passes: 4074, Time: 5, Avg: 0.0012272950417280314, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-mikevdbokke/8bit-array;4074;5;1;algorithm=base,faithful=yes
-Passes: 3967, Time: 5, Avg: 0.0012603982858583312, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-mikevdbokke/32bit-array;3967;5;1;algorithm=base,faithful=yes
+Passes: 191, Time: 5.025, Avg: 0.026308900523560212, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+mikevdbokke/number-array;191;5.025;32;algorithm=base,faithful=yes
+Passes: 3218, Time: 5.001, Avg: 0.0015540708514605345, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+mikevdbokke/Solution_1;3218;5.001;8;algorithm=base,faithful=yes
+Passes: 3208, Time: 5, Avg: 0.0015586034912718205, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+mikevdbokke/byte-array;3208;5;8;algorithm=base,faithful=yes
+Passes: 3214, Time: 5, Avg: 0.0015556938394523958, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+mikevdbokke/Solution_1;3214;5;8;algorithm=base,faithful=yes
+Passes: 4029, Time: 5.001, Avg: 0.0012412509307520476, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+mikevdbokke/8bit-array;4029;5.001;1;algorithm=base,faithful=yes
+Passes: 3962, Time: 5.001, Avg: 0.0012622412922766281, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+mikevdbokke/32bit-array;3962;5.001;1;algorithm=base,faithful=yes
 ```
 
 ## Author

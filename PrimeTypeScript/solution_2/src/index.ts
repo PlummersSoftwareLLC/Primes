@@ -135,7 +135,11 @@ function main() {
   doGC();
 
   runOne((sieveSize: number) => {return new BitNumArray(sieveSize)}, sieveSize);
-  
+
+  doGC();
+
+  runOne((sieveSize: number) => {return new BitBuffer(sieveSize)}, sieveSize);
+
   doGC();
   
   runOne((sieveSize: number) => {return new BitByteArray(sieveSize)}, sieveSize);
