@@ -4,6 +4,7 @@ const time = std.time;
 const sieves = @import("./sieves.zig");
 const IntSieve = sieves.IntSieve;
 const BitSieve = sieves.BitSieve;
+const FastSieve = sieves.FastSieve;
 const runners = @import("./runners.zig");
 const SingleThreadedRunner = runners.SingleThreadedRunner;
 const ParallelAmdahlRunner = runners.AmdahlRunner;
@@ -26,7 +27,8 @@ pub fn main() anyerror!void {
     defer multithreaded_allocator.deinit();
 
     // check for the --all flag.
-    const all = (std.os.argv.len == 2) and (std.mem.eql(u8, std.mem.spanZ(std.os.argv[1]), "--all"));
+    const args = try std.process.argsAlloc(std.heap.page_allocator);
+    const all = (args.len == 2) and (std.mem.eql(u8, args[1], "--all"));
 
     comptime const AllDataTypes = .{ bool, u1, u8, u16, u32, u64, usize };
     comptime const BitSieveDataTypes = .{ u8, u16, u32, u64 };
@@ -40,6 +42,8 @@ pub fn main() anyerror!void {
         .{ SingleThreadedRunner, BitSieve, false, false },
         .{ ParallelGustafsonRunner, BitSieve, false, false },
         .{ ParallelGustafsonRunner, BitSieve, true, false },
+        .{ SingleThreadedRunner, FastSieve, false, false },
+        .{ ParallelGustafsonRunner, FastSieve, false, false },
         .{ SingleThreadedRunner, IntSieve, false, true },
         .{ SingleThreadedRunner, BitSieve, false, true },
         .{ ParallelGustafsonRunner, BitSieve, false, true },
@@ -74,12 +78,18 @@ pub fn main() anyerror!void {
                     }
                 }
             }
+        } else if (@TypeOf(SieveFn) == type) {
+            comptime const Runner = RunnerFn(SieveFn, runner_opts);
+            comptime const selected = selected_runs(Runner, no_ht_opt);
+            if (all or selected) {
+                try runSieveTest(Runner, run_for, allocator, wheel, 1, SIZE);
+            }
         } else {
             comptime const DataTypes = if (SieveFn == IntSieve) AllDataTypes else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
                 comptime const typebits = if (SieveFn == IntSieve) 8 * @sizeOf(Type) else 1;
-                comptime const Sieve = SieveFn(Type, .{});
+                comptime const Sieve = if (@TypeOf(SieveFn) == type) SieveFn else SieveFn(Type, .{});
                 comptime const Runner = RunnerFn(Sieve, runner_opts);
                 comptime const selected = selected_runs(Runner, no_ht_opt);
                 if (all or selected) {
@@ -106,6 +116,9 @@ fn selected_runs(comptime Runner: type, comptime no_ht_opt: bool) bool {
         "parallel-amdahl-sieve-u8",
         "parallel-gustafson-sieve-u8",
         "single-bitSieve-u8",
+        "single-fastSieve",
+        "parallel-gustafson-bitSieve-u8",
+        "parallel-gustafson-fastSieve",
         "parallel-gustafson-bitSieve-u8",
         "parallel-gustafson-bitSieve-" ++ widthstring,
         "single-sieve-u8-480of2310",
@@ -151,7 +164,7 @@ fn runSieveTest(
     const elapsed = timer.read();
 
     var threads = try Runner.threads();
-    try printResults("ManDeJan&ityonemo-zig-" ++ Runner.name, passes, elapsed, threads, wheel, bits);
+    try printResults("ManDeJan&ityonemo&spexGuy-zig-" ++ Runner.name, passes, elapsed, threads, wheel, bits);
 }
 
 fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, threads: usize, wheel: bool, bits: usize) !void {

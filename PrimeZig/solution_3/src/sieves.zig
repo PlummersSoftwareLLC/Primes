@@ -394,5 +394,202 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
 
         pub const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
         pub const name = "bitSieve-" ++ @typeName(T) ++ wheel_name;
+<<<<<<< HEAD
+=======
     };
+}
+
+pub const FastSieve = struct {
+    // values
+    const Self = @This();
+
+    // storage
+    field: []align(8) u8,
+    field_size: usize,
+    allocator: *Allocator,
+
+    const PatternChunk = std.meta.Vector(64, u8);
+    const small_factor_max = @sizeOf(PatternChunk) * 8;
+
+    const bit_masks = blk: {
+        var masks: [8]u8 = undefined;
+        for (masks) |*value, index| {
+            value.* = ~(@as(u8, 1) << index);
+        }
+        break :blk masks;
+    };
+
+    const trailing_masks = blk: {
+        var masks: [8]u8 = undefined;
+        for (masks) |*value, index| {
+            value.* = -%(@as(u8, 1) << index);
+        }
+        break :blk masks;
+>>>>>>> zig-kitchen-sink
+    };
+
+    // member functions
+    pub fn init(allocator: *Allocator, field_size: usize) !Self {
+        const bit_size = field_size / 2;
+        const field_size_bytes = (bit_size + @bitSizeOf(u8) - 1) / @bitSizeOf(u8);
+
+        // allocates an array of data.
+        // Overallocate so we can do unchecked writes at the end.
+        const field = try allocator.alignedAlloc(u8, 8, field_size_bytes + @sizeOf(PatternChunk) - 1);
+        return Self{ .field = field, .allocator = allocator, .field_size = field_size };
+    }
+
+    pub fn deinit(self: *Self) void {
+        self.allocator.free(self.field);
+    }
+
+    pub fn reset(self: *Self) usize {
+        const field = self.field;
+        @memset(field.ptr, 0xFF, field.len);
+        const num_bits = self.field_size >> 1;
+        const final_index = num_bits / 8;
+        const final_bits = num_bits % 8;
+
+        // there might be some stray bits at the end.
+        // we need to mask those bits off.
+        const final_mask = (@as(u8, 1) << @intCast(u3, final_bits)) - 1;
+        field[final_index] &= final_mask;
+        for (field[final_index+1..]) |*v| v.* = 0;
+        return 3;
+    }
+
+    pub fn primeCount(self: *Self) usize {
+        var count: usize = 0;
+        var idx: usize = 0;
+
+        for (self.field) |value| {
+            count += @popCount(u8, value);
+        }
+
+        return count;
+    }
+
+    pub inline fn findNextFactor(self: *Self, factor: usize) usize {
+        const field = self.field;
+        const num = (factor + 2) >> 1;
+        var index = num / 8;
+        var slot = field[index] & trailing_masks[num % 8];
+        if (slot == 0) {
+            for (field[index + 1 ..]) |s| {
+                index += 1;
+                slot = s;
+                if (s != 0) {
+                    break;
+                }
+            }
+        }
+        return (((index * 8) + @ctz(u8, slot)) << 1) + 1;
+    }
+
+    pub fn runFactor(self: *Self, factor: usize) void {
+        if (factor < small_factor_max) {
+            runSmallFactor(self, @intCast(u32, factor));
+        } else {
+            runSparseFactor(self, factor);
+        }
+    }
+
+    pub inline fn runSparseFactor(self: *Self, factor: usize) void {
+        const field = self.field;
+        const limit = self.field_size >> 1;
+        var num = (factor * factor) >> 1;
+        while (num < limit) : (num += factor) {
+            field[num / 8] &= bit_masks[num % 8];
+        }
+    }
+
+    pub inline fn runSmallFactor(self: *Self, factor: u32) void {
+        std.debug.assert(factor < small_factor_max);
+        const field = self.field;
+        const limit = self.field_size >> 1;
+
+        // Fill in a pattern buffer
+        var pattern_raw: [small_factor_max + @sizeOf(PatternChunk)-1]u8 = undefined;
+        const pattern = pattern_raw[0..factor + @sizeOf(PatternChunk)-1];
+        @memset(pattern.ptr, 0xFF, pattern.len);
+        var num: u32 = 0;
+        while (num < pattern.len * @bitSizeOf(u8)) : (num += factor) {
+            pattern[num / 8] &= bit_masks[num % 8];
+        }
+
+        // Fill normally until we start a byte
+        // This loop will execute at most 7 times
+        num = (factor * factor) >> 1;
+        while (num % @bitSizeOf(u8) != 0) : (num += factor) {
+            field[num / 8] &= bit_masks[num % 8];
+        }
+
+        // Apply pattern in bulk
+        const byte_index = num / @bitSizeOf(u8);
+        const bulk_ptr = @ptrCast([*]align(1) PatternChunk, field.ptr + byte_index);
+        const bulk_len = (field.len - byte_index) / @sizeOf(PatternChunk);
+        const fetch_increment = @sizeOf(PatternChunk) % factor;
+        var fetch_index: usize = 0;
+        for (bulk_ptr[0..bulk_len]) |*item, i| {
+            item.* &= @ptrCast(*align(1) PatternChunk, &pattern[fetch_index]).*;
+            fetch_index += fetch_increment;
+            if (fetch_index >= factor) fetch_index -= factor;
+        }
+    }
+
+    pub const name = "fastSieve";
+};
+
+
+fn printBits(bytes: []const u8, start: usize, end: usize) void {
+    var c = start;
+    while (c < end) : (c += 1) {
+        var bit = @as(u8, 1) << @truncate(u3, c);
+        var byte = bytes[c / 8];
+        const str = if (bit & byte == 0) "0" else "1";
+        if (c % 8 == 0 and c != start) {
+            std.debug.print("_", .{});
+        }
+        std.debug.print("{s}", .{str});
+    }
+    std.debug.print("\n", .{});
+}
+
+test {
+    const print = std.debug.print;
+    print("\n", .{});
+    defer print("\n", .{});
+
+    const Sieve = BitSieve(u8, .{});
+    var gold_sieve = try Sieve.init(std.testing.allocator, 1_000_000);
+    defer gold_sieve.deinit();
+    var test_sieve = try FastSieve.init(std.testing.allocator, 1_000_000);
+    defer test_sieve.deinit();
+    var prime = gold_sieve.reset();
+    try std.testing.expectEqual(prime, test_sieve.reset());
+    while (true) {
+        gold_sieve.runFactor(prime);
+        test_sieve.runFactor(prime);
+        for (test_sieve.field[gold_sieve.field.len..]) |v| {
+            try std.testing.expectEqual(@as(u8, 0), v);
+        }
+        std.testing.expectEqualSlices(u8, gold_sieve.field, test_sieve.field[0..gold_sieve.field.len]) catch |err| {
+            const mismatch_index = for (gold_sieve.field) |v, i| {
+                if (v != test_sieve.field[i]) break i;
+            } else unreachable;
+            const print_start = if (mismatch_index < 8) 0 else mismatch_index - 8;
+            const gold_print_end = if (mismatch_index + 8 >= gold_sieve.field.len) gold_sieve.field.len else mismatch_index + 8;
+            const test_print_end = if (mismatch_index + 8 >= gold_sieve.field.len) test_sieve.field.len else mismatch_index + 8;
+            print("@{}:{} prime={}\n", .{print_start / 8, print_start % 8, prime});
+            printBits(gold_sieve.field, print_start * 8, gold_print_end * 8);
+            printBits(test_sieve.field, print_start * 8, test_print_end * 8);
+            return err;
+        };
+        const num_primes = gold_sieve.primeCount();
+        try std.testing.expectEqual(num_primes, test_sieve.primeCount());
+        const new_prime = gold_sieve.findNextFactor(prime);
+        if (new_prime >= 1_000_000) break;
+        try std.testing.expectEqual(new_prime, test_sieve.findNextFactor(prime));
+        prime = new_prime;
+    }
 }
