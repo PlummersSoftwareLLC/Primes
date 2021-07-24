@@ -1,0 +1,301 @@
+** Register use
+
+* rI1: general use
+* rI2: factor/sieve word
+* rI3: bitword/sieve bit/check table index
+* rI4: run count
+
+BTARR   ORIG	3400            Jump past bit array
+
+** Constants and variables
+
+* Parameters
+LTSVSZ	EQU     200000          Sieve size literal. Max is 200000, due to memory size
+SVSQRT	CON     447             Sqrt of sieve size variable
+RUNCT   CON     30              Number of times the sieve will be run, or a value < 1 to run indefinitely
+DOPRTRN CON     0               Print run result (!= 0) or not (== 0)
+DOPRTRT CON     1               Print end result (!= 0) or not (== 0)
+
+* Table with reference values (sieve size first, prime count second)
+CHCKTBL	CON     10
+	CON     4
+	CON     100
+	CON     25
+	CON     1000
+	CON     168
+	CON     10000
+	CON     1229
+	CON     100000
+	CON     9592
+	CON     200000
+	CON     17984
+	CON     -1
+
+* Basic constants
+LTBPW	EQU     5*6             Bits per word literal
+ADDR	EQU     1:2             Address fspec
+FIELD   EQU     4:4             Field fspec
+LSTBYT  EQU     5:5             Last byte fspec      
+CNSL	EQU     19              Console device number
+SLASH   CON     47              Character code of /
+ZERO    CON     30              Character code of 0
+
+* Constants derived from other values
+LTBTCT  EQU     LTSVSZ+1/2      Sieve bit count literal
+LTWDCT  EQU     LTBTCT/LTBPW    Sieve full word count literal
+LTBWCT  EQU     LTWDCT*LTBPW    Sieve bits in full words literal
+LTRBTCT EQU     LTBTCT-LTBWCT   Sieve bits remainder literal
+
+* Runtime variables
+SVSIZE	CON     LTSVSZ          Sieve size variable
+BTPRWRD CON     LTBPW           Bits per word variable
+NUMBER  CON     0	        Number variable (too big for rI)
+PRMCNT  CON     0               Prime count variable (too big for rI)
+
+* Text word constants
+INCOR   ALF     "INCOR"
+RECT    ALF     "RECT "
+CORRE   ALF     "CORRE"
+CT      ALF     "CT   "
+UNKNO   ALF     "UNKNO"
+WN      ALF     "WN   "
+
+** Main program
+
+START	ENT2    3               First factor is 3
+
+* Start of factor loop
+QLOOP   ENTX    0,2             Load factor into rX
+
+* Start of num loop
+NUMLOOP JXE     NXTNUM          If we're looking at an even number, skip it
+        ENTA    0               Prepare rAX for division
+        STX     NUMBER          Hang on to our number
+        SRB     1               Divide by 2...
+        DIV     BTPRWRD         ...and then the number of bits per word
+        STA     *+1(ADDR)       rA contains the word index, which we...
+        ENT3    *               ...load into rI3...
+        LDA     BTARR,3         ...so we can then load the correct word into rA       
+        STX     *+1(ADDR)       rX contains the bit number, which we put forward...
+        SRB     *               ...so we can shift that bit to the right
+        JAE     SETFCTR         If our bit is zero, we found our next factor
+        LDX     NUMBER          Load number back into rX
+NXTNUM  INCX    2               Bump rX to next odd number 
+        CMPX    SVSQRT          If number > the sqrt of sieve size...
+        JG      CNTPRM          ...we can end this run...
+        JMP     NUMLOOP         ...else continue
+* End of num loop        
+
+* Found next factor
+SETFCTR LD2     NUMBER          Load factor into rI2
+        LDA     NUMBER          Load factor into rA...
+        MUL     NUMBER          ...so we can start at factor * factor
+
+* Start of loop to set bits for factor multiples
+SETLOOP ENTA    0               Prepare rAX for division
+        STX     NUMBER          Hang on to our number
+        SRB     1               Divide by 2...
+        DIV     BTPRWRD         ...and then the number of bits per word
+        STA     *+1(ADDR)       rA contains the word index, which we...
+        ENT3    *               ...load into rI3...
+        LDA     BTARR,3         ...so we can then load the correct word into rA
+        STX     *+1(ADDR)       rX contains the bit number, which we put forward...
+        ENT1    *               ...so we can load it into rI1
+        SRB     0,1             Right shift rAX by the bit number
+        JAO     1F              If the bit's already set, do nothing...
+        INCA    1               ...else set it
+1H      SLB     0,1             Shift the bit back left to its place       
+        STA     BTARR,3         Store word back where we got it from 
+        LDX     NUMBER          Load number back into rX...
+        INCX    0,2             ...and add the factor once... 
+        INCX    0,2             ...and twice (num += factor * 2)
+        CMPX    SVSIZE          If number <= sieve size...
+        JLE     SETLOOP         ...continue marking non-primes...
+        INC2    2               ...else bump factor to next odd number  
+        CMP2    SVSQRT          If factor > the sqrt of sieve size...
+        JG      CNTPRM          ...we can end this run...
+        JMP     QLOOP           ...else continue
+* End of set bit loop
+
+* Let's count the primes found in this run
+CNTPRM  ENT2    LTWDCT          Load sieve word count into rI2
+        ENT3    LTRBTCT         Load remainder bit count into rI3
+        STZ     PRMCNT          Zero prime count 
+        J3Z     NXTWRD          If remainder bit count == 0, skip to first full word
+
+* Start of word loop        
+WRDLOOP LDA     BTARR,2         Load word into rA
+
+* Start of bit loop
+BITLOOP JAO     1F              If right bit is set, do nothing
+        LDX     PRMCNT          Load prime count, ...
+        INCX    1               ...increase it...
+        STX     PRMCNT          ...and store it back
+1H      SRB     1               Shift to next bit
+        DEC3    1               Decrease number of bits to process
+        J3P     BITLOOP         If there's a bit left to look at, continue
+* End of bit loop
+
+NXTWRD  STZ     BTARR,2         Clear word we've processed
+        J2Z     PRNTRUN         If we've processed all words, print result
+        DEC2    1               Decrease number of words to process
+        ENT3    LTBPW           Set bits to process to number of bits per word
+        JMP     WRDLOOP         Continue processing
+* End of word loop
+
+* Compose result text and print it
+PRNTRUN INC4    1               Increase run count
+        LDA     DOPRTRN         Load run print flag in rA
+        JAZ     CKRUNCT         If we're not supposed to print, see if we need to run again    
+
+        ENTA    0,4             Load run count into rA for conversion
+        CHAR    0
+        STX     RCTXT           Store run count text
+
+        LDA     SVSIZE          Load sieve size into rA for conversion
+        CHAR    0
+        STA     SZTXT           Store sieve size text, part 1...
+        STX     SZTXT2          ...and part 2
+
+        LDA     PRMCNT          Load prime count in rA so we can convert
+        CHAR    0
+        STX     PCTXT           Store prime count text
+
+        ENT1    CKTXT           Set move target to first conclusion word
+        ENT3    0               Start at beginning of check table
+
+* Start of check loop
+CHKLOOP LDA     CHCKTBL,3       Load sieve size from check table
+        JAN     SVUNKNW         If we have a sieve size < 0, we have no answer
+        CMPA    SVSIZE          If check table sieve size equals ours...
+        JE      CHKVAL          ...check its value
+        INC3    2               Move to next check table record
+        JMP     CHKLOOP         Continue checking
+* End of check loop
+
+* Update print text to show what we found
+CHKVAL  LDX     PRMCNT          Load prime count so we can check it
+        CMPX    CHCKTBL+1,3     If check table value doesn't match ours...
+        JNE     1F              ...then we'll jump to say so...
+        MOVE    CORRE           ...else we report correct result
+        MOVE    CT
+        JMP     DOPRINT         Time to print  
+1H      MOVE    INCOR           Our result didn't match check table
+        MOVE    RECT
+        JMP     DOPRINT         Time to print
+SVUNKNW MOVE    UNKNO           Check table doesn't contain our sieve size
+        MOVE    WN              Put end of "unknown" in second conclusion word
+
+* Print run result
+DOPRINT JBUS    *(CNSL)         Wait for console to be available
+        OUT     RUNTXT(CNSL)    Print result text
+CKRUNCT CMP4    RUNCT           If we've not reached our run count...
+        JNE     START           ...start next run
+
+* Print end result
+        LDA     DOPRTRT         Load end result print flag in rA
+        JAZ     FINISH          If we're not supposed to print, jump to end
+        ENT3    0               Initialize rI3...
+        ENT4    0               ...and rI4 for end result print
+
+        ENT2    NAMETXT         Load name section address in rI2...
+        JMP     PUTS            ...so we can put it in output buffer
+
+        LDA     RUNCT           Load run count into rA...
+        CHAR    0               ...so we can convert it
+        ENT1    0               Set shift count to 0
+        ENT5    0               Set "found non-zero" flag to false
+1H      SRC     1               Circle shift rightmost rX byte into leftmost rA byte
+        INC1    1               Count our shift
+        CMPX    ZERO(LSTBYT)    If rightmost rX byte == '0'...        
+        JE      2F              ...jump to check if we've seen a nonzero...
+        ENT5    1               ...else set our nonzero flag to true...
+        JMP     1B              ...and continue
+2H      J2Z     1B              If we have a zero and we haven't seen a non-zero yet, then continue shifting
+        SLC     1               If we're here, we've right-shifted one character too many, so revert it
+1H      JMP     PUTCH           Put rightmost character of rX in buffer
+        SLC     1               Shift left to next character
+        DEC1    1               Decrease our shift counter
+        J1P     1B              Continue shifting if we have more characters to go 
+
+        ENT2    TAILTXT         Load tail section address in rI2...
+        JMP     PUTS            ...so we can put it in output buffer
+        JBUS    *(CNSL)         Wait for console to be available
+        OUT     RSLTTXT(CNSL)   Print result text
+FINISH  HLT     0               Nothing left to do, so halt
+
+** Procedures
+
+PUTCH   STJ  XPUTCH		Output character stored in rightmost byte of rX to buffer
+        INC3 9			Move to next buffer character position
+        CMP3 =5*9=		If before or on last character in buffer word...
+        JLE  1F			...move to next character in word...
+        ENT3 9			...else move to first character...
+        INC4 1			...of next buffer word
+1H      ST3  *+1(FIELD)		Update next instruction with field (character position)
+	STX  RSLTTXT,4		Write char in rX
+XPUTCH  JMP  *
+
+PUTS    STJ  XPUTS		Output text constant pointed to by rI2 to buffer
+        ENT1 9			Start at first character of text constant word
+1H      ST1  *+1(FIELD)		Update next instruction with field (character position)
+	LDX  0,2		Load character into rX
+        CMPX SLASH		If character is / then we're done
+XPUTS   JE   *		
+        INC1 9			Move to next text constant character
+        CMP1 =5*9=		If before or on last character in word...
+        JLE  2F			...go to print that character...
+        ENT1 9			...else move to first character...
+        INC2 1			...of next text constant word
+2H      JMP  PUTCH		Output character
+        JMP  1B			Next character
+
+** Result text templates
+
+* Run template
+RUNTXT  ALF     "RUN: "
+RCTXT   CON     0
+        ALF     ", SIE"
+        ALF     "VE:  "
+SZTXT   CON     0
+SZTXT2  CON     0
+        ALF     ", PRI"
+        ALF     "MES: "
+PCTXT   CON     0
+        ALF     ", RES"
+        ALF     "ULT: "
+CKTXT   CON     0
+        CON     0
+        ALF     "     "
+
+* Chunks
+NAMETXT ALF     "RBERG"
+        ALF     "EN;/ "
+TAILTXT ALF     ";<TIM"
+	ALF	"E>;1;"
+        ALF     "ALGOR"
+        ALF     "ITHM="
+        ALF     "BASE,"
+        ALF     "FAITH"
+        ALF     "FUL=N"
+        ALF     "O,BIT"
+        ALF     "S=1/ "
+
+* End template
+RSLTTXT ALF     "     "
+        ALF     "     "  
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+        ALF     "     "
+*
+        END     START
+*
