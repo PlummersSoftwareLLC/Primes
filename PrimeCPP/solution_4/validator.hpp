@@ -4,6 +4,9 @@
 
 #include <cstddef>
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Compares computed number of primes against historical data.
+
 static inline bool validate(const std::size_t sieveSize, const std::size_t primeCount)
 {
     // clang-format off

@@ -3,15 +3,20 @@
 #include <algorithm>
 #include <array>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
 #include <climits>
 #include <cstddef>
+#include <cstring>
 
 #include "compile_time.hpp"
 #include "storages.hpp"
 #include "utils.hpp"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Configuration type used to communicate the configuration of the sieve to the benchmark runner.
 
 struct Config {
     const std::string name;
@@ -19,6 +24,10 @@ struct Config {
     const bool faithful;
     const std::size_t bits;
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Pre-generation sieve that computes the entire sieve at compile-time and only copies the pre-computed data to a
+// run-time buffer.
 
 template<std::size_t SieveSize>
 class PreGenerated {
@@ -31,8 +40,13 @@ class PreGenerated {
 
     inline void runSieve()
     {
+        // Sieve generation happens once at compile-time.
         constexpr auto preGenSieve = genSieve<SieveSize>();
+
+        // Transform sieve from std::array<bool> to packed storage, storing primeness using 1-bit.
         constexpr auto preGenBitSieve = transformToBitArray<storage_data_t>(preGenSieve);
+
+        // Copy pre-generated sieve to run-time buffer.
         m_bits = storage_t{preGenBitSieve};
     }
 
@@ -83,11 +97,17 @@ class PreGenerated {
     }
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dynamic stride configuration used to configure which stride to use for the sieve.
+
 enum class DynStride {
     NONE,
     OUTER,
     BOTH,
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Generic/templated sieve that can be configured to use any combination of optimizations.
 
 template<typename Storage, std::size_t WheelSize, DynStride Stride = DynStride::OUTER, bool HalfStorage = true>
 class GenericSieve {
@@ -97,9 +117,11 @@ class GenericSieve {
 
     inline void runSieve()
     {
+        // Helper variables to communicate inner/outer state to the strider.
         constexpr auto true_v = std::bool_constant<true>{};
         constexpr auto false_v = std::bool_constant<false>{};
 
+        // Used to advance the inner/outer loop using the configured method.
         constexpr auto strider = []<bool Outer>(auto& idx, std::bool_constant<Outer>) {
             if constexpr(Stride == DynStride::BOTH || (Outer && Stride == DynStride::OUTER)) {
                 return WHEEL_INC[++idx];
@@ -111,19 +133,19 @@ class GenericSieve {
 
         const auto sieveSize = m_sieveSize / (HalfStorage ? 2 : 1);
 
-        auto wheelIdx = idx_t{};
-        for(auto i = START_NUM; i * i <= sieveSize; i += strider(wheelIdx, true_v)) {
-            for(auto num = i; i <= sieveSize; num += strider(wheelIdx, true_v)) {
-                if(m_bits[num]) {
-                    i = num;
-                    break;
-                }
+        auto wheelIdx = wheel_idx_t{};
+        // makeIdx allows the storage to provide an optimized index type.
+        for(auto i = m_bits.makeIdx(START_NUM); i * i <= sieveSize; i += strider(wheelIdx, true_v)) {
+            while(!m_bits[i]) {
+                i += strider(wheelIdx, true_v);
             }
 
             auto strideIdx = wheelIdx;
-            const auto factor = HalfStorage ? (i * 2 + 1) : i;
+            // Explicit static_cast of the index is used to call the explicit conversion operator
+            // if the storage provides a custom index.
+            const auto factor = HalfStorage ? (i * 2 + 1) : static_cast<std::size_t>(i);
             const auto start = (factor * factor) / (HalfStorage ? 2 : 1);
-            for(auto num = start; num <= sieveSize; num += factor * strider(strideIdx, false_v)) {
+            for(auto num = m_bits.makeIdx(start); num <= sieveSize; num += factor * strider(strideIdx, false_v)) {
                 m_bits[num] = false;
             }
         }
@@ -136,11 +158,12 @@ class GenericSieve {
         const auto sieveSize = (m_sieveSize + 1) / (HalfStorage ? 2 : 1);
 
         auto primes = std::vector<std::size_t>{};
+        // The wheel skips the base primes in the sieve, so they have to be inserted from the base of the wheel.
         std::copy_if(BASE_PRIMES.begin(), BASE_PRIMES.end() - 1, std::back_inserter(primes), [&](const auto& prime) { return prime <= m_sieveSize; });
-        auto wheelIdx = idx_t{};
-        for(auto i = START_NUM; i < sieveSize; i += WHEEL_INC[++wheelIdx]) {
+        auto wheelIdx = wheel_idx_t{};
+        for(auto i = m_bits.makeIdx(START_NUM); i < sieveSize; i += WHEEL_INC[++wheelIdx]) {
             if(m_bits[i]) {
-                const auto prime = HalfStorage ? (2 * i + 1) : i;
+                const auto prime = HalfStorage ? (i * 2 + 1) : static_cast<std::size_t>(i);
                 primes.push_back(prime);
             }
         }
@@ -157,7 +180,7 @@ class GenericSieve {
         name += (Stride == DynStride::NONE) ? "cs-" : "";
         name += (Stride == DynStride::OUTER) ? "os-" : "";
         name += (Stride == DynStride::BOTH) ? "bs-" : "";
-        name += (HalfStorage) ? "hs-" : "fs-";
+        name += HalfStorage ? "hs-" : "fs-";
         name += m_bits;
         const auto algorithm = (check == 1) ? "base" : "wheel";
         return {name, algorithm, true, m_bits.getBitCount()};
@@ -168,7 +191,7 @@ class GenericSieve {
     static constexpr auto START_NUM = BASE_PRIMES[BASE_PRIMES.size() - 1] / (HalfStorage ? 2 : 1);
     static constexpr auto WHEEL_INC = genWheel<WheelSize, HalfStorage>();
 
-    using idx_t = utils::ModIndex<std::size_t, WHEEL_INC.size()>;
+    using wheel_idx_t = utils::ModIndex<std::size_t, WHEEL_INC.size()>;
 
     const std::size_t m_sieveSize;
     Storage m_bits;

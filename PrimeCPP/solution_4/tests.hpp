@@ -13,6 +13,9 @@
 
 namespace detail {
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Trivial isPrime function to test correctness of sieves.
+
 static inline auto isPrime(const std::size_t& num)
 {
     if(num <= 1) {
@@ -25,6 +28,9 @@ static inline auto isPrime(const std::size_t& num)
     }
     return true;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Calculates reference primes to compare sieve results against.
 
 static inline auto calcReferencePrimes(const std::size_t sieveSize)
 {
@@ -46,6 +52,9 @@ static inline auto& getReferencePrimes(const std::size_t sieveSize)
 
 } // namespace detail
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Compares results and prints what and where errors occurred.
+
 static inline auto compareResults(const auto& name, const auto& computed, const auto& reference)
 {
     auto error = false;
@@ -62,6 +71,9 @@ static inline auto compareResults(const auto& name, const auto& computed, const 
     }
     return !error;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Runner that allows sieves to be tested in parallel, using the same interface the benchmark uses.
 
 template<typename Sieve, std::size_t SieveSize, typename Time>
 struct TestRunner {

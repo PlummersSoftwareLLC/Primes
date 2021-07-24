@@ -10,23 +10,32 @@
 
 namespace utils {
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Helper to allow static_asserts to fail in if constexpr.
+
 template<typename...>
 struct always_false : std::false_type {
 };
 template<typename... Ts>
 inline constexpr auto always_false_v = always_false<Ts...>::value;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Compile-time loop.
+
 template<typename Fn, std::size_t... Idxs>
 constexpr decltype(auto) for_constexpr(Fn&& func, std::index_sequence<Idxs...>)
 {
+    // Each iteration returns nothing.
     if constexpr((std::is_void_v<std::invoke_result_t<Fn, std::integral_constant<std::size_t, Idxs>>> && ...)) {
         (func(std::integral_constant<std::size_t, Idxs>{}), ...);
     }
+    // Each iteration returns boolean, allowing for short-circuit evaluation, and result is returned from the loop.
     else if constexpr((std::is_same_v<std::invoke_result_t<Fn, std::integral_constant<std::size_t, Idxs>>, bool> && ...)) {
         if((func(std::integral_constant<std::size_t, Idxs>{}) && ...))
             return true;
         return false;
     }
+    // Each iteration returns arbitrary non-void type which will be returned as a tuple from the loop.
     else if constexpr((!std::is_void_v<std::invoke_result_t<Fn, std::integral_constant<std::size_t, Idxs>>> && ...)) {
         return std::tuple{func(std::integral_constant<std::size_t, Idxs>{})...};
     }
@@ -35,6 +44,7 @@ constexpr decltype(auto) for_constexpr(Fn&& func, std::index_sequence<Idxs...>)
     }
 }
 
+// Overload to allow iterating over tuple elements.
 template<typename Fn, typename Tuple>
 constexpr decltype(auto) for_constexpr(Fn&& func, Tuple&& tuple)
 {
@@ -42,19 +52,17 @@ constexpr decltype(auto) for_constexpr(Fn&& func, Tuple&& tuple)
                          std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Division that rounds up. Opposite of integer division.
+
 template<typename T, typename U>
 constexpr auto ceildiv(const T& dividend, const U& divisor)
 {
-    constexpr auto ceil = [](const auto& num) {
-        const auto trunc = static_cast<std::int64_t>(num);
-        if(num == trunc) {
-            return num;
-        }
-        return static_cast<std::remove_cvref_t<decltype(num)>>(trunc + 1);
-    };
-
-    return static_cast<std::common_type_t<T, U>>(ceil(static_cast<double>(dividend) / divisor));
+    return (dividend + divisor - 1) / divisor;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Modular index helper. Wraps around on overflow.
 
 template<typename T, T Width>
 class ModIndex {
