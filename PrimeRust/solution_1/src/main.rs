@@ -85,7 +85,7 @@ pub mod primes {
             FlagStorageByteVector(vec![1; size])
         }
 
-        // bounds checks are elided since we're runing up to .len()
+        // bounds checks are elided since we're running up to .len()
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
