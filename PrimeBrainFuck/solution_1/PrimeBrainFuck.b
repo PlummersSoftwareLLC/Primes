@@ -54,130 +54,157 @@ use 14  last_zero = 0
 set 15  copy_of_y1
 }
 
-set x = (1'000'000)
-    ++ ++ ++ ++ ++ start with (10) at 0
-     [>++ ++ ++ ++ ++<-] mul by (10) with result at 1
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 2
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 3
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 4
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 5
-    >[ copy value of 5
-        <<<<+<+>>>>> to 0 and 1 (x and dividend)
-        >>>> >>>+<<< <<<< to 12 (y1)
-    -]<<<<< go to 0
+iteration #1
+    set x = (1'000'000)
+        ++ ++ ++ ++ ++ start with (10) at 0
+         [>++ ++ ++ ++ ++<-] mul by (10) with result at 1
+        >[>++ ++ ++ ++ ++<-] mul by (10) with result at 2
+        >[>++ ++ ++ ++ ++<-] mul by (10) with result at 3
+        >[>++ ++ ++ ++ ++<-] mul by (10) with result at 4
+        >[>++ ++ ++ ++ ++<-] mul by (10) with result at 5
+        >[ copy value of 5
+            <<<<+<+>>>>> to 0 and 1 (x and dividend)
+            >>>> >>>+<<< <<<< to 12 (y1)
+        -]<<<<< go to 0
 
-copy y1 to divisor and copy_of_y1
-    >>>> >>>> >>>>[ copy value of 12
-        <<<< <<<< <+> >>>> >>>> to 3 (divisor)
-        >>>+<<< to 15 (copy of y1)
-    -]<<<< <<<< <<<< go to 0
+    copy y1 to divisor and copy_of_y1
+        >>>> >>>> >>>>[ copy value of 12
+            <<<< <<<< <+> >>>> >>>> to 3 (divisor)
+            >>>+<<< to 15 (copy of y1)
+        -]<<<< <<<< <<<< go to 0
 
-do first division (credit goes to u/danielcristofani)
-https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
-    >[ while dividend != 0
-        >+ add remainder
-        >- sub divisor
+    do first division (credit goes to u/danielcristofani)
+    https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
+        >[ while dividend != 0
+            >+ add remainder
+            >- sub divisor
 
-        [>>>] if divisor == 0: go to last_zero
-        < go to remainder or to first_zero
+            [>>>] if divisor == 0: go to last_zero
+            < go to remainder or to first_zero
 
-        [ if at remainder: run the following code once
-            [ while remainder != 0
-                >+ add divisor
-                <- sub remainder
+            [ if at remainder: run the following code once
+                [ while remainder != 0
+                    >+ add divisor
+                    <- sub remainder
+                ]
+                >>+ add quotient
+                > go to first_zero
             ]
-            >>+ add quotient
-            > go to first_zero
-        ]
-        <<<<- sub dividend
-    ]<
+            <<<<- sub dividend
+        ]<
 
-copy quotient and copy_of_y1 to add
-effectively adding quotient and copy_of_y1
-    >>>>[ copy value of 4
-        >>>>+<<<< to 8
-    -]<<<< go to 0
-    >>>> >>>> >>>> >>>[ copy value of 15
-        <<<< <<<+>>> >>>> to 8
-    -]<<< <<<< <<<< <<<< go to 0
+    copy quotient and copy_of_y1 to add
+    effectively adding quotient and copy_of_y1
+        >>>>[ copy value of 4
+            >>>>+<<<< to 8
+        -]<<<< go to 0
+        >>>> >>>> >>>> >>>[ copy value of 15
+            <<<< <<<+>>> >>>> to 8
+        -]<<< <<<< <<<< <<<< go to 0
 
-copy add to dividend
-    >>>> >>>>[ copy value of 8
-        >+< to 9
-    -]<<<< <<<< go to 0
+    copy add to dividend
+        >>>> >>>>[ copy value of 8
+            >+< to 9
+        -]<<<< <<<< go to 0
 
-set divisor to 2
-    >>>> >>>> >>>++<<< <<<< <<<<
+    set divisor to 2
+        >>>> >>>> >>>++<<< <<<< <<<<
 
-do second division (credit goes to u/danielcristofani)
-https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
-    >>>> >>>> >[ go to 9 (second dividend)
-        >+>-[>>>]<[[>+<-]>>+>]<<<< same as previous division
-    -]< <<<< <<<< go to 0
+    do second division (credit goes to u/danielcristofani)
+    https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
+        >>>> >>>> >[ go to 9 (second dividend)
+            >+>-[>>>]<[[>+<-]>>+>]<<<< same as previous division
+        -]< <<<< <<<< go to 0
 
-start with second iteration
->>>> >>>> >>>> >>>> go to 16
+iteration #2 (the same code without comments)
+    >>>> >>>> >>>> >>>> go to 16
+    ++++++++++[>++++++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
 
-set x = (1'000'000)
-    ++ ++ ++ ++ ++ start with (10) at 0
-     [>++ ++ ++ ++ ++<-] mul by (10) with result at 1
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 2
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 3
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 4
-    >[>++ ++ ++ ++ ++<-] mul by (10) with result at 5
-    >[ copy value of 5
-        <<<<+<+>>>>> to 0 and 1 (x and dividend)
-    -]<<<<< go to 0
+    copy previous result to divisor and copy_of_y1
+        <<<<[ copy value of previous 12
+            >>>> go to 0
+            >>>+<<< to 3 (divisor)
+            >>>> >>>> >>>> >>>+<<< <<<< <<<< <<<< to 15 (copy of y1)
+            <<<< go to previous 12
+        -]>>>> go to 0
 
-copy previous result to divisor and copy_of_y1
-    <<<<[ copy value of 12
-        >>>> go to 0
-        >>>+<<< to 3 (divisor)
-        >>>> >>>> >>>> >>>+<<< <<<< <<<< <<<< to 15 (copy of y1)
-        <<<< go to previous 12
-    -]>>>> go to 0
+    >[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>
+    >>>[<<<<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>
+    >>>>>>++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<
+    <<<
 
-do first division (credit goes to u/danielcristofani)
-https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
-    >[ while dividend != 0
-        >+ add remainder
-        >- sub divisor
-
-        [>>>] if divisor == 0: go to last_zero
-        < go to remainder or to first_zero
-
-        [ if at remainder: run the following code once
-            [ while remainder != 0
-                >+ add divisor
-                <- sub remainder
-            ]
-            >>+ add quotient
-            > go to first_zero
-        ]
-        <<<<- sub dividend
-    ]<
-
-copy quotient and copy_of_y1 to add
-effectively adding quotient and copy_of_y1
-    >>>>[ copy value of 4
-        >>>>+<<<< to 8
-    -]<<<< go to 0
-    >>>> >>>> >>>> >>>[ copy value of 15
-        <<<< <<<+>>> >>>> to 8
-    -]<<< <<<< <<<< <<<< go to 0
-
-copy add to dividend
-    >>>> >>>>[ copy value of 8
-        >+< to 9
-    -]<<<< <<<< go to 0
-
-set divisor to 2
-    >>>> >>>> >>>++<<< <<<< <<<<
-
-do second division (credit goes to u/danielcristofani)
-https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
-    >>>> >>>> >[ go to 9 (second dividend)
-        >+>-[>>>]<[[>+<-]>>+>]<<<< same as previous division
-    -]< <<<< <<<< go to 0
+the following copy pasting is a sin in programming
+but I couldn't be bothered to write a loop
+iteration #3
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #4
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #5
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #6
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #7
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #8
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #9
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #10
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #11
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
+iteration #12
+    >>>>>>>>>>>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>+++
+    +++++++<-]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<
+    <<<<[>>>>>>>+<<<>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-
+    [>>>]<[[>+<-]>>+>]<<<<-]<>>>>[>>>>+<<<<-]<<<<>>>>>>>>>>>>>>>[<<
+    <<<<<+>>>>>>>-]<<<<<<<<<<<<<<<>>>>>>>>[>+<-]<<<<<<<<>>>>>>>>>>>
+    ++<<<<<<<<<<<>>>>>>>>>[>+>-[>>>]<[[>+<-]>>+>]<<<<-]<<<<<<<<<
 
 >>>> >>>> >>>>
