@@ -1,0 +1,49 @@
+% Prime Sieve with TeX (480 out of 2310 wheel)
+% author: jfbu
+% date:   2021/07/24
+
+% Customize Range
+% ===============
+
+\ifx\Range\undefined
+\def\Range{1000000}% limited to somewhat less than 295,000,000 with tex/etex/pdftex,
+                   % and to 999,999,999 if running with lualatex
+\fi
+
+% Usage
+% =====
+
+% Compile this file with either
+%
+% tex
+% etex
+% pdftex
+% luatex
+
+% e.g
+% tex wheel_primestofile
+%
+% or (adapt the quoting to your shell) for a custom range
+%
+% tex \\def\\Range{10000}\\input wheel_primestofile
+
+% To allow compilation with base Knuth tex, the built-in
+% timing via \pdfresettimer/\pdfelapsedtime is automatically
+% unactive if the run is via "Knuth tex".
+%
+% Use "time" if desired, e.g.
+%
+% time tex \\def\\Range{10000000}\\input wheel_primestofile
+
+% See wheel_primestofile_timings.txt
+
+% activate @ as a letter for being more mysterious
+\catcode`@ 11
+% and use also _ as a letter to appear even more TeXnical
+\catcode`_ 11
+
+\input wheel_sieve.tex
+
+\input shared_primestofile.tex
+
+\bye
