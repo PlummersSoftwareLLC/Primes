@@ -9,8 +9,17 @@ a version for the JVM.
 
 ## Run instructions
 
-The command (`gradlew.bat` for windows)
+The easy way.
 
+There are 2 run-xxxx.sh files.
+`./run-native.sh` will build the kexe (executable file) then run it natively.
+
+`./run-on-jvm.sh` wil build the JAR file then run it on a JVM
+
+
+**OR**
+
+The command (`gradlew.bat` for windows)
 `./gradlew build fatJar`
 
 will build the current platform native artifact, and JVM artifact.
