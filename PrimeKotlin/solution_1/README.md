@@ -53,10 +53,13 @@ for your current platform and run it.
     java -jar build/libs/PrimeKotlin-fat-1.0.0-SNAPSHOT.jar                                                                           16.6s ? Sat Jul 24 08:08:44 2021
     xvolks-jvm;5241;5.0;1;algorithm=base;faithful=yes,bits=unknown
 
-### Note
+### Notes
+#### Note 1
 The results in native compilation is painfully slow. This is still in development at
 https://github.com/JetBrains/kotlin
 
+#### Note 2
+I do not have any relation with JetBrains besides using their community products.
 
 
 
