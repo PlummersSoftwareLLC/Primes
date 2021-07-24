@@ -1,18 +1,29 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
-    FlagStorageByteVector, FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, PrimeSieve,
+    FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageByteVector, PrimeSieve,
 };
-use std::{thread, time::{Duration, Instant}};
+
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
 use structopt::StructOpt;
 
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
+
+    /// Shorthand for the `u8` bit count to avoid additional conversions.
+    const U8_BITS: usize = u8::BITS as usize;
+
+    /// Shorthand for the `u32` bit count to avoid additional conversions.
+    const U32_BITS: usize = u32::BITS as usize;
 
     /// Validator to compare against known primes.
     /// Pulled this out into a separate struct, as it's defined
     /// `const` in C++. There are various ways to do this in Rust, including
     /// lazy_static, etc. Should be able to do the const initialisation in the future.
     pub struct PrimeValidator(HashMap<usize, usize>);
+
     impl Default for PrimeValidator {
         fn default() -> Self {
             let map = [
@@ -31,6 +42,7 @@ pub mod primes {
             PrimeValidator(map)
         }
     }
+
     impl PrimeValidator {
         // Return Some(true) or Some(false) if we know the answer, or None if we don't have
         // an entry for the given sieve_size.
@@ -42,9 +54,9 @@ pub mod primes {
             }
         }
 
-        #[allow(dead_code)]
-        pub fn known_results(&self) -> &HashMap<usize, usize> {
-            &self.0
+        #[cfg(test)]
+        pub fn known_results_iter(&self) -> impl Iterator<Item = (&usize, &usize)> {
+            self.0.iter()
         }
     }
 
@@ -67,13 +79,13 @@ pub mod primes {
     /// remain so for all time. To ensure consistent memory use in the future,
     /// we're explicitly using bytes (u8) here.
     pub struct FlagStorageByteVector(Vec<u8>);
+
     impl FlagStorage for FlagStorageByteVector {
         fn create_true(size: usize) -> Self {
             FlagStorageByteVector(vec![1; size])
         }
 
-
-        // bounds checks are elided since we're runing up to .len()
+        // bounds checks are elided since we're running up to .len()
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
@@ -83,6 +95,7 @@ pub mod primes {
             }
         }
 
+        #[inline(always)]
         fn get(&self, index: usize) -> bool {
             if let Some(val) = self.0.get(index) {
                 *val == 1
@@ -99,12 +112,11 @@ pub mod primes {
         length_bits: usize,
     }
 
-    const U32_BITS: usize = 32;
     impl FlagStorage for FlagStorageBitVector {
         fn create_true(size: usize) -> Self {
             let num_words = size / U32_BITS + (size % U32_BITS).min(1);
             FlagStorageBitVector {
-                words: vec![0xffffffff; num_words],
+                words: vec![u32::MAX; num_words],
                 length_bits: size,
             }
         }
@@ -124,6 +136,7 @@ pub mod primes {
             }
         }
 
+        #[inline(always)]
         fn get(&self, index: usize) -> bool {
             if index >= self.length_bits {
                 return false;
@@ -133,7 +146,7 @@ pub mod primes {
         }
     }
 
-    /// Storage using a vector of 32-bit words, but addressing individual bits within each. Bits are 
+    /// Storage using a vector of 32-bit words, but addressing individual bits within each. Bits are
     /// reset by rotating the mask left instead of modulo+shift.
     pub struct FlagStorageBitVectorRotate {
         words: Vec<u32>,
@@ -144,7 +157,7 @@ pub mod primes {
         fn create_true(size: usize) -> Self {
             let num_words = size / U32_BITS + (size % U32_BITS).min(1);
             FlagStorageBitVectorRotate {
-                words: vec![0xffffffff; num_words],
+                words: vec![u32::MAX; num_words],
                 length_bits: size,
             }
         }
@@ -167,6 +180,7 @@ pub mod primes {
             }
         }
 
+        #[inline(always)]
         fn get(&self, index: usize) -> bool {
             if index >= self.length_bits {
                 return false;
@@ -177,42 +191,44 @@ pub mod primes {
     }
 
     /// Storage using a vector of (8-bit) bytes, but individually addressing bits within
-    /// each byte for bit-level storage. This is a fun variation I made up myself, but 
-    /// I'm pretty sure it's not original: someone must have done this before, and it 
-    /// probably has a name. If you happen to know, let me know :) 
+    /// each byte for bit-level storage. This is a fun variation I made up myself, but
+    /// I'm pretty sure it's not original: someone must have done this before, and it
+    /// probably has a name. If you happen to know, let me know :)
     ///
-    /// The idea here is to store bits in a different order. First we make use of all the 
-    /// _first_ bits in each word. Then we come back to the start of the array and 
+    /// The idea here is to store bits in a different order. First we make use of all the
+    /// _first_ bits in each word. Then we come back to the start of the array and
     /// proceed to use the _second_ bit in each word, and so on.
     ///
     /// There is a computation / memory bandwidth tradeoff here. This works well
-    /// only for sieves that fit inside the processor cache. For processors with 
-    /// smaller caches or larger sieves, this algorithm will result in a lot of 
+    /// only for sieves that fit inside the processor cache. For processors with
+    /// smaller caches or larger sieves, this algorithm will result in a lot of
     /// cache thrashing.
-    const U8_BITS: usize = 8;
     pub struct FlagStorageBitVectorStriped {
         words: Vec<u8>,
         length_bits: usize,
     }
+
     impl FlagStorageBitVectorStriped {
         fn ceiling(numerator: isize, denominator: isize) -> isize {
             (numerator + denominator - 1) / denominator
         }
     }
+
     impl FlagStorage for FlagStorageBitVectorStriped {
         fn create_true(size: usize) -> Self {
             let num_words = size / U8_BITS + (size % U8_BITS).min(1);
             Self {
-                words: vec![0xff; num_words],
+                words: vec![u8::MAX; num_words],
                 length_bits: size,
             }
         }
 
+        #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let chunk = self.words.len();
             for bit in 0..8 {
                 // get mask for this bit position
-                let mask = !(1_u8 << bit);
+                let mask = !(1 << bit);
 
                 // calculate start word for this stripe
                 let chunk_start = bit * chunk;
@@ -234,6 +250,7 @@ pub mod primes {
             }
         }
 
+        #[inline(always)]
         fn get(&self, index: usize) -> bool {
             if index > self.length_bits {
                 return false;
@@ -245,9 +262,8 @@ pub mod primes {
         }
     }
 
-
-    /// The actual sieve implementation, generic over the storage. This allows us to 
-    /// include the storage type we want without re-writing the algorithm each time. 
+    /// The actual sieve implementation, generic over the storage. This allows us to
+    /// include the storage type we want without re-writing the algorithm each time.
     pub struct PrimeSieve<T: FlagStorage> {
         sieve_size: usize,
         flags: T,
@@ -265,6 +281,7 @@ pub mod primes {
             }
         }
 
+        #[inline(always)]
         fn is_num_flagged(&self, number: usize) -> bool {
             if number % 2 == 0 {
                 return false;
@@ -318,7 +335,7 @@ pub mod primes {
             for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.is_num_flagged(*n)) {
                 print!("{},", num);
             }
-            eprint!("\n");
+            eprintln!();
         }
 
         let count = prime_sieve.count_primes();
@@ -342,7 +359,13 @@ pub mod primes {
 
     /// print correctly-formatted results to `stderr` as per CONTRIBUTING.md
     /// - format is <name>;<iterations>;<total_time>;<num_threads>
-    pub fn report_results_stdout(label: &str, bits_per_prime: usize, duration: Duration, passes: usize, threads: usize) {
+    pub fn report_results_stdout(
+        label: &str,
+        bits_per_prime: usize,
+        duration: Duration,
+        passes: usize,
+        threads: usize,
+    ) {
         println!(
             "mike-barber_{};{};{:.10};{};algorithm=base,faithful=yes,bits={}",
             label,
@@ -391,7 +414,7 @@ struct CommandLineOptions {
     /// Run variant that uses bit-level storage, using striped storage
     #[structopt(long)]
     bits_striped: bool,
-    
+
     /// Run variant that uses byte-level storage
     #[structopt(long)]
     bytes: bool,
@@ -412,8 +435,10 @@ fn main() {
     };
 
     // run all implementations if no options are specified (default)
-    let run_all = [opt.bits, opt.bits_rotate, opt.bits_striped, opt.bytes].iter().all(|b| !b);
-    
+    let run_all = [opt.bits, opt.bits_rotate, opt.bits_striped, opt.bytes]
+        .iter()
+        .all(|b| !*b);
+
     for threads in thread_options {
         if opt.bytes || run_all {
             thread::sleep(Duration::from_secs(1));
@@ -574,7 +599,7 @@ mod tests {
 
     fn sieve_known_correct<T: FlagStorage>() {
         let validator = PrimeValidator::default();
-        for (sieve_size, expected_primes) in validator.known_results().iter() {
+        for (sieve_size, expected_primes) in validator.known_results_iter() {
             let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(*sieve_size);
             sieve.run_sieve();
             assert_eq!(
