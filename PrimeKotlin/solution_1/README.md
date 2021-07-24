@@ -7,6 +7,8 @@ As an example, I have included in the `build.gradle.kts` file
 the generation of macOS, Linux and Windows executables and 
 a version for the JVM.
 
+
+
 ## Run instructions
 
 The easy way.
@@ -45,12 +47,11 @@ for your current platform and run it.
 ### Results
 #### Native
     ./build/bin/native/releaseExecutable/PrimeKotlin.kexe
-    Passes: 2761, Time: 10.001, Avg: 0.0036222385, Limit: 1000000, Count: 78498, Valid: true
+    xvolks-native;1334;5.002;1;algorithm=base;faithful=yes,bits=unknown
 
 #### JVM
     java -jar build/libs/PrimeKotlin-fat-1.0.0-SNAPSHOT.jar                                                                           16.6s ? Sat Jul 24 08:08:44 2021
-    Passes: 10632, Time: 10.0, Avg: 9.405568E-4, Limit: 1000000, Count: 78498, Valid: true
-
+    xvolks-jvm;5241;5.0;1;algorithm=base;faithful=yes,bits=unknown
 
 ### Note
 The results in native compilation is painfully slow. This is still in development at

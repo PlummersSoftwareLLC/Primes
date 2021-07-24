@@ -1,5 +1,7 @@
 import kotlin.math.sqrt
 
+expect val label: String
+
 class PrimeKotlin(private val sieveSize: Int) {
     private val Bits = BooleanArray(sieveSize+1) { true }
 
@@ -39,7 +41,8 @@ class PrimeKotlin(private val sieveSize: Int) {
         if (showResults) {
             println()
         }
-        println("Passes: $passes, Time: $duration, Avg: ${duration / passes}, Limit: ${sieveSize}, Count: $count, Valid: ${validateResults()}")
+//        println("Passes: $passes, Time: $duration, Avg: ${duration / passes}, Limit: ${sieveSize}, Count: $count, Valid: ${validateResults()}")
+        println("xvolks-$label;$passes;$duration;1;algorithm=base;faithful=yes,bits=unknown")
     }
 
     private fun validateResults(): Boolean {
@@ -90,7 +93,7 @@ fun main(args: Array<String>) {
     val sec = try {
         args[0].toLong()
     } catch (e: Exception) {
-        10_000
+        5_000
     }
     doIt(sec)
 }
