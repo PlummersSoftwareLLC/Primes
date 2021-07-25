@@ -124,11 +124,11 @@ PRO PRIMEIDL_1BIT
     sieve = OBJ_NEW('PRIMESIEVE', 1000000LL)
     sieve->RUN
     time_end = SYSTIME(/SECONDS)
-    passes++
+    ++passes
     IF time_end - time_start GE 5D THEN BEGIN
         PRINT,FORMAT='(A0,";",I0,";",F0,";",I0,";algorithm=",A0,",faithful=",A0,",bits=",I1)', $
           'kriztioan_1bit', $
-          ++passes, $
+          passes, $
           time_end - time_start, $
           !CPU.TPOOL_NTHREADS, $
           'base', $
