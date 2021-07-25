@@ -56,12 +56,9 @@ public:
     }
 
     void setFlagsFalse(size_t n, size_t skip) {
-        auto rolling_mask = ~uint32_t(1 << n % 32);
-        auto roll_bits = skip % 32;
-        while (n < arrSize) {
-            array[index(n)] &= rolling_mask;
-            n += skip;
-            rolling_mask = rol(rolling_mask, roll_bits);
+        const auto rolling_mask = ~uint32_t(1 << n % 32);
+        for (int c = 0; n < arrSize; ++c, n += skip) {
+            array[index(n)] &= rol(rolling_mask, (c * skip) % 32);
         }
     }
     
