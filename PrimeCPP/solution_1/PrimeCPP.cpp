@@ -11,10 +11,28 @@
 #include <map>
 #include <cstring>
 #include <cmath>
+#include <array>
+#include <thread>
 
 using namespace std;
 using namespace std::chrono;
 
+enum class Types {
+    rol,
+    masks,
+};
+
+auto typeToChar(Types type) {
+    #define CASE(type) case Types::type: return #type
+    switch (type) {
+    CASE(rol);
+    CASE(masks);
+    }
+    return "unhandled";
+    #undef CASE
+}
+
+template<Types type>
 class BitArray {
     uint32_t *array;
     size_t arrSize;
@@ -34,6 +52,11 @@ class BitArray {
     inline void setFalseSubindex(size_t n, uint32_t &d) {
         d &= ~uint32_t(uint32_t(0x01) << (n % (8*sizeof(uint32_t))));
     }
+
+    inline static constexpr uint32_t rol(uint32_t x, uint32_t n) {
+        return (x<<n) | (x>>(32-n));
+    }
+
 public:
     explicit BitArray(size_t size) : arrSize(size) {
         array = new uint32_t[arraySize(size)];
@@ -46,27 +69,45 @@ public:
         return getSubindex(n, array[index(n)]);
     }
 
-    static constexpr uint32_t rol(uint32_t x, uint32_t n) {
-        return (x<<n) | (x>>(32-n));
-    }
-
-    void setFlagsFalse(size_t n, size_t skip) {
-        auto rolling_mask = ~uint32_t(1 << n % 32);
-        auto roll_bits = skip % 32;
-        while (n < arrSize) {
-            array[index(n)] &= rolling_mask;
-            n += skip;
-            rolling_mask = rol(rolling_mask, roll_bits);
-        }
-    }
+    void setFlagsFalse(size_t n, size_t skip);
 };
 
+constexpr std::array<uint32_t, 32> get_rolling_masks(){
+    std::array<uint32_t, 32>  out{0};
+    auto x = ~uint32_t(1);
+    out[0] = x;
+    for(int i = 1 ; i < 32 ; ++i) {
+        out[i] = (x<<i) | (x>>(32-i));
+    }
+    return out;
+}
+
+constexpr std::array<uint32_t, 32> rolling_masks = get_rolling_masks();
+
+template<>
+void BitArray<Types::rol>::setFlagsFalse(size_t n, size_t skip){
+    auto rolling_mask = ~uint32_t(1 << n % 32);
+    auto roll_bits = skip % 32;
+    while (n < arrSize) {
+        array[index(n)] &= rolling_mask;
+        n += skip;
+        rolling_mask = rol(rolling_mask, roll_bits);
+    }
+}
+template<>
+void BitArray<Types::masks>::setFlagsFalse(size_t n, size_t skip){
+    auto n_orig = n;
+    for (int c = 0; n < arrSize; ++c, n += skip)
+        array[index(n)] &= rolling_masks[(c * skip + n_orig) % 32];
+}
+
+template<Types type>
 class prime_sieve
 {
   private:
 
       long sieveSize = 0;
-      BitArray Bits;
+      BitArray<type> Bits;
       static const std::map<const long long, const int> resultsDictionary;
 
       bool validateResults()
@@ -139,7 +180,7 @@ class prime_sieve
 
           // Following 2 lines added by rbergen to conform to drag race output format
           printf("\n");       
-          printf("davepl_pol;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
+          printf("davepl_pol_Michoumichmich_%s;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", typeToChar(type), passes, duration);
       }
 
       int countPrimes()
@@ -152,7 +193,8 @@ class prime_sieve
       }
 };
 
-const std::map<const long long, const int> prime_sieve::resultsDictionary =
+template<Types type>
+const std::map<const long long, const int> prime_sieve<type>::resultsDictionary =
 {
     {          10LL, 4         },               // Historical data for validating our results - the number of primes
     {         100LL, 25        },               // to be found under some limit, such as 168 primes under 1000
@@ -166,14 +208,15 @@ const std::map<const long long, const int> prime_sieve::resultsDictionary =
     { 10000000000LL, 455052511 },
 };
 
-int main()
-{
+template<Types type>
+void run() {
+    this_thread::sleep_for(5s); // Let CPU stabilize.
     auto passes = 0;
     auto tStart = steady_clock::now();
 
     while (true)
     {
-        prime_sieve sieve(1000000L);
+        prime_sieve<type> sieve(1000000L);
         sieve.runSieve();
         passes++;
         if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= 5)
@@ -182,4 +225,10 @@ int main()
             break;
         }
     } 
+}
+
+int main()
+{
+    run<Types::rol>();
+    run<Types::masks>();
 }
