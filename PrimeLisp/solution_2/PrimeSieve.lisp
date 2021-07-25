@@ -110,7 +110,7 @@
   "Invoke test, and then check if sieve-state is correct
 according to the historical data in +results+."
   (let ((hist (cdr (assoc (sieve-state-maxints sieve-state) +results+ :test #'=))))
-    (if (and (test) hist (= hist (count-primes sieve-state))) "yes" "no")))
+    (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
 (let* ((passes 0)

@@ -34,9 +34,6 @@
 (defconstant +MASK+ (1- +bits-per-word+))
 (defconstant +SHIFT+ (- (logcount +MASK+)))
 
-(deftype nonneg-fixnum ()
-  `(integer 0 ,most-positive-fixnum))
-
 (deftype sieve-element-type ()
   `(unsigned-byte ,+bits-per-word+))
 
@@ -278,7 +275,7 @@
 
 (defclass sieve-state ()
   ((maxints :initarg :maxints
-            :type nonneg-fixnum
+            :type fixnum
             :accessor sieve-state-maxints)
 
    (a       :initarg :a
@@ -287,7 +284,7 @@
 
 
 (defun create-sieve (maxints)
-  (declare (nonneg-fixnum maxints))
+  (declare (fixnum maxints))
   (make-instance 'sieve-state
     :maxints maxints
     :a (make-array
@@ -370,7 +367,7 @@
   "Invoke test, and then check if sieve-state is correct
 according to the historical data in +results+."
   (let ((hist (cdr (assoc (sieve-state-maxints sieve-state) +results+ :test #'=))))
-    (if (and (test) hist (= hist (count-primes sieve-state))) "yes" "no")))
+    (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
 (let* ((passes 0)
