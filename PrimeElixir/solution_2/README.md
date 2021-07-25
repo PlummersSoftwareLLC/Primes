@@ -9,12 +9,29 @@ In Elixir it is possible to address a single bit in a binary (or what other prog
 
 ## Run instructions
 
+Local:
+
 ```sh
 MIX_ENV=prod mix run -e 'PrimeSieve.main'
 ```
 
+Docker:
+
+```sh
+docker build -t primeelixir .
+docker run primeelixir
+```
+
 ## Output
+
+Intel Core i7 4770k, Windows 10
 
 ```txt
 thomas9911;34;5.732;1;algorithm=base,faithful=yes,bits=1
+```
+
+AMD Ryzen 7 5800H, Ubuntu 21.04 in Docker
+
+```txt
+thomas9911;48;5.156;1;algorithm=base,faithful=yes,bits=1
 ```
