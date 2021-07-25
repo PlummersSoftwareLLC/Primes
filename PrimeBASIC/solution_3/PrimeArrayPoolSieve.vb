@@ -1,7 +1,7 @@
 ﻿Imports System.Buffers
 Imports System.Runtime.CompilerServices
 
-Class PrimeSieve
+Class PrimeArrayPoolSieve
     Inherits SieveBase
 
     Public ReadOnly Property SieveSize As Integer

@@ -11,24 +11,24 @@ Module Program
 	End Sub
 
     Sub Startup(
-        <Display(ShortName:="f", Description:="Whether to use the faithful implementation. Valid values: yes, no or all.")>
-        faithful As String)
+        <Display(ShortName:="p", Description:="Whether to use the ArrayPool implementation. Valid values: yes, no or all.")>
+        arraypool As String)
 
-        Select Case faithful
+        Select Case arraypool
             Case "all"
-                RunTest(False)
                 RunTest(True)
+                RunTest(False)
             Case "yes"
                 RunTest(True)
             Case "no"
                 RunTest(False)
             Case Else
-                Console.Error.WriteLine("The parameter 'faithful' is incorrect. Use /? to view help.")
+                Console.Error.WriteLine($"The parameter '{NameOf(arraypool)}' is incorrect. Use /? to view help.")
                 Environment.Exit(1)
         End Select
     End Sub
 
-    Private Sub RunTest(isFaithful As Boolean)
+    Private Sub RunTest(useArrayPool As Boolean)
         Dim referenceResults As New Dictionary(Of Integer, Integer) From {
             {10, 4},
             {100, 25},
@@ -49,16 +49,19 @@ Module Program
         Const FiveSeconds = TicksPerSecond * 5
 
         Dim startTime = Date.UtcNow.Ticks
-        If isFaithful Then
+        Dim implType As String
+        If useArrayPool Then
+            implType = "ArrayPool"
             Do
-                Dim sieveInner As New PrimeFaithfulSieve(sieveSize)
+                Dim sieveInner As New PrimeArrayPoolSieve(sieveSize)
                 sieveInner.Run()
                 sieve = sieveInner
                 passCount += 1
             Loop While Date.UtcNow.Ticks - startTime < FiveSeconds
         Else
+            implType = "ReDim"
             Do
-                Dim sieveInner As New PrimeSieve(sieveSize)
+                Dim sieveInner As New PrimeReDimSieve(sieveSize)
                 sieveInner.Run()
                 sieve = sieveInner
                 passCount += 1
@@ -71,6 +74,6 @@ Module Program
             Console.WriteLine("WARNING: result is incorrect!")
         End If
 
-        Console.WriteLine($"Nukepayload2_CsKinematicsArrayPool8of30M;{passCount};{duration};1;algorithm=wheel,faithful={If(isFaithful, "yes", "no")},bits=1")
+        Console.WriteLine($"Nukepayload2_{implType}8of30M;{passCount};{duration};1;algorithm=wheel,faithful=yes,bits=1")
     End Sub
 End Module

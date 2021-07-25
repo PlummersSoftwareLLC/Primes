@@ -1,6 +1,6 @@
 ﻿Imports System.Runtime.CompilerServices
 
-Class PrimeFaithfulSieve
+Class PrimeReDimSieve
 	Inherits SieveBase
 
 	Public ReadOnly Property SieveSize As Integer
