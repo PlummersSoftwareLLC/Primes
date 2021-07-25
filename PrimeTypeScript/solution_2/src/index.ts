@@ -81,8 +81,6 @@ class PrimeSieve {
   }
 }
 
-// --- Main "function"
-
 let passes = 0;
 let startTime = Date.now();
 const sieveSize = 1e6;
