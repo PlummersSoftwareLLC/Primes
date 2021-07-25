@@ -3,7 +3,6 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
@@ -22,10 +21,13 @@ The state of the sieve is stored in a Lisp class.
 For Common Lisp bit ops see https://lispcookbook.github.io/cl-cookbook/numbers.html#bit-wise-operation
 Also it uses inverted logic, i.e. 0 for primes.
 
+`PrimeSievewordops.lisp` sets multiple bits at a time by copying bitpatterns (that are shifted and masked appropriately)
+into the word-array.
+
 `PrimeSieveWheel.lisp` is a Common Lisp port of sieve_5760of30030_only_write_read_bits.c
 by Daniel Spangberg.
 
-The state of the sieve is stored in a Lisp struct.
+The state of the sieve is stored in a Lisp class.
 
 Algorithm is _wheel_, see PrimeC/solution_2/README.md for a better explanation than I would be able to give.
 
@@ -65,15 +67,17 @@ If you can't or won't install sbcl then use `docker` or `podman` to build and ru
 Using sbcl 2.0.0 on Windows 7, Pentium(R) Dual Core T4300 @ 2.10GHz I get
 
     D:\robert\projects\Primes\PrimeLisp\solution_2>run.cmd 2>nul
-    mayerrobert-cl;1852;5.002;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-clb;2195;5.002;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-wheel;5369;5.0;1;algorithm=wheel,faithful=no,bits=1
-    mayerrobert-cl-wheel-opt;6005;5.0;1;algorithm=wheel,faithful=no,bits=1
+    mayerrobert-cl;1987;5.007;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-clb;2209;5.007;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-wheel;5490;5.007;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-wheel-opt;6026;5.008;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-words;4086;5.008;1;algorithm=base,faithful=yes,bits=1
 
 Using sbcl 2.1.6 on Windows 10/ WSL2/ debian 10.9, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz I get
 
     $ ./run.sh 2>/dev/null
-    mayerrobert-cl;3605;5.0;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-clb;5326;5.0;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-wheel;15512;5.0;1;algorithm=wheel,faithful=no,bits=1
-    mayerrobert-cl-wheel-opt;16742;5.0;1;algorithm=wheel,faithful=no,bits=1
+    mayerrobert-cl;3610;5.0;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-wheel;16183;5.0;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-wheel-opt;16053;5.0;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-clb;5348;5.0;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-words;11692;5.0;1;algorithm=base,faithful=yes,bits=1
