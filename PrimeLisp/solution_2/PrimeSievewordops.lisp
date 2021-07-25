@@ -277,4 +277,4 @@ according to the historical data in +results+."
     (format *error-output* "Algorithm: base w/ wordops  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
             passes duration (* 1000 avg) (count-primes result) (validate result))
 
-    (format t "mayerrobert-cl-words;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration)))
+    (format t "mayerrobert-cl-words;~d;~f;1;algorithm=base,faithful=no,bits=1~%" passes duration)))

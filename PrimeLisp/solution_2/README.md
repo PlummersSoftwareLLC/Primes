@@ -3,6 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
@@ -71,7 +72,7 @@ Using sbcl 2.0.0 on Windows 7, Pentium(R) Dual Core T4300 @ 2.10GHz I get
     mayerrobert-clb;2209;5.007;1;algorithm=base,faithful=yes,bits=1
     mayerrobert-cl-wheel;5490;5.007;1;algorithm=wheel,faithful=yes,bits=1
     mayerrobert-cl-wheel-opt;6026;5.008;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-words;4086;5.008;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-words;4086;5.008;1;algorithm=base,faithful=no,bits=1
 
 Using sbcl 2.1.6 on Windows 10/ WSL2/ debian 10.9, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz I get
 
@@ -80,4 +81,4 @@ Using sbcl 2.1.6 on Windows 10/ WSL2/ debian 10.9, 11th Gen Intel(R) Core(TM) i5
     mayerrobert-cl-wheel;16183;5.0;1;algorithm=wheel,faithful=yes,bits=1
     mayerrobert-cl-wheel-opt;16053;5.0;1;algorithm=wheel,faithful=yes,bits=1
     mayerrobert-clb;5348;5.0;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-words;11692;5.0;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-words;11692;5.0;1;algorithm=base,faithful=no,bits=1
