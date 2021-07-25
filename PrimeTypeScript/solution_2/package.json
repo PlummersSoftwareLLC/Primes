@@ -6,8 +6,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf ./build",
-    "start": "node --expose-gc ./build/index.js --32only",
-    "start-all": "node --expose-gc ./build/index.js",
+    "start": "node --expose-gc ./build/index.js",
     "dev": "tsc && node ./build/index.js"
   },
   "keywords": [],
