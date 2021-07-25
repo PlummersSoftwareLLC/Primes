@@ -166,11 +166,11 @@ pub mod primes {
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
             let roll_bits = skip as u32;
-            let mut rolling_mask1 = !(1 << start % U32_BITS);
-            let mut rolling_mask2 = !(1 << (start + skip) % U32_BITS);
-            
+            let mut rolling_mask1 = !(1 << (start % U32_BITS));
+            let mut rolling_mask2 = !(1 << ((start + skip) % U32_BITS));
+
             // if the skip is larger than the word size, we're clearing bits in different
-            // words: we can unroll the loop
+            // words each time: we can unroll the loop
             if skip > U32_BITS {
                 let roll_bits_double = roll_bits * 2;
                 let unrolled_end = (self.words.len() * U32_BITS).saturating_sub(skip);
@@ -178,7 +178,7 @@ pub mod primes {
                     let word_idx1 = i / U32_BITS;
                     let word_idx2 = (i + skip) / U32_BITS;
                     // Safety: We have ensured that (i+skip) < self.words.len() * U32_BITS.
-                    // The compiler will not elide these bounds checks, 
+                    // The compiler will not elide these bounds checks,
                     // so there is a performance benefit to using get_unchecked_mut here.
                     unsafe {
                         *self.words.get_unchecked_mut(word_idx1) &= rolling_mask1;
@@ -193,7 +193,7 @@ pub mod primes {
             while i < self.words.len() * U32_BITS {
                 let word_idx = i / U32_BITS;
                 // Safety: We have ensured that word_index < self.words.len().
-                // Unsafe usage to ensure that we elide the bounds check reliably.
+                // Unsafe required to ensure that we elide the bounds check reliably.
                 unsafe {
                     *self.words.get_unchecked_mut(word_idx) &= rolling_mask1;
                 }
@@ -264,7 +264,7 @@ pub mod primes {
                 if chunk_start < chunk {
                     let slice = &mut self.words[chunk_start..];
                     let mut i = 0;
-                    
+
                     // unrolled loop
                     let end_unrolled = slice.len().saturating_sub(skip);
                     while i < end_unrolled {
@@ -278,7 +278,7 @@ pub mod primes {
                         i += skip + skip;
                     }
 
-                    // remainder - compiler elides these bounds checks as 
+                    // remainder - compiler elides these bounds checks as
                     // the loop is simple enough
                     while i < slice.len() {
                         slice[i] &= mask;
