@@ -20,6 +20,6 @@ export class BitNumArray implements IBitArray {
   }
 
   public get bitsPerFlag() {
-    return 32; // I think
+    return undefined;
   }
 }

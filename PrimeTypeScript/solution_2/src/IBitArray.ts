@@ -3,5 +3,5 @@ export interface IBitArray {
   size: number
   get(i: number): number;
   setTrue(i: number): void;
-  bitsPerFlag: number;
+  bitsPerFlag: number | undefined;
 }

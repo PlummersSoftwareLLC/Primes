@@ -3,7 +3,6 @@ import { IBitArray } from "./IBitArray";
 import { BitNumArray } from "./BitNumArray";
 import { BitByteArray } from "./BitByteArray";
 import { Bit32Array } from "./Bit32Array";
-import { Solution1ByteBuffer } from './Solution1ByteBuffer'
 
 const DICT: { [size: number]: number } = {
   10: 4,
@@ -49,7 +48,7 @@ class PrimeSieve {
     }
   }
 
-  public printResults(name: string, bitsPerFlag: number, duration: number, passes: number) {
+  public printResults(name: string, bitsPerFlag: number | undefined, duration: number, passes: number) {
     const avg = duration / passes;
     const countPrimes = this.countPrimes();
     const valid = this.validateResults();
@@ -58,7 +57,13 @@ class PrimeSieve {
     );
 
     // Based on: marghidanu
-    console.log(`mikevdbokke_${name};${passes};${duration};1;algorithm=base,faithful=yes,bits=${bitsPerFlag}`);
+    let tagLine = `mikevdbokke_${name};${passes};${duration};1;algorithm=base,faithful=yes`;
+    if (bitsPerFlag) {
+      tagLine += `,bits=${bitsPerFlag}`;
+    } else {
+      tagLine += `,bits=unknown`;
+    }
+    console.log(tagLine);
   }
 
   private countPrimes(): number {
@@ -112,43 +117,17 @@ function doGC() {
 }
 
 function main() {
-  doGC();
-
-  runOne((sieveSize: number) => {return new BitNumArray(sieveSize)}, sieveSize);
-
-  doGC();
-
-  runOne((sieveSize: number) => {return new Solution1ByteBuffer(sieveSize)}, sieveSize);
-
-  doGC();
-  
-  runOne((sieveSize: number) => {return new BitByteArray(sieveSize)}, sieveSize);
-  
-  doGC();
-  
-  runOne((sieveSize: number) => {return new Solution1ByteBuffer(sieveSize)}, sieveSize);
-  
+  runOne((sieveSize: number) => {return new Bit32Array(sieveSize)}, sieveSize);
   doGC();
   
   runOne((sieveSize: number) => {return new Bit8Array(sieveSize)}, sieveSize);
-  
+  doGC();
+
+  runOne((sieveSize: number) => {return new BitNumArray(sieveSize)}, sieveSize);
   doGC();
   
-  runOne((sieveSize: number) => {return new Bit32Array(sieveSize)}, sieveSize);
-  
+  runOne((sieveSize: number) => {return new BitByteArray(sieveSize)}, sieveSize);
   doGC();
 }
 
-let is32only = false;
-for (let arg of process.argv) {
-  if (arg=='--32only') {
-    is32only = true;
-  }
-}
-doGC();
-
-if (is32only) {
-  runOne((sieveSize: number) => {return new Bit32Array(sieveSize)}, sieveSize);
-} else {
-  main();
-}
+main();
