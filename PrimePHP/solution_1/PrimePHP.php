@@ -41,7 +41,8 @@ class PrimeSieve
         $factor = 3;
         $sieveSize = $this->sieveSize;
         $q = sqrt($sieveSize);
-        $rb = new SplFixedArray($this->rawBitsSize);
+		$rawBitsSize = $this->rawBitsSize;
+        $rb = new SplFixedArray($rawBitsSize);
 
         while ($factor < $q) {
             for ($i = $factor; $i <= $sieveSize; $i += 2) {
@@ -52,8 +53,8 @@ class PrimeSieve
             }
 
             $ft2 = $factor;
-            $start = ($factor * $factor) * 0.5;
-            for ($i = $start; $i <= $this->rawBitsSize; $i += $ft2) {
+            $start = $factor * $factor * 0.5;
+            for ($i = $start; $i <= $rawBitsSize; $i += $ft2) {
                 $rb[$i] = 1;
             }
 
