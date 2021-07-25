@@ -25,13 +25,6 @@ class PrimeSieve {
     private readonly bits: IBitArray
   ) {
     this.sieveSize = bits.size;
-    // Solution #1 - Passes: 3516 - 8 byte / bit
-    // this.bits = new BitNumArray(sieveSize);  // Passes: 195 - number / bit
-    // this.bits = new BitByteArray(sieveSize);  // Passes: 3248 - 8 byte / bit
-    // this.bits = new Bit8Array(sieveSize);  // Passes: 3965 - 1 bit / bit
-
-    // Fastest so far
-    // this.bits = new Bit32Array(sieveSize); // Passes: 4286 - 1 bit / bit
   }
 
   public runSieve() {
@@ -56,29 +49,16 @@ class PrimeSieve {
     }
   }
 
-  public printResults(showResults: boolean, name: string, bitsPerFlag: number, duration: number, passes: number) {
-    if (showResults) process.stdout.write("2, ");
-
-    let count = 1;
-    for (let num = 3; num < this.sieveSize; num += 2) {
-      if (!this.bits.get(num)) {
-        if (showResults) process.stdout.write(`${num}, `);
-        count++;
-      }
-    }
-
-    if (showResults) console.log();
-
-    // TODO: Add old style too
+  public printResults(name: string, bitsPerFlag: number, duration: number, passes: number) {
     const avg = duration / passes;
     const countPrimes = this.countPrimes();
     const valid = this.validateResults();
     console.error(
-      `Passes: ${passes}, Time: ${duration}, Avg: ${avg}, Limit: ${this.sieveSize}, Count1: ${countPrimes}, Count2: ${count}, Valid: ${valid}`
+      `Passes: ${passes}, Time: ${duration}, Avg: ${avg}, Limit: ${this.sieveSize}, Count: ${countPrimes}, Valid: ${valid}`
     );
 
     // Based on: marghidanu
-    console.log(`mikevdbokke/${name};${passes};${duration};${bitsPerFlag};algorithm=base,faithful=yes`);
+    console.log(`mikevdbokke_${name};${passes};${duration};1;algorithm=base,faithful=yes,bits=${bitsPerFlag}`);
   }
 
   private countPrimes(): number {
@@ -113,7 +93,7 @@ function runOne(createArray: (sieveSize: number) => IBitArray, sieveSize: number
     passes++;
     const duration = (Date.now() - startTime) / 1000;
     if (duration >= 5) {
-      sieve.printResults(false, bitArray.name, bitArray.bitsPerFlag, duration, passes);
+      sieve.printResults(bitArray.name, bitArray.bitsPerFlag, duration, passes);
       break;
     }
   }

@@ -4,7 +4,6 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
-![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 ## Run
 
