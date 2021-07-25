@@ -61,7 +61,7 @@ public:
         while (n < arrSize) {
             array[index(n)] &= rolling_mask;
             n += skip;
-            rolling_mask = rol(rolling_mask, skip);
+            rolling_mask = rol(rolling_mask, roll_bits);
         }
     }
     
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
     if (!bQuiet)
     {
         printf("Computing primes to %llu on %d thread%s for %d second%s.\n", 
-            llUpperLimit,
+            (unsigned long long)llUpperLimit,
             cThreads,
             cThreads == 1 ? "" : "s",
             cSeconds,
