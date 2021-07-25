@@ -75,7 +75,7 @@ void printResults(const Sieve &sieve, bool showResults, double duration, int pas
     if (showResults)
         printf("\n");
 
-    printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %llu, Count1: %d, Count2: %d, Valid: %d\n",
+    printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %lu, Count1: %d, Count2: %d, Valid: %d\n",
            passes,
            duration,
            duration / passes,
@@ -85,37 +85,49 @@ void printResults(const Sieve &sieve, bool showResults, double duration, int pas
            validateResults(sieve));
 
     printf("\n");
-    printf("flo80_constexpr;%d;%f;%d;algorithm=base,faithful=no,bits=1\n", passes, duration, threads);
+    printf("flo80_pol_constexpr;%d;%f;%d;algorithm=base,faithful=no,bits=1\n", passes, duration, threads);
 }
 
-void run(uint64_t upperLimit, const Sieve &checkSieve, int numberOfThreads = 1, int runtimeSeconds = 5)
+// Consteval in order to force clang to always optimize. Gcc consistently does
+// so with constexpr and inside the body.
+consteval auto execute() {
+    Sieve result;
+    result.runSieve();
+    return result;
+}
+
+void run(const Sieve &checkSieve, int numberOfThreads = 1, int runtimeSeconds = 5)
 {
 
     unsigned int passes = 0;
 
-    printf("Computing primes to %llu on %d thread%s for %d second%s.\n", upperLimit,
+    printf("Computing primes to %lu on %d thread%s for %d second%s.\n", checkSieve.size(),
            numberOfThreads,
            numberOfThreads == 1 ? "" : "s",
            runtimeSeconds,
            runtimeSeconds == 1 ? "" : "s");
 
     const auto tStart = steady_clock::now();
-    while (duration_cast<seconds>(steady_clock::now() - tStart).count() < runtimeSeconds)
-    {
-        vector<thread> threadPool;
-
-        for (unsigned int i = 0; i < numberOfThreads; i++)
+    if (numberOfThreads == 1) {
+        for (;duration_cast<seconds>(steady_clock::now() - tStart).count() < runtimeSeconds; ++passes)
         {
-            threadPool.push_back(thread([upperLimit]
-                                        {
-                                            auto sieve = Sieve(upperLimit);
-                                            sieve.runSieve();
-                                        }));
+            auto res = execute();
         }
-        for (auto &th : threadPool)
-            th.join();
-
-        passes += numberOfThreads;
+    } else {
+        std::thread threads[numberOfThreads];
+        uint64_t l_passes[numberOfThreads];
+        for (unsigned int i = 0; i < numberOfThreads; i++)
+            threads[i] = std::thread([i, &l_passes, &tStart]()
+            {
+                for (l_passes[i] = 0; duration_cast<seconds>(steady_clock::now() - tStart).count() < 5; ++l_passes[i])
+                {
+                    auto res = execute();
+                }
+            });
+        for (auto i = 0; i < numberOfThreads; i++) {
+            threads[i].join();
+            passes += l_passes[i];
+        }
     }
 
     const auto tEnd = steady_clock::now();
@@ -124,23 +136,13 @@ void run(uint64_t upperLimit, const Sieve &checkSieve, int numberOfThreads = 1, 
 
 int main(int argc, char **argv)
 {
-    uint64_t upperLimit = 1'000'000L;
-    constexpr int runtimeSeconds = 5;
-
-    if (argc > 1)
-    {
-        upperLimit = std::max((uint64_t)atoll(argv[argc - 1]), (uint64_t)1);
-        assert(upperLimit < Sieve::maxSize);
-    }
-
-    auto checkSieve = Sieve(upperLimit);
-    checkSieve.runSieve();
+    Sieve checkSieve = execute();
     const auto result = validateResults(checkSieve) ? checkSieve.count() : 0;
 
     const auto numberOfThreads = thread::hardware_concurrency();
     thread::hardware_concurrency();
-    run(upperLimit, checkSieve, numberOfThreads, runtimeSeconds);
-    run(upperLimit, checkSieve, 1, runtimeSeconds);
+    run(checkSieve, numberOfThreads, runtimeSeconds);
+    run(checkSieve, 1, runtimeSeconds);
 
     return result;
 }

@@ -1,13 +1,13 @@
-FROM ubuntu:18.04 AS build
+FROM ubuntu:21.04 AS build
 
 RUN apt-get update -qq \
-    && apt-get install -y clang-10
+    && apt-get install -y clang
 
 COPY *.cpp *.h /opt/app/
 WORKDIR /opt/app
-RUN clang++-10 -pthread -O3 -m64 -mtune=native -std=c++20 PrimeCPP_CONSTEXPR.cpp -oprimes_constexpr
+RUN clang++ -pthread -O3 -m64 -mtune=native -fconstexpr-steps=1000000000 -fconstexpr-depth=100000000 -std=c++20 PrimeCPP_CONSTEXPR.cpp -oprimes_constexpr
 
-FROM ubuntu:18.04
+FROM ubuntu:21.04
 COPY --from=build /opt/app/primes_constexpr /usr/local/bin
 
-ENTRYPOINT [ "primes_constexpr" , "1000000"]
+ENTRYPOINT [ "primes_constexpr" ]
