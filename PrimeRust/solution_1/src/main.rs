@@ -281,10 +281,18 @@ pub mod primes {
             }
         }
 
+        fn is_num_flagged(&self, number: usize) -> bool {
+            if number % 2 == 0 {
+                return false;
+            }
+            let index = number / 2;
+            self.flags.get(index)
+        }
+
         // count number of primes (not optimal, but doesn't need to be)
         pub fn count_primes(&self) -> usize {
-            (0..self.sieve_size / 2)
-                .filter(|v| self.flags.get(*v))
+            (1..self.sieve_size)
+                .filter(|v| self.is_num_flagged(*v))
                 .count()
         }
 
@@ -325,7 +333,7 @@ pub mod primes {
     ) {
         if show_results {
             eprint!("2,");
-            for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.flags.get(*n)) {
+            for num in (3..prime_sieve.sieve_size).filter(|n| prime_sieve.is_num_flagged(*n)) {
                 print!("{},", num);
             }
             eprintln!();
