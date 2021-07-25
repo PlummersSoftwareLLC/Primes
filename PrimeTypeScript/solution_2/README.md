@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
-![Bit count](https://img.shields.io/badge/Algorithm-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 ## Run
 
