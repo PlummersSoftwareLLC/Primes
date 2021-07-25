@@ -29,11 +29,7 @@
     (      10000 . 1229     )
     (     100000 . 9592     )
     (    1000000 . 78498    )
-    (   10000000 . 664579   )
-    ;(  100000000 . 5761455  )
-    ;( 1000000000 . 50847534 )
-    ;(10000000000 . 455052511)
-    )
+    (   10000000 . 664579   ))
   "Historical data for validating our results - the number of primes
    to be found under some limit, such as 168 primes under 1000")
 
