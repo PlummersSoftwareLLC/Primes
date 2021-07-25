@@ -56,7 +56,7 @@ public:
         while (n < arrSize) {
             array[index(n)] &= rolling_mask;
             n += skip;
-            rolling_mask = rol(rolling_mask, skip);
+            rolling_mask = rol(rolling_mask, roll_bits);
         }
     }
 };
