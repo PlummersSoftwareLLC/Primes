@@ -8,7 +8,8 @@
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 Contributors:
-- Michael Barber @mike-barber https://www.github.com/mike-barber
+- Michael Barber @mike-barber https://www.github.com/mike-barber -- original author
+- Kai Rese @Kulasko https://github.com/Kulasko -- numerous idiomatic improvements and detailed code review
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
@@ -35,14 +36,14 @@ Tested on a Ryzen 3900X, Rust 1.53, running on WSL2.
 
 This is as reported on `stdout`:
 ```
-mike-barber_byte-storage;18543;5.0002603531;1;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;12082;5.0004081726;1;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-rotate;12484;5.0002326965;1;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-striped;15576;5.0002875328;1;algorithm=base,faithful=yes,bits=1
-mike-barber_byte-storage;168821;5.0012035370;24;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;134987;5.0009522438;24;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-rotate;159453;5.0008320808;24;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-striped;182613;5.0009403229;24;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;18133;5.0003032684;1;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;11900;5.0003099442;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;14026;5.0002503395;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;18840;5.0001025200;1;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;168113;5.0010471344;24;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;134415;5.0008001328;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;165800;5.0009751320;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;189954;5.0009155273;24;algorithm=base,faithful=yes,bits=1
 ```
 
 We report more informative metrics to `stderr` too, but these don't go into the report, as recorded below.
