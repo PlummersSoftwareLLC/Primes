@@ -35,6 +35,7 @@ namespace PrimeSieveCS
             public prime_sieve(ulong n)
             {
                 sieveSize = n;
+                n/=2;               // only storing odd numbers
                 rawbits = GC.AllocateUninitializedArray<byte>((int)((n / 8) + 1), pinned: true);
                 rawbits.AsSpan().Fill(0xFF);
             }
