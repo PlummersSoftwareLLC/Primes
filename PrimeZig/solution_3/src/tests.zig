@@ -69,7 +69,7 @@ test "Test multithreaded-amdahl" {
     }
 }
 
-test "Test mulithreaded-gustafson" {
+test "Test multithreaded-gustafson" {
     inline for (expected_results) |result| {
         const field_size = result[0];
         const expected_primes = result[1];
@@ -80,6 +80,7 @@ test "Test mulithreaded-gustafson" {
 }
 
 test "Single threaded with bitsieve/8" {
+    std.debug.print("\n", .{});
     inline for (expected_results) |result| {
         const field_size = result[0];
         const expected_primes = result[1];
@@ -101,7 +102,7 @@ test "Single threaded with bitsieve/64" {
     }
 }
 
-const pregens = [_]comptime_int{2, 3, 4, 5};
+const wheels = [_]comptime_int{2, 3, 4, 5};
 const OEIS_PRIMES = [_]usize{ 3, 5, 7, 11, 13, 17, 19 };
 
 fn divisible_by(a: usize, b: usize) bool {
@@ -110,9 +111,9 @@ fn divisible_by(a: usize, b: usize) bool {
 
 test "Int Sieve boost produces correct byte values" {
     inline for (expected_results) |result| {
-        inline for (pregens) |pregen| {
+        inline for (wheels) |wheel| {
             const field_size = result[0];
-            const Sieve = IntSieve(u8, .{ .pregen = pregen });
+            const Sieve = IntSieve(u8, .{ .wheel = wheel });
 
             var sieve = try Sieve.init(allocator, field_size);
             defer sieve.deinit();
@@ -122,7 +123,7 @@ test "Int Sieve boost produces correct byte values" {
             for (sieve.field) |v, index| {
                 var target = 2 * index + 1;
                 var maybe_prime = true;
-                for (OEIS_PRIMES[0..pregen]) |prime| {
+                for (OEIS_PRIMES[0..wheel]) |prime| {
                     maybe_prime = maybe_prime and !divisible_by(target, prime);
                     maybe_prime = maybe_prime or (prime == target);
                 }
@@ -164,40 +165,12 @@ fn bit_fetch(comptime int_t: type, slice: []int_t, target: usize) bool {
     return (slice[slice_index] & bit_mask) != 0;
 }
 
-test "Bit Sieve boost produces correct bit values" {
-    inline for (intsizes) |int_t| {
-        inline for (expected_results) |result| {
-            inline for (pregens) |pregen| {
-                const field_size = result[0];
-                const Sieve = BitSieve(int_t, field_size, .{ .pregen = pregen });
-
-                var sieve = try Sieve.create(allocator);
-                defer sieve.destroy();
-
-                _ = sieve.reset();
-
-                var index: usize = 0;
-                while (index < (Sieve.size >> 1)) : (index += 1) {
-                    var target = 2 * index + 1;
-                    var shouldbe_prime = true;
-                    for (OEIS_PRIMES[0..pregen]) |prime| {
-                        shouldbe_prime = shouldbe_prime and !divisible_by(target, prime);
-                        shouldbe_prime = shouldbe_prime or (prime == target);
-                    }
-                    var field_val = bit_fetch(int_t, sieve.field.*[0..], index);
-                    std.testing.expectEqual(shouldbe_prime, field_val);
-                }
-            }
-        }
-    }
-}
-
-test "Single threaded Int Sieve with a boost from pregeneration" {
+test "Single threaded Int Sieve with a boost from wheeleration" {
     inline for (expected_results) |result| {
-        inline for (pregens) |pregen| {
+        inline for (wheels) |wheel| {
             const field_size = result[0];
             const expected_primes = result[1];
-            const Sieve = IntSieve(u8, .{ .pregen = pregen });
+            const Sieve = IntSieve(u8, .{ .wheel = wheel });
 
             var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
             try std.testing.expectEqual(passes, 1);
@@ -205,15 +178,15 @@ test "Single threaded Int Sieve with a boost from pregeneration" {
     }
 }
 
-test "Single threaded Bit Sieve with a boost from pregeneration" {
+test "Single threaded Bit Sieve with a boost from wheeleration" {
     inline for (expected_results) |result| {
-        inline for (pregens) |pregen| {
+        inline for (wheels) |wheel| {
             const field_size = result[0];
             const expected_primes = result[1];
-            const Sieve = BitSieve(u8, field_size, .{ .pregen = pregen });
+            const Sieve = BitSieve(u8, .{ .wheel = wheel });
 
-            var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), expected_primes, true);
-            std.testing.expectEqual(@as(u64, 2), passes);
+            var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+            try std.testing.expectEqual(@as(u64, 1), passes);
         }
     }
 }

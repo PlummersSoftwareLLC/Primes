@@ -2,11 +2,14 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const WheelFn = @import("wheel.zig").Wheel;
 
-const SieveOpts = struct { pregen: ?comptime_int = null, bulksearch: bool = false };
+const SieveOpts = struct {
+    wheel: ?comptime_int = null,
+    bulksearch: bool = false,
+    cached_masks: bool = false };
 
 pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
     // store the wheel type
-    const Wheel: ?type = if (opts.pregen) | pregen | WheelFn(pregen, .byte) else null;
+    const Wheel: ?type = if (opts.wheel) | wheel | WheelFn(wheel, .byte) else null;
     const bulksearch = opts.bulksearch;
 
     return struct {
@@ -183,7 +186,7 @@ pub fn IntSieve(comptime T: type, opts: SieveOpts) type {
 
 pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
     // store the wheel type
-    const Wheel: ?type = if (opts.pregen) | pregen | WheelFn(pregen, .bit) else null;
+    const Wheel: ?type = if (opts.wheel) | wheel | WheelFn(wheel, .bit) else null;
 
     return struct {
         // values
@@ -191,13 +194,15 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
         const bit_width = @bitSizeOf(T);
         const one: T = 1;
         const bit_shift = switch (T) {
+            u256 => 8,
+            u128 => 7,
             u64 => 6,
             u32 => 5,
             u16 => 4,
             u8 => 3,
             else => unreachable,
         };
-        const smallint_t = std.meta.Int(.unsigned, bit_shift);
+        const shift_t = std.meta.Int(.unsigned, bit_shift);
         const bit_mask: T = (1 << bit_shift) - 1;
 
         // storage
@@ -222,7 +227,7 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
         }
 
         pub fn reset(self: *Self) usize {
-            const finalmask: T = (one << @intCast(smallint_t, (self.field_size >> 1) & bit_mask)) - 1;
+            const finalmask: T = (one << @intCast(shift_t, (self.field_size >> 1) & bit_mask)) - 1;
 
             var starting_point: usize = 0;
 
@@ -263,7 +268,6 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
         pub fn primeCount(self: *Self) usize {
             var count: usize = 0;
             var idx: usize = 0;
-
 
             for (self.field) |value| {
                 count += @popCount(T, value);
@@ -357,6 +361,43 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
+            if (opts.cached_masks) {
+                if (factor < bit_width / 2) {
+                    self.runFactorSmall(factor);
+                } else {
+                    self.runFactorBig(factor);
+                }
+            } else {
+                self.runFactorBig(factor);
+            }
+        }
+
+        fn runFactorSmall(self: *Self, factor: usize) void {
+            // for small factors, where you're likely to try to assign
+            comptime const masks = bit_masks();
+            const inner_iterations = bit_width / factor;
+            var location: usize = factor >> 1;
+            for (self.field) |*field_chunk| {
+                var cache = bit_mask;
+                var inner: usize = 0;
+                while (inner < inner_iterations) : (inner += 1) {
+                    cache &= masks[location % bit_width];
+                    location += factor;
+                }
+                const overflowed = (location % bit_width) < factor;
+                cache = select(T, overflowed, cache, cache & masks[location % bit_width]);
+                location = select(usize, overflowed, location, location + factor);
+                field_chunk.* &= cache;
+            }
+            // restore the initial prime itself.
+            self.field[0] |= (@as(T, 1) << @intCast(shift_t, factor >> 1)) | @as(T, 1);
+        }
+
+        inline fn select(comptime select_t: type, should_select: bool, opt_1: select_t, opt_2: select_t) select_t {
+            return (std.math.boolMask(select_t, should_select) & opt_1) | (std.math.boolMask(select_t, !should_select) & opt_2);
+        }
+
+        fn runFactorBig(self: *Self, factor: usize) void {
             comptime const masks = bit_masks();
             const field = self.field;
             const limit = self.field_size >> 1;
@@ -366,14 +407,6 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
                 field[index] &= masks[num & residue_mask];
             }
         }
-
-        const shift_t = switch (T) {
-            u8 => u3,
-            u16 => u4,
-            u32 => u5,
-            u64 => u6,
-            else => unreachable,
-        };
 
         fn trailing_masks() comptime [bit_width]T {
             var masks = std.mem.zeroes([bit_width]T);
@@ -392,8 +425,9 @@ pub fn BitSieve(comptime T: type, opts: SieveOpts) type {
             return masks;
         }
 
-        pub const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
-        pub const name = "bitSieve-" ++ @typeName(T) ++ wheel_name;
+        const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
+        const cache_name = if (opts.cached_masks) "-cached-masks" else "";
+        pub const name = "bitSieve-" ++ @typeName(T) ++ cache_name ++ wheel_name;
     };
 }
 

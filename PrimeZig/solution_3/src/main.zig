@@ -31,50 +31,53 @@ pub fn main() anyerror!void {
     const all = (args.len == 2) and (std.mem.eql(u8, args[1], "--all"));
 
     comptime const AllDataTypes = .{ bool, u1, u8, u16, u32, u64, usize };
-    comptime const BitSieveDataTypes = .{ u8, u16, u32, u64 };
+    comptime const BitSieveDataTypes = .{ u8, u16, u32, u64, u128, u256 };
 
     comptime const specs = .{
-        .{ SingleThreadedRunner, IntSieve, false, false },
-        .{ ParallelAmdahlRunner, IntSieve, false, false },
-        .{ ParallelAmdahlRunner, IntSieve, true, false },
-        .{ ParallelGustafsonRunner, IntSieve, false, false },
-        .{ ParallelGustafsonRunner, IntSieve, true, false },
-        .{ SingleThreadedRunner, BitSieve, false, false },
-        .{ ParallelGustafsonRunner, BitSieve, false, false },
-        .{ ParallelGustafsonRunner, BitSieve, true, false },
-        .{ SingleThreadedRunner, FastSieve, false, false },
-        .{ ParallelGustafsonRunner, FastSieve, false, false },
-        .{ SingleThreadedRunner, IntSieve, false, true },
-        .{ SingleThreadedRunner, BitSieve, false, true },
-        .{ ParallelGustafsonRunner, BitSieve, false, true },
-        .{ ParallelGustafsonRunner, BitSieve, true, true },
-
+        .{ SingleThreadedRunner, IntSieve, false, false, false },
+        .{ ParallelAmdahlRunner, IntSieve, false, false, false },
+        .{ ParallelAmdahlRunner, IntSieve, true, false, false },
+        .{ ParallelGustafsonRunner, IntSieve, false, false, false },
+        .{ ParallelGustafsonRunner, IntSieve, true, false, false },
+        .{ SingleThreadedRunner, BitSieve, false, false, false },
+        .{ SingleThreadedRunner, BitSieve, false, false, true },
+        .{ ParallelGustafsonRunner, BitSieve, false, false, false },
+        .{ ParallelGustafsonRunner, BitSieve, false, false, true },
+        .{ ParallelGustafsonRunner, BitSieve, true, false, false },
+        .{ ParallelGustafsonRunner, BitSieve, true, false, true },
+        .{ SingleThreadedRunner, FastSieve, false, false, false },
+        .{ ParallelGustafsonRunner, FastSieve, false, false, false },
+        .{ SingleThreadedRunner, IntSieve, false, true, false },
+        .{ SingleThreadedRunner, BitSieve, false, true, false },
+        .{ ParallelGustafsonRunner, BitSieve, false, true, false },
+        .{ ParallelGustafsonRunner, BitSieve, true, true, false },
     };
 
-    // number of pregenerated primes in the wheel
-    comptime const pregens = [_]comptime_int{ 2, 3, 4, 5 };
+    // number of wheelerated primes in the wheel
+    comptime const wheels = [_]comptime_int{ 2, 3, 4, 5 };
 
     inline for (specs) |spec| {
         comptime const RunnerFn = spec[0];
         comptime const SieveFn = spec[1];
         comptime const no_ht_opt = spec[2];
-        comptime const wheel = spec[3];
+        comptime const use_wheel = spec[3];
+        comptime const use_cache = spec[4];
 
         comptime const runner_opts = if (no_ht_opt) .{.no_ht = true} else .{};
 
         var allocator = if (RunnerFn == SingleThreadedRunner) &single_threaded_allocator.allocator else &multithreaded_allocator.allocator;
 
-        if (wheel) {
+        if (use_wheel) {
             comptime const DataTypes = if (SieveFn == IntSieve) .{u8} else BitSieveDataTypes;
 
             inline for (DataTypes) |Type| {
                 comptime const typebits = if (SieveFn == IntSieve) 8 * @sizeOf(Type) else 1;
-                inline for (pregens) |pregen| {
-                    comptime const Sieve = SieveFn(Type, .{ .pregen = pregen });
+                inline for (wheels) |wheel| {
+                    comptime const Sieve = SieveFn(Type, .{ .wheel = wheel});
                     comptime const Runner = RunnerFn(Sieve, runner_opts);
                     comptime const selected = selected_runs(Runner, no_ht_opt);
                     if (all or selected) {
-                        try runSieveTest(Runner, run_for, allocator, wheel, typebits, SIZE);
+                        try runSieveTest(Runner, run_for, allocator, use_wheel, typebits, SIZE);
                     }
                 }
             }
@@ -82,24 +85,23 @@ pub fn main() anyerror!void {
             comptime const Runner = RunnerFn(SieveFn, runner_opts);
             comptime const selected = selected_runs(Runner, no_ht_opt);
             if (all or selected) {
-                try runSieveTest(Runner, run_for, allocator, wheel, 1, SIZE);
+                try runSieveTest(Runner, run_for, allocator, use_wheel, 1, SIZE);
             }
         } else {
             comptime const DataTypes = if (SieveFn == IntSieve) AllDataTypes else BitSieveDataTypes;
-
             inline for (DataTypes) |Type| {
                 comptime const typebits = if (SieveFn == IntSieve) 8 * @sizeOf(Type) else 1;
-                comptime const Sieve = if (@TypeOf(SieveFn) == type) SieveFn else SieveFn(Type, .{});
+                comptime const Sieve = if (@TypeOf(SieveFn) == type) SieveFn else SieveFn(Type, .{.cached_masks = use_cache});
                 comptime const Runner = RunnerFn(Sieve, runner_opts);
                 comptime const selected = selected_runs(Runner, no_ht_opt);
+
                 if (all or selected) {
-                    try runSieveTest(Runner, run_for, allocator, wheel, typebits, SIZE);
+                    try runSieveTest(Runner, run_for, allocator, use_wheel, typebits, SIZE);
                 }
             }
         }
     }
 }
-
 
 const widthstring = switch (std.builtin.target.cpu.arch.ptrBitWidth()) {
     32 => "u32",
@@ -116,11 +118,14 @@ fn selected_runs(comptime Runner: type, comptime no_ht_opt: bool) bool {
         "parallel-amdahl-sieve-u8",
         "parallel-gustafson-sieve-u8",
         "single-bitSieve-u8",
+        "single-bitSieve-" ++ widthstring ++ "-cached-masks",
+        "single-bitSieve-u128-cached-masks",
         "single-fastSieve",
         "parallel-gustafson-bitSieve-u8",
         "parallel-gustafson-fastSieve",
         "parallel-gustafson-bitSieve-u8",
-        "parallel-gustafson-bitSieve-" ++ widthstring,
+        "parallel-gustafson-bitSieve-" ++ widthstring ++ "-cached-masks",
+        "parallel-gustafson-bitSieve-u128-cached-masks",
         "single-sieve-u8-480of2310",
         "single-sieve-u8-5760of30030",
         "single-bitSieve-u8-480of2310",
@@ -164,7 +169,7 @@ fn runSieveTest(
     const elapsed = timer.read();
 
     var threads = try Runner.threads();
-    try printResults("ManDeJan&ityonemo&spexGuy-zig-" ++ Runner.name, passes, elapsed, threads, wheel, bits);
+    try printResults("ManDeJan&ityonemo&SpexGuy-zig-" ++ Runner.name, passes, elapsed, threads, wheel, bits);
 }
 
 fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, threads: usize, wheel: bool, bits: usize) !void {

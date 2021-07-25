@@ -1,4 +1,4 @@
-//! implementation of the ability to pregenerate primes at compile-time
+//! implementation of the ability to wheelerate primes at compile-time
 //! and use them. should generate into the compiled artifact exactly the
 //! memory layout to be copied in as a "wheel" for the first (n) primes
 

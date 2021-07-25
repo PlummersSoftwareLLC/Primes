@@ -45,7 +45,12 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
             // in debug mode, verify that we got the right answer.
             if (std.builtin.mode == .Debug) {
                 if (self.sieve_size == 1_000_000) {
-                    std.debug.assert(self.sieve.primeCount() == expected_1M_result);
+                    var prime_count = self.sieve.primeCount();
+                    if (prime_count != expected_1M_result) {
+                        std.debug.print("hey we got the wrong answer {}\n", .{self.sieve.primeCount()});
+                        // panic-death.
+                        unreachable;
+                    }
                 }
             }
 

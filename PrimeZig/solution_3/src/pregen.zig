@@ -1,4 +1,4 @@
-//! implementation of the ability to pregenerate primes and use them.
+//! implementation of the ability to wheelerate primes and use them.
 //! should generate into the compiled artifact exactly the memory layout
 //! to be copied in as a "wheel" for the first (n) primes
 
