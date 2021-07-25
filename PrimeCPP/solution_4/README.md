@@ -171,18 +171,18 @@ Using these results the `run_bench` target was configured to include these optim
 
 The following measurements were taken on an Intel i9-9900K and AMD Ryzen 9 3950X running each benchmark 30 times to account for scheduling noise. Only faithful solutions were used for the comparison, and only the fastest solutions are shown.
 
-![intel_base_1](./images/intel_base_1-bit.png)
+![intel_base_1](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/intel_base_1-bit.png)
 
-![intel_base_8](./images/intel_base_8-bit.png)
+![intel_base_8](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/intel_base_8-bit.png)
 
-![intel_wheel_1](./images/intel_wheel_1-bit.png)
+![intel_wheel_1](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/intel_wheel_1-bit.png)
 
-![intel_wheel_8](./images/intel_wheel_8-bit.png)
+![intel_wheel_8](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/intel_wheel_8-bit.png)
 
-![amd_base_1](./images/amd_base_1-bit.png)
+![amd_base_1](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/amd_base_1-bit.png)
 
-![amd_base_8](./images/amd_base_8-bit.png)
+![amd_base_8](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/amd_base_8-bit.png)
 
-![amd_wheel_1](./images/amd_wheel_1-bit.png)
+![amd_wheel_1](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/amd_wheel_1-bit.png)
 
-![amd_wheel_8](./images/amd_wheel_8-bit.png)
+![amd_wheel_8](https://raw.githubusercontent.com/BlackMark29A/Primes/6300dee30609f93e1b8a137658635bb2ec0b12da/PrimeCPP/solution_4/images/amd_wheel_8-bit.png)
