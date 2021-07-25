@@ -1,9 +1,5 @@
 import { IBitArray } from "./IBitArray";
 
-function dec2bin(dec: number) {
-  return (dec >>> 0).toString(2);
-}
-
 export class Bit8Array implements IBitArray {
   private readonly bits: Uint8Array;
   

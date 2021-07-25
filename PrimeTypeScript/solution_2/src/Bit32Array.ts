@@ -1,9 +1,4 @@
-import { BitByteArray } from "./BitByteArray";
 import { IBitArray } from "./IBitArray";
-
-function dec2bin(dec: number) {
-  return (dec >>> 0).toString(2);
-}
 
 export class Bit32Array implements IBitArray {
   private readonly bits: Uint32Array;
