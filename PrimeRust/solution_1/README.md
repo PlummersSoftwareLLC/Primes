@@ -36,14 +36,14 @@ Tested on a Ryzen 3900X, Rust 1.53, running on WSL2.
 
 This is as reported on `stdout`:
 ```
-mike-barber_byte-storage;18133;5.0003032684;1;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;11900;5.0003099442;1;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-rotate;14026;5.0002503395;1;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-striped;18840;5.0001025200;1;algorithm=base,faithful=yes,bits=1
-mike-barber_byte-storage;168113;5.0010471344;24;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;134415;5.0008001328;24;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-rotate;165800;5.0009751320;24;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-striped;189954;5.0009155273;24;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;18899;5.0000662804;1;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;12078;5.0003247261;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;14249;5.0003366470;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;19021;5.0002198219;1;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;171065;5.0014705658;24;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;134961;5.0008754730;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;166345;5.0007843971;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;190855;5.0008077621;24;algorithm=base,faithful=yes,bits=1
 ```
 
 We report more informative metrics to `stderr` too, but these don't go into the report, as recorded below.
