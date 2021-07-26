@@ -1,5 +1,5 @@
 :Class PrimeSieve
-    :Field Public n
+    :Field Private n
     :Field Public bits
 
     ⎕IO←0
@@ -16,58 +16,58 @@
       :Access Public
       bits←runSieveDfn n
     ∇
-     runSieveDfn←{
-        ⎕IO←0
-        n←⍵
-        factor←3
-        bits←n⍴0 1 0 0 0 1
-        q←⌈n*0.5
-        _←{
-            factor⊢←2∘+⍣(bits⊃⍨⊣)factor
-            _←{
-                factor>50:bits[factor×2+⍳2-⍨⌈n÷factor]←0
-                1⊣bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
-            }0
-            factor≤q:∇ 0
-            1
-        }0
-        bits
-    }
+      runSieveDfn←{
+          ⎕IO←0
+          n←⍵
+          factor←3
+          bits←n⍴0 1 0 0 0 1
+          q←⌈n*0.5
+          _←{
+              factor⊢←2∘+⍣(bits⊃⍨⊣)factor
+              _←{
+                  factor>50:bits[factor×2+⍳2-⍨⌈n÷factor]←0
+                  1⊣bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
+              }0
+              factor≤q:∇ 0
+              1
+          }0
+          bits
+      }
 
     ∇ r←countPrimes
-        :Access Public
-        r←countPrimesDfn bits
+      :Access Public
+      r←countPrimesDfn bits
     ∇
     countPrimesDfn←{1++/⍵}
 
     ∇ r←validateResults
-        :Access Public
-        r←validateResultsDfn 0
+      :Access Private
+      r←validateResultsDfn 0
     ∇
-    validateResultsDfn←{
-        ⎕IO←0
-        result←⍸n⍷sieveSizes
-        result≡⍬: 0⌈
-        (countPrimesDfn bits)=sieveResults[result]
-    }
+      validateResultsDfn←{
+          ⎕IO←0
+          resIndex←⍸n⍷sieveSizes
+          resIndex≡⍬:0
+          (countPrimesDfn bits)=sieveResults[resIndex]
+      }
 
     ∇ printResults args
-        :Access Public
-        printResultsDfn args
+      :Access Public
+      printResultsDfn args
     ∇
     printResultsDfn←{
-        showResults←1↑⍵
-        duration←¯1↑2↑⍵
-        passes←¯1↑⍵
-        _←{
-            showResults:showResultsDfn duration passes
-            1
-        }0
-    }
-    showResultsDfn←{
-        duration←1↑⍵
-        passes←¯1↑⍵
-        ⎕←1↓2 3,⍸bits
-        ⎕←'Passes:' passes 'Time:' duration 'Avg:' duration÷passes 'Limit:' n 'Count:' countPrimes 'Valid:' validateResults
-    }
+         showResults←1↑⍵
+         duration←¯1↑2↑⍵
+         passes←¯1↑⍵
+         _←{
+             showResults:showResultsDfn duration passes
+             1
+         }0
+     }
+     showResultsDfn←{
+         duration←1↑⍵
+         passes←¯1↑⍵
+         ⎕←⎕←2 3,1↓⍸bits
+         ⎕←'Passes:'passes'Time:'duration'Avg:'duration÷passes'Limit:'n'Count:'countPrimes'Valid:'validateResults
+     }
 :EndClass
