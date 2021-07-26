@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.14
 
 # Variables
 ENV GODOT_VERSION "3.3.2"

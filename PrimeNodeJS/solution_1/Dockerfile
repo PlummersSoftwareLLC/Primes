@@ -6,6 +6,7 @@ WORKDIR /opt/app
 
 COPY PrimeNode.js .
 COPY PrimeNode_cluster.js .
+COPY PrimeNode_memcopy.js .
 
 COPY run.sh .
 RUN chmod +x run.sh

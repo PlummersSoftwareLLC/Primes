@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "PrimeVB": {
+      "commandName": "Project",
+      "commandLineArgs": "-p all"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

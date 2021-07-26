@@ -82,8 +82,9 @@ class PrimeSieve {
   bool _validateResults() => _resultsDictionary[_sieveSize] == countPrimes();
 
   /// This method constructs a new instance of the PrimeSieve object, where the
-  /// [sieveSize] will be set to [n], and the list will be filled with 0.
-  PrimeSieve(this._sieveSize) : _bits = Uint8List(_sieveSize);
+  /// [sieveSize] is set by the first positional argument, and the [bits] list
+  /// will be initialized to half the [sieveSize] and filled with 0.
+  PrimeSieve(this._sieveSize) : _bits = Uint8List((_sieveSize + 1) >> 1);
 
   /// This method runs the sieve. For more intormation about the algorithm,
   /// please check back to Dave's original video.
@@ -93,14 +94,14 @@ class PrimeSieve {
 
     while (factor <= q) {
       for (var num = factor; num < _sieveSize; num += 2) {
-        if (_bits[num] == 0) {
+        if (_bits[num >> 1] == 0) {
           factor = num;
           break;
         }
       }
 
       for (var num = factor * factor; num < _sieveSize; num += factor * 2) {
-        _bits[num] = 1;
+        _bits[num >> 1] = 1;
       }
 
       factor += 2;
@@ -124,7 +125,7 @@ class PrimeSieve {
     var count = (_sieveSize >= 2) ? 1 : 0;
 
     for (var num = 3; num <= _sieveSize; num += 2) {
-      if (_bits[num] == 0) {
+      if (_bits[num >> 1] == 0) {
         if (showResults) {
           // In Dart, using the dollar sign "$" in the stdout.write method will
           // print a variable of the same name to the console.
@@ -151,14 +152,14 @@ class PrimeSieve {
     // These 2 lines are for the drag race format
     stderr.write('\n');
     stdout.write(
-        'eagerestwolf&mmcdon20;$passes;$duration;1;algorithm=base,faithful=yes,bits=8\n');
+        'eagerestwolf&mmcdon20_8bit;$passes;$duration;1;algorithm=base,faithful=yes,bits=8\n');
   }
 
   int countPrimes() {
     var count = (_sieveSize >= 2) ? 1 : 0;
 
     for (var i = 3; i < _sieveSize; i += 2) {
-      if (_bits[i] == 0) {
+      if (_bits[i >> 1] == 0) {
         count++;
       }
     }

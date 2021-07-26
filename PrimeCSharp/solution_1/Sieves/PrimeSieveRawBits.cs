@@ -94,8 +94,7 @@ namespace PrimeCSharp.Sieves
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool GetBit(byte[] bits, uint index)
         {
-            if (index % 2 == 0)
-                return false;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
             index /= 2;
 
@@ -109,14 +108,13 @@ namespace PrimeCSharp.Sieves
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ClearBit(byte[] bits, uint index)
         {
-            if (index % 2 == 1)
-            {
-                index /= 2;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-                byte mask = (byte)~(1u << (int)(index % elementBits));
+            index /= 2;
 
-                GetRawBits(bits, index / elementBits) &= mask;
-            }
+            byte mask = (byte)~(1u << (int)(index % elementBits));
+
+            GetRawBits(bits, index / elementBits) &= mask;
         }
     }
 }
