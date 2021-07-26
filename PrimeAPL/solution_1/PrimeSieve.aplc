@@ -1,6 +1,6 @@
-:Class PrimeSieve
+﻿:Class PrimeSieve
     :Field Private n
-    :Field Public bits
+    :Field Private bits
 
     ⎕IO←0
     :Field Shared Public sieveSizes←10*1+⍳10
@@ -12,22 +12,23 @@
       n←limit
     ∇
 
-    ∇ runSieve
+    ∇ r←runSieve
       :Access Public
       bits←runSieveDfn n
+      r←1
     ∇
     runSieveDfn←{
         ⎕IO←0
         n←⍵
         factor←3
-        bits←n⍴0 1 0 0 0 1
+        bits←n⍴0 1
         q←⌈n*0.5
         _←{
-            factor⊢←2∘+⍣(bits⊃⍨⊣)factor
             _←{
                 factor>50:bits[factor×2+⍳2-⍨⌈n÷factor]←0
                 1⊣bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
             }0
+            factor⊢←2∘+⍣(bits⊃⍨⊣)factor
             factor≤q:∇ 0
             1
         }0
@@ -38,7 +39,7 @@
       :Access Public
       r←countPrimesDfn bits
     ∇
-    countPrimesDfn←{1++/⍵}
+    countPrimesDfn←+/
 
     ∇ r←validateResults
       :Access Private
@@ -51,23 +52,30 @@
         (countPrimesDfn bits)=sieveResults[resIndex]
     }
 
-    ∇ printResults args
+    ∇ r←printResults args
       :Access Public
       printResultsDfn args
+      r←1
     ∇
     printResultsDfn←{
-         showResults←1↑⍵
-         duration←¯1↑2↑⍵
-         passes←¯1↑⍵
-         _←{
-             showResults:showResultsDfn duration passes
-             1
-         }0
-     }
-     showResultsDfn←{
-         duration←1↑⍵
-         passes←¯1↑⍵
-         ⎕←⎕←2 3,1↓⍸bits
-         ⎕←'Passes:'passes'Time:'duration'Avg:'duration÷passes'Limit:'n'Count:'countPrimes'Valid:'validateResults
-     }
+        showResults←1↑⍵
+        duration←¯1↑2↑⍵
+        passes←¯1↑⍵
+        _←{
+            showResults:showResultsDfn duration passes
+            1
+        }0
+        ⍞←'garklein;' ⋄ ⍞←passes ⋄ ⍞←';' ⋄ ⍞←duration ⋄ ⍞←';' ⋄ ⍞←'1;'
+        ⍞←'algorithm=base,faithful=yes,bits=1'
+    }
+    showResultsDfn←{
+        duration←1↑⍵
+        passes←¯1↑⍵
+        ⎕←2 3,1↓⍸bits
+        ⍞←'Passes:' ⋄ ⍞←passes ⋄ ⍞←'Time:' ⋄ ⍞←duration
+        ⍞←'Avg:' ⋄ ⍞←duration÷passes ⋄ ⍞←'Limit:' ⋄ ⍞←n
+        ⍞←'Count:' ⋄ ⍞←countPrimes ⋄ ⍞←'Valid:' ⋄ ⍞←validateResults
+        ⎕←''
+        1
+    }
 :EndClass

@@ -1,0 +1,12 @@
+ main←{
+     ⍝]load './PrimeSieve.aplc'
+     passes←0
+     tEnd←5000+12⎕DT⊂⎕TS
+     _←{
+        sieve←⎕new PrimeSieve 1000000
+        _←sieve.runSieve
+        passes+←1
+        (12⎕DT⊂⎕TS)≥tEnd: sieve.printResults 1 (1000÷⍨(5000+(12⎕DT⊂⎕TS)-tEnd)) passes
+        ∇0
+     }0
+ }
