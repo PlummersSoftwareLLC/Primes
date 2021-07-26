@@ -24,7 +24,7 @@ fpc PrimePas.pas -O2 -v0
 PrimePas
 ```
 
-The -O2 option provides a quicl optimization
+The -O2 option provides a quick optimization
 
 ### Docker
 A Dockerfile has been provided.
