@@ -30,7 +30,6 @@ type
       procedure runSieve;
       procedure printResults(showResults: boolean; duration: double; lPasses: longint);
       function countPrimes: longint;
-
   end;
 
 { prime_sieve }
