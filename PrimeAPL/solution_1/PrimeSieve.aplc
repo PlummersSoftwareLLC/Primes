@@ -16,23 +16,23 @@
       :Access Public
       bits←runSieveDfn n
     ∇
-      runSieveDfn←{
-          ⎕IO←0
-          n←⍵
-          factor←3
-          bits←n⍴0 1 0 0 0 1
-          q←⌈n*0.5
-          _←{
-              factor⊢←2∘+⍣(bits⊃⍨⊣)factor
-              _←{
-                  factor>50:bits[factor×2+⍳2-⍨⌈n÷factor]←0
-                  1⊣bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
-              }0
-              factor≤q:∇ 0
-              1
-          }0
-          bits
-      }
+    runSieveDfn←{
+        ⎕IO←0
+        n←⍵
+        factor←3
+        bits←n⍴0 1 0 0 0 1
+        q←⌈n*0.5
+        _←{
+            factor⊢←2∘+⍣(bits⊃⍨⊣)factor
+            _←{
+                factor>50:bits[factor×2+⍳2-⍨⌈n÷factor]←0
+                1⊣bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
+            }0
+            factor≤q:∇ 0
+            1
+        }0
+        bits
+    }
 
     ∇ r←countPrimes
       :Access Public
@@ -44,12 +44,12 @@
       :Access Private
       r←validateResultsDfn 0
     ∇
-      validateResultsDfn←{
-          ⎕IO←0
-          resIndex←⍸n⍷sieveSizes
-          resIndex≡⍬:0
-          (countPrimesDfn bits)=sieveResults[resIndex]
-      }
+    validateResultsDfn←{
+        ⎕IO←0
+        resIndex←⍸n⍷sieveSizes
+        resIndex≡⍬:0
+        (countPrimesDfn bits)=sieveResults[resIndex]
+    }
 
     ∇ printResults args
       :Access Public
