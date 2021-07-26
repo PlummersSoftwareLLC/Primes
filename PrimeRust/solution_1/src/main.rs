@@ -85,10 +85,26 @@ pub mod primes {
             FlagStorageByteVector(vec![1; size])
         }
 
-        // bounds checks are elided since we're running up to .len()
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
+
+            // unrolled loop - there's a small benefit
+            let end_unrolled = self.0.len().saturating_sub(skip * 3);
+            while i < end_unrolled {
+                // Safety: We have ensured that (i+skip*3) < self.0.len().
+                // The compiler will not elide these bounds checks,
+                // so there is a performance benefit to using get_unchecked_mut here.
+                unsafe {
+                    *self.0.get_unchecked_mut(i) = 0;
+                    *self.0.get_unchecked_mut(i + skip) = 0;
+                    *self.0.get_unchecked_mut(i + skip * 2) = 0;
+                    *self.0.get_unchecked_mut(i + skip * 3) = 0;
+                }
+                i += skip * 4;
+            }
+
+            // bounds checks are elided
             while i < self.0.len() {
                 self.0[i] = 0;
                 i += skip;
