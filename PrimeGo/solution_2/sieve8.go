@@ -8,7 +8,9 @@ import (
 	"time"
 )
 
-var primeCounts = map[uint64]uint64{
+var label string = "ssovest-go-uint8"
+
+var primeCounts = map[uintptr]uintptr{
 	10:        4,
 	100:       25,
 	1000:      168,
@@ -21,13 +23,13 @@ var primeCounts = map[uint64]uint64{
 
 type Sieve struct {
 	bits []uint8
-	size uint64
+	size uintptr
 }
 
 func (s Sieve) RunSieve() {
-	var factor, start, step uint64
+	var factor, start, step uintptr
 	end := (s.size + 1) / 2
-	q := uint64(math.Sqrt(float64(s.size)) / 2)
+	q := uintptr(math.Sqrt(float64(s.size)) / 2)
 
 	for factor = 1; factor <= q; factor++ {
 		if (s.bits[factor/8] & bits.RotateLeft8(1, int(factor))) != 0 {
@@ -43,11 +45,11 @@ func (s Sieve) RunSieve() {
 	}
 }
 
-func (s Sieve) CountPrimes() uint64 {
-	t := uint64(0)
+func (s Sieve) CountPrimes() uintptr {
+	t := uintptr(0)
 	end := (s.size + 1) / 2
-	for i := uint64(0); i < end; i++ {
-		t += uint64(bits.RotateLeft8(^s.bits[i/8], -int(i)) & 1)
+	for i := uintptr(0); i < end; i++ {
+		t += uintptr(bits.RotateLeft8(^s.bits[i/8], -int(i)) & 1)
 	}
 	return t
 }
@@ -58,14 +60,18 @@ func (s Sieve) ValidateResults() bool {
 }
 
 func main() {
-	var limit uint64
+	var limit uintptr
+	var l64 uint64
 	var duration time.Duration
+	var verbose bool
 	var sieve Sieve
 
-	flag.Uint64Var(&limit, "limit", 1000000, "limit")
+	flag.Uint64Var(&l64, "limit", 1000000, "limit")
 	flag.DurationVar(&duration, "time", 5*time.Second, "duration")
+	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.Parse()
 
+	limit = uintptr(l64)
 	stop := make(chan struct{})
 	passes := 0
 	start := time.Now()
@@ -82,5 +88,13 @@ loop:
 			passes++
 		}
 	}
-	fmt.Printf("ssovest-go;%v;%v;1;algorithm=base,faithful=yes,bits=1\n", passes, time.Since(start).Seconds())
+
+	timeDelta := time.Since(start).Seconds()
+	if verbose {
+		avg := float64(timeDelta)/float64(passes)
+		count := sieve.CountPrimes()
+		valid := sieve.ValidateResults()
+		fmt.Printf("Passes: %v, Time: %v, Avg: %v, Limit: %v, Count: %v, Valid: %v\n\n", passes, timeDelta, avg, limit, count, valid)
+	}
+	fmt.Printf("%v;%v;%v;1;algorithm=base,faithful=yes,bits=1\n", label, passes, timeDelta)
 }
