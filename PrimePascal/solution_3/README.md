@@ -30,15 +30,15 @@ The -O2 option provides a quick optimization
 A Dockerfile has been provided.
 
 ## Output
-Result obtained on a Intel Core i7-7700HQ (base 2.8 GHz, boost 3.8GHz) running Windows 10 (version 20H2 build 19042.1110)
-```
+Result obtained on a Intel Core i7-7700HQ (base 2.8 GHz, boost 3.8GHz) running Windows 10 (version 20H2 build 19042.1110)  
 passes: 5293, Time: 5.00, Avg: 0.000945, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
+```
 olivierbrun;5293;5.00;1;algorithm=base,faithful=yes,bits=1
 ```
-Result obtained on a Raspberry PI4 running Raspberry PI OS 64 bits
-```
+Result obtained on a Raspberry PI4 running Raspberry PI OS 64 bits  
 passes: 1657, Time: 5.00, Avg: 0.003020, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
+```
 olivierbrun;1657;5.00;1;algorithm=base,faithful=yes,bits=1
 ```
