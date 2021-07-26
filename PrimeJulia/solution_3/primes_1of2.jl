@@ -40,7 +40,8 @@ end
 @inline _div_uint_size(i::Integer) = i >> _div_uint_size_shift
 # These functions are similar to Base.get_chunk_id (bitarray.jl).
 # This is definitely a bit more complicated due to one-based indexing.
-@inline _get_chunk_index(i::Integer) = _div_uint_size(i - 1) + 1
+# _div_uint_size(i + (_uint_bit_length - 1)) == _div_uint_size(i - 1) + 1
+@inline _get_chunk_index(i::Integer) = _div_uint_size(i + (_uint_bit_length - 1))
 @inline _get_bit_index_mask(i::Integer) = UInt(1) << _mod_uint_size(i - 1)
 
 
