@@ -85,10 +85,26 @@ pub mod primes {
             FlagStorageByteVector(vec![1; size])
         }
 
-        // bounds checks are elided since we're running up to .len()
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
+
+            // unrolled loop - there's a small benefit
+            let end_unrolled = self.0.len().saturating_sub(skip * 3);
+            while i < end_unrolled {
+                // Safety: We have ensured that (i+skip*3) < self.0.len().
+                // The compiler will not elide these bounds checks,
+                // so there is a performance benefit to using get_unchecked_mut here.
+                unsafe {
+                    *self.0.get_unchecked_mut(i) = 0;
+                    *self.0.get_unchecked_mut(i + skip) = 0;
+                    *self.0.get_unchecked_mut(i + skip * 2) = 0;
+                    *self.0.get_unchecked_mut(i + skip * 3) = 0;
+                }
+                i += skip * 4;
+            }
+
+            // bounds checks are elided
             while i < self.0.len() {
                 self.0[i] = 0;
                 i += skip;
@@ -165,18 +181,40 @@ pub mod primes {
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             let mut i = start;
-            let initial_bit_idx = start % U32_BITS;
-            let mut rolling_mask: u32 = !(1 << initial_bit_idx);
             let roll_bits = skip as u32;
+            let mut rolling_mask1 = !(1 << (start % U32_BITS));
+            let mut rolling_mask2 = !(1 << ((start + skip) % U32_BITS));
+
+            // if the skip is larger than the word size, we're clearing bits in different
+            // words each time: we can unroll the loop
+            if skip > U32_BITS {
+                let roll_bits_double = roll_bits * 2;
+                let unrolled_end = (self.words.len() * U32_BITS).saturating_sub(skip);
+                while i < unrolled_end {
+                    let word_idx1 = i / U32_BITS;
+                    let word_idx2 = (i + skip) / U32_BITS;
+                    // Safety: We have ensured that (i+skip) < self.words.len() * U32_BITS.
+                    // The compiler will not elide these bounds checks,
+                    // so there is a performance benefit to using get_unchecked_mut here.
+                    unsafe {
+                        *self.words.get_unchecked_mut(word_idx1) &= rolling_mask1;
+                        *self.words.get_unchecked_mut(word_idx2) &= rolling_mask2;
+                    }
+                    rolling_mask1 = rolling_mask1.rotate_left(roll_bits_double);
+                    rolling_mask2 = rolling_mask2.rotate_left(roll_bits_double);
+                    i += skip * 2;
+                }
+            }
+
             while i < self.words.len() * U32_BITS {
                 let word_idx = i / U32_BITS;
-                // Note: Unsafe usage to ensure that we elide the bounds check reliably.
-                //       We have ensured that word_index < self.words.len().
+                // Safety: We have ensured that word_index < self.words.len().
+                // Unsafe required to ensure that we elide the bounds check reliably.
                 unsafe {
-                    *self.words.get_unchecked_mut(word_idx) &= rolling_mask;
+                    *self.words.get_unchecked_mut(word_idx) &= rolling_mask1;
                 }
                 i += skip;
-                rolling_mask = rolling_mask.rotate_left(roll_bits);
+                rolling_mask1 = rolling_mask1.rotate_left(roll_bits);
             }
         }
 
@@ -242,6 +280,22 @@ pub mod primes {
                 if chunk_start < chunk {
                     let slice = &mut self.words[chunk_start..];
                     let mut i = 0;
+
+                    // unrolled loop
+                    let end_unrolled = slice.len().saturating_sub(skip);
+                    while i < end_unrolled {
+                        // Safety: We have ensured that (i+skip) < slice.len().
+                        // The compiler will not elide these bounds checks,
+                        // so there is a performance benefit to using get_unchecked_mut here.
+                        unsafe {
+                            *slice.get_unchecked_mut(i) &= mask;
+                            *slice.get_unchecked_mut(i + skip) &= mask;
+                        }
+                        i += skip + skip;
+                    }
+
+                    // remainder - compiler elides these bounds checks as
+                    // the loop is simple enough
                     while i < slice.len() {
                         slice[i] &= mask;
                         i += skip;
