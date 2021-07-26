@@ -102,9 +102,6 @@ begin
       num+=2;
     end;
 
-    //if num>q then
-    //  break;
-
     num:=factor*factor;
 
     while num<sieveSize do
@@ -120,6 +117,7 @@ end;
 procedure prime_sieve.printResults(showResults: boolean; duration: double; lPasses: longint);
 const
   TrueFalse: array[boolean] of string = ('false', 'true');
+  
 var
   num,
   count: longint;
@@ -151,18 +149,19 @@ begin
   end;
 
   if showResults then
-      writeln;
-
-  writeln(format('passes: %d, Time: %f, Avg: %.6f, Limit: %d, Count1: %d, Count2: %d, Valid: %s',[
-                  lPasses,
-                  duration,
-                  duration/lPasses,
-                  sieveSize,
-                  count,
-                  countPrimes,
-                  TrueFalse[validateResults]]));
-
-  writeln;
+  begin
+    writeln;
+    writeln(format('passes: %d, Time: %f, Avg: %.6f, Limit: %d, Count1: %d, Count2: %d, Valid: %s',[
+                   lPasses,
+                   duration,
+                   duration/lPasses,
+                   sieveSize,
+                   count,
+                   countPrimes,
+                   TrueFalse[validateResults]]));
+    writeln;
+  end;
+  
   writeln(format('olivierbrun;%d;%f;1;algorithm=base,faithful=yes,bits=1', [lPasses, duration]));
 end;
 
