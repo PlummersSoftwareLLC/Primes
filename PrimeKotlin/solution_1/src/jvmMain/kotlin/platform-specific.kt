@@ -13,14 +13,12 @@ actual inline fun <reified T : PrimeSieve> benchmarkPrimeSieve(
 ) {
     if (multithreaded) {
         runBlocking(Dispatchers.Default) {
-            val cores = Runtime.getRuntime().availableProcessors()
-
             val primeSieveJobs = ArrayList<Job>()
 
             val iterations = AtomicInteger()
             val lastIteration = AtomicReference<T>()
 
-            repeat(cores) {
+            repeat(CORES) {
                 primeSieveJobs += launch {
                     while (isActive) {
                         lastIteration.set(newInstance(PRIME_SIEVE_SIZE))

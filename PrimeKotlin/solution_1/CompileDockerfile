@@ -2,7 +2,7 @@
 # This file is the base file for the docker build.
 #
 #
-ARG GRADLE_VERSION=6.8
+ARG GRADLE_VERSION=7.1.1
 ARG JDK_VERSION=16
 
 FROM gradle:${GRADLE_VERSION}-jdk-hotspot
