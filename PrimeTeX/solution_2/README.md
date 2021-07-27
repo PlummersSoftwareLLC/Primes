@@ -4,7 +4,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 The Sieve is implemented using only Knuth base TeX; the benchmarking however
 requires the timing extensions of `pdftex` or `luatex` and also uses
@@ -13,9 +13,9 @@ anyhow.
 
 TeX has no native array type.  The storage technique is via "font dimension
 parameters": instantiating a Sieve object loads in TeX memory a font at a size
-indexed on the instantiation number.  The font dimensions (each stored as a
-32bit word with pdftex) will serve to mark the (non) primes: one font dimension
-per number as there is no native TeX interface to bitwise operations.
+indexed on the instantiation number.  The font dimensions will serve to mark
+the (non) primes: one font dimension per number as there is no native TeX
+interface to bitwise operations.
 
 *faithfulness*: No, as the memory footprint is unavoidably global and can not
 be released.  For the author amusement with TeX the user interface mimicks
@@ -25,8 +25,9 @@ assignments; also the `\newcount` by themselves means clashes with
 any code using same names for `\count`).
 
 *bit count*: For reasons explained below the benchmark is done with `luatex`
-binary.  I have no idea whether it uses 32bits or 64bits words for the
-font dimension parameters.  I indicated 32bits.
+binary.  I have no idea whether it uses 32bits or 64bits words for the font
+dimension parameters.  Thus I indicated *unknown*, it is at least 32bits as
+TeX allows dimensions with up to 30bits.
 
 Two algorithms are implemented:
 
@@ -84,22 +85,22 @@ Hardware: 2 GHz Intel Core i7 with 8 Go 1600 MHz DDR3 of memory.
 Docker run:
 
 ```
-jfbu-tex;10;5.38837s;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;23;5.04814s;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;10;5.38837s;1;algorithm=base,faithful=no,bits=unknown
+jfbu-tex-480of2310;23;5.04814s;1;algorithm=wheel,faithful=no,bits=unknown
 ```
 
 Native run (with `luatex`: `/bin/sh run.sh`):
 
 ```
-jfbu-tex;10;5.39767s;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;22;5.22046s;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;10;5.39767s;1;algorithm=base,faithful=no,bits=unknown
+jfbu-tex-480of2310;22;5.22046s;1;algorithm=wheel,faithful=no,bits=unknown
 ```
 
 Native run (with `pdftex`: `/bin/sh runpdftex.sh`):
 
 ```
-jfbu-tex;8;5.19325s;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;23;5.19388s;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;8;5.19325s;1;algorithm=base,faithful=no,bits=unknown
+jfbu-tex-480of2310;23;5.19388s;1;algorithm=wheel,faithful=no,bits=unknown
 ```
 
 I don't know why the speed increase from base (one out of two) to wheel (480
