@@ -316,6 +316,74 @@ pub mod primes {
         }
     }
 
+    pub struct FlagStorageBitVectorStripedBlocks {
+        blocks: Vec<Block>,
+        length_bits: usize,
+    }
+
+    const BLOCK_SIZE: usize = 64 * 1024;
+    const BLOCK_SIZE_BITS: usize = BLOCK_SIZE * U8_BITS;
+    type Block = [u8; BLOCK_SIZE];
+
+    impl FlagStorage for FlagStorageBitVectorStripedBlocks {
+        fn create_true(size: usize) -> Self {
+            let num_blocks = size / BLOCK_SIZE_BITS + (size % BLOCK_SIZE_BITS).min(1);
+            Self {
+                length_bits: size,
+                blocks: vec![[u8::MAX; BLOCK_SIZE]; num_blocks],
+            }
+        }
+
+        #[inline(always)]
+        fn reset_flags(&mut self, start: usize, skip: usize) {
+            // find first block
+            // find start bit
+            // find start word
+            let mut block_idx = start / BLOCK_SIZE_BITS;
+
+            let offset_idx = start % BLOCK_SIZE_BITS;
+            let mut bit_idx = offset_idx / BLOCK_SIZE;
+            let mut word_idx = offset_idx % BLOCK_SIZE;
+
+            while block_idx < self.blocks.len() {
+                let block = self.blocks.get_mut(block_idx).unwrap();
+                while bit_idx < U8_BITS {
+                    // get mask for this bit position
+                    let mask = !(1 << bit_idx);
+
+                    // TODO: remainder - compiler elides these bounds checks as
+                    // the loop is simple enough
+                    while word_idx < BLOCK_SIZE {
+                        block[word_idx] &= mask;
+                        word_idx += skip;
+                    }
+
+                    // bit/stripe complete; advance to next bit
+                    // TODO: permit advancing multiple bits for larger skips
+                    bit_idx += 1;
+                    word_idx -= BLOCK_SIZE;
+                }
+
+                // block complete; advance to next block
+                block_idx += 1;
+                bit_idx = 0;
+            }
+        }
+
+        #[inline(always)]
+        fn get(&self, index: usize) -> bool {
+            if index > self.length_bits {
+                return false;
+            }
+            let block = index / BLOCK_SIZE_BITS;
+            let offset = index % BLOCK_SIZE_BITS;
+            let bit_index = offset / BLOCK_SIZE;
+            let word_index = offset % BLOCK_SIZE;
+            let word = self.blocks.get(block).unwrap().get(word_index).unwrap();
+            *word & (1 << bit_index) != 0
+        }
+    }
+
     /// The actual sieve implementation, generic over the storage. This allows us to
     /// include the storage type we want without re-writing the algorithm each time.
     pub struct PrimeSieve<T: FlagStorage> {
@@ -630,7 +698,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::PrimeValidator;
+    use crate::primes::{FlagStorageBitVectorStripedBlocks, PrimeValidator};
 
     #[test]
     fn sieve_known_correct_bits() {
@@ -648,6 +716,11 @@ mod tests {
     }
 
     #[test]
+    fn sieve_known_correct_bits_striped_blocks() {
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks>();
+    }
+
+    #[test]
     fn sieve_known_correct_bytes() {
         sieve_known_correct::<FlagStorageByteVector>();
     }
@@ -662,6 +735,64 @@ mod tests {
                 sieve.count_primes(),
                 "wrong number of primes for sieve = {}",
                 sieve_size
+            );
+        }
+    }
+
+    #[test]
+    fn storage_byte_correct() {
+        basic_storage_correct::<FlagStorageByteVector>();
+    }
+
+    #[test]
+    fn storage_bit_correct() {
+        basic_storage_correct::<FlagStorageBitVector>();
+    }
+
+    #[test]
+    fn storage_bit_rotate_correct() {
+        basic_storage_correct::<FlagStorageBitVectorRotate>();
+    }
+
+    #[test]
+    fn storage_bit_striped_correct() {
+        basic_storage_correct::<FlagStorageBitVectorStriped>();
+    }
+
+    #[test]
+    fn storage_bit_striped_block_correct() {
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks>();
+    }
+
+    fn basic_storage_correct<T: FlagStorage>() {
+        let size = 100_000;
+        let mut storage = T::create_true(size);
+        for i in 0..size {
+            assert!(storage.get(i), "expected initially true for index {}", i);
+        }
+
+        // not primes; we're just checking the storage works
+        storage.reset_flags(30, 7);
+        for i in 0..size {
+            let expected_inv = (i >= 30) && ((i - 30) % 7 == 0);
+            assert_eq!(
+                storage.get(i),
+                !expected_inv,
+                "expected value incorrect for index {}",
+                i
+            );
+        }
+
+        storage.reset_flags(72, 100);
+        for i in 0..size {
+            let first = (i >= 30) && ((i - 30) % 7 == 0);
+            let second = (i >= 72) && ((i - 72) % 100 == 0);
+            let expected_inv = first || second;
+            assert_eq!(
+                storage.get(i),
+                !expected_inv,
+                "expected value incorrect for index {}",
+                i
             );
         }
     }
