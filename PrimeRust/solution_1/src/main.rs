@@ -67,7 +67,7 @@ pub mod primes {
         /// create new storage for given number of flags pre-initialised to all true
         fn create_true(size: usize) -> Self;
 
-        /// reset all flags at indices starting at `start` with a stride of `stride`
+        /// reset all flags at indices starting at `start` with a stride of `skip`
         fn reset_flags(&mut self, start: usize, skip: usize);
 
         /// get a specific flag
@@ -244,7 +244,7 @@ pub mod primes {
     /// cache thrashing due to multiple passes. It really doesn't work well on something 
     /// like a raspberri pi. 
     ///
-    /// `FlagStorageBitVectorStripedBlocks` takes a more cache-friendly approach.
+    /// [`FlagStorageBitVectorStripedBlocks`] takes a more cache-friendly approach.
     pub struct FlagStorageBitVectorStriped {
         words: Vec<u8>,
         length_bits: usize,
@@ -316,7 +316,7 @@ pub mod primes {
         }
     }
 
-    /// This is a variation of `FlagStorageBitVectorStriped` that has better locality.
+    /// This is a variation of [`FlagStorageBitVectorStriped`] that has better locality.
     /// The striped storage is divided up into smaller blocks, and we do multiple
     /// passes over the smaller block rather than the entire sieve.
     pub struct FlagStorageBitVectorStripedBlocks<const N: usize> {
@@ -324,7 +324,13 @@ pub mod primes {
         length_bits: usize,
     }
 
+    /// This is the optimal block size for [`FlagStorageBitVectorStriped`] for CPUs
+    /// with a fair amount of L1 cache, and works well on AMD Ryzen.
     pub const BLOCK_SIZE_DEFAULT: usize = 16 * 1024;
+
+    /// This is a good block size for [`FlagStorageBitVectorStriped`] for CPUs with
+    /// less L1 cache available. It's also useful when running heavily many sieves
+    /// in parallel.
     pub const BLOCK_SIZE_SMALL: usize = 4 * 1024;
 
     impl<const N: usize> FlagStorageBitVectorStripedBlocks<N> {
@@ -344,12 +350,12 @@ pub mod primes {
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             // determine first block, start bit, and first word
-            let mut block_idx = start / Self::BLOCK_SIZE_BITS;
+            let block_idx_start = start / Self::BLOCK_SIZE_BITS;
             let offset_idx = start % Self::BLOCK_SIZE_BITS;
             let mut bit_idx = offset_idx / Self::BLOCK_SIZE;
             let mut word_idx = offset_idx % Self::BLOCK_SIZE;
 
-            while block_idx < self.blocks.len() {
+            for block_idx in block_idx_start..self.blocks.len() {
                 // Safety: we have ensured the block_idx < length
                 let block = unsafe { self.blocks.get_unchecked_mut(block_idx) };
                 while bit_idx < U8_BITS {
@@ -393,8 +399,7 @@ pub mod primes {
                     word_idx -= Self::BLOCK_SIZE;
                 }
 
-                // block complete; advance to next block
-                block_idx += 1;
+                // block complete; reset bit index and proceed with the next block
                 bit_idx = 0;
             }
         }
