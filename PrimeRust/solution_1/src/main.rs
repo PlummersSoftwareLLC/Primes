@@ -248,12 +248,6 @@ pub mod primes {
         length_bits: usize,
     }
 
-    impl FlagStorageBitVectorStriped {
-        fn ceiling(numerator: isize, denominator: isize) -> isize {
-            (numerator + denominator - 1) / denominator
-        }
-    }
-
     impl FlagStorage for FlagStorageBitVectorStriped {
         fn create_true(size: usize) -> Self {
             let num_words = size / U8_BITS + (size % U8_BITS).min(1);
@@ -265,44 +259,45 @@ pub mod primes {
 
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
-            let chunk = self.words.len();
-            for bit in 0..8 {
+            let words_len = self.words.len();
+            let mut bit_idx = start / words_len;
+            let mut word_idx = start % words_len;
+
+            while bit_idx < U8_BITS {
+                // calculate effective end position: we might have a shorter stripe on the last iteration
+                let stripe_start_position = bit_idx * words_len;
+                let effective_len = words_len.min(self.length_bits - stripe_start_position);
+
                 // get mask for this bit position
-                let mask = !(1 << bit);
+                let mask = !(1 << bit_idx);
 
-                // calculate start word for this stripe
-                let chunk_start = bit * chunk;
-                let earliest = start.max(chunk_start);
-                let diff = earliest as isize - start as isize;
-                let relative = Self::ceiling(diff, skip as isize) * skip as isize;
-                let chunk_start = relative as usize + start - chunk_start;
-
-                // for larger `skips`, not every bit will have any corresponding words
-                // take slice starting here, and reset the bit in every `skip`th word
-                if chunk_start < chunk {
-                    let slice = &mut self.words[chunk_start..];
-                    let mut i = 0;
-
-                    // unrolled loop
-                    let end_unrolled = slice.len().saturating_sub(skip);
-                    while i < end_unrolled {
-                        // Safety: We have ensured that (i+skip) < slice.len().
-                        // The compiler will not elide these bounds checks,
-                        // so there is a performance benefit to using get_unchecked_mut here.
-                        unsafe {
-                            *slice.get_unchecked_mut(i) &= mask;
-                            *slice.get_unchecked_mut(i + skip) &= mask;
-                        }
-                        i += skip + skip;
+                // unrolled loop
+                while word_idx < effective_len.saturating_sub(skip) {
+                    // Safety: we have ensured that (word_idx + skip*N) < length
+                    unsafe {
+                        *self.words.get_unchecked_mut(word_idx) &= mask;
+                        *self.words.get_unchecked_mut(word_idx + skip) &= mask;
                     }
-
-                    // remainder - compiler elides these bounds checks as
-                    // the loop is simple enough
-                    while i < slice.len() {
-                        slice[i] &= mask;
-                        i += skip;
-                    }
+                    word_idx += skip * 2;
                 }
+
+                // remainder
+                while word_idx < effective_len {
+                    // safety: we have ensured that word_idx < length
+                    unsafe {
+                        *self.words.get_unchecked_mut(word_idx) &= mask;
+                    }
+                    word_idx += skip;
+                }
+
+                // early termination: this was the last stripe
+                if effective_len != words_len {
+                    return;
+                }
+
+                // bit/stripe complete; advance to next bit
+                bit_idx += 1;
+                word_idx -= words_len;
             }
         }
 
@@ -318,15 +313,19 @@ pub mod primes {
         }
     }
 
+    /// This is a variation of `FlagStorageBitVectorStriped` that has better locality.
+    /// The striped storage is divided up into smaller blocks, and we do multiple 
+    /// passes over the smaller block rather than the entire sieve. Smaller blocks
+    /// make better use of limited processor cache.
     pub struct FlagStorageBitVectorStripedBlocks {
         blocks: Vec<Block>,
         length_bits: usize,
     }
 
+    type Block = [u8; BLOCK_SIZE];
     const BLOCK_SIZE: usize = 16 * 1024;
     const BLOCK_SIZE_BITS: usize = BLOCK_SIZE * U8_BITS;
-    type Block = [u8; BLOCK_SIZE];
-
+    
     impl FlagStorage for FlagStorageBitVectorStripedBlocks {
         fn create_true(size: usize) -> Self {
             let num_blocks = size / BLOCK_SIZE_BITS + (size % BLOCK_SIZE_BITS).min(1);
@@ -340,25 +339,24 @@ pub mod primes {
         fn reset_flags(&mut self, start: usize, skip: usize) {
             // find first block, start bit, and first word
             let mut block_idx = start / BLOCK_SIZE_BITS;
-
             let offset_idx = start % BLOCK_SIZE_BITS;
             let mut bit_idx = offset_idx / BLOCK_SIZE;
             let mut word_idx = offset_idx % BLOCK_SIZE;
 
             while block_idx < self.blocks.len() {
-                // TODO: Safety comment, or verify bounds check elided
+                // Safety: we have ensured the block_idx < length
                 let block = unsafe { self.blocks.get_unchecked_mut(block_idx) };
                 while bit_idx < U8_BITS {
                     // calculate effective end position: we might have a shorter stripe on the last iteration
                     let stripe_start_position = block_idx * BLOCK_SIZE_BITS + bit_idx * BLOCK_SIZE;
-                    let effective_end = BLOCK_SIZE.min(self.length_bits - stripe_start_position);
-                    let complete_after_this = effective_end != BLOCK_SIZE;
+                    let effective_len = BLOCK_SIZE.min(self.length_bits - stripe_start_position);
 
                     // get mask for this bit position
                     let mask = !(1 << bit_idx);
 
-                    while word_idx < effective_end.saturating_sub(skip * 3) {
-                        // Safety: We have ensured that (i+skip*N) < BLOCK_SIZE
+                    // unrolled loop
+                    while word_idx < effective_len.saturating_sub(skip * 3) {
+                        // Safety: we have ensured that (word_idx + skip*N) < length
                         unsafe {
                             *block.get_unchecked_mut(word_idx) &= mask;
                             *block.get_unchecked_mut(word_idx + skip) &= mask;
@@ -368,9 +366,9 @@ pub mod primes {
                         word_idx += skip * 4;
                     }
 
-                    // TODO: remainder - compiler elides these bounds checks as
-                    // the loop is simple enough
-                    while word_idx < effective_end {
+                    // remainder
+                    while word_idx < effective_len {
+                        // safety: we have ensured that word_idx < length
                         unsafe {
                             *block.get_unchecked_mut(word_idx) &= mask;
                         }
@@ -378,12 +376,11 @@ pub mod primes {
                     }
 
                     // early termination: this was the last stripe
-                    if complete_after_this {
+                    if effective_len != BLOCK_SIZE {
                         return;
                     }
-
+                    
                     // bit/stripe complete; advance to next bit
-                    // TODO: permit advancing multiple bits for larger skips
                     bit_idx += 1;
                     word_idx -= BLOCK_SIZE;
                 }
