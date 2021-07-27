@@ -1,7 +1,7 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
     FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageBitVectorStripedBlocks,
-    FlagStorageByteVector, PrimeSieve, DEFAULT_BLOCK_SIZE, SMALL_BLOCK_SIZE,
+    FlagStorageByteVector, PrimeSieve, BLOCK_SIZE_DEFAULT, BLOCK_SIZE_SMALL,
 };
 
 use std::{
@@ -241,7 +241,10 @@ pub mod primes {
     /// There is a computation / memory bandwidth tradeoff here. This works well
     /// only for sieves that fit inside the processor cache. For processors with
     /// smaller caches or larger sieves, this algorithm will result in a lot of
-    /// cache thrashing.
+    /// cache thrashing due to multiple passes. It really doesn't work well on something 
+    /// like a raspberri pi. 
+    ///
+    /// `FlagStorageBitVectorStripedBlocks` takes a more cache-friendly approach.
     pub struct FlagStorageBitVectorStriped {
         words: Vec<u8>,
         length_bits: usize,
@@ -258,6 +261,7 @@ pub mod primes {
 
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
+            // determine start bit, and first word
             let words_len = self.words.len();
             let mut bit_idx = start / words_len;
             let mut word_idx = start % words_len;
@@ -289,7 +293,7 @@ pub mod primes {
                     word_idx += skip;
                 }
 
-                // early termination: this was the last stripe
+                // early termination: this is the last stripe
                 if effective_len != words_len {
                     return;
                 }
@@ -314,15 +318,14 @@ pub mod primes {
 
     /// This is a variation of `FlagStorageBitVectorStriped` that has better locality.
     /// The striped storage is divided up into smaller blocks, and we do multiple
-    /// passes over the smaller block rather than the entire sieve. Smaller blocks
-    /// make better use of limited processor cache.
+    /// passes over the smaller block rather than the entire sieve.
     pub struct FlagStorageBitVectorStripedBlocks<const N: usize> {
         blocks: Vec<[u8; N]>,
         length_bits: usize,
     }
 
-    pub const DEFAULT_BLOCK_SIZE: usize = 16 * 1024;
-    pub const SMALL_BLOCK_SIZE: usize = 4 * 1024;
+    pub const BLOCK_SIZE_DEFAULT: usize = 16 * 1024;
+    pub const BLOCK_SIZE_SMALL: usize = 4 * 1024;
 
     impl<const N: usize> FlagStorageBitVectorStripedBlocks<N> {
         const BLOCK_SIZE: usize = N;
@@ -340,7 +343,7 @@ pub mod primes {
 
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
-            // find first block, start bit, and first word
+            // determine first block, start bit, and first word
             let mut block_idx = start / Self::BLOCK_SIZE_BITS;
             let offset_idx = start % Self::BLOCK_SIZE_BITS;
             let mut bit_idx = offset_idx / Self::BLOCK_SIZE;
@@ -380,7 +383,7 @@ pub mod primes {
                         word_idx += skip;
                     }
 
-                    // early termination: this was the last stripe
+                    // early termination: this is the last stripe
                     if effective_len != Self::BLOCK_SIZE {
                         return;
                     }
@@ -668,7 +671,7 @@ fn main() {
             thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<DEFAULT_BLOCK_SIZE>>(
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>(
                     "bit-storage-striped-blocks",
                     1,
                     run_duration,
@@ -679,8 +682,8 @@ fn main() {
             }
 
             for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<SMALL_BLOCK_SIZE>>(
-                    "bit-storage-striped-blocks-sml",
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>(
+                    "bit-storage-striped-blocks-small",
                     1,
                     run_duration,
                     threads,
@@ -765,7 +768,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::{PrimeValidator, DEFAULT_BLOCK_SIZE};
+    use crate::primes::{PrimeValidator, BLOCK_SIZE_DEFAULT};
 
     #[test]
     fn sieve_known_correct_bits() {
@@ -784,7 +787,9 @@ mod tests {
 
     #[test]
     fn sieve_known_correct_bits_striped_blocks() {
-        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<DEFAULT_BLOCK_SIZE>>();
+        // check both sizes
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>();
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>();
     }
 
     #[test]
@@ -831,7 +836,8 @@ mod tests {
         // test small as well as default block sizes
         basic_storage_correct::<FlagStorageBitVectorStripedBlocks<7>>();
         basic_storage_correct::<FlagStorageBitVectorStripedBlocks<1024>>();
-        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<DEFAULT_BLOCK_SIZE>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>();
     }
 
     fn basic_storage_correct<T: FlagStorage>() {
