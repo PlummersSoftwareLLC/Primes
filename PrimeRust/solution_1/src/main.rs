@@ -768,7 +768,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::{PrimeValidator, BLOCK_SIZE_DEFAULT};
+    use crate::primes::PrimeValidator;
 
     #[test]
     fn sieve_known_correct_bits() {
