@@ -3,8 +3,8 @@
     :Field Private bits
 
     ⎕IO←0
-    :Field Shared Private sieveSizes←10*1+⍳10
-    :Field Shared Private sieveResults←4 25 168 1229 9592 78498 664579 5761455 50847534 455052511
+    :Field Shared Public sieveSizes←10*1+⍳10
+    :Field Shared Public sieveResults←4 25 168 1229 9592 78498 664579 5761455 50847534 455052511
 
     ∇ NewPrimeSieve limit
       :Implements Constructor
@@ -36,7 +36,7 @@
     }
 
     ∇ r←countPrimes
-      :Access Private
+      :Access Public
       r←countPrimesDfn bits
     ∇
     countPrimesDfn←+/
