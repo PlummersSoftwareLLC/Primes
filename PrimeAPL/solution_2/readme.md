@@ -8,4 +8,4 @@ Make sure you have [Dyalog APL](https://www.dyalog.com/download-zone.htm?p=downl
 Run `run.bat `.
 
 ## Output
-`garklein-tradfn;2375;5.002;1;algorithm=base,faithful=yes,bits=1`
+`garklein-tradfn;477;5.004;1;algorithm=base,faithful=yes,bits=1`
