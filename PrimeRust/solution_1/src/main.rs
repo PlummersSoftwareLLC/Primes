@@ -323,7 +323,7 @@ pub mod primes {
         length_bits: usize,
     }
 
-    const BLOCK_SIZE: usize = 8 * 1024;
+    const BLOCK_SIZE: usize = 16 * 1024;
     const BLOCK_SIZE_BITS: usize = BLOCK_SIZE * U8_BITS;
     type Block = [u8; BLOCK_SIZE];
 
@@ -338,9 +338,7 @@ pub mod primes {
 
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
-            // find first block
-            // find start bit
-            // find start word
+            // find first block, start bit, and first word
             let mut block_idx = start / BLOCK_SIZE_BITS;
 
             let offset_idx = start % BLOCK_SIZE_BITS;
@@ -355,17 +353,15 @@ pub mod primes {
                     // get mask for this bit position
                     let mask = !(1 << bit_idx);
 
-                    // unrolled loop
-                    let end_unrolled = BLOCK_SIZE.saturating_sub(skip);
-                    while word_idx < end_unrolled {
-                        // Safety: We have ensured that (i+skip) < slice.len().
-                        // The compiler will not elide these bounds checks,
-                        // so there is a performance benefit to using get_unchecked_mut here.
+                    while word_idx < BLOCK_SIZE.saturating_sub(skip*3) {
+                        // Safety: We have ensured that (i+skip*N) < BLOCK_SIZE
                         unsafe {
                             *block.get_unchecked_mut(word_idx) &= mask;
                             *block.get_unchecked_mut(word_idx + skip) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip*2) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip*3) &= mask;
                         }
-                        word_idx += skip * 2;
+                        word_idx += skip * 4;
                     }
 
                     // TODO: remainder - compiler elides these bounds checks as
