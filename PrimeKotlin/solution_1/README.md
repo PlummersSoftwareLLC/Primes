@@ -91,9 +91,9 @@ Tested on a 6 Core i5 8400 and 16 GB 2400 MHz RAM
 
 | Passes | Name | Output |
 --- | --- | ---
-| 30938| **JVM** Idiomatic Fast (Multithreaded) | `jvm_kotlin_idiomatic_fast_multi;30938;5.0;1;algorithm=base,faithful=yes` |
-| 30768 | **JVM** Traditional (Multithreaded) | `jvm_kotlin_traditional_multi;30768;5.0;1;algorithm=base,faithful=yes` |
-| 29173 | **JVM** Idiomatic (Multithreaded) | `jvm_kotlin_idiomatic_multi;29173;5.0;1;algorithm=base,faithful=yes` |
+| 30938| **JVM** Idiomatic Fast (Multithreaded) | `jvm_kotlin_idiomatic_fast_multi;30938;5.0;6;algorithm=base,faithful=yes` |
+| 30768 | **JVM** Traditional (Multithreaded) | `jvm_kotlin_traditional_multi;30768;5.0;6;algorithm=base,faithful=yes` |
+| 29173 | **JVM** Idiomatic (Multithreaded) | `jvm_kotlin_idiomatic_multi;29173;5.0;6;algorithm=base,faithful=yes` |
 | 5893 | **JVM** Idiomatic Fast | `jvm_kotlin_idiomatic_fast_single;5893;5.0;1;algorithm=base,faithful=yes` |
 | 5720 | **JVM** Traditional | `jvm_kotlin_traditional_single;5720;5.0;1;algorithm=base,faithful=yes` |
 | 5401 | **JVM** Idiomatic | `jvm_kotlin_idiomatic_single;5401;5.0;1;algorithm=base,faithful=yes` |
