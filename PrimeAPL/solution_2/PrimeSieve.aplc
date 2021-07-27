@@ -3,8 +3,8 @@
     :Field Private bits
 
     ⎕IO←0
-    :Field Shared Public sieveSizes←10*1+⍳10
-    :Field Shared Public sieveResults←4 25 168 1229 9592 78498 664579 5761455 50847534 455052511
+    :Field Shared Private sieveSizes←10*1+⍳10
+    :Field Shared Private sieveResults←4 25 168 1229 9592 78498 664579 5761455 50847534 455052511
 
     ∇ NewPrimeSieve limit
       :Implements Constructor
@@ -36,48 +36,35 @@
     }
 
     ∇ r←countPrimes
-      :Access Public
-      r←countPrimesDfn bits
+      :Access Private
+      r←+/bits
     ∇
-    countPrimesDfn←+/
 
     ∇ r←validateResults
-      :Access Private
-      r←validateResultsDfn 0
-    ∇
-    validateResultsDfn←{
+        :Access Public
         ⎕IO←0
         resIndex←⍸n⍷sieveSizes
-        resIndex≡⍬:0
-        (countPrimesDfn bits)=sieveResults[resIndex]
-    }
-
-    ∇ r←printResults args
-      :Access Public
-      printResultsDfn args
-      r←1
+        :If resIndex≡⍬
+            r←0
+        :Else
+        r←countPrimes=sieveResults[resIndex]
+        :EndIf
     ∇
-    printResultsDfn←{
+
+    ∇ printResults args
+        :Access Public
         ⎕IO←0
-        showResults←0⊃⍵
-        duration←1⊃⍵
-        passes←2⊃⍵
-        _←{
-            showResults:showResultsDfn duration passes
-            1
-        }0
-        ⍞←'garklein;' ⋄ ⍞←passes ⋄ ⍞←';' ⋄ ⍞←duration ⋄ ⍞←';' ⋄ ⍞←'1;'
+        showResults←0⊃args
+        duration←1⊃args
+        passes←2⊃args
+        :If showResults
+            ⎕←2,1↓⍸bits
+            ⍞←'Passes: ' ⋄ ⍞←passes ⋄ ⍞←', Time: ' ⋄ ⍞←duration
+            ⍞←', Avg: ' ⋄ ⍞←duration÷passes ⋄ ⍞←', Limit: ' ⋄ ⍞←n
+            ⍞←', Count: ' ⋄ ⍞←countPrimes ⋄ ⍞←', Valid: ' ⋄ ⍞←validateResults
+            ⎕←''
+        :EndIf
+        ⍞←'garklein-tradfn;' ⋄ ⍞←passes ⋄ ⍞←';' ⋄ ⍞←duration ⋄ ⍞←';' ⋄ ⍞←'1;'
         ⍞←'algorithm=base,faithful=yes,bits=1'
-    }
-    showResultsDfn←{
-        ⎕IO←0
-        duration←0⊃⍵
-        passes←1⊃⍵
-        ⎕←2,1↓⍸bits
-        ⍞←'Passes: ' ⋄ ⍞←passes ⋄ ⍞←', Time: ' ⋄ ⍞←duration
-        ⍞←', Avg: ' ⋄ ⍞←duration÷passes ⋄ ⍞←', Limit: ' ⋄ ⍞←n
-        ⍞←', Count: ' ⋄ ⍞←countPrimes ⋄ ⍞←', Valid: ' ⋄ ⍞←validateResults
-        ⎕←''
-        1
-    }
+    ∇
 :EndClass

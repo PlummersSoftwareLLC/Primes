@@ -1,4 +1,4 @@
-# APL solution by Garklein
+# APL dfn solution by Garklein
 This is an APL implementation of the prime sieve.
 I'll probably go over it line by line later here
 

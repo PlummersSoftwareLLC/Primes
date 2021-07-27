@@ -1,4 +1,4 @@
-# APL solution by Garklein
+# APL tradfn solution by Garklein
 This is an APL implementation of the prime sieve.
 I'll probably go over it line by line later here
 
@@ -8,4 +8,4 @@ Make sure you have [Dyalog APL](https://www.dyalog.com/download-zone.htm?p=downl
 Run `run.bat `.
 
 ## Output
-`garklein-dfn;2375;5.002;1;algorithm=base,faithful=yes,bits=1`
+`garklein-tradfn;2375;5.002;1;algorithm=base,faithful=yes,bits=1`
