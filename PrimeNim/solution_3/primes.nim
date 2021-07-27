@@ -23,6 +23,7 @@ const RESULT = DICT[LIMIT]
 const CPUL1CACHE {.intdefine.} = 16384 # in bytes
 
 const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
+const CBITMASK = [ 0xFE'u8, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F ]
 
 # Nim does not have a bit array slice stepping by a value so
 # this implements it using a macro; works like Python arr{start:step:limit}
@@ -102,6 +103,14 @@ type # encloses all bit sequence operations used...
 func newBitSeq(size: int): BitSeq =
   BitSeq(size: size, buffer: newSeq[byte](((size - 1) shr 3) + 1))
 
+func `[]`(bitseq: BitSeq; i: int): bool {.inline.} =
+  (bitseq.buffer[i shr 3] and BITMASK[i and 7]) != 0'u8
+
+func `[]=`(bitseq: BitSeq; i: int; v: bool) {.inline.} =
+  let w = i shr 3
+  if v: bitseq.buffer[w] = bitseq.buffer[w] or BITMASK[i and 7]
+  else: bitseq.buffer[w] = bitseq.buffer[w] and CBITMASK[i and 7]
+
 func `[]`(bitseq: BitSeq; startstop: HSlice[int, int];
           step: int = 1): iterator: bool {.closure.} {.inline.} =
   assert step <= 0 or startstop.b < startstop.a,
@@ -121,16 +130,16 @@ func setRange(bitseq: BitSeq; start, stop: int; step: int = 1): int =
     unrollLoops(bitbufa, sz, result, step)
   while result <= stop:
     let cp = cast[ptr byte](bitbufa + (result shr 3))
-    cp[] = cp[] or BITMASK[result and 7]
+    cp[] = cp[] or (1'u8 shl (result and 7)) # BITMASK[result and 7]
     result += step
 
 func countTrues(bitseq: BitSeq): int =
   let bsp = cast[ptr UncheckedArray[uint64]](bitseq.buffer[0].addr)
-  let lstwrd = bitseq.size shr 6
-  let mask = not ((0'u64 - 2'u64) shl (bitseq.size and 63))
+  let lstwrd = (bitseq.size - 1) shr 6
+  let mask = not ((0'u64 - 2'u64) shl ((bitseq.size - 1) and 63))
   result = 0
   for i in 0 ..< lstwrd: result += bsp[i].popCount
-  result -= (bsp[lstwrd] and mask).popCount
+  result += (bsp[lstwrd] and mask).popCount
 
 type
   PrimeSieve = ref object
@@ -142,42 +151,44 @@ func newPrimeSieve(lmt: Prime): PrimeSieve = # seq size rounded up to uint64
   if lmt < 3: return PrimeSieve(limit: if lmt < 2: 0 else: 2,
                                 sieveBuffer: newBitSeq(0))
   result = PrimeSieve(limit: lmt,
-                      sievebuffer: newBitSeq((lmt.int + 64) and -64))
+                      sievebuffer: newBitSeq(((lmt - 3.Prime) shr 1).int + 1))
 
   # include the sieving of the sieveBuffer in the initialization of PrimeSieve
   let cmpsts = newBitSeq(CPUL1CACHE * 8)
   let cmpstsp = cast[ptr UncheckedArray[byte]](cmpsts.buffer[0].addr)
-  let cmpstsa = cast[int](cmpstsp)
-  let sqrtndx = lmt.float64.sqrt.int
-  let bitlmt = lmt.int; let bufsz = (lmt.int + 8) shr 3
+  let sqrtndx = (lmt.float64.sqrt.int - 3) div 2
+  let sqrtsqrtndx = (lmt.float64.sqrt.sqrt.int - 3) div 2
+  let bitlmt = ((lmt - 3.Prime) shr 1).int; let bufsz = (bitlmt + 8) shr 3
 
   var numbps = 0 # first just cull the base primes and count them...
-  for bp in countup(3, sqrtndx, 2):
-    if (cmpstsp[bp shr 3] and (1'u8 shl (bp and 7))) == 0'u8: # for base prime
+  for i in 0 .. sqrtsqrtndx:
+    if not cmpsts[i]: # for base prime
       numbps.inc
-      for c in countup(bp * bp, sqrtndx, bp shl 1):
-        let cp = cast[ptr uint16](cmpstsa + (c shr 3))
-        cp[] = cp[] or (1'u8 shl (c and 7))
+      let bp = i + i + 3; let strtndx = (bp * bp - 3) shr 1
+      for c in countup(strtndx, sqrtndx, bp): cmpsts[c] = true
+  for i in sqrtsqrtndx + 1 .. sqrtndx:
+    if not cmpsts[i]: numbps.inc
 
   # then fill arrays of base primes/start indexes...
   var basePrimes = newSeq[int](numbps)
   var startIndices = newSeq[int](numbps); var j = 0
-  for bp in countup(3, sqrtndx, 2):
-    if (cmpstsp[bp shr 3] and (1'u8 shl (bp and 7))) == 0'u8: # for base prime
+  for i in 0 .. sqrtndx:
+    if not cmpsts[i]: # for base prime
+      let bp = i + i + 3; let strtndx = (bp * bp - 3) shr 1
       basePrimes[j] = bp
-      startIndices[j] = (bp * bp) and ((CPUL1CACHE shl 3) - 1); j.inc
+      startIndices[j] = strtndx and ((CPUL1CACHE shl 3) - 1); j.inc
 
   # finally, cull by CPU L1 cache sizes...
   for pgbs in countup(0, bufsz - 1, CPUL1CACHE):
     let cullSize = min(CPUL1CACHE, bufsz - pgbs); zeroMem(cmpstsp, cullSize)
-    let cullIndexLimit = min(bitlmt - pgbs * 8, CPUL1CACHE * 8 - 1).int
+    let cullIndexLimit = min(bitlmt - pgbs * 8, CPUL1CACHE * 8 - 1)
     let pageLimit = (pgbs + CPUL1CACHE) shl 3
     for i, basePrime in basePrimes.pairs: # then cull by cache pages...
-      if basePrime * basePrime >= pageLimit: break
-      let delta = 2 * basePrime.int; var cullIndex = startIndices[i]
-      let nextCullIndex = cmpsts.setRange(cullIndex, cullIndexLimit, delta)
-      startIndices[i] = # store next index for next cache page
-        nextCullIndex - CPUL1CACHE * 8
+      if ((basePrime * basePrime - 3) shr 1) >= pageLimit: break
+      var cullIndex = startIndices[i]
+      let nextCullIndex = cmpsts.setRange(cullIndex, cullIndexLimit, basePrime)
+      # store next index for next cache page...
+      startIndices[i] = nextCullIndex - CPUL1CACHE * 8
     # moving each sieved cache size into the final result...
     copyMem(result.sieveBuffer.buffer[pgbs].addr,
             cmpsts.buffer[0].addr, cullSize)
@@ -186,7 +197,8 @@ method primes(this: PrimeSieve): iterator: Prime {.closure.} {.base.} =
   return iterator: Prime {.closure.} =
     if this.limit >= 2:
       yield 2
-      var i = 3; let prs = this.sieveBuffer[3 .. this.limit.int, step = 2]
+      let lmt = ((this.limit - 3.Prime) shr 1).int
+      var i = 3; let prs = this.sieveBuffer[0 .. lmt]
       for b in prs():
         if not b: yield i.Prime
         i += 2
@@ -195,11 +207,11 @@ method primes(this: PrimeSieve): iterator: Prime {.closure.} {.base.} =
 method countPrimes(this: PrimeSieve): int64 {.base.} =
   if this.limit < 3:
     if this.limit < 2: return 0'i64 else: return 1'i64
-  let lstwrd = this.limit.int64 div 64
-  lstwrd * 32 + (if lstwrd == 0: (this.limit - (this.limit shr 1)).int else: 0) -
-    this.sieveBuffer.countTrues.int64
+  let lstndx = ((this.limit - 3.Prime) shr 1).int64
+  let lstwrd = (lstndx shr 6); let lstmod = lstndx and 63
+  2 + lstmod + lstwrd * 64 - this.sieveBuffer.countTrues.int64
 
-# showing results...
+# verifying, producing, showing results...
 
 var rslts = ""; let ps0 = 100.newPrimeSieve.primes
 for p in ps0(): rslts &= $p & " "
@@ -214,6 +226,7 @@ var passes = 0; var rslt: PrimeSieve
 while duration < 5_000_000_000:
   rslt = LIMIT.newPrimeSieve
   duration = getMonoTime().ticks - start; passes += 1
+
 let elapsed = duration.float64 / 1e9
 let primeCount = rslt.countPrimes
 isValid = isValid and primeCount == RESULT # a thrid check
