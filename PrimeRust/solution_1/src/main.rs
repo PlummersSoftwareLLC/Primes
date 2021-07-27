@@ -1,6 +1,7 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
-    FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageByteVector, PrimeSieve,
+    FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageBitVectorStripedBlocks,
+    FlagStorageByteVector, PrimeSieve, DEFAULT_BLOCK_SIZE, SMALL_BLOCK_SIZE,
 };
 
 use std::{
@@ -8,8 +9,6 @@ use std::{
     time::{Duration, Instant},
 };
 use structopt::StructOpt;
-
-use crate::primes::FlagStorageBitVectorStripedBlocks;
 
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
@@ -314,42 +313,49 @@ pub mod primes {
     }
 
     /// This is a variation of `FlagStorageBitVectorStriped` that has better locality.
-    /// The striped storage is divided up into smaller blocks, and we do multiple 
+    /// The striped storage is divided up into smaller blocks, and we do multiple
     /// passes over the smaller block rather than the entire sieve. Smaller blocks
     /// make better use of limited processor cache.
-    pub struct FlagStorageBitVectorStripedBlocks {
-        blocks: Vec<Block>,
+    pub struct FlagStorageBitVectorStripedBlocks<const N: usize> {
+        blocks: Vec<[u8; N]>,
         length_bits: usize,
     }
 
-    type Block = [u8; BLOCK_SIZE];
-    const BLOCK_SIZE: usize = 16 * 1024;
-    const BLOCK_SIZE_BITS: usize = BLOCK_SIZE * U8_BITS;
-    
-    impl FlagStorage for FlagStorageBitVectorStripedBlocks {
+    pub const DEFAULT_BLOCK_SIZE: usize = 16 * 1024;
+    pub const SMALL_BLOCK_SIZE: usize = 4 * 1024;
+
+    impl<const N: usize> FlagStorageBitVectorStripedBlocks<N> {
+        const BLOCK_SIZE: usize = N;
+        const BLOCK_SIZE_BITS: usize = Self::BLOCK_SIZE * U8_BITS;
+    }
+
+    impl<const N: usize> FlagStorage for FlagStorageBitVectorStripedBlocks<N> {
+        #[inline(always)]
         fn create_true(size: usize) -> Self {
-            let num_blocks = size / BLOCK_SIZE_BITS + (size % BLOCK_SIZE_BITS).min(1);
+            let num_blocks = size / Self::BLOCK_SIZE_BITS + (size % Self::BLOCK_SIZE_BITS).min(1);
             Self {
                 length_bits: size,
-                blocks: vec![[u8::MAX; BLOCK_SIZE]; num_blocks],
+                blocks: vec![[u8::MAX; N]; num_blocks],
             }
         }
 
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
             // find first block, start bit, and first word
-            let mut block_idx = start / BLOCK_SIZE_BITS;
-            let offset_idx = start % BLOCK_SIZE_BITS;
-            let mut bit_idx = offset_idx / BLOCK_SIZE;
-            let mut word_idx = offset_idx % BLOCK_SIZE;
+            let mut block_idx = start / Self::BLOCK_SIZE_BITS;
+            let offset_idx = start % Self::BLOCK_SIZE_BITS;
+            let mut bit_idx = offset_idx / Self::BLOCK_SIZE;
+            let mut word_idx = offset_idx % Self::BLOCK_SIZE;
 
             while block_idx < self.blocks.len() {
                 // Safety: we have ensured the block_idx < length
                 let block = unsafe { self.blocks.get_unchecked_mut(block_idx) };
                 while bit_idx < U8_BITS {
                     // calculate effective end position: we might have a shorter stripe on the last iteration
-                    let stripe_start_position = block_idx * BLOCK_SIZE_BITS + bit_idx * BLOCK_SIZE;
-                    let effective_len = BLOCK_SIZE.min(self.length_bits - stripe_start_position);
+                    let stripe_start_position =
+                        block_idx * Self::BLOCK_SIZE_BITS + bit_idx * Self::BLOCK_SIZE;
+                    let effective_len =
+                        Self::BLOCK_SIZE.min(self.length_bits - stripe_start_position);
 
                     // get mask for this bit position
                     let mask = !(1 << bit_idx);
@@ -376,13 +382,13 @@ pub mod primes {
                     }
 
                     // early termination: this was the last stripe
-                    if effective_len != BLOCK_SIZE {
+                    if effective_len != Self::BLOCK_SIZE {
                         return;
                     }
-                    
+
                     // bit/stripe complete; advance to next bit
                     bit_idx += 1;
-                    word_idx -= BLOCK_SIZE;
+                    word_idx -= Self::BLOCK_SIZE;
                 }
 
                 // block complete; advance to next block
@@ -396,10 +402,10 @@ pub mod primes {
             if index > self.length_bits {
                 return false;
             }
-            let block = index / BLOCK_SIZE_BITS;
-            let offset = index % BLOCK_SIZE_BITS;
-            let bit_index = offset / BLOCK_SIZE;
-            let word_index = offset % BLOCK_SIZE;
+            let block = index / Self::BLOCK_SIZE_BITS;
+            let offset = index % Self::BLOCK_SIZE_BITS;
+            let bit_index = offset / Self::BLOCK_SIZE;
+            let word_index = offset % Self::BLOCK_SIZE;
             let word = self.blocks.get(block).unwrap().get(word_index).unwrap();
             *word & (1 << bit_index) != 0
         }
@@ -663,8 +669,19 @@ fn main() {
             thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks>(
+                run_implementation::<FlagStorageBitVectorStripedBlocks<DEFAULT_BLOCK_SIZE>>(
                     "bit-storage-striped-blocks",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorStripedBlocks<SMALL_BLOCK_SIZE>>(
+                    "bit-storage-striped-blocks-sml",
                     1,
                     run_duration,
                     threads,
@@ -749,7 +766,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::{FlagStorageBitVectorStripedBlocks, PrimeValidator};
+    use crate::primes::{PrimeValidator, DEFAULT_BLOCK_SIZE};
 
     #[test]
     fn sieve_known_correct_bits() {
@@ -768,7 +785,7 @@ mod tests {
 
     #[test]
     fn sieve_known_correct_bits_striped_blocks() {
-        sieve_known_correct::<FlagStorageBitVectorStripedBlocks>();
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<DEFAULT_BLOCK_SIZE>>();
     }
 
     #[test]
@@ -812,7 +829,10 @@ mod tests {
 
     #[test]
     fn storage_bit_striped_block_correct() {
-        basic_storage_correct::<FlagStorageBitVectorStripedBlocks>();
+        // test small as well as default block sizes
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<7>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<1024>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<DEFAULT_BLOCK_SIZE>>();
     }
 
     fn basic_storage_correct<T: FlagStorage>() {
