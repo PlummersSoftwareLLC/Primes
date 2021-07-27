@@ -7,15 +7,15 @@
     :Field Shared Private sieveResults←4 25 168 1229 9592 78498 664579 5761455 50847534 455052511
 
     ∇ NewPrimeSieve limit
-      :Implements Constructor
-      :Access Public
-      n←limit
+        :Implements Constructor
+        :Access Public
+        n←limit
     ∇
 
     ∇ r←runSieve
-      :Access Public
-      bits←runSieveDfn n
-      r←1
+        :Access Public
+        bits←runSieveDfn n
+        r←1
     ∇
     runSieveDfn←{
         ⎕IO←0
@@ -36,14 +36,14 @@
     }
 
     ∇ r←countPrimes
-      :Access Private
-      r←countPrimesDfn bits
+        :Access Private
+        r←countPrimesDfn bits
     ∇
     countPrimesDfn←+/
 
     ∇ r←validateResults
-      :Access Private
-      r←validateResultsDfn 0
+        :Access Private
+        r←validateResultsDfn 0
     ∇
     validateResultsDfn←{
         ⎕IO←0
@@ -53,9 +53,9 @@
     }
 
     ∇ r←printResults args
-      :Access Public
-      printResultsDfn args
-      r←1
+        :Access Public
+        printResultsDfn args
+        r←1
     ∇
     printResultsDfn←{
         ⎕IO←0
