@@ -1,0 +1,1 @@
+dyalog -script main.apl
