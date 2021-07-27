@@ -36,7 +36,7 @@ actual inline fun <reified T : PrimeSieve> benchmarkPrimeSieve(
                     duration = 5000.0,
                     iterations = iterations.get(),
                     result = lastIteration.get(),
-                ).print("jvm", "multi")
+                ).print("jvm", "multi", CORES)
             }
         }
 

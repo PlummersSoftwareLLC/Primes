@@ -6,8 +6,8 @@ abstract class PrimeSieve(val sieveSize: Int) {
     abstract val foundPrimes: IntArray
     abstract val implementationName: String
 
-    fun toString(passes: Int, duration: Double, threads: String) =
-        "kotlin_${implementationName}_$threads;$passes;$duration;1;algorithm=base,faithful=yes"
+    fun toString(passes: Int, duration: Double, threads: String, threadCount: Int) =
+        "kotlin_${implementationName}_$threads;$passes;$duration;$threadCount;algorithm=base,faithful=yes"
 
     val isValid get() = VALIDATION_DATA[sieveSize] == primesCount
 

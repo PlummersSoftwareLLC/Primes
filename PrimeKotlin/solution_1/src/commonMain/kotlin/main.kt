@@ -30,8 +30,8 @@ data class IterationResult(
     val iterations: Int,
     val result: PrimeSieve,
 ) {
-    fun print(platform: String, threads: String) =
-        println("${platform}_${result.toString(iterations, duration / 1000.0, threads)}")
+    fun print(platform: String, threads: String, threadCount: Int = 1) =
+        println("${platform}_${result.toString(iterations, duration / 1000.0, threads, threadCount)}")
 }
 
 inline fun <reified T : PrimeSieve> runTest(crossinline newInstance: (Int) -> T): IterationResult {
