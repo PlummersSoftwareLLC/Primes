@@ -6,7 +6,7 @@ uses
   {$IF defined(linux)}
   cthreads, ctypes,
   {$ELSEIF defined(freebsd) or defined(darwin)}
-  uses ctypes, sysctl,
+  cthreads, ctypes, sysctl,
   {$ELSEIF defined(windows)}
   Windows,
     {$IFDEF UseTProcessW}
@@ -25,7 +25,6 @@ type
     sieveSize: int64;
     runningThreads,
     passes: longint;
-    threadStarted,
     terminateThreads: boolean;
     bits: PPackedBits;
   end;
@@ -42,7 +41,7 @@ type
       constructor Create(n: int64);
       destructor Destroy; override;
 
-      procedure runSieve;
+      procedure RunSieve;
   end;
 
 {$IFDEF Linux}
@@ -70,7 +69,7 @@ begin
   inherited Destroy;
 end;
 
-procedure prime_sieve.runSieve;
+procedure prime_sieve.RunSieve;
 var
   num,
   step,
@@ -138,10 +137,6 @@ begin
   GetSystemInfo(SystemInfo{%H-});
   Result := SystemInfo.dwNumberOfProcessors;
 end;
-{$ELSEIF defined(UNTESTEDsolaris)}
-  begin
-    t = sysconf(_SC_NPROC_ONLN);
-  end;
 {$ELSEIF defined(freebsd) or defined(darwin)}
 var
   mib: array[0..1] of cint;
@@ -162,13 +157,13 @@ end;
   begin
     Result:=sysconf(_SC_NPROCESSORS_ONLN);
   end;
-
 {$ELSE}
   begin
     Result:=1;
   end;
 {$ENDIF}
 
+// retrieve command line options
 procedure GetRequested(var lThreadsRequested, lSecondsRequested: longint; var lSizeRequested: int64);
 var
   numParam: longint;
@@ -191,6 +186,7 @@ begin
   end;
 end;
 
+// initialize the dictionary storing precomputed primes counts for validation
 procedure FillValidateResults(var lResultsDictionary: TResultsDictionary);
 const
   PRIME_COUNTS: array [0..9, 0..1] of int64 = (
@@ -215,36 +211,6 @@ begin
 
   for i:=0 to high(PRIME_COUNTS) do
      lResultsDictionary.Add(PRIME_COUNTS[i,0], PRIME_COUNTS[i,1]);
-end;
-
-function SieveThread(p: pointer): ptrint;
-var
-  sieve: prime_sieve;
-
-  nbBytes,
-  sieveSize: int64;
-
-  lSieveThreadParam: PSieveThreadParam;
-
-begin
-  lSieveThreadParam:=p;
-  InterLockedIncrement(lSieveThreadParam^.runningThreads);
-  lSieveThreadParam^.threadStarted:=true;
-  sieveSize:=lSieveThreadParam^.sieveSize;
-  sieve:=prime_sieve.Create(sieveSize);
-  sieve.runSieve;
-
-  if lSieveThreadParam^.terminateThreads and (lSieveThreadParam^.runningThreads=1) then
-  begin
-    nbBytes:=sieveSize >> 3 + ord((sieveSize and $7)>0);
-    lSieveThreadParam^.bits:=GetMem(nbBytes);
-    move(sieve.bits[0], lSieveThreadParam^.bits[0], nbBytes);
-  end;
-
-  sieve.Free;
-  InterLockedIncrement(lSieveThreadParam^.passes);
-  InterLockedDecrement(lSieveThreadParam^.runningThreads);
-  result:=0;
 end;
 
 function CountPrimes(lSieveSize: int64; lBits: PPackedBits): int64;
@@ -330,9 +296,50 @@ begin
   writeln(format('olivierbrun;%d;%f;%d;algorithm=base,faithful=yes,bits=1', [lPasses, lDuration, lThreadsRequested]));
 end;
 
+function SieveThread(p: pointer): ptrint;
+var
+  sieve: prime_sieve;
+
+  nbBytes,
+  sieveSize: int64;
+
+  lSieveThreadParam: PSieveThreadParam;
+
+begin
+  lSieveThreadParam:=p;
+  InterLockedIncrement(lSieveThreadParam^.runningThreads); // increment the running threads count
+  sieveSize:=lSieveThreadParam^.sieveSize;
+  sieve:=nil;
+
+  // calculating primes until the main thread sets the terminateThreads to true
+  while not lSieveThreadParam^.terminateThreads do
+  begin
+    // if a sieve object exists destroy it
+    if assigned(sieve) then
+      FreeAndNil(sieve);
+
+    sieve:=prime_sieve.Create(sieveSize); // instantiate a new sieve
+    sieve.runSieve; // run it
+    InterLockedIncrement(lSieveThreadParam^.passes); // the passes variable is shared among all threads, hence the use of the thread safe InterLockedIncrement instruction instead of directly doing a +=1 operation
+  end;
+
+  // copying the bits from the latest thread for validation when printing the results
+  if lSieveThreadParam^.runningThreads=1 then
+  begin
+    nbBytes:=sieveSize >> 3 + ord((sieveSize and $7)>0);
+    lSieveThreadParam^.bits:=GetMem(nbBytes);
+    move(sieve.bits[0], lSieveThreadParam^.bits[0], nbBytes);
+  end;
+
+  sieve.Free;
+  InterLockedDecrement(lSieveThreadParam^.runningThreads); // decrement the running threads count
+  result:=0;
+end;
+
 var
   sieveThreadParam: TSieveThreadParam;
 
+  numThread,
   secondsRequested,
   threadsRequested: longint;
 
@@ -342,40 +349,38 @@ var
   elapsedTime: double;
 
 begin
-  GetRequested(threadsRequested, secondsRequested, sieveThreadParam.sieveSize);
-  FillValidateResults(resultsDictionary);
+  GetRequested(threadsRequested, secondsRequested, sieveThreadParam.sieveSize); // retrieving command line options
+
   sieveThreadParam.passes:=0;
   sieveThreadParam.runningThreads:=0;
   sieveThreadParam.terminateThreads:=false;
-  sieveThreadParam.threadStarted:=false;
   sieveThreadParam.bits:=nil;
 
   timeStart:=GetTickCount64;
 
+  // spawning the requested threads
+  for numThread:=1 to threadsRequested do
+    BeginThread(@sieveThread, @sieveThreadParam);
+
   while true do
   begin
-    if sieveThreadParam.runningThreads<threadsRequested then
-    begin
-      BeginThread(@sieveThread, @sieveThreadParam); // spawn a new thread
-      repeat until sieveThreadParam.threadStarted; // waiting until the thread has started to ensure the count of running threads is updated
-      sieveThreadParam.threadStarted:=false;
-    end;
-
     elapsedTime:=(GetTickCount64-timeStart)/1000;
 
     if elapsedTime>=secondsRequested then
     begin
       sieveThreadParam.terminateThreads:=true;
 
-      //waiting for all running threads to complete
+      // waiting for all running threads to terminate
       repeat
       until sieveThreadParam.runningThreads=0;
 
+      // getting the elapsed time once all threads are destroyed
       elapsedTime:=(GetTickCount64-timeStart)/1000;
       break;
     end;
   end;
 
+  FillValidateResults(resultsDictionary); // populate the prime counts dictionary for the validation
   PrintResults(false, elapsedTime, sieveThreadParam.passes, sieveThreadParam.sieveSize, sieveThreadParam.bits, resultsDictionary, threadsRequested);
   FreeMem(sieveThreadParam.bits);
   resultsDictionary.Free;
