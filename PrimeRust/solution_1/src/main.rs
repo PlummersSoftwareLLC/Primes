@@ -323,7 +323,7 @@ pub mod primes {
         length_bits: usize,
     }
 
-    const BLOCK_SIZE: usize = 64 * 1024;
+    const BLOCK_SIZE: usize = 8 * 1024;
     const BLOCK_SIZE_BITS: usize = BLOCK_SIZE * U8_BITS;
     type Block = [u8; BLOCK_SIZE];
 
@@ -348,15 +348,32 @@ pub mod primes {
             let mut word_idx = offset_idx % BLOCK_SIZE;
 
             while block_idx < self.blocks.len() {
-                let block = self.blocks.get_mut(block_idx).unwrap();
+                let block = unsafe {
+                    self.blocks.get_unchecked_mut(block_idx)
+                };
                 while bit_idx < U8_BITS {
                     // get mask for this bit position
                     let mask = !(1 << bit_idx);
 
+                    // unrolled loop
+                    let end_unrolled = BLOCK_SIZE.saturating_sub(skip);
+                    while word_idx < end_unrolled {
+                        // Safety: We have ensured that (i+skip) < slice.len().
+                        // The compiler will not elide these bounds checks,
+                        // so there is a performance benefit to using get_unchecked_mut here.
+                        unsafe {
+                            *block.get_unchecked_mut(word_idx) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip) &= mask;
+                        }
+                        word_idx += skip * 2;
+                    }
+
                     // TODO: remainder - compiler elides these bounds checks as
                     // the loop is simple enough
                     while word_idx < BLOCK_SIZE {
-                        block[word_idx] &= mask;
+                        unsafe { 
+                            *block.get_unchecked_mut(word_idx) &= mask;
+                        }
                         word_idx += skip;
                     }
 
