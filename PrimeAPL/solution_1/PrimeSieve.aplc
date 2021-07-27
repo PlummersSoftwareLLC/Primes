@@ -58,9 +58,10 @@
       r←1
     ∇
     printResultsDfn←{
-        showResults←1↑⍵
-        duration←¯1↑2↑⍵
-        passes←¯1↑⍵
+        ⎕IO←0
+        showResults←0⊃⍵
+        duration←1⊃⍵
+        passes←2⊃⍵
         _←{
             showResults:showResultsDfn duration passes
             1
@@ -69,12 +70,13 @@
         ⍞←'algorithm=base,faithful=yes,bits=1'
     }
     showResultsDfn←{
-        duration←1↑⍵
-        passes←¯1↑⍵
-        ⎕←2 3,1↓⍸bits
-        ⍞←'Passes:' ⋄ ⍞←passes ⋄ ⍞←'Time:' ⋄ ⍞←duration
-        ⍞←'Avg:' ⋄ ⍞←duration÷passes ⋄ ⍞←'Limit:' ⋄ ⍞←n
-        ⍞←'Count:' ⋄ ⍞←countPrimes ⋄ ⍞←'Valid:' ⋄ ⍞←validateResults
+        ⎕IO←0
+        duration←0⊃⍵
+        passes←1⊃⍵
+        ⎕←2,1↓⍸bits
+        ⍞←'Passes: ' ⋄ ⍞←passes ⋄ ⍞←', Time: ' ⋄ ⍞←duration
+        ⍞←', Avg: ' ⋄ ⍞←duration÷passes ⋄ ⍞←', Limit: ' ⋄ ⍞←n
+        ⍞←', Count: ' ⋄ ⍞←countPrimes ⋄ ⍞←', Valid: ' ⋄ ⍞←validateResults
         ⎕←''
         1
     }
