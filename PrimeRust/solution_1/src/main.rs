@@ -330,7 +330,6 @@ pub mod primes {
     }
 
     impl<const N: usize> FlagStorage for FlagStorageBitVectorStripedBlocks<N> {
-        #[inline(always)]
         fn create_true(size: usize) -> Self {
             let num_blocks = size / Self::BLOCK_SIZE_BITS + (size % Self::BLOCK_SIZE_BITS).min(1);
             Self {
