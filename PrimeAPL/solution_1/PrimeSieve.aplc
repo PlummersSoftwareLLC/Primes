@@ -25,8 +25,8 @@
         q←⌈n*0.5
         _←{
             _←{
-                factor>50:bits[factor×2+⍳2-⍨⌈n÷factor]←0
-                1⊣bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
+                factor>50:bits[factor×factor↓⍳⌈n÷factor]←0
+                1⊣bits>←(n↑(factor*2)⍴1)<n⍴factor↑1
             }0
             factor⊢←2∘+⍣(bits⊃⍨⊣)factor
             factor≤q:∇ 0
@@ -52,16 +52,13 @@
         (countPrimesDfn bits)=sieveResults[resIndex]
     }
 
-    ∇ r←printResults args
+    ∇ printResults args
         :Access Public
         printResultsDfn args
-        r←1
     ∇
     printResultsDfn←{
         ⎕IO←0
-        showResults←0⊃⍵
-        duration←1⊃⍵
-        passes←2⊃⍵
+        (showResults duration passes)←⍵
         _←{
             showResults:showResultsDfn duration passes
             1
@@ -71,12 +68,12 @@
     }
     showResultsDfn←{
         ⎕IO←0
-        duration←0⊃⍵
-        passes←1⊃⍵
+        (duration passes)←⍵
         ⎕←2,1↓⍸bits
         ⍞←'Passes: ' ⋄ ⍞←passes ⋄ ⍞←', Time: ' ⋄ ⍞←duration
         ⍞←', Avg: ' ⋄ ⍞←duration÷passes ⋄ ⍞←', Limit: ' ⋄ ⍞←n
         ⍞←', Count: ' ⋄ ⍞←countPrimes ⋄ ⍞←', Valid: ' ⋄ ⍞←validateResults
+        ⍞←', Array type ID: ' ⋄ ⍞←181⌶bits
         ⎕←''
         1
     }

@@ -20,16 +20,19 @@
     ∇ bits←computeSieve;factor;q
         :Access Private
         ⎕IO←0
-        factor←1 ⍝ 3-2
+        factor←3
         bits←n⍴0 1
         q←⌈n*0.5
         :While factor ≤ q
-            factor⊢←2∘+⍣(bits⊃⍨⊣)factor
-            :If factor > 50
-                bits[factor×2+⍳2-⍨⌈n÷factor]←0
-            :Else
-                bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
+            :If ~bits[factor]
+                factor⊢←2∘+⍣(bits⊃⍨⊣)factor
             :EndIf
+            :If factor > 50
+                bits[factor×factor↓⍳⌈n÷factor]←0
+            :Else
+                bits>←(n↑(factor*2)⍴1)<n⍴factor↑1
+            :EndIf
+            factor+←2
         :EndWhile                      
     ∇
 
