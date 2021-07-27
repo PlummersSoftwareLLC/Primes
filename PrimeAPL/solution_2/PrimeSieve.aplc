@@ -12,10 +12,9 @@
       n←limit
     ∇
 
-    ∇ r←runSieve
+    ∇ runSieve
       :Access Public
       bits←runSieveDfn n
-      r←1
     ∇
     runSieveDfn←{
         ⎕IO←0
