@@ -10,10 +10,15 @@
         :Implements Constructor
         :Access Public
         n←limit
+    ∇  
+    
+    ∇ runSieve    
+        :Access Public
+        bits←computeSieve
     ∇
 
-    ∇ runSieve
-        :Access Public
+    ∇ bits←computeSieve;factor;q
+        :Access Private
         ⎕IO←0
         factor←1 ⍝ 3-2
         bits←n⍴0 1
@@ -25,7 +30,7 @@
             :Else
                 bits>←(n↑(2×factor)⍴1)<n⍴factor↑1
             :EndIf
-        :EndWhile
+        :EndWhile                      
     ∇
 
     ∇ r←countPrimes
@@ -33,7 +38,7 @@
         r←+/bits
     ∇
 
-    ∇ r←validateResults
+    ∇ r←validateResults;resIndex
         :Access Public
         ⎕IO←0
         resIndex←⍸n⍷sieveSizes
@@ -44,12 +49,9 @@
         :EndIf
     ∇
 
-    ∇ printResults args
+    ∇ printResults (showResults duration passes)
         :Access Public
         ⎕IO←0
-        showResults←0⊃args
-        duration←1⊃args
-        passes←2⊃args
         :If showResults
             ⎕←2,1↓⍸bits
             ⍞←'Passes: ' ⋄ ⍞←passes ⋄ ⍞←', Time: ' ⋄ ⍞←duration
