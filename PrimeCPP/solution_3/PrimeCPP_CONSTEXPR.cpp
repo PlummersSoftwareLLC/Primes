@@ -112,16 +112,18 @@ void run(const Sieve &checkSieve, int numberOfThreads = 1, int runtimeSeconds = 
         for (;duration_cast<seconds>(steady_clock::now() - tStart).count() < runtimeSeconds; ++passes)
         {
             auto res = execute();
+            shadowFunc(res);
         }
     } else {
         std::thread threads[numberOfThreads];
         uint64_t l_passes[numberOfThreads];
         for (unsigned int i = 0; i < numberOfThreads; i++)
-            threads[i] = std::thread([i, &l_passes, &tStart]()
+            threads[i] = std::thread([runtimeSeconds, i, &l_passes, &tStart]()
             {
-                for (l_passes[i] = 0; duration_cast<seconds>(steady_clock::now() - tStart).count() < 5; ++l_passes[i])
+                for (l_passes[i] = 0; duration_cast<seconds>(steady_clock::now() - tStart).count() < runtimeSeconds; ++l_passes[i])
                 {
                     auto res = execute();
+                    shadowFunc(res);
                 }
             });
         for (auto i = 0; i < numberOfThreads; i++) {

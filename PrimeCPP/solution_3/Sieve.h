@@ -41,15 +41,16 @@ public:
 	static constexpr uint64_t STACK_SIZE = 50'000'000L;
 	static_assert(STACK_SIZE >= upperLimit, "You may not exceed the stack size");
 
-private:
+private:	
 	static constexpr auto wordsize = sizeof(U) * 8;
-	static constexpr auto words = (upperLimit + wordsize - 1) / wordsize;
+	static constexpr auto words = (upperLimit >> 7) + (((upperLimit >> 1) & 63) > 0);
 
 	U bitmap[words] = {0}; // 0 means contains, 1 means missing
 	uint64_t sieveSize = upperLimit;
 
 	constexpr void insert(uint64_t index)
 	{
+		index /= 2;
 		const auto bi = index / wordsize;
 		const auto off = index % wordsize;
 		bitmap[bi] &= ~(((U)1) << off);
@@ -57,6 +58,7 @@ private:
 
 	constexpr void remove(uint64_t index)
 	{
+		index /= 2;
 		const auto bi = index / wordsize;
 		const auto off = index % wordsize;
 		bitmap[bi] |= (((U)1) << off);
@@ -65,6 +67,7 @@ private:
 public:
 	constexpr bool contains(uint64_t index) const
 	{
+		index /= 2;
 		const auto bi = index / wordsize;
 		const auto off = index % wordsize;
 		return 0 == (bitmap[bi] & (((U)1) << off));
@@ -117,3 +120,5 @@ public:
 
 	U *u() { return bitmap; }
 };
+
+void shadowFunc(const Sieve &);
