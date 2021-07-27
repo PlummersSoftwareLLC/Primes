@@ -7,7 +7,6 @@ global main
 extern printf
 extern malloc
 extern free
-extern clock_gettime
 
 default rel
 
@@ -31,6 +30,7 @@ NULL            equ     0                   ; null pointer
 SEMICOLON       equ     59                  ; semicolon ascii
 INIT_BLOCK      equ     0ffffffffffffffffh  ; init block for prime array            
 
+CLOCK_GETTIME   equ     228                 ; syscall number for clock_gettime
 CLOCK_MONOTONIC equ     1                   ; CLOCK_MONOTONIC
 WRITE           equ     1                   ; syscall number for write
 STDOUT          equ     1                   ; file descriptor of stdout
@@ -80,9 +80,10 @@ main:
     mov         [sizeSqrt], eax             ; save sizeSqrt
 
 ; get start time
+    mov         rax, CLOCK_GETTIME          ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [startTime]            ; * struct to store result in
-    call        clock_gettime wrt ..plt
+    syscall
 
     xor         r15, r15                    ; sievePtr = null
 
@@ -108,9 +109,10 @@ createSieve:
 ; * r14d: runCount
 ; * r15: sievePtr (&sieve)
 
+    mov         rax, CLOCK_GETTIME          ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [duration]             ; * struct to store result in
-    call        clock_gettime wrt ..plt
+    syscall
 
     mov         rbx, [duration+time.sec]    ; numSeconds = duration.seconds
     sub         rbx, [startTime+time.sec]   ; numSeconds -= startTime.seconds
