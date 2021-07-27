@@ -9,6 +9,8 @@ use std::{
 };
 use structopt::StructOpt;
 
+use crate::primes::FlagStorageBitVectorStripedBlocks;
+
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
 
@@ -538,6 +540,10 @@ struct CommandLineOptions {
     #[structopt(long)]
     bits_striped: bool,
 
+    /// Run variant that uses bit-level storage, using striped storage in blocks
+    #[structopt(long)]
+    bits_striped_blocks: bool,
+
     /// Run variant that uses byte-level storage
     #[structopt(long)]
     bytes: bool,
@@ -558,9 +564,15 @@ fn main() {
     };
 
     // run all implementations if no options are specified (default)
-    let run_all = [opt.bits, opt.bits_rotate, opt.bits_striped, opt.bytes]
-        .iter()
-        .all(|b| !*b);
+    let run_all = [
+        opt.bits,
+        opt.bits_rotate,
+        opt.bits_striped,
+        opt.bits_striped_blocks,
+        opt.bytes,
+    ]
+    .iter()
+    .all(|b| !*b);
 
     for threads in thread_options {
         if opt.bytes || run_all {
@@ -614,6 +626,21 @@ fn main() {
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStriped>(
                     "bit-storage-striped",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+        }
+
+        if opt.bits_striped_blocks || run_all {
+            thread::sleep(Duration::from_secs(1));
+            print_header(threads, limit, run_duration);
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorStripedBlocks>(
+                    "bit-storage-striped-blocks",
                     1,
                     run_duration,
                     threads,
