@@ -346,31 +346,40 @@ pub mod primes {
             let mut word_idx = offset_idx % BLOCK_SIZE;
 
             while block_idx < self.blocks.len() {
-                let block = unsafe {
-                    self.blocks.get_unchecked_mut(block_idx)
-                };
+                // TODO: Safety comment, or verify bounds check elided
+                let block = unsafe { self.blocks.get_unchecked_mut(block_idx) };
                 while bit_idx < U8_BITS {
+                    // calculate effective end position: we might have a shorter stripe on the last iteration
+                    let stripe_start_position = block_idx * BLOCK_SIZE_BITS + bit_idx * BLOCK_SIZE;
+                    let effective_end = BLOCK_SIZE.min(self.length_bits - stripe_start_position);
+                    let complete_after_this = effective_end != BLOCK_SIZE;
+
                     // get mask for this bit position
                     let mask = !(1 << bit_idx);
 
-                    while word_idx < BLOCK_SIZE.saturating_sub(skip*3) {
+                    while word_idx < effective_end.saturating_sub(skip * 3) {
                         // Safety: We have ensured that (i+skip*N) < BLOCK_SIZE
                         unsafe {
                             *block.get_unchecked_mut(word_idx) &= mask;
                             *block.get_unchecked_mut(word_idx + skip) &= mask;
-                            *block.get_unchecked_mut(word_idx + skip*2) &= mask;
-                            *block.get_unchecked_mut(word_idx + skip*3) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip * 2) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip * 3) &= mask;
                         }
                         word_idx += skip * 4;
                     }
 
                     // TODO: remainder - compiler elides these bounds checks as
                     // the loop is simple enough
-                    while word_idx < BLOCK_SIZE {
-                        unsafe { 
+                    while word_idx < effective_end {
+                        unsafe {
                             *block.get_unchecked_mut(word_idx) &= mask;
                         }
                         word_idx += skip;
+                    }
+
+                    // early termination: this was the last stripe
+                    if complete_after_this {
+                        return;
                     }
 
                     // bit/stripe complete; advance to next bit
@@ -438,15 +447,20 @@ pub mod primes {
             let mut factor = 3;
             let q = (self.sieve_size as f32).sqrt() as usize;
 
-            // note: need to check up to and including q, otherwise we
-            // fail to catch cases like sieve_size = 1000
-            while factor <= q {
+            loop {
                 // find next factor - next still-flagged number
                 factor = (factor / 2..self.sieve_size / 2)
                     .find(|n| self.flags.get(*n))
                     .unwrap()
                     * 2
                     + 1;
+
+                // check for termination _before_ resetting flags;
+                // note: need to check up to and including q, otherwise we
+                // fail to catch cases like sieve_size = 1000
+                if factor > q {
+                    break;
+                }
 
                 // reset flags starting at `start`, every `factor`'th flag
                 let start = factor * factor / 2;
