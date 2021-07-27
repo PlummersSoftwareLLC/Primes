@@ -5,6 +5,7 @@
 global main
 
 extern printf
+extern clock_gettime
 
 default rel
 
@@ -25,7 +26,6 @@ FALSE           equ     0                   ; false constant
 SEMICOLON       equ     59                  ; semicolon ascii
 INIT_BLOCK      equ     0ffffffffffffffffh  ; init block for prime array            
 
-CLOCK_GETTIME   equ     228                 ; syscall number for clock_gettime
 CLOCK_MONOTONIC equ     1                   ; CLOCK_MONOTONIC
 WRITE           equ     1                   ; syscall number for write
 STDOUT          equ     1                   ; file descriptor of stdout
@@ -76,10 +76,9 @@ main:
     inc         r13d                        ; sizeSqrt++, for safety 
 
 ; get start time
-    mov         rax, CLOCK_GETTIME          ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [startTime]            ; * struct to store result in
-    syscall
+    call        clock_gettime wrt ..plt
 
 runLoop:
 
@@ -163,10 +162,9 @@ endRun:
 ; * rbx: numSeconds
 ; * r12d: runCount
 
-    mov         rax, CLOCK_GETTIME          ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [duration]             ; * struct to store result in
-    syscall
+    call        clock_gettime wrt ..plt
 
     mov         rbx, [duration+time.sec]    ; numSeconds = duration.seconds
     sub         rbx, [startTime+time.sec]   ; numSeconds -= startTime.seconds
