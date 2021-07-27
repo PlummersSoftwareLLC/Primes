@@ -85,22 +85,22 @@ Hardware: 2 GHz Intel Core i7 with 8 Go 1600 MHz DDR3 of memory.
 Docker run:
 
 ```
-jfbu-tex;10;5.38837s;1;algorithm=base,faithful=no,bits=unknown
-jfbu-tex-480of2310;23;5.04814s;1;algorithm=wheel,faithful=no,bits=unknown
+jfbu-tex;10;5.38837;1;algorithm=base,faithful=no
+jfbu-tex-480of2310;23;5.04814;1;algorithm=wheel,faithful=no
 ```
 
 Native run (with `luatex`: `/bin/sh run.sh`):
 
 ```
-jfbu-tex;10;5.39767s;1;algorithm=base,faithful=no,bits=unknown
-jfbu-tex-480of2310;22;5.22046s;1;algorithm=wheel,faithful=no,bits=unknown
+jfbu-tex;10;5.39767;1;algorithm=base,faithful=no
+jfbu-tex-480of2310;22;5.22046;1;algorithm=wheel,faithful=no
 ```
 
 Native run (with `pdftex`: `/bin/sh runpdftex.sh`):
 
 ```
-jfbu-tex;8;5.19325s;1;algorithm=base,faithful=no,bits=unknown
-jfbu-tex-480of2310;23;5.19388s;1;algorithm=wheel,faithful=no,bits=unknown
+jfbu-tex;8;5.19325;1;algorithm=base,faithful=no
+jfbu-tex-480of2310;23;5.19388;1;algorithm=wheel,faithful=no
 ```
 
 I don't know why the speed increase from base (one out of two) to wheel (480
