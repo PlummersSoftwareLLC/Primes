@@ -1,13 +1,13 @@
 ARG GRADLE_VERSION=7.1.1
 ARG JDK_VERSION=16
 
-FROM fvbakel/kotlin-primes:1.0.0 as BUILD
+FROM gradle:${GRADLE_VERSION}-jdk-hotspot as BUILD
+
+RUN apt-get update && apt-get -y install libncurses5
 
 WORKDIR /src
 COPY . /src
-
 RUN ./compile.sh
-
 
 FROM adoptopenjdk:${JDK_VERSION}-jdk-hotspot
 
