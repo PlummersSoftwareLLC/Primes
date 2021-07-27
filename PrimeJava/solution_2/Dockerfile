@@ -4,4 +4,4 @@ WORKDIR /opt/app
 
 COPY src/PrimeSieveJavaBitSet.java .
 
-CMD "java" "PrimeSieveJavaBitSet.java"
+CMD ["java", "PrimeSieveJavaBitSet.java"]

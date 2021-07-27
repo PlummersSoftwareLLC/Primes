@@ -1,67 +1,32 @@
 import Foundation
+import ArgumentParser
 
-protocol BitArray {
-    init(size: Int)
-    func getBit(_ idx: Int) -> Bool
-    mutating func clearBit(_ idx: Int)
-}
-
-struct BoolBitArray: BitArray {
-    var rawBits: [Bool]
-    init(size: Int) {
-        rawBits = Array(repeating: true, count: (size + 1) / 2)
-    }
-
-    /// Gets a bit from the array of bits, but automatically just filters out even numbers as false,
-    /// and then only uses half as many bits for actual storage
-    func getBit(_ idx: Int) -> Bool {
-        assert(idx % 2 != 0)
-        return rawBits[idx / 2]
-    }
-
-    /// Reciprocal of GetBit, ignores even numbers and just stores the odds.
-    /// Since the prime sieve work should never waste time clearing even numbers,
-    /// this code will assert if you try to
-    mutating func clearBit(_ idx: Int) {
-        assert(idx % 2 != 0, "If you're setting even bits, you're sub-optimal for some reason!")
-        rawBits[idx / 2] = false
-    }
-}
-
-class PrimeSieveSwift {
+class Sieve {
     let sieveSize: Int
-    var bits: BitArray
+    let factorLimit: Int
+    var bits: UnsafeMutableBufferPointer<Bool>
 
     init(limit: Int) {
         sieveSize = limit
-        bits = BoolBitArray(size: limit)
+        factorLimit = Int(sqrt(Double(sieveSize)))
+        bits = UnsafeMutableBufferPointer<Bool>.allocate(capacity: (limit + 1) / 2)
+        bits.initialize(repeating: true)
     }
 
-    /// Return the count of bits that are still set in the sieve.
-    /// Assumes you've already called `runSieve`, of course!
-    func countPrimes() -> Int {
-        var count = 1
-        for num in stride(from: 3, to: sieveSize, by: 2) {
-            if bits.getBit(num) {
-                count += 1
-            }
-        }
-        return count
-    }
+    deinit { bits.deallocate() }
+
+    @inlinable func index(forNumber num: Int) -> Int {num >> 1 - 1}
 
     func runSieve() {
         var factor = 3
-        let q = Int(sqrt(Double(sieveSize)))
-
-        while factor <= q {
-            for num in stride(from: factor, to: sieveSize, by: 2) {
-                if bits.getBit(num) {
-                    factor = num
-                    break
-                }
+        while factor <= factorLimit {
+            while !bits[index(forNumber: factor)] {
+                factor += 2
             }
-            for num in stride(from: factor * factor, to: sieveSize, by: factor * 2) {
-                bits.clearBit(num)
+            var nFactor = factor*factor
+            while nFactor <= sieveSize {
+                bits[index(forNumber: nFactor)] = false
+                nFactor += 2*factor
             }
             factor += 2
         }
@@ -69,7 +34,7 @@ class PrimeSieveSwift {
 }
 
 
-extension PrimeSieveSwift {
+extension Sieve {
     /// Historical data for validating our results - the number of primes to be found
     /// under some limit, such as 168 primes under 1000
     static let primeCounts = [
@@ -83,6 +48,18 @@ extension PrimeSieveSwift {
         100000000: 5761455,
     ]
 
+    /// Return the count of bits that are still set in the sieve.
+    /// Assumes you've already called `runSieve`, of course!
+    func countPrimes() -> Int {
+        var count = 1
+        for num in stride(from: 3, to: sieveSize, by: 2) {
+            if bits[index(forNumber: num)] {
+                count += 1
+            }
+        }
+        return count
+    }
+
     /// Look up our count of primes in the historical data (if we have it) to see if it matches
     func validateResults() -> Bool {
         guard let correctCount = Self.primeCounts[sieveSize] else {
@@ -92,40 +69,63 @@ extension PrimeSieveSwift {
     }
 }
 
-extension PrimeSieveSwift {
+extension Sieve {
     func printResults(showingNumbers: Bool, duration: TimeInterval, passes: Int) {
         if showingNumbers {
             print("2, ", terminator: "")
-        }
-
-        var count = 1
-        for num in stride(from: 3, to: sieveSize, by: 2) {
-            if bits.getBit(num) {
-                if showingNumbers {
+            for num in stride(from: 3, to: sieveSize, by: 2) {
+                if bits[index(forNumber: num)] {
                     print(num, terminator: ", ")
                 }
-                count += 1
             }
         }
 
-        assert(count == countPrimes())
-
-        print("\nPasses: \(passes), Time: \(duration), Avg: \(duration/Double(passes)), Limit: \(sieveSize), Count: \(count), Valid: \(validateResults())")
+        print("\nPasses: \(passes), Time: \(duration), Avg: \(duration/Double(passes)), Limit: \(sieveSize), Count: \(countPrimes()), Valid: \(validateResults())")
         
         /// Following 2 lines added by rbergen to conform to drag race output format
         print()
-        print("j-f1;\(passes);\(duration);1;algorithm=base,faithful=yes\n")
+        print("yellowcub;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=\(8*MemoryLayout<Bool>.size)\n")
     }
 }
 
-let start = Date()
-var passes = 0
-var sieve: PrimeSieveSwift!
+struct StopWatch {
+    private let start =  Date()
+    public var stop = 0.0
 
-while start.distance(to: Date()) < 10 {
-    sieve = PrimeSieveSwift(limit: 1_000_000)
-    sieve.runSieve()
-    passes += 1
+    mutating func lap() -> Double {
+        stop = start.distance(to: Date())
+        return stop
+    }
 }
 
-sieve.printResults(showingNumbers: false, duration: start.distance(to: Date()), passes: passes)
+struct PrimeSieveSwift: ParsableCommand {
+    public static let configuration = CommandConfiguration(abstract: "Generate Primes")
+
+    @Option(name: [.customLong("upper-limit"), .customShort("n")], help: "Compute all primes below this limit.")
+    private var upperLimit = 1_000_000
+
+    @Option(name: [.customLong("time"), .customShort("t")], help: "Max time for number of passes.")
+    private var maxTime = 5.0
+
+    @Option(name: [.customLong("list-results"), .customShort("l")], help: "List all computed primes.")
+    private var listResults = false
+
+    func run() throws {
+        var passes = 0
+        
+        var stopWatch = StopWatch()
+        while true {
+            let sieve = Sieve(limit: upperLimit)
+            sieve.runSieve()
+            passes += 1
+
+            if stopWatch.lap() >= maxTime {
+                sieve.printResults(showingNumbers: listResults, duration: stopWatch.stop, passes: passes)
+                break
+            }
+        }
+
+    }
+
+}
+PrimeSieveSwift.main()

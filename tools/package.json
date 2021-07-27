@@ -24,11 +24,14 @@
     "typescript": "^4.3.2"
   },
   "dependencies": {
+    "chartscii": "^1.2.7",
     "commander": "^7.2.0",
     "console-table-printer": "^2.9.0",
     "dockerode": "^3.3.0",
     "glob": "^7.1.7",
+    "node-uname": "^3.0.4",
     "systeminformation": "^5.7.4",
-    "ts-node": "^10.0.0"
+    "ts-node": "^10.0.0",
+    "winston": "^3.3.3"
   }
 }

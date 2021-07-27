@@ -73,26 +73,23 @@ namespace PrimeCSharp.Sieves
 
         private bool GetBit(int index)
         {
-            if (index % 2 == 0)
-                return false;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
             return boolArray[index >> 1];
         }
 
         private void SetBit(int index)
         {
-            if (index % 2 == 1)
-            {
-                boolArray[index >> 1] = true;
-            }
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
+
+            boolArray[index >> 1] = true;
         }
 
         private void ClearBit(int index)
         {
-            if (index % 2 == 1)
-            {
-                boolArray[index >> 1] = false;
-            }
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
+
+            boolArray[index >> 1] = false;
         }
     }
 }

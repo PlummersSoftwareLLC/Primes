@@ -82,6 +82,53 @@ export default class ReportService {
     return report;
   }
 
+  public parseOutput(
+    content: string,
+    implementation: string,
+    solution: string
+  ): Array<Result> {
+    return content
+      .split(/\r?\n/)
+      .map((line) => {
+        const match = line
+          .trim()
+          .match(
+            /^(?<label>.+)\s*;\s*(?<passes>\d+)\s*;\s*(?<duration>\d+([.]\d+)?)\s*;\s*(?<threads>\d+)(;(?<extra>.+))?$/
+          );
+
+        // Moving to the next record if the line doesn't match
+        if (!match) return;
+
+        // Extract tags into an object and add it to the result.
+        const tags: { [key: string]: string } = {};
+        if (match.groups?.['extra']) {
+          const tagsRegex =
+            /(?<key>[a-zA-Z0-9\-_]{1,32})=(?<value>[a-zA-Z0-9_\-+."':]{1,32})/gim;
+
+          let tagMatch;
+          while ((tagMatch = tagsRegex.exec(match.groups?.['extra']))) {
+            if (!tagMatch.groups?.['key']) continue;
+            tags[tagMatch.groups?.['key']] = tagMatch.groups?.['value'] || '';
+          }
+        }
+
+        return {
+          implementation: implementation.replace('prime', ''),
+          solution: solution.replace('solution_', ''),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          label: match.groups!['label'],
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          passes: +match.groups!['passes'],
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          duration: +match.groups!['duration'],
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          threads: +match.groups!['threads'],
+          tags
+        } as Result;
+      })
+      .filter((item): item is Result => !!item);
+  }
+
   public saveReport(report: Report): string {
     const content = JSON.stringify(report, undefined, 4);
 

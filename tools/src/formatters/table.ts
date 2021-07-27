@@ -24,8 +24,17 @@ export class TableFormatter implements IFormatter {
     const table = new Table({
       title,
       columns: [
-        { name: 'index', title: 'Index', alignment: 'center', color: 'blue' },
-        { name: 'implementation', title: 'Implementation', alignment: 'left' },
+        {
+          name: 'index',
+          title: 'Index',
+          alignment: 'center',
+          color: 'blue'
+        },
+        {
+          name: 'implementation',
+          title: 'Implementation',
+          alignment: 'left'
+        },
         { name: 'solution', title: 'Solution', alignment: 'left' },
         { name: 'label', title: 'Label', alignment: 'left' },
         { name: 'passes', title: 'Passes', alignment: 'center' },

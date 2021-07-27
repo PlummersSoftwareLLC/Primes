@@ -97,8 +97,8 @@ func main() {
 	passes := 0
 	startClock := time.Now()
 
-	initBitArray := make([]bool, 1e6)
 	for {
+		initBitArray := make([]bool, 1e6)
 		for i := range initBitArray {
 			initBitArray[i] = true
 		}

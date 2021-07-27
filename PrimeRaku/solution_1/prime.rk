@@ -1,0 +1,88 @@
+class prime_sieve {
+	has uint $!sieveSize = 0;
+	has @!Bits is default(True);
+	constant \resultsDictionary = {
+		10 => 4,
+		100 => 25,
+		1000 => 168,
+		10000 => 1229,
+		100000 => 9592,
+		1000000 => 78498,
+		10000000 => 664579,
+		100000000 => 5761455,
+		1000000000 => 50847534,
+		10000000000 => 455052511};
+	
+	method validateResults(--> Bool:D) {
+		my \result = resultsDictionary{$!sieveSize};
+		return False unless result;
+		return  result == self.countPrimes();
+	}
+
+	submethod BUILD(Int:D:$sieveSize) {
+		$!sieveSize = $sieveSize;
+	}
+
+	method runSieve() {
+		my $factor = 3;
+		my $q = floor(sqrt($!sieveSize));
+
+		while $factor <= $q {
+			loop (my $num = $factor; $num < $!sieveSize; $num += 2) {
+				if @!Bits[$num] {
+					$factor = $num;
+					last;
+				}
+			}
+			loop ($num = $factor * $factor; $num < $!sieveSize; $num += $factor * 2) {
+				@!Bits[$num] = False;
+			}
+			$factor += 2;
+		}
+	}
+
+	method printResults(Bool:D $showResults, Rat:D $duration, Int:D $passes) {
+		print "2, " if $showResults;
+		my $count = ($!sieveSize >= 2);
+		loop (my $num = 3; $num <= $!sieveSize; $num += 2) {
+			if @!Bits[$num] {
+				"%d, ".printf($num) if $showResults;
+				$count++;
+			}
+		}
+
+		#say "" if $showResults;
+		#"Passes: %d, Time: %f, Avg: %f, Limit: %d, Count1: %d, Count2: %d, Valid: %d\n".printf(
+			#$passes,
+			#$duration,
+			#$duration / $passes,
+			#$!sieveSize,
+			#$count,
+			#self.countPrimes(),
+			#self.validateResults()
+		#);
+		#say "";
+		"draco1006;%d;%f;1;algorithm=base,faithful=yes\n".printf($passes, $duration);
+	}
+
+	method countPrimes(--> Int:D) {
+		my Int $count = ($!sieveSize >= 2).Int;
+		loop (my $i = 3; $i < $!sieveSize; $i+=2) {
+			$count++ if @!Bits[$i];
+		}
+		return $count;
+	}
+}
+
+my $passes = 0;
+my $tStart = INIT now;
+
+loop {
+	my $sieve = prime_sieve.new(:sieveSize(1_000_000));
+	$sieve.runSieve();
+	$passes++;
+	if ((now - $tStart) >= 5) {
+		$sieve.printResults(False, (now - $tStart).Rat(), $passes);
+		last;
+	}
+}
