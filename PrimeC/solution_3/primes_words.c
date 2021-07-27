@@ -150,50 +150,33 @@ void run_sieve(struct sieve_state *sieve_state) {
         for (unsigned int num = 1; num <= (sizeof(TYPE)<<2U); num ++) {
             if (getBit(sieve_state,num) == ON ) {
                 prime_product = prime_product * ((num << 1U)+1U);
-                if (prime_product > 8* sizeof(TYPE)) {
-                    if (prime_product < sieve_state->nr_of_words) {
-                        prime_word_cpy_idx[i] = num;
-                        prime_products[i] = prime_product;
-                        i++;
-                    } else {
-                        prime_word_cpy_idx[i] = -1; // special meaning later on...
-                        prime_products[i] =sieve_state->nr_of_words;
-                        break;
-                    }
+                if (prime_product < sieve_state->nr_of_words) {
+                    prime_word_cpy_idx[i] = num;
+                    prime_products[i] = prime_product;
+                    i++;
+                } else {
+                    prime_word_cpy_idx[i] = -1; // special meaning later on...
+                    prime_products[i] =sieve_state->nr_of_words;
+                    break;
                 }
             }
         }
 
-        // STEP 3
-        // crossout from begin to product for up to the first found prime
-        // start with prime3
-        // ((2*(prime_product+1U)*8*sizeof(TYPE) == ((prime_product+1U)*sizeof(TYPE)) << 4U
-        run_sieve_segment(sieve_state,1,((prime_products[0]+1U)*sizeof(TYPE)) << 4U, prime_word_cpy_idx[0] );
-
-        // STEP 4
-        // now we can do a word crossout for the first few primes that
-        // are determined by the logic above
-        // printf("Copy prime_products[0]=%u, Copy prime_products[1]=%u\n",prime_products[0],prime_products[1]);
-        repeat_words_2_max (
-            sieve_state,
-            prime_products[0]+1, 
-            &(sieve_state->bit_array[1]), 
-            prime_products[0],
-            prime_products[1]+1U
-        );
-
-        // STEP 5
-        // Crossout for the range found in step 2
-        // with the memory copy strategey
-        // in each loop 
         while (j< ( (8*sizeof(TYPE)) - 1U) ) {
-            j++;
             if (prime_word_cpy_idx[j] == -1) {
                 break;
             }
-            if (prime_word_cpy_idx[j]>0) {               
+            
+            if (prime_word_cpy_idx[j]>0) {
+                // STEP 3
+                // Run the sieve from the first prime found in step 2 to and including 
+                // the word that is equal to the first product found in step 2. 
+                // Stop after the first prime of step 2 is processed.
                 run_sieve_segment(sieve_state,prime_word_cpy_idx[j],((prime_products[j]+1U)*sizeof(TYPE)) << 4U, prime_word_cpy_idx[j] );
 
+                // STEP 4
+                // Fill the array until and including the second product found in step 2 
+                // with copies of the words from word `1` to the product found in step 2.
                 repeat_words_2_max (
                     sieve_state,
                     prime_products[j]+1, 
@@ -201,10 +184,11 @@ void run_sieve(struct sieve_state *sieve_state) {
                     prime_products[j],
                     prime_products[j+1] + 1U
                 );
-            }           
+            }
+            j++;           
         }
 
-        // STEP 6
+        // STEP 5
         // crossout the remaining
         run_sieve_segment(sieve_state,prime_word_cpy_idx[j-1] +1,sieve_state->limit,0);
     }
