@@ -5,13 +5,11 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
-![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 ## Java solutions by @chrvanorle
 
-This is a collection of prime sieve algorithms implemented in Java. All solutions only store odd prime candidates, and use inverted values to avoid initializing the array to true or ones. The implementations are:
+This is a collection of prime sieve algorithms implemented in Java. All solutions only store odd prime candidates, and use inverted values to avoid initializing the array to ones. The implementations are:
 
-* Bool: Using a boolean array for storing the primes, 8 bits per prime
 * I8: Using bytes to store primes, 1 bit per prime
 * I32: Using 32 bit integers to store primes, 1 bit per prime
 * I64: Using 64 bit integers to store primes, 1 bit per prime
@@ -33,7 +31,6 @@ Results:
 
 i7-8750H
 ```
-chrvanorleBool;6666;5.003000;1;algorithm=base,faithful=yes,bits=8
 chrvanorleI8;4026;5.006000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI32;6017;5.000000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI64;5867;5.000000;1;algorithm=base,faithful=yes,bits=1
@@ -41,7 +38,6 @@ chrvanorleI64;5867;5.000000;1;algorithm=base,faithful=yes,bits=1
 
 i5-3570K
 ```
-chrvanorleBool;5584;5.000000;1;algorithm=base,faithful=yes,bits=8
 chrvanorleI8;4319;5.000000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI32;6335;5.006000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI64;6130;5.009000;1;algorithm=base,faithful=yes,bits=1
@@ -49,7 +45,6 @@ chrvanorleI64;6130;5.009000;1;algorithm=base,faithful=yes,bits=1
 
 e5-2670 (V1)
 ```
-chrvanorleBool;3999;5.000000;1;algorithm=base,faithful=yes,bits=8
 chrvanorleI8;2806;5.001000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI32;3735;5.001000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI64;3604;5.000000;1;algorithm=base,faithful=yes,bits=1
@@ -57,7 +52,6 @@ chrvanorleI64;3604;5.000000;1;algorithm=base,faithful=yes,bits=1
 
 r7 3700x (windows 10)
 ```
-chrvanorleBool;8270;5.000000;1;algorithm=base,faithful=yes,bits=8
 chrvanorleI8;4775;5.000000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI32;6884;5.000000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI64;6367;5.001000;1;algorithm=base,faithful=yes,bits=1
@@ -65,7 +59,6 @@ chrvanorleI64;6367;5.001000;1;algorithm=base,faithful=yes,bits=1
 
 r7 3700x (centos 8)
 ```
-chrvanorleBool;10297;5.000000;1;algorithm=base,faithful=yes,bits=8
 chrvanorleI8;5959;5.000000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI32;8972;5.000000;1;algorithm=base,faithful=yes,bits=1
 chrvanorleI64;7788;5.000000;1;algorithm=base,faithful=yes,bits=1
