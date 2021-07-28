@@ -4,7 +4,7 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 This is a collection of implementations in Swift, of which:
 1. one is a "naive" implementation that maintains the array of primes in an underlying array of 8-bit booleans
