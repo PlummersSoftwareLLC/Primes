@@ -27,8 +27,16 @@ class PrimeUmple {
         return resultsDictionary.get(sieveSize).equals(countPrimes());
     }
 
+    before getBit {
+        assert index % 2 == 0: "You are getting even bits, which is sub-optimal";
+    }
+
     private boolean getBit(int index) {
         return bits.get(index >> 1);
+    }
+
+    before clearBit {
+        assert index % 2 == 0: "You are setting even bits, which is sub-optimal";
     }
 
     private void clearBit(int index) {
