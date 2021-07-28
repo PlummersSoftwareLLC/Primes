@@ -1,20 +1,4 @@
-********************************************
-BrainFuck Prime Sieve 
-by aquarel 7/23/21
-
-This file only contains the core function
-of the prime sieve; Which is equivalent to 
-the "runSieve" method in other
-implementations; The setup code and printing
-results is handled by PrimeBrainFuck*cpp
-********************************************
-
-
-PART #1 = 
-"""
-int q = (int) sqrt(sieveSize) plus 1;
-"""
-
+PART #1 = "int q = (int) sqrt(sieveSize);"
 Aka a sad excuse for a square root function
 It just needs to approximate above the real
 value to not miss any number
@@ -29,15 +13,14 @@ y12 = (y11 add x / y11) / 2
 y12 add 1 = sqrt(x)
 
 Every "cell" or memory address used for one
-iteration is listed below; Each cell has a
-tag at the start:
+iteration is listed below
+Each cell is has a tag at the start:
 "set" = an input value
 "out" = an output value
 "use" = value reserved to use when run
-"cpy" = a copy of a value
 "ign" = ignored/unused value
 
-memory layout = 
+memory layout =
 {
 set 0   x = 1'000'000
 set 1   dividend = x
@@ -55,7 +38,7 @@ set 11  divisor = 2
 out 12  y1 = add / 2
 use 13  first_zero = 0
 use 14  last_zero = 0
-cpy 15  copy_of_y1
+set 15  copy_of_y1
 }
 
 iteration #1
@@ -83,7 +66,7 @@ iteration #1
             >+ add remainder
             >- sub divisor
 
-            [>>>] if divisor != 0: go to last_zero
+            [>>>] if divisor == 0: go to last_zero
             < go to remainder or to first_zero
 
             [ if at remainder: run the following code once
@@ -135,8 +118,8 @@ iteration #2 (the same code without comments and with a couple changes)
 
     >[>+>-[>>>]<[[>+<-]>>+>]<<<<-]>>>[>>>>+<<<<-]>>>>>>>>>>>[<<<<<<
     <+>>>>>>>-]<<<<<<<[>+<-]>>>++<<[>+>-[>>>]<[[>+<-]>>+>]<<<<-]
-
-I couldn't be bothered to write a loop
+the following is a sin in programming
+but I couldn't be bothered to write a loop
 iteration #3
     >>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[>++++++++++<-
     ]>[>++++++++++<-]>[>++++++++++<-]>[<<<<+<+>>>>>-]<<<<<<<<<[>>>>
