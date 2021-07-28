@@ -20,7 +20,7 @@ class BitArray {
     size_t arrSize;
 
     inline static size_t arraySize(size_t size) {
-        return (size >> 5) + ((size & 0x31) > 0);
+        return (size >> 5) + ((size & 31) > 0);
     }
 
     inline static size_t index(size_t n) {
@@ -37,7 +37,7 @@ class BitArray {
 public:
     explicit BitArray(size_t size) : arrSize(size) {
         array = new uint32_t[arraySize(size)];
-        std::memset(array, 0xFF, (size >> 3) + ((size & 0x07) > 0));
+        std::memset(array, 0xFF, (size >> 3) + ((size & 7) > 0));
     }
 
     ~BitArray() {delete [] array;}
