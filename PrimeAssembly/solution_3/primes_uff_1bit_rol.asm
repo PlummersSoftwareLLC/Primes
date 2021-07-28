@@ -13,8 +13,6 @@ SIEVE_SIZE  equ     1000000
 
 clockErrorString:       db      "Error getting time",0xA
 clockErrorSize          equ     $ - clockErrorString
-mallocErrorString:      db      "Error allocating memory",0xA
-mallocErrorSize         equ     $ - mallocErrorString
 primesErrorString:      db      "Incorrect number of primes detected",0xA
 primesErrorSize:        equ     $ - primesErrorString
 result:                 db      "weirddan455;%d;%f;1;algorithm=base,faithful=no,bits=1",0xA,0
@@ -200,17 +198,6 @@ mov     rax, 1
 mov     rdi, 1
 lea     rsi, [clockErrorString]
 mov     rdx, clockErrorSize
-syscall
-pop     rbp
-mov     rax, 1
-ret
-
-mallocError:
-
-mov     rax, 1
-mov     rdi, 1
-lea     rsi, [mallocErrorString]
-mov     rdx, mallocErrorSize
 syscall
 pop     rbp
 mov     rax, 1
