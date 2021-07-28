@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This solution aims to be the fastest C# solution while maintaining faithfulness, the base algorithm and not recycling buffers.
+This solution aims to be one of the fastest C# solutions while maintaining faithfulness, the base algorithm and not recycling buffers.
 
 [X] Unsafe
 [X] Compiler intrinsics

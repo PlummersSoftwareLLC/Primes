@@ -100,8 +100,7 @@ namespace PrimeSieveCS
 
                         if (halfFactor > halfRoot) break;
 
-                        //by testing different values 18 seems to be optimal
-                        //some other value might be better depending on runtime
+                        //marking with a mask if we can get enough bits in the ulong, 18 seems to be optimal
                         if (halfFactor <= 18)
                         {
                             // Mark off all multiples starting with the factor's square up to the square root of the limit
