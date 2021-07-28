@@ -19,18 +19,16 @@ Shell script `./run.sh` runs both solutions sequentially.
 
 ## Output
 
-`__$ make DIRECTORY=PrimeSwift/solution_1
-  CC(target) Release/obj.target/uname/uname.o
-  SOLINK_MODULE(target) Release/uname.node
-added 229 packages in 4.16s
-info: Detected architecture: amd64
-info: [PrimeSwift][solution_1] Building...
-info: [PrimeSwift][solution_1] Running...
-                                                           Single-threaded                                                           
-┌───────┬────────────────┬──────────┬───────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
-│ Index │ Implementation │ Solution │ Label             │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
-├───────┼────────────────┼──────────┼───────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-│   1   │ PrimeSwift     │ 1        │ yellowcub_boolean │  6884  │ 5.00020  │    1    │   base    │   yes    │ 8    │  1376.74381   │
-│   2   │ PrimeSwift     │ 1        │ yellowcub_bit64   │  3459  │ 5.00117  │    1    │   base    │   yes    │ 1    │   691.63802   │
-└───────┴────────────────┴──────────┴───────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+`__$ ./run.sh                                    ✔  ⚙  1746  22:10:13
+[0/0] Build complete!
+
+Passes: 3829, Time: 5.001450061798096, Avg: 0.001306202680020396, Limit: 1000000, Count: 78498, Valid: true
+
+yellowcub_bit64;3829;5.001450061798096;1;algorithm=base,faithful=yes,bits=1
+
+[0/0] Build complete!
+
+Passes: 7005, Time: 5.000383973121643, Avg: 0.0007138306885255736, Limit: 1000000, Count: 78498, Valid: true
+
+yellowcub;7005;5.000383973121643;1;algorithm=base,faithful=yes,bits=8
 `
