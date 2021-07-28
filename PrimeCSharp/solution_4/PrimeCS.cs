@@ -56,6 +56,16 @@ namespace PrimeSieveCS
                 }
             }
 
+            static ulong CreateMarkingMask(uint factor)
+            {
+                ulong mask = 0;
+                for (uint i = 0; i < 64; i += factor)
+                {
+                    mask |= 1UL << (int)i;
+                }
+                return mask;
+            }
+
             // primeSieve
             // 
             // Calculate the primes up to the specified limit
@@ -65,7 +75,7 @@ namespace PrimeSieveCS
             {
                 uint factor = 3;
                 uint halfFactor = factor >> 1;
-                uint halfRoot = ((uint)(Math.Sqrt(this.sieveSize) + 1)) >> 1;
+                uint halfRoot = ((uint)(Math.Sqrt(sieveSize) + 1)) >> 1;
 
                 // We ignore even numbers by using values that track half of the actuals, and the only
                 // number we keep in original form is the prime factor we're walking through the sieve
@@ -75,7 +85,7 @@ namespace PrimeSieveCS
                         // Scan for the next unset bit which means it is a prime factor
                         var segment = ptr[halfFactor / 64];
                         var offset = halfFactor % 64;
-                        segment ^= 0xFFFFFFFFFFFFFFFF;
+                        segment ^= 0xFFFFFFFFFFFFFFFF; //since we only have access to TrailingZeroCount, we have to flip all the bits
                         segment >>= (int)offset;
                         var jump = BitOperations.TrailingZeroCount(segment);
                         if (jump == 64)
@@ -90,11 +100,30 @@ namespace PrimeSieveCS
 
                         if (halfFactor > halfRoot) break;
 
-                        // Mark off all multiples starting with the factor's square up to the square root of the limit
-                        for (uint index = (factor * factor) >> 1; index < halfLimit; index += factor)
+                        //by testing different values 18 seems to be optimal
+                        //some other value might be better depending on runtime
+                        if (halfFactor <= 18)
                         {
-                            var ptrmark = ptr + index / 64;
-                            ptrmark[0] |= 1UL << (int)(index % 64);
+                            // Mark off all multiples starting with the factor's square up to the square root of the limit
+                            ulong mask = CreateMarkingMask(factor);
+                            var start = (factor * factor) / 2;
+                            var offset2 = start % 64;
+                            for (uint index = start / 64; index < halfLimit / 64 + 1; index++)
+                            {
+                                var ormask = mask << (int)offset2;
+                                ptr[index] |= ormask;
+                                var pop = (uint)BitOperations.PopCount(ormask);
+                                offset2 += pop * factor - 64;
+                            }
+                        }
+                        else
+                        {
+                            //Mark off all multiples starting with the factor's square up to the square root of the limit
+                            for (uint index = (factor * factor) >> 1; index < halfLimit; index += factor)
+                            {
+                                var ptrmark = ptr + index / 64;
+                                ptrmark[0] |= 1UL << (int)(index % 64);
+                            }
                         }
                     }
             }
