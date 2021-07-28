@@ -43,7 +43,7 @@ public:
 
 private:	
 	static constexpr auto wordsize = sizeof(U) * 8;
-	static constexpr auto words = (upperLimit >> 7) + (((upperLimit >> 1) & 63) > 0);
+	static constexpr auto words = (upperLimit / wordsize / 2) + (((upperLimit / 2) % wordsize) > 0);
 
 	U bitmap[words] = {0}; // 0 means contains, 1 means missing
 	uint64_t sieveSize = upperLimit;
@@ -120,5 +120,3 @@ public:
 
 	U *u() { return bitmap; }
 };
-
-void shadowFunc(const Sieve &);

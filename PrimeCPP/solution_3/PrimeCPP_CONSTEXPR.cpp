@@ -8,6 +8,7 @@
 #include <ctime>
 #include <thread>
 #include <vector>
+#include <random>
 
 #include "Sieve.h"
 
@@ -96,9 +97,9 @@ consteval auto execute() {
     return result;
 }
 
-void run(const Sieve &checkSieve, int numberOfThreads = 1, int runtimeSeconds = 5)
+void run(int numberOfThreads = 1, int runtimeSeconds = 5)
 {
-
+    Sieve checkSieve;
     unsigned int passes = 0;
 
     printf("Computing primes to %lu on %d thread%s for %d second%s.\n", checkSieve.size(),
@@ -107,44 +108,51 @@ void run(const Sieve &checkSieve, int numberOfThreads = 1, int runtimeSeconds = 
            runtimeSeconds,
            runtimeSeconds == 1 ? "" : "s");
 
-    const auto tStart = steady_clock::now();
+    double duration;
     if (numberOfThreads == 1) {
-        for (;duration_cast<seconds>(steady_clock::now() - tStart).count() < runtimeSeconds; ++passes)
-        {
+        const auto tStart = steady_clock::now();
+        while (true) {
             auto res = execute();
-            shadowFunc(res);
+            ++passes;
+            if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= runtimeSeconds) {
+                checkSieve = res;
+                break;
+            }
         }
+        duration = duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000.0;
     } else {
         std::thread threads[numberOfThreads];
         uint64_t l_passes[numberOfThreads];
+        auto randomThreadCheck = [numberOfThreads, rd = std::random_device{}]() mutable
+            {return std::uniform_int_distribution{1, numberOfThreads}(rd);}();
+
+        const auto tStart = steady_clock::now();
         for (unsigned int i = 0; i < numberOfThreads; i++)
-            threads[i] = std::thread([runtimeSeconds, i, &l_passes, &tStart]()
+            threads[i] = std::thread([&checkSieve, randomThreadCheck, runtimeSeconds, i, &l_passes, &tStart]()
             {
-                for (l_passes[i] = 0; duration_cast<seconds>(steady_clock::now() - tStart).count() < runtimeSeconds; ++l_passes[i])
-                {
+                l_passes[i] = 0;
+                while (true) {
                     auto res = execute();
-                    shadowFunc(res);
+                    ++l_passes[i];
+                    if (duration_cast<seconds>(steady_clock::now() - tStart).count() >= runtimeSeconds) {
+                        if (randomThreadCheck == i)
+                            checkSieve = res;
+                        break;
+                    }
                 }
             });
         for (auto i = 0; i < numberOfThreads; i++) {
             threads[i].join();
             passes += l_passes[i];
         }
+        duration = duration_cast<microseconds>(steady_clock::now() - tStart).count() / 1000000.0;
     }
 
-    const auto tEnd = steady_clock::now();
-    printResults(checkSieve, false, duration_cast<microseconds>(tEnd - tStart).count() / 1000000.0, passes, numberOfThreads);
+    printResults(checkSieve, false, duration, passes, numberOfThreads);
 }
 
 int main(int argc, char **argv)
 {
-    Sieve checkSieve = execute();
-    const auto result = validateResults(checkSieve) ? checkSieve.count() : 0;
-
-    const auto numberOfThreads = thread::hardware_concurrency();
-    thread::hardware_concurrency();
-    run(checkSieve, numberOfThreads, runtimeSeconds);
-    run(checkSieve, 1, runtimeSeconds);
-
-    return result;
+    run(thread::hardware_concurrency(), runtimeSeconds);
+    run(1, runtimeSeconds);
 }
