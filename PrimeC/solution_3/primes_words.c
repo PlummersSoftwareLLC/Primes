@@ -9,19 +9,22 @@
 
 #define ON BITZERO
 
-#ifdef COMPILE_64_BIT
-#define TYPE uint64_t
-#define MASK 63U
-#define SHIFT 6U
-#define MEMSHIFT 7U
-#define SHIFTSIZE 3U
-#else
 #define TYPE uint32_t
 #define MASK 31U 
 #define SHIFT 5U
 #define MEMSHIFT 6U
 #define SHIFTSIZE 2U 
-#endif
+// the setting below is about 30,5 kb
+// it is the number of words of 4 bytes each
+// with an L1 cache of 32 kb the max value = 8192
+// however, works best with a smaller value so there is room for others
+// TODO: setting below should be determined automatic during program
+// initialization or compile, don't know how to so set
+// to what works on my hardware
+const unsigned int L1_CACHESIZE=7814;
+
+// the constant below is a cache of all the possible bit masks
+const TYPE offset_mask[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
 
 struct sieve_state {
   TYPE *bit_array;
@@ -29,7 +32,7 @@ struct sieve_state {
   unsigned int nr_of_words;
 };
 
-struct sieve_state *create_sieve(int limit) {
+static inline struct sieve_state *create_sieve(int limit) {
   struct sieve_state *sieve_state=malloc(sizeof *sieve_state);
 
   sieve_state->nr_of_words=(limit >> MEMSHIFT) + 1;
@@ -38,12 +41,12 @@ struct sieve_state *create_sieve(int limit) {
   return sieve_state;
 }
 
-void delete_sieve(struct sieve_state *sieve_state) {
+static inline void delete_sieve(struct sieve_state *sieve_state) {
   free(sieve_state->bit_array);
   free(sieve_state);
 }
 
-void repeat_words_2_max (
+static inline void repeat_words_2_max (
     struct sieve_state *sieve_state,
     unsigned int word_offset, 
     TYPE *word_values, 
@@ -71,17 +74,104 @@ void repeat_words_2_max (
     }
 }
 
-void setBit(struct sieve_state *sieve_state,unsigned int index) {
+static inline void setBit(struct sieve_state *sieve_state,unsigned int index) {
     unsigned int word_offset = index >> SHIFT;                // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
     unsigned int offset  = index & MASK;                      // use & (and) for remainder, faster than modulus of /32
-    sieve_state->bit_array[word_offset] |=  (TYPE) 1 << offset;
+    sieve_state->bit_array[word_offset] |=  offset_mask[offset];
 }
 
-TYPE getBit (struct sieve_state *sieve_state,unsigned int index) {
+static inline TYPE getBit (struct sieve_state *sieve_state,unsigned int index) {
     unsigned int word_offset = index >> SHIFT;  
     unsigned int offset  = index & MASK;
-    return sieve_state->bit_array[word_offset] & (TYPE) 1 << offset;     // use a mask to only get the bit at position bitOffset.
+    return sieve_state->bit_array[word_offset] & offset_mask[offset];     // use a mask to only get the bit at position bitOffset.
 }
+
+/*
+    Purpose:
+    Crossout a the sieve block by block, this has a few more calculations
+    but can better use the L1 cache
+
+*/
+static inline void block_cross_out(
+    struct sieve_state *sieve_state,
+    unsigned int prime,
+    unsigned int max_index
+) {
+    unsigned int start_index;
+    unsigned int next_start_index;
+    unsigned int start_word;
+    unsigned int current_word;
+    unsigned int max_word = max_index >> SHIFT;
+    unsigned int max_word_block = max_word;
+    unsigned int current_mask;
+    unsigned int offset;
+    unsigned int grow;
+
+    start_index = ((prime * prime)>>1U);
+    start_word = start_index >> SHIFT;
+    current_word = start_word;
+    next_start_index = start_index;
+
+    if (prime < 32U) {
+        // crossout so we are atleast in the next word
+        while (current_word == start_word) {
+            setBit(sieve_state,next_start_index);
+            next_start_index += prime;
+            current_word = next_start_index >> SHIFT;
+        }
+
+        start_word = current_word;
+    }
+    offset = next_start_index & MASK;
+
+    if (max_word > L1_CACHESIZE) {
+        max_word_block = L1_CACHESIZE;
+    }
+
+    while (1) {
+
+        // crossout for one block
+        while (current_word <= (start_word+prime) && current_word <= max_word_block ) {
+            if (prime < 32U) {
+                // fill the rest of the mask
+                // multiple crossouts on each word
+                current_mask = 0U;
+                grow = 0U;
+                while (offset < 32U) {
+                    current_mask |= offset_mask[offset];
+                    grow +=prime;
+                    offset += prime;
+                }
+                next_start_index += grow;
+            } else {
+                current_mask = offset_mask[offset];
+                next_start_index += prime;
+            }
+            // now apply this mask to all words with steps of the prime
+            while (current_word <= max_word_block) {
+                sieve_state->bit_array[current_word] |=  current_mask;
+                current_word += prime;
+            }
+            offset = next_start_index & MASK;
+            current_word = next_start_index >> SHIFT;
+        }
+
+        if (max_word_block == max_word) {
+            break;
+        }
+
+        // now get the first index in the next block
+        if (start_word <= max_word_block ) {
+            const unsigned int end_of_block_idx = ((max_word_block +1U) * 8 * sizeof(TYPE)) -1;
+            next_start_index = start_index + (((end_of_block_idx - start_index) / prime ) +1 ) * prime;
+            offset = next_start_index & MASK;
+            current_word = next_start_index >> SHIFT;
+            start_word = current_word;
+        }
+        max_word_block = max_word;
+    }
+}
+
 /*
     Purpose:
     This function calculates a segment of the sieve.
@@ -94,7 +184,7 @@ TYPE getBit (struct sieve_state *sieve_state,unsigned int index) {
     If stop_prime is specified, the calculation stops after the
     crossout for this prime is completed
 */
-void run_sieve_segment(
+static inline void run_sieve_segment(
     struct sieve_state *sieve_state,
     unsigned int start_nr_idx,
     unsigned int end_nr,
@@ -111,9 +201,8 @@ void run_sieve_segment(
         if ( getBit(sieve_state,factor_index) == ON ) {
             prime = (factor_index << 1U)+1U;
             // crossout
-            for (unsigned int num = ((prime * prime)>>1U) ; num <= max_index; num += prime) {
-                setBit(sieve_state,num);
-            }  
+            block_cross_out(sieve_state,prime,max_index);
+
             if (factor_index == stop_prime_idx) {
                 break;
             }
@@ -129,7 +218,7 @@ void run_sieve_segment(
     
     See details described in README.md
 */
-void run_sieve(struct sieve_state *sieve_state) {
+static inline void run_sieve(struct sieve_state *sieve_state) {
     int prime_word_cpy_idx[8*sizeof(TYPE)];
     unsigned int prime_product = 1;
     unsigned int prime_products [8*sizeof(TYPE)];
