@@ -7,7 +7,7 @@
 
 This solution aims to be one of the fastest C# solutions while maintaining faithfulness, the base algorithm and not recycling buffers.
 
-[X] Unsafe
-[X] Compiler intrinsics
-[X] Fast
+[x] Unsafe
+[x] Compiler intrinsics
+[x] Fast
 [ ] Readable
