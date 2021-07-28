@@ -4,6 +4,7 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 This is a collection of implementations in Swift, of which:
 1. one is a "naive" implementation that maintains the array of primes in an underlying array of 8-bit booleans
@@ -19,7 +20,7 @@ Shell script `./run.sh` runs both solutions sequentially.
 
 ## Output
 
-`__$ ./run.sh
+__$ ./run.sh
 
 [0/0] Build complete!
 
@@ -32,4 +33,3 @@ yellowcub_bit64;3829;5.001450061798096;1;algorithm=base,faithful=yes,bits=1
 Passes: 7005, Time: 5.000383973121643, Avg: 0.0007138306885255736, Limit: 1000000, Count: 78498, Valid: true
 
 yellowcub;7005;5.000383973121643;1;algorithm=base,faithful=yes,bits=8
-`
