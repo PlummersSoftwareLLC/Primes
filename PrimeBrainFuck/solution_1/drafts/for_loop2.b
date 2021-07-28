@@ -93,18 +93,19 @@ copy num to num_copy_1
         >>>> >>+<< <<<< add num_copy_1
     -]<< <<<< <<<< go to 0
 
-copy step to step_copy_1 2 3 and 4
-    >>>> >>>> >>>>[ go to 12
+.
+
+>>>> >>>> >>>> >>>> go to num_copy_1
+[
+    copy step to step_copy_1 2 3 and 4
+    <<<<[ go to 12
         >>>> >>>> >+ add step_copy_1
         >+ add step_copy_2
         >+ add step_copy_3
         >+ add step_copy_4
         <<<< <<<< <<<<
-    -]<<<< <<<< <<<< go to 0
+    -]>>>> go to 0
 
->>>> >>>> >>>> >>>> go to num_copy_1
-
-[
     >+< set check = 1
     >> go to 2
 
@@ -113,17 +114,29 @@ copy step to step_copy_1 2 3 and 4
 
     [ if at check: run the following code once
         >>>> >[ go to step_copy_2
-            <<<< <<+>> >>>> sub num_copy_1
-        -]<<<< < go to check
+            <<<< <<+>> >>>> add num_copy_1
+        -]< <<<< go to check
         
+        <.> print num_copy_1
 
+        >>>> >>[ go to step_copy_3
+            <<<< <<<->>> >>>> sub num_copy_1
+        -]<< <<<< go to check
 
-        .> print factor
-        - sub check
-        >++ set step = 2
+        . print factor
+        >- sub check
+        > go to step 
+        >>>> >>[ go to step_copy_4
+            <<<< <<+>> >>>> add step
+        -]<< <<<<
+
+        >>>[ go to step_copy_1
+            <<<< <<<< <+> >>>> >>>> add step
+        -]<<<
+
         > go to first_zero
     ]
     
     <- sub step
-    <<- sub factor
+    <<- sub num_copy_1
 ]
