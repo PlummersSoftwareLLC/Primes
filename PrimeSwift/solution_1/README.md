@@ -20,6 +20,7 @@ Shell script `./run.sh` runs both solutions sequentially.
 ## Output
 
 `__$ ./run.sh
+
 [0/0] Build complete!
 
 Passes: 3829, Time: 5.001450061798096, Avg: 0.001306202680020396, Limit: 1000000, Count: 78498, Valid: true
