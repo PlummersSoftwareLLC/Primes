@@ -242,7 +242,7 @@ pub mod primes {
     /// only for sieves that fit inside the processor cache. For processors with
     /// smaller caches or larger sieves, this algorithm will result in a lot of
     /// cache thrashing due to multiple passes. It really doesn't work well on something 
-    /// like a raspberri pi. 
+    /// like a raspberry pi. 
     ///
     /// [`FlagStorageBitVectorStripedBlocks`] takes a more cache-friendly approach.
     pub struct FlagStorageBitVectorStriped {
@@ -329,7 +329,7 @@ pub mod primes {
     pub const BLOCK_SIZE_DEFAULT: usize = 16 * 1024;
 
     /// This is a good block size for [`FlagStorageBitVectorStriped`] for CPUs with
-    /// less L1 cache available. It's also useful when running heavily many sieves
+    /// less L1 cache available. It's also useful when running many sieves
     /// in parallel.
     pub const BLOCK_SIZE_SMALL: usize = 4 * 1024;
 

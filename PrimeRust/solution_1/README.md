@@ -79,7 +79,7 @@ bit-storage     Passes: 151710, Threads: 24, Time: 5.0007929802, Average: 0.0000
 bit-storage     Passes: 151644, Threads: 24, Time: 5.0008230209, Average: 0.0000329774, Limit: 1000000, Counts: 78498, Valid: Pass
 ```
 
-## Performance - **Raspberri Pi 4**
+## Performance - **Raspberry Pi 4**
 
 Tested on a **Raspberry Pi 4**, standard clock with active cooling, running 64-bit Ubuntu Server 20.04.
 - Examples are run with `cargo run --release -- --repetitions=3` to get 3 repetitions.
