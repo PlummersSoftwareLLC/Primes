@@ -5,24 +5,22 @@ public class PrimeSieveJava
 {
 	private static final Map<Integer, Integer> VALIDATION_DATA;
 	
-	// Java has a BitSet class included but switching to a boolean array of size improves performance by a lot
-	// This brings the limitation of the sieve only being able to test numbers up to Integer.MAX_VALUE - 2 (Requested array size exceeds VM limit)
-	private final boolean[] dataSet;
+	private final SimpleBitSet dataSet;
 	private final int sieveSize;
 	
 	public PrimeSieveJava(int sieveSize)
 	{
 		this.sieveSize = sieveSize;
 		// unlike the other old implementations the dataSet isn't initialized with true values to optimize speed
-		dataSet = new boolean[(sieveSize + 1) >> 1];
+		dataSet = new SimpleBitSet(sieveSize + 1 >> 1);
 	}
 	
 	public int countPrimes()
 	{
 		int count = 0;
-		for (int i = 0; i < dataSet.length; i++)
+		for (int i = 0; i < dataSet.count; i++)
 		{
-			if (!dataSet[i])
+			if (dataSet.get(i))
 			{
 				count++;
 			}
@@ -46,24 +44,24 @@ public class PrimeSieveJava
 	// Also rather interesting: checking index % 2 != 0 is slower than index % 2 == 1
 	private boolean getBit(int index)
 	{
-		return (index & 1) == 1 && !dataSet[index >> 1];
+		return dataSet.get(index >> 1);
 	}
 	
 	// Again instead of checking if index is even we just update the array at that index equivalent to that check
 	// to boost performance
 	private void clearBit(int index)
 	{
-		dataSet[index >> 1] = (index & 1) == 1;
+		dataSet.set(index >> 1);
 	}
 	
 	public void runSieve()
 	{
 		int factor = 3;
-		int q = (int) Math.sqrt(sieveSize);
+		int q = (int) Math.sqrt(sieveSize) + 1;
 		
 		while (factor < q)
 		{
-			for (int num = factor; num <= sieveSize; num++)
+			for (int num = factor; num <= sieveSize; num += 2)
 			{
 				if (getBit(num))
 				{
@@ -72,8 +70,9 @@ public class PrimeSieveJava
 				}
 			}
 			
-			for (int num = factor * factor; num <= sieveSize; num += factor * 2)
+			for (int num = factor * factor; num <= sieveSize; num += factor * 2) {
 				clearBit(num);
+			}
 			
 			factor += 2;
 		}
@@ -87,7 +86,7 @@ public class PrimeSieveJava
 		}
 		
 		int count = 1;
-		for (int num = 3; num <= this.sieveSize; num++)
+		for (int num = 3; num <= this.sieveSize; num += 2)
 		{
 			if (getBit(num))
 			{
@@ -145,4 +144,26 @@ public class PrimeSieveJava
 		VALIDATION_DATA.put(10000000, 664579);
 		VALIDATION_DATA.put(100000000, 5761455);
 	}
+
+	static class SimpleBitSet {
+        final int[] bits;
+        final int count;
+
+        SimpleBitSet(final int count) {
+            bits = new int[count + 31 >> 5];
+            this.count = count;
+        }
+
+        boolean get(final int index) {
+            final int i = index >> 5;
+
+            return (bits[i] & 1 << index) == 0;
+        }
+
+        public void set(final int index) {
+            final int i = index >> 5;
+
+            bits[i] |= 1 << index;
+        }
+    }
 }
