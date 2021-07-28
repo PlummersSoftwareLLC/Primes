@@ -3,14 +3,14 @@
 ** program parameter (sieveSize). The default sieveSize is 1,000,000
 */
 
-class Erasthosthanes private
+class Eratosthenes private
 properties private
 	sieveSize
 	sqRt = int
 properties public
 	primes = Rexx[]
 
-method erasthosthanes(lclSieveSize = int, lclSqRt = int)
+method Eratosthenes(lclSieveSize = int, lclSqRt = int)
 	sieveSize = lclSieveSize
 	primes = Rexx[sieveSize+1]
 	sqRt = lclSqRt
@@ -60,11 +60,11 @@ method main(args = String[]) static
 	sqRt = SquareRoot(sieveSize).trunc
 
 	/*
-	** the 'faithful' loop starts here. Each iteration creates a new Erasthosthanes object
+	** the 'faithful' loop starts here. Each iteration creates a new Eratosthenes object
 	*/
 	elapsedtime = time("R")
 	loop while elapsedTime <= 5
-		wSieve = Erasthosthanes(sieveSize, sqRt)
+		wSieve = Eratosthenes(sieveSize, sqRt)
 		wSieve.Sieve()
 		iterations = iterations+1
 		elapsedTime = time("E")
@@ -94,7 +94,7 @@ method main(args = String[]) static
 	exit 0
 
 
-method PrintDetail(sieveSize,e = Erasthosthanes) static
+method PrintDetail(sieveSize,e = Eratosthenes) static
 	printWidth	= int sieveSize.length() + 1
 	line		= 2.right(printWidth)
 	primesPerLine	= 1
@@ -117,7 +117,7 @@ method PrintDetail(sieveSize,e = Erasthosthanes) static
 	return
 
 
-method PrintSummary(sieveSize,e = Erasthosthanes) static
+method PrintSummary(sieveSize,e = Eratosthenes) static
 	cnt			= int 1 /* accounts for 2 as prime */
 
 	loop i = 3 to sieveSize by 2

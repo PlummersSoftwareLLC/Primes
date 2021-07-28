@@ -1,5 +1,5 @@
 # NetRexx solution by joss
-Sieve of Erastosthones for the NetRexx language.
+Sieve of Eratosthenes for the NetRexx language.
 Uses the RexxLA (Rexx Language Association) translator to compile the program PrimeNetRexx.NetRexx
 
 NetRexx translates source code into Java compiled classes. The NetRexx syntax is similar to REXX,
