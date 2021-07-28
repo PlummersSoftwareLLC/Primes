@@ -12,8 +12,8 @@ A faithful implementation of the prime sieve algorithm in the [umple language](h
 To run the solution using Docker, run the following command:
 
 ```
-docker build -t primes-yoix .
-docker run --rm -it primes-yoix
+docker build -t primes-umple .
+docker run --rm -it primes-umple
 ```
 
 To run the solution using the umple compiler, run the following command:
