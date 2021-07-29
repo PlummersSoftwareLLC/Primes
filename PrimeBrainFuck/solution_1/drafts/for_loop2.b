@@ -14,20 +14,21 @@ out 9   start = multiplier_1 * 3
 set 10  num = 1'000'000 minus start
 set 11  multiplier_2 = factor
 out 12  step = multiplier_2 * 2
-ign 13
-ign 14
+cpy 13  step_copy_1 = step
+        start_copy_1 = start
+cpy 14  start_copy_2 = start
 ign 15
 
 cpy 16  num_copy_1 = num
 use 17  check = 1
 set 18  step = 0
 use 19  first_zero = 0
-use 20  last_zero = =
-cpy 21  step_copy_1 = step
-cpy 22  step_copy_2 = step
-cpy 23  step_copy_3 = step
+use 20  last_zero = 0
+ign 21
+ign 22
+ign 23
 
-cpy 24  step_copy_4 = step
+ign 24
 ign 25
 ign 26
 ign 27
@@ -37,7 +38,6 @@ ign 30
 ign 31
 
 primes are stored after this point
-use 32
 }
 
 
@@ -83,10 +83,18 @@ multiply multiplier_2 by 2
     >++< add 2 to step
 -]<<< <<<< <<<< go to 0
 
+copy start to start_copy_1
 subtract start from num
     >>>> >>>> >[ go to start
-        >-< sub num
+        >- sub num
+        >>>+ add start_copy_1
+        <<<< go to start
     -]< <<<< <<<< go to 0
+
+copy start_copy_1 to start
+    >>>> >>>> >>>> >[ go to start_copy_1
+        <<<<+>>>> add start
+    -]< <<<< <<<< <<<< go to 0
 
 copy num to num_copy_1
     >>>> >>>> >>[ go to 10
@@ -102,34 +110,40 @@ copy num to num_copy_1
     < go to check or to first_zero
 
     [ if at check: run the following code once
-        >>>> >[ go to step_copy_2
-            <<<< <<+>> >>>> add num_copy_1
-        -]< <<<< go to check
+        copy start to start_copy_1 2 and 3
+        add start to num_copy_1
+            <<<< <<<<[ go to start
+                  >>>>+ add start_copy_1
+                  >+ add start_copy_2
+                  >>+ add num_copy_1
+                  <<<< <<< go to start
+            -]>>>> >>>> go to check
 
-        <.> print num_copy_1
-
-        >>>> >>[ go to step_copy_3
-            <<<< <<<->>> >>>> sub num_copy_1
-        -]<< <<<< go to check
-
-        - sub check
-        >>>> >>>[ go to step_copy_4
-            <<<< <<+>> >>>> add step
-        -]<<< <<<< go to check
-
-        copy step to step_copy_1 2 3 and 4
-            <<<<[ go to 12
-                >>>> >>>> >+ add step_copy_1
-                >+ add step_copy_2
-                >+ add step_copy_3
-                >+ add step_copy_4
-                <<<< <<<< <<<<
+        copy start_copy_1 to start
+            <<<<[ go to start_copy_1
+                <<<<+>>>> add start
             -]>>>> go to check
 
-        >>>>[ go to step_copy_1
-            <<<< <<<< <+> >>>> >>>> add step
-        -]<<<< go to check
+        <-.+> print num_copy_1
 
+        sub start_copy_2 to num_copy_1
+            <<<[ go to start_copy_2
+                >>-<< add num_copy_1
+            -]>>> go to check
+
+        copy step to step_copy_1 and step
+            <<<< <[ go to step
+                >+ add step_copy_1
+                >>>> >+ add step
+                <<<< << go to step
+            -]> >>>> go to check
+
+        copy step_copy_1 to step
+            <<<<[ go to step_copy_1
+                <+> add step
+            -]>>>> go to check
+
+        - sub check
         >> go to first_zero
     ]
 
