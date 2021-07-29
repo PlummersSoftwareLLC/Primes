@@ -8,6 +8,7 @@ namespace PrimeCSharp.Sieves
         public string QuickName => "dbool";
         public string Name => "Inverted Bool Array, Direct";
         public bool IsBaseAlgorithm => true;
+        public int? BitsPerPrime => 8;
 
         public int SieveSize { get; }
         private readonly bool[] boolArray;
