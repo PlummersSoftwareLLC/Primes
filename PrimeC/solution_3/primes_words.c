@@ -4,6 +4,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 
 #define BITZERO 0U
 
@@ -14,17 +15,54 @@
 #define SHIFT 5U
 #define MEMSHIFT 6U
 #define SHIFTSIZE 2U 
-// the setting below is about 30,5 kb
-// it is the number of words of 4 bytes each
-// with an L1 cache of 32 kb the max value = 8192
-// however, works best with a smaller value so there is room for others
-// TODO: setting below should be determined automatic during program
-// initialization or compile, don't know how to so set
-// to what works on my hardware
-const unsigned int L1_CACHESIZE=7814;
+
+
+// The setting below is set to 32kb
+// this L1 cache size is assumed if it can not be determined
+#define DEFAULT_L1_SIZE 32768U
+// the paramer below is the number of bytes we
+// want to keep "free" from the bit array, so there is
+// some room left for other frequent used data
+#define KEEP_FREE 1500U
+//
+// The configuration parameter below determines 
+unsigned int BLOCK_SIZE = ( DEFAULT_L1_SIZE - KEEP_FREE ) / sizeof(TYPE);
 
 // the constant below is a cache of all the possible bit masks
 const TYPE offset_mask[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
+
+/*
+    Purpose:
+    Get the size of the L1 data cache
+
+*/
+int get_L1_data_cache () {
+    #ifdef LEVEL1_DCACHE_SIZE
+        return LEVEL1_DCACHE_SIZE;
+    #else
+        int value = sysconf (_SC_LEVEL1_DCACHE_SIZE);
+        return value;
+    #endif
+}
+
+/*
+    Purpose:
+    Calculate the optimal size for the BLOCK_SIZE 
+    parameter on this hardware based on the L1 datacache size
+    and set that parameter
+*/
+void set_word_block_size() {
+    int l1_size = get_L1_data_cache();
+    if (l1_size > 0) {
+        if (l1_size > KEEP_FREE) {
+            BLOCK_SIZE= (l1_size-KEEP_FREE) / sizeof(TYPE);
+        } else {
+            // we are in a situation with a real small L1 cache size
+            // so don't use it, by setting it to a huge value 
+            BLOCK_SIZE = BLOCK_SIZE * 10000;
+        }
+    } 
+}
 
 struct sieve_state {
   TYPE *bit_array;
@@ -97,20 +135,16 @@ static inline void block_cross_out(
     unsigned int prime,
     unsigned int max_index
 ) {
-    unsigned int start_index;
-    unsigned int next_start_index;
-    unsigned int start_word;
-    unsigned int current_word;
+    unsigned int start_index = ((prime * prime)>>1U);
+    unsigned int next_start_index = start_index;
+    unsigned int start_word = start_index >> SHIFT;
+    unsigned int current_word = start_word;
     unsigned int max_word = max_index >> SHIFT;
     unsigned int max_word_block = max_word;
     unsigned int current_mask;
     unsigned int offset;
     unsigned int grow;
-
-    start_index = ((prime * prime)>>1U);
-    start_word = start_index >> SHIFT;
-    current_word = start_word;
-    next_start_index = start_index;
+    unsigned int end_of_block_idx;
 
     if (prime < 32U) {
         // crossout so we are atleast in the next word
@@ -124,8 +158,8 @@ static inline void block_cross_out(
     }
     offset = next_start_index & MASK;
 
-    if (max_word > L1_CACHESIZE) {
-        max_word_block = L1_CACHESIZE;
+    if (max_word > BLOCK_SIZE) {
+        max_word_block = BLOCK_SIZE;
     }
 
     while (1) {
@@ -162,7 +196,7 @@ static inline void block_cross_out(
 
         // now get the first index in the next block
         if (start_word <= max_word_block ) {
-            const unsigned int end_of_block_idx = ((max_word_block +1U) * 8 * sizeof(TYPE)) -1;
+            end_of_block_idx = ((max_word_block +1U) * 8 * sizeof(TYPE)) - 1;
             next_start_index = start_index + (((end_of_block_idx - start_index) / prime ) +1 ) * prime;
             offset = next_start_index & MASK;
             current_word = next_start_index >> SHIFT;
@@ -171,6 +205,7 @@ static inline void block_cross_out(
         max_word_block = max_word;
     }
 }
+
 
 /*
     Purpose:
@@ -376,7 +411,7 @@ void print_results (
 }
 
 int main(int argc, char **argv) {
-    unsigned int        limit     = 1000000;
+    unsigned int        limit       = 1000000;
     double              maxtime     = 5.;
     unsigned int        show_result = 0;
     
@@ -385,6 +420,7 @@ int main(int argc, char **argv) {
     double              duration;
     int                 passes      = 0;
 
+    set_word_block_size();
 
     clock_gettime(CLOCK_MONOTONIC,&start);
 
@@ -393,7 +429,7 @@ int main(int argc, char **argv) {
         run_sieve(sieve_state);
         passes++;
         clock_gettime(CLOCK_MONOTONIC,&now);
-        double duration=now.tv_sec+now.tv_nsec*1e-9-start.tv_sec-start.tv_nsec*1e-9;
+        duration=now.tv_sec+now.tv_nsec*1e-9-start.tv_sec-start.tv_nsec*1e-9;
 
         if (duration>=maxtime) {
             print_results ( sieve_state, show_result, duration, passes);
