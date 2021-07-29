@@ -4,7 +4,7 @@
 */
 
 class PrimeNetRexx public uses RexxTime
-properties static public
+properties static private
 	sqRt = int 
 	iterations = int
     elapsedTime
@@ -33,6 +33,10 @@ method main(args = String[]) static
 		sieveSize = 1000000
 	  end
 	
+	/* 
+	** calculate the square root fo the sieve size
+	** then truncate that to an integer
+	*/
 	sqRt = SquareRoot(sieveSize).trunc
 
 	/*
@@ -76,7 +80,7 @@ method PrintDetail(sieveSize,e = Eratosthenes) static
 	primesPerLine	= 1
 
 	loop i = 3 to sieveSize by 2
-	  if e.primes[i] = NULL then
+	  if e.primes(i) = NULL then
 	   do
 		 line = line||i.right(printWidth," ")
 		 primesPerLine = primesPerLine + 1
@@ -97,7 +101,7 @@ method PrintSummary(sieveSize,e = Eratosthenes) static
 	cnt			= int 1 /* accounts for 2 as prime */
 
 	loop i = 3 to sieveSize by 2
-	  if e.primes[i] == NULL then
+	  if e.primes(i) == NULL then
 		cnt = cnt + 1
 	  select
 		when i = 99 & i <= sieveSize then
@@ -147,8 +151,10 @@ class Eratosthenes private
 properties private
 	sieveSize
 	sqRt = int
-properties public
 	primes = Rexx[]
+
+method primes(i = int)
+	return this.primes[i]
 
 method Eratosthenes(lclSieveSize = int, lclSqRt = int)
 	sieveSize = lclSieveSize
