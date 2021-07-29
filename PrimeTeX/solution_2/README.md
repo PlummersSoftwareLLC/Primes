@@ -133,16 +133,17 @@ the `TEXMFCNF` environment variable is suitably set, as done by `runpdftex.sh`.
 methods. It has `shared_batteries.tex` as dependency.
 
 `wheel_sieve.tex` is the core library providing the Sieve object and its
-methods. It has `shared_batteries.tex` as dependency. It uses the "480 out of
-2310" wheel.
+methods. It also has `shared_batteries.tex` as dependency. It uses the
+"480-out-of-2310" wheel.
 
 `erato_primestofile.tex` is a file loading `erato_sieve.tex`, which you can run
 with either Knuth base `tex` or `pdftex` or `luatex` to generate files with
-one prime per line. By default it generates `listofprimes-1000000.txt`.
+one prime per line.  By default it generates `listofprimes-1000000.txt`.
 
-`wheel_primestofile.tex` is a file loading `erato_sieve.tex`, which you can run
+`wheel_primestofile.tex` is a file loading `wheel_sieve.tex`, which you can run
 with either Knuth base `tex` or `pdftex` or `luatex` to generate files with
-one prime per line. By default it generates `listofprimes-1000000.txt`.
+one prime per line using the wheel algorithm.
+By default it generates `listofprimes-1000000.txt`.
 
 `{erato,wheel}_primestopdf_{h,v}.tex` are to be compiled with `pdflatex` or
 `lualatex`.  They either use or re-compute `listofprimes-1000000.txt` (or some
@@ -158,7 +159,7 @@ Executing
 pdftex erato_benchmark && cat erato_benchmark-out.txt
 ```
 
-will most certainly fail, execept if your computer is very slow.
+will most certainly fail, except if your computer is very slow.
 
 To fix this, make sure that the repertory contains the contributed file
 `texmf.cnf` and do `export TEXMFCNF="$(pwd):"` and then try again.

@@ -207,8 +207,9 @@
 \def\SieveSieve#1{%
     % Set \_svobjarray to the font array
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
-    % Set \cstA to be the sieve range
-    \cstA\csname _svobj.#1.range\endcsname\relax
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA\csname _svobj.#1.range\endcsname{}\relax
     % Set \cstB to its square root
     \SetToSqrt\cstA\cstB
     %
@@ -268,8 +269,9 @@
 \def\SieveReset#1{%
     % Set \_svobjarray to the font array
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
-    % Set \cstA to be the sieve range
-    \cstA\csname _svobj.#1.range\endcsname\relax
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA\csname _svobj.#1.range\endcsname{}\relax
     %
     \cnta\cstA
     \advance\cnta-\@ne
@@ -301,8 +303,9 @@
 \def\SieveSetToCount#1#2{%
     % Set \_svobjarray to the font array
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
-    % Set \cstA to be the sieve range
-    \cstA\csname _svobj.#1.range\endcsname\relax
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA\csname _svobj.#1.range\endcsname{}\relax
     % Get the length of the fontdimen array: 2J+1<=N
     \cnta\cstA
     \advance\cnta-\@ne
@@ -348,8 +351,9 @@
   \immediate\openout\out=#2\relax
     % Set \_svobjarray to the font array
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
-    % Set \cstA to be the sieve range
-    \cstA\csname _svobj.#1.range\endcsname\relax
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA\csname _svobj.#1.range\endcsname{}\relax
     % Get the length of the fontdimen array: 2J+1<=N
     \cnta\cstA
     \advance\cnta-\@ne
