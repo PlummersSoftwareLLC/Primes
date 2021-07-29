@@ -135,7 +135,7 @@ namespace PrimeSieveCS
         static void Main(string[] args)
         {
             //setup
-            const int sievesize = 100000000;
+            const int sievesize = 1000000;
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
             //warmup 
