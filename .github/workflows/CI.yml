@@ -43,13 +43,13 @@ jobs:
           NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
           echo "::set-output name=normalized::${NAME}"
       
-      - name: Lint Dockefile
+      - name: Lint Dockerfile
         uses: jbergstroem/hadolint-gh-action@v1
         with:
           dockerfile: "${{ matrix.solution }}/Dockerfile"
           output_format: tty
           error_level: 0
-          config_file: ./hadolint.yml
+          config_file: ./config/hadolint.yml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1

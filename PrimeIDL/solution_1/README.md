@@ -9,7 +9,9 @@
 
 Interactive Data Language ([IDL](https://www.l3harrisgeospatial.com/Software-Technology/IDL)) implementations of the prime sieve algorithm. A free and open-source IDL compiler is available as [GDL](https://gnudatalanguage.github.io/index.html).
 
-Two implementations are collected:
+[IDL](https://www.l3harrisgeospatial.com/Software-Technology/IDL) is used in scientific data analysis, where its strength lies in vector and matrix operations. In many ways it is comparable to [Matlab](https://www.mathworks.com/products/matlab.html) and its open-source free counterpart GNU [Octave](https://www.gnu.org/software/octave/index).
+
+Two implementations are provided:
 
 1. One has the least, in terms of speed, favorable [characteristics](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/CONTRIBUTING.md#characteristics); loops are slow, really slow, in IDL ...
 2. One has more favorable [characteristics](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/CONTRIBUTING.md#characteristics) and does things more the 'IDL-way'.
@@ -36,13 +38,13 @@ docker run --rm primes
 IDL 8.8:
 
 ```shell
-kriztioan_1bit;7;5.553826;1;algorithm=base,faithful=yes,bits=1
-kriztioan_idlway;717;5.005487;12;algorithm=base,faithful=yes,bits=8
+kriztioan_1bit;9;5.644735;1;algorithm=base,faithful=yes,bits=1
+kriztioan_idlway;719;5.002732;12;algorithm=base,faithful=yes,bits=8
 ```
 
 GDL 1.0.0-rc.3 git:
 
 ```shell
-kriztioan_1bit;2;5.370245;1;algorithm=base,faithful=yes,bits=1
-kriztioan_idlway;363;5.010998;6;algorithm=base,faithful=yes,bits=8
+kriztioan_1bit;3;5.004834;1;algorithm=base,faithful=yes,bits=1
+kriztioan_idlway;350;5.011078;6;algorithm=base,faithful=yes,bits=8
 ```

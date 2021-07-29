@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/powershell
+FROM mcr.microsoft.com/powershell:7.1.3-ubuntu-20.04
 
 WORKDIR /opt/primes
 

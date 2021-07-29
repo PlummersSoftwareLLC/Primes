@@ -1,4 +1,4 @@
-FROM mtrute/gforth-container:latest
+FROM mtrute/gforth-container:0.7.9_20190627
 
 WORKDIR /opt/app
 
