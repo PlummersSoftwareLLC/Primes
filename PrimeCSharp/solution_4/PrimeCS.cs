@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.X86;
 
 namespace PrimeSieveCS
 {
@@ -100,19 +101,23 @@ namespace PrimeSieveCS
 
                         if (halfFactor > halfRoot) break;
 
-                        //marking with a mask if we can get enough bits in the ulong, 18 seems to be optimal
-                        if (halfFactor <= 18)
+                        //marking with a mask if we can get enough bits in the ulong, 20 seems to be optimal
+                        if (halfFactor <= 20)
                         {
                             // Mark off all multiples starting with the factor's square up to the square root of the limit
                             ulong mask = CreateMarkingMask(factor);
                             var start = (factor * factor) / 2;
                             var offset2 = start % 64;
+                            var rolbits = factor - (64 % factor);
                             for (uint index = start / 64; index < halfLimit / 64 + 1; index++)
                             {
                                 var ormask = mask << (int)offset2;
                                 ptr[index] |= ormask;
-                                var pop = (uint)BitOperations.PopCount(ormask);
-                                offset2 += pop * factor - 64;
+                                offset2 += rolbits;
+                                while(offset2 >= factor)
+                                {
+                                    offset2 -= factor;
+                                }
                             }
                         }
                         else
