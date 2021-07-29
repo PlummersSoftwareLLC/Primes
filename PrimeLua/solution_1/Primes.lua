@@ -15,11 +15,13 @@ local myDict =
 	k100000000 = 5761455 
 }
 
+local floor, sqrt = math.floor, math.sqrt
+
 function setup(size)
 	sieveSize = size
 	bitArray = {}
 	
-	for n = 1, math.floor((sieveSize + 1)/2) do
+  for n = 1, floor((sieveSize + 1) / 2) do
 		bitArray[n] = true
 	end
 end
@@ -45,7 +47,7 @@ function getBit(index)
 	if index % 2 == 0 then
 		return false
 	end
-  return bitArray[math.floor(index / 2)]
+  return bitArray[floor(index / 2)]
 end
 
 function clearBit(index)
@@ -53,7 +55,7 @@ function clearBit(index)
 		print("You are setting even bits, which is sub-optimal")
 		return
 	end
-	bitArray[math.floor(index / 2)] = false
+  bitArray[floor(index / 2)] = false
 end
 
 -- primeSieve
@@ -62,7 +64,7 @@ end
 
 function runSieve()
 	local factor = 3
-	local q = math.floor(math.sqrt(sieveSize)+0.5)
+  local q = floor(sqrt(sieveSize) + 0.5)
 	
 	while factor < q do
 		
