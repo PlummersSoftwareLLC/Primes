@@ -56,10 +56,10 @@ typedef struct {
     WORD * const buffer;
 } SIEVE;
 
-unsigned int nextPrime( SIEVE const *pSieve, unsigned int primeCandidate )
+// Search the bit array for the next set bit, which corresponds to the next prime
+unsigned int nextPrime( WORD *buffer, unsigned int lastPrime )
 {
-    WORD * const buffer = pSieve->buffer;
-    primeCandidate += 2;
+    unsigned int const primeCandidate = lastPrime + 2;
 
     unsigned int wordIndex = wordIndexOf( primeCandidate );
     WORD word = buffer[wordIndex];
@@ -71,19 +71,18 @@ unsigned int nextPrime( SIEVE const *pSieve, unsigned int primeCandidate )
         word = buffer[++wordIndex];
     }
 
-    primeCandidate = primeOf( wordIndex * BITS_PER_WORD + leastSetBit( word ) );
-
-    // Now primeCandidate is really PRIME!
-    return primeCandidate;
+    return primeOf( wordIndex * BITS_PER_WORD + leastSetBit( word ) );
 }
 
-void sieveOnePrime( SIEVE const *pSieve, unsigned int prime, unsigned int maxNumber )
+// Remove multiples of the prime found by nextPrime
+// Note that it is sufficient to remove multiples of the factors corresponding to
+// remaining bits, so we search for set bits and map from bits to factors.
+// Search from highest possible set bit to lowest in order that we do not remove a
+// factor that we still need to use.
+void sieveOnePrime( WORD *buffer, unsigned int prime, unsigned int maxNumber )
 {
-    unsigned int i; // Loop index
-    WORD * const buffer = pSieve->buffer;
-
     // Factor to use in eliminating a multiple
-    unsigned int maxFactor = maxNumber / prime;
+    unsigned int const maxFactor = maxNumber / prime;
     // Use a signed type so that it can go below zero without underflow
     int wordIndex = wordIndexOf( maxFactor );
     while( (int)wordIndexOf( prime ) <= wordIndex )
@@ -105,7 +104,7 @@ void sieveOnePrime( SIEVE const *pSieve, unsigned int prime, unsigned int maxNum
 #if defined DEBUG
     printf( "%u\n", prime );
     printf( "2 " );
-    for( i = 3u; i < maxNumber; i += 2u )
+    for( unsigned int i = 3u; i < maxNumber; i += 2u )
     {
         if( bitIsSet( buffer, i ) ) printf( "%u ", i );
     }
@@ -130,6 +129,7 @@ void primes( SIEVE const *pSieve )
     buffer[0] = ones; // Actually, only one byte is required
     WORD smallPrimes = 0u;
 
+    // Dynamic (or lazy) sieve wheel avoids reliance on pre-computed primes
     for( ;; )
     {
         // Make prime-1 more copies of initialized bytes until buffer is full
@@ -145,11 +145,11 @@ void primes( SIEVE const *pSieve )
             memcpy( bufferU8 + i * primesProduct, bufferU8, primesProduct );
         }
         primesProduct *= prime;
-        sieveOnePrime( pSieve, prime, primeOf( primesProduct * 8 ) );
+        sieveOnePrime( buffer, prime, primeOf( primesProduct * 8 ) );
         // Remove these small primes from buffer and save in smallPrimes
         clearBit( buffer, prime );
         setBit( &smallPrimes, prime );
-        prime = nextPrime( pSieve, prime );
+        prime = nextPrime( buffer, prime );
     }
     doneInit:
     // Restore small primes to buffer
@@ -169,8 +169,8 @@ void primes( SIEVE const *pSieve )
     // Process the remaining bits
     do
     {
-        sieveOnePrime( pSieve, prime, maxNumber );
-        prime = nextPrime( pSieve, prime );
+        sieveOnePrime( buffer, prime, maxNumber );
+        prime = nextPrime( buffer, prime );
     }
     while( prime * prime < maxNumber );
 
@@ -187,6 +187,7 @@ void primes( SIEVE const *pSieve )
 #endif /* defined DEBUG */
 }
 
+// Count all set bits in pSieve->buffer
 unsigned int countPrimes(SIEVE const *pSieve)
 {
     WORD const *buffer = pSieve->buffer;
