@@ -462,20 +462,33 @@ alias IsFaithful = Flag!"faithful";
 
 void main()
 {
-    runSingleThreaded!(SieveCT!PRIME_COUNT)(IsFaithful.no);
-    runMultiThreaded!(SieveCT!PRIME_COUNT)(No.faithful); // Same thing as IsFaithful.no
+    alias dt = MultithreadMode.dynamicThreads;
+    alias st = MultithreadMode.staticThreads;
 
-    runSingleThreaded!SieveRT(IsFaithful.yes);
-    runMultiThreaded!SieveRT(Yes.faithful);
+    alias s1 = SieveCT!PRIME_COUNT;
+    runSingleThreaded!s1(IsFaithful.no);
+    runMultiThreaded!(s1, dt)(No.faithful); // Same thing as IsFaithful.no
+    runMultiThreaded!(s1, st)(No.faithful);
 
-    runSingleThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no & IsFaithful.no & IsFaithful.no, "pregenerated", 0);
-    runMultiThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no, "pregenerated", 0);
+    alias s2 = SieveRT;
+    runSingleThreaded!s2(IsFaithful.yes);
+    runMultiThreaded!(s2, dt)(Yes.faithful);
+    runMultiThreaded!(s2, st)(Yes.faithful);
 
-    runSingleThreaded!(SieveRT_LookupTable!PRIME_COUNT)(IsFaithful.no, "lookup", 1);
-    runMultiThreaded!(SieveRT_LookupTable!PRIME_COUNT)(IsFaithful.no, "lookup", 1);
+    alias s3 = SieveRTCT_Cheatiness!PRIME_COUNT;
+    runSingleThreaded!s3(IsFaithful.no & IsFaithful.no & IsFaithful.no, "pregenerated", 0);
+    runMultiThreaded!(s3, dt)(IsFaithful.no, "pregenerated", 0);
+    runMultiThreaded!(s3, st)(IsFaithful.no, "pregenerated", 0);
 
-    runSingleThreaded!SieveRT_8(IsFaithful.yes, "base", 8);
-    runMultiThreaded!SieveRT_8(IsFaithful.yes, "base", 8);
+    alias s4 = SieveRT_LookupTable!PRIME_COUNT;
+    runSingleThreaded!s4(IsFaithful.no, "lookup", 1);
+    runMultiThreaded!(s4, dt)(IsFaithful.no, "lookup", 1);
+    runMultiThreaded!(s4, st)(IsFaithful.no, "lookup", 1);
+
+    alias s5 = SieveRT_8;
+    runSingleThreaded!s5(IsFaithful.yes, "base", 8);
+    runMultiThreaded!(s5, dt)(IsFaithful.yes, "base", 8);
+    runMultiThreaded!(s5, st)(IsFaithful.yes, "base", 8);
 }
 
 // Here we're asking for an alias to another symbol, so we can pass in either of the sieve types.
@@ -544,7 +557,13 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = 
     );
 }
 
-void runMultiThreaded(alias SieveType)(IsFaithful faithful, string algorithm = "base", uint bits = 1)
+enum MultithreadMode
+{
+    dynamicThreads, // Constantly create threads for the full 5 seconds.
+    staticThreads   // Create only totalCPUs amount of threads that run for the full 5 seconds.
+}
+
+void runMultiThreaded(alias SieveType, MultithreadMode ThreadMode)(IsFaithful faithful, string algorithm = "base", uint bits = 1)
 {
     import core.atomic            : atomicOp;
     import std.conv               : to;
@@ -562,15 +581,35 @@ void runMultiThreaded(alias SieveType)(IsFaithful faithful, string algorithm = "
         // threads as there are CPUs (a.k.a totalCPUs).
         //
         // D makes multi-threaded processing painfully easy.
-        foreach(i; iota(0, totalCPUs).parallel)
+        static if(ThreadMode == MultithreadMode.dynamicThreads)
         {
-            // #3: Using __traits(compiles) to determine if we need to pass a value to the ctor or not.
-            static if(__traits(compiles, new SieveType(PRIME_COUNT)))
-                scope sieve = new SieveType(PRIME_COUNT);
-            else
-                scope sieve = new SieveType();
-            sieve.runSieve();
-            atomicOp!"+="(passes, 1);
+            foreach(i; iota(0, totalCPUs).parallel)
+            {
+                // #3: Using __traits(compiles) to determine if we need to pass a value to the ctor or not.
+                static if(__traits(compiles, new SieveType(PRIME_COUNT)))
+                    scope sieve = new SieveType(PRIME_COUNT);
+                else
+                    scope sieve = new SieveType();
+                sieve.runSieve();
+                atomicOp!"+="(passes, 1);
+            }
+        }
+        else static if(ThreadMode == MultithreadMode.staticThreads)
+        {
+            foreach(i; iota(0, totalCPUs).parallel)
+            {
+                uint myPasses;
+                while(timer.peek.total!"seconds" < MAX_SECONDS)
+                {
+                    static if(__traits(compiles, new SieveType(PRIME_COUNT)))
+                        scope sieve = new SieveType(PRIME_COUNT);
+                    else
+                        scope sieve = new SieveType();
+                    sieve.runSieve();
+                    myPasses++;
+                }
+                atomicOp!"+="(passes, myPasses);
+            }
         }
     }
 
@@ -586,7 +625,7 @@ void runMultiThreaded(alias SieveType)(IsFaithful faithful, string algorithm = "
 
     s.runSieve();
     s.printResults(
-        "BradleyChatha-Multi-"~__traits(identifier, SieveType), 
+        "BradleyChatha-Multi%s-%s".format(ThreadMode, __traits(identifier, SieveType)), 
         "algorithm=%s,bits=%s,faithful=%s".format(algorithm, bits, faithful),
         totalCPUs, 
         false, 

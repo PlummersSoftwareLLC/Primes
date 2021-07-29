@@ -46,44 +46,59 @@ dub test --compiler=...
 
 | Tag | Description | Multithreaded | Passes | Algorithm | Bits | Faithful |
 |-----|-------------|---------------|--------|-----------|------|----------|
-| SieveRT_8 | An 8-bit variant of SieveRT. | true | 14713 | base | 8 | true |
-| SieveRT | Sieve that where everything is allocated and computed at runtime. | true | 13313 | base | 1 | true |
-| SieveRT | Sieve that where everything is allocated and computed at runtime. | false | 6956 | base | 1 | true |
-| SieveRT_8 | An 8-bit variant of SieveRT. | false | 6534 | base | 8 | true |
-| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | false | 92990407 | pregenerated | 0 | false |
-| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | true | 4844121 | pregenerated | 0 | false |
-| SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | true | 30861 | lookup | 1 | false |
-| SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | true | 22689 | base | 1 | false |
-| SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | false | 12998 | lookup | 1 | false |
-| SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | false | 7547 | base | 1 | false |
- 
+| SieveRT | Sieve that where everything is allocated and computed at runtime. | staticThreads | 24574 | base | 1 | true |
+| SieveRT_8 | An 8-bit variant of SieveRT. | staticThreads | 21569 | base | 8 | true |
+| SieveRT | Sieve that where everything is allocated and computed at runtime. | dynamicThreads | 13629 | base | 1 | true |
+| SieveRT_8 | An 8-bit variant of SieveRT. | dynamicThreads | 10097 | base | 8 | true |
+| SieveRT | Sieve that where everything is allocated and computed at runtime. | single | 7003 | base | 1 | true |
+| SieveRT_8 | An 8-bit variant of SieveRT. | single | 6181 | base | 8 | true |
+| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | staticThreads | 323844955 | pregenerated | 0 | false |
+| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | single | 94602080 | pregenerated | 0 | false |
+| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | dynamicThreads | 4409977 | pregenerated | 0 | false |
+| SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | staticThreads | 44017 | lookup | 1 | false |
+| SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | staticThreads | 27679 | base | 1 | false |
+| SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | dynamicThreads | 25313 | lookup | 1 | false |
+| SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | dynamicThreads | 24821 | base | 1 | false |
+| SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | single | 12121 | lookup | 1 | false |
+| SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | single | 7691 | base | 1 | false |
+
 
 ## Output
 
 ```
 Command: dub run -b release --compiler=ldc2
 stderr:
-    Passes: 7547, Time: 5 secs, 35 μs, and 1 hnsec, Avg: 662 μs and 5 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 22689, Time: 5 secs, 227 μs, and 1 hnsec, Avg: 220 μs and 3 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 6956, Time: 5 secs, 464 μs, and 9 hnsecs, Avg: 718 μs and 8 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 13313, Time: 5 secs, 1 ms, 124 μs, and 4 hnsecs, Avg: 375 μs and 6 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 92990407, Time: 5 secs, Avg: 0 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 4844121, Time: 5 secs, 6 μs, and 9 hnsecs, Avg: 1 μs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 12998, Time: 5 secs, 268 μs, and 4 hnsecs, Avg: 384 μs and 6 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 30861, Time: 5 secs, 182 μs, and 9 hnsecs, Avg: 162 μs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 6534, Time: 5 secs, 441 μs, and 8 hnsecs, Avg: 765 μs and 2 hnsecs, Limit: 1000000, Count: 78498, Valid: true
-    Passes: 14713, Time: 5 secs, 7 μs, and 4 hnsecs, Avg: 339 μs and 8 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 7691, Time: 5 secs, 28 μs, and 5 hnsecs, Avg: 650 μs and 1 hnsec, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 24821, Time: 5 secs, 490 μs, and 2 hnsecs, Avg: 201 μs and 4 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 27679, Time: 5 secs, 668 μs, and 2 hnsecs, Avg: 180 μs and 6 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 7003, Time: 5 secs, 306 μs, and 5 hnsecs, Avg: 714 μs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 13629, Time: 5 secs, 6 ms, 845 μs, and 9 hnsecs, Avg: 367 μs and 3 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 24574, Time: 5 secs, 658 μs, and 1 hnsec, Avg: 203 μs and 4 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 94602080, Time: 5 secs and 1 hnsec, Avg: 0 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 4409977, Time: 5 secs, 17 μs, and 3 hnsecs, Avg: 1 μs and 1 hnsec, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 323844955, Time: 5 secs, 12 μs, and 8 hnsecs, Avg: 0 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 12121, Time: 5 secs, 292 μs, and 7 hnsecs, Avg: 412 μs and 5 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 25313, Time: 5 secs, 320 μs, and 5 hnsecs, Avg: 197 μs and 5 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 44017, Time: 5 secs and 254 μs, Avg: 113 μs and 5 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 6181, Time: 5 secs, 743 μs, and 4 hnsecs, Avg: 809 μs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 10097, Time: 5 secs, 55 μs, and 1 hnsec, Avg: 495 μs and 2 hnsecs, Limit: 1000000, Count: 78498, Valid: true
+    Passes: 21569, Time: 5 secs, 673 μs, and 2 hnsecs, Avg: 231 μs and 8 hnsecs, Limit: 1000000, Count: 78498, Valid: true
 
 stdout:
-    BradleyChatha-Single-SieveCT;7547;5.00004;1;algorithm=base,bits=1,faithful=no
-    BradleyChatha-Multi-SieveCT;22689;5.00023;4;algorithm=base,bits=1,faithful=no
-    BradleyChatha-Single-SieveRT;6956;5.00046;1;algorithm=base,bits=1,faithful=yes
-    BradleyChatha-Multi-SieveRT;13313;5.00112;4;algorithm=base,bits=1,faithful=yes
-    BradleyChatha-Single-SieveRTCT_Cheatiness;92990407;5;1;algorithm=pregenerated,bits=0,faithful=no
-    BradleyChatha-Multi-SieveRTCT_Cheatiness;4844121;5.00001;4;algorithm=pregenerated,bits=0,faithful=no
-    BradleyChatha-Single-SieveRT_LookupTable;12998;5.00027;1;algorithm=lookup,bits=1,faithful=no
-    BradleyChatha-Multi-SieveRT_LookupTable;30861;5.00018;4;algorithm=lookup,bits=1,faithful=no
-    BradleyChatha-Single-SieveRT_8;6534;5.00044;1;algorithm=base,bits=8,faithful=yes
-    BradleyChatha-Multi-SieveRT_8;14713;5.00001;4;algorithm=base,bits=8,faithful=yes
+    BradleyChatha-Single-SieveCT;7691;5.00003;1;algorithm=base,bits=1,faithful=no
+    BradleyChatha-MultidynamicThreads-SieveCT;24821;5.00049;4;algorithm=base,bits=1,faithful=no
+    BradleyChatha-MultistaticThreads-SieveCT;27679;5.00067;4;algorithm=base,bits=1,faithful=no
+    BradleyChatha-Single-SieveRT;7003;5.00031;1;algorithm=base,bits=1,faithful=yes
+    BradleyChatha-MultidynamicThreads-SieveRT;13629;5.00685;4;algorithm=base,bits=1,faithful=yes
+    BradleyChatha-MultistaticThreads-SieveRT;24574;5.00066;4;algorithm=base,bits=1,faithful=yes
+    BradleyChatha-Single-SieveRTCT_Cheatiness;94602080;5;1;algorithm=pregenerated,bits=0,faithful=no
+    BradleyChatha-MultidynamicThreads-SieveRTCT_Cheatiness;4409977;5.00002;4;algorithm=pregenerated,bits=0,faithful=no
+    BradleyChatha-MultistaticThreads-SieveRTCT_Cheatiness;323844955;5.00001;4;algorithm=pregenerated,bits=0,faithful=no
+    BradleyChatha-Single-SieveRT_LookupTable;12121;5.00029;1;algorithm=lookup,bits=1,faithful=no
+    BradleyChatha-MultidynamicThreads-SieveRT_LookupTable;25313;5.00032;4;algorithm=lookup,bits=1,faithful=no
+    BradleyChatha-MultistaticThreads-SieveRT_LookupTable;44017;5.00025;4;algorithm=lookup,bits=1,faithful=no
+    BradleyChatha-Single-SieveRT_8;6181;5.00074;1;algorithm=base,bits=8,faithful=yes
+    BradleyChatha-MultidynamicThreads-SieveRT_8;10097;5.00006;4;algorithm=base,bits=8,faithful=yes
+    BradleyChatha-MultistaticThreads-SieveRT_8;21569;5.00067;4;algorithm=base,bits=8,faithful=yes
 ```
 

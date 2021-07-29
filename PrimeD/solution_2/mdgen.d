@@ -21,14 +21,21 @@ struct Output
 
 struct Solution
 {
-    string  tag;
-    bool    multithreaded;
-    ulong   passes;
-    string  time;
-    uint    threads;
-    string  algorithm;
-    uint    bits;
-    bool    isFaithful;
+    string      tag;
+    ThreadMode  threadMode;
+    ulong       passes;
+    string      time;
+    uint        threads;
+    string      algorithm;
+    uint        bits;
+    bool        isFaithful;
+}
+
+enum ThreadMode
+{
+    single,
+    staticThreads,
+    dynamicThreads
 }
 
 void main()
@@ -84,7 +91,7 @@ Solution[] findSolutions(const Output result)
         .tee!(match => assert(!match.empty))
         .map!(match => Solution(
             match.captures[1].splitter('-').drop(2).fold!((a,b) => a~b)(""),
-            match.captures[1].canFind("-Multi-"),
+            findThreadMode(match.captures[1]),
             match.captures[2].to!ulong,
             match.captures[3].idup,
             match.captures[4].to!uint,
@@ -98,6 +105,18 @@ Solution[] findSolutions(const Output result)
             (a, b) => a.passes > b.passes
         )
         .array;
+}
+
+ThreadMode findThreadMode(const char[] tag)
+{
+    if(tag.canFind("-Single-"))
+        return ThreadMode.single;
+    else if(tag.canFind("-Multidynamic"))
+        return ThreadMode.dynamicThreads;
+    else if(tag.canFind("-Multistatic"))
+        return ThreadMode.staticThreads;
+
+    assert(false, tag);
 }
 
 string findDescription(string tag)
@@ -145,7 +164,7 @@ void writeSolutionSection(ref Appender!(char[]) output, const Solution[] solutio
     {
         output.put("| ");   output.put(solution.tag);                       output.put(" | ");
                             output.put(findDescription(solution.tag));      output.put(" | ");
-                            output.put(solution.multithreaded.to!string);   output.put(" | ");
+                            output.put(solution.threadMode.to!string);      output.put(" | ");
                             output.put(solution.passes.to!string);          output.put(" | ");
                             output.put(solution.algorithm);                 output.put(" | ");
                             output.put(solution.bits.to!string);            output.put(" | ");
