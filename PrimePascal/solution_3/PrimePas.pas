@@ -3,6 +3,9 @@ program PrimePas;
 {$mode objfpc}{$H+}
 
 uses
+  {$if defined(linux) or defined(freebsd) or defined(darwin)}
+  cthreads,
+  {$endif}
   SysUtils, fgl, CPUCountUtil;
 
 type
