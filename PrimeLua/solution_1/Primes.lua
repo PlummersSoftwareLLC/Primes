@@ -37,10 +37,9 @@ function countPrimes()
 end
 
 function validateResults()
-	if myDict["k" .. tostring(sieveSize)] then
-		return myDict["k" .. tostring(sieveSize)] == countPrimes()
-	end
-	return nil
+  local k = 'k' .. sieveSize
+
+  return myDict[k] == countPrimes()
 end
 
 function getBit(index)
