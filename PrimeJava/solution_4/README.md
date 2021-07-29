@@ -12,7 +12,9 @@ This is a collection of prime sieve algorithms implemented in Java. All solution
 
 * I8: Using bytes to store primes, 1 bit per prime
 * I32: Using 32 bit integers to store primes, 1 bit per prime
+* I32C: Using 32 bit integers to store primes, 1 bit per prime, precache masks
 * I64: Using 64 bit integers to store primes, 1 bit per prime
+* I64C: Using 64 bit integers to store primes, 1 bit per prime, precache masks
 
 ## Building and running
 
