@@ -9,27 +9,28 @@ struct BooleanBitArray<Word> where Word: FixedWidthInteger {
     init(repeating value: Bool, count arraySize: Int){
         let wordArraySize = (arraySize + (wordSize - 1)) / wordSize
         words = UnsafeMutableBufferPointer<Word>.allocate(capacity: wordArraySize)
-        var wordRepeatedValue = Word(0)
-        if value { wordRepeatedValue = Word.max }
-        words.initialize(repeating: wordRepeatedValue)
+//        var wordRepeatedValue = Word(0)
+//        if value { wordRepeatedValue = Word.max }
+//        words.initialize(repeating: wordRepeatedValue)
+        words.initialize(repeating: value ? Word.max : 0)
     }
 
     func deallocate(){
         words.deallocate()
     }
 
-    private func maskIndex(_ num: Int) -> (Int, Word) {
+    @usableFromInline internal func maskIndex(_ num: Int) -> (Int, Word) {
         let wordIndex = num / wordSize
         let mask = Word(1) << (num % wordSize)
         return (wordIndex, mask)
     }
 
-    func getBit(atIndex num: Int) -> Bool {
+    @inlinable func getBit(atIndex num: Int) -> Bool {
         let (i, m) = maskIndex(num)
         return (words[i] & m) != 0
     }
 
-    func setBit(atIndex num: Int, to value: Bool) {
+    @inlinable func setBit(atIndex num: Int, to value: Bool) {
         let (i, m) = maskIndex(num)
         if value { words[i] |= m } else { words[i] &= ~m }
     }
@@ -51,7 +52,7 @@ class Sieve {
         primeArray.deallocate()
     }
 
-    func index(forNumber num: Int) -> Int {
+    func index(for num: Int) -> Int {
         assert(num % 2 == 1, "Error: BitArray:get property should not have accessed an even number.")
         return num >> 1 - 1 // 3 -> 0, 5 -> 1, 7 -> 2, etc.
     }
@@ -59,12 +60,12 @@ class Sieve {
     func runSieve() {
         var factor = 3
         while factor <= factorLimit {
-            while !primeArray.getBit(atIndex: index(forNumber: factor)) {
+            while !primeArray.getBit(atIndex: index(for: factor)) {
                 factor += 2
             }
             var nFactor = factor*factor
             while nFactor <= sieveSize {
-                primeArray.setBit(atIndex: index(forNumber: nFactor), to: false)
+                primeArray.setBit(atIndex: index(for: nFactor), to: false)
                 nFactor += 2*factor
             }
             factor += 2
@@ -92,7 +93,7 @@ extension Sieve {
     func countPrimes() -> Int {
         var count = 1
         for num in stride(from: 3, to: sieveSize, by: 2) {
-            if primeArray.getBit(atIndex: index(forNumber: num)) {
+            if primeArray.getBit(atIndex: index(for: num)) {
                 count += 1
             }
         }
@@ -113,7 +114,7 @@ extension Sieve {
         if showingNumbers {
             print(2, terminator: ", ")
             for num in stride(from: 3, to: sieveSize, by: 2) {
-                if primeArray.getBit(atIndex: index(forNumber: num)) {
+                if primeArray.getBit(atIndex: index(for: num)) {
                     print(num, terminator: ", ")
                 }
             }

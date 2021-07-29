@@ -84,7 +84,7 @@ extension Sieve {
         
         /// Following 2 lines added by rbergen to conform to drag race output format
         print()
-        print("yellowcub_boolean;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=\(8*MemoryLayout<Bool>.size)\n")
+        print("j-f1_ycub_bool;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=\(8*MemoryLayout<Bool>.size)\n")
     }
 }
 
