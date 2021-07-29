@@ -1,18 +1,20 @@
 # D solution by Bradley Chatha, Paul Backus, Bastiaan Veelo
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-lookup-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-pregenerated-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-0-yellowgreen)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Deviation](https://img.shields.io/badge/Deviation-compile%20time-blue)
 
-A faithful yet more idiomatic and memory efficient (bits 1) implementation than solution_1, which appears to be a very direct translation of the original Python code.
+Several solutions are provided, which are listed in the table below.
 
 This implementation is well commented on the D specific parts.
-
-It includes an unfaithful version (due to certain things not being runtime values) and a faithful version. Both are ran in a single threaded and then
-multi-threaded test.
 
 If you're not familiar with some of the antics D can achieve... have fun with the code.
 
