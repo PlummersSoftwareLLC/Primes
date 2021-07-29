@@ -106,6 +106,49 @@ mixin template CommonSieveFunctions()
     // `@safe` is a built-in attribute that specifies "the compiler can guarentee(citation needed) this code is memory safe".
     @safe:
 
+    mixin RunSieve;
+
+    private bool getBit(size_t index) @nogc nothrow inout
+    {
+        // Fairly standard bitty stuff.
+        assert(index % 2 == 1, "Index is even?");
+        return (this._bits[index / 8] & (1 << (index % 8))) != 0;
+    }
+
+    private void clearBit(size_t index) @nogc nothrow
+    {
+        this._bits[index / 8] &= ~(1 << (index % 8));
+    }
+
+    private size_t countPrimes() nothrow inout
+    {
+        import std.algorithm : map, sum;
+        import std.range     : iota;
+
+        // D has a concept called `ranges`, which are (usually) lightweight structs
+        // which provide a .popFront(), .front(), and .empty() functions.
+        //
+        // They are used to produce a range of values in a lazily-evaluated manner, often without
+        // any/reduced heap allocations.
+        //
+        // The standard library provides a bunch of ranges which can be composed together to form
+        // pipelines.
+        //
+        // So essentially all we're doing is making a lazily evaluated, allocationless pipeline:
+        //  Get every number in the range [0..size] exclusive.
+        //  Map it to 1 if it is a prime, map it to 0 otherwise.
+        // Then:
+        //  Evalulate all values of the pipeline, and find the sum of all the mapped results.
+        return iota(3, SieveSize, 2)
+                .map!(num => this.getBit(num) ? 1 : 0) // Ternary operator is just to make it more clear, not actually needed.
+                .sum + 1; // + 1 is to account for '2' being a special case.
+    }
+}
+
+mixin template RunSieve()
+{
+    import core.time : Duration;
+
     // Members are public by default.
     // Because this function is injected into both `SieveCT` and `SieveRT`, the compiler can actually
     // perform any optimisations it wants in `SieveCT` based off the fact that `SieveSize` is known at compile-time,
@@ -216,42 +259,6 @@ mixin template CommonSieveFunctions()
             attribs
         );
     }
-
-    private bool getBit(size_t index) @nogc nothrow inout
-    {
-        // Fairly standard bitty stuff.
-        assert(index % 2 == 1, "Index is even?");
-        return (this._bits[index / 8] & (1 << (index % 8))) != 0;
-    }
-
-    private void clearBit(size_t index) @nogc nothrow
-    {
-        this._bits[index / 8] &= ~(1 << (index % 8));
-    }
-
-    private size_t countPrimes() nothrow inout
-    {
-        import std.algorithm : map, sum;
-        import std.range     : iota;
-
-        // D has a concept called `ranges`, which are (usually) lightweight structs
-        // which provide a .popFront(), .front(), and .empty() functions.
-        //
-        // They are used to produce a range of values in a lazily-evaluated manner, often without
-        // any/reduced heap allocations.
-        //
-        // The standard library provides a bunch of ranges which can be composed together to form
-        // pipelines.
-        //
-        // So essentially all we're doing is making a lazily evaluated, allocationless pipeline:
-        //  Get every number in the range [0..size] exclusive.
-        //  Map it to 1 if it is a prime, map it to 0 otherwise.
-        // Then:
-        //  Evalulate all values of the pipeline, and find the sum of all the mapped results.
-        return iota(3, SieveSize, 2)
-                .map!(num => this.getBit(num) ? 1 : 0) // Ternary operator is just to make it more clear, not actually needed.
-                .sum + 1; // + 1 is to account for '2' being a special case.
-    }
 }
 
 // This is the faithful, runtime-based version of `SieveRT`
@@ -267,10 +274,12 @@ final class SieveRT
     // It's very much up to debate on how this should be handled, but this is just an easy, D-ish way forward.
     private alias SieveSize = _sieveSize;
 
+    @safe:
+
     // In D, we use `this` as the name of constructors. Makes sense really.
     this(size_t sieveSize)
     {
-        this._bits.length = alignTo!8(sieveSize/2) / 8;
+        this._bits.length = alignTo!8(sieveSize) / 8;
         this._bits[] = ubyte.max;
         this._sieveSize = sieveSize;
     }
@@ -317,7 +326,7 @@ final class SieveRT
 }
 
 // This is a *super* unfaiathful version which computes the sieve
-// at compile-time. Honestly this is just testing how fast your CPU can do a foreach loop.
+// at compile-time. Honestly this is just testing how fast your CPU can construct an empty class.
 // "but da C++ solution" is my excuse!
 // RTCT = Runtime sieve at Compile Time.
 final class SieveRTCT_Cheatiness(size_t SieveSize)
@@ -360,16 +369,86 @@ final class SieveRTCT_Cheatiness(size_t SieveSize)
     }
 }
 
-final class SieveRTIntrinsic
+final class SieveRT_LookupTable(size_t SieveSize)
 {
-    private ubyte[] _bits;
+    import core.time : Duration;
+
+    // Since we've already defined a compile-time evaluated sieve, we don't need to bother making it again.
+    alias Sieve = SieveRTCT_Cheatiness!SieveSize.Sieve;
+    size_t count;
+
+    // ditto.
+    this(){}
+    this(size_t){}
+
+    void runSieve()
+    {
+        import std.algorithm : count;
+        import std.range : iota;
+
+        this.count = 
+            iota(3, SieveSize, 2)
+            .count!(num => (Sieve._bits[num / 8] & (1 << (num % 8))) > 0);
+    }
+
+    void printResults(
+        string tag,
+        string attribs,
+        size_t threadCount, 
+        bool showResults,
+        Duration duration,
+        size_t passes
+    ) @trusted // `stderr` is unsafe apparently
+    {
+        assert(this.count == Sieve.countPrimes());
+        Sieve.printResults(tag, attribs, threadCount, showResults, duration, passes);
+    }
+}
+
+final class SieveRT_8
+{
+    mixin RunSieve; 
+
+    private bool[] _bits;
     private size_t _sieveSize;
+    private alias SieveSize = _sieveSize;
+
+    @safe:
 
     this(size_t sieveSize)
     {
-        this._bits.length = alignTo!8(sieveSize) / 8;
-        this._bits[] = ubyte.max;
+        this._bits.length = sieveSize/2;
+        this._bits[] = true;
         this._sieveSize = sieveSize;
+    }
+
+    private bool getBit(size_t index) nothrow inout
+    {
+        return this._bits[index/2];
+    }
+
+    private void clearBit(size_t index) @nogc nothrow
+    {
+        this._bits[index/2] = false;
+    }
+
+    private size_t countPrimes() nothrow inout
+    {
+        import std.algorithm : filter, map;
+        import std.range : walkLength, iota;
+
+        // Slightly different way instead of using .count
+        return iota(3, SieveSize, 2)
+                .map!(num => this.getBit(num))
+                .filter!(b => b)
+                .walkLength + 1;
+    }
+
+    private bool validateResults() inout
+    {
+        auto sieve = new SieveRT(this._sieveSize); // Since I know this one validates correctly. 
+        sieve.runSieve();
+        return this.countPrimes() == sieve.countPrimes();
     }
 }
 
@@ -385,17 +464,26 @@ void main()
 {
     runSingleThreaded!(SieveCT!PRIME_COUNT)(IsFaithful.no);
     runMultiThreaded!(SieveCT!PRIME_COUNT)(No.faithful); // Same thing as IsFaithful.no
+
     runSingleThreaded!SieveRT(IsFaithful.yes);
     runMultiThreaded!SieveRT(Yes.faithful);
-    runSingleThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no);
-    runMultiThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no);
+
+    runSingleThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no & IsFaithful.no & IsFaithful.no, "pregenerated", 0);
+    runMultiThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no, "pregenerated", 0);
+
+    runSingleThreaded!(SieveRT_LookupTable!PRIME_COUNT)(IsFaithful.no, "lookup", 1);
+    runMultiThreaded!(SieveRT_LookupTable!PRIME_COUNT)(IsFaithful.no, "lookup", 1);
+
+    runSingleThreaded!SieveRT_8(IsFaithful.yes, "base", 8);
+    runMultiThreaded!SieveRT_8(IsFaithful.yes, "base", 8);
 }
 
 // Here we're asking for an alias to another symbol, so we can pass in either of the sieve types.
-void runSingleThreaded(alias SieveType)(IsFaithful faithful)
+void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = "base", uint bits = 1)
 {
     import std.conv               : to;
     import std.datetime.stopwatch : StopWatch, AutoStart;
+    import std.format             : format;
 
     auto passes = 1u;
     auto timer = StopWatch(AutoStart.yes);
@@ -416,12 +504,12 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful)
         // (We could also just add a dummy ctor in `SieveCT`, but that's booooring)
         // (We also could've made a function specifically for constructing the sieves, but
         //  then I couldn't show off D as much!)
-        // (Also, since SieveCTRT was added a bit later I didn't account for it in this code.
-        //  So it actually manages to be matched as both the RT and CT versions at different points
-        //  so my solution was to just give it both types of constructors instead of complicating things further)
+        // (Also, since the other sieves were added a bit later I didn't account for them in this code.
+        //  So they actually manage to be matched as both the RT and CT versions at different points
+        //  so my solution was to just give them both types of constructors instead of complicating things further)
 
         // #1: Using the `is()` expression on a concrete type.
-        static if(is(SieveType == SieveRT))
+        static if(is(SieveType == SieveRT) || is(SieveType == SieveRT_8))
             scope sieve = new SieveType(PRIME_COUNT);
         else
             scope sieve = new SieveType();
@@ -448,7 +536,7 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful)
     s.runSieve();
     s.printResults(
         "BradleyChatha-Single-"~SieveClassName, 
-        "algorithm=base,bits=1,faithful="~(faithful.to!string), // Flag.to!string -> "yes" or "no". 
+        "algorithm=%s,bits=%s,faithful=%s".format(algorithm, bits, faithful), // Flag.to!string -> "yes" or "no". 
         1, 
         false, 
         elapsedTime, 
@@ -456,11 +544,12 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful)
     );
 }
 
-void runMultiThreaded(alias SieveType)(IsFaithful faithful)
+void runMultiThreaded(alias SieveType)(IsFaithful faithful, string algorithm = "base", uint bits = 1)
 {
     import core.atomic            : atomicOp;
     import std.conv               : to;
     import std.datetime.stopwatch : StopWatch, AutoStart;
+    import std.format             : format;
     import std.range              : iota;
     import std.parallelism        : totalCPUs, parallel;
 
@@ -498,7 +587,7 @@ void runMultiThreaded(alias SieveType)(IsFaithful faithful)
     s.runSieve();
     s.printResults(
         "BradleyChatha-Multi-"~__traits(identifier, SieveType), 
-        "algorithm=base,bits=1,faithful="~(faithful.to!string), 
+        "algorithm=%s,bits=%s,faithful=%s".format(algorithm, bits, faithful),
         totalCPUs, 
         false, 
         elapsedTime, 
