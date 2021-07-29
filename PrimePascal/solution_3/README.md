@@ -23,9 +23,16 @@ fpc PrimePas.pas -O2 -v0
 PrimePas
 ```
 
-### Command line options when running the PrimePas program
+### Command line options when running the PrimePas program.
+All parameters are optional.
 ````
-PrimePas -d<Duration> -t<Threads count> -s<Sieve size>
+PrimePas [-d<Duration>] [-t<Threads count>] [-s<Sieve size>] [-l] [-v]
+
+-d: provides the ability to specify the duration
+-t: provides the ability to specify the number of threads
+-s: provides the ability to specify the sieve size
+-l: lists all found prime numbers when the latest thread is destroyed
+-v: displays validation results such as "Passes: 19794, Theads: 8, Time: 5.016000 s, Avg: 0.253410 ms, Limit: 1000000, Counts: 78498/78498, Valid: true"
 
 Default values are:
 
@@ -39,41 +46,48 @@ A Dockerfile has been provided.
 
 ## Output
 ### Result obtained on a Intel Core i7-7700HQ on Windows 10 (version 20H2 build 19042.1110)  
-8 threads: PrimePas
+8 threads: PrimePas -v
 ```
-passes: 18659, Time: 5.02 s, Avg: 0.268825 ms, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-olivierbrun;18659;5.02;8;algorithm=base,faithful=yes,bits=1
+Passes: 19794, Theads: 8, Time: 5.016000 s, Avg: 0.253410 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;19794;5.016000;8;algorithm=base,faithful=yes,bits=1
 ```
-16 threads: PrimePas -t16
+16 threads: PrimePas -t16 -v
 ```
-passes: 19469, Time: 5.02 s, Avg: 0.257589 ms, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-olivierbrun;19469;5.02;16;algorithm=base,faithful=yes,bits=1
+Passes: 20819, Theads: 16, Time: 5.016000 s, Avg: 0.240934 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;20819;5.016000;16;algorithm=base,faithful=yes,bits=1
 ```
-32 threads: PrimePas -t32
+32 threads: PrimePas -t32 -v
 ```
-passes: 20255, Time: 5.09 s, Avg: 0.251444 ms, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-olivierbrun;20255;5.09;32;algorithm=base,faithful=yes,bits=1
+Passes: 21296, Theads: 32, Time: 5.000000 s, Avg: 0.234786 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;21296;5.000000;32;algorithm=base,faithful=yes,bits=1
 ```
-64 threads: PrimePas -t64
+64 threads: PrimePas -t64 -v
 ```
-passes: 20617, Time: 5.09 s, Avg: 0.247078 ms, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-olivierbrun;20617;5.09;64;algorithm=base,faithful=yes,bits=1
+Passes: 22372, Theads: 64, Time: 5.203000 s, Avg: 0.232567 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;22372;5.203000;64;algorithm=base,faithful=yes,bits=1
 ```
 
 ### Result obtained on a Raspberry PI4 running Raspberry PI OS 64 bits (5.10.17-v8+) 
-4 threads: ./PrimePas
+4 threads: ./PrimePas -v
 ```
-passes: 5143, Time: 5.00 s, Avg: 0.972779 ms, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-olivierbrun;5143;5.00;4;algorithm=base,faithful=yes,bits=1
+Passes: 5197, Theads: 4, Time: 5.001000 s, Avg: 0.962286 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;5197;5.001000;4;algorithm=base,faithful=yes,bits=1
 ```
-8 threads: ./PrimePas -t8
+8 threads: ./PrimePas -t8 -v
 ```
-passes: 5850, Time: 5.01 s, Avg: 0.856239 ms, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-olivierbrun;5850;5.01;8;algorithm=base,faithful=yes,bits=1
+Passes: 5887, Theads: 8, Time: 5.007000 s, Avg: 0.850518 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;5887;5.007000;8;algorithm=base,faithful=yes,bits=1
 ```
-16 threads: ./PrimePas -t16
+16 threads: ./PrimePas -t16 -v
 ```
-passes: 6058, Time: 5.02 s, Avg: 0.828986 ms, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-olivierbrun;6058;5.02;16;algorithm=base,faithful=yes,bits=1
+Passes: 6077, Theads: 16, Time: 5.008000 s, Avg: 0.824091 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;6077;5.008000;16;algorithm=base,faithful=yes,bits=1
 ```
 
