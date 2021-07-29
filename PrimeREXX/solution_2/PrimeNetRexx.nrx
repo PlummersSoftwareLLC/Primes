@@ -3,30 +3,6 @@
 ** program parameter (sieveSize). The default sieveSize is 1,000,000
 */
 
-class Eratosthenes private
-properties private
-	sieveSize
-	sqRt = int
-properties public
-	primes = Rexx[]
-
-method Eratosthenes(lclSieveSize = int, lclSqRt = int)
-	sieveSize = lclSieveSize
-	primes = Rexx[sieveSize+1]
-	sqRt = lclSqRt
-
-method Sieve()
-	loop i = 3 to sqRt by 2
-		if primes[i] = NULL then
-			do
-				incr = i + i; strt = i * i
-				loop j = strt to sieveSize by incr
-					primes[j] = 0
-				end
-			end
-	end
-return
-
 class PrimeNetRexx public uses RexxTime
 properties static public
 	sqRt = int 
@@ -166,3 +142,28 @@ method Format(num) static
 	l3			= (3 - (l//3)) // 3
 	i			= num.right(l+l3)
 	return temp1.translate(i,temp2).space(0).strip("T",",")
+
+class Eratosthenes private
+properties private
+	sieveSize
+	sqRt = int
+properties public
+	primes = Rexx[]
+
+method Eratosthenes(lclSieveSize = int, lclSqRt = int)
+	sieveSize = lclSieveSize
+	primes = Rexx[sieveSize+1]
+	sqRt = lclSqRt
+
+method Sieve()
+	loop i = 3 to sqRt by 2
+		if primes[i] = NULL then
+			do
+				incr = i + i; strt = i * i
+				loop j = strt to sieveSize by incr
+					primes[j] = 0
+				end
+			end
+	end
+return
+
