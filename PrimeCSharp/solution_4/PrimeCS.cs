@@ -10,7 +10,6 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.X86;
 
 namespace PrimeSieveCS
 {
@@ -136,7 +135,7 @@ namespace PrimeSieveCS
         static void Main(string[] args)
         {
             //setup
-            const int sievesize = 1000000;
+            const int sievesize = 100000000;
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
             //warmup 
