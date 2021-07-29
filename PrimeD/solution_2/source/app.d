@@ -55,7 +55,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
     // compile-time things D can do.
     //
     // Since this function is only ever called after all data mutations are done, it seems appropriate to state that it's `pure`.
-    private bool validateResults() nothrow pure
+    private bool validateResults() nothrow pure inout // "inout" means, in a nutshell, "can be run from either a mutable or const or immutable reference".
     {
         // We can embed structs directly into functions.
         // By marking it 'static' we're saying that it doesn't need access to the function context.
@@ -162,7 +162,7 @@ mixin template CommonSieveFunctions()
         bool showResults,
         Duration duration,
         size_t passes
-    ) @trusted // `stderr` is unsafe apparently
+    ) @trusted inout // `stderr` is unsafe apparently
     {
         import std.array  : Appender;
         import std.conv   : to;
@@ -217,7 +217,7 @@ mixin template CommonSieveFunctions()
         );
     }
 
-    private bool getBit(size_t index) @nogc nothrow
+    private bool getBit(size_t index) @nogc nothrow inout
     {
         // Fairly standard bitty stuff.
         assert(index % 2 == 1, "Index is even?");
@@ -229,7 +229,7 @@ mixin template CommonSieveFunctions()
         this._bits[index / 8] &= ~(1 << (index % 8));
     }
 
-    private size_t countPrimes() nothrow
+    private size_t countPrimes() nothrow inout
     {
         import std.algorithm : map, sum;
         import std.range     : iota;
@@ -270,7 +270,7 @@ final class SieveRT
     // In D, we use `this` as the name of constructors. Makes sense really.
     this(size_t sieveSize)
     {
-        this._bits.length = alignTo!8(sieveSize) / 8;
+        this._bits.length = alignTo!8(sieveSize/2) / 8;
         this._bits[] = ubyte.max;
         this._sieveSize = sieveSize;
     }
@@ -287,7 +287,7 @@ final class SieveRT
     @PrimePair(10_000, 1229)
     @PrimePair(1_000,  168)
     @(PrimePair(100, 25), PrimePair(10, 4)) // alternate syntax.
-    private bool validateResults()
+    private bool validateResults() inout
     {
         import std.algorithm : filter, map;
         import std.traits    : getUDAs;
@@ -316,6 +316,63 @@ final class SieveRT
     }
 }
 
+// This is a *super* unfaiathful version which computes the sieve
+// at compile-time. Honestly this is just testing how fast your CPU can do a foreach loop.
+// "but da C++ solution" is my excuse!
+// RTCT = Runtime sieve at Compile Time.
+final class SieveRTCT_Cheatiness(size_t SieveSize)
+{
+    import core.time : Duration;
+
+    // `static` means the variable exists without need of an object in memory (i.e embedded within global memory/the exe)
+    // So if we do something like say, call a function to assign its value, because the compiler
+    // needs to know what the actual value is beforehand, it'll execute this function at compile-time.
+    //
+    // Essentially this is just running the sieve at compile time to pregenerate it.
+    static const Sieve = (){
+        auto sieve = new SieveRT(SieveSize);
+        sieve.runSieve();
+        return sieve;
+    }();
+
+    // Explained further down.
+    this(){}
+    this(size_t){}
+
+    // I wanted to do the below thing, but I think I'm hitting a compiler bug.
+    // enum IsValid = Sieve.validateResults();
+
+    // Well... It's precomputed so we just no-op this.
+    void runSieve()
+    {
+    }
+
+    void printResults(
+        string tag,
+        string attribs,
+        size_t threadCount, 
+        bool showResults,
+        Duration duration,
+        size_t passes
+    ) @trusted // `stderr` is unsafe apparently
+    {
+        Sieve.printResults(tag, attribs, threadCount, showResults, duration, passes);
+    }
+}
+
+final class SieveRTIntrinsic
+{
+    private ubyte[] _bits;
+    private size_t _sieveSize;
+
+    this(size_t sieveSize)
+    {
+        this._bits.length = alignTo!8(sieveSize) / 8;
+        this._bits[] = ubyte.max;
+        this._sieveSize = sieveSize;
+    }
+}
+
 enum PRIME_COUNT = 1_000_000;
 enum MAX_SECONDS = 5;
 
@@ -330,6 +387,8 @@ void main()
     runMultiThreaded!(SieveCT!PRIME_COUNT)(No.faithful); // Same thing as IsFaithful.no
     runSingleThreaded!SieveRT(IsFaithful.yes);
     runMultiThreaded!SieveRT(Yes.faithful);
+    runSingleThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no);
+    runMultiThreaded!(SieveRTCT_Cheatiness!PRIME_COUNT)(IsFaithful.no);
 }
 
 // Here we're asking for an alias to another symbol, so we can pass in either of the sieve types.
@@ -357,6 +416,9 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful)
         // (We could also just add a dummy ctor in `SieveCT`, but that's booooring)
         // (We also could've made a function specifically for constructing the sieves, but
         //  then I couldn't show off D as much!)
+        // (Also, since SieveCTRT was added a bit later I didn't account for it in this code.
+        //  So it actually manages to be matched as both the RT and CT versions at different points
+        //  so my solution was to just give it both types of constructors instead of complicating things further)
 
         // #1: Using the `is()` expression on a concrete type.
         static if(is(SieveType == SieveRT))
