@@ -11,7 +11,7 @@ This is a collection of implementations in Swift, of which:
 2. one is a "naive" implementation that maintains the array of primes in an underlying array of bit-mapped 64-bit unsigned integers
 
 Credits:
-1. jf-1 - Original implementation and primary code arrangement
+1. j-f1 - Original implementation and primary code arrangement
 2. yellowcub - performance improvements, 1-bit implementation for leaderboard
 
 ## Run instructions
