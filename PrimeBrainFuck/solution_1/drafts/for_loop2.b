@@ -14,9 +14,9 @@ out 9   start = multiplier_1 * 3
 set 10  num = 1'000'000 minus start
 set 11  multiplier_2 = factor
 out 12  step = multiplier_2 * 2
-ign 13  
-ign 14  
-ign 15 
+ign 13
+ign 14
+ign 15
 
 cpy 16  num_copy_1 = num
 use 17  check = 1
@@ -93,19 +93,8 @@ copy num to num_copy_1
         >>>> >>+<< <<<< add num_copy_1
     -]<< <<<< <<<< go to 0
 
-.
-
 >>>> >>>> >>>> >>>> go to num_copy_1
 [
-    copy step to step_copy_1 2 3 and 4
-    <<<<[ go to 12
-        >>>> >>>> >+ add step_copy_1
-        >+ add step_copy_2
-        >+ add step_copy_3
-        >+ add step_copy_4
-        <<<< <<<< <<<<
-    -]>>>> go to 0
-
     >+< set check = 1
     >> go to 2
 
@@ -116,27 +105,34 @@ copy num to num_copy_1
         >>>> >[ go to step_copy_2
             <<<< <<+>> >>>> add num_copy_1
         -]< <<<< go to check
-        
+
         <.> print num_copy_1
 
         >>>> >>[ go to step_copy_3
             <<<< <<<->>> >>>> sub num_copy_1
         -]<< <<<< go to check
 
-        . print factor
-        >- sub check
-        > go to step 
-        >>>> >>[ go to step_copy_4
+        - sub check
+        >>>> >>>[ go to step_copy_4
             <<<< <<+>> >>>> add step
-        -]<< <<<<
+        -]<<< <<<< go to check
 
-        >>>[ go to step_copy_1
+        copy step to step_copy_1 2 3 and 4
+            <<<<[ go to 12
+                >>>> >>>> >+ add step_copy_1
+                >+ add step_copy_2
+                >+ add step_copy_3
+                >+ add step_copy_4
+                <<<< <<<< <<<<
+            -]>>>> go to check
+
+        >>>>[ go to step_copy_1
             <<<< <<<< <+> >>>> >>>> add step
-        -]<<<
+        -]<<<< go to check
 
-        > go to first_zero
+        >> go to first_zero
     ]
-    
+
     <- sub step
     <<- sub num_copy_1
 ]
