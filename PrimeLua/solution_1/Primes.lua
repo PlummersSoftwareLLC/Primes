@@ -45,7 +45,7 @@ function getBit(index)
 	if index % 2 == 0 then
 		return false
 	end
-	return bitArray[index/2]
+  return bitArray[math.floor(index / 2)]
 end
 
 function clearBit(index)
@@ -69,7 +69,7 @@ function runSieve()
 		for num = factor, sieveSize do
 			if getBit(num) then
 				factor = num
-				--continue
+        break
 			end
 		end
 
