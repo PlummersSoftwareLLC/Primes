@@ -56,7 +56,7 @@ dub test --compiler=...
 | SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | true | 22689 | base | 1 | false |
 | SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | false | 12998 | lookup | 1 | false |
 | SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | false | 7547 | base | 1 | false |
-
+ 
 
 ## Output
 
