@@ -452,6 +452,63 @@ final class SieveRT_8
     }
 }
 
+// What if we could... say... generate a string at compile time and then use that string as code?
+string generateSieveRT(alias BitType)()
+{
+    import std.format : format;
+
+    // q{} are token strings: Strings that must evaluate to D tokens.
+    return format!q{
+    final class SieveRT_%s
+    {
+        mixin CommonSieveFunctions;
+
+        private %s[] _bits;
+        private size_t _sieveSize;
+        private alias SieveSize = _sieveSize;
+
+        @safe:
+
+        this(size_t sieveSize)
+        {
+            this._bits.length = alignTo!8(sieveSize) / 8;
+            this._bits[] = ubyte.max;
+            this._sieveSize = sieveSize;
+        }
+
+        private bool validateResults() inout
+        {
+            auto sieve = new SieveRT(this._sieveSize);
+            sieve.runSieve();
+            return this.countPrimes() == sieve.countPrimes();
+        }
+    }
+    }(
+        BitType.sizeof * 8,
+        BitType.stringof
+    );
+}
+mixin(generateSieveRT!ushort);
+mixin(generateSieveRT!uint);
+mixin(generateSieveRT!ulong);
+
+// ditto, but for running them!
+// But.. what if we got the format string from an external file first?
+immutable RUN_SIEVE_FORMAT = import("run_sieve.d"); // String import paths are relative to the /views/ folder.
+string generateSieveRTRunner(string Alias, alias BitType)()
+{
+    import std.format : format;
+
+    // Now, I didn't promise maintainable code, but I think I've snuck in the vast majority of D's cooler features.
+    const bits = BitType.sizeof * 8;
+    return format!RUN_SIEVE_FORMAT(
+        Alias, bits,
+        Alias,
+        Alias, bits,
+        Alias, bits
+    );
+}
+
 enum PRIME_COUNT = 1_000_000;
 enum MAX_SECONDS = 5;
 
@@ -489,11 +546,16 @@ void main()
     runSingleThreaded!s5(IsFaithful.yes, "base", 8);
     runMultiThreaded!(s5, dt)(IsFaithful.yes, "base", 8);
     runMultiThreaded!(s5, st)(IsFaithful.yes, "base", 8);
+
+    mixin(generateSieveRTRunner!("s6", ushort));
+    mixin(generateSieveRTRunner!("s7", uint));
+    mixin(generateSieveRTRunner!("s8", ulong));
 }
 
 // Here we're asking for an alias to another symbol, so we can pass in either of the sieve types.
 void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = "base", uint bits = 1)
 {
+    import std.algorithm          : canFind;
     import std.conv               : to;
     import std.datetime.stopwatch : StopWatch, AutoStart;
     import std.format             : format;
@@ -522,7 +584,11 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = 
         //  so my solution was to just give them both types of constructors instead of complicating things further)
 
         // #1: Using the `is()` expression on a concrete type.
-        static if(is(SieveType == SieveRT) || is(SieveType == SieveRT_8))
+        // #5: We can also execute some code to make it even more generic.
+        static if(
+            /*#1*/ is(SieveType == SieveRT) || is(SieveType == SieveRT_8)
+            /*#5*/ || __traits(identifier, SieveType).canFind("RT")
+        )
             scope sieve = new SieveType(PRIME_COUNT);
         else
             scope sieve = new SieveType();
