@@ -2,7 +2,7 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Algorithm](https://img.shields.io/badge/Algorithm-lookup-yellowgreen)
-![Algorithm](https://img.shields.io/badge/Algorithm-pregenerated-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
@@ -64,9 +64,9 @@ dub test --compiler=...
 | SieveRT_16 | None given for this solution. | single | 5647 | base | 1 | true |
 | SieveRT_32 | None given for this solution. | single | 4642 | base | 1 | true |
 | SieveRT_64 | None given for this solution. | single | 3985 | base | 1 | true |
-| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | staticThreads | 322972998 | pregenerated | 0 | false |
-| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | single | 94483313 | pregenerated | 0 | false |
-| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | dynamicThreads | 4619129 | pregenerated | 0 | false |
+| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | staticThreads | 322972998 | other | 0 | false |
+| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | single | 94483313 | other | 0 | false |
+| SieveRTCT_Cheatiness | Sieve that is fully generated at compile-time, which is kind of cheating. | dynamicThreads | 4619129 | other | 0 | false |
 | SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | staticThreads | 46699 | lookup | 1 | false |
 | SieveRT_LookupTable | Sieve that uses a compile-time generated lookup table. | dynamicThreads | 29029 | lookup | 1 | false |
 | SieveCT | Sieve where some storage is statically allocated, and some calcs are compile-time evaluated. | staticThreads | 27653 | base | 1 | false |
@@ -112,9 +112,9 @@ stdout:
     BradleyChatha-Single-SieveRT;7001;5.00046;1;algorithm=base,bits=1,faithful=yes
     BradleyChatha-MultidynamicThreads-SieveRT;13389;5.00167;4;algorithm=base,bits=1,faithful=yes
     BradleyChatha-MultistaticThreads-SieveRT;24760;5.00058;4;algorithm=base,bits=1,faithful=yes
-    BradleyChatha-Single-SieveRTCT_Cheatiness;94483313;5;1;algorithm=pregenerated,bits=0,faithful=no
-    BradleyChatha-MultidynamicThreads-SieveRTCT_Cheatiness;4619129;5;4;algorithm=pregenerated,bits=0,faithful=no
-    BradleyChatha-MultistaticThreads-SieveRTCT_Cheatiness;322972998;5.00003;4;algorithm=pregenerated,bits=0,faithful=no
+    BradleyChatha-Single-SieveRTCT_Cheatiness;94483313;5;1;algorithm=other,bits=0,faithful=no
+    BradleyChatha-MultidynamicThreads-SieveRTCT_Cheatiness;4619129;5;4;algorithm=other,bits=0,faithful=no
+    BradleyChatha-MultistaticThreads-SieveRTCT_Cheatiness;322972998;5.00003;4;algorithm=other,bits=0,faithful=no
     BradleyChatha-Single-SieveRT_LookupTable;12235;5.00003;1;algorithm=lookup,bits=1,faithful=no
     BradleyChatha-MultidynamicThreads-SieveRT_LookupTable;29029;5.00039;4;algorithm=lookup,bits=1,faithful=no
     BradleyChatha-MultistaticThreads-SieveRT_LookupTable;46699;5.00019;4;algorithm=lookup,bits=1,faithful=no

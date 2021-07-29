@@ -517,39 +517,78 @@ import std.typecons : Flag, Yes, No;
 // Create a type-safe boolean. `Yes.faithful`, `No.faithful`, `IsFaithful.yes`, `IsFaithful.no`, can all be used.
 alias IsFaithful = Flag!"faithful";
 
-void main()
+void main(string[] args)
 {
+    import std.getopt;
+
+    enum Mode
+    {
+        all = 100,
+        leaderboard = 10,
+    }
+
+    Mode mode;
+
+    auto result = getopt(args,
+        config.required, "mode|m", "all,leaderboard", &mode,
+    );
+
+    if(result.helpWanted)
+    {
+        defaultGetoptPrinter("", result.options);
+        return;
+    }
+
     alias dt = MultithreadMode.dynamicThreads;
     alias st = MultithreadMode.staticThreads;
 
-    alias s1 = SieveCT!PRIME_COUNT;
-    runSingleThreaded!s1(IsFaithful.no);
-    runMultiThreaded!(s1, dt)(No.faithful); // Same thing as IsFaithful.no
-    runMultiThreaded!(s1, st)(No.faithful);
+    final switch(mode) with(Mode)
+    {
+        case leaderboard:
+            alias s1 = SieveCT!PRIME_COUNT;
+            runSingleThreaded!s1(IsFaithful.no);
+            runMultiThreaded!(s1, st)(No.faithful);
 
-    alias s2 = SieveRT;
-    runSingleThreaded!s2(IsFaithful.yes);
-    runMultiThreaded!(s2, dt)(Yes.faithful);
-    runMultiThreaded!(s2, st)(Yes.faithful);
+            alias s2 = SieveRT;
+            runSingleThreaded!s2(IsFaithful.yes);
+            runMultiThreaded!(s2, st)(Yes.faithful);
 
-    alias s3 = SieveRTCT_Cheatiness!PRIME_COUNT;
-    runSingleThreaded!s3(IsFaithful.no & IsFaithful.no & IsFaithful.no, "pregenerated", 0);
-    runMultiThreaded!(s3, dt)(IsFaithful.no, "pregenerated", 0);
-    runMultiThreaded!(s3, st)(IsFaithful.no, "pregenerated", 0);
+            alias s3 = SieveRT_8;
+            runSingleThreaded!s3(IsFaithful.yes, "base", 8);
+            runMultiThreaded!(s3, st)(IsFaithful.yes, "base", 8);
+            break;
 
-    alias s4 = SieveRT_LookupTable!PRIME_COUNT;
-    runSingleThreaded!s4(IsFaithful.no, "lookup", 1);
-    runMultiThreaded!(s4, dt)(IsFaithful.no, "lookup", 1);
-    runMultiThreaded!(s4, st)(IsFaithful.no, "lookup", 1);
+        case all:
+            alias s1 = SieveCT!PRIME_COUNT;
+            runSingleThreaded!s1(IsFaithful.no);
+            runMultiThreaded!(s1, st)(No.faithful);
+            runMultiThreaded!(s1, dt)(No.faithful); // Same thing as IsFaithful.no
 
-    alias s5 = SieveRT_8;
-    runSingleThreaded!s5(IsFaithful.yes, "base", 8);
-    runMultiThreaded!(s5, dt)(IsFaithful.yes, "base", 8);
-    runMultiThreaded!(s5, st)(IsFaithful.yes, "base", 8);
+            alias s2 = SieveRT;
+            runSingleThreaded!s2(IsFaithful.yes);
+            runMultiThreaded!(s2, st)(Yes.faithful);
+            runMultiThreaded!(s2, dt)(Yes.faithful);
 
-    mixin(generateSieveRTRunner!("s6", ushort));
-    mixin(generateSieveRTRunner!("s7", uint));
-    mixin(generateSieveRTRunner!("s8", ulong));
+            alias s3 = SieveRTCT_Cheatiness!PRIME_COUNT;
+            runSingleThreaded!s3(IsFaithful.no & IsFaithful.no & IsFaithful.no, "other", 0);
+            runMultiThreaded!(s3, st)(IsFaithful.no, "other", 0);
+            runMultiThreaded!(s3, dt)(IsFaithful.no, "other", 0);
+
+            alias s4 = SieveRT_LookupTable!PRIME_COUNT;
+            runSingleThreaded!s4(IsFaithful.no, "lookup", 1);
+            runMultiThreaded!(s4, dt)(IsFaithful.no, "lookup", 1);
+            runMultiThreaded!(s4, st)(IsFaithful.no, "lookup", 1);
+
+            alias s5 = SieveRT_8;
+            runSingleThreaded!s5(IsFaithful.yes, "base", 8);
+            runMultiThreaded!(s5, dt)(IsFaithful.yes, "base", 8);
+            runMultiThreaded!(s5, st)(IsFaithful.yes, "base", 8);
+
+            mixin(generateSieveRTRunner!("s6", ushort));
+            mixin(generateSieveRTRunner!("s7", uint));
+            mixin(generateSieveRTRunner!("s8", ulong));
+            break;
+    }
 }
 
 // Here we're asking for an alias to another symbol, so we can pass in either of the sieve types.
