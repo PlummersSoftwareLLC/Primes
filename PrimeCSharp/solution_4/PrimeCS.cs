@@ -139,7 +139,7 @@ namespace PrimeSieveCS
             var wStart = DateTime.UtcNow;
             while ((DateTime.UtcNow - wStart).TotalSeconds < 3)
                 new prime_sieve(sievesize).runSieve();
-                
+            GC.Collect();
 
             //running the dragrace
             var tStart = DateTime.UtcNow;
