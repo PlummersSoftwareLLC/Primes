@@ -24,9 +24,9 @@ use 17  check = 1
 set 18  step = 0
 use 19  first_zero = 0
 use 20  last_zero = 0
-ign 21
-ign 22
-ign 23
+use 21  num_offset = 0
+cpy 22  num_offset_copy_1 = num_offset
+cpy 23  num_offset_copy_2 = num_offset
 
 ign 24
 ign 25
@@ -46,7 +46,8 @@ set factor = 999
     [>++ ++ ++ ++ ++<-]
     >[>++ ++ ++ ++ ++<-]
     >[<<+>>-]
-    <<-
+    <<---
+>>>> >>>> >>>> >>>> >>>> >+< <<<< <<<< <<<< <<<< <<<<
 
 set num = 1'000'000
     >>>> >>>> >> go to num
@@ -118,15 +119,33 @@ copy num to num_copy_1
                   >>+ add num_copy_1
                   <<<< <<< go to start
             -]>>>> >>>> go to check
-
         copy start_copy_1 to start
             <<<<[ go to start_copy_1
                 <<<<+>>>> add start
             -]>>>> go to check
 
+        copy num_offset to num_offset_copy_1 and 2
+        sub num_offset * (8) from num_copy_1
+            >>>>[ go to num_offset
+                <<<< <---- ----> >>>> sub (8) from num_copy_1
+                >+ add num_offset_copy_1
+                >+ add num_offset_copy_2
+                << go to num_offsets
+            -]<<<< go to check
+
+        copy num_offset_copy_1 to num_offset
+            >>>> >[ go to num_offset_copy_1
+                <+> add num_offset
+            -]< <<<< go to check
+
         <-.+> print num_copy_1
 
-        sub start_copy_2 to num_copy_1
+        add num_offset_copy_2 * (8) to num_copy_1
+            >>>> >>[ go to num_offset_copy
+                <<<< <<<++++ ++++>>> >>>> add (8) to num_copy_1
+            -]<< <<<< go to check
+
+        sub start_copy_2 from num_copy_1
             <<<[ go to start_copy_2
                 >>-<< add num_copy_1
             -]>>> go to check
@@ -150,3 +169,13 @@ copy num to num_copy_1
     <- sub step
     <<- sub num_copy_1
 ]
+
+>>>> >+< <<<< add num_offset
+
+clear memory
+    [-] set factor = 0
+    >[-] set check = 0
+    >[-] set step = 0
+    <<<< <<[-] set step = 0
+    <<<[-] set start = 0
+<<<< <<<< < go to 0
