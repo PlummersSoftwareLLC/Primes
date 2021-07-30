@@ -20,10 +20,7 @@ const DICT = {
 }.toTable()
 const RESULT = DICT[LIMIT]
 
-const CPUL1CACHE {.intdefine.} = 16384 # in bytes
-
 const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
-const CBITMASK = [ 0xFE'u8, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F ]
 
 # Nim does not have a bit array slice stepping by a value so
 # this implements it using a macro; works like Python arr{start:step:limit}
@@ -106,11 +103,6 @@ func newBitSeq(size: int): BitSeq =
 func `[]`(bitseq: BitSeq; i: int): bool {.inline.} =
   (bitseq.buffer[i shr 3] and BITMASK[i and 7]) != 0'u8
 
-func `[]=`(bitseq: BitSeq; i: int; v: bool) {.inline.} =
-  let w = i shr 3
-  if v: bitseq.buffer[w] = bitseq.buffer[w] or BITMASK[i and 7]
-  else: bitseq.buffer[w] = bitseq.buffer[w] and CBITMASK[i and 7]
-
 func `[]`(bitseq: BitSeq; startstop: HSlice[int, int];
           step: int = 1): iterator: bool {.closure.} {.inline.} =
   assert step <= 0 or startstop.b < startstop.a,
@@ -120,18 +112,18 @@ func `[]`(bitseq: BitSeq; startstop: HSlice[int, int];
       yield (bitseq.buffer[i shr 3] and BITMASK[i and 7]) != 0
 
 # sets a range of the BitSeq by step size to true and returns the next index...
-func setRange(bitseq: BitSeq; start, stop: int; step: int = 1): int =
+func setRange(bitseq: BitSeq; start, stop: int; step: int = 1) =
   assert step <= 0 or stop < start or stop > bitseq.size,
          "Error:  illegal slice limits or step size!!!"
   let bitbufa = cast[int](bitseq.buffer[0].addr)
-  result = start
+  var ndx = start
   let sz = min(bitseq.buffer.len, (stop + 8) shr 3) # round up
   if start <= sz * 8 - 16 * step: # enough loops to be worth the setup
-    unrollLoops(bitbufa, sz, result, step)
-  while result <= stop:
-    let cp = cast[ptr byte](bitbufa + (result shr 3))
-    cp[] = cp[] or (1'u8 shl (result and 7)) # BITMASK[result and 7]
-    result += step
+    unrollLoops(bitbufa, sz, ndx, step)
+  while ndx <= stop:
+    let cp = cast[ptr byte](bitbufa + (ndx shr 3))
+    cp[] = cp[] or (1'u8 shl (ndx and 7)) # BITMASK[result and 7]
+    ndx += step
 
 func countTrues(bitseq: BitSeq): int =
   let bsp = cast[ptr UncheckedArray[uint64]](bitseq.buffer[0].addr)
@@ -150,48 +142,16 @@ func newPrimeSieve(lmt: Prime): PrimeSieve = # seq size rounded up to uint64
   doAssert (lmt <= 1.Prime shl 34), "Specified limit is too large!!!"
   if lmt < 3: return PrimeSieve(limit: if lmt < 2: 0 else: 2,
                                 sieveBuffer: newBitSeq(0))
-  result = PrimeSieve(limit: lmt,
-                      sievebuffer: newBitSeq(((lmt - 3.Prime) shr 1).int + 1))
+  let bitlmt = ((lmt - 3.Prime) shr 1).int # ; let bufsz = (bitlmt + 8) shr 3
+  result = PrimeSieve(limit: lmt, sievebuffer: newBitSeq(bitlmt + 1))
 
   # include the sieving of the sieveBuffer in the initialization of PrimeSieve
-  let cmpsts = newBitSeq(CPUL1CACHE * 8)
-  let cmpstsp = cast[ptr UncheckedArray[byte]](cmpsts.buffer[0].addr)
   let sqrtndx = (lmt.float64.sqrt.int - 3) div 2
-  let sqrtsqrtndx = (lmt.float64.sqrt.sqrt.int - 3) div 2
-  let bitlmt = ((lmt - 3.Prime) shr 1).int; let bufsz = (bitlmt + 8) shr 3
 
-  var numbps = 0 # first just cull the base primes and count them...
-  for i in 0 .. sqrtsqrtndx:
-    if not cmpsts[i]: # for base prime
-      numbps.inc
-      let bp = i + i + 3; let strtndx = (bp * bp - 3) shr 1
-      for c in countup(strtndx, sqrtndx, bp): cmpsts[c] = true
-  for i in sqrtsqrtndx + 1 .. sqrtndx:
-    if not cmpsts[i]: numbps.inc
-
-  # then fill arrays of base primes/start indexes...
-  var basePrimes = newSeq[int](numbps)
-  var startIndices = newSeq[int](numbps); var j = 0
   for i in 0 .. sqrtndx:
-    if not cmpsts[i]: # for base prime
-      let bp = i + i + 3; let strtndx = (bp * bp - 3) shr 1
-      basePrimes[j] = bp
-      startIndices[j] = strtndx and ((CPUL1CACHE shl 3) - 1); j.inc
-
-  # finally, cull by CPU L1 cache sizes...
-  for pgbs in countup(0, bufsz - 1, CPUL1CACHE):
-    let cullSize = min(CPUL1CACHE, bufsz - pgbs); zeroMem(cmpstsp, cullSize)
-    let cullIndexLimit = min(bitlmt - pgbs * 8, CPUL1CACHE * 8 - 1)
-    let pageLimit = (pgbs + CPUL1CACHE) shl 3
-    for i, basePrime in basePrimes.pairs: # then cull by cache pages...
-      if ((basePrime * basePrime - 3) shr 1) >= pageLimit: break
-      var cullIndex = startIndices[i]
-      let nextCullIndex = cmpsts.setRange(cullIndex, cullIndexLimit, basePrime)
-      # store next index for next cache page...
-      startIndices[i] = nextCullIndex - CPUL1CACHE * 8
-    # moving each sieved cache size into the final result...
-    copyMem(result.sieveBuffer.buffer[pgbs].addr,
-            cmpsts.buffer[0].addr, cullSize)
+    if not result.sieveBuffer[i]: # for base prime
+      let basePrime = i + i + 3; let cullIndex = (basePrime * basePrime - 3) shr 1
+      result.sieveBuffer.setRange(cullIndex, bitlmt, step = basePrime)
 
 method primes(this: PrimeSieve): iterator: Prime {.closure.} {.base.} =
   return iterator: Prime {.closure.} =
