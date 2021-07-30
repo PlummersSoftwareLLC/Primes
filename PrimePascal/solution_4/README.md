@@ -13,7 +13,7 @@ The mechanism significantly improves the solution I proposed in solution 3:
 - performance is significantly better on linux machines (about 33% in average) than with solution 3
 - this solution is using an array of uint32 to store the bits (instead of a bitpacked array as proposed in solution 3, which was limiting the sieve size to 2^32 - 1), each bit is used for odd numbers only, which reduces the memory footpring by 2
 
-I've inlined the GetBit and ClearBits functions, providing some boost during the execution.
+I've inlined the GetBit and ClearBits functions, providing some boost during the execution.  
 I've also noticed that using GetMem to allocate memory on the heap for the bits array, provides better performances than using a setlength instruction.
 
 ## Run instructions
