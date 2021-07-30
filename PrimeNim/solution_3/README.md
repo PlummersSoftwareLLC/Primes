@@ -12,7 +12,7 @@
 Nim is available via package managers under the popular systems. The following command should get you started:
 
 ```
-nim c --gc:arc -d:danger -d:danger -t:"-march=native" -d:lto -r primes.nim
+nim c --gc:arc -d:danger -t:"-march=native" -d:lto -r primes.nim
 ```
 
 ### Docker
@@ -24,7 +24,7 @@ docker build -t primes .
 docker run --rm primes
 ```
 
-Uses the official Alpine images.
+Uses the official Ubuntu images.
 
 ## Benchmarks
 
@@ -32,7 +32,7 @@ This version runs about the same speed run either on the Docker image or locally
 
 ## Output
 ```
-GordonBGood_1of2;19183;5.000058949;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_1of2;18223;5.000027703;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Benchmarks
@@ -40,11 +40,11 @@ GordonBGood_1of2;19183;5.000058949;1;algorithm=base,faithful=yes,bits=1
 Running locally on my Intel SkyLake i5-6500 at 3.6 GHz when single threaded, I get some astounding numbers:
 
 ```
-Passes: 20449, Time: 5.000211346, Avg: 0.0002445210692943421, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 20476, Time: 5.000030604, Avg: 0.0002441898126587224, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 20464, Time: 5.00012255, Avg: 0.0002443374975566849, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 20478, Time: 5.000101811, Avg: 0.0002441694409121985, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 20494, Time: 5.000095961, Avg: 0.0002439785283985557, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 18206, Time: 5.000073695, Avg: 0.0002746387836427551, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 18032, Time: 5.000169903, Avg: 0.0002772942492790594, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 18188, Time: 5.000128758, Avg: 0.0002749136110622388, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 18168, Time: 5.000089205, Avg: 0.0002752140689674152, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 18223, Time: 5.000027703, Avg: 0.0002743800528453053, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 ```
 Which matches the results when run with Docker on the same machine as follows:
 
@@ -53,7 +53,7 @@ Which matches the results when run with Docker on the same machine as follows:
 ┌───────┬────────────────┬──────────┬──────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label            │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼──────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-│   1   │ PrimeNim       │ 3        │ GordonBGood_1of2 │ 20317  │ 5.00001  │    1    │   base    │   yes    │ 1    │  4063.39378   │
+│   1   │ PrimeNim       │ 3        │ GordonBGood_1of2 │ 18023  │ 5.00008  │    1    │   base    │   yes    │ 1    │  3604.54114   │
 └───────┴────────────────┴──────────┴──────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
 
@@ -65,21 +65,17 @@ This benchmark is written to be true to the "faithful to base algorithm" specifi
 2. The output array contains at least one bit for each odd number in the sieved range as per the required algorithm.
 3. The program marks as composite all odd composite representative bits that represent multiples of the odd base primes.
 4. This implementation starts looking for base primes at three and scans only odd value indices up to the square root of the limit for prime base numbers as is allowed.
-5. The base primes and the square of each base prime starting index is determined in a first pass with the results stored in intermediate arrays, followed by the culling operations starting at the square of each base prime as is also allowed.
+5. There is an outer loop that scans for instances of odd base prime values from three up to the index representing the square root of the limit, and with the body of this outer loop then marking all multiples of the found base prime value starting at the index representing the square of that base prime for all the multiples in the delivered sieving array as is also allowed.
 6. The sieving buffer starts in zeroed state with composite number bit representatives marked as one when culled as is allowed.
-7. The composite culling by multiples of the base primes in sequence is the last phase of the sieving operation, which is an allowed option.
-8. There are approximately 810,000 culling/marking of composite representations just as for the original odds-only algorithm.
-9. Something that differs from other common implementations is that the culling is done by CPU L1 cache sized pages at a time, with the resulting sieved pages copied into the deliverable array; this is a minor optimization that doesn't seem to conflict with the base specification.
+7. There are approximately 810,000 culling/marking of composite representations just as for the original odds-only algorithm.
 
-There are minor tweaks, but the major reason that this implementation is so much faster than others, which optimization is made effective by culling within one CPU L1 cache buffer at a time to avoid "cache thrashing", is "Extreme Loop Unrolling" using a Nim macro to generate the almost two thousand lines of code based on modulo patterns that result from stepping within a byte array with an even number of bits per byte.  This technique is similar to the "striping" technique used by the fastest "faithful to base algorithm" Rust implementation which culls by eight simpler-than-"bit-twiddling"-per-bit constant mask value loops per base prime, but this implementation instead combines those eight "striping" loops into a single loop with eight culling operations per loop, with the macro calculating the necessary variations as to the immediate bit mask to be used for each cull in each of the patterns.  Thus, it is similar to the techniques that have already been accepted, just refined to the utmost.
+There are minor tweaks, but the major reason that this implementation is so much faster than others, is "Extreme Loop Unrolling" using a Nim macro to generate the thousands of lines of code based on modulo patterns that result from stepping within a (even bits) byte array.  This technique is similar to the "striping" technique used by the fastest "faithful to base algorithm" Rust implementation which culls by eight simpler-than-"bit-twiddling"-per-bit constant mask value loops per base prime, but this implementation instead combines those eight "striping" loops into a single loop with eight culling operations per loop, with the macro calculating the necessary variations as to the immediate bit mask to be used for each cull in each of the patterns.  Thus, it is similar to the techniques that have already been accepted, just refined to the utmost.
 
-In order to make it obvious that this implementation is "faithful to base", the `bitSeq  bit array has been implemented as a custom type with all memory access operations done through custom functions/methods/operators.
+In order to make it obvious that this implementation is "faithful to base", the `bitSeq  bit array has been implemented as a custom type with all memory access operations done through custom functions/methods/operators; in particular the `setRange` function implements a marking starting at an index, to an index, stepping by an index which is a built-in ability in many languages.
 
-This technique, when used with a CPU L1 cache-sized buffer, allows culling operations to take an average of just over one CPU clock cycle per read/modify/write `or` machine instruction used to mark the composites with a modern high-efficiency CPU, but there is about a ten per cent overhead due to the need to copy the sieved partial array into the deliverable array.
+This technique allows culling/marking operations to take an average of about 1.25 CPU clock cycles per read/modify/write `or` machine instruction used to mark the composites with a modern high-efficiency CPU.
 
-As common to all efficient SoE implementations, almost all of the expended time is still spent in the composite number culling loops.
-
-Along with the use of page-segmentation, the technique described above forms the basis of the ability to odds-only single-threaded sieve (as here) to a range of a hundred billion (10^11) in about a minute on a modern CPU, reduced by a factor of about four with "Maximal Wheel Factorization", and yet further reduced by the number of effective "real" (not HT/SMT) threads for "industrial strength" sieving if the algorithm were adapted to multi-threading.  Some modern desktop machines with 16 cores can sieve to this hundred billion range in about a second using these methods.
+As common to all efficient SoE implementations, almost all of the expended time is spent in the composite number culling/marking.
 
 ## Author
 
