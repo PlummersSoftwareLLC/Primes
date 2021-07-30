@@ -9,9 +9,6 @@ struct BooleanBitArray<Word> where Word: FixedWidthInteger {
     init(repeating value: Bool, count arraySize: Int){
         let wordArraySize = (arraySize + (wordSize - 1)) / wordSize
         words = UnsafeMutableBufferPointer<Word>.allocate(capacity: wordArraySize)
-//        var wordRepeatedValue = Word(0)
-//        if value { wordRepeatedValue = Word.max }
-//        words.initialize(repeating: wordRepeatedValue)
         words.initialize(repeating: value ? Word.max : 0)
     }
 
