@@ -48,7 +48,6 @@ type
       procedure RunSieve;
   end;
 
-
 { prime_sieve }
 
 constructor prime_sieve.Create(n: uint64);
