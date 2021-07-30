@@ -57,7 +57,7 @@ typedef struct {
 } SIEVE;
 
 // Search the bit array for the next set bit, which corresponds to the next prime
-unsigned int nextPrime( WORD *buffer, unsigned int lastPrime )
+static inline unsigned int nextPrime( WORD *buffer, unsigned int lastPrime )
 {
     unsigned int const primeCandidate = lastPrime + 2;
 
@@ -79,7 +79,7 @@ unsigned int nextPrime( WORD *buffer, unsigned int lastPrime )
 // remaining bits, so we search for set bits and map from bits to factors.
 // Search from highest possible set bit to lowest in order that we do not remove a
 // factor that we still need to use.
-void sieveOnePrime( WORD *buffer, unsigned int prime, unsigned int maxNumber )
+static inline void sieveOnePrime( WORD *buffer, unsigned int prime, unsigned int maxNumber )
 {
     // Factor to use in eliminating a multiple
     unsigned int const maxFactor = maxNumber / prime;
