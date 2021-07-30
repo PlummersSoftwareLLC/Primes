@@ -3,8 +3,6 @@
 // ---------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -56,14 +54,32 @@ namespace PrimeSieveCS
                 }
             }
 
-            static ulong CreateMarkingMask(uint factor)
+            unsafe static void ClearBitsWithRolMulti(ulong* ptr, uint start, uint factor, uint limit)
             {
-                ulong mask = 0;
-                for (uint i = 0; i < 64; i += factor)
+                ulong rolling_mask = 1UL << (int)(start);
+                uint offset = start % 64;
+                for (uint index = start / 64; index < limit / 64 + 1; index++)
                 {
-                    mask |= 1UL << (int)i;
+                    var ptroffset = ptr + index;
+                    var segment = ptroffset[0];
+                    do
+                    {
+                        segment |= rolling_mask;
+                        rolling_mask = BitOperations.RotateLeft(rolling_mask, (int)factor);
+                        offset += factor;
+                    } while (offset < 64);
+                    ptroffset[0] = segment;
+                    offset -= 64;
                 }
-                return mask;
+            }
+
+            unsafe static void ClearBitsDefault(ulong* ptr, uint start, uint factor, uint limit)
+            {
+                for (uint index = start; index < limit; index += factor)
+                {
+                    var ptrmark = ptr + index / 64;
+                    ptrmark[0] |= 1UL << (int)(index % 64);
+                }
             }
 
             // primeSieve
@@ -85,7 +101,7 @@ namespace PrimeSieveCS
                         // Scan for the next unset bit which means it is a prime factor
                         var segment = ptr[halfFactor / 64];
                         var offset = halfFactor % 64;
-                        segment ^= 0xFFFFFFFFFFFFFFFF; //since we only have access to TrailingZeroCount, we have to flip all the bits
+                        segment = ~segment; //since we only have access to TrailingZeroCount, we have to flip all the bits
                         segment >>= (int)offset;
                         var jump = BitOperations.TrailingZeroCount(segment);
                         if (jump == 64)
@@ -100,33 +116,14 @@ namespace PrimeSieveCS
 
                         if (halfFactor > halfRoot) break;
 
-                        //marking with a mask if we can get enough bits in the ulong, 20 seems to be optimal
-                        if (halfFactor <= 20)
+                        //marking with a rolling mask if we can get enough bits in the ulong, 20 seems to be optimal
+                        if (halfFactor < 20)
                         {
-                            // Mark off all multiples starting with the factor's square up to the square root of the limit
-                            ulong mask = CreateMarkingMask(factor);
-                            var start = (factor * factor) / 2;
-                            var offset2 = start % 64;
-                            var rolbits = factor - (64 % factor);
-                            for (uint index = start / 64; index < halfLimit / 64 + 1; index++)
-                            {
-                                var ormask = mask << (int)offset2;
-                                ptr[index] |= ormask;
-                                offset2 += rolbits;
-                                while(offset2 >= factor)
-                                {
-                                    offset2 -= factor;
-                                }
-                            }
+                            ClearBitsWithRolMulti(ptr, (factor * factor) / 2, factor, halfLimit);
                         }
                         else
                         {
-                            //Mark off all multiples starting with the factor's square up to the square root of the limit
-                            for (uint index = (factor * factor) >> 1; index < halfLimit; index += factor)
-                            {
-                                var ptrmark = ptr + index / 64;
-                                ptrmark[0] |= 1UL << (int)(index % 64);
-                            }
+                            ClearBitsDefault(ptr, (factor * factor) / 2, factor, halfLimit);
                         }
                     }
             }
@@ -139,8 +136,10 @@ namespace PrimeSieveCS
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
             //warmup 
-            for (int i = 0; i < 100; i++)
+            var wStart = DateTime.UtcNow;
+            while ((DateTime.UtcNow - wStart).TotalSeconds < 3)
                 new prime_sieve(sievesize).runSieve();
+                
 
             //running the dragrace
             var tStart = DateTime.UtcNow;
