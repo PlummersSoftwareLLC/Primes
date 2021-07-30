@@ -16,14 +16,14 @@
 (defconstant +results+
   '((         10 . 4        )
     (        100 . 25       )
+    (        127 . 31       )
+    (        128 . 31       )
+    (        129 . 31       )
     (       1000 . 168      )
     (      10000 . 1229     )
     (     100000 . 9592     )
     (    1000000 . 78498    )
-    (   10000000 . 664579   )
-    (  100000000 . 5761455  )
-    ( 1000000000 . 50847534 )
-    (10000000000 . 455052511))
+    (   10000000 . 664579   ))
   "Historical data for validating our results - the number of primes
    to be found under some limit, such as 168 primes under 1000")
 
@@ -33,9 +33,6 @@
 
 (defconstant +MASK+ (1- +bits-per-word+))
 (defconstant +SHIFT+ (- (logcount +MASK+)))
-
-(deftype nonneg-fixnum ()
-  `(integer 0 ,most-positive-fixnum))
 
 (deftype sieve-element-type ()
   `(unsigned-byte ,+bits-per-word+))
@@ -276,14 +273,19 @@
 ))
 
 
-(defstruct sieve-state
-  (maxints -1 :type fixnum :read-only t)
-  (a nil :type simple-array :read-only t))
+(defclass sieve-state ()
+  ((maxints :initarg :maxints
+            :type fixnum
+            :accessor sieve-state-maxints)
+
+   (a       :initarg :a
+            :type simple-array
+            :accessor sieve-state-a)))
 
 
 (defun create-sieve (maxints)
   (declare (fixnum maxints))
-  (make-sieve-state
+  (make-instance 'sieve-state
     :maxints maxints
     :a (make-array
          (1+ (floor (floor maxints +bits-per-word+) 2))
@@ -297,11 +299,9 @@
   (let* ((maxints (sieve-state-maxints sieve-state))
          (maxintsh (ash maxints -1))
          (a (sieve-state-a sieve-state))
-         (q (1+ (isqrt maxints)))
-         
          (factorh (ash 17 -1))
-         (qh (ash q -1)))
-    (declare (fixnum maxints maxintsh q factorh qh)
+         (qh (ash (ceiling (sqrt maxints)) -1)))
+    (declare (fixnum maxints maxintsh factorh qh)
              (type (simple-array sieve-element-type 1) a))
     (do* ((step 1 (if (>= step 5759) 0 (1+ step)))
           (inc (aref steps step) (aref steps step)))
@@ -322,19 +322,20 @@
                 (logior #1# (ash 1 (logand i +MASK+))))
           (incf i (the fixnum (* factor ninc)))))
 
-      (incf factorh inc))))
+      (incf factorh inc)))
+  sieve-state)
 
 
 (defun count-primes (sieve-state)
   (declare (sieve-state sieve-state))
   (let* ((maxints (sieve-state-maxints sieve-state))
          (a (sieve-state-a sieve-state))
-         (ncount 6)
+         (ncount (if (<= maxints 10) 4 6))
          (factor 17)
          (step 1)
          (inc (ash (aref +steps+ step) 1)))
     (declare (fixnum maxints ncount factor inc) (type (simple-array sieve-element-type 1) a))
-    (when *list-to* (princ "2, 3, 5, 7, 11, 13, " *error-output*))
+    (when *list-to* (princ (if (<= maxints 10) "2, 3, 5, 7" "2, 3, 5, 7, 11, 13, ") *error-output*))
     (do () ((> factor maxints))
       (when (zerop (logand (aref a (ash factor (+ -1 +SHIFT+)))
                            (ash 1 (logand (ash factor -1) +MASK+))))
@@ -351,9 +352,22 @@
     ncount))
 
 
+(defun test ()
+  "Run run-sieve on all historical data in +results+, return nil if there is any deviation."
+  (let ((result t))
+    (mapc #'(lambda (tupel)
+              (unless (= (cdr tupel) (count-primes (run-sieve (create-sieve (car tupel)) +steps+)))
+                (format *error-output* "ERROR: ~d produces wrong result~%" (car tupel))
+                (setq result nil)))
+            +results+)
+    result))
+
+
 (defun validate (sieve-state)
+  "Invoke test, and then check if sieve-state is correct
+according to the historical data in +results+."
   (let ((hist (cdr (assoc (sieve-state-maxints sieve-state) +results+ :test #'=))))
-    (if (and hist (= (count-primes sieve-state) hist)) "yes" "no")))
+    (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
 (let* ((passes 0)
@@ -372,4 +386,4 @@
     (format *error-output* "Algorithm: wheel  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
             passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
 
-    (format t "mayerrobert-cl-wheel;~d;~f;1;algorithm=wheel,faithful=no,bits=1~%" passes duration)))
+    (format t "mayerrobert-cl-wheel;~d;~f;1;algorithm=wheel,faithful=yes,bits=1~%" passes duration)))

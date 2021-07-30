@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation in C. The basic calculation is based on [solution_2/sieve_1of2.c](../solution_2/sieve_1of2.c) by Daniel Spångberg. However, this implementation has the segmented optimization built on top of that.
+This is an implementation in C. The basic calculation is based on [solution_2/sieve_1of2.c](../solution_2/sieve_1of2.c) by Daniel Spångberg. However, this implementation has the segmented and L1 cache optimization built on top of that.
 
 ## The segmented algorithm
 
@@ -17,23 +17,31 @@ If we have crossed out `3` then the words in the sieve will have the pattern bel
 
 After `5` is crossed out we get a similar repeating pattern, but this time after `3 * 5 = 15` words. Note that we can exclude the prime `2` because we are considering already only odd numbers in the sieve.
 
-This algorithm makes use of this repeating pattern. If we know the repeating pattern then we can copy that pattern in one step until the end of the sieve size, instead of multiple bit operations on the same words to achieve the same result.
+This algorithm makes use of this repeating pattern. If we know the repeating pattern then we can copy that pattern, instead of multiple bit operations on the same words to achieve the same result.
 
 ### Considerations
 
 - It is only efficient if it affects every word. So only primes are considered that are  smaller than half the word size. This means that in the cross-out phase each step would always affect every word because the step size is smaller than one word.
-- The copy of the pattern has to occur often enough to get benefit from the repeating pattern calculation. Therefor this code calculates a repeating pattern that is less than 1% of the total sieve size, so it can be copied 99 times. This results in a reduction in bit calculations for low primes with 99%.
+- The copy of the pattern has to occur often enough to get benefit from the repeating pattern calculation. There for a check is done if the limit is at least 4 words.
+- The copy makes only sense for prime number whose product is smaller than the sieve size.
 - To make the calculation fair, no knowledge of what the prime numbers are is included in the algorithm. In other words, the repeating pattern and what primes to use for that pattern is calculated in each pass and depends on the word size and sieve size.
 
 ### Calculation steps
 
 The algorithm consists of the following steps:
 
-1. First calculate all the primes in the first half word.
-2. Find the largest product of primes that is smaller than 1% of the sieve_size. Keep the largest prime in this product.
-3. Run the sieve from `3` to and including the word that is equal to the product found in step 2. Stop after the largest prime of step 2 is processed.
-4. Fill the rest of the array with copies of the words from word `1` to the product found in step 2.
-5. Cross-out the remaining primes as usual, start with the largest prime from step 2 plus 2.
+1. First calculate all the primes in the first word.
+2. Find the range of product of primes that are larger than the word size and smaller than sieve size. Store these primes and product in an array. The last entry in the array has for prime the value `-1` and for product the number of words in the bit array.
+3. Run the sieve from the first prime found in step 2 to and including the word that is equal to the first product found in step 2. Stop after the first prime of step 2 is processed.
+4. Fill the array until and including the second product found in step 2 with copies of the words from word `1` to the product found in step 2.
+5. Repeat step 3 and 4 foreach prime found in step 2 but this time start with the prime from the array. For the last prime use the number of words as the upper bound for the copy.
+6. Cross-out the remaining primes as usual, start with the largest prime from step 2 plus 2.
+
+## L1 cache optimization
+
+A CPU has level one (L1) cache. This is the fastest memory the CPU can use, but it is limited in size. On my CPU it is 32kb. This is about half the size in case of one million as a limit. To have the sieve stay as long as possible in the L1 cache, the processing of the cross out is done in blocks of just under 32 kb. This has a big improvement of about 20% on my hardware. However, with hardware that has a 64 kb L1 cache it might have a bad impact. Next step is to dynamically determine the size of the L1 cache and have that size as a parameter.
+
+This optimization was inspired by the Cython solution 1 by ssolvest.
 
 ## Choice of Dockerfile
 
@@ -84,5 +92,5 @@ These results are with the following conditions:
 
 - Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz, Lubuntu 21.04 64 bit
 - GCC Compiler: gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
-- running in Docker container alpine:3.13
+- running in Docker container Ubuntu:18.04
 - Docker version 20.10.2, build 20.10.2-0ubuntu2
