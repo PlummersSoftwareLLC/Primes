@@ -9,7 +9,8 @@
   (optimize (speed 3) (safety 0) (debug 0) (space 0))
 
   (inline nth-bit-set-p)
-  (inline set-nth-bit))
+  (inline set-nth-bit)
+  (inline set-bits))
 
 
 (defparameter *list-to* 100
@@ -19,14 +20,14 @@
 (defconstant +results+
   '((         10 . 4        )
     (        100 . 25       )
+    (        127 . 31       )
+    (        128 . 31       )
+    (        129 . 31       )
     (       1000 . 168      )
     (      10000 . 1229     )
     (     100000 . 9592     )
     (    1000000 . 78498    )
-    (   10000000 . 664579   )
-    (  100000000 . 5761455  )
-    ( 1000000000 . 50847534 )
-    (10000000000 . 455052511))
+    (   10000000 . 664579   ))
   "Historical data for validating our results - the number of primes
    to be found under some limit, such as 168 primes under 1000")
 
@@ -76,18 +77,27 @@
          (logior #1# (expt 2 r)))) 0)
 
 
+(defun set-bits (bits first-incl last-excl every-nth)
+  (declare (type fixnum first-incl last-excl every-nth)
+           (type sieve-array-type bits))
+  (loop for num of-type fixnum
+        from first-incl
+        to (1- last-excl)
+        by every-nth
+        do (set-nth-bit bits num)))
+
+
 (defun run-sieve (sieve-state)
   (declare (type sieve-state sieve-state))
 
   (let* ((rawbits (sieve-state-a sieve-state))
          (sieve-size (sieve-state-maxints sieve-state))
-         (sieve-sizeh (floor sieve-size 2))
-         (q (floor (sqrt sieve-size)))
-         (qh (floor (1+ q) 2)))
-    (declare (fixnum sieve-size sieve-sizeh q qh) (type sieve-array-type rawbits))
+         (sieve-sizeh (ceiling sieve-size 2))
+         (qh (ceiling (floor (sqrt sieve-size)) 2)))
+    (declare (fixnum sieve-size sieve-sizeh qh) (type sieve-array-type rawbits))
     (do ((factor 0)
          (factorh 1))
-        ((> factorh qh))
+        (nil)
       (declare (fixnum factor factorh))
 
       (loop for num of-type fixnum
@@ -97,11 +107,10 @@
             finally (setq factor (1+ (* num 2)))
                     (setq factorh (1+ num)))
 
-      (loop for num of-type fixnum
-            from (floor (the fixnum (* factor factor)) 2)
-            to (1- sieve-sizeh)
-            by factor
-            do (set-nth-bit rawbits num)))
+      (when (> factorh qh)
+        (return-from run-sieve sieve-state))
+
+      (set-bits rawbits (floor (the fixnum (* factor factor)) 2) sieve-sizeh factor))
     sieve-state))
 
 
@@ -135,9 +144,22 @@
   (terpri *error-output*))
 
 
+(defun test ()
+  "Run run-sieve on all historical data in +results+, return nil if there is any deviation."
+  (let ((result t))
+    (mapc #'(lambda (tupel)
+              (unless (= (cdr tupel) (count-primes (run-sieve (create-sieve (car tupel)))))
+                (format *error-output* "ERROR: ~d produces wrong result~%" (car tupel))
+                (setq result nil)))
+            +results+)
+    result))
+
+
 (defun validate (sieve-state)
+  "Invoke test, and then check if sieve-state is correct
+according to the historical data in +results+."
   (let ((hist (cdr (assoc (sieve-state-maxints sieve-state) +results+ :test #'=))))
-    (if (and hist (= (count-primes sieve-state) hist)) "yes" "no")))
+    (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
 (let* ((passes 0)
