@@ -1,0 +1,13 @@
+[package]
+name = "rust-wheel-sieve"
+version = "1.0.0"
+authors = ["sergio-chumacero <sergio.chumacero@zeda.tech>"]
+edition = "2018"
+
+[dependencies]
+num_cpus = "1.13"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
