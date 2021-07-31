@@ -8,7 +8,7 @@
 
 ## Run instructions
 
-(Linux): g++ -Ofast -std=c++17 PrimeCPP.cpp -o Primes_g && ./Primes_g
+(Linux): clang++ -march=native -mtune=native -Ofast -pthread -std=c++17 PrimeCPP_PAR.cpp -o Primes_clang++ && ./Primes_clang++
 
 ## Output
 

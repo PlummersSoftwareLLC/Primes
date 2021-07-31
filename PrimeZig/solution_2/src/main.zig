@@ -78,7 +78,7 @@ fn runSieveBitTest(comptime size: comptime_int, run_for: comptime_int) anyerror!
 fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, bit_size: usize) !void {
     const elapsed = @intToFloat(f32, elapsed_ns) / @intToFloat(f32, time.ns_per_s);
     const stdout = std.io.getStdOut().writer();
-    try stdout.print("{s};{};{d:.5};1;faithful=yes,algorithm=base,bits={}\n", .{
+    try stdout.print("{s};{};{d:.5};1;faithful=no,algorithm=base,bits={}\n", .{
         backing, passes, elapsed, bit_size
     });
 }

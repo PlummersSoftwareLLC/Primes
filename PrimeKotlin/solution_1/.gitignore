@@ -1,0 +1,6 @@
+# IDE
+.idea/
+
+# Gradle
+.gradle/
+gradle/
