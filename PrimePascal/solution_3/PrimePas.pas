@@ -9,13 +9,8 @@ uses
   SysUtils, fgl, CPUCountUtil;
 
 type
-  TResultsDictionary = specialize TFPGMap<int64, int64>;
-
-  TPackedBits = bitpacked array [0..high(uint32)] of boolean;
-  PPackedBits = ^TPackedBits;
-
   TSieveThreadParam = record
-    sieveSize: size_t;
+    sieveSize: uint64;
 
     runningThreads,
     totalThreads,
@@ -30,35 +25,41 @@ type
 
   PSieveThreadParam = ^TSieveThreadParam;
 
+  TResultsDictionary = specialize TFPGMap<uint64, uint64>;
+
+  TBitsArr = array [0..high(uint32)] of uint32; // number of uint32 will be SieveSize/64 + 1 extra uint32 if SieveSize/2 (flags for odd numbers only)is not a multiple of 32
+  PBitsArr = ^TBitsArr;
+
   { prime_sieve }
   prime_sieve = class
     private
-      sieveSize: size_t;
-      bits: PPackedBits;
+      sieveSize: uint64;
+      bits: PBitsArr;
 
-      procedure ClearBits(n, skip: size_t);
-      function CountPrimes: size_t;
+      procedure ClearBits(n, skip: uint64); inline;
+      function GetBit(n: uint64): boolean; inline;
+      function CountPrimes: uint64;
       procedure PrintResults(showResults, showValidation: boolean; duration: double; passes, threads: integer);
       function ValidateResults: boolean;
 
     public
-      constructor Create(n: size_t);
+      constructor Create(n: uint64);
       destructor Destroy; override;
-
       procedure RunSieve;
   end;
+
 { prime_sieve }
 
-constructor prime_sieve.Create(n: size_t);
+constructor prime_sieve.Create(n: uint64);
 var
-  nbBytes: size_t;
+  bitsArrSize: uint32; // 32 bits size array because each value is 32 bits (containing 32 flags for prime numbers)
 
 begin
   sieveSize:=n;
-  //allocating sieveSize/8 bytes on the heap to store the bits
-  nbBytes:=n >> 3 + ord((n and $7)>0); // an extra byte is added in the case where n is not a multiple of 8
-  bits:=GetMem(nbBytes);
-  fillchar(bits[0], nbBytes, $AA); // initializing bits to true for odd numbers and false for even numbers
+  //allocating bitsArrSize = sieveSize/64 uint32s on the heap to store the bits for odd numbers
+  bitsArrSize:=(n>>6) + ord(((n>>1) and 31)<>0); //and extra uint32 is added in case sieveSize/2 is not a multiple of 32
+  bits:=GetMem(bitsArrSize*4); // 32 bits = 4 bytes
+  fillDWord(bits^[0], bitsArrSize, $FFFFFFFF); // setting bits to true
 end;
 
 destructor prime_sieve.Destroy;
@@ -67,20 +68,33 @@ begin
   inherited Destroy;
 end;
 
-procedure prime_sieve.ClearBits(n, skip: size_t);
+procedure prime_sieve.ClearBits(n, skip: uint64);
+var
+  maxSize: uint64;
+
 begin
-  while n<=sieveSize do
+  // dividing all values by 2 as we only store bits for odd numbers in the uint32 array
+  n:=n>>1;
+  skip:=skip>>1;
+  maxSize:=sieveSize>>1;
+
+  while n<=maxSize do
   begin
-    bits^[n]:=false;
+    bits^[n>>5]:=bits^[n>>5] and not(uint32(1) << (n and 31));
     n+=skip;
   end;
+end;
+
+function prime_sieve.GetBit(n: uint64): boolean;
+begin
+  result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))<>0;
 end;
 
 procedure prime_sieve.RunSieve;
 var
   num,
   factor,
-  q: size_t;
+  q: uint64;
 
 begin
   factor:=3;
@@ -90,7 +104,7 @@ begin
   begin
     num:=factor;
 
-    while (num<=sieveSize) and not bits^[num] do
+    while (num<=sieveSize) and not GetBit(num) do
       num+=2;
 
     if num>sieveSize then
@@ -98,15 +112,14 @@ begin
 
     factor:=num;
     ClearBits(factor*factor, factor+factor);
-
     factor+=2;
   end;
 end;
 
-function prime_sieve.CountPrimes: size_t;
+function prime_sieve.CountPrimes: uint64;
 var
   i,
-  count: size_t;
+  count: uint64;
 
 begin
   count:=ord(sieveSize>=2);
@@ -115,7 +128,7 @@ begin
 
   while i<=sieveSize do
   begin
-    if bits^[i] then
+    if GetBit(i) then
       count+=1;
 
     i+=2;
@@ -124,10 +137,6 @@ begin
   result:=count;
 end;
 
-// validateResults
-//
-// Checks to see if the number of primes found matches what we should expect.  This data isn't used in the
-// sieve processing at all, only to sanity check that the results are right when done.
 function prime_sieve.ValidateResults: boolean;
 const
   PRIME_COUNTS: array [0..9, 0..1] of uint64 = (
@@ -177,7 +186,7 @@ begin
 
   while num<=sieveSize do
   begin
-    if bits^[num] then
+    if GetBit(num) then
     begin
       if showResults then
          write(format('%d, ', [num]));
@@ -197,7 +206,7 @@ begin
                    passes,
                    threads,
                    duration,
-                   duration*1000/passes,
+                   duration*1000/passes, // displaying average in milliseconds
                    sieveSize,
                    count, CountPrimes,
                    BoolToStr(validateResults, 'true', 'false')]));
@@ -208,7 +217,7 @@ begin
 end;
 
 // retrieve command line options
-procedure GetRequested(var lThreadsRequested, lSecondsRequested: longint; var lSizeRequested: size_t; var lShowResults, lShowValidation: boolean);
+procedure GetRequested(var lThreadsRequested, lSecondsRequested: longint; var lSizeRequested: uint64; var lShowResults, lShowValidation: boolean);
 var
   numParam: longint;
   lCommand: string;
@@ -228,7 +237,7 @@ begin
       '-l': lShowResults:=true;
       '-t': lThreadsRequested:=StrToIntDef(Trim(RightStr(lCommand, length(lCommand)-2)), 1);
       '-d': lSecondsRequested:=StrToIntDef(Trim(RightStr(lCommand, length(lCommand)-2)), 5);
-      '-s': lSizeRequested:=StrToIntDef(Trim(RightStr(lCommand, length(lCommand)-2)), 1000000);
+      '-s': lSizeRequested:=StrToInt64Def(Trim(RightStr(lCommand, length(lCommand)-2)), 1000000);
       '-v': lShowValidation:=true;
     end;
   end;
@@ -298,3 +307,4 @@ begin
     end;
   end;
 end.
+
