@@ -85,6 +85,20 @@ Results:
 sergiocks;112726;5;16;algorithm=wheel,faithful=yes,bits=8
 ```
 
+## Algorithm Description
+
+The algorithm used is based on [Pritchard's wheel sieve](https://www.semanticscholar.org/paper/Explaining-the-wheel-sieve-Pritchard/675801e3b109441cb59e6a368181cfc4a6f84519).
+
+In the context of this algorithm, the `n`th *wheel* is the set of positive integers between 1 and the product of the first `n` primes that are coprime to all first `n` primes. For example the first wheel is `{1}`, the second is `{1,5}`, the third is `{1,7,11,13,17,19,23,27,29}` and so on.
+
+If we have the `n`th wheel and `p` is the `n+1` smallest prime, we can construct the `n+1` wheel by *rolling* the `n`th wheel `p` times and then sieving out multiples of `p`. Rolling the wheel means repeating the pattern by shifting the wheel.
+
+For example, to construct the second wheel from the first one, we roll the first wheel `{1}` three times to obtain `{1,3,5}` and then sieve the multiples of 3 to obtain the next wheel `{1,5}`. Then, to obtain the next wheel, we roll this wheel five times to obtain `{1,5,7,11,13,17,21,23,27,29}` and then sieve out the multiples of 5 to obtain the third wheel.
+
+We continue generating larger and larger wheels until the size of the next wheel (the product of the base primes) reaches the desired limit. For a limit of one million, for exaple, the algorithm will compute a truncated version of the 8th wheel (of size `2*3*5*7*11*13*17*19 = 9,699,690`). This wheel is guaranteed to not contain multiples of the first 8 primes, but may still contain multiples of larger primes.
+
+To sieve out the remaining possible composites in the wheel, it is necessary to continue sieving larger primes using a regular sieve.
+
 ## Optimization Possibilities
 
 The following insights may lead to further optimizations, although the complexity of implementation may not be worth the gains.
