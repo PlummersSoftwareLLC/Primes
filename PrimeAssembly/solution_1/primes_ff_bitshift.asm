@@ -79,6 +79,13 @@ main:
     inc         eax                         ; sizeSqrt++, for safety 
     mov         [sizeSqrt], eax             ; save sizeSqrt
 
+    mov         rax, INIT_BLOCK             ; rax = INIT_BLOCK
+    push        rax                         ; push rax to stack (3 times needed to align to 16 byte)
+    push        rax
+    push        rax
+    movdqa      xmm0, [rsp]                 ; store init block in 128-bit xmm0 register (used in initLoop)
+    add         rsp, 24                     ; restore stack pointer
+
 ; get start time
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [startTime]            ; * struct to store result in
@@ -205,23 +212,23 @@ newSieve:
 ; * r13d = initBlockCount
 
     mov         r12, rax                    ; sievePtr = &sieve
-    mov         r13d, [r12+sieve.bitSize]   ; initBlockCount = sieve.bitSize
-    shr         r13d, 6                     ; initBlockCount /= 64
-    inc         r13d                        ; initBlockCount++
-    
-    lea         rdi, [8*r13d]               ; ask for initBlockCount * 8 bytes
+    mov         r13d, [r12+sieve.bitSize]   ; sieveBytes = sieve.bitSize
+    shr         r13d, 7                     ; sieveBytes /= 128
+    inc         r13d                        ; sieveBytes++
+    shl         r13d, 4                     ; sieveBytes *= 16
+
+    mov         edi, r13d                   ; ask sieveBytes
     call        malloc wrt ..plt            ; primesPtr = &array[0]
 
     mov         [r12+sieve.primes], rax     ; sieve.primes = rax
 
 ; initialize prime array   
-    xor         rcx, rcx                    ; initBlockIndex = 0                       
-    mov         rdx, INIT_BLOCK             ; init_block = INIT_BLOCK
+    xor         rcx, rcx                    ; byteCounter = 0                       
 
 initLoop:
-    mov         [rax+8*rcx], rdx            ; sieve.primes[initBlockIndex*8][0..63] = true
-    inc         ecx                         ; initBlockIndex++
-    cmp         ecx, r13d                   ; if initBlockIndex < initBlockCount...
+    movdqa      [rax+rcx], xmm0             ; sieve.primes[byteCounter][0..127] = true
+    add         rcx, 16                     ; byteCounter += 16
+    cmp         ecx, r13d                   ; if byteCounter < sieveBytes...
     jb          initLoop                    ; ...continue initialization
 
     mov         rax, r12                    ; return &sieve
