@@ -4,4 +4,4 @@ WORKDIR /opt/app
 
 COPY . .
 
-ENTRYPOINT [ "swift", "run", "--configuration", "release" ]
+ENTRYPOINT ["swift", "run", "--configuration", "release"]

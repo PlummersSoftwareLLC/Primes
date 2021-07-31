@@ -142,7 +142,7 @@ Take the following steps to run all benchmarks:
 1. Make sure you have installed the [required software](#windows-installation-and-prerequisites)
 2. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.
    For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
-3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)
 4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
 5. `cd Primes`
 6. `make`
@@ -153,7 +153,7 @@ Take the following steps to run all benchmarks:
 
 The following software must be installed:
 
-- Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 20.04 LST distribution
+- Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 20.04 LTS distribution
 - make
 - cc
 - Node.js
@@ -163,7 +163,7 @@ WSL2 has special [hardware requirements](https://docs.microsoft.com/en-us/window
 
 #### Install WSL2
 
-Windows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL2 follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 20.04 LSTas the default distribution to use. Start the Ubuntu app once to create a user, as described in the above instructions.
+Windows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL2 follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 20.04 LTS as the default distribution to use. Start the Ubuntu app once to create a user, as described in the above instructions.
 
 #### Install cc and make inside the Ubuntu distribution
 
@@ -190,16 +190,16 @@ Take the following steps to install Node.js inside the Ubuntu distribution:
 
 Take the following steps to install Docker Desktop for Windows with the WSL2 backend:
 
-1. Make sure [WSL2 is installed](#install-wsl2) with the Ubuntu 20.04 LST before you start with the installation of Docker.
+1. Make sure [WSL2 is installed](#install-wsl2) with the Ubuntu 20.04 LTS before you start with the installation of Docker.
 2. For the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-windows/install/#install-docker-desktop-on-windows>. At step 2 select **install required Windows components for WSl2**.
 3. Once Docker is installed, start Docker Desktop
 4. In Docker Desktop navigate to **Settings --> Resources --> WSL Integration**
 5. Check Ubuntu 18.04 and click Apply & Restart
-6. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+6. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)
 7. ```sudo groupadd docker```
 8. ```sudo usermod -aG docker $USER```
 9. Close the Ubuntu window
-10. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+10. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)
 11. Verify that you can run docker inside the Ubuntu WSL2 container:
 
    ```bash

@@ -33,7 +33,7 @@ class PrimeSieve
     public function __construct($sieveSize = 1000000)
     {
         $this->sieveSize = $sieveSize;
-        $this->rawBitsSize = (int)(($this->sieveSize + 1) / 2);
+        $this->rawBitsSize = (int)(($this->sieveSize + 1) * 0.5);
     }
 
     public function runSieve()
@@ -41,19 +41,20 @@ class PrimeSieve
         $factor = 3;
         $sieveSize = $this->sieveSize;
         $q = sqrt($sieveSize);
-        $rb = new SplFixedArray($this->rawBitsSize);
+		$rawBitsSize = $this->rawBitsSize;
+        $rb = new SplFixedArray($rawBitsSize);
 
         while ($factor < $q) {
             for ($i = $factor; $i <= $sieveSize; $i += 2) {
-                if ($rb[$i / 2] === null) {
+                if ($rb[$i * 0.5] === null) {
                     $factor = $i;
                     break;
                 }
             }
 
             $ft2 = $factor;
-            $start = ($factor * $factor) / 2;
-            for ($i = $start; $i <= $this->rawBitsSize; $i += $ft2) {
+            $start = $factor * $factor * 0.5;
+            for ($i = $start; $i <= $rawBitsSize; $i += $ft2) {
                 $rb[$i] = 1;
             }
 
@@ -65,7 +66,7 @@ class PrimeSieve
     public function printResults(): void
     {
         for ($i = 1; $i < $this->sieveSize; $i++) {
-            if ($i % 2 && $this->rawbits[$i / 2] === null) {
+            if ($i % 2 && $this->rawbits[$i * 0.5] === null) {
                 echo $i . ", ";
             }
         }

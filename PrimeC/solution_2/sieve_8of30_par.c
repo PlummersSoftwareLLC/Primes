@@ -35,7 +35,7 @@ struct sieve_state {
 struct sieve_state *create_sieve(int maxints) {
   struct sieve_state *sieve_state=malloc(sizeof *sieve_state);
   // We need to store only odd integers, so only half the number of integers
-  sieve_state->a=calloc(maxints/2/sizeof(TYPE)+1,sizeof(TYPE));
+  sieve_state->a=calloc((maxints + 16*sizeof(TYPE) - 1) / 16 / sizeof(TYPE), sizeof(TYPE));
   sieve_state->maxints=maxints;
   return sieve_state;
 }
@@ -95,7 +95,7 @@ void run_sieve(struct sieve_state *sieve_state) {
 	    }
 	  }
 	  if (ithread==numthreads-1)
-	    mylastbit=lastbit;
+	    mylastbit=lastbit-1;
 	  else {
 	    // Make sure I continue with more bits until the next cpu can handle the bits
 	    while (1) {

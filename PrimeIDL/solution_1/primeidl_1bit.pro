@@ -6,14 +6,14 @@ PRO PRIMESIEVE::RUN
   q = SQRT(self.sieve_size)
 
   WHILE factor LE q DO BEGIN
-    FOR i = factor, self.sieve_size, 2 DO BEGIN
+    FOR i = factor, self.sieve_size, 2LL DO BEGIN
       IF self->GET_BIT(i) THEN BEGIN
         factor = i
         BREAK
       ENDIF
     ENDFOR
 
-    FOR i = factor * 3LL, self.sieve_size, factor * 2LL DO $ 
+    FOR i = factor * factor, self.sieve_size, factor * 2LL DO $ 
       self->CLEAR_BIT,i
 
     factor += 2LL
@@ -22,7 +22,7 @@ END
 
 FUNCTION PRIMESIEVE::GET_BIT,i
 
-  COMPILE_OPT IDL2
+  COMPILE_OPT IDL2, HIDDEN
 
   RETURN, ((*self.raw_bits)[i/16LL] AND $
             ISHFT(1B, ((i/2LL - 1LL) MOD 8LL))) GT 0B
@@ -30,7 +30,7 @@ END
 
 PRO PRIMESIEVE::CLEAR_BIT,i
 
-  COMPILE_OPT IDL2
+  COMPILE_OPT IDL2, HIDDEN
 
   (*self.raw_bits)[i/16LL] = (*self.raw_bits)[i/16LL] AND $
                                 NOT ISHFT(1B, ((i/2LL - 1LL ) MOD 8LL))
@@ -57,7 +57,7 @@ PRO PRIMESIEVE::LIST_PRIMES
 
     COMPILE_OPT IDL2
 
-    FOR i = 3LL, self.sieve_size, 2 DO $
+    FOR i = 3LL, self.sieve_size, 2LL DO $
       IF self->GET_BIT(i) THEN PRINT,FORMAT='(I0,",",$)',i
     PRINT,FORMAT='(A1," ")',STRING(8B)
 END
@@ -77,7 +77,7 @@ END
 
 FUNCTION PRIMESIEVE::INIT,n
 
-  COMPILE_OPT IDL2
+  COMPILE_OPT IDL2, HIDDEN
 
   self.prime_counts = HASH(          10LL, 4LL, $
                                     100LL, 25LL, $
@@ -98,7 +98,7 @@ END
 
 PRO PRIMESIEVE::CLEANUP
 
-    COMPILE_OPT IDL2
+    COMPILE_OPT IDL2, HIDDEN
 
     IF PTR_VALID(self.raw_bits) THEN $
       PTR_FREE,self.raw_bits
@@ -106,14 +106,14 @@ END
 
 PRO PRIMESIEVE__DEFINE
 
-  COMPILE_OPT IDL2
+  COMPILE_OPT IDL2, HIDDEN
 
   void = {PRIMESIEVE, prime_counts:HASH(), sieve_size:0LL, raw_bits:PTR_NEW()}
 END
 
 PRO PRIMEIDL_1BIT
 
-  COMPILE_OPT IDL2
+  COMPILE_OPT IDL2, HIDDEN
 
   CPU,TPOOL_NTHREADS=1B
 
@@ -124,7 +124,7 @@ PRO PRIMEIDL_1BIT
     sieve = OBJ_NEW('PRIMESIEVE', 1000000LL)
     sieve->RUN
     time_end = SYSTIME(/SECONDS)
-    passes++
+    ++passes
     IF time_end - time_start GE 5D THEN BEGIN
         PRINT,FORMAT='(A0,";",I0,";",F0,";",I0,";algorithm=",A0,",faithful=",A0,",bits=",I1)', $
           'kriztioan_1bit', $
