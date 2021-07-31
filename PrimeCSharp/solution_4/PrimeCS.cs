@@ -75,10 +75,29 @@ namespace PrimeSieveCS
 
             unsafe static void ClearBitsDefault(ulong* ptr, uint start, uint factor, uint limit)
             {
-                for (uint index = start; index < limit; index += factor)
+                var i0 = start;
+                var i1 = start + factor;
+                var i2 = start + factor * 2;
+                var i3 = start + factor * 3;
+
+                var factor4 = factor * 4;
+                while (i3 < limit)
                 {
-                    var ptrmark = ptr + index / 64;
-                    ptrmark[0] |= 1UL << (int)(index % 64);
+                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
+                    ptr[i1 / 64] |= 1ul << (int)(i1 % 64);
+                    ptr[i2 / 64] |= 1ul << (int)(i2 % 64);
+                    ptr[i3 / 64] |= 1ul << (int)(i3 % 64);
+
+                    i0 += factor4;
+                    i1 += factor4;
+                    i2 += factor4;
+                    i3 += factor4;
+                }
+
+                while (i0 < limit)
+                {
+                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
+                    i0 += factor;
                 }
             }
 
@@ -95,7 +114,7 @@ namespace PrimeSieveCS
 
                 // We ignore even numbers by using values that track half of the actuals, and the only
                 // number we keep in original form is the prime factor we're walking through the sieve
-                fixed(ulong* ptr = bits)
+                fixed (ulong* ptr = bits)
                     while (true)
                     {
                         // Scan for the next unset bit which means it is a prime factor
@@ -154,7 +173,7 @@ namespace PrimeSieveCS
             }
 
             var tD = DateTime.UtcNow - tStart;
-            
+
             if (sieve != null)
                 printResults(sieve, false, tD.TotalSeconds, passes);
         }
