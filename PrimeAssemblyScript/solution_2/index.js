@@ -1,3 +1,5 @@
+'use strict';
+
 import fs from 'node:fs/promises';
 import loader from "@assemblyscript/loader";
 import { WASI } from 'wasi';
