@@ -10,4 +10,3 @@ const result = await loader.instantiate(binary, { wasi_snapshot_preview1: wasi.w
 
 wasi.start(result);
 result.exports.bench();
-
