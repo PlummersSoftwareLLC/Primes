@@ -60,8 +60,6 @@ class PrimeSieve {
     let tagLine = `mikevdbokke_${name};${passes};${duration};1;algorithm=base,faithful=yes`;
     if (bitsPerFlag) {
       tagLine += `,bits=${bitsPerFlag}`;
-    } else {
-      tagLine += `,bits=unknown`;
     }
     console.log(tagLine);
   }
