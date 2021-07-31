@@ -24,13 +24,13 @@ use 17  check = 1
 set 18  step = 0
 use 19  first_zero = 0
 use 20  last_zero = 0
-use 21  num_offset = 0
-cpy 22  num_offset_copy_1 = num_offset
-cpy 23  num_offset_copy_2 = num_offset
+set 21  dividend = num
+out 22  remainder = num % step
+set 23  divisor = step
 
-ign 24
-ign 25
-ign 26
+out 24  quotient = num / step
+use 25  first_zero = 0
+use 26  last_zero = 0
 ign 27
 ign 28
 ign 29
@@ -46,8 +46,7 @@ set factor = 999
     [>++ ++ ++ ++ ++<-]
     >[>++ ++ ++ ++ ++<-]
     >[<<+>>-]
-    <<---
->>>> >>>> >>>> >>>> >>>> >+< <<<< <<<< <<<< <<<< <<<<
+    <<-
 
 set num = 1'000'000
     >>>> >>>> >> go to num
@@ -97,10 +96,29 @@ copy start_copy_1 to start
         <<<<+>>>> add start
     -]< <<<< <<<< <<<< go to 0
 
-copy num to num_copy_1
+copy num to num_copy_1 qnd dividend
     >>>> >>>> >>[ go to 10
-        >>>> >>+<< <<<< add num_copy_1
+        >>>> >>+ add num_copy_1
+        >>>> >+ add dividend
+        <<<< <<<< <<< go to num
     -]<< <<<< <<<< go to 0
+
+copy step to step_copy_1 and divisor
+    >>>> >>>> >>>>[ go to step
+        >+ add step_copy_1
+        >>>> >>>> >>+ add divisor
+        <<<< <<<< <<< go to step
+    -]
+copy step_copy_1 to step
+    >[ go to step_copy_1
+        <+> add step
+    -]<<<< <<<< <<<< <
+
+divide dividend by divisor (credit goes to u/danielcristofani)
+https://www*reddit*com/r/brainfuck/comments/dwdboo/division_in_brainfuck/
+    >>>> >>>> >>>> >>>> >>>> > go to dividend
+    [>+>-[>>>]<[[>+<-]>>+>]<<<<-] divide
+    <<<< <<<< <<<< <<<< <<<< < go to 0
 
 >>>> >>>> >>>> >>>> go to num_copy_1
 [
@@ -124,26 +142,25 @@ copy num to num_copy_1
                 <<<<+>>>> add start
             -]>>>> go to check
 
-        copy num_offset to num_offset_copy_1 and 2
-        sub num_offset * (8) from num_copy_1
-            >>>>[ go to num_offset
-                <<<< <---- ----> >>>> sub (8) from num_copy_1
-                >+ add num_offset_copy_1
-                >+ add num_offset_copy_2
-                << go to num_offsets
-            -]<<<< go to check
-
-        copy num_offset_copy_1 to num_offset
-            >>>> >[ go to num_offset_copy_1
-                <+> add num_offset
+        copy remainder to remainder_copy_1 and 2
+        sub remainder from num_copy_1
+            >>>> >[ go to remainder
+                <<<< <<->> >>>> sub num_copy_1
+                >>>> >+ add remainder_copy_1
+                >+ add remainder_copy_2
+                <<<< << go to remainder
             -]< <<<< go to check
+        copy remainder_copy_1 to remainder
+            >>>> >>>> >>[ go to remainder_copy_1
+                <<<< <+> >>>> add remainder
+            -]<< <<<< <<<< go to check
 
-        <-.+> print num_copy_1
+        <.> print num_copy_1
 
-        add num_offset_copy_2 * (8) to num_copy_1
-            >>>> >>[ go to num_offset_copy
-                <<<< <<<++++ ++++>>> >>>> add (8) to num_copy_1
-            -]<< <<<< go to check
+        add remainder_copy_2 to num_copy_1
+            >>>> >>>> >>>[ go to remainder_copy_1
+                <<<< <<<< <<<<+>>>> >>>> >>>> add num_copy_1
+            -]<<< <<<< <<<< go to check
 
         sub start_copy_2 from num_copy_1
             <<<[ go to start_copy_2
@@ -156,7 +173,6 @@ copy num to num_copy_1
                 >>>> >+ add step
                 <<<< << go to step
             -]> >>>> go to check
-
         copy step_copy_1 to step
             <<<<[ go to step_copy_1
                 <+> add step
@@ -170,12 +186,16 @@ copy num to num_copy_1
     <<- sub num_copy_1
 ]
 
->>>> >+< <<<< add num_offset
-
 clear memory
-    [-] set factor = 0
     >[-] set check = 0
     >[-] set step = 0
+
+    >>>>[-] set remainder = 0
+    >[-] set divisor = 0
+    >[-] set quotient = 0
+    
+    <<<< << go to step
+
     <<<< <<[-] set step = 0
     <<<[-] set start = 0
 <<<< <<<< < go to 0
