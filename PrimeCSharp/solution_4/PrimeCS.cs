@@ -13,7 +13,7 @@ namespace PrimeSieveCS
 {
     class PrimeCS
     {
-        class prime_sieve
+        class PrimeSieve
         {
             public readonly uint sieveSize = 0;
             readonly uint halfLimit;
@@ -31,7 +31,7 @@ namespace PrimeSieveCS
                 { 100_000_000 , 5761455 }
             };
 
-            public prime_sieve(uint size)
+            public PrimeSieve(uint size)
             {
                 sieveSize = size;
                 halfLimit = (size + 1) / 2;
@@ -46,7 +46,7 @@ namespace PrimeSieveCS
                         yield return num;
             }
 
-            public bool containsValidResults
+            public bool ContainsValidResults
             {
                 get
                 {
@@ -54,9 +54,10 @@ namespace PrimeSieveCS
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             unsafe static void ClearBitsWithRolMulti(ulong* ptr, uint start, uint factor, uint limit)
             {
-                ulong rolling_mask = 1UL << (int)(start);
+                ulong rollingMask = 1UL << (int)(start);
                 uint offset = start % 64;
                 for (uint index = start / 64; index < limit / 64 + 1; index++)
                 {
@@ -64,8 +65,8 @@ namespace PrimeSieveCS
                     var segment = ptroffset[0];
                     do
                     {
-                        segment |= rolling_mask;
-                        rolling_mask = BitOperations.RotateLeft(rolling_mask, (int)factor);
+                        segment |= rollingMask;
+                        rollingMask = BitOperations.RotateLeft(rollingMask, (int)factor);
                         offset += factor;
                     } while (offset < 64);
                     ptroffset[0] = segment;
@@ -73,6 +74,7 @@ namespace PrimeSieveCS
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             unsafe static void ClearBitsDefault(ulong* ptr, uint start, uint factor, uint limit)
             {
                 var i0 = start;
@@ -106,7 +108,7 @@ namespace PrimeSieveCS
             // Calculate the primes up to the specified limit
 
             [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-            unsafe public void runSieve()
+            unsafe public void RunSieve()
             {
                 uint factor = 3;
                 uint halfFactor = factor >> 1;
@@ -151,34 +153,34 @@ namespace PrimeSieveCS
         static void Main(string[] args)
         {
             //setup
-            const int sievesize = 1000000;
+            const int sieveSize = 1_000_000;
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
             //warmup 
             var wStart = DateTime.UtcNow;
             while ((DateTime.UtcNow - wStart).TotalSeconds < 3)
-                new prime_sieve(sievesize).runSieve();
+                new PrimeSieve(sieveSize).RunSieve();
             GC.Collect();
 
             //running the dragrace
             var tStart = DateTime.UtcNow;
             var passes = 0;
-            prime_sieve sieve = null;
+            PrimeSieve sieve = null;
 
             while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
             {
-                sieve = new prime_sieve(sievesize);
-                sieve.runSieve();
+                sieve = new PrimeSieve(sieveSize);
+                sieve.RunSieve();
                 passes++;
             }
 
             var tD = DateTime.UtcNow - tStart;
 
             if (sieve != null)
-                printResults(sieve, false, tD.TotalSeconds, passes);
+                PrintResults(sieve, false, tD.TotalSeconds, passes);
         }
 
-        static void printResults(prime_sieve sieve, bool showResults, double duration, int passes)
+        static void PrintResults(PrimeSieve sieve, bool showResults, double duration, int passes)
         {
             if (showResults)
             {
@@ -186,7 +188,7 @@ namespace PrimeSieveCS
                 Console.WriteLine();
             }
 
-            Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + sieve.sieveSize + ", Count: " + sieve.EnumeratePrimes().Count() + ", Valid: " + sieve.containsValidResults);
+            Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + sieve.sieveSize + ", Count: " + sieve.EnumeratePrimes().Count() + ", Valid: " + sieve.ContainsValidResults);
 
             // Following 2 lines added by rbergen to conform to drag race output format
             Console.WriteLine();
