@@ -11,3 +11,7 @@ This solution aims to be one of the fastest C# solutions while maintaining faith
 - [x] Compiler intrinsics
 - [x] Fast
 - [ ] Readable
+
+Contributors:
+- @ItalyToast https://www.github.com/ItalyToast -- original author
+- Michael Barber @mike-barber https://www.github.com/mike-barber -- fixed 8X over allocation, contributor
