@@ -47,15 +47,17 @@ Node.JS: `v16.5.0`
 CPU: `Intel Core i9 2.3 GHz`
 
 ### Result
-```
-Passes: 6414,
+
+```text
+Passes: 6666,
 Time: 5.0,
-Avg: 0.0007795447600074112,
+Avg: 0.0007500750361941755,
 Limit: 1000000,
 Count1: 78498,
 Count2: 78498,
 Valid: true
 ```
+
 ```bash
-maxgraey;6414;5.0;8;algorithm=base,faithful=yes
+maxgraey;6666;5.0;1;algorithm=base,faithful=yes
 ```

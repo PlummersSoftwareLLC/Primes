@@ -1,6 +1,6 @@
 type BitWord = u32;
 
-const BITS = <BitWord>(sizeof<BitWord>() * 8);
+const BITS = (sizeof<BitWord>() * 8) as BitWord;
 
 @final export class PrimeSieve {
     private static primeCounts: Map<u32, u32> = new Map<u32, u32>()
@@ -36,13 +36,13 @@ const BITS = <BitWord>(sizeof<BitWord>() * 8);
         let q = Math.sqrt(size / 2) as u32;
 
         for (let factor: u32 = 1; factor <= q; ++factor) {
-            if (unchecked(bits[factor / BITS]) & (1 << <BitWord>factor)) {
+            if (unchecked(bits[factor / BITS]) & (1 << factor as BitWord)) {
                 continue;
             }
             start = (2 * factor) * (factor + 1);
             step = 2 * factor + 1;
             while (start < end) {
-                unchecked(bits[start / BITS] |= 1 << <BitWord>start);
+                unchecked(bits[start / BITS] |= 1 << start as BitWord);
                 start += step;
             }
         }
@@ -53,7 +53,7 @@ const BITS = <BitWord>(sizeof<BitWord>() * 8);
         let count = 0;
         let len = (size + 1) / 2;
         for (let i: u32 = 0; i < len; i++) {
-            if ((~this.bits[i / BITS] >> <BitWord>i) & 1) {
+            if ((~this.bits[i / BITS] >> i as BitWord) & 1) {
                 if (showResults)
                     console.log(i.toString() + ", ");
                 count++;
@@ -61,13 +61,14 @@ const BITS = <BitWord>(sizeof<BitWord>() * 8);
         }
 
         console.log(
-            "Passes: "   + passes.toString() +
-            ", Time: "   + duration.toString() +
-            ", Avg: "    + (duration / (passes as f32)).toString() +
-            ", Limit: "  + this.size.toString() +
-            ", Count1: " + count.toString() +
-            ", Count2: " + this.countPrimes().toString() +
-            ", Valid: "  + this.validateResults().toString()
+            `Passes: ${passes}\
+            , Time: ${duration}\
+            , Avg: ${duration / (passes as f32)}\
+            , Limit: ${this.size}\
+            , Count1: ${count}\
+            , Count2: ${this.countPrimes()}\
+            , Valid: ${this.validateResults()}`
+            .replaceAll("            ", "")
         );
 
         // Following 2 lines added by rbergen to conform to drag race output format
@@ -81,7 +82,7 @@ const BITS = <BitWord>(sizeof<BitWord>() * 8);
         let count: u32 = 0;
         let len = (size + 1) / 2;
         for (let i: u32 = 0; i < len; i++) {
-            count += (~this.bits[i / BITS] >> <BitWord>i) & 1;
+            count += (~this.bits[i / BITS] >> i as BitWord) & 1;
         }
         return count;
     }
