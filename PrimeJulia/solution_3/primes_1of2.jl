@@ -40,7 +40,8 @@ end
 @inline _div_uint_size(i::Integer) = i >> _div_uint_size_shift
 # These functions are similar to Base.get_chunk_id (bitarray.jl).
 # This is definitely a bit more complicated due to one-based indexing.
-@inline _get_chunk_index(i::Integer) = _div_uint_size(i - 1) + 1
+# _div_uint_size(i + (_uint_bit_length - 1)) == _div_uint_size(i - 1) + 1
+@inline _get_chunk_index(i::Integer) = _div_uint_size(i + (_uint_bit_length - 1))
 @inline _get_bit_index_mask(i::Integer) = UInt(1) << _mod_uint_size(i - 1)
 
 
@@ -84,6 +85,7 @@ end
 function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, max_index::Integer)
     # Bit rotating the mask might be slower on platforms without a
     # native bit rotate instruction. Requires at least Julia 1.5.
+    start_index += 1
     bitmask = _get_bit_index_mask(start_index)
     for index in start_index:max_index
         if iszero(unsafe_get_bit_at_index_with_bitmask(arr, index, bitmask))
@@ -113,9 +115,8 @@ function run_sieve!(sieve::PrimeSieve)
     max_factor_index = _map_to_index(unsafe_trunc(UInt, sqrt(sieve_size)))
     factor_index = UInt(1) # 1 => 3, 2 => 5, 3 => 7, ...
     while factor_index <= max_factor_index
-        factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_bits_index)
         clear_factors!(is_not_prime, factor_index, max_bits_index)
-        factor_index += UInt(1)
+        factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_factor_index)
     end
     return is_not_prime
 end
