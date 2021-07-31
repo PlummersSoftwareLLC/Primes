@@ -11,7 +11,7 @@
   },
   "type": "module",
   "author": "",
-  "license": "ISC",
+  "license": "BSD-3",
   "dependencies": {
     "@assemblyscript/loader": "0.19.9"
   },
