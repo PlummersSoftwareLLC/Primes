@@ -1,3 +1,4 @@
+// utility to retrieve the number of cores availble on a machine
 unit CPUCountUtil;
 
 {$mode objfpc}{$H+}
@@ -16,11 +17,6 @@ uses
     {$ENDIF}
   {$ENDIF}
   Classes, SysUtils;
-
-{$if defined(linux) or defined(freebsd) or defined(darwin)}
-type
-  size_t=QWord;
-{$endif}
 
 function GetSystemThreadCount: integer;
 
