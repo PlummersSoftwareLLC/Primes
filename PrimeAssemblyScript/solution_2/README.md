@@ -43,15 +43,15 @@ Currently the docker version almost halves the passes number vs the local versio
 
 ### Env
 
-Node.JS: `v16.5.0`
+Node.JS: `v16.6.0`
 CPU: `Intel Core i9 2.3 GHz`
 
 ### Result
 
 ```text
-Passes: 6666,
+Passes: 6726,
 Time: 5.0,
-Avg: 0.0007500750361941755,
+Avg: 0.0007433838909491897,
 Limit: 1000000,
 Count1: 78498,
 Count2: 78498,
@@ -59,5 +59,5 @@ Valid: true
 ```
 
 ```bash
-maxgraey;6666;5.0;1;algorithm=base,faithful=yes
+maxgraey;6726;5.0;1;algorithm=base,faithful=yes,bits=1
 ```
