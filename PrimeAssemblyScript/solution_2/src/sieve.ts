@@ -67,14 +67,10 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
             , Limit: ${this.size}\
             , Count1: ${count}\
             , Count2: ${this.countPrimes()}\
-            , Valid: ${this.validateResults()}`
+            , Valid: ${this.validateResults()}\n`
             .replaceAll("            ", "")
         );
-
-        // Following 2 lines added by rbergen to conform to drag race output format
-        console.log("");
-        console.log("maxgraey;" + passes.toString() + ";" + duration.toString() + ";1;algorithm=base,faithful=yes");
-
+        console.log(`maxgraey;${passes};${duration};1;algorithm=base,faithful=yes`);
     }
 
     countPrimes(): u32 {
