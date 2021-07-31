@@ -70,7 +70,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
             , Valid: ${this.validateResults()}\n`
             .replaceAll("            ", "")
         );
-        console.log(`maxgraey;${passes};${duration};1;algorithm=base,faithful=yes`);
+        console.log(`maxgraey;${passes};${duration};1;algorithm=base,faithful=yes,bits=1`);
     }
 
     countPrimes(): u32 {
