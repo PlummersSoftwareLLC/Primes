@@ -33,9 +33,11 @@ namespace PrimeSieveCS
 
             public PrimeSieve(uint size)
             {
+                const int wordBits = sizeof(ulong) * 8;
+                
                 sieveSize = size;
                 halfLimit = (size + 1) / 2;
-                bits = new ulong[(int)(halfLimit / sizeof(ulong) + 1)];
+                bits = new ulong[(int)(halfLimit / wordBits + 1)];
             }
 
             public IEnumerable<uint> EnumeratePrimes()
@@ -156,9 +158,9 @@ namespace PrimeSieveCS
             const int sieveSize = 1_000_000;
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
-            //warmup 
+            //warmup - 5 seconds permitted
             var wStart = DateTime.UtcNow;
-            while ((DateTime.UtcNow - wStart).TotalSeconds < 3)
+            while ((DateTime.UtcNow - wStart).TotalSeconds < 5)
                 new PrimeSieve(sieveSize).RunSieve();
             GC.Collect();
 
