@@ -13,7 +13,7 @@ namespace PrimeSieveCS
 {
     class PrimeCS
     {
-        class prime_sieve
+        class PrimeSieve
         {
             public readonly uint sieveSize = 0;
             readonly uint halfLimit;
@@ -31,11 +31,13 @@ namespace PrimeSieveCS
                 { 100_000_000 , 5761455 }
             };
 
-            public prime_sieve(uint size)
+            public PrimeSieve(uint size)
             {
+                const int wordBits = sizeof(ulong) * 8;
+                
                 sieveSize = size;
                 halfLimit = (size + 1) / 2;
-                bits = new ulong[(int)(halfLimit / sizeof(ulong) + 1)];
+                bits = new ulong[(int)(halfLimit / wordBits + 1)];
             }
 
             public IEnumerable<uint> EnumeratePrimes()
@@ -46,7 +48,7 @@ namespace PrimeSieveCS
                         yield return num;
             }
 
-            public bool containsValidResults
+            public bool ContainsValidResults
             {
                 get
                 {
@@ -54,9 +56,10 @@ namespace PrimeSieveCS
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             unsafe static void ClearBitsWithRolMulti(ulong* ptr, uint start, uint factor, uint limit)
             {
-                ulong rolling_mask = 1UL << (int)(start);
+                ulong rollingMask = 1UL << (int)(start);
                 uint offset = start % 64;
                 for (uint index = start / 64; index < limit / 64 + 1; index++)
                 {
@@ -64,8 +67,8 @@ namespace PrimeSieveCS
                     var segment = ptroffset[0];
                     do
                     {
-                        segment |= rolling_mask;
-                        rolling_mask = BitOperations.RotateLeft(rolling_mask, (int)factor);
+                        segment |= rollingMask;
+                        rollingMask = BitOperations.RotateLeft(rollingMask, (int)factor);
                         offset += factor;
                     } while (offset < 64);
                     ptroffset[0] = segment;
@@ -73,12 +76,32 @@ namespace PrimeSieveCS
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             unsafe static void ClearBitsDefault(ulong* ptr, uint start, uint factor, uint limit)
             {
-                for (uint index = start; index < limit; index += factor)
+                var i0 = start;
+                var i1 = start + factor;
+                var i2 = start + factor * 2;
+                var i3 = start + factor * 3;
+
+                var factor4 = factor * 4;
+                while (i3 < limit)
                 {
-                    var ptrmark = ptr + index / 64;
-                    ptrmark[0] |= 1UL << (int)(index % 64);
+                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
+                    ptr[i1 / 64] |= 1ul << (int)(i1 % 64);
+                    ptr[i2 / 64] |= 1ul << (int)(i2 % 64);
+                    ptr[i3 / 64] |= 1ul << (int)(i3 % 64);
+
+                    i0 += factor4;
+                    i1 += factor4;
+                    i2 += factor4;
+                    i3 += factor4;
+                }
+
+                while (i0 < limit)
+                {
+                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
+                    i0 += factor;
                 }
             }
 
@@ -87,7 +110,7 @@ namespace PrimeSieveCS
             // Calculate the primes up to the specified limit
 
             [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-            unsafe public void runSieve()
+            unsafe public void RunSieve()
             {
                 uint factor = 3;
                 uint halfFactor = factor >> 1;
@@ -95,7 +118,7 @@ namespace PrimeSieveCS
 
                 // We ignore even numbers by using values that track half of the actuals, and the only
                 // number we keep in original form is the prime factor we're walking through the sieve
-                fixed(ulong* ptr = bits)
+                fixed (ulong* ptr = bits)
                     while (true)
                     {
                         // Scan for the next unset bit which means it is a prime factor
@@ -132,34 +155,34 @@ namespace PrimeSieveCS
         static void Main(string[] args)
         {
             //setup
-            const int sievesize = 1000000;
+            const int sieveSize = 1_000_000;
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
-            //warmup 
+            //warmup - 5 seconds permitted
             var wStart = DateTime.UtcNow;
-            while ((DateTime.UtcNow - wStart).TotalSeconds < 3)
-                new prime_sieve(sievesize).runSieve();
+            while ((DateTime.UtcNow - wStart).TotalSeconds < 5)
+                new PrimeSieve(sieveSize).RunSieve();
             GC.Collect();
 
             //running the dragrace
             var tStart = DateTime.UtcNow;
             var passes = 0;
-            prime_sieve sieve = null;
+            PrimeSieve sieve = null;
 
             while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
             {
-                sieve = new prime_sieve(sievesize);
-                sieve.runSieve();
+                sieve = new PrimeSieve(sieveSize);
+                sieve.RunSieve();
                 passes++;
             }
 
             var tD = DateTime.UtcNow - tStart;
-            
+
             if (sieve != null)
-                printResults(sieve, false, tD.TotalSeconds, passes);
+                PrintResults(sieve, false, tD.TotalSeconds, passes);
         }
 
-        static void printResults(prime_sieve sieve, bool showResults, double duration, int passes)
+        static void PrintResults(PrimeSieve sieve, bool showResults, double duration, int passes)
         {
             if (showResults)
             {
@@ -167,7 +190,7 @@ namespace PrimeSieveCS
                 Console.WriteLine();
             }
 
-            Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + sieve.sieveSize + ", Count: " + sieve.EnumeratePrimes().Count() + ", Valid: " + sieve.containsValidResults);
+            Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + sieve.sieveSize + ", Count: " + sieve.EnumeratePrimes().Count() + ", Valid: " + sieve.ContainsValidResults);
 
             // Following 2 lines added by rbergen to conform to drag race output format
             Console.WriteLine();
