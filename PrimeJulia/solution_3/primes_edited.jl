@@ -82,13 +82,12 @@ end
     @inbounds arr[_get_chunk_index(index)] |= _get_bit_index_mask(index)
 end
 
-function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, max_index::Integer)
+function unsafe_find_next_factor_index(ptr::Ptr{UInt}, start_index::Integer, max_index::Integer)
     # Bit rotating the mask might be slower on platforms without a
     # native bit rotate instruction. Requires at least Julia 1.5.
-    start_index += 1
     bitmask = _get_bit_index_mask(start_index)
     for index in start_index:max_index
-        if iszero(unsafe_get_bit_at_index_with_bitmask(arr, index, bitmask))
+        if iszero(unsafe_load(ptr, _get_chunk_index(index)) & bitmask)
             return index
         end
         bitmask = bitrotate(bitmask, 1)
@@ -98,25 +97,32 @@ function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, 
     return max_index + 1
 end
 
-function clear_factors!(arr::Vector{UInt}, factor_index::Integer, max_index::Integer)
+function unsafe_clear_factors!(ptr::Ptr{UInt}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
     # Since the for loop carries some memory dependencies (no two
     # iterations should access the same UInt at the same time), we can
     # only use `@simd` and not `@simd ivdep`.
     @simd for index in _div2(factor * factor):factor:max_index
-        unsafe_set_bit_at_index!(arr, index)
+        chunk_index = _get_chunk_index(index)
+        unsafe_store!(
+            ptr,
+            unsafe_load(ptr, chunk_index) | _get_bit_index_mask(index),
+            chunk_index
+        )
     end
 end
 
 function run_sieve!(sieve::PrimeSieve)
     is_not_prime = sieve.is_not_prime
+    arr_pointer = pointer(is_not_prime)
     sieve_size = sieve.sieve_size
     max_bits_index = _map_to_index(sieve_size)
     max_factor_index = _map_to_index(unsafe_trunc(UInt, sqrt(sieve_size)))
     factor_index = UInt(1) # 1 => 3, 2 => 5, 3 => 7, ...
-    while factor_index <= max_factor_index
-        clear_factors!(is_not_prime, factor_index, max_bits_index)
-        factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_factor_index)
+    @GC.preserve is_not_prime while factor_index <= max_factor_index
+        factor_index = unsafe_find_next_factor_index(arr_pointer, factor_index, max_bits_index)
+        unsafe_clear_factors!(arr_pointer, factor_index, max_bits_index)
+        factor_index += UInt(1)
     end
     return is_not_prime
 end
