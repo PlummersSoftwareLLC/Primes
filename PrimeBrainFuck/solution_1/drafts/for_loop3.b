@@ -15,18 +15,27 @@ set 10  num = 1'000'000 minus start
 set 11  multiplier_2 = factor
 out 12  step = multiplier_2 * 2
 cpy 13  step_copy_1 = step
-cpy 14  step_copy_2 = step
-cpy 15  num_cpy_1 = num
+        start_copy_1 = start
+cpy 14  start_copy_2 = start
+ign 15  
 
-cpy 16  num_cpy_2 = num
+cpy 16  num_copy_1 = num
 use 17  check = 1
 set 18  step = 0
 use 19  first_zero = 0
-use 20  last_zero = =
-ign 21
-ign 22
-ign 23
-}
+use 20  last_zero = 0
+set 21  dividend = num
+out 22  remainder = num % step
+set 23  divisor = step
+
+out 24  quotient = num / step
+use 25  first_zero = 0
+use 26  last_zero = 0
+cpy 27  remainder_copy_1 = remainder
+cpy 28  remainder_copy_2 = remainder
+ign 29
+ign 30
+ign 31
 
 set factor = 1000 minus 3
     ++ ++ ++ ++ ++
