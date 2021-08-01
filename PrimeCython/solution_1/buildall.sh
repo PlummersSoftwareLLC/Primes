@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CFLAGS=`python3-config --embed --includes`
+CFLAGS="-march=native -mtune=native `python3-config --embed --includes`"
 LDFLAGS=`python3-config --embed --ldflags`
 CC=gcc
 
