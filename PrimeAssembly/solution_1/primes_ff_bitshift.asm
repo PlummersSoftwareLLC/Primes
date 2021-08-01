@@ -352,7 +352,7 @@ countLoop:
 
 nextItem:
     add         ecx, 2                      ; bitIndex += 2
-    cmp         ecx, SIEVE_SIZE             ; if bitIndex < SIEVE_SIZE
+    cmp         ecx, [rdi+sieve.sieveSize]  ; if bitIndex < sieveSize
     jb          countLoop                   ; ...continue counting
 
     ret                                     ; end of countPrimes
