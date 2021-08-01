@@ -17,7 +17,7 @@ struc time
 endstruc
 
 struc sieve
-    .bitSize: resd    1
+    .sieveSize: resd    1
     .primes:    resq    1
 endstruc
 
@@ -200,8 +200,7 @@ newSieve:
     mov         rdi, sieve_size             ; ask for sieve_size bytes
     call        malloc wrt ..plt            ; rax = &sieve
 
-    inc         r12d                        ; array_size = sieve limit + 1
-    mov         [rax+sieve.bitSize], r12d   ; sieve.bitSize = array_size
+    mov         [rax+sieve.sieveSize], r12d ; store sieve size parameter for faithfulness
 
 ; registers:
 ; * rax = primesPtr (&sieve.primes[0])
@@ -211,7 +210,7 @@ newSieve:
 ; * r13d = initBlockCount
 
     mov         r12, rax                    ; sievePtr = &sieve
-    mov         r13d, [r12+sieve.bitSize]   ; sieveBytes = sieve.bitSize
+    mov         r13d, [r12+sieve.sieveSize] ; sieveBytes = sieve.sieveSize
     shr         r13d, 7                     ; sieveBytes /= 128
     inc         r13d                        ; sieveBytes++
     shl         r13d, 4                     ; sieveBytes *= 16
@@ -261,11 +260,13 @@ runSieve:
 ; * r8d: factor
 ; * r9:  clrSkipValue
 ; * r10: clrCurWord
+; * r11d: sieveSize
 ; * r13d: sizeSqrt
 
     mov         rbx, [rdi+sieve.primes]     ; primesPtr = &sieve.primes[0]
     mov         r13d, [sizeSqrt]            ; sizeSqrt = global.sizeSqrt
     mov         r8d, 3                      ; factor = 3
+    mov         r11d, [rdi+sieve.sieveSize] ; sieveSize = sieve.sieveSize
 
 sieveLoop:
     mov         eax, r8d                     ; number = factor...
@@ -282,7 +283,7 @@ getBitLoop:
     jnz         getBitEarlyEnd              ; if bit is set, factor = number and break
                                             ; if bit not set...
     add         eax, 2                      ; number += 2
-    cmp         eax, SIEVE_SIZE             ; if number < SIEVE_SIZE...
+    cmp         eax, r11d                   ; if number < sieveSize...
     jb          getBitLoop                  ; continue getting bits
     jmp         clearBitInit                ; if no bits are set, do not update factor
 
@@ -292,8 +293,8 @@ getBitEarlyEnd:
 clearBitInit:
     mov         eax, r8d
     imul        eax, eax                     ; number = factor * factor
-    cmp         eax, SIEVE_SIZE              ; if number >= SIEVE_SIZE...
-    jge         sieveLoopEnd                 ; skip over clearBitLoop
+    cmp         eax, r11d                    ; if number >= sieveSize...
+    jae         sieveLoopEnd                 ; skip over clearBitLoop
 
     mov         cl, al
     and         cl, 31                       ; clrBitNumber = number % 32
@@ -313,7 +314,7 @@ clearBitLoop:
     and         [rbx + r10 * 4], edx         ; clear the bit
     rol         edx, cl                      ; rotate clrBitSelect left by clrRollBits
     add         eax, r9d                     ; number += clrSkipValue
-    cmp         eax, SIEVE_SIZE              ; if number < SIEVE_SIZE...
+    cmp         eax, r11d                    ; if number < sieveSize...
     jb          clearBitLoop                 ; ...continue clearing bits
 
 sieveLoopEnd:
