@@ -1,8 +1,4 @@
-﻿// ---------------------------------------------------------------------------
-// PrimeCS.cs : Dave's Garage Prime Sieve in C++
-// ---------------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -57,6 +53,12 @@ namespace PrimeSieveCS
                 }
             }
 
+            /// <summary>
+            /// A clear bits function thats using pointers so we dont need to store the index in a register.
+            /// 
+            /// We do need to do a sub for each comparison in the outer loop. 
+            /// There might be a faster version we can make with an index if we reverse it.
+            /// </summary>
             unsafe static void ClearBitsDense(ulong* ptr, uint start, int factor, uint limit)
             {
                 Debug.Assert(factor < 64, "factor cant be bigger than 63, that will cause incorrect calcualtions. This is optimized for lower factors");
@@ -92,7 +94,6 @@ namespace PrimeSieveCS
                 }
             }
 
-            
             unsafe static void ClearBitsSparseUnrolled4(ulong* ptr, uint start, uint factor, uint limit)
             {
                 var i0 = start;
@@ -158,11 +159,9 @@ namespace PrimeSieveCS
                 }
             }
 
-
-            // primeSieve
-            // 
-            // Calculate the primes up to the specified limit
-
+            /// <summary>
+            /// Calculate the primes up to the specified limit
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveOptimization)]
             unsafe public void RunSieve()
             {
@@ -194,7 +193,8 @@ namespace PrimeSieveCS
 
                         if (halfFactor > halfRoot) break;
 
-                        //marking with a rolling mask if we can get enough bits in the ulong, 20 seems to be optimal
+                        //marking with a rolling mask if we can get enough bits in the ulong.
+                        //Half factor of 20 seems to be optimal. (~3 bits / ulong) 
                         if (halfFactor < 20)
                         {
                             ClearBitsDense(ptr, (factor * factor) / 2, (int)factor, halfLimit);
@@ -217,7 +217,9 @@ namespace PrimeSieveCS
             var wStart = DateTime.UtcNow;
             while ((DateTime.UtcNow - wStart).TotalSeconds < 5)
                 new PrimeSieve(sieveSize).RunSieve();
-            GC.Collect();
+
+            //Forcing a GC to give us as much space on the heap as possible (dont do this in real code).
+            GC.Collect(0, GCCollectionMode.Forced, true, true);
 
             //running the dragrace
             var tStart = DateTime.UtcNow;
