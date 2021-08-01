@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
@@ -56,28 +57,48 @@ namespace PrimeSieveCS
                 }
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            unsafe static void ClearBitsWithRolMulti(ulong* ptr, uint start, uint factor, uint limit)
+            unsafe static void ClearBitsDense(ulong* ptr, uint start, int factor, uint limit)
             {
+                Debug.Assert(factor < 64, "factor cant be bigger than 63, that will cause incorrect calcualtions. This is optimized for lower factors");
+
+                //Performance: we want factor and offset as an int so we can dodge a SUB in the while comparison in the inner loop
+
+                var ptrStart = ptr + start / 64;
+                var ptrEnd   = ptr + limit / 64;
+
                 ulong rollingMask = 1UL << (int)(start);
-                uint offset = start % 64;
-                for (uint index = start / 64; index < limit / 64 + 1; index++)
+                int offset = (int)(64 - start % 64);
+                while (ptrStart <= ptrEnd)
                 {
-                    var ptroffset = ptr + index;
-                    var segment = ptroffset[0];
+                    var segment = ptrStart[0];
                     do
                     {
                         segment |= rollingMask;
-                        rollingMask = BitOperations.RotateLeft(rollingMask, (int)factor);
-                        offset += factor;
-                    } while (offset < 64);
-                    ptroffset[0] = segment;
-                    offset -= 64;
+                        rollingMask = BitOperations.RotateLeft(rollingMask, factor);
+                        offset -= factor;
+                    } while (offset > 0);
+                    offset += 64;
+                    ptrStart[0] = segment;
+                    ptrStart++;
                 }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            unsafe static void ClearBitsDefault(ulong* ptr, uint start, uint factor, uint limit)
+            unsafe static void ClearBitsSparse(ulong* ptr, uint start, uint factor, uint limit)
+            {
+                for (uint index = start; index < limit; index += factor)
+                {
+                    ptr[index / 64] |= 1UL << (int)(index % 64);
+                }
+            }
+
+            /// <summary>
+            /// Unrolled version of ClearBitsSparse.
+            /// 
+            /// Provided by mike-barber.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            unsafe static void ClearBitsSparseUnrolled4(ulong* ptr, uint start, uint factor, uint limit)
             {
                 var i0 = start;
                 var i1 = start + factor;
@@ -104,6 +125,7 @@ namespace PrimeSieveCS
                     i0 += factor;
                 }
             }
+
 
             // primeSieve
             // 
@@ -133,6 +155,7 @@ namespace PrimeSieveCS
                             continue;
                         }
 
+                        //scan finnished - restoring factor
                         halfFactor += (uint)jump;
                         factor = (halfFactor << 1) + 1;
                         halfFactor++;
@@ -142,11 +165,11 @@ namespace PrimeSieveCS
                         //marking with a rolling mask if we can get enough bits in the ulong, 20 seems to be optimal
                         if (halfFactor < 20)
                         {
-                            ClearBitsWithRolMulti(ptr, (factor * factor) / 2, factor, halfLimit);
+                            ClearBitsDense(ptr, (factor * factor) / 2, (int)factor, halfLimit);
                         }
                         else
                         {
-                            ClearBitsDefault(ptr, (factor * factor) / 2, factor, halfLimit);
+                            ClearBitsSparseUnrolled4(ptr, (factor * factor) / 2, factor, halfLimit);
                         }
                     }
             }
