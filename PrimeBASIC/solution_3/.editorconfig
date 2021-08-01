@@ -1,0 +1,3 @@
+﻿[*.vb]
+# BC40000
+dotnet_diagnostic.BC40000.severity = silent

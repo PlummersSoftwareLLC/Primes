@@ -11,8 +11,12 @@
 # signatures containing `::Integer` to `::UInt` as well as patch the
 # count_primes and get_found_primes functions to use UInts.
 
-# This is basically a log2(sizeof(UInt)).
-if UInt == UInt16
+
+const _uint_bit_length = sizeof(UInt) * 8
+# This is basically `log2(_uint_bit_length)`.
+if UInt == UInt8
+    const _div_uint_size_shift = 3
+elseif UInt == UInt16
     const _div_uint_size_shift = 4
 elseif UInt == UInt32
     const _div_uint_size_shift = 5
@@ -23,10 +27,9 @@ elseif UInt == UInt128
 else
     error("Unknown UInt type ($UInt)")
 end
-const _uint_bit_length = sizeof(UInt) * 8
 
-# Functions like the ones defined below are also used in Julia Base
-# to speed up things such as Julia's native BitArray type.
+# Functions like the ones defined below are also used in Julia's Base
+# library to speed up things such as Julia's native BitArray type.
 @inline _mul2(i::Integer) = i << 1
 @inline _div2(i::Integer) = i >> 1
 # Map factor to index (3 => 1, 5 => 2, 7 => 3, ...) and vice versa.
@@ -37,7 +40,8 @@ const _uint_bit_length = sizeof(UInt) * 8
 @inline _div_uint_size(i::Integer) = i >> _div_uint_size_shift
 # These functions are similar to Base.get_chunk_id (bitarray.jl).
 # This is definitely a bit more complicated due to one-based indexing.
-@inline _get_chunk_index(i::Integer) = _div_uint_size(i - 1) + 1
+# _div_uint_size(i + (_uint_bit_length - 1)) == _div_uint_size(i - 1) + 1
+@inline _get_chunk_index(i::Integer) = _div_uint_size(i + (_uint_bit_length - 1))
 @inline _get_bit_index_mask(i::Integer) = UInt(1) << _mod_uint_size(i - 1)
 
 
@@ -69,7 +73,7 @@ PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
 end
 
 # This is used in unsafe_find_next_factor_index since we bitrotate the
-# bitmask there instead of calling _get_bit_index_mask each time.
+# bitmask there instead of calling unsafe_get_bit_index_mask each time.
 @inline function unsafe_get_bit_at_index_with_bitmask(arr::Vector{UInt}, index::Integer, bitmask::Integer)
     return @inbounds arr[_get_chunk_index(index)] & bitmask
 end
@@ -81,14 +85,15 @@ end
 function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, max_index::Integer)
     # Bit rotating the mask might be slower on platforms without a
     # native bit rotate instruction. Requires at least Julia 1.5.
+    start_index += 1
     bitmask = _get_bit_index_mask(start_index)
     for index in start_index:max_index
-        if unsafe_get_bit_at_index_with_bitmask(arr, index, bitmask) == 0
+        if iszero(unsafe_get_bit_at_index_with_bitmask(arr, index, bitmask))
             return index
         end
         bitmask = bitrotate(bitmask, 1)
     end
-    # Unsafe: you need to check this in the caller or make sure it
+    # UNSAFE: you need to check this in the caller or make sure it
     # never happens
     return max_index + 1
 end
@@ -110,9 +115,8 @@ function run_sieve!(sieve::PrimeSieve)
     max_factor_index = _map_to_index(unsafe_trunc(UInt, sqrt(sieve_size)))
     factor_index = UInt(1) # 1 => 3, 2 => 5, 3 => 7, ...
     while factor_index <= max_factor_index
-        factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_bits_index)
         clear_factors!(is_not_prime, factor_index, max_bits_index)
-        factor_index += 1
+        factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_factor_index)
     end
     return is_not_prime
 end
@@ -126,7 +130,7 @@ function count_primes(sieve::PrimeSieve)
     # beforehand.
     count = 1
     for i in 1:max_bits_index
-        if unsafe_get_bit_at_index(arr, i) == 0
+        if iszero(unsafe_get_bit_at_index(arr, i))
             count += 1
         end
     end
@@ -141,7 +145,7 @@ function get_found_primes(sieve::PrimeSieve)
     # Int(sieve_size) may overflow if sieve_size is too large (most
     # likely only a problem for 32-bit systems)
     for (index, number) in zip(1:max_bits_index, 3:2:Int(sieve_size))
-        if unsafe_get_bit_at_index(arr, index) == 0
+        if iszero(unsafe_get_bit_at_index(arr, index))
             push!(output, number)
         end
     end
@@ -164,7 +168,7 @@ function main_benchmark(sieve_size::Integer, duration::Integer)
     println(stderr, "Number of trues: ", count_primes(sieve_instance))
     println(
         stderr,
-        "primes_main.jl: ",
+        "primes_1of2.jl: ",
         join(
             [
                 "Passes: $passes",
@@ -190,6 +194,5 @@ function main(args::Vector{String}=ARGS)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    precompile(main_benchmark, (UInt, Int))
     main()
 end

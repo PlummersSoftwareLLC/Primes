@@ -96,7 +96,7 @@ param(
 
 # Known results for validating the output.
 $KnowResults = @{
-    10        = 1;
+    10        = 4;
     100       = 25;
     1000      = 168;
     10000     = 1229;
@@ -109,7 +109,7 @@ $KnowResults = @{
 class Sieve {
     Sieve([int]$Size) {
         $this.SieveSize = $Size
-        $this.BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList ([int] (($Size + 1) / 2)), $true)
+        $this.BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList ([int] (($Size / 2) + ($Size % 2))), $true)
     }
     [int]$SieveSize
     [System.Collections.BitArray]$BitArray
@@ -185,19 +185,17 @@ function Invoke-Sieve {
     $factor = 3
     $q = [int] [System.Math]::Sqrt($Sieve.SieveSize)
 
-    while ($factor -lt $q) {
-        for ($i = $factor; $i -le $Sieve.SieveSize; ++$i) {
+    while ($factor -le $q) {
+        for ($i = $factor; $i -lt $Sieve.SieveSize; ++$i) {
             if (($i -band 1) -or $Sieve.BitArray[$i -shr 1]) {
                 $factor = $i
                 break;
             }
         }
-        
+
         $step = 2 * $factor
-        for ($i = $factor * 3; $i -le $Sieve.SieveSize; $i += $step) {
-            if ($i -band 1) {
-                $Sieve.BitArray[$i -shr 1] = $false;
-            }
+        for ($i = $factor * $factor; $i -lt $Sieve.SieveSize; $i += $step) {
+            $Sieve.BitArray[$i -shr 1] = $false;
         }
 
         $factor += 2
@@ -231,8 +229,8 @@ function Write-Results {
     $retval = [System.Collections.Generic.List[int]]::New($Sieve.SieveSize)
     $retval.Add(2)
     
-    for ($i = 3; $i -le $Sieve.SieveSize; ++$i) {
-        if (($i -band 1) -or $Sieve.BitArray[$i -shr 1]) {
+    for ($i = 3; $i -le $Sieve.SieveSize; $i+=2) {
+        if ($Sieve.BitArray[$i -shr 1]) {
             ++$count
             $retval.Add($i)
         }

@@ -1,3 +1,4 @@
 #!/bin/sh
 
-swift run --configuration release
+./PrimeSwift_1bitBool/.build/release/PrimeSieveSwift
+./PrimeSwift_8bitBool/.build/release/PrimeSieveSwift

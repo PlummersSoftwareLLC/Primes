@@ -4,7 +4,8 @@ WORKDIR /home/opam/primeocaml
 
 COPY *.ml ./
 
-RUN chown -R opam:nogroup .
+# hadolint ignore=DL3004
+RUN sudo chown -R opam:nogroup .
 RUN corebuild PrimeOCamlFunctional.native
 
 FROM alpine:3.13

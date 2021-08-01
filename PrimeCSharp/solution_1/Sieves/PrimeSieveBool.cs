@@ -8,6 +8,7 @@ namespace PrimeCSharp.Sieves
         public string QuickName => "bool";
         public string Name => "Bool Array";
         public bool IsBaseAlgorithm => true;
+        public int? BitsPerPrime => 8;
 
         public int SieveSize { get; }
         private readonly bool[] boolArray;
@@ -76,18 +77,16 @@ namespace PrimeCSharp.Sieves
 
         private bool GetBit(int index)
         {
-            if (index % 2 == 0)
-                return false;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
             return boolArray[index >> 1];
         }
 
         private void ClearBit(int index)
         {
-            if (index % 2 == 1)
-            {
-                boolArray[index >> 1] = false;
-            }
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
+
+            boolArray[index >> 1] = false;
         }
     }
 }
