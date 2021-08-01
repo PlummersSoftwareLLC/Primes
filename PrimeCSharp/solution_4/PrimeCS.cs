@@ -92,12 +92,7 @@ namespace PrimeSieveCS
                 }
             }
 
-            /// <summary>
-            /// Unrolled version of ClearBitsSparse.
-            /// 
-            /// Provided by mike-barber.
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            
             unsafe static void ClearBitsSparseUnrolled4(ulong* ptr, uint start, uint factor, uint limit)
             {
                 var i0 = start;
@@ -120,6 +115,43 @@ namespace PrimeSieveCS
                 }
 
                 while (i0 < limit)
+                {
+                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
+                    i0 += factor;
+                }
+            }
+
+            /// <summary>
+            /// Unrolled version of ClearBitsSparse.
+            /// 
+            /// Provided by mike-barber. Reversed version by ItalyToast
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            unsafe static void ClearBitsSparseUnrolled4Rev(ulong* ptr, uint start, uint factor, uint limit)
+            {
+                uint bitsset = (limit - start) / factor;
+                int iter = (int)bitsset;
+
+                var i0 = start;
+                var i1 = start + factor;
+                var i2 = start + factor * 2;
+                var i3 = start + factor * 3;
+
+                var factor4 = factor * 4;
+                for (iter -= 4; iter > 0; iter -= 4)
+                {
+                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
+                    ptr[i1 / 64] |= 1ul << (int)(i1 % 64);
+                    ptr[i2 / 64] |= 1ul << (int)(i2 % 64);
+                    ptr[i3 / 64] |= 1ul << (int)(i3 % 64);
+
+                    i0 += factor4;
+                    i1 += factor4;
+                    i2 += factor4;
+                    i3 += factor4;
+                }
+
+                for (iter += 4; iter >= 0; iter--)
                 {
                     ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
                     i0 += factor;
@@ -169,7 +201,7 @@ namespace PrimeSieveCS
                         }
                         else
                         {
-                            ClearBitsSparseUnrolled4(ptr, (factor * factor) / 2, factor, halfLimit);
+                            ClearBitsSparseUnrolled4Rev(ptr, (factor * factor) / 2, factor, halfLimit);
                         }
                     }
             }
