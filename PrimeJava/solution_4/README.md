@@ -1,6 +1,7 @@
 # Prime Sieve Algorithms
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-other-yellow)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
@@ -15,6 +16,8 @@ This is a collection of prime sieve algorithms implemented in Java. All solution
 * I32C: Using 32 bit integers to store primes, 1 bit per prime, precache masks
 * I64: Using 64 bit integers to store primes, 1 bit per prime
 * I64C: Using 64 bit integers to store primes, 1 bit per prime, precache masks
+* I64PatternCalc: Using 64 bit integers to store primes, 1 bit per prime, using masks to mark multiple values per array write, making it an "other" algorithm
+* W appended means a warmup was done
 
 ## Building and running
 
@@ -26,6 +29,7 @@ Options you can set from the commandline:
 
 * -parallel: Run multithreaded.
 * -threads: How many threads to use when running multithreaded. Defaults to the number of processors on the system.
+* -warmup: Runs the sieve a few seconds to warmup the JVM.
 
 ## Output
 
@@ -33,35 +37,40 @@ Results:
 
 i7-8750H
 ```
-chrvanorleI8;4026;5.006000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32;6017;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64;5867;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32W;6160;5.007000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32CW;7380;5.006000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64W;6041;5.005000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64CW;7171;5.013000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64PatternCalcW;9286;5.012000;1;algorithm=other,faithful=yes,bits=1
+chrvanorleI8W;5367;5.012000;1;algorithm=base,faithful=yes,bits=1
 ```
 
-i5-3570K
+e5-2670 (v1)
 ```
-chrvanorleI8;4319;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32;6335;5.006000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64;6130;5.009000;1;algorithm=base,faithful=yes,bits=1
-```
-
-e5-2670 (V1)
-```
-chrvanorleI8;2806;5.001000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32;3735;5.001000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64;3604;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32W;3735;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32CW;4358;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64W;3665;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64CW;4157;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64PatternCalcW;4999;5.005000;1;algorithm=other,faithful=yes,bits=1
+chrvanorleI8W;3444;5.000000;1;algorithm=base,faithful=yes,bits=1
 ```
 
-r7 3700x (windows 10)
+i5-3570k
 ```
-chrvanorleI8;4775;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32;6884;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64;6367;5.001000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32W;5005;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32CW;5013;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64W;4855;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64CW;4771;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64PatternCalcW;7408;5.000000;1;algorithm=other,faithful=yes,bits=1
+chrvanorleI8W;4123;5.000000;1;algorithm=base,faithful=yes,bits=1
 ```
 
-r7 3700x (centos 8)
+r7-3700x (debian)
 ```
-chrvanorleI8;5959;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32;8972;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64;7788;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32W;8428;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32CW;9269;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64W;8040;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64CW;7869;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64PatternCalcW;11819;5.000000;1;algorithm=other,faithful=yes,bits=1
+chrvanorleI8W;3985;5.000000;1;algorithm=base,faithful=yes,bits=1
 ```
