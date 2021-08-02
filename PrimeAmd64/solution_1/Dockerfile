@@ -1,6 +1,5 @@
-FROM alpine:3.13
+FROM alpine:3.14
 WORKDIR /opt/app
-COPY *.sh *.dmp ./
-RUN chmod +x *.sh
+COPY . .
 RUN ./make.sh
-ENTRYPOINT [ "./run.sh" ]
+ENTRYPOINT [ "./run8.sh" ]

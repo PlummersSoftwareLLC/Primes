@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 for f in *.dmp ; do
     a=`basename $f .dmp`
     cut -d'#' -f1 <$f | xxd -p -r >$a
