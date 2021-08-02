@@ -91,12 +91,11 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    prime_sieve sieve(1000, bf_source_file);
-
     int passes = 0;
     auto start_time = steady_clock::now();
 
     while (true) {
+        prime_sieve sieve(1000, bf_source_file);
         sieve.runSieve();
         passes++;
 
