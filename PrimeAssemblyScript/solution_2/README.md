@@ -49,9 +49,9 @@ CPU: `Intel Core i9 2.3 GHz`
 ### Result
 
 ```text
-Passes: 7315,
+Passes: 7670,
 Time: 5.0,
-Avg: 0.0006835269741714001,
+Avg: 0.0006518904701806605,
 Limit: 1000000,
 Count1: 78498,
 Count2: 78498,
@@ -59,5 +59,5 @@ Valid: true
 ```
 
 ```bash
-maxgraey;7315;5.0;1;algorithm=base,faithful=yes,bits=1
+maxgraey;7670;5.0;1;algorithm=base,faithful=yes,bits=1
 ```
