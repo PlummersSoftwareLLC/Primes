@@ -77,7 +77,7 @@ public:
                validateResults());
 
         printf("\n");
-        printf("aquarel;%d;%f;1;algorithm=base,faithful=no,parallel=no,bits=32\n", passes, duration);
+        printf("aquarel;%d;%f;1;algorithm=base,faithful=no,bits=32\n", passes, duration);
     }
 };
 

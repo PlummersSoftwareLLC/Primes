@@ -4,6 +4,7 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
+![Deviation](https://img.shields.io/badge/Deviation-brainfuck-blue)
 
 This solution implements a sieve similar to the original python version in the BrainFuck language. The amazing (perhaps
 even amusing) part of this language is that there are only eight commands available that each consist of a single
