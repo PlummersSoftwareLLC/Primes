@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 echo 1000000 | ./dacvs8 | awk '
     1 { print > "/dev/stderr" }
     $1=="I" {i=$2}
