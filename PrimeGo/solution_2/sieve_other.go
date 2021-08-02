@@ -9,7 +9,7 @@ import (
 
 var label string = "ssovest-go-other"
 
-var primeCounts = map[uintptr]uintptr{
+var primeCounts = map[uint64]uint64{
 	10:        4,
 	100:       25,
 	1000:      168,
@@ -22,12 +22,12 @@ var primeCounts = map[uintptr]uintptr{
 
 type Bitarray []uint64
 
-func NewBitarray(length uintptr) Bitarray {
+func NewBitarray(length uint64) Bitarray {
 	return make(Bitarray, (length+63)/64)
 }
 
-func (b Bitarray) SetSliceTrue(start, stop, step uintptr) {
-	var index, next, end uintptr
+func (b Bitarray) SetSliceTrue(start, stop, step uint64) {
+	var index, next, end uint64
 	var mask uint64
 	end = (stop + 63) / 64
 
@@ -79,15 +79,15 @@ func (b Bitarray) SetSliceTrue(start, stop, step uintptr) {
 	}
 }
 
-func (b Bitarray) Find(val bool, start, stop uintptr) uintptr {
+func (b Bitarray) Find(val bool, start, stop uint64) uint64 {
 	for start < stop && val != (b[start/64]&bits.RotateLeft64(1, int(start)) != 0) {
 		start++
 	}
 	return start
 }
 
-func (b Bitarray) Count(val bool, start, stop uintptr) uintptr {
-	var count uintptr
+func (b Bitarray) Count(val bool, start, stop uint64) uint64 {
+	var count uint64
 	for ; start < stop; start++ {
 		if val == (b[start/64]&bits.RotateLeft64(1, int(start)) != 0) {
 			count++
@@ -98,11 +98,11 @@ func (b Bitarray) Count(val bool, start, stop uintptr) uintptr {
 
 type Sieve struct {
 	bits Bitarray
-	size uintptr
+	size uint64
 }
 
 func (s Sieve) RunSieve() {
-	var factor, start, stop, step uintptr
+	var factor, start, stop, step uint64
 	stop = (s.size + 1) / 2
 	for {
 		factor = s.bits.Find(false, factor+1, stop)
@@ -116,7 +116,7 @@ func (s Sieve) RunSieve() {
 	}
 }
 
-func (s Sieve) CountPrimes() uintptr {
+func (s Sieve) CountPrimes() uint64 {
 	return s.bits.Count(false, 0, (s.size+1)/2)
 }
 
@@ -126,19 +126,17 @@ func (s Sieve) ValidateResults() bool {
 }
 
 func main() {
-	var limit uintptr
-	var l64 uint64
+	var limit uint64
 	var duration time.Duration
 	var verbose bool
 	var sieve Sieve
 
-	flag.Uint64Var(&l64, "limit", 1000000, "limit")
+	flag.Uint64Var(&limit, "limit", 1000000, "limit")
 	flag.DurationVar(&duration, "time", 5*time.Second, "duration")
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 
 	flag.Parse()
 
-	limit = uintptr(l64)
 	stop := make(chan struct{})
 	passes := 0
 	start := time.Now()
