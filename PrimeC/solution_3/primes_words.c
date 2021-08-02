@@ -20,7 +20,7 @@
 // The setting below is set to 16kb
 // this L1 cache size is assumed if it can not be determined
 #define DEFAULT_L1_SIZE (16*1024)
-#define KEEP_FREE 0
+#define KEEP_FREE 1500
 //
 // The configuration parameter below determines 
 unsigned int BLOCK_SIZE = (DEFAULT_L1_SIZE - KEEP_FREE ) / sizeof(TYPE);
@@ -89,6 +89,22 @@ static inline TYPE getBit (struct sieve_state *sieve_state,unsigned int index) {
     unsigned int word_offset = index >> SHIFT;  
     unsigned int offset  = index & MASK;
     return sieve_state->bit_array[word_offset] & offset_mask[offset];     // use a mask to only get the bit at position bitOffset.
+}
+
+/*
+    Purpose:
+    Crossout bit by bit
+
+*/
+static inline void bit_cross_out(
+    struct sieve_state *sieve_state,
+    unsigned int prime,
+    unsigned int max_index
+) {
+    unsigned int start_index = ((prime * prime)>>1U);
+    for ( unsigned int i = start_index; i <= max_index; i +=prime ) {
+        setBit(sieve_state,i);
+    }
 }
 
 /*
@@ -373,7 +389,7 @@ void print_results (
         );
 
 	printf("\n");
-	printf("fvbakel_Cwords;%d;%f;1;algorithm=other,faithful=yes,bits=%lu\n", passes, duration,1LU);
+	printf("fvbakel_Cwords;%d;%f;1;algorithm=other,faithful=yes,bits=%lu,blocksize=%u\n", passes, duration,1LU,BLOCK_SIZE);
 }
 
 double run_timed_sieve(  
@@ -418,22 +434,24 @@ double run_timed_sieve(
 */
 void set_word_block_size(const unsigned int limit) {
     const double sample_time = 0.2;
-    const unsigned int block_size_samples[] = {4,16,32,64,128};
-    double speed[5];
+    const unsigned int block_size_samples_kb[] = {4,16,32,64,128,(1024*4)};
+    const unsigned int nr_of_samples = 6;
+    unsigned int block_size_samples[(nr_of_samples)];
+    double speed[(nr_of_samples)];
     unsigned int max_speed_index = 0;
 
-    for (unsigned int i = 0; i <5; i ++) {
-        BLOCK_SIZE = ((block_size_samples[i] * 1024) - KEEP_FREE) / sizeof(TYPE);
+    for (unsigned int i = 0; i <nr_of_samples; i ++) {
+        block_size_samples[i] = ((block_size_samples_kb[i] * 1024) - KEEP_FREE) / sizeof(TYPE);
+        BLOCK_SIZE = block_size_samples[i];
         speed[i] = run_timed_sieve(limit,sample_time,0,0);
     }
 
-    for (unsigned int i = 1; i <4; i ++) {
+    for (unsigned int i = 1; i <(nr_of_samples); i ++) {
         if (speed[i]> speed[max_speed_index]) {
             max_speed_index = i;
         }
     }
-    BLOCK_SIZE = ((block_size_samples[max_speed_index] * 1024) - KEEP_FREE) / sizeof(TYPE);
-
+    BLOCK_SIZE = block_size_samples[max_speed_index];
 }
 
 int main(int argc, char **argv) {
@@ -443,9 +461,11 @@ int main(int argc, char **argv) {
     
     double              speed;
 
-    set_word_block_size(limit);
+    while(1) {
+        set_word_block_size(limit);
 
-    speed = run_timed_sieve(limit,maxtime,show_result,1);
+        speed = run_timed_sieve(limit,maxtime,show_result,1);
+    }
 
     return 0;
 }
