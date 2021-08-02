@@ -93,22 +93,6 @@ static inline TYPE getBit (struct sieve_state *sieve_state,unsigned int index) {
 
 /*
     Purpose:
-    Crossout bit by bit
-
-*/
-static inline void bit_cross_out(
-    struct sieve_state *sieve_state,
-    unsigned int prime,
-    unsigned int max_index
-) {
-    unsigned int start_index = ((prime * prime)>>1U);
-    for ( unsigned int i = start_index; i <= max_index; i +=prime ) {
-        setBit(sieve_state,i);
-    }
-}
-
-/*
-    Purpose:
     Crossout a the sieve block by block, this has a few more calculations
     but can better use the L1 cache
 
@@ -389,9 +373,13 @@ void print_results (
         );
 
 	printf("\n");
-	printf("fvbakel_Cwords;%d;%f;1;algorithm=other,faithful=yes,bits=%lu,blocksize=%u\n", passes, duration,1LU,BLOCK_SIZE);
+	printf("fvbakel_Cwords;%d;%f;1;algorithm=other,faithful=yes,bits=%lu\n", passes, duration,1LU);
 }
 
+/*
+    Purpose:
+    Run the sieve in a loop until the maximum specified time
+*/
 double run_timed_sieve(  
     unsigned int        limit,
     double              maxtime,
@@ -458,14 +446,12 @@ int main(int argc, char **argv) {
     unsigned int        limit       = 1000000;
     double              maxtime     = 5.;
     unsigned int        show_result = 0;
-    
+
     double              speed;
 
-    while(1) {
-        set_word_block_size(limit);
+    set_word_block_size(limit);
 
-        speed = run_timed_sieve(limit,maxtime,show_result,1);
-    }
+    speed = run_timed_sieve(limit,maxtime,show_result,1);
 
     return 0;
 }
