@@ -37,9 +37,9 @@ type
       bits: PBitsArr;
 
       procedure ClearBits(n, skip: uint64); inline;
-      function GetBit(n: uint64): boolean; inline;
+      function IsPrime(n: uint64): boolean; inline;
       function CountPrimes: uint64;
-      procedure PrintResults(showResults, showValidation: boolean; duration: double; passes, threads: integer);
+      procedure PrintResults(showResults, showValidation: boolean; duration: double; totalPasses, threads: integer);
       function ValidateResults: boolean;
 
     public
@@ -59,7 +59,11 @@ begin
   //allocating bitsArrSize = sieveSize/64 uint32s on the heap to store the bits for odd numbers
   bitsArrSize:=(n>>6) + ord(((n>>1) and 31)<>0); //and extra uint32 is added in case sieveSize/2 is not a multiple of 32
   bits:=GetMem(bitsArrSize*4); // 32 bits = 4 bytes
-  fillDWord(bits^[0], bitsArrSize, $FFFFFFFF); // setting bits to true
+  {$if defined(linux) or defined(freebsd) or defined(darwin)}
+  fillDWord(bits^[0], bitsArrSize, $FFFFFFFF); // setting bits to true on linux machines (see why in ClearBits)
+  {$else}
+  fillDWord(bits^[0], bitsArrSize, $0); // setting bits to false on Windows machines (see why in ClearBits)
+  {$endif}
 end;
 
 destructor prime_sieve.Destroy;
@@ -80,19 +84,26 @@ begin
 
   while n<=maxSize do
   begin
-    bits^[n>>5]:=bits^[n>>5] and not(uint32(1) << (n and 31));
+    {$if defined(linux) or defined(freebsd) or defined(darwin)}
+    bits^[n>>5]:=bits^[n>>5] and not(uint32(1) << (n and 31)); // setting bit to 0 specifying the number is not prime ("and not" seems faster than "or" on linux machines or at least on aarch64)
+    {$else}
+    bits^[n>>5]:=bits^[n>>5] or (uint32(1) << (n and 31)); // setting bit to 1 specifying the number is not prime ("or" seems faster than "and not" on Windows machines)
+    {$endif}
     n+=skip;
   end;
 end;
 
-function prime_sieve.GetBit(n: uint64): boolean;
+function prime_sieve.IsPrime(n: uint64): boolean;
 begin
-  result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))<>0;
+  {$if defined(linux) or defined(freebsd) or defined(darwin)}
+  result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))<>0; // checking whether the bit is set to 0
+  {$else}
+  result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))=0; // checking whether the bit is set to 1
+  {$endif}
 end;
 
 procedure prime_sieve.RunSieve;
 var
-  num,
   factor,
   q: uint64;
 
@@ -100,17 +111,12 @@ begin
   factor:=3;
   q:=trunc(sqrt(sieveSize));
 
-  while factor<=q do
+  while factor <= q do
   begin
-    num:=factor;
+    // searching the next prime number to set the factor
+    while not IsPrime(factor) and (factor < sieveSize) do
+      factor+=2;
 
-    while (num<=sieveSize) and not GetBit(num) do
-      num+=2;
-
-    if num>sieveSize then
-      break;
-
-    factor:=num;
     ClearBits(factor*factor, factor+factor);
     factor+=2;
   end;
@@ -128,7 +134,7 @@ begin
 
   while i<=sieveSize do
   begin
-    if GetBit(i) then
+    if IsPrime(i) then
       count+=1;
 
     i+=2;
@@ -171,7 +177,7 @@ begin
   resultsDictionary.Free;
 end;
 
-procedure prime_sieve.PrintResults(showResults, showValidation: boolean; duration: double; passes, threads: integer);
+procedure prime_sieve.PrintResults(showResults, showValidation: boolean; duration: double; totalPasses, threads: integer);
 var
   count,
   num: uint64;
@@ -186,7 +192,7 @@ begin
 
   while num<=sieveSize do
   begin
-    if GetBit(num) then
+    if IsPrime(num) then
     begin
       if showResults then
          write(format('%d, ', [num]));
@@ -203,17 +209,17 @@ begin
   if showValidation then
   begin
     writeln(format('Passes: %d, Theads: %d, Time: %.6f s, Avg: %.6f ms, Limit: %d, Counts: %d/%d, Valid: %s',[
-                   passes,
+                   totalPasses,
                    threads,
                    duration,
-                   duration*1000/passes, // displaying average in milliseconds
+                   duration*1000/totalPasses, // displaying average in milliseconds
                    sieveSize,
                    count, CountPrimes,
                    BoolToStr(validateResults, 'true', 'false')]));
     writeln;
   end;
 
-  writeln(format('olivierbrun;%d;%.6f;%d;algorithm=base,faithful=yes,bits=1', [passes, duration, threads]));
+  writeln(format('olivierbrun;%d;%.6f;%d;algorithm=base,faithful=yes,bits=1', [totalPasses, duration, threads]));
 end;
 
 // retrieve command line options
@@ -248,11 +254,13 @@ function SieveThread(p: pointer): ptrint;
 var
   sieve: prime_sieve;
   lSieveThreadParam: PSieveThreadParam;
+  passes: integer;
 
 begin
   lSieveThreadParam:=p;
   InterLockedIncrement(lSieveThreadParam^.runningThreads); // increment the running threads count
   sieve:=nil;
+  passes:=0;
 
   // calculating primes until the main thread sets the terminateThreads to true
   while not lSieveThreadParam^.terminateThreads do
@@ -263,8 +271,10 @@ begin
 
     sieve:=prime_sieve.Create(lSieveThreadParam^.sieveSize); // instantiate a new sieve
     sieve.runSieve; // run it
-    InterLockedIncrement(lSieveThreadParam^.passes); // the passes variable is shared among all threads, hence the use of the thread safe InterLockedIncrement instruction instead of directly doing a +=1 operation
+    passes+=1;
   end;
+
+  InterlockedExchangeAdd(lSieveThreadParam^.passes, passes); // adding passes to the shared variable in a thread safe way
 
   // displaying results if this is the latest thread to terminate
   if lSieveThreadParam^.runningThreads=1 then
@@ -307,4 +317,3 @@ begin
     end;
   end;
 end.
-
