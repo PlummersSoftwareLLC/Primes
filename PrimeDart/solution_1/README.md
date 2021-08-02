@@ -97,10 +97,10 @@ platform, but Dart will generate a standard ELF binary on *nix systems.
 ### Docker Results (runs all implementations)
 
 ```
-eagerestwolf&mmcdon20_8bit;4736;5.00113;1;algorithm=base,faithful=yes,bits=8
-eagerestwolf&mmcdon20_8bit_par;10888;5.001292;12;algorithm=base,faithful=yes,bits=8
-eagerestwolf&mmcdon20_1bit;3609;5.000836;1;algorithm=base,faithful=yes,bits=1
-eagerestwolf&mmcdon20_1bit_par;20329;5.000964;12;algorithm=base,faithful=yes,bits=1
+eagerestwolf&mmcdon20_8bit;4766;5.000781;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_8bit_par;10417;5.002521;12;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_1bit;4171;5.001069;1;algorithm=base,faithful=yes,bits=1
+eagerestwolf&mmcdon20_1bit_par;24669;5.001305;12;algorithm=base,faithful=yes,bits=1
 ```
 
 ### Dart SDK (running PrimeDart.dart)
