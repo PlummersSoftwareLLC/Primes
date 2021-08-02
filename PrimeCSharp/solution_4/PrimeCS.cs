@@ -85,40 +85,14 @@ namespace PrimeSieveCS
                 }
             }
 
+            //Note: this is not actually used
+            //it is the reference for the unrolled version: ClearBitsSparseUnrolled4Rev
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             unsafe static void ClearBitsSparse(ulong* ptr, uint start, uint factor, uint limit)
             {
                 for (uint index = start; index < limit; index += factor)
                 {
                     ptr[index / 64] |= 1UL << (int)(index % 64);
-                }
-            }
-
-            unsafe static void ClearBitsSparseUnrolled4(ulong* ptr, uint start, uint factor, uint limit)
-            {
-                var i0 = start;
-                var i1 = start + factor;
-                var i2 = start + factor * 2;
-                var i3 = start + factor * 3;
-
-                var factor4 = factor * 4;
-                while (i3 < limit)
-                {
-                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
-                    ptr[i1 / 64] |= 1ul << (int)(i1 % 64);
-                    ptr[i2 / 64] |= 1ul << (int)(i2 % 64);
-                    ptr[i3 / 64] |= 1ul << (int)(i3 % 64);
-
-                    i0 += factor4;
-                    i1 += factor4;
-                    i2 += factor4;
-                    i3 += factor4;
-                }
-
-                while (i0 < limit)
-                {
-                    ptr[i0 / 64] |= 1ul << (int)(i0 % 64);
-                    i0 += factor;
                 }
             }
 
