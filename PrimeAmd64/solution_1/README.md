@@ -14,7 +14,7 @@ When I open the source file dacvs8.dmp in vi (really vim) on my Ubuntu system, t
 ## Run instructions
 
 To make the binary, run `make.sh` (on a Linux system).
-To execute the binary (after it is made) for primes up to 1 million, run `run.sh`.
+To execute the binary (after it is made) for primes up to 1 million, run `run8.sh`.
 
 ## Output
 
