@@ -8,7 +8,7 @@ export default class DockerService {
   }
 
   public runContainer(imageName: string): string {
-    const output = child_process.execSync(`docker run --rm ${imageName}`, {
+    const output = child_process.execSync(`docker run --security-opt seccomp=unconfined --rm ${imageName}`, {
       stdio: 'pipe'
     });
     return output.toString('utf8');
