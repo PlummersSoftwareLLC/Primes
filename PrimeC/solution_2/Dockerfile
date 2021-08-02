@@ -1,8 +1,10 @@
-FROM alpine:3.13
+FROM ubuntu:20.04
 
-RUN apk add --update build-base
+# Get GCC
+RUN apt-get update
+RUN apt-get install -y build-essential
 
-WORKDIR /opt/app
+WORKDIR /home/primes
 
 COPY compile.sh .
 COPY run.sh .
