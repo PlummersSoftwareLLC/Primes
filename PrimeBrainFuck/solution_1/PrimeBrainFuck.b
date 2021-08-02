@@ -1,6 +1,6 @@
 ********************************************
 BrainFuck Prime Sieve 
-by aquarel 7/23/21
+by aquarel 8/1/21
 
 This file only contains the core function
 of the prime sieve; Which is equivalent to 
@@ -24,13 +24,13 @@ Use x as a first guess; y0 = x
 y1 = (y0 add x / y0) / 2
 y2 = (y1 add x / y1) / 2
 y3 = (y3 add x / y3) / 2
-and so on for 12 times
-y12 = (y11 add x / y11) / 2
-y12 add 1 = sqrt(x)
+and so on for 6 times
+y6 = (y5 add x / y5) / 2
+y6 add 1 = sqrt(x)
 
 Every "cell" or memory address used for one
 iteration is listed below; Each cell has a
-tag at the start:
+tag at the start which dictates its function:
 "set" = an input value
 "out" = an output value
 "use" = value reserved to use when run
@@ -39,7 +39,7 @@ tag at the start:
 
 memory layout = 
 {
-set 0   x = 1'000'000
+set 0   x = 1000
 set 1   dividend = x
 out 2   remainder = x % y0
 set 3   divisor = y0
@@ -58,12 +58,11 @@ use 14  last_zero = 0
 cpy 15  copy_of_y1
 }
 
-Performance statistics:
-192 cells (768 bytes) are used in this step
-Takes ~5 seconds to run on i9 9900K in WSL
+96 cells (384 bytes of memory) are used in
+this step
 
 iteration #1
-    set x = (1'000'000)
+    set x = (1000)
         ++ ++ ++ ++ ++
         [>++ ++ ++ ++ ++<-]
         >[>++ ++ ++ ++ ++<-]
@@ -124,6 +123,7 @@ iteration #1
 iteration #2 (the same code without comments and with a couple changes)
     >>>> >>>> >>>> >>>> go to 16
 
+    set x = (1000)
     ++++++++++[>++++++++++<-]>[>++++++++++<-]>[<+<+>>-]<<
 
     copy previous result to divisor and copy_of_y1
@@ -133,10 +133,12 @@ iteration #2 (the same code without comments and with a couple changes)
             <<<< go to previous 12
         -]>>>> go to 0
 
+    simplified code (removed redundant data pointer shifts)
     >[>+>-[>>>]<[[>+<-]>>+>]<<<<-]>>>[>>>>+<<<<-]>>>>>>>>>>>[<<<<<<
     <+>>>>>>>-]<<<<<<<[>+<-]>>>++<<[>+>-[>>>]<[[>+<-]>>+>]<<<<-]
 
-I couldn't be bothered to write a loop
+the same code as iteration #2 (simplified and compacted)
+I was also too lazy to write a loop
 iteration #3
     >>>>>>>++++++++++[>++++++++++<-]>[>++++++++++<-]>[<+<+>>-]<<<<<
     <[>>>>>>>+>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<-]>>>>>[>+>-[>>>]<[[>
@@ -163,10 +165,6 @@ iteration #6
 
 PART #2 =
 """
-void clear_bit(int index){
-    rawbits(index // 2) = false;
-}
-
 for (int factor = 3;
     factor smaller_than q;
     factor = factor plus 2){
@@ -175,30 +173,37 @@ for (int factor = 3;
         num smaller_than sieve_size;
         num = num plus factor * 2){
 
-        clear_bit(num);
+        rawbits(index // 2) = false;
     }
 }
 """
 
-This step is the core functionality of the
-prime sieve; The two nested loops are a
-simplified version of the original python
-implementation by davepl 
+This step is the prime sieve; The two nested
+loops are a simplified version of the 
+original python implementation by davepl 
 (PrimePython/solution_1/PrimePY*py); It 
 checks for all factors and does not skip any
 The performance of this is sub optimal;
+You can check out the more readable version
+of this here (replace the stars with dots):
+https://github*com/ThatAquarel/Primes/blob/
+brainfuck_solution/PrimeBrainFuck/
+solution_1/drafts/sieve*py
 
-The first and second for loop are written
-seperately in the files drafts/for_loop*b
-and drafts/for_loop2*b; The two combined
-is stored in drafts/for_loop3*b; PART #2
-is a simplified version of the loops in
-drafts/for_loop3_simplied*b; It contains
-less unecessary steps
+Also links for the seperated code of these
+two loops (replace the stars with dots):
+First loop
+https://github*com/ThatAquarel/Primes/blob/
+brainfuck_solution/PrimeBrainFuck/
+solution_1/drafts/for_loop*b
+Second loop
+https://github*com/ThatAquarel/Primes/blob/
+brainfuck_solution/PrimeBrainFuck/
+solution_1/drafts/for_loop2*b
 
 Every "cell" or memory address used for one
 iteration is listed below; Each cell has a
-tag at the start:
+tag at the start which dictates its function:
 "set" = an input value
 "out" = an output value
 "use" = value reserved to use when run
@@ -218,7 +223,7 @@ cpy 7   factor_copy = factor
 
 set 8   multiplier_1 = factor
 out 9   start = multiplier_1 * 3
-set 10  num = 1'000'000 minus start
+set 10  num = 1000 minus start
 set 11  multiplier_2 = factor
 out 12  step = multiplier_2 * 2
 cpy 13  step_copy_1 = step
@@ -245,11 +250,9 @@ ign 30
 ign 31
 }
 
-Performance statistics:
 32 cells (128 bytes) are used by the loops
-8 000 000 cells (32 000 000 bytes) are used
-by the prime array
-Takes ~20 minutes to run on i9 9900K in WSL
+8000 cells (32000 bytes) are used by the 
+prime array
 
 FIRST FOR LOOP
 [
@@ -261,10 +264,9 @@ FIRST FOR LOOP
 
     [ if at check: run the following code once
         <++ add (2) to factor
-        .
         
         SECOND FOR LOOP
-            set num = 1'000'000
+            set num = 1000
                 >>>> >>>> >> go to num
                 ++ ++ ++ ++ ++
                 [>++ ++ ++ ++ ++<-]
@@ -366,6 +368,22 @@ FIRST FOR LOOP
                             <<<< <+> >>>> add remainder
                         -]<< <<<< <<<< go to check
 
+                    PRIME ARRAY
+
+                    memory layout =
+                    {
+                    set 0   data = 1
+                    set 1   go_to = 0
+                    use 2   first_zero = 0
+                    use 3   last_zero = 0
+                    set 4   prime_count = 0
+                    set 5   go_back = 0
+                    ign 6
+                    use 7   check = 1
+
+                    repeat for 999 more times
+                    }
+
                     < go to num_copy_1
                         copy num_copy_1 to num_copy_2; go_to and go_back
                             [
@@ -438,7 +456,7 @@ FIRST FOR LOOP
                 <<- sub num_copy_1
             ]
 
-            clear memory
+            clear memory for next iteration of loop
                 >[-] set check = 0
                 >[-] set step = 0
 
@@ -462,8 +480,62 @@ FIRST FOR LOOP
     <<- sub factor
 ]
 
+PART #3 =
+"""
+int count = 0;
+for (int i = 0; i smaller_than 1000; i = i plus 1) {
+    if (rawbits at index i == true) {
+        count = count plus 1;
+    }
+}
+
+return count;
+"""
+
+This final step counts all the primes; The
+current index equals 0 if it is prime and
+larger than 0 if it is composite; The count
+is incremented each time it meets a prime;
+Half the total (500) is subtracted after
+because we haven't ruled out the even 
+numbers yet
+
+Every "cell" or memory address used for one
+iteration is listed below; Each cell has a
+tag at the start which dictates its function:
+"set" = an input value
+"out" = an output value
+"use" = value reserved to use when run
+"cpy" = a copy of a value
+"ign" = ignored/unused value
+
+memory layout =
+{
+first_index:
+set 0   data = 1
+set 1   go_to = 0
+use 2   first_zero = 0
+use 3   last_zero = 0
+set 4   prime_count = 0
+set 5   go_back = 0
+ign 6
+use 7   check = 1
+repeat for 998 more times
+
+last index:
+set 0
+set 1
+use 2
+use 3
+set 4   prime_count
+set 5   half_total = 500
+ign 6
+use 7
+}
+
+
 >>>> >>>> >>>> >>>> >>>> >>>> >>>> >>>> go to first array index
-> set go_to to 1 000 000
+> set go_to to 1000
     ++ ++ ++ ++ ++
     [>++ ++ ++ ++ ++<-]
     >[<++ ++ ++ ++ ++>-]<
@@ -501,11 +573,19 @@ FIRST FOR LOOP
 
 >>>> go to prime_count
 
-> set next one = 500 000
+> set half_total = 500
 ++ ++ ++ ++ ++
 [>++ ++ ++ ++ ++<-]
 >[<++ ++ +>-]<
 
-[<->-] subtract next one from prime_count
+[<->-] sub half_total from prime_count
 which removes all the even numbers
 < return prime_count
+
+Performance:
+    Testing platform info:
+    CPU: i9 9900K @ 3*60 GHZ
+    OS HOST: Windows 10 21h1 (build 19043*1110)
+    OS GUEST: WSL version 2; Ubuntu 18*04
+
+    Averages 53 seconds per run

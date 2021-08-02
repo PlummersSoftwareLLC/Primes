@@ -45,4 +45,4 @@ COPY --from=build /opt/app/PrimeBrainFuck /usr/local/bin
 COPY --from=build /opt/app/PrimeBrainFuck.b /opt/app/
 
 # run
-ENTRYPOINT [ "PrimeBrainFuck", "1", "/opt/app/PrimeBrainFuck.b" ]
+ENTRYPOINT [ "PrimeBrainFuck", "/opt/app/PrimeBrainFuck.b" ]

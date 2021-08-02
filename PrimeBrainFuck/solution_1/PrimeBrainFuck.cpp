@@ -1,8 +1,15 @@
+// ---------------------------------------------------------------------------
+// PrimeBrainFuck.cpp : An invoker for the BrainFuck implementation
+// Mostly copied from the original davepl C++ version
+// Modified by ThatAquarel
+// ---------------------------------------------------------------------------
+
 #include <cstdlib>
 #include <chrono>
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <sys/stat.h>
 
 using namespace std;
 using namespace std::chrono;
@@ -39,15 +46,25 @@ public:
         sieve_size = n;
 
         stringstream exec_stream;
-        exec_stream << "brainfuck " << bf_source_file << " " << n + 128;
+        exec_stream << "brainfuck " << bf_source_file << " " << n * 8 + 1024;
         getline(exec_stream, exec_str);
     }
 
-    ~prime_sieve() = default;
-
     void runSieve() {
-        int exit_status = system(exec_str.c_str());
-        count = WEXITSTATUS(exit_status);
+        FILE *fp;
+        char path[256];
+
+        fp = popen(exec_str.c_str(), "r");
+        if (fp == nullptr) {
+            cerr << "Failed to execute command: " << exec_str << endl;
+            exit(-1);
+        }
+
+        while (fgets(path, sizeof(path), fp) != nullptr) {
+            count = stoi(path);
+        }
+
+        pclose(fp);
     }
 
     void printResults(double duration, int passes) {
@@ -60,35 +77,35 @@ public:
                validateResults());
 
         printf("\n");
-        printf("aquarel;%d;%f;1;algorithm=base,faithful=no,bits=32\n", passes, duration);
+        printf("aquarel;%d;%f;1;algorithm=base,faithful=no,parallel=no,bits=32\n", passes, duration);
     }
 };
 
 int main(int argc, char *argv[]) {
-    long upper_limit = 1'000'000L;
     string bf_source_file = "PrimeBrainFuck.b";
+    if (argc > 1) bf_source_file = argv[1];
 
-    if (argc > 1) upper_limit = max((long) strtol(argv[1], nullptr, 10), (long) 1);
-    if (argc > 2) bf_source_file = argv[2];
+    struct stat buffer{};
+    if (stat(bf_source_file.c_str(), &buffer) != 0) {
+        cerr << "File \"" << bf_source_file << "\" does not exist." << endl;
+        exit(-1);
+    }
 
-    prime_sieve sieve(upper_limit, bf_source_file);
+    prime_sieve sieve(1000, bf_source_file);
 
     int passes = 0;
     auto start_time = steady_clock::now();
 
-    sieve.runSieve();
-    sieve.printResults(1.0, 1);
+    while (true) {
+        sieve.runSieve();
+        passes++;
 
-//    while (true) {
-//        sieve.runSieve();
-//        passes++;
-//
-//        auto duration = duration_cast<microseconds>(steady_clock::now() - start_time).count();
-//        if (duration >= 5000000) {
-//            sieve.printResults((double) duration / 1000000.0, passes);
-//            break;
-//        }
-//    }
+        auto duration = duration_cast<microseconds>(steady_clock::now() - start_time).count();
+        if (duration >= 5000000) {
+            sieve.printResults((double) duration / 1000000.0, passes);
+            break;
+        }
+    }
 
     return 0;
 }
