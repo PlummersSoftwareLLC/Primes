@@ -12,6 +12,9 @@ This solution aims to be one of the fastest C# solutions while maintaining faith
 - [x] Fast
 - [ ] Readable
 
+TODO
+- Reverse the whole sieve algorithm so we can dodge a SUB instrutions in every loop check
+
 Contributors:
 - @ItalyToast https://www.github.com/ItalyToast -- original author
 - Michael Barber @mike-barber https://www.github.com/mike-barber -- fixed 8X over allocation, contributor
