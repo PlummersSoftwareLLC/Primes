@@ -20,10 +20,10 @@
 // The setting below is set to 16kb
 // this L1 cache size is assumed if it can not be determined
 #define DEFAULT_L1_SIZE (16*1024)
-#define KEEP_FREE 1500
+#define KEEP_FREE 1500U
 //
 // The configuration parameter below determines 
-unsigned int BLOCK_SIZE = (DEFAULT_L1_SIZE - KEEP_FREE ) / sizeof(TYPE);
+unsigned int BLOCK_SIZE = ( DEFAULT_L1_SIZE - KEEP_FREE ) / sizeof(TYPE);
 
 // the const below is to reduce the multiplications
 const unsigned int BITS_IN_WORD=8*sizeof(TYPE);
