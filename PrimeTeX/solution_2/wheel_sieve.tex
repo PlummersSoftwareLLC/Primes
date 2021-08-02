@@ -3,7 +3,7 @@
 % date:   2021/07/27
 %
 % This file defines syntax for a  "Sieve object" in TeX lingua with its
-% associated methods: sieve, reset, settocount, outtofile.
+% associated methods: sieve, reset (not implemented), settocount, outtofile.
 %
 % Usage:
 %
@@ -314,10 +314,11 @@
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
     % 
     \cntb\cstB
-        % make sure we never get 0 modulo 2310 as our cogids array
-        % indices start at 1
+        % make sure we never get an even number modulo 2310 as our cogids array indices
+        % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cntb\else\advance\cntb-\@ne\fi
     \cntc\cntb
+    % For the sieve range set to 1000000, this division gives zero as 1000<2310
     \divide\cntc\wheelmodulus
     \cntd\cntc
     \multiply\cntd\wheelcogcount
@@ -373,8 +374,8 @@
         % 
         \cnta \cstA % Range
         \divide\cnta\cntc % Range//factor
-        % make sure we never get 0 modulo 2310 as our cogids array
-        % indices start at 1
+        % make sure we never get an even number modulo 2310 as our cogids array indices
+        % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cnta\else\advance\cnta-\@ne\fi
         %
         \cntb\cnta
@@ -442,15 +443,15 @@
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
     % 
     \cnta\cstA
-        % make sure we never get 0 modulo 2310 as our cogids array
-        % indices start at 1
+        % make sure we never get an even number modulo 2310 as our cogids array indices
+        % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cnta\else\advance\cnta-\@ne\fi
     \cntc\cnta
     \divide\cntc\wheelmodulus
     \cntd\cntc
     \multiply\cntd\wheelcogcount
     \multiply\cntc\wheelmodulus
-    \advance\cnta-\cntc % this is A modulo 2310 (A odd so never 0)
+    \advance\cnta-\cntc % this is A modulo 2310 (A odd so this is odd too)
     \advance\cntd\fontdimen\cnta\wheelcogids
     %
     % We need to iterate \cntd-1 times to go from
@@ -530,15 +531,15 @@
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
     % 
     \cnta\cstA
-        % make sure we never get 0 modulo 2310 as our cogids array
-        % indices start at 1
+        % make sure we never get an even number modulo 2310 as our cogids indices
+        % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cnta\else\advance\cnta-\@ne\fi
     \cntc\cnta
     \divide\cntc\wheelmodulus
     \cntd\cntc
     \multiply\cntd\wheelcogcount
     \multiply\cntc\wheelmodulus
-    \advance\cnta-\cntc % this is A modulo 2310 (A odd so never 0)
+    \advance\cnta-\cntc % this is A modulo 2310 (A odd so this is odd too)
     \advance\cntd\fontdimen\cnta\wheelcogids
     %
     % We need to iterate \cntd-1 times to go from
