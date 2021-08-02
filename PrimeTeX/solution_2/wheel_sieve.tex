@@ -300,8 +300,9 @@
 \def\SieveSieve#1{%
     % Set \_svobjarray to the font array
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
-    % Set \cstA to be the sieve range
-    \cstA\csname _svobj.#1.range\endcsname\relax
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA\csname _svobj.#1.range\endcsname{}\relax
     % Set \cstB to its square root
     % nota bene: move this to the "init" and add corresponding attribute to
     % object data?
@@ -433,8 +434,9 @@
   % #2 is the file name
     % Set \_svobjarray to the font array
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
-    % Set \cstA to be the sieve range
-    \cstA\csname _svobj.#1.range\endcsname\relax
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA\csname _svobj.#1.range\endcsname{}\relax
     %
     % We need to precompute a priori how many elementary steps of the wheel
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
@@ -520,8 +522,9 @@
   \immediate\write\out{11}%
     % Set \_svobjarray to the font array
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
-    % Set \cstA to be the sieve range
-    \cstA\csname _svobj.#1.range\endcsname\relax
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA\csname _svobj.#1.range\endcsname{}\relax
     %
     % We need to precompute a priori how many elementary steps of the wheel
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
