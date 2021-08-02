@@ -61,9 +61,12 @@ Yes, although not every request for memory triggers a system call, as described 
 ### The size of the memory buffer must correspond to the size of the sieve.
 Yes, the buffer has 8 bits for each sieve number 1, 3, 5, 7, 9, ..., (M-1)/2.
 
-## This submission conforms to the base rules:
+## This submission conforms to the rules:
 ### Solution uses sieve of Eratosthenes.
 Yes.
+
+### Benchmarked code returns a list of primes.
+Yes, the normal way to run the program is run8.sh. This puts a list of primes to stderr. A report in the preferred style is written to stdout.
 
 ### Solution runs for at least 5 seconds, then stops as quickly as possible after that.
 The algorithm completes its current pass before checking the clock, then stops if at least 5 seconds have passed. The program gets the time (down to the nanosecond) from Linux system call clock_gettime.
@@ -73,3 +76,17 @@ Yes.
 
 ### You own copyright to all code and are willing to license that code under BSD-new.
 Yes.
+
+## Base algorithm:
+### Search for next prime in the sieve, then clear this prime's multiples.
+Yes, the program does this.
+### When seeking factors, the algorithm sequentually checks all odd numbers, starting at 3.
+Yes, the program does this.
+### When clearing factors, the algorithm clears all non-primes individually, increasing the number by 2\*factor on each cycle.
+Yes, the program does this.
+### Not seeking factors beyond the square root of the sieve size is permissible.
+Yes, the program stops seeking there.
+### Inverted prime marking is permissible.
+Yes, the program uses 0 for prime and 1 for non-prime.
+### Starting the clearing loop at factor\*factor is permissible.
+Yes, the program starts clearing there.
