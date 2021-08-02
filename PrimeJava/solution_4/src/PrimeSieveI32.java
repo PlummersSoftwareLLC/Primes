@@ -4,7 +4,7 @@ public class PrimeSieveI32 extends PrimeSieveBase{
 	private static final int SIZE = 1 << SHIFT_SIZE;
 	
 	// bitset of odd numbers, zero means its a prime
-	private int[] dataSet;
+	private final int[] dataSet;
 	
 	public PrimeSieveI32(int sieveSize) {
 		super(sieveSize);

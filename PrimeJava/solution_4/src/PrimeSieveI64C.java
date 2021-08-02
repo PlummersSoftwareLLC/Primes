@@ -5,9 +5,9 @@ public class PrimeSieveI64C extends PrimeSieveBase{
 	private static final int MOD = (SIZE << 1) - 1;
 	
 	// bitset of odd numbers, zero means its a prime
-	private long[] dataSet;
+	private final long[] dataSet;
 	
-	private static long[] masks;
+	private static final long[] masks;
 	
 	static {
 		// double size so that we don't need to halve index in clearBit
