@@ -1,6 +1,6 @@
 # Haskell "Loop Unpeeling" solution by GordonBGood
 
-This Haskell solution is implemented in an imperative style using `forM_` so that the core algorithm remains recognizable.
+This Haskell solution is implemented in an imperative style using `forM_` so that the core algorithm remains recognizable.  Unlike the earlier solution, this solution does not use imported libraries to accomplish the task, so thus is `faithful to base`.  The number representation is one bit per odd number.
 
 The implementation uses the same algorithm as the Rust "striped" algorithm, so thus is `faithful base`, although the actual loops are very simple and thus no separate storage implementation is used.  The outer loop starting at code line 50 searches for the base prime values as required; The next inner loop level has a limit set at code line 55 so that it never runs more than eight times, then loops starting at code line 56 by just setting up the constant mask value and starting byte index to be used in the innermost actual marking loops as per code lines 59 to 61.  The boolean deliverable array is returned at code line 62.
 
