@@ -29,8 +29,12 @@ export const command = new Command('benchmark')
   .requiredOption('-d, --directory <directory>', 'Implementation directory')
   .option('-f, --formatter <type>', 'Output formatter', 'table')
   .option('-o, --output-file <file>', 'Write output to given file')
+  .option('-u, --unconfined <bool>', 'Run with seccomp:unconfined (native performance for interpreted languages)')
   .action(async (args) => {
     const directory = path.resolve(args.directory as string);
+    const unconfined = args.unconfined === 'true';
+
+    logger.info(`Unconfined mode: ${unconfined}`);
 
     // Making sure the outputs directory exists
     if (!fs.existsSync(directory)) {
@@ -89,7 +93,7 @@ export const command = new Command('benchmark')
       let output = '';
       try {
         logger.info(`[${implementation}][${solution}] Running...`);
-        output = dockerService.runContainer(imageName);
+        output = dockerService.runContainer(imageName, unconfined);
       } catch (err) {
         logger.warn(
           `[${implementation}][${solution}] Exited with abnormal code: ${err.status}. Results might be partial...`

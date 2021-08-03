@@ -7,8 +7,13 @@ export default class DockerService {
     });
   }
 
-  public runContainer(imageName: string): string {
-    const output = child_process.execSync(`docker run --security-opt seccomp=unconfined --rm ${imageName}`, {
+  public runContainer(imageName: string, unconfined: boolean): string {
+    let options = '--rm';
+    if (unconfined) {
+      options += ' --security-opt seccomp=unconfined'
+    }
+
+    const output = child_process.execSync(`docker run ${options} ${imageName}`, {
       stdio: 'pipe'
     });
     return output.toString('utf8');

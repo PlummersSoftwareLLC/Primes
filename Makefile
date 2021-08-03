@@ -4,6 +4,7 @@ SHELL := /bin/bash
 
 DIRECTORY := $(shell pwd)
 FORMATTER := "table"
+UNCONFINED := "false"
 
 .PHONY: all
 all: benchmark
@@ -11,7 +12,7 @@ all: benchmark
 .PHONY: benchmark
 benchmark: check-env
 	@REALPATH=$$(cd "$${DIRECTORY}" && pwd); \
-	ARGS=("-d $${REALPATH}" "-f $(FORMATTER)"); \
+	ARGS=("-d $${REALPATH}" "-f $(FORMATTER)" "-u $(UNCONFINED)"); \
 	[ ! -z $${OUTPUT_FILE} ] && ARGS+=( "-o $${OUTPUT_FILE}" ); \
 	cd ./tools; npm ci --silent && npm start --silent -- benchmark $${ARGS[@]}
 

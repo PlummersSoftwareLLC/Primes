@@ -335,6 +335,16 @@ Make the `DIRECTORY` variable point to the directory that contains the solutions
 make DIRECTORY=PrimeCPP
 ```
 
+## Running in unconfined mode
+
+For some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero affect slowing on CPU-intensive code.
+See https://github.com/moby/moby/issues/41389 for the related docker issue. You can disable some of the sandboxing
+to obtain near-native performance (at least on Linux) with the `UNCONFINED=true` option:
+```bash
+make UNCONFINED=true
+make DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED
+```
+
 ## Output formats
 
 The benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format. 
