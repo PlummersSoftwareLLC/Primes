@@ -61,28 +61,33 @@ A Dockerfile has been provided.
 ### Result obtained on a Intel Core i7-7700HQ on Windows 10 (version 20H2 build 19042.1110)  
 1 thread: PrimePas -t1 -v
 ```
-Passes: 5713, Theads: 1, Time: 5.000000 s, Avg: 0.875197 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;5713;5.000000;1;algorithm=base,faithful=yes,bits=1
+Passes: 6159, Theads: 1, Time: 5.000000 s, Avg: 0.811820 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;6159;5.000000;1;algorithm=base,faithful=yes,bits=1
 ```
 8 threads: PrimePas -v
 ```
-Passes: 19708, Theads: 8, Time: 5.000000 s, Avg: 0.253704 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;19708;5.000000;8;algorithm=base,faithful=yes,bits=1
+Passes: 21232, Theads: 8, Time: 5.000000 s, Avg: 0.235494 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;21232;5.000000;8;algorithm=base,faithful=yes,bits=1
 ```
 16 threads: PrimePas -t16 -v
 ```
-Passes: 20754, Theads: 16, Time: 5.031000 s, Avg: 0.242411 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;20754;5.031000;16;algorithm=base,faithful=yes,bits=1
+Passes: 23111, Theads: 32, Time: 5.062000 s, Avg: 0.219030 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;23111;5.062000;32;algorithm=base,faithful=yes,bits=1
 ```
 32 threads: PrimePas -t32 -v
 ```
-Passes: 21194, Theads: 32, Time: 5.000000 s, Avg: 0.235916 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;21194;5.000000;32;algorithm=base,faithful=yes,bits=1
+Passes: 22872, Theads: 32, Time: 5.032000 s, Avg: 0.220007 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;22872;5.032000;32;algorithm=base,faithful=yes,bits=1
 ```
 64 threads: PrimePas -t64 -v
 ```
-Passes: 21471, Theads: 64, Time: 5.000000 s, Avg: 0.232872 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;21471;5.000000;64;algorithm=base,faithful=yes,bits=1
+Passes: 24414, Theads: 64, Time: 5.265000 s, Avg: 0.215655 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;24414;5.265000;64;algorithm=base,faithful=yes,bits=1
 ```
 
 #### Results obtained for 10 billions (we exceeds the 5 seconds limit, but it confirms that the solution works for large sieve sizes).  
@@ -90,40 +95,47 @@ It's interesting to note that  when running multple threads for such large numbe
 
 1 thread: PrimePas -s10000000000 -t1 -v
 ```
-Passes: 1, Theads: 1, Time: 37.234000 s, Avg: 37234.000000 ms, Limit: 10000000000, Counts: 455052511/455052511, Valid: true
-olivierbrun;1;37.234000;1;algorithm=base,faithful=yes,bits=1
+Passes: 1, Theads: 1, Time: 35.282000 s, Avg: 35282.000000 ms, Limit: 10000000000, Counts: 455052511/455052511, Valid: true
+
+olivierbrun;1;35.282000;1;algorithm=base,faithful=yes,bits=1
 ```
-8 threads: PrimePas -s10000000000 -t8 -v
+4 threads: PrimePas -s10000000000 -t4 -v
 ```
-Passes: 8, Theads: 8, Time: 201.344000 s, Avg: 25168.000000 ms, Limit: 10000000000, Counts: 455052511/455052511, Valid: true
-olivierbrun;8;201.344000;8;algorithm=base,faithful=yes,bits=1
+Passes: 4, Theads: 4, Time: 97.531000 s, Avg: 24382.750000 ms, Limit: 10000000000, Counts: 455052511/455052511, Valid: true
+
+olivierbrun;4;97.531000;4;algorithm=base,faithful=yes,bits=1
 ```
 
 ### Result obtained on a Raspberry PI4 running Raspberry PI OS 64 bits (5.10.17-v8+) 
 1 thread: ./PrimePas -t1 -v
 ```
-Passes: 2253, Theads: 1, Time: 5.000000 s, Avg: 2.219263 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;2253;5.000000;1;algorithm=base,faithful=yes,bits=1
+Passes: 2256, Theads: 1, Time: 5.001000 s, Avg: 2.216755 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;2256;5.001000;1;algorithm=base,faithful=yes,bits=1
 ```
 4 threads: ./PrimePas -v
 ```
-Passes: 6916, Theads: 4, Time: 5.001000 s, Avg: 0.723106 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;6916;5.001000;4;algorithm=base,faithful=yes,bits=1
+Passes: 7021, Theads: 4, Time: 5.002000 s, Avg: 0.712434 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;7021;5.002000;4;algorithm=base,faithful=yes,bits=1
 ```
 8 threads: ./PrimePas -t8 -v
 ```
-Passes: 7769, Theads: 8, Time: 5.004000 s, Avg: 0.644098 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;7769;5.004000;8;algorithm=base,faithful=yes,bits=1
+Passes: 7813, Theads: 8, Time: 5.007000 s, Avg: 0.640855 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;7813;5.007000;8;algorithm=base,faithful=yes,bits=1
 ```
 16 threads: ./PrimePas -t16 -v
 ```
-Passes: 8159, Theads: 16, Time: 5.009000 s, Avg: 0.613923 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
-olivierbrun;8159;5.009000;16;algorithm=base,faithful=yes,bits=1
+Passes: 8200, Theads: 16, Time: 5.033000 s, Avg: 0.613780 ms, Limit: 1000000, Counts: 78498/78498, Valid: true
+
+olivierbrun;8200;5.033000;16;algorithm=base,faithful=yes,bits=1
 ```
 
 Just for the fun, here is the result obtained on the Raspberry PI 4 on 1 thread for a sieve size of 10 billions (CPU utilization was also only 50%-52% and memory usage 597.9MB).  
 ./PrimePa4 -s10000000000 -t1 -v
 ```
-Passes: 1, Theads: 1, Time: 258.352000 s, Avg: 258352.000000 ms, Limit: 10000000000, Counts: 455052511/455052511, Valid: true
-olivierbrun;1;258.352000;1;algorithm=base,faithful=yes,bits=1
+Passes: 1, Theads: 1, Time: 248.897000 s, Avg: 248897.000000 ms, Limit: 10000000000, Counts: 455052511/455052511, Valid: true
+
+olivierbrun;1;248.897000;1;algorithm=base,faithful=yes,bits=1
 ```

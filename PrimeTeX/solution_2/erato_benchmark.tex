@@ -78,7 +78,7 @@
 % which will be then cat by run.sh
 \newwrite\out
 \immediate\openout\out=\jobname-out.txt
-\immediate\write\out{jfbu-tex;\the\nbofpasses;\T;1;algorithm=base,faithful=no}
+\immediate\write\out{jfbu-tex;\the\nbofpasses;\T;1;algorithm=base,faithful=no,bits=32}
 %
 % Validate
 \expandafter\ifx\csname PrimeCount\BenchmarkRange\endcsname\relax

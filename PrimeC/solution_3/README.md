@@ -39,7 +39,7 @@ The algorithm consists of the following steps:
 
 ## L1 cache optimization
 
-A CPU has level one (L1) cache. This is the fastest memory the CPU can use, but it is limited in size. On my CPU it is 32kb. This is about half the size in case of one million as a limit. To have the sieve stay as long as possible in the L1 cache, the processing of the cross out is done in blocks of just under 32 kb. This has a big improvement of about 20% on my hardware. However, with hardware that has a 64 kb L1 cache it might have a bad impact. Next step is to dynamically determine the size of the L1 cache and have that size as a parameter.
+A CPU has level one (L1) cache. This is the fastest memory the CPU can use, but it is limited in size. On my CPU it is 32kb. This is about half the size in case of one million as a limit. To have the sieve stay as long as possible in the L1 cache, the processing of the cross out is done in blocks. This has a big improvement of about 20% on my hardware. The optimal size of the blocks depends on the hardware, so this solution first searches for the best block size parameter for the hardware it is running on.
 
 This optimization was inspired by the Cython solution 1 by ssolvest.
 

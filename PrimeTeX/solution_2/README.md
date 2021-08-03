@@ -4,7 +4,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
 
 The Sieve is implemented using only Knuth base TeX; the benchmarking however
 requires the timing extensions of `pdftex` or `luatex` and also uses
@@ -13,9 +13,9 @@ anyhow.
 
 TeX has no native array type.  The storage technique is via "font dimension
 parameters": instantiating a Sieve object loads in TeX memory a font at a size
-indexed on the instantiation number.  The font dimensions will serve to mark
-the (non) primes: one font dimension per number as there is no native TeX
-interface to bitwise operations.
+indexed on the instantiation number.  The minimal non-zero font dimension (`1sp`, stored as a `1` on a 32bits word) will serve to mark
+the non-primes, the `0sp` signals primes: one full font dimension per number as there is no native TeX
+interface to bitwise operations.  Each font dimension occupies 32bits in memory.
 
 *faithfulness*: No, as the memory footprint is unavoidably global and can not
 be released.  For the author amusement with TeX the user interface mimicks
@@ -23,11 +23,6 @@ some notions of objects and methods, but some of these pure TeX aspects
 should be improved (as there is a mix of local and automatically global
 assignments; also the `\newcount` by themselves means clashes with
 any code using same names for `\count`).
-
-*bit count*: For reasons explained below the benchmark is done with `luatex`
-binary.  I have no idea whether it uses 32bits or 64bits words for the font
-dimension parameters.  Thus I indicated *unknown*, it is at least 32bits as
-TeX allows dimensions with up to 30bits.
 
 Two algorithms are implemented:
 
@@ -56,7 +51,7 @@ the benchmark lets `luatex` allocate again needed memory.
 
 ```bash
 docker build -t erato:latest .
-docker run --rm erato:latest
+docker run --rm erato
 ```
 
 ## Native runs
@@ -80,27 +75,28 @@ the `pdftex` run will fail due to exhausted memory.
 
 ## Output
 
-Hardware: 2 GHz Intel Core i7 with 8 Go 1600 MHz DDR3 of memory.
+Hardware: 2 GHz Intel Core i7 (one processor, two cores) with 8 Go 1600 MHz
+DDR3 of memory (mid-2012 machine).
 
 Docker run:
 
 ```
 jfbu-tex;10;5.38837;1;algorithm=base,faithful=no
-jfbu-tex-480of2310;23;5.04814;1;algorithm=wheel,faithful=no
+jfbu-tex-480of2310;23;5.04814;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 Native run (with `luatex`: `/bin/sh run.sh`):
 
 ```
 jfbu-tex;10;5.39767;1;algorithm=base,faithful=no
-jfbu-tex-480of2310;22;5.22046;1;algorithm=wheel,faithful=no
+jfbu-tex-480of2310;22;5.22046;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 Native run (with `pdftex`: `/bin/sh runpdftex.sh`):
 
 ```
 jfbu-tex;8;5.19325;1;algorithm=base,faithful=no
-jfbu-tex-480of2310;23;5.19388;1;algorithm=wheel,faithful=no
+jfbu-tex-480of2310;23;5.19388;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 I don't know why the speed increase from base (one out of two) to wheel (480
@@ -123,8 +119,9 @@ RUN tlmgr install --repository http://ftp.math.utah.edu/pub/tex/historic/systems
 I wanted to do this with `pdftexcmds.sty` to have `\pdfresettimer` with
 `luatex` but this turned out to be complicated as this meant installing the
 whole `oberdiek` bundle and then I encountered a problem, having spent enough
-time on this I finally copied over directly the relevant lua code into the
-benchmark TeX files, rather than experiment with Docker TeXLive difficulties.
+time on this I finally copied over directly the relevant lua code for timing
+into the benchmark TeX files, rather than experiment with Docker TeXLive
+difficulties.
 
 `texmf.cnf` is a file which instructs `pdftex` to use more memory, once
 the `TEXMFCNF` environment variable is suitably set, as done by `runpdftex.sh`.
