@@ -41,7 +41,7 @@
 %   array in memory represents only odd numbers, first one 3.
 %
 % - For a range N (at least 3) we thus instantiate an array of J "32bits
-%   words" (perhaps 64bits on some installations of pdftex ??? not checked)
+%   words"
 %   with maximal J such that 2J+1<=N, i.e. J=(N-1)//2.
 %
 % Acknowledgements:
@@ -151,7 +151,7 @@
   \advance\instance\@ne
   \expandafter\edef\csname _svobj.#1.instance\endcsname##1{\the\instance}%
   %
-  % an array of font dimensions (each a 32bit word)
+  % an array of font dimensions (each a 32bits word)
   \cntb 665
   \advance\cntb\instance
   % Initialize a font

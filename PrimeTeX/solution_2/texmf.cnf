@@ -4,8 +4,8 @@
 % re-compiling the pdftex binary itself).
 %
 % For a range as in the benchmark of 1,000,000 each pass consumes
-% 500,000 word of memory so this allows about (147483647-20000)/500000
-% =294.9.. i.e. 294 passes, max.
+% 500,000 words of memory (each 32bits) so this allows about
+% (147483647-20000)/500000 =294.9.. i.e. 294 passes, max.
 %
 % To activate this memory setting execute
 %    export TEXMFCNF="$(pwd):"
