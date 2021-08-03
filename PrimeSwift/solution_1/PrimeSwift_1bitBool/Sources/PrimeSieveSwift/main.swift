@@ -1,51 +1,88 @@
 import Foundation
 import ArgumentParser
 
+// This is a very limited single bit Boolean Array
+struct BooleanBitArray<Word> where Word: FixedWidthInteger {
+    private let words: UnsafeMutableBufferPointer<Word>
+    private let wordSize: Int = 8*MemoryLayout<Word>.size
+    
+    init(repeating value: Bool, count arraySize: Int){
+        let wordArraySize = (arraySize + (wordSize - 1)) / wordSize
+        words = UnsafeMutableBufferPointer<Word>.allocate(capacity: wordArraySize)
+        words.initialize(repeating: value ? Word.max : 0)
+    }
+
+    func deallocate(){
+        words.deallocate()
+    }
+
+    @usableFromInline internal func maskIndex(_ num: Int) -> (Int, Word) {
+        let wordIndex = num / wordSize
+        let mask = Word(1) << (num % wordSize)
+        return (wordIndex, mask)
+    }
+
+    @inlinable func getBit(atIndex num: Int) -> Bool {
+        let (i, m) = maskIndex(num)
+        return (words[i] & m) != 0
+    }
+
+    @inlinable func setBit(atIndex num: Int, to value: Bool) {
+        let (i, m) = maskIndex(num)
+        if value { words[i] |= m } else { words[i] &= ~m }
+    }
+
+}
+
 class Sieve {
     let sieveSize: Int
     let factorLimit: Int
-    var bits: UnsafeMutableBufferPointer<Bool>
+    var primeArray: BooleanBitArray<UInt>
 
     init(limit: Int) {
         sieveSize = limit
         factorLimit = Int(sqrt(Double(sieveSize)))
-        bits = UnsafeMutableBufferPointer<Bool>.allocate(capacity: (limit + 1) / 2)
-        bits.initialize(repeating: true)
+        primeArray = BooleanBitArray(repeating: true, count: (limit + 1) / 2)
     }
 
-    deinit { bits.deallocate() }
+    deinit {
+        primeArray.deallocate()
+    }
 
-    @inlinable func index(forNumber num: Int) -> Int {num >> 1 - 1}
+    func index(for num: Int) -> Int {
+        assert(num % 2 == 1, "Error: BitArray:get property should not have accessed an even number.")
+        return num >> 1 - 1 // 3 -> 0, 5 -> 1, 7 -> 2, etc.
+    }
 
     func runSieve() {
         var factor = 3
         while factor <= factorLimit {
-            while !bits[index(forNumber: factor)] {
+            while !primeArray.getBit(atIndex: index(for: factor)) {
                 factor += 2
             }
             var nFactor = factor*factor
             while nFactor <= sieveSize {
-                bits[index(forNumber: nFactor)] = false
+                primeArray.setBit(atIndex: index(for: nFactor), to: false)
                 nFactor += 2*factor
             }
             factor += 2
         }
     }
-}
 
+}
 
 extension Sieve {
     /// Historical data for validating our results - the number of primes to be found
     /// under some limit, such as 168 primes under 1000
     static let primeCounts = [
-        10: 4,
-        100: 25,
-        1000: 168,
-        10000: 1229,
-        100000: 9592,
-        1000000: 78498,
-        10000000: 664579,
-        100000000: 5761455,
+                 10:         4,
+                100:        25,
+              1_000:       168,
+             10_000:     1_229,
+            100_000:     9_592,
+          1_000_000:    78_498,
+         10_000_000:   664_579,
+        100_000_000: 5_761_455,
     ]
 
     /// Return the count of bits that are still set in the sieve.
@@ -53,7 +90,7 @@ extension Sieve {
     func countPrimes() -> Int {
         var count = 1
         for num in stride(from: 3, to: sieveSize, by: 2) {
-            if bits[index(forNumber: num)] {
+            if primeArray.getBit(atIndex: index(for: num)) {
                 count += 1
             }
         }
@@ -72,9 +109,9 @@ extension Sieve {
 extension Sieve {
     func printResults(showingNumbers: Bool, duration: TimeInterval, passes: Int) {
         if showingNumbers {
-            print("2, ", terminator: "")
+            print(2, terminator: ", ")
             for num in stride(from: 3, to: sieveSize, by: 2) {
-                if bits[index(forNumber: num)] {
+                if primeArray.getBit(atIndex: index(for: num)) {
                     print(num, terminator: ", ")
                 }
             }
@@ -84,7 +121,7 @@ extension Sieve {
         
         /// Following 2 lines added by rbergen to conform to drag race output format
         print()
-        print("yellowcub;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=\(8*MemoryLayout<Bool>.size)\n")
+        print("yellowcub_bit64;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=1\n")
     }
 }
 

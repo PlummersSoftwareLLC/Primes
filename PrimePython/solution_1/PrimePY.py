@@ -9,6 +9,7 @@
 # Updated 3/22/2021 for Dave's Garage episode comparing C++, C#, and Python
 
 from sys import stdout                      # So I can print without an automatic python newline
+from sys import argv
 from math import sqrt                       # Used by the sieve
 import timeit                               # For timing the durations
 
@@ -123,9 +124,10 @@ class prime_sieve(object):
 
 tStart = timeit.default_timer()                         # Record our starting time
 passes = 0                                              # We're going to count how many passes we make in fixed window of time
+target = int(argv[1]) if len(argv) > 1 else 1000000
 
 while (timeit.default_timer() - tStart < 5):           # Run until more than 10 seconds have elapsed
-    sieve = prime_sieve(1000000)                        #  Calc the primes up to a million
+    sieve = prime_sieve(target)                         #  Calc the primes up to a million
     sieve.runSieve()                                    #  Find the results
     passes = passes + 1                                 #  Count this pass
     
