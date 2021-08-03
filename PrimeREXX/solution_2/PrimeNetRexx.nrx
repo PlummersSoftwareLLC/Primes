@@ -114,7 +114,7 @@ method PrintSummary(sieveSize,e = Eratosthenes) static
 		when i = 99999 & i <= sieveSize then
 		  System.err.println(  Format(cnt)" primes less than 100,000 (expected 9,592)")
 		when i = 999999 & i <= sieveSize then
-		  System.err.println(  Format(cnt)" primes less than 1,000,000 (expected 78,948)")
+		  System.err.println(  Format(cnt)" primes less than 1,000,000 (expected 78,498")
 		when i = 9999999 & i <= sieveSize then
 		  System.err.println( Format(cnt)" primes less than 10,000,000 (expected 664,579)")
 		when i = 99999999 & i <= sieveSize then
