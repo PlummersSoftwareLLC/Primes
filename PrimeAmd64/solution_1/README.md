@@ -16,8 +16,12 @@ When I open the source file dacvs8.dmp in vi (really vim) on my Ubuntu system, t
 To make the binary, run `make.sh` (on a Linux system).
 To execute the binary (after it is made) for primes up to 1 million, run `run8.sh`.
 
-## Output
+## Output of run8.sh
+```
+dsmith8;6383;5.000102;1;algorithm=base,faithful=yes,bits=8
+```
 
+## Output of run8p.sh
 ```
 P 2
 P 3
@@ -40,7 +44,6 @@ I 6383
 T 5000102361
 1276.6
 dsmith8;6383;5.000102;1;algorithm=base,faithful=yes,bits=8
-
 ```
 
 ## This submission is faithful.
@@ -66,7 +69,7 @@ Yes, the buffer has 8 bits for each sieve number 1, 3, 5, 7, 9, ..., (M-1)/2.
 Yes.
 
 ### Benchmarked code returns a list of primes.
-Yes, the normal way to run the program is run8.sh. This puts a list of primes to stderr. A report in the preferred style is written to stdout.
+Script run8.sh puts out a single line of statistics in the preferred style. Script run8p.sh puts out a list of primes to stderr and a single line of statistics to stdout.
 
 ### Solution runs for at least 5 seconds, then stops as quickly as possible after that.
 The algorithm completes its current pass before checking the clock, then stops if at least 5 seconds have passed. The program gets the time (down to the nanosecond) from Linux system call clock_gettime.
