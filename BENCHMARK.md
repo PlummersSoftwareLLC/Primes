@@ -342,7 +342,7 @@ See https://github.com/moby/moby/issues/41389 for the related docker issue. You 
 to obtain near-native performance (at least on Linux) with the `UNCONFINED=true` option:
 ```bash
 make UNCONFINED=true
-make DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED
+make DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED=true
 ```
 
 ## Output formats
