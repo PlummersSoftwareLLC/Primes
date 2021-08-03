@@ -3,7 +3,7 @@
 ** program parameter (sieveSize). The default sieveSize is 1,000,000
 */
 
-class PrimeNetRexx public uses RexxTime
+class PrimeNetRexx public binary uses RexxTime
 properties static private
 	sqRt = int 
 	iterations = int
@@ -78,9 +78,10 @@ method PrintDetail(sieveSize,e = Eratosthenes) static
 	printWidth	= int sieveSize.length() + 1
 	line		= 2.right(printWidth)
 	primesPerLine	= 1
+	i = Rexx
 
 	loop i = 3 to sieveSize by 2
-	  if e.primes(i) = NULL then
+	  if e.primes(i) = 0 then
 	   do
 		 line = line||i.right(printWidth," ")
 		 primesPerLine = primesPerLine + 1
@@ -98,10 +99,10 @@ method PrintDetail(sieveSize,e = Eratosthenes) static
 
 
 method PrintSummary(sieveSize,e = Eratosthenes) static
-	cnt			= int 1 /* accounts for 2 as prime */
-
+	cnt			= Rexx 1 /* accounts for 2 as prime */
+	i = Rexx
 	loop i = 3 to sieveSize by 2
-	  if e.primes(i) == NULL then
+	  if e.primes(i) = 0 then
 		cnt = cnt + 1
 	  select
 		when i = 99 & i <= sieveSize then
@@ -139,35 +140,42 @@ method SquareRoot(number) static
 	return guess2
 
 
-method Format(num) static 
+method Format(num = Rexx) static 
+	i 			= Rexx
+	temp1		= Rexx
+	temp2		= Rexx
+	l3			= Rexx
+
 	temp1		= "abc,def,ghi,jkl,mno,pqr,stu,vwx"
 	temp2		= "abcdefghijklmnopqrstuvwx"
 	l			= num.length()
 	l3			= (3 - (l//3)) // 3
+
+
 	i			= num.right(l+l3)
 	return temp1.translate(i,temp2).space(0).strip("T",",")
 
-class Eratosthenes private
+class Eratosthenes private binary
 properties private
-	sieveSize
+	sieveSize = int
 	sqRt = int
-	primes = Rexx[]
+	primes = byte[]
 
 method primes(i = int)
 	return this.primes[i]
 
 method Eratosthenes(lclSieveSize = int, lclSqRt = int)
 	sieveSize = lclSieveSize
-	primes = Rexx[sieveSize+1]
+	primes = byte[sieveSize+1]
 	sqRt = lclSqRt
 
 method Sieve()
 	loop i = 3 to sqRt by 2
-		if primes[i] = NULL then
+		if primes[i] = 0 then
 			do
 				incr = i + i; strt = i * i
 				loop j = strt to sieveSize by incr
-					primes[j] = 0
+					primes[j] = 1
 				end
 			end
 	end
