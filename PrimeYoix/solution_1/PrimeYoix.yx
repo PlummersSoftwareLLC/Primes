@@ -87,7 +87,7 @@ PrimeSieve(int size) {
                 printf("\n");
             }
 
-            printf("mmcdon20_yoix;%d,%f;1;algorithm=base,faithful=yes,bits=1\n",
+            printf("mmcdon20_yoix;%d;%f;1;algorithm=base,faithful=yes,bits=1\n",
                 passes, duration);
         }
 
