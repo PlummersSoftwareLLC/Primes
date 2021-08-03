@@ -3,9 +3,8 @@ PRO PRIMESIEVE::RUN
   COMPILE_OPT IDL2
 
   factor = 3LL
-  q = SQRT(self.sieve_size)
 
-  WHILE factor LE q DO BEGIN
+  WHILE 1 DO BEGIN
     FOR i = factor, self.sieve_size, 2 DO BEGIN
       IF (*self.is_prime)[i/2LL] THEN BEGIN
         factor = i
@@ -13,9 +12,15 @@ PRO PRIMESIEVE::RUN
       ENDIF
     ENDFOR
 
+    factor_squared = factor * factor
+
+    n = self.sieve_size - factor_squared
+
+    IF n LT 0 THEN BREAK
+
     i = MAKE_ARRAY(1LL + $
-                     (self.sieve_size - factor * 3LL) / (factor * 2LL), $
-                   /INDEX, START=factor*3LL, INCREMENT=DOUBLE(factor)*2D, /L64)
+                    n / (factor * 2LL), $
+                   /INDEX, START=factor_squared, INCREMENT=DOUBLE(factor)*2D, /L64)
 
     (*self.is_prime)[i/2LL] = 0B
 
@@ -34,7 +39,7 @@ PRO PRIMESIEVE::LIST_PRIMES
 
     COMPILE_OPT IDL2
 
-    FOR i = 3LL, self.sieve_size, 2 DO $
+    FOR i = 3LL, self.sieve_size, 2LL DO $
       IF (*self.is_prime)[i/2LL] THEN PRINT,FORMAT='(I0,",",$)',i
     PRINT,FORMAT='(A1," ")',STRING(8B)
 END
@@ -54,7 +59,7 @@ END
 
 FUNCTION PRIMESIEVE::INIT,n
 
-  COMPILE_OPT IDL2
+  COMPILE_OPT IDL2, HIDDEN
 
   self.prime_counts = HASH(          10LL, 4LL, $
                                     100LL, 25LL, $
@@ -76,7 +81,7 @@ END
 
 PRO PRIMESIEVE::CLEANUP
 
-    COMPILE_OPT IDL2
+    COMPILE_OPT IDL2, HIDDEN
 
     IF PTR_VALID(self.is_prime) THEN $
       PTR_FREE,self.is_prime
@@ -84,7 +89,7 @@ END
 
 PRO PRIMESIEVE__DEFINE
 
-  COMPILE_OPT IDL2
+  COMPILE_OPT IDL2, HIDDEN
 
   void = {PRIMESIEVE, prime_counts:HASH(), sieve_size:0LL, is_prime:PTR_NEW()}
 END
@@ -100,7 +105,7 @@ PRO PRIMEIDL_IDLWAY
     sieve = OBJ_NEW('PRIMESIEVE', 1000000LL)
     sieve->RUN
     time_end = SYSTIME(/SECONDS)
-    passes++
+    ++passes
     IF time_end - time_start GE 5D THEN BEGIN
         PRINT,FORMAT='(A0,";",I0,";",F0,";",I0,";algorithm=",A0,",faithful=",A0,",bits=",I1)', $
           'kriztioan_idlway', $

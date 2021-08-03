@@ -1,0 +1,4 @@
+*.jar
+*.java
+logs/
+build/

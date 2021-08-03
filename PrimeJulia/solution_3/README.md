@@ -143,8 +143,8 @@ Core i5-9300H CPU and 24 GB of RAM running Windows 10 Home:
 PS D:\Office Files\Programming\Primes> julia primes_1of2.jl
 Settings: sieve_size = 1000000 | duration = 5
 Number of trues: 78498
-primes_1of2.jl: Passes: 8588 | Elapsed: 5.0 | Passes per second: 1717.6 | Average pass duration: 0.0005822077317186772
-louie-github_port_1of2;8588;5.0;1;algorithm=base,faithful=yes,bits=
+primes_1of2.jl: Passes: 9146 | Elapsed: 5.0 | Passes per second: 1829.2 | Average pass duration: 0.0005466870763175158
+louie-github_port_1of2;9146;5.0;1;algorithm=base,faithful=yes,bits=1
 ```
-On said machine, the number of passes usually ranges between 8200
-and 8700.
+On said machine, when no heavy tasks are running, the number of passes
+usually ranges between 8900 and 9300.
