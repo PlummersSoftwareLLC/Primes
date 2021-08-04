@@ -1,21 +1,17 @@
 name: CI
 
-on:
-  push:
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
+on: ["push", "pull_request"]
 
 jobs:
   collect-solutions:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: "Checkout code"
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: "Find Dockerfiles"
-        id: "solutions"
+      - name: Find Dockerfiles
+        id: solutions
         run: |
           SOLUTIONS=$(find Prime* -type f -name Dockerfile -exec dirname {} \; | sort | sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
           echo "::set-output name=solutions::${SOLUTIONS}"
@@ -24,7 +20,7 @@ jobs:
       solutions: ${{ steps.solutions.outputs.solutions }}
 
   build:
-    runs-on: "ubuntu-20.04"
+    runs-on: ubuntu-20.04
 
     needs: ["collect-solutions"]
 
@@ -34,10 +30,10 @@ jobs:
         solution: ${{ fromJson(needs.collect-solutions.outputs.solutions) }}
 
     steps:
-      - name: "Checkout code"
+      - name: Checkout code
         uses: actions/checkout@v2
       
-      - name: "Normalize solution name"
+      - name: Normalize solution name
         id: solution-name
         run: |
           NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
