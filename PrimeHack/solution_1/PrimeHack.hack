@@ -82,7 +82,7 @@ class PrimeSieve {
         $timeInSecs = $duration / 1000;
         echo "Passes: {$passes}, Time: {$timeInSecs}, Avg: {$avg}, Limit: {$this->sieveSize}, Count: {$count}, Valid: {$this->validateResults()}\n";
         echo "\n";
-        echo "da-strange-boi;{$passes};{$timeInSecs};1;algorithm=base,faithful=yes,parallel=no,bits=unknown\n";
+        echo "da-strange-boi;{$passes};{$timeInSecs};1;algorithm=base,faithful=yes,parallel=no\n";
     }
 }
 
