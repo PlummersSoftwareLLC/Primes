@@ -51,7 +51,7 @@ end
 PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
 
 
-function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, max_index::Integer)
+@inline function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, max_index::Integer)
     # This loop calculates indices as if they are zero-based then adds
     # 1 when accessing the array since Julia uses 1-based indexing.
     zero_index = start_index
@@ -68,7 +68,7 @@ function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, 
     return max_index + 1
 end
 
-function unsafe_clear_factors!(arr::Vector{UInt}, factor_index::Integer, max_index::Integer)
+@inline function unsafe_clear_factors!(arr::Vector{UInt}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
     # This function also uses zero-based indexing calculations similar
     # to unsafe_find_next_factor_index.
