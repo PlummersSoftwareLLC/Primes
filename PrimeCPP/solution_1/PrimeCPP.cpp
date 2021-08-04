@@ -11,23 +11,9 @@
 #include <map>
 #include <cstring>
 #include <cmath>
-#include <array>
 
 using namespace std;
 using namespace std::chrono;
-
-constexpr std::array<uint32_t, 32> get_rolling_masks(){
-    std::array<uint32_t, 32>  out{0};
-    auto x = ~uint32_t(1);
-    out[0] = x;
-    for(int i = 1 ; i < 32 ; ++i) {
-        out[i] = (x<<i) | (x>>(32-i));
-    }
-    return out;
-}
-
-constexpr std::array<uint32_t, 32> rolling_masks = get_rolling_masks();
-
 
 class BitArray {
     uint32_t *array;
@@ -60,14 +46,19 @@ public:
         return getSubindex(n, array[index(n)]);
     }
 
-
-    void setFlagsFalse(size_t n, size_t skip) {
-        auto n_orig = n;
-        for (int c = 0; n < arrSize; ++c, n += skip) {
-            array[index(n)] &= rolling_masks[(c * skip + n_orig) % 32];
-        }
+    static constexpr uint32_t rol(uint32_t x, uint32_t n) {
+        return (x<<n) | (x>>(32-n));
     }
 
+    void setFlagsFalse(size_t n, size_t skip) {
+        auto rolling_mask = ~uint32_t(1 << n % 32);
+        auto roll_bits = skip % 32;
+        while (n < arrSize) {
+            array[index(n)] &= rolling_mask;
+            n += skip;
+            rolling_mask = rol(rolling_mask, skip);
+        }
+    }
 };
 
 class prime_sieve
