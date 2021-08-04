@@ -3,6 +3,32 @@
 ** program parameter (sieveSize). The default sieveSize is 1,000,000
 */
 
+class Eratosthenes private binary
+properties private
+	sieveSize = int
+	sqRt = int
+	primes = byte[]
+
+method primes(i = int)
+	return this.primes[i]
+
+method Eratosthenes(lclSieveSize = int, lclSqRt = int)
+	sieveSize = lclSieveSize
+	primes = byte[sieveSize+1]
+	sqRt = lclSqRt
+
+method Sieve()
+	loop i = 3 to sqRt by 2
+		if primes[i] = 0 then
+			do
+				incr = i + i; strt = i * i
+				loop j = strt to sieveSize by incr
+					primes[j] = 1
+				end
+			end
+	end
+return
+
 class PrimeNetRexx public binary uses RexxTime
 properties static private
 	sqRt = int 
@@ -154,30 +180,3 @@ method Format(num = Rexx) static
 
 	i			= num.right(l+l3)
 	return temp1.translate(i,temp2).space(0).strip("T",",")
-
-class Eratosthenes private binary
-properties private
-	sieveSize = int
-	sqRt = int
-	primes = byte[]
-
-method primes(i = int)
-	return this.primes[i]
-
-method Eratosthenes(lclSieveSize = int, lclSqRt = int)
-	sieveSize = lclSieveSize
-	primes = byte[sieveSize+1]
-	sqRt = lclSqRt
-
-method Sieve()
-	loop i = 3 to sqRt by 2
-		if primes[i] = 0 then
-			do
-				incr = i + i; strt = i * i
-				loop j = strt to sieveSize by incr
-					primes[j] = 1
-				end
-			end
-	end
-return
-
