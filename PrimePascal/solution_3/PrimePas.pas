@@ -27,7 +27,7 @@ type
 
   TResultsDictionary = specialize TFPGMap<uint64, uint64>;
 
-  TBitsArr = array [0..high(uint32)] of uint32; // number of uint32 will be SieveSize/64 + 1 extra uint32 if SieveSize/2 (flags for odd numbers only)is not a multiple of 32
+  TBitsArr = array [0..high(uint32)] of uint32; // number of uint32 will be SieveSize/64 + 1 extra uint32 if SieveSize/2 (flags for odd numbers only) is not a multiple of 32
   PBitsArr = ^TBitsArr;
 
   { prime_sieve }
@@ -59,10 +59,10 @@ begin
   //allocating bitsArrSize = sieveSize/64 uint32s on the heap to store the bits for odd numbers
   bitsArrSize:=(n>>6) + ord(((n>>1) and 31)<>0); //and extra uint32 is added in case sieveSize/2 is not a multiple of 32
   bits:=GetMem(bitsArrSize*4); // 32 bits = 4 bytes
-  {$if defined(linux) or defined(freebsd) or defined(darwin)}
-  fillDWord(bits^[0], bitsArrSize, $FFFFFFFF); // setting bits to true on linux machines (see why in ClearBits)
+  {$if defined(CPUAARCH64) or defined(CPUARM)}
+  fillDWord(bits^[0], bitsArrSize, $FFFFFFFF); // setting bits to true on AARCH64 or ARM machines (see why in ClearBits)
   {$else}
-  fillDWord(bits^[0], bitsArrSize, $0); // setting bits to false on Windows machines (see why in ClearBits)
+  fillDWord(bits^[0], bitsArrSize, $0); // setting bits to false on other machines than AARCH64 or ARM (see why in ClearBits)
   {$endif}
 end;
 
@@ -84,10 +84,10 @@ begin
 
   while n<=maxSize do
   begin
-    {$if defined(linux) or defined(freebsd) or defined(darwin)}
-    bits^[n>>5]:=bits^[n>>5] and not(uint32(1) << (n and 31)); // setting bit to 0 specifying the number is not prime ("and not" seems faster than "or" on linux machines or at least on aarch64)
+    {$if defined(CPUAARCH64) or defined(CPUARM)}
+    bits^[n>>5]:=bits^[n>>5] and not(uint32(1) << (n and 31)); // setting bit to 0 specifying the number is not prime ("and not" seems faster than "or" on AARCH64 or ARM machines)
     {$else}
-    bits^[n>>5]:=bits^[n>>5] or (uint32(1) << (n and 31)); // setting bit to 1 specifying the number is not prime ("or" seems faster than "and not" on Windows machines)
+    bits^[n>>5]:=bits^[n>>5] or (uint32(1) << (n and 31)); // setting bit to 1 specifying the number is not prime ("or" seems faster than "and not" on non AARCH64 or ARM machines)
     {$endif}
     n+=skip;
   end;
@@ -95,7 +95,7 @@ end;
 
 function prime_sieve.IsPrime(n: uint64): boolean;
 begin
-  {$if defined(linux) or defined(freebsd) or defined(darwin)}
+  {$if defined(CPUAARCH64) or defined(CPUARM)}
   result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))<>0; // checking whether the bit is set to 0
   {$else}
   result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))=0; // checking whether the bit is set to 1
