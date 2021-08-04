@@ -21,5 +21,5 @@ Intel Core i5-2500 @ 3.30GHz (Ubuntu 20.04)
 ```
 Passes: 51, Time: 5.011, Avg: 0.098254901960784, Limit: 1000000, Count: 78498, Valid: 1
 
-da-strange-boi;51;5.011;1;algorithm=base,faithful=yes,parallel=no,bits=unknown
+da-strange-boi;51;5.011;1;algorithm=base,faithful=yes,parallel=no
 ```
