@@ -96,9 +96,8 @@ void BitArray<Types::rol>::setFlagsFalse(size_t n, size_t skip){
 }
 template<>
 void BitArray<Types::masks>::setFlagsFalse(size_t n, size_t skip){
-    auto n_orig = n;
-    for (int c = 0; n < arrSize; ++c, n += skip)
-        array[index(n)] &= rolling_masks[(c * skip + n_orig) % 32];
+    for (; n < arrSize; n += skip)
+        array[index(n)] &= rolling_masks[n % 32];
 }
 
 template<Types type>
