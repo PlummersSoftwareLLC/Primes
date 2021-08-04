@@ -8,7 +8,8 @@
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 Contributors:
-- Michael Barber @mike-barber https://www.github.com/mike-barber
+- Michael Barber @mike-barber https://www.github.com/mike-barber -- original author
+- Kai Rese @Kulasko https://github.com/Kulasko -- numerous idiomatic improvements and detailed code review
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
@@ -35,14 +36,18 @@ Tested on a Ryzen 3900X, Rust 1.53, running on WSL2.
 
 This is as reported on `stdout`:
 ```
-mike-barber_byte-storage;18543;5.0002603531;1;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;12082;5.0004081726;1;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-rotate;12484;5.0002326965;1;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-striped;15576;5.0002875328;1;algorithm=base,faithful=yes,bits=1
-mike-barber_byte-storage;168821;5.0012035370;24;algorithm=base,faithful=yes,bits=8
-mike-barber_bit-storage;134987;5.0009522438;24;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-rotate;159453;5.0008320808;24;algorithm=base,faithful=yes,bits=1
-mike-barber_bit-storage-striped;182613;5.0009403229;24;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;18661;5.0000872612;1;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;12098;5.0002989769;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;14090;5.0002450943;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;19205;5.0002722740;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped-blocks;21305;5.0001897812;1;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped-blocks-small;20338;5.0000920296;1;algorithm=base,faithful=yes,bits=1
+mike-barber_byte-storage;170552;5.0009374619;24;algorithm=base,faithful=yes,bits=8
+mike-barber_bit-storage;134112;5.0011000633;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-rotate;164057;5.0006699562;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped;191961;5.0007262230;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped-blocks;221099;5.0007972717;24;algorithm=base,faithful=yes,bits=1
+mike-barber_bit-storage-striped-blocks-small;224842;5.0006871223;24;algorithm=base,faithful=yes,bits=1
 ```
 
 We report more informative metrics to `stderr` too, but these don't go into the report, as recorded below.
@@ -74,7 +79,7 @@ bit-storage     Passes: 151710, Threads: 24, Time: 5.0007929802, Average: 0.0000
 bit-storage     Passes: 151644, Threads: 24, Time: 5.0008230209, Average: 0.0000329774, Limit: 1000000, Counts: 78498, Valid: Pass
 ```
 
-## Performance - **Raspberri Pi 4**
+## Performance - **Raspberry Pi 4**
 
 Tested on a **Raspberry Pi 4**, standard clock with active cooling, running 64-bit Ubuntu Server 20.04.
 - Examples are run with `cargo run --release -- --repetitions=3` to get 3 repetitions.

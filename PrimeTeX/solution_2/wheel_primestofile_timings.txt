@@ -1,0 +1,181 @@
+% Prime Sieve with TeX
+% author: jfbu
+% date:   2021/07/27
+%
+
+Done on a
+
+hardware: 2 GHz Intel Core i7 (1cpu, 2cores, mid-2012)
+          8 Go 1600 MHz DDR3
+OS: mac osx high sierra
+
+(tex and pdftex binaries are self-compiled from TeXLive sources at my locale,
+they are not the ones from TeXLive darwin-legacy but the luatex is from
+darwin-legacy)
+
+=============
+N = 1,000,000
+=============
+
+$ time tex wheel_primestofile
+This is TeX, Version 3.141592653 (TeX Live 2021) (preloaded format=tex)
+(./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 1000000...
+...done
+Sieving...
+...done
+Outputting to file listofprimes-1000000.txt...
+78498 primes were written to file listofprimes-1000000.txt
+...done
+ ) )
+No pages of output.
+Transcript written on wheel_primestofile.log.
+
+real	0m0.609s
+user	0m0.583s
+sys	0m0.020s
+
+$ time pdftex wheel_primestofile
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 1000000...
+...done (0.00284s)
+Sieving...
+...done (0.22652s)
+Outputting to file listofprimes-1000000.txt...
+78498 primes were written to file listofprimes-1000000.txt
+...done (0.25105s)
+ ) )
+No pages of output.
+Transcript written on wheel_primestofile.log.
+
+real	0m0.672s
+user	0m0.645s
+sys	0m0.023s
+
+==============
+N = 10,000,000
+==============
+
+$ time tex \\def\\Range{10000000}\\input wheel_primestofile
+This is TeX, Version 3.141592653 (TeX Live 2021) (preloaded format=tex)
+(./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done
+Sieving...
+...done
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done
+ ) )
+No pages of output.
+Transcript written on wheel_primestofile.log.
+
+real	0m4.751s
+user	0m4.701s
+sys	0m0.041s
+
+$ time pdftex \\def\\Range{10000000}\\input wheel_primestofile
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done (0.02386s)
+Sieving...
+...done (2.59813s)
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done (2.38518s)
+ ) )
+No pages of output.
+Transcript written on wheel_primestofile.log.
+
+real	0m5.199s
+user	0m5.145s
+sys	0m0.044s
+
+$ time luatex \\def\\Range{10000000}\\input wheel_primestofile
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done (0.39095s)
+Sieving...
+...done (2.319s)
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done (3.0409s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on wheel_primestofile.log.
+
+real	0m6.197s
+user	0m6.109s
+sys	0m0.079s
+
+=============
+N=100,000,000 
+=============
+
+(possible with pdftex if font memory is enlarged via TEXMFCNF and texmf.cnf)
+
+$ time luatex \\def\\Range{100000000}\\input wheel_primestofile
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 100000000...
+...done (3.84619s)
+Sieving...
+...done (26.5682s)
+Outputting to file listofprimes-100000000.txt...
+5761455 primes were written to file listofprimes-100000000.txt
+...done (28.48254s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on wheel_primestofile.log.
+
+real	0m59.444s
+user	0m58.895s
+sys	0m0.445s
+
+This gives 5,761,455 primes less than 100,000,000 and the largest one is
+99,999,989. The output file has 51,099,000 bytes at my locale.
+
+===============
+N = 999,999,999
+===============
+
+(only possible with luatex, or with a pdftex re-compiled from sources)
+
+$ time luatex \\def\\Range{999999999}\\input wheel_primestofile
+
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 999999999...
+...done (42.57521s)
+Sieving...
+...done (309.85982s)
+Outputting to file listofprimes-999999999.txt...
+50847534 primes were written to file listofprimes-999999999.txt
+...done (288.52357s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on wheel_primestofile.log.
+
+real	10m46.004s
+user	10m33.819s
+sys	0m7.745s
+
+It finds 50,847,534 primes, the largest one being 999,999,937. The
+output file has 501,959,790 bytes at my locale.

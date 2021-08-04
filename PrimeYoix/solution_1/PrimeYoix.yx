@@ -1,0 +1,122 @@
+import yoix.math.sqrt;
+import yoix.math.floor;
+import yoix.stdio.printf;
+
+PrimeSieve(int size) {
+    Array b = new Array[(size + 31) >> 6];
+    int i;
+    for (i = 0; i < b@length; i++) {
+        b[i] = 0xFFFFFFFF;
+    }
+
+    Dictionary o = {
+        int sieveSize = size;
+        Array bits = b;
+
+        Dictionary resultsDictionary = {
+            "10", 4,
+            "100", 25,
+            "1000", 168,
+            "10000", 1229,
+            "100000", 9592,
+            "1000000", 78498,
+            "10000000", 664579,
+            "100000000", 5761455,
+            "1000000000", 50847534,
+            "10000000000", 455052511,
+        };
+
+        validateResults() {
+            return resultsDictionary[toString(sieveSize)] == countPrimes();
+        }
+
+        getBit(int index) {
+            index >>= 1;
+            return (bits[index >> 5] & (1 << (index % 32))) != 0;
+        }
+
+        clearBit(int index) {
+            index >>= 1;
+            bits[index >> 5] &= ~(1 << (index % 32));
+        }
+
+        runSieve() {
+            int factor = 3;
+            int q = floor(sqrt(sieveSize));
+            
+            while (factor <= q) {
+                int num;
+                for (num = factor; num < sieveSize; num += 2) {
+                    if (getBit(num)) {
+                        factor = num;
+                        break;
+                    }
+                }
+
+                for (num = factor * factor; num < sieveSize; num += factor * 2) {
+                    clearBit(num);
+                }
+
+                factor += 2;
+            }
+        }
+
+        printResults(int showResults, double duration, int passes) {
+            if (showResults) {
+                printf("2, ");
+            }
+
+            int count = sieveSize >= 2 ? 1 : 0;
+
+            int num;
+            for (num = 3; num < sieveSize; num += 2) {
+                if (getBit(num)) {
+                    if (showResults) {
+                        printf("%d, ", num);
+                    }
+                    count++;
+                }
+            }
+
+            if (showResults) {
+                printf("\n");
+                printf("Passes: %d, Time: %f, ", passes, duration);
+                printf("Avg: %f, Limit: %d, ", duration / passes, sieveSize);
+                printf("Count1: %d, Count2: %d, ", count, countPrimes());
+                printf("Valid: %s\n", validateResults() ? "True" : "False");
+                printf("\n");
+            }
+
+            printf("mmcdon20_yoix;%d;%f;1;algorithm=base,faithful=yes,bits=1\n",
+                passes, duration);
+        }
+
+        countPrimes() {
+            int count = sieveSize >= 2 ? 1 : 0;
+            int i;
+            for (i = 3; i < sieveSize; i += 2) {
+                if (getBit(i) == TRUE) {
+                    count += 1;
+                }
+            }
+            return count;
+        }
+    };
+
+    return o;
+}
+
+int passes = 0;
+double start = yoix.system.time();
+
+while (true) {
+    Dictionary sieve = PrimeSieve(1000000);
+    sieve.runSieve();
+    passes++;
+
+    double stop = yoix.system.time();
+    if ((stop - start) >= 5.0) {
+        sieve.printResults(FALSE, (stop - start) / 1, passes);
+        break;
+    }
+}

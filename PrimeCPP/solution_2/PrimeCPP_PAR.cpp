@@ -25,7 +25,7 @@ class BitArray {
     size_t arrSize;
 
     inline static size_t arraySize(size_t size) {
-        return (size >> 5) + ((size & 0x31) > 0);
+        return (size >> 5) + ((size & 31) > 0);
     }
 
     inline static size_t index(size_t n) {
@@ -42,7 +42,7 @@ class BitArray {
 public:
     explicit BitArray(size_t size) : arrSize(size) {
         array = new uint32_t[arraySize(size)];
-        std::memset(array, 0xFF, (size >> 3) + ((size & 0x07) > 0));
+        std::memset(array, 0xFF, (size >> 3) + ((size & 7) > 0));
     }
 
     ~BitArray() {delete [] array;}
@@ -61,7 +61,7 @@ public:
         while (n < arrSize) {
             array[index(n)] &= rolling_mask;
             n += skip;
-            rolling_mask = rol(rolling_mask, skip);
+            rolling_mask = rol(rolling_mask, roll_bits);
         }
     }
     
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
     if (!bQuiet)
     {
         printf("Computing primes to %llu on %d thread%s for %d second%s.\n", 
-            llUpperLimit,
+            (unsigned long long)llUpperLimit,
             cThreads,
             cThreads == 1 ? "" : "s",
             cSeconds,
