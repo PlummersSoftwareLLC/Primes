@@ -337,7 +337,7 @@ make DIRECTORY=PrimeCPP
 
 ## Running in unconfined mode
 
-For some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero affect slowing on CPU-intensive code.
+For some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero effect slowing CPU-intensive code.
 See https://github.com/moby/moby/issues/41389 for the related docker issue. You can disable some of the sandboxing
 to obtain near-native performance (at least on Linux) with the `UNCONFINED=1` option:
 ```bash
