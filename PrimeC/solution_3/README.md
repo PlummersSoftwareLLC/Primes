@@ -9,7 +9,7 @@
 This is an implementation in C. The basic calculation is based on [solution_2/sieve_1of2.c](../solution_2/sieve_1of2.c) by Daniel Spångberg. However, this implementation has two solutions build on top of that.
 
 1. `prime_words`: This solution makes use of the segmented algorithm and has a L1 cache optimization.
-2. `primes_stripped-block`: This solution makes use of the `stripped-blocks` algorithm that is based on [Rust solution 1](../../PrimeRust/solution_1) by @mike-barber.
+2. `primes_striped-block`: This solution makes use of the `striped-blocks` algorithm that is based on [Rust solution 1](../../PrimeRust/solution_1) by @mike-barber.
 
 ## The segmented algorithm
 
@@ -87,9 +87,12 @@ Or you can do step 2 and 3 with `go.sh`.
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-Passes: 9210, Time: 5.000185, Avg: 0.000543, Limit: 1000000, Count: 78498, Valid: True
+Passes: 17338, Time: 5.000208, Avg: 0.000288, Limit: 1000000, Count: 78498, Valid: True
 
-fvbakel_Cwords;9210;5.000185;1;algorithm=other,faithful=yes,bits=1
+fvbakel_Cwords;17338;5.000208;1;algorithm=other,faithful=yes,bits=1
+Passes: 6773, Time: 5.000336, Avg: 0.000738, Limit: 1000000, Count: 78498, Valid: True
+
+fvbakel_Cstriped-block;6773;5.000336;1;algorithm=base,faithful=yes,bits=1
 ```
 
 These results are with the following conditions:

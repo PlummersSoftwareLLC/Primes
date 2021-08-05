@@ -241,7 +241,7 @@ void print_results (
         );
 
 	printf("\n");
-	printf("fvbakel_Cstripped-block;%d;%f;1;algorithm=base,faithful=yes,bits=%lu\n", passes, duration,1LU);
+	printf("fvbakel_Cstriped-block;%d;%f;1;algorithm=base,faithful=yes,bits=%lu\n", passes, duration,1LU);
 }
 
 double run_timed_sieve(  
