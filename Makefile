@@ -12,8 +12,9 @@ all: benchmark
 .PHONY: benchmark
 benchmark: check-env
 	@REALPATH=$$(cd "$${DIRECTORY}" && pwd); \
-	ARGS=("-d $${REALPATH}" "-f $(FORMATTER)" "-u $(UNCONFINED)"); \
+	ARGS=("-d $${REALPATH}" "-f $(FORMATTER)"); \
 	[ ! -z $${OUTPUT_FILE} ] && ARGS+=( "-o $${OUTPUT_FILE}" ); \
+	[ ! -z $${UNCONFINED} ] && ARGS+=( "--unconfined" ); \
 	cd ./tools; npm ci --silent && npm start --silent -- benchmark $${ARGS[@]}
 
 .PHONY: check-env
