@@ -1,7 +1,7 @@
 FROM primeimages/freepascal:3.2.0 AS build
 
+COPY *.pas /opt/app/
 WORKDIR /opt/app
-COPY *.pas .
 
 RUN fpc PrimePas -O3 -v0
 
