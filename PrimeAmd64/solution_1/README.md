@@ -10,7 +10,7 @@ This is a faithful implementation of the base prime number sieve algorithm from 
 This submission is written in machine language (amd64) in the style of my video series "Handmade Linux x86 executables."
 (https://www.youtube.com/playlist?list=PLZCIHSjpQ12woLj0sjsnqDH8yVuXwTy3p).
 
-When I open the source files dacvs1.dmp and dacvs8.dmp in vi (really vim) on my Ubuntu system, the text editor provides "syntax highlighting" by graying out the comments. This requires no special configuration. 
+When I open a source file (dacvs1.dmp or dacvs8.dmp) in vi (really vim) on my Ubuntu system, the text editor provides "syntax highlighting" by graying out the comments. This requires no special configuration. 
 
 ## Run instructions
 
