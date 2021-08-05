@@ -5,7 +5,7 @@
 
 Done on a
 
-hardware: 2 GHz Intel Core i7
+hardware: 2 GHz Intel Core i7 (1cpu, 2cores, mid-2012)
           8 Go 1600 MHz DDR3
 OS: mac osx high sierra
 
