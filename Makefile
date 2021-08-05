@@ -4,7 +4,7 @@ SHELL := /bin/bash
 
 DIRECTORY := $(shell pwd)
 FORMATTER := "table"
-UNCONFINED := "true"
+UNCONFINED := "false"
 
 .PHONY: all
 all: benchmark

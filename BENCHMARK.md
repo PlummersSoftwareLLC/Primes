@@ -267,7 +267,7 @@ For the installation of Docker follow the instructions as described in <https://
 Below is an example of the benchmark output.
 
 ```bash
-                                                                   Single-threaded
+                                                                   Single-threaded                                                                    
 ┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬───────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration  │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼───────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
@@ -282,7 +282,7 @@ etc
 │  74   │ powershell     │ 1        │ crowbar27_ps1                     │   1    │ 150.03900 │    1    │   base    │   yes    │ 1    │    0.00666    │
 └───────┴────────────────┴──────────┴───────────────────────────────────┴────────┴───────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 
-                                                                   Multi-threaded
+                                                                   Multi-threaded                                                                    
 ┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
@@ -319,7 +319,7 @@ added 229 packages in 11.074s
 info: Detected architecture: amd64
 info: [PrimeCrystal][solution_1] Building...
 info: [PrimeCrystal][solution_1] Running...
-                                                       Single-threaded
+                                                       Single-threaded                                                        
 ┌───────┬────────────────┬──────────┬────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label      │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
@@ -335,20 +335,19 @@ Make the `DIRECTORY` variable point to the directory that contains the solutions
 make DIRECTORY=PrimeCPP
 ```
 
-## Running with seccomp sandboxing
+## Running in unconfined mode
 
-For some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero affect slowing on CPU-intensive code
-due to some of its security sandboxing. See https://github.com/moby/moby/issues/41389 for the related docker issue.
-By default, we disable this (because the benchmark code is reviewed, we trust it, and we want near-native speeds).
-To re-enable seccomp when running benchmarks use the `UNCONFINED=false` option:
+For some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero affect slowing on CPU-intensive code.
+See https://github.com/moby/moby/issues/41389 for the related docker issue. You can disable some of the sandboxing
+to obtain near-native performance (at least on Linux) with the `UNCONFINED=true` option:
 ```bash
-make UNCONFINED=false
-make DIRECTORY=PrimeMyFavoriteLanguage UNCONFINED=false
+make UNCONFINED=true
+make DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED=true
 ```
 
 ## Output formats
 
-The benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format.
+The benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format. 
 Here are the supported values:
 
 * table
