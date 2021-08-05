@@ -49,6 +49,12 @@ export const command = new Command('benchmark')
       return;
     }
 
+    // Collect runtime options for docker images
+    let options: Array<string> = [];
+    if (unconfined) {
+      options.push('--security-opt seccomp=unconfined')
+    }
+
     // Determine architecture
     const architecture = ARCHITECTURES[uname().machine] || 'amd64';
     logger.info(`Detected architecture: ${architecture}`);
@@ -93,7 +99,7 @@ export const command = new Command('benchmark')
       let output = '';
       try {
         logger.info(`[${implementation}][${solution}] Running...`);
-        output = dockerService.runContainer(imageName, unconfined);
+        output = dockerService.runContainer(imageName, options);
       } catch (err) {
         logger.warn(
           `[${implementation}][${solution}] Exited with abnormal code: ${err.status}. Results might be partial...`
