@@ -47,5 +47,11 @@ And for `block`/`segmented` versions:
 
 AMD A4-3305M 1.9 GHz, Windows 7 64 bit
 ```
-ssovest-go;2434;5.0042862;1;algorithm=base,faithful=yes,bits=1
+ssovest-go-u32-B;8138;5.000469686;1;algorithm=base,faithful=yes,bits=1
+ssovest-go-u32-blocks-B;6916;5.001404427;1;algorithm=base,faithful=yes,bits=1
+ssovest-go-u8-B;2053;5.003531582;1;algorithm=base,faithful=yes,bits=1
+ssovest-go-other-B;13586;5.000640339;1;algorithm=other,faithful=yes,bits=1
+ssovest-go-other-blocks-B;10723;5.000676751;1;algorithm=other,faithful=yes,bits=1
+ssovest-go-other-segmented-B;8315;5.000506643;1;algorithm=other,faithful=yes,bits=1
+ssovest-go-ptr-B;2360;5.000475421;1;algorithm=base,faithful=yes,bits=1
 ```
