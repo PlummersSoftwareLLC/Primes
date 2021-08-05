@@ -46,7 +46,7 @@ func (b Bitarray) SetSliceTrue(start, stop, step uint64) {
 		start += step
 	}
 
-	blockEnd = indices[i]
+	blockEnd = indices[31]
 	if blockEnd >= end {
 		blockEnd = end - 1
 	}
