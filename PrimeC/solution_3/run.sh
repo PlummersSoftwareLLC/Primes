@@ -1,4 +1,4 @@
 #!/bin/sh
-for x in primes_words; do
+for x in primes_words primes_stripped-block; do
     ./$x
 done
