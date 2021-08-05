@@ -4,11 +4,9 @@
 #include <time.h>
 #include <math.h>
 
-#define BITZERO ((char) 0)
-
+#define TYPE uint32_t
+#define BITZERO ((TYPE) 0)
 #define ON BITZERO
-
-#define TYPE char
 
 #define KEEP_FREE 1024
 //
@@ -21,7 +19,7 @@ unsigned int BITS_IN_BLOCK;
 const unsigned int BITS_IN_WORD=BITS_IN_BYTE*sizeof(TYPE);
 
 // the constant below is a cache of all the possible bit masks
-const char OFFSET_MASK[] = { ((char) 1),((char) 2),((char) 4),((char) 8),((char) 16),((char) 32),((char) 64),((char) 128)};
+const TYPE OFFSET_MASK[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
 
 struct sieve_state {
     TYPE *bit_storage;
