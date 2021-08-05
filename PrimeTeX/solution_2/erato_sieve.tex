@@ -36,6 +36,9 @@
 % - primes are marked as 0, non-primes as 1. The array entries type is
 %   a TeX dimension, which pdftex represents (I think) as 32bits words.
 %   So more precisely primes are marked as 0sp and non-primes as 1sp.
+%   (update: using \dimen's \z@ and \onesp for significantly faster
+%    assignments; I knew this would bring some game but I did not
+%    expect it as big actually)
 %
 % - index j stands for the number 2j+1 and starts at j=1. So the sieving
 %   array in memory represents only odd numbers, first one 3.
@@ -80,6 +83,9 @@
 \catcode`_ 11
 
 \input shared_batteries.tex
+
+% this will serve to mark composites
+\newdimen\onesp \onesp 1sp
 
 % additional count registers 
 \newcount\indexa
@@ -158,21 +164,21 @@
   \font\_svobjarray=cmr10 at \cntb sp % each class instantiation via own font
                                 % point size 666sp, 667sp, ....
   % Create the array of its parameters 
-  \fontdimen\cnta\_svobjarray=0sp
+  \fontdimen\cnta\_svobjarray=\z@
   %
   % Save the name
   \expandafter\let\csname _svobjarray.#1\endcsname\_svobjarray
   %
   % The array entries are set to 0, apart from the first few ones
   % We must fix this here
-  \fontdimen1\_svobjarray=0sp 
-  \fontdimen2\_svobjarray=0sp
-  \fontdimen3\_svobjarray=0sp
-  \fontdimen4\_svobjarray=0sp
-  \fontdimen5\_svobjarray=0sp
-  \fontdimen6\_svobjarray=0sp
-  \fontdimen7\_svobjarray=0sp
-  \fontdimen8\_svobjarray=0sp % needed for usage with luatex
+  \fontdimen1\_svobjarray=\z@ 
+  \fontdimen2\_svobjarray=\z@
+  \fontdimen3\_svobjarray=\z@
+  \fontdimen4\_svobjarray=\z@
+  \fontdimen5\_svobjarray=\z@
+  \fontdimen6\_svobjarray=\z@
+  \fontdimen7\_svobjarray=\z@
+  \fontdimen8\_svobjarray=\z@ % needed for usage with luatex
   %
   % sieve method (the ##1 gobbles the {} of the syntax)
   %
@@ -224,7 +230,7 @@
     \Replicate{\the\cntb}{%
       \advance\indexa\@ne
       % do we have a prime?
-      \ifnum\fontdimen\indexa\_svobjarray=0 %
+      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
         % yes, so let's sieve out its multiples
         % starting with factor*factor
         \cntc \indexa      % will hold the factor
@@ -236,7 +242,7 @@
         %
         \indexb \cntb
         \divide \indexb \tw@ % (odd number x) //2 gives j such that x=2j+1
-        \fontdimen\indexb\_svobjarray=1sp % factor * factor now sieved out
+        \fontdimen\indexb\_svobjarray=\onesp % factor * factor now sieved out
          %
         \cnta \cstA % Range
         \advance\cnta-\cntb % Range - factor * factor
@@ -250,14 +256,14 @@
         \Replicate{\the\cntb}{%
           \ReplicateM{%
             \advance\indexb\cntc % j steps by factor, thus 2*j+1 by 2*factor
-            \fontdimen\indexb\_svobjarray=1sp % sieved out 
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out 
            }%
          }%
         \multiply\cntb\@m
         \advance\cnta-\cntb % this is what remains to be done
         \Replicate{\the\cnta}{%
           \advance\indexb\cntc
-          \fontdimen\indexb\_svobjarray=1sp % sieved out 
+          \fontdimen\indexb\_svobjarray=\onesp % sieved out 
         }%
       \fi % end of branch handling sieving out multiples of a prime factor <= sqrt(Range)
     }%
@@ -286,14 +292,14 @@
         \Replicate{\the\cntb}{%
           \ReplicateM{%
             \advance\indexa\@ne
-            \fontdimen\indexa\_svobjarray=0sp %
+            \fontdimen\indexa\_svobjarray=\z@ %
            }%
          }%
         \multiply\cntb\@m
         \advance\cnta-\cntb % this is what remains to be done
         \Replicate{\the\cnta}{%
           \advance\indexa\@ne
-          \fontdimen\indexa\_svobjarray=0sp %
+          \fontdimen\indexa\_svobjarray=\z@ %
         }%
 }% end of \SieveReset
 
@@ -320,7 +326,7 @@
     \Replicate{\the\cntb}{%
         \ReplicateM{%
           \advance\indexa\@ne
-          \ifnum\fontdimen\indexa\_svobjarray=0
+          \ifdim\fontdimen\indexa\_svobjarray=\z@
              \advance\cntc\@ne % we have a prime
           \fi
          }%
@@ -331,7 +337,7 @@
     % and do it
     \Replicate{\the\cnta}{%
           \advance\indexa\@ne
-          \ifnum\fontdimen\indexa\_svobjarray=0
+          \ifdim\fontdimen\indexa\_svobjarray=\z@
              \advance\cntc\@ne % we have a prime
           \fi
          }%
@@ -369,7 +375,7 @@
     \Replicate{\the\cntb}{%
         \ReplicateM{%
           \advance\indexa\@ne
-          \ifnum\fontdimen\indexa\_svobjarray=0
+          \ifdim\fontdimen\indexa\_svobjarray=\z@
   % we have a prime
   \cntc\indexa
   \advance\cntc\cntc
@@ -385,7 +391,7 @@
     % and do it
     \Replicate{\the\cnta}{%
           \advance\indexa\@ne
-          \ifnum\fontdimen\indexa\_svobjarray=0
+          \ifdim\fontdimen\indexa\_svobjarray=\z@
   % we have a prime
   \cntc\indexa
   \advance\cntc\cntc

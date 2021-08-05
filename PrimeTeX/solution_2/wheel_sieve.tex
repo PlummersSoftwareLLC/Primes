@@ -54,6 +54,9 @@
 
 \input shared_batteries.tex
 
+% this will serve to mark composites
+\newdimen\onesp \onesp 1sp
+
 % additional count registers 
 \newcount\indexa
 \newcount\indexb 
@@ -109,42 +112,42 @@
 % regarding even numbers we handle them by cancel culture.
 %
 % reserve enough space:
-\fontdimen\wheelmodulus\wheelcogids=0sp
+\fontdimen\wheelmodulus\wheelcogids=\z@
 % sieve out multiples of three up to 2310
 \indexa-3
-\Replicate{385}{\advance\indexa6 \fontdimen\indexa\wheelcogids=1sp }%
+\Replicate{385}{\advance\indexa6 \fontdimen\indexa\wheelcogids=\onesp }%
 % sieve out multiples of five up to 2310
 \indexa-5
-\Replicate{231}{\advance\indexa10 \fontdimen\indexa\wheelcogids=1sp }%
+\Replicate{231}{\advance\indexa10 \fontdimen\indexa\wheelcogids=\onesp }%
 % sieve out multiples of seven up to 2310
 \indexa-7
-\Replicate{165}{\advance\indexa14 \fontdimen\indexa\wheelcogids=1sp }%
+\Replicate{165}{\advance\indexa14 \fontdimen\indexa\wheelcogids=\onesp }%
 % sieve out multiples of eleven up to 2310
 \indexa-11
-\Replicate{105}{\advance\indexa22 \fontdimen\indexa\wheelcogids=1sp }%
+\Replicate{105}{\advance\indexa22 \fontdimen\indexa\wheelcogids=\onesp }%
 
 % before giving to the cogids[n] their final values let's initiate
 % the cognext and cogdeltas arrays.
 
 \font\wheelcognext=cmr10 at 667sp
-\fontdimen\wheelmodulus\wheelcognext=0sp
+\fontdimen\wheelmodulus\wheelcognext=\z@
 % we don't care about 1 to 7 or 8 possibly already set values
 
 \font\wheelcogdeltas=cmr10 at 668sp
-\fontdimen\wheelmodulus\wheelcogdeltas=0sp
+\fontdimen\wheelmodulus\wheelcogdeltas=\z@
 
 % we now start creating the cogs array. We don't know yet its
 % future size (actually we know it will be 480, but TeX does not
 % know yet). As long as we don't use "\font" we can append
 % to this array.
 \font\wheelcogs=cmr10 at 669sp
-\fontdimen1\wheelcogids=1sp % 1 is first cog
-\fontdimen1\wheelcogs  =1sp % first cog is at 1
+\fontdimen1\wheelcogids=\onesp % 1 is first cog
+\fontdimen1\wheelcogs  =\onesp % first cog is at 1
 \indexa\@ne
 \indexb\@ne
 \indexc\@ne
 \Replicate{1154}{\advance\indexb\tw@
-    \ifnum\fontdimen\indexb\wheelcogids=0 % relatively prime to 2310
+    \ifdim\fontdimen\indexb\wheelcogids=\z@ % relatively prime to 2310
       \advance\indexc\@ne
       \fontdimen\indexc\wheelcogs    =\indexb sp %
       %
@@ -164,8 +167,8 @@
       \fontdimen\indexb\wheelcogids  =\indexc sp
     \fi
 }%
-\fontdimen2309\wheelcognext=1sp %
-\fontdimen2309\wheelcogdeltas=1sp % see divide by 2 above
+\fontdimen2309\wheelcognext=\onesp %
+\fontdimen2309\wheelcogdeltas=\onesp % see divide by 2 above
 
 % we have finished our job with constructing the necessary
 % and useful wheel data.
@@ -252,20 +255,20 @@
   % Initialize a font
   \font\_svobjarray=cmr10 at \cntb sp % each class instantiation impacts memory
   % Create the array of its parameters 
-  \fontdimen\cnta\_svobjarray=0sp
+  \fontdimen\cnta\_svobjarray=\z@
   % and save its name in the object attributes
   \expandafter\let\csname _svobjarray.#1\endcsname\_svobjarray
   %
   % Array entries with indices 1 to 7 (or 8 with luatex) are not
   % initialized to zero, let's fix this
-  \fontdimen1\_svobjarray=0sp 
-  \fontdimen2\_svobjarray=0sp
-  \fontdimen3\_svobjarray=0sp
-  \fontdimen4\_svobjarray=0sp
-  \fontdimen5\_svobjarray=0sp
-  \fontdimen6\_svobjarray=0sp
-  \fontdimen7\_svobjarray=0sp
-  \fontdimen8\_svobjarray=0sp % needed for usage with luatex
+  \fontdimen1\_svobjarray=\z@ 
+  \fontdimen2\_svobjarray=\z@
+  \fontdimen3\_svobjarray=\z@
+  \fontdimen4\_svobjarray=\z@
+  \fontdimen5\_svobjarray=\z@
+  \fontdimen6\_svobjarray=\z@
+  \fontdimen7\_svobjarray=\z@
+  \fontdimen8\_svobjarray=\z@ % needed for usage with luatex
   %
   % sieve method (the ##1 gobbles the {} of the syntax)
   %
@@ -355,7 +358,7 @@
       % update the iteration count
       \advance\cntf\@ne
       % do we have a prime?
-      \ifnum\fontdimen\indexa\_svobjarray=0 %
+      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
         % yes, so let's sieve out its multiples
         % starting with factor*factor
         %
@@ -368,7 +371,7 @@
         %
         \indexb \cntb
         \divide \indexb \tw@ 
-        \fontdimen\indexb\_svobjarray=1sp % factor * factor now sieved out
+        \fontdimen\indexb\_svobjarray=\onesp % factor * factor now sieved out
         %
         % we now need to know exactly how many iterations are needed
         % 
@@ -405,7 +408,7 @@
             \multiply\cntd\fontdimen\indexd\wheelcogdeltas
             \advance\indexb\cntd
             % and mark this index as sieved out
-            \fontdimen\indexb\_svobjarray=1sp % sieved out 
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out 
             % update the class of G modulo modulus
             \indexd\fontdimen\indexd\wheelcognext
            }%
@@ -418,7 +421,7 @@
             \multiply\cntd\fontdimen\indexd\wheelcogdeltas
             \advance\indexb\cntd
             % and mark this index as sieved out
-            \fontdimen\indexb\_svobjarray=1sp % sieved out 
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out 
             % update the class of G modulo modulus
             \indexd\fontdimen\indexd\wheelcognext
         }%
@@ -483,7 +486,7 @@
       % and now update the class modulo wheel modulus
       \indexc\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifnum\fontdimen\indexa\_svobjarray=0 %
+      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
         % we have a prime
         \advance\cntf\@ne
       \fi
@@ -499,7 +502,7 @@
       % and now update the class modulo wheel modulus
       \indexc\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifnum\fontdimen\indexa\_svobjarray=0 %
+      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
         % we have a prime
         \advance\cntf\@ne
       \fi
@@ -571,7 +574,7 @@
       % and now update the class modulo wheel modulus
       \indexc\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifnum\fontdimen\indexa\_svobjarray=0 %
+      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
         % we have a prime
         \cnta\indexa
         \advance\cnta\cnta
@@ -591,7 +594,7 @@
       % and now update the class modulo wheel modulus
       \indexc\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifnum\fontdimen\indexa\_svobjarray=0 %
+      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
       % we have a prime
         \cnta\indexa
         \advance\cnta\cnta

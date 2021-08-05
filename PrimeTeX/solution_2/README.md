@@ -28,18 +28,16 @@ Two algorithms are implemented:
 
 - the base one with sieving out starting at `factor * factor`
 and going by steps of `2 * factor`.
-- and a refinement using the "480 out of 2310" wheel (`2*3*5*7*11`). With `pdftex`
-this runs almost 3X times faster than the odd-only algorithm, but with `luatex`
-the improvement is more like 2.2X, for unknown reasons.
+- and a refinement using the "480 out of 2310" wheel (`2*3*5*7*11`).
 
 Even configuring `pdftex` (which has no dynamic memory allocation) to its
 maximal TeXLive memory setting, a maximum of `294` passes can be done with it
 for the sieving range of `1,000,000` (each pass consuming about `500,000`
 words of font memory).
 
-As at my locale I achieve with `pdftex` `23` passes for the wheel
-implementation (compared to `8` for the base implementation), a computer about
-`13` times faster than mine would exhaust `pdftex` maximal font memory during
+As at my locale I achieve with `pdftex` `40` passes for the wheel
+implementation, a computer about
+`7.5` times faster than mine would exhaust `pdftex` maximal font memory during
 the benchmark.
 
 For this reason the Dockerfile is configured to run only the `luatex`
@@ -81,29 +79,29 @@ DDR3 of memory (mid-2012 machine).
 Docker run:
 
 ```
-jfbu-tex;10;5.38837;1;algorithm=base,faithful=no
-jfbu-tex-480of2310;23;5.04814;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;22;5.10106;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;33;5.13968;1;algorithm=wheel,faithful=no,bits=32
 ```
 
-Native run (with `luatex`: `/bin/sh run.sh`):
+Native run (with `luatex`: `/bin/sh run.sh`). The `luatex` is from TeXLive 2021,
+the one of the Dockerfile from TeXLive 2018.
 
 ```
-jfbu-tex;10;5.39767;1;algorithm=base,faithful=no
-jfbu-tex-480of2310;22;5.22046;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;20;5.05441;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;29;5.04533;1;algorithm=wheel,faithful=no,bits=32
 ```
 
-Native run (with `pdftex`: `/bin/sh runpdftex.sh`):
+Native run (with `pdftex`: `/bin/sh runpdftex.sh`). The `pdftex` is compiled
+locally from sources with compiler flags for speed.
 
 ```
-jfbu-tex;8;5.19325;1;algorithm=base,faithful=no
-jfbu-tex-480of2310;23;5.19388;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;25;5.09103;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;40;5.06285;1;algorithm=wheel,faithful=no,bits=32
 ```
 
-I don't know why the speed increase from base (one out of two) to wheel (480
-out of 2310) is almost 3 with `pdftex` and lower with `luatex`. Also for some
-reason the Docker runs I did `pdftex` were about `15%` slower than my native
-runs, possibly having to do with the fact that I compiled the `pdftex` binary
-locally but not the `luatex`.
+I don't know why the speed ratio wheel/base is higher with `pdftex` than
+with `luatex`. Also, this ratio is a bit disappointing: perhaps an indication
+my wheel implementation has room for improvements.
 
 ## Information on some of the files
 
@@ -156,7 +154,7 @@ Executing
 pdftex erato_benchmark && cat erato_benchmark-out.txt
 ```
 
-will most certainly fail, except if your computer is very slow.
+will certainly fail due to exhausted `pdftex` memory, except if your computer is very slow.
 
 To fix this, make sure that the repertory contains the contributed file
 `texmf.cnf` and do `export TEXMFCNF="$(pwd):"` and then try again.
