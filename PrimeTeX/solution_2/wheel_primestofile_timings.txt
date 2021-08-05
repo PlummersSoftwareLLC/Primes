@@ -1,7 +1,7 @@
 % Prime Sieve with TeX
 % author: jfbu
 % date:   2021/07/27
-%
+% updated timings 2021/08/05
 
 Done on a
 
@@ -32,9 +32,9 @@ Outputting to file listofprimes-1000000.txt...
 No pages of output.
 Transcript written on wheel_primestofile.log.
 
-real	0m0.609s
-user	0m0.583s
-sys	0m0.020s
+real	0m0.548s
+user	0m0.519s
+sys	0m0.023s
 
 $ time pdftex wheel_primestofile
 This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
@@ -43,19 +43,19 @@ entering extended mode
 (./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 1000000...
-...done (0.00284s)
+...done (0.00299s)
 Sieving...
-...done (0.22652s)
+...done (0.12943s)
 Outputting to file listofprimes-1000000.txt...
 78498 primes were written to file listofprimes-1000000.txt
-...done (0.25105s)
+...done (0.24924s)
  ) )
 No pages of output.
 Transcript written on wheel_primestofile.log.
 
-real	0m0.672s
-user	0m0.645s
-sys	0m0.023s
+real	0m0.593s
+user	0m0.553s
+sys	0m0.027s
 
 ==============
 N = 10,000,000
@@ -76,9 +76,9 @@ Outputting to file listofprimes-10000000.txt...
 No pages of output.
 Transcript written on wheel_primestofile.log.
 
-real	0m4.751s
-user	0m4.701s
-sys	0m0.041s
+real	0m4.124s
+user	0m4.048s
+sys	0m0.057s
 
 $ time pdftex \\def\\Range{10000000}\\input wheel_primestofile
 This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
@@ -87,19 +87,19 @@ entering extended mode
 (./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 10000000...
-...done (0.02386s)
+...done (0.02771s)
 Sieving...
-...done (2.59813s)
+...done (1.48656s)
 Outputting to file listofprimes-10000000.txt...
 664579 primes were written to file listofprimes-10000000.txt
-...done (2.38518s)
+...done (2.57507s)
  ) )
 No pages of output.
 Transcript written on wheel_primestofile.log.
 
-real	0m5.199s
-user	0m5.145s
-sys	0m0.044s
+real	0m4.286s
+user	0m4.204s
+sys	0m0.063s
 
 $ time luatex \\def\\Range{10000000}\\input wheel_primestofile
 This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
@@ -107,19 +107,19 @@ This is LuaTeX, Version 1.13.0 (TeX Live 2021)
 (./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 10000000...
-...done (0.39095s)
+...done (0.38805s)
 Sieving...
-...done (2.319s)
+...done (1.64871s)
 Outputting to file listofprimes-10000000.txt...
 664579 primes were written to file listofprimes-10000000.txt
-...done (3.0409s)
+...done (3.24814s)
 ))
 warning  (pdf backend): no pages of output.
 Transcript written on wheel_primestofile.log.
 
-real	0m6.197s
-user	0m6.109s
-sys	0m0.079s
+real	0m5.630s
+user	0m5.520s
+sys	0m0.091s
 
 =============
 N=100,000,000 
@@ -133,19 +133,19 @@ This is LuaTeX, Version 1.13.0 (TeX Live 2021)
 (./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 100000000...
-...done (3.84619s)
+...done (3.81114s)
 Sieving...
-...done (26.5682s)
+...done (17.0527s)
 Outputting to file listofprimes-100000000.txt...
 5761455 primes were written to file listofprimes-100000000.txt
-...done (28.48254s)
+...done (27.75099s)
 ))
 warning  (pdf backend): no pages of output.
 Transcript written on wheel_primestofile.log.
 
-real	0m59.444s
-user	0m58.895s
-sys	0m0.445s
+real	0m49.053s
+user	0m48.591s
+sys	0m0.392s
 
 This gives 5,761,455 primes less than 100,000,000 and the largest one is
 99,999,989. The output file has 51,099,000 bytes at my locale.
@@ -157,25 +157,24 @@ N = 999,999,999
 (only possible with luatex, or with a pdftex re-compiled from sources)
 
 $ time luatex \\def\\Range{999999999}\\input wheel_primestofile
-
 This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
  restricted system commands enabled.
 (./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 999999999...
-...done (42.57521s)
+...done (37.31293s)
 Sieving...
-...done (309.85982s)
+...done (192.27728s)
 Outputting to file listofprimes-999999999.txt...
 50847534 primes were written to file listofprimes-999999999.txt
-...done (288.52357s)
+...done (268.8449s)
 ))
 warning  (pdf backend): no pages of output.
 Transcript written on wheel_primestofile.log.
 
-real	10m46.004s
-user	10m33.819s
-sys	0m7.745s
+real	8m19.685s
+user	8m15.340s
+sys	0m3.626s
 
 It finds 50,847,534 primes, the largest one being 999,999,937. The
 output file has 501,959,790 bytes at my locale.

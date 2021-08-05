@@ -8,7 +8,7 @@
 \catcode`_ 11
 
 % luatex compatibility layer (it does not know \pdfresettimer)
-\ifdefined\directlua
+\ifx\directlua\undefined\else
       % **too** complicated to get this to work with Docker (and I wasted
       % enough time on this)
       % \input pdftexcmds.sty
