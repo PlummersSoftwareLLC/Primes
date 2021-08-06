@@ -1,6 +1,7 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
-    FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageByteVector, PrimeSieve,
+    FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageBitVectorStripedBlocks,
+    FlagStorageByteVector, PrimeSieve, BLOCK_SIZE_DEFAULT, BLOCK_SIZE_SMALL,
 };
 
 use std::{
@@ -66,7 +67,7 @@ pub mod primes {
         /// create new storage for given number of flags pre-initialised to all true
         fn create_true(size: usize) -> Self;
 
-        /// reset all flags at indices starting at `start` with a stride of `stride`
+        /// reset all flags at indices starting at `start` with a stride of `skip`
         fn reset_flags(&mut self, start: usize, skip: usize);
 
         /// get a specific flag
@@ -240,16 +241,13 @@ pub mod primes {
     /// There is a computation / memory bandwidth tradeoff here. This works well
     /// only for sieves that fit inside the processor cache. For processors with
     /// smaller caches or larger sieves, this algorithm will result in a lot of
-    /// cache thrashing.
+    /// cache thrashing due to multiple passes. It really doesn't work well on something 
+    /// like a raspberry pi. 
+    ///
+    /// [`FlagStorageBitVectorStripedBlocks`] takes a more cache-friendly approach.
     pub struct FlagStorageBitVectorStriped {
         words: Vec<u8>,
         length_bits: usize,
-    }
-
-    impl FlagStorageBitVectorStriped {
-        fn ceiling(numerator: isize, denominator: isize) -> isize {
-            (numerator + denominator - 1) / denominator
-        }
     }
 
     impl FlagStorage for FlagStorageBitVectorStriped {
@@ -263,44 +261,46 @@ pub mod primes {
 
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
-            let chunk = self.words.len();
-            for bit in 0..8 {
+            // determine start bit, and first word
+            let words_len = self.words.len();
+            let mut bit_idx = start / words_len;
+            let mut word_idx = start % words_len;
+
+            while bit_idx < U8_BITS {
+                // calculate effective end position: we might have a shorter stripe on the last iteration
+                let stripe_start_position = bit_idx * words_len;
+                let effective_len = words_len.min(self.length_bits - stripe_start_position);
+
                 // get mask for this bit position
-                let mask = !(1 << bit);
+                let mask = !(1 << bit_idx);
 
-                // calculate start word for this stripe
-                let chunk_start = bit * chunk;
-                let earliest = start.max(chunk_start);
-                let diff = earliest as isize - start as isize;
-                let relative = Self::ceiling(diff, skip as isize) * skip as isize;
-                let chunk_start = relative as usize + start - chunk_start;
-
-                // for larger `skips`, not every bit will have any corresponding words
-                // take slice starting here, and reset the bit in every `skip`th word
-                if chunk_start < chunk {
-                    let slice = &mut self.words[chunk_start..];
-                    let mut i = 0;
-
-                    // unrolled loop
-                    let end_unrolled = slice.len().saturating_sub(skip);
-                    while i < end_unrolled {
-                        // Safety: We have ensured that (i+skip) < slice.len().
-                        // The compiler will not elide these bounds checks,
-                        // so there is a performance benefit to using get_unchecked_mut here.
-                        unsafe {
-                            *slice.get_unchecked_mut(i) &= mask;
-                            *slice.get_unchecked_mut(i + skip) &= mask;
-                        }
-                        i += skip + skip;
+                // unrolled loop
+                while word_idx < effective_len.saturating_sub(skip) {
+                    // Safety: we have ensured that (word_idx + skip*N) < length
+                    unsafe {
+                        *self.words.get_unchecked_mut(word_idx) &= mask;
+                        *self.words.get_unchecked_mut(word_idx + skip) &= mask;
                     }
-
-                    // remainder - compiler elides these bounds checks as
-                    // the loop is simple enough
-                    while i < slice.len() {
-                        slice[i] &= mask;
-                        i += skip;
-                    }
+                    word_idx += skip * 2;
                 }
+
+                // remainder
+                while word_idx < effective_len {
+                    // safety: we have ensured that word_idx < length
+                    unsafe {
+                        *self.words.get_unchecked_mut(word_idx) &= mask;
+                    }
+                    word_idx += skip;
+                }
+
+                // early termination: this is the last stripe
+                if effective_len != words_len {
+                    return;
+                }
+
+                // bit/stripe complete; advance to next bit
+                bit_idx += 1;
+                word_idx -= words_len;
             }
         }
 
@@ -312,6 +312,108 @@ pub mod primes {
             let word_index = index % self.words.len();
             let bit_index = index / self.words.len();
             let word = self.words.get(word_index).unwrap();
+            *word & (1 << bit_index) != 0
+        }
+    }
+
+    /// This is a variation of [`FlagStorageBitVectorStriped`] that has better locality.
+    /// The striped storage is divided up into smaller blocks, and we do multiple
+    /// passes over the smaller block rather than the entire sieve.
+    pub struct FlagStorageBitVectorStripedBlocks<const N: usize> {
+        blocks: Vec<[u8; N]>,
+        length_bits: usize,
+    }
+
+    /// This is the optimal block size for [`FlagStorageBitVectorStriped`] for CPUs
+    /// with a fair amount of L1 cache, and works well on AMD Ryzen.
+    pub const BLOCK_SIZE_DEFAULT: usize = 16 * 1024;
+
+    /// This is a good block size for [`FlagStorageBitVectorStriped`] for CPUs with
+    /// less L1 cache available. It's also useful when running many sieves
+    /// in parallel.
+    pub const BLOCK_SIZE_SMALL: usize = 4 * 1024;
+
+    impl<const N: usize> FlagStorageBitVectorStripedBlocks<N> {
+        const BLOCK_SIZE: usize = N;
+        const BLOCK_SIZE_BITS: usize = Self::BLOCK_SIZE * U8_BITS;
+    }
+
+    impl<const N: usize> FlagStorage for FlagStorageBitVectorStripedBlocks<N> {
+        fn create_true(size: usize) -> Self {
+            let num_blocks = size / Self::BLOCK_SIZE_BITS + (size % Self::BLOCK_SIZE_BITS).min(1);
+            Self {
+                length_bits: size,
+                blocks: vec![[u8::MAX; N]; num_blocks],
+            }
+        }
+
+        #[inline(always)]
+        fn reset_flags(&mut self, start: usize, skip: usize) {
+            // determine first block, start bit, and first word
+            let block_idx_start = start / Self::BLOCK_SIZE_BITS;
+            let offset_idx = start % Self::BLOCK_SIZE_BITS;
+            let mut bit_idx = offset_idx / Self::BLOCK_SIZE;
+            let mut word_idx = offset_idx % Self::BLOCK_SIZE;
+
+            for block_idx in block_idx_start..self.blocks.len() {
+                // Safety: we have ensured the block_idx < length
+                let block = unsafe { self.blocks.get_unchecked_mut(block_idx) };
+                while bit_idx < U8_BITS {
+                    // calculate effective end position: we might have a shorter stripe on the last iteration
+                    let stripe_start_position =
+                        block_idx * Self::BLOCK_SIZE_BITS + bit_idx * Self::BLOCK_SIZE;
+                    let effective_len =
+                        Self::BLOCK_SIZE.min(self.length_bits - stripe_start_position);
+
+                    // get mask for this bit position
+                    let mask = !(1 << bit_idx);
+
+                    // unrolled loop
+                    while word_idx < effective_len.saturating_sub(skip * 3) {
+                        // Safety: we have ensured that (word_idx + skip*N) < length
+                        unsafe {
+                            *block.get_unchecked_mut(word_idx) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip * 2) &= mask;
+                            *block.get_unchecked_mut(word_idx + skip * 3) &= mask;
+                        }
+                        word_idx += skip * 4;
+                    }
+
+                    // remainder
+                    while word_idx < effective_len {
+                        // safety: we have ensured that word_idx < length
+                        unsafe {
+                            *block.get_unchecked_mut(word_idx) &= mask;
+                        }
+                        word_idx += skip;
+                    }
+
+                    // early termination: this is the last stripe
+                    if effective_len != Self::BLOCK_SIZE {
+                        return;
+                    }
+
+                    // bit/stripe complete; advance to next bit
+                    bit_idx += 1;
+                    word_idx -= Self::BLOCK_SIZE;
+                }
+
+                // block complete; reset bit index and proceed with the next block
+                bit_idx = 0;
+            }
+        }
+
+        #[inline(always)]
+        fn get(&self, index: usize) -> bool {
+            if index > self.length_bits {
+                return false;
+            }
+            let block = index / Self::BLOCK_SIZE_BITS;
+            let offset = index % Self::BLOCK_SIZE_BITS;
+            let bit_index = offset / Self::BLOCK_SIZE;
+            let word_index = offset % Self::BLOCK_SIZE;
+            let word = self.blocks.get(block).unwrap().get(word_index).unwrap();
             *word & (1 << bit_index) != 0
         }
     }
@@ -355,15 +457,20 @@ pub mod primes {
             let mut factor = 3;
             let q = (self.sieve_size as f32).sqrt() as usize;
 
-            // note: need to check up to and including q, otherwise we
-            // fail to catch cases like sieve_size = 1000
-            while factor <= q {
+            loop {
                 // find next factor - next still-flagged number
                 factor = (factor / 2..self.sieve_size / 2)
                     .find(|n| self.flags.get(*n))
                     .unwrap()
                     * 2
                     + 1;
+
+                // check for termination _before_ resetting flags;
+                // note: need to check up to and including q, otherwise we
+                // fail to catch cases like sieve_size = 1000
+                if factor > q {
+                    break;
+                }
 
                 // reset flags starting at `start`, every `factor`'th flag
                 let start = factor * factor / 2;
@@ -470,6 +577,10 @@ struct CommandLineOptions {
     #[structopt(long)]
     bits_striped: bool,
 
+    /// Run variant that uses bit-level storage, using striped storage in blocks
+    #[structopt(long)]
+    bits_striped_blocks: bool,
+
     /// Run variant that uses byte-level storage
     #[structopt(long)]
     bytes: bool,
@@ -490,9 +601,15 @@ fn main() {
     };
 
     // run all implementations if no options are specified (default)
-    let run_all = [opt.bits, opt.bits_rotate, opt.bits_striped, opt.bytes]
-        .iter()
-        .all(|b| !*b);
+    let run_all = [
+        opt.bits,
+        opt.bits_rotate,
+        opt.bits_striped,
+        opt.bits_striped_blocks,
+        opt.bytes,
+    ]
+    .iter()
+    .all(|b| !*b);
 
     for threads in thread_options {
         if opt.bytes || run_all {
@@ -546,6 +663,32 @@ fn main() {
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStriped>(
                     "bit-storage-striped",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+        }
+
+        if opt.bits_striped_blocks || run_all {
+            thread::sleep(Duration::from_secs(1));
+            print_header(threads, limit, run_duration);
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>(
+                    "bit-storage-striped-blocks",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>(
+                    "bit-storage-striped-blocks-small",
                     1,
                     run_duration,
                     threads,
@@ -648,6 +791,13 @@ mod tests {
     }
 
     #[test]
+    fn sieve_known_correct_bits_striped_blocks() {
+        // check both sizes
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>();
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>();
+    }
+
+    #[test]
     fn sieve_known_correct_bytes() {
         sieve_known_correct::<FlagStorageByteVector>();
     }
@@ -662,6 +812,68 @@ mod tests {
                 sieve.count_primes(),
                 "wrong number of primes for sieve = {}",
                 sieve_size
+            );
+        }
+    }
+
+    #[test]
+    fn storage_byte_correct() {
+        basic_storage_correct::<FlagStorageByteVector>();
+    }
+
+    #[test]
+    fn storage_bit_correct() {
+        basic_storage_correct::<FlagStorageBitVector>();
+    }
+
+    #[test]
+    fn storage_bit_rotate_correct() {
+        basic_storage_correct::<FlagStorageBitVectorRotate>();
+    }
+
+    #[test]
+    fn storage_bit_striped_correct() {
+        basic_storage_correct::<FlagStorageBitVectorStriped>();
+    }
+
+    #[test]
+    fn storage_bit_striped_block_correct() {
+        // test small as well as default block sizes
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<7>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<1024>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>();
+    }
+
+    fn basic_storage_correct<T: FlagStorage>() {
+        let size = 100_000;
+        let mut storage = T::create_true(size);
+        for i in 0..size {
+            assert!(storage.get(i), "expected initially true for index {}", i);
+        }
+
+        // not primes; we're just checking the storage works
+        storage.reset_flags(30, 7);
+        for i in 0..size {
+            let expected_inv = (i >= 30) && ((i - 30) % 7 == 0);
+            assert_eq!(
+                storage.get(i),
+                !expected_inv,
+                "expected value incorrect for index {}",
+                i
+            );
+        }
+
+        storage.reset_flags(72, 100);
+        for i in 0..size {
+            let first = (i >= 30) && ((i - 30) % 7 == 0);
+            let second = (i >= 72) && ((i - 72) % 100 == 0);
+            let expected_inv = first || second;
+            assert_eq!(
+                storage.get(i),
+                !expected_inv,
+                "expected value incorrect for index {}",
+                i
             );
         }
     }

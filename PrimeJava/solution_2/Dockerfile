@@ -1,7 +1,9 @@
-FROM adoptopenjdk/openjdk11:jdk-11.0.11_9-alpine-slim
+FROM adoptopenjdk/openjdk16:jdk-16.0.1_9-alpine-slim
 
 WORKDIR /opt/app
 
-COPY src/PrimeSieveJavaBitSet.java .
+COPY src/*.java ./
+COPY run.sh .
+RUN chmod a+x run.sh
 
-CMD ["java", "PrimeSieveJavaBitSet.java"]
+ENTRYPOINT [ "sh", "./run.sh" ]

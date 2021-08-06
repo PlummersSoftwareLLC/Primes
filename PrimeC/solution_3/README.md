@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is an implementation in C. The basic calculation is based on [solution_2/sieve_1of2.c](../solution_2/sieve_1of2.c) by Daniel Spångberg. However, this implementation has the segmented optimization built on top of that.
+This is an implementation in C. The basic calculation is based on [solution_2/sieve_1of2.c](../solution_2/sieve_1of2.c) by Daniel Spångberg. However, this implementation has the segmented and L1 cache optimization built on top of that.
 
 ## The segmented algorithm
 
@@ -36,6 +36,12 @@ The algorithm consists of the following steps:
 4. Fill the array until and including the second product found in step 2 with copies of the words from word `1` to the product found in step 2.
 5. Repeat step 3 and 4 foreach prime found in step 2 but this time start with the prime from the array. For the last prime use the number of words as the upper bound for the copy.
 6. Cross-out the remaining primes as usual, start with the largest prime from step 2 plus 2.
+
+## L1 cache optimization
+
+A CPU has level one (L1) cache. This is the fastest memory the CPU can use, but it is limited in size. On my CPU it is 32kb. This is about half the size in case of one million as a limit. To have the sieve stay as long as possible in the L1 cache, the processing of the cross out is done in blocks. This has a big improvement of about 20% on my hardware. The optimal size of the blocks depends on the hardware, so this solution first searches for the best block size parameter for the hardware it is running on.
+
+This optimization was inspired by the Cython solution 1 by ssolvest.
 
 ## Choice of Dockerfile
 

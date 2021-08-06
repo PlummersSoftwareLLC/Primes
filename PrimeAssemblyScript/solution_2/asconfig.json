@@ -1,0 +1,17 @@
+{
+    "entries": [
+        "./src/index.ts"
+    ],
+    "targets": {
+        "release": {
+            "optimize": true,
+            "sourceMap": true,
+            "binaryFile": "./dist/release.wasm"
+        },
+        "debug": {
+            "debug": true,
+            "sourceMap": true,
+            "binaryFile": "./dist/debug.wasm"
+        }
+    }
+}
