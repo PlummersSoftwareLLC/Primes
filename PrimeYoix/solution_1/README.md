@@ -25,5 +25,5 @@ java -jar yoix.jar PrimeYoix.yx
 ### Output
 
 ```
-mmcdon20_yoix;1,7.375000;1;algorithm=base,faithful=yes,bits=1
+mmcdon20_yoix;1;7.375000;1;algorithm=base,faithful=yes,bits=1
 ```

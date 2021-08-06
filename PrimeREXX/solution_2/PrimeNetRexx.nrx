@@ -1,0 +1,182 @@
+/*
+** NetRexx program to determine the prime numbers less than a number passed as a
+** program parameter (sieveSize). The default sieveSize is 1,000,000
+*/
+
+class Eratosthenes private binary
+properties private
+	sieveSize = int
+	sqRt = int
+	primes = byte[]
+
+method primes(i = int)
+	return this.primes[i]
+
+method Eratosthenes(lclSieveSize = int, lclSqRt = int)
+	sieveSize = lclSieveSize
+	primes = byte[sieveSize+1]
+	sqRt = lclSqRt
+
+method Sieve()
+	loop i = 3 to sqRt by 2
+		if primes[i] = 0 then
+			do
+				incr = i + i; strt = i * i
+				loop j = strt to sieveSize by incr
+					primes[j] = 1
+				end
+			end
+	end
+return
+
+class PrimeNetRexx public binary uses RexxTime
+properties static private
+	sqRt = int 
+	iterations = int
+    elapsedTime
+
+
+method main(args = String[]) static
+	arg = Rexx(args)
+	parse arg sieveSize outputMode
+	if sieveSize = "" then
+		do
+			sieveSize = 1000000
+			outputMode = 0
+		end
+	else if outputMode = "" then
+		outputMode = 0
+	
+	if sieveSize.translate("           ","0123456789").space(0) \= "" then
+		sieveSize = 1000000
+	if outputMode.translate("          ","0123456789").space(0) \= "" then
+		outputMode = 0
+
+	if sieveSize >= 0 & sieveSize <= 3 then
+	  do
+		/* first argument was an output mode, there is no sieve size, shift left */
+		outputMode = sieveSize
+		sieveSize = 1000000
+	  end
+	
+	/* 
+	** calculate the square root fo the sieve size
+	** then truncate that to an integer
+	*/
+	sqRt = SquareRoot(sieveSize).trunc
+
+	/*
+	** the 'faithful' loop starts here. Each iteration creates a new Eratosthenes object
+	*/
+	elapsedtime = time("R")
+	loop while elapsedTime <= 5
+		wSieve = Eratosthenes(sieveSize, sqRt)
+		wSieve.Sieve()
+		iterations = iterations+1
+		elapsedTime = time("E")
+	end
+	
+	/*
+	** Sieve iterations are complete, print the results
+	*/
+	say "joss_NetRexx;"iterations";"elapsedTime";1;algorithm=base,bits=8,faithful=yes"
+	
+	select
+	  when outputMode = 1 then
+		PrintDetail(sieveSize,wSieve)
+	  when outputMode = 2 then
+		PrintSummary(sieveSize, wSieve)
+	  when outputMode = 3 then
+		do
+		  /* print summary last so you don't have to scroll to the top
+		  ** of the detail output to see the summary
+		  */
+		  PrintDetail(sieveSize, wSieve)
+		  PrintSummary(sieveSize, wSieve)
+		end
+	  otherwise
+		nop
+	end /* select*/
+	exit 0
+
+
+method PrintDetail(sieveSize,e = Eratosthenes) static
+	printWidth	= int sieveSize.length() + 1
+	line		= 2.right(printWidth)
+	primesPerLine	= 1
+	i = Rexx
+
+	loop i = 3 to sieveSize by 2
+	  if e.primes(i) = 0 then
+	   do
+		 line = line||i.right(printWidth," ")
+		 primesPerLine = primesPerLine + 1
+		 if primesPerLine = 20 then
+		   do
+			 System.err.println(line)
+			 line = ""
+			 primesPerLine = 0
+		   end
+	   end
+	end i
+	if primesPerLine > 0 then
+	  System.err.println(line)
+	return
+
+
+method PrintSummary(sieveSize,e = Eratosthenes) static
+	cnt			= Rexx 1 /* accounts for 2 as prime */
+	i = Rexx
+	loop i = 3 to sieveSize by 2
+	  if e.primes(i) = 0 then
+		cnt = cnt + 1
+	  select
+		when i = 99 & i <= sieveSize then
+		  System.err.println( cnt" primes less than 100 (expected 25)")
+		when i = 999 & i <= sieveSize then
+		  System.err.println(  cnt" primes less than 1,000 (expected 168)")
+		when i = 9999 & i <= sieveSize then
+		  System.err.println(  Format(cnt)" primes less than 10,000 (expected 1,229)")
+		when i = 99999 & i <= sieveSize then
+		  System.err.println(  Format(cnt)" primes less than 100,000 (expected 9,592)")
+		when i = 999999 & i <= sieveSize then
+		  System.err.println(  Format(cnt)" primes less than 1,000,000 (expected 78,498)")
+		when i = 9999999 & i <= sieveSize then
+		  System.err.println( Format(cnt)" primes less than 10,000,000 (expected 664,579)")
+		when i = 99999999 & i <= sieveSize then
+		  System.err.println( Format(cnt)" primes less than 100,000,000 (expected 5,761,455)")
+		when i = 999999999 & i <= sieveSize then
+		  System.err.println( Format(cnt)" primes less than 1,000,000,000 (expected 50,847,534)")
+		when i = sieveSize | i = sieveSize - 1 then
+		  System.err.println( Format(cnt)" primes less than or equal to "format(sieveSize))
+		otherwise
+		  nop
+	  end /* select */
+	end i
+	return
+
+
+method SquareRoot(number) static
+	guess = number / 2
+	guess2 = 0.5 * (number / guess + guess)
+	loop while (guess2 - guess).abs() > 0.0001
+	  guess = guess2
+	  guess2 = 0.5 * (number / guess + guess)
+	end /* while */
+	return guess2
+
+
+method Format(num = Rexx) static 
+	i 			= Rexx
+	temp1		= Rexx
+	temp2		= Rexx
+	l3			= Rexx
+
+	temp1		= "abc,def,ghi,jkl,mno,pqr,stu,vwx"
+	temp2		= "abcdefghijklmnopqrstuvwx"
+	l			= num.length()
+	l3			= (3 - (l//3)) // 3
+
+
+	i			= num.right(l+l3)
+	return temp1.translate(i,temp2).space(0).strip("T",",")

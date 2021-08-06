@@ -1,0 +1,66 @@
+% Prime Sieve with TeX
+% author: jfbu
+% date:   2021/07/24-27
+%
+% activate @ as a letter for being more mysterious
+\catcode`@ 11
+% and use also _ as a letter to appear even more TeXnical
+\catcode`_ 11
+
+% luatex compatibility layer (it does not know \pdfresettimer)
+\ifx\directlua\undefined\else
+      % **too** complicated to get this to work with Docker (and I wasted
+      % enough time on this)
+      % \input pdftexcmds.sty
+      % \let\pdfresettimer\pdf@resettimer
+      % \let\pdfelapsedtime\pdf@elapsedtime
+% https://tex.stackexchange.com/a/32531
+\directlua{pdfelapsedtimer_basetime=0}%
+\def\pdfresettimer{\directlua{pdfelapsedtimer_basetime = os.clock()}}%
+\def\pdfelapsedtime{\numexpr\directlua{tex.print(math.floor((os.clock()-pdfelapsedtimer_basetime)*65536+0.5))}\relax}%
+\fi  
+
+% auxiliary for converting \pdfelapsedtime output into seconds
+{\catcode`P12\catcode`T12\lowercase{\gdef\strippt#1PT{#1}}}%
+
+% Instantiate
+\immediate\write128{Instantiate object for sieving up to \Range...}%
+\ifx\pdfresettimer\undefined\else\pdfresettimer\fi
+%
+\NewSieve{foo}{\Range}%
+%
+\ifx\pdfresettimer\undefined
+    \immediate\write128{...done}%
+\else
+    \immediate\write128{...done
+    (\expandafter\strippt\the\dimexpr\pdfelapsedtime sp s)}%
+\fi
+
+% Sieve
+\immediate\write128{Sieving...}%
+\ifx\pdfresettimer\undefined\else\pdfresettimer\fi
+%
+\Sieve foo.sieve{}%
+%
+\ifx\pdfresettimer\undefined
+    \immediate\write128{...done}%
+\else
+    \immediate\write128{...done
+    (\expandafter\strippt\the\dimexpr\pdfelapsedtime sp s)}%
+\fi
+
+% Output
+\immediate\write128{Outputting to file listofprimes-\Range.txt...}%
+\ifx\pdfresettimer\undefined\else\pdfresettimer\fi
+%
+\Sieve foo.outtofile{listofprimes-\Range.txt}%
+%
+\ifx\pdfresettimer\undefined
+    \immediate\write128{...done}%
+\else
+    \immediate\write128{...done
+    (\expandafter\strippt\the\dimexpr\pdfelapsedtime sp s)}%
+\fi
+%
+
+\bye
