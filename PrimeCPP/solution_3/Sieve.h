@@ -3,6 +3,10 @@
 #include <cstddef>
 #include <cstdint>
 
+// CONFIG
+static constinit const size_t upperLimit = 1'000'000L;
+static constinit const int runtimeSeconds = 5;
+
 // from https://baptiste-wicht.com/posts/2014/07/compile-integer-square-roots-at-compile-time-in-cpp.html
 static constexpr uint64_t ct_sqrt(uint64_t res, uint64_t l, uint64_t r)
 {
@@ -34,17 +38,19 @@ class Sieve
 {
 public:
 	using U = uint64_t;
-	static constexpr uint64_t maxSize = 50000000L; // stack size limited
+	static constexpr uint64_t STACK_SIZE = 50'000'000L;
+	static_assert(STACK_SIZE >= upperLimit, "You may not exceed the stack size");
 
-private:
+private:	
 	static constexpr auto wordsize = sizeof(U) * 8;
-	static constexpr auto words = (maxSize + wordsize - 1) / wordsize;
+	static constexpr auto words = (upperLimit / wordsize / 2) + (((upperLimit / 2) % wordsize) > 0);
 
 	U bitmap[words] = {0}; // 0 means contains, 1 means missing
-	uint64_t sieveSize = maxSize;
+	uint64_t sieveSize = upperLimit;
 
 	constexpr void insert(uint64_t index)
 	{
+		index /= 2;
 		const auto bi = index / wordsize;
 		const auto off = index % wordsize;
 		bitmap[bi] &= ~(((U)1) << off);
@@ -52,6 +58,7 @@ private:
 
 	constexpr void remove(uint64_t index)
 	{
+		index /= 2;
 		const auto bi = index / wordsize;
 		const auto off = index % wordsize;
 		bitmap[bi] |= (((U)1) << off);
@@ -60,14 +67,13 @@ private:
 public:
 	constexpr bool contains(uint64_t index) const
 	{
+		index /= 2;
 		const auto bi = index / wordsize;
 		const auto off = index % wordsize;
 		return 0 == (bitmap[bi] & (((U)1) << off));
 	}
 
 	constexpr Sieve() {}
-
-	constexpr Sieve(const uint64_t size) : sieveSize(size) {}
 
 	constexpr uint64_t size() const
 	{
