@@ -11,15 +11,15 @@ p     v p11:$<
 2         >>::2/8/1+0g\2/8%1+0\gA|                 $
 p              BIT IS ZERO
 2            MARK MULTIPLES BELOW
-*        v g11: <   p13 *2\*:::  <
-:               ^ +g13  p0+1/8/2\ <
-0      ^ w :::2/8/1+0g\2/8%1+0\gO ^                   PRINT BENCHMARK RESULT
-3      ^ <                              v          #                     @      >1+> :     v
-p                                       >0";89fb-lojt">:#,_$\.";",:aaa**:*/0\>:awv ^,+*c4-1_v
-2      v   ;                  >,v       $        ; <                     #      >>:a%1+v    $
-*                             |:< ";1;algorithm=base;faithful=no;bits=1"a0.,;^      /a\<;"."<
-:                             @         #
-0                                   > :v  :<  "valid"a0   <   VALIDATE PRIME COUNT
+*        v g11: <   p13 *2\*:::  <                                           v#'<
+:               ^ +g13  p0+1/8/2\ <                                          > v>0'#v
+0      ^ w :::2/8/1+0g\2/8%1+0\gO ^                            v/**::d':,;'    s s  <
+3      ^ <                                         #                  >'0+>:#,_$^ v
+p                                       >0";89fb-lojt">:#,_$\  > 0\>:aw>:a%'0v '
+2      v                                           <               ^ ;>^;/a\+< .
+*                               >,v                            ^      %*:**aaa,<
+:                               |:<     $#";1;algorithm=base;faithful=no;bits=1"a0<
+0                               @   > :v  :<  "valid"a0   <   VALIDATE PRIME COUNT BELOW
 4                                   ^ ,_^  ^"invalid"a0  _^#-  <      <          <         <   **<
 p                                   ^ "unclear"a0 <    <      <      <        <        <<        :
 2       >" :semirp">:#,_$                    11g:aw$  4                                          *
@@ -32,9 +32,9 @@ p            @<     PRINT PRIMES                                              >:
 *>>>>>>    2.3> ::2/8/1+0g  \2/8%1+0\g  A|
 :                                     ^.:<
 0
-6   THE CODE ON THE LEFT EDGE                  TO PRINT PRIMES INSTEAD OF RUNNING
-p   IS SETTING UP A LOOKUP TABLE               THE BENCHMARK, REPLACE THE # IN LINE
-2   FOR THE EIGHT BIT MASKS                    IN LINE 8, COL 2 WITH v
+6   THE CODE ON THE LEFT EDGE                    TO PRINT PRIMES INSTEAD OF RUNNING
+p   IS SETTING UP A LOOKUP TABLE                 THE BENCHMARK, REPLACE THE # IN
+2   FOR THE EIGHT BIT MASKS                      LINE 8, COL 2 WITH v
 *
 :   TO CHANGE THE SIEVE SIZE, EDIT THE NUMBER
 0   IN THE FIRST LINE (a = 10, aa* = 100,
