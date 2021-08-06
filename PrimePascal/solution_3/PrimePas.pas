@@ -219,7 +219,7 @@ begin
     writeln;
   end;
 
-  writeln(format('olivierbrun;%d;%.6f;%d;algorithm=base,faithful=yes,bits=1', [totalPasses, duration, threads]));
+  writeln(format('olivierbrun_%d_threads;%d;%.6f;%d;algorithm=base,faithful=yes,bits=1', [threads, totalPasses, duration, threads]));
 end;
 
 // retrieve command line options
