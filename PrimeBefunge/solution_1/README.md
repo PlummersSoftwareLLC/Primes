@@ -25,7 +25,7 @@ tricky to work with: you have to build numbers from the hexadecimal instructions
 78498, in this program, looks like `9a*1-2*73*:**`.
 
 This program, `primes.b98`, keeps the prime sieve state in the first line
-(once the code in it is no longer needed) and a few other variables broadly
+(once the code there is no longer needed) and keeps a few other variables around
 in the north-east corner. There's some self-modification around line 16/17,
 column 80/81, where bits of the output code are used multiple times.
 
