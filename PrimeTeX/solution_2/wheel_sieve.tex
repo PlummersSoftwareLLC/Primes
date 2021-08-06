@@ -147,7 +147,7 @@
 \indexb=\@ne
 \indexc=\@ne
 \Replicate{1154}{\advance\indexb\tw@
-    \ifdim\fontdimen\indexb\wheelcogids=\z@ % relatively prime to 2310
+    \ifcase\fontdimen\indexb\wheelcogids % relatively prime to 2310
       \advance\indexc\@ne
       \fontdimen\indexc\wheelcogs    =\indexb sp %
       %
@@ -358,7 +358,7 @@
       % update the iteration count
       \advance\cntf\@ne
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % yes, so let's sieve out its multiples
         % starting with factor*factor
         %
@@ -366,10 +366,9 @@
         \advance\cntc\cntc
         \advance\cntc\@ne % \cntc = 2j+1 = odd factor
         %
-        \cntb=\cntc
-        \multiply \cntb \cntb % factor*factor
+        \indexb=\cntc
+        \multiply \indexb \indexb % factor*factor
         %
-        \indexb=\cntb
         \divide \indexb \tw@ 
         \fontdimen\indexb\_svobjarray=\onesp % factor * factor now sieved out
         %
@@ -486,7 +485,7 @@
       % and now update the class modulo wheel modulus
       \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % we have a prime
         \advance\cntf\@ne
       \fi
@@ -502,7 +501,7 @@
       % and now update the class modulo wheel modulus
       \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % we have a prime
         \advance\cntf\@ne
       \fi
@@ -574,7 +573,7 @@
       % and now update the class modulo wheel modulus
       \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % we have a prime
         \cnta=\indexa
         \advance\cnta\cnta
@@ -594,7 +593,7 @@
       % and now update the class modulo wheel modulus
       \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
       % we have a prime
         \cnta=\indexa
         \advance\cnta\cnta

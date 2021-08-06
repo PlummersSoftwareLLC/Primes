@@ -40,7 +40,20 @@
 %     faster assignments; I knew this would bring some gain but I did not
 %     expect it as big as it turned out.
 %   * update on August 6: use = sign for all assignments. Faster. Also,
-%     I tested "by" for \advance but it is definitely slower than without
+%     I tested "by" for \advance but it is definitely slower adding it
+%   * putting the replicated bodies in "\action" macros is also definitely
+%     slower
+%   * the \romannumeral in \Replicate is a legacy from where this macro
+%     was taken (xintkernel.sty, which itself cloned it from latex3)
+%     and serves nothing
+%     Surprisingly tests with luatex 1.13 definitely show it is advantageous.
+%     But tests with the luatex 1.07.0 from the Docker container are less
+%     conclusive... perhaps because there are less files in the texmf trees,
+%     as unexpectedly this is sensitive to whether TEXMFCNF is set or not!
+%     Weird and we are entering areas where
+%     things are more or less pronounced depending on engine (pdftex,
+%     luatex, dev version of successor of luatex...)
+%   * using \ifcase rather than \ifdim\foo=\z@ is faster (thanks to HH)
 %   * I test the above with luatex as it is used for benchmark. I hope
 %     my luatex 2021 behaves as luatex 2018 from the Docker image...
 %
@@ -234,7 +247,7 @@
     \Replicate{\the\cntb}{%
       \advance\indexa\@ne
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % yes, so let's sieve out its multiples
         % starting with factor*factor
         \cntc=\indexa      % will hold the factor
@@ -330,7 +343,7 @@
     \Replicate{\the\cntb}{%
         \ReplicateM{%
           \advance\indexa\@ne
-          \ifdim\fontdimen\indexa\_svobjarray=\z@
+          \ifcase\fontdimen\indexa\_svobjarray
              \advance\cntc\@ne % we have a prime
           \fi
          }%
@@ -341,7 +354,7 @@
     % and do it
     \Replicate{\the\cnta}{%
           \advance\indexa\@ne
-          \ifdim\fontdimen\indexa\_svobjarray=\z@
+          \ifcase\fontdimen\indexa\_svobjarray
              \advance\cntc\@ne % we have a prime
           \fi
          }%
@@ -379,7 +392,7 @@
     \Replicate{\the\cntb}{%
         \ReplicateM{%
           \advance\indexa\@ne
-          \ifdim\fontdimen\indexa\_svobjarray=\z@
+          \ifcase\fontdimen\indexa\_svobjarray
   % we have a prime
   \cntc=\indexa
   \advance\cntc\cntc
@@ -395,7 +408,7 @@
     % and do it
     \Replicate{\the\cnta}{%
           \advance\indexa\@ne
-          \ifdim\fontdimen\indexa\_svobjarray=\z@
+          \ifcase\fontdimen\indexa\_svobjarray
   % we have a prime
   \cntc=\indexa
   \advance\cntc\cntc

@@ -79,24 +79,24 @@ DDR3 of memory (mid-2012 machine).
 Docker run:
 
 ```
-jfbu-tex;23;5.15387;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;35;5.1453;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;23;5.10483;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;35;5.03275;1;algorithm=wheel,faithful=no,bits=32
 ```
 
-Native run (with `luatex`: `/bin/sh run.sh`). The `luatex` is from TeXLive 2021,
-the one of the Dockerfile from TeXLive 2018.
+Native run (with `luatex`: `/bin/sh run.sh`). The `luatex` is `1.13` from
+TeXLive 2021, the one of the Dockerfile is `1.07.0` from TeXLive 2018.
 
 ```
-jfbu-tex;21;5.20486;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;31;5.10928;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;21;5.2344;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;31;5.1061;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 Native run (with `pdftex`: `/bin/sh runpdftex.sh`). The `pdftex` is compiled
 locally from sources with compiler flags for speed.
 
 ```
-jfbu-tex;26;5.14963;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;42;5.0096;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;26;5.12202;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;42;5.02986;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 I don't know why the speed ratio wheel/base is slightly higher with `pdftex`
