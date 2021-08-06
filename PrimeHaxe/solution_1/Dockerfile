@@ -7,7 +7,7 @@ WORKDIR /opt/app
 COPY . .
 
 COPY *.sh ./
-RUN chmod a+x *.sh
+RUN chmod a+x ./*.sh
 RUN ./compile.sh
 
 ENTRYPOINT [ "./run.sh" ]

@@ -7,7 +7,7 @@ WORKDIR /opt/app
 COPY *.sh ./
 COPY *.asm ./
 
-RUN chmod a+x *.sh
+RUN chmod a+x ./*.sh
 
 RUN ./build.sh
 
