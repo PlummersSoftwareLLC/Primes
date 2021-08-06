@@ -113,7 +113,7 @@ export default class ReportService {
         }
 
         return {
-          implementation: implementation.toLowerCase().replace('prime', ''),
+          implementation: implementation.replace('prime', ''),
           solution: solution.replace('solution_', ''),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           label: match.groups!['label'],

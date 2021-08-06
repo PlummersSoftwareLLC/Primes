@@ -11,8 +11,7 @@ public class PrimeSieveJavaBitSet {
   // Historical data for validating our results - the number of primes to be found under some
   // limit, such as 168 primes under 1000
   private static final Map<Integer, Integer> MY_DICT = Map.of( //
-      10, 4, //
-      100, 25, //
+      10, 1, //
       1000, 168, //
       10000, 1229, //
       100000, 9592, //
@@ -24,7 +23,7 @@ public class PrimeSieveJavaBitSet {
   public static void main(final String[] args) {
 
     var passes = 0;
-    PrimeSieve sieve = null;
+    var sieve = new PrimeSieve(LIMIT);
     final var tStart = currentTimeMillis();
 
     while (MILLISECONDS.toSeconds(currentTimeMillis() - tStart) < TIME) {
@@ -55,7 +54,7 @@ public class PrimeSieveJavaBitSet {
       var factor = 3;
       final var q = (int) Math.sqrt(this.sieveSize);
 
-      while (factor <= q) {
+      while (factor < q) {
         for (var num = factor; num <= this.sieveSize; num++) {
           if (getBit(num)) {
             factor = num;
@@ -66,7 +65,7 @@ public class PrimeSieveJavaBitSet {
         // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd
         // instance of this factor's multiple. We can then step by factor * 2 because every second
         // one is going to be even by definition
-        for (var num = factor * factor; num <= this.sieveSize; num += factor * 2)
+        for (var num = factor * 3; num <= this.sieveSize; num += factor * 2)
           this.clearBit(num);
 
         factor += 2; // No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
@@ -119,13 +118,11 @@ public class PrimeSieveJavaBitSet {
       if (showResults)
         System.out.println("");
 
-      if (!this.validateResults()) {
-        System.out.printf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %s%n",
-            passes, duration, duration / passes, sieveSize, count, this.validateResults());
-        System.out.println();
-      }
-      System.out.printf("PratimGhosh86-JavaBitSet;%d;%f;1;algorithm=base,faithful=yes,bits=1\n",
-          passes, duration);
+      System.out.printf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %s%n", passes,
+          duration, duration / passes, sieveSize, count, this.validateResults());
+      System.out.println();
+      System.out.printf("PratimGhosh86;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes,
+          duration);
     }
   }
 
