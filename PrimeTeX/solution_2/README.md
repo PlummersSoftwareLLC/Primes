@@ -35,9 +35,9 @@ maximal TeXLive memory setting, a maximum of `294` passes can be done with it
 for the sieving range of `1,000,000` (each pass consuming about `500,000`
 words of font memory).
 
-As at my locale I achieve with `pdftex` `40` passes for the wheel
+As at my locale I achieve with `pdftex` `42` passes for the wheel
 implementation, a computer about
-`7.5` times faster than mine would exhaust `pdftex` maximal font memory during
+`7` times faster than mine would exhaust `pdftex` maximal font memory during
 the benchmark.
 
 For this reason the Dockerfile is configured to run only the `luatex`
@@ -79,29 +79,29 @@ DDR3 of memory (mid-2012 machine).
 Docker run:
 
 ```
-jfbu-tex;22;5.10106;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;33;5.13968;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;23;5.15387;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;35;5.1453;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 Native run (with `luatex`: `/bin/sh run.sh`). The `luatex` is from TeXLive 2021,
 the one of the Dockerfile from TeXLive 2018.
 
 ```
-jfbu-tex;20;5.05441;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;29;5.04533;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;21;5.20486;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;31;5.10928;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 Native run (with `pdftex`: `/bin/sh runpdftex.sh`). The `pdftex` is compiled
 locally from sources with compiler flags for speed.
 
 ```
-jfbu-tex;25;5.09103;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-480of2310;40;5.06285;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;26;5.14963;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-480of2310;42;5.0096;1;algorithm=wheel,faithful=no,bits=32
 ```
 
-I don't know why the speed ratio wheel/base is higher with `pdftex` than
-with `luatex`. Also, this ratio is a bit disappointing: perhaps an indication
-my wheel implementation has room for improvements.
+I don't know why the speed ratio wheel/base is slightly higher with `pdftex`
+than with `luatex`. Also, this ratio is a bit disappointing: perhaps an
+indication my wheel implementation has room for improvements.
 
 ## Information on some of the files
 
@@ -145,6 +145,15 @@ By default it generates `listofprimes-1000000.txt`.
 other configurable range) and then output to `pdf` the prime numbers in a
 column-wise manner, the columns being filled from left to right for the `h`
 version and from top to bottom for the `v` version.
+
+`getlistofprimes_{erato,wheel}.sh` is to be executed with `/bin/sh`. They test
+production of files `listofprimes-<range>.txt` for `<range>` varying from
+`1,000,000` to `999,999,999`.  The costliest part is not the sieving but the
+creation of the text files, one prime per line (I have not tried to experiment
+alternative ways to write from TeX to the created files, as this is not topic
+of the drag-race).  Please check first typical timings on my hardware in
+`{erato,wheel}_primestofile_timings.txt`.
+
 
 ## More info on native runs with pdftex
 

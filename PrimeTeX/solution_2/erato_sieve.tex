@@ -1,6 +1,6 @@
 % Prime Sieve with TeX
 % author: jfbu
-% date:   2021/07/24
+% date:   2021/07/24--2021/08/06
 %
 % This file defines syntax for a  "Sieve object" in TeX lingua with its
 % associated methods: sieve, reset, settocount, outtofile.
@@ -36,9 +36,13 @@
 % - primes are marked as 0, non-primes as 1. The array entries type is
 %   a TeX dimension, which pdftex represents (I think) as 32bits words.
 %   So more precisely primes are marked as 0sp and non-primes as 1sp.
-%   (update: using \dimen's \z@ and \onesp for significantly faster
-%    assignments; I knew this would bring some game but I did not
-%    expect it as big actually)
+%   * update on August 5: use \dimen's \z@ and \onesp for significantly
+%     faster assignments; I knew this would bring some gain but I did not
+%     expect it as big as it turned out.
+%   * update on August 6: use = sign for all assignments. Faster. Also,
+%     I tested "by" for \advance but it is definitely slower than without
+%   * I test the above with luatex as it is used for benchmark. I hope
+%     my luatex 2021 behaves as luatex 2018 from the Docker image...
 %
 % - index j stands for the number 2j+1 and starts at j=1. So the sieving
 %   array in memory represents only odd numbers, first one 3.
@@ -85,7 +89,7 @@
 \input shared_batteries.tex
 
 % this will serve to mark composites
-\newdimen\onesp \onesp 1sp
+\newdimen\onesp \onesp=1sp
 
 % additional count registers 
 \newcount\indexa
@@ -144,12 +148,12 @@
   %
   \expandafter\def\csname _svobj.#1\endcsname##1##{\csname _svobj.#1.##1\endcsname}%
   % range A
-  \cstA#2\relax
+  \cstA=#2\relax
   %  (the ##1 is only to gobble the {} from the method calling syntax)
   \expandafter\edef\csname _svobj.#1.range\endcsname##1{\the\cstA}%
   %
   % array size 2J+1<= A 
-  \cnta\cstA
+  \cnta=\cstA
   \advance\cnta-\@ne
   \divide\cnta\tw@
   %
@@ -158,7 +162,7 @@
   \expandafter\edef\csname _svobj.#1.instance\endcsname##1{\the\instance}%
   %
   % an array of font dimensions (each a 32bits word)
-  \cntb 665
+  \cntb=665
   \advance\cntb\instance
   % Initialize a font
   \font\_svobjarray=cmr10 at \cntb sp % each class instantiation via own font
@@ -215,16 +219,16 @@
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
     % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
     % is defined to gobble a {}...
-    \cstA\csname _svobj.#1.range\endcsname{}\relax
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
     % Set \cstB to its square root
     \SetToSqrt\cstA\cstB
     %
-    \indexa\z@
+    \indexa=\z@
     %
     % Start the actual sieving
     % We need to check indices 1..J with 2J+1<=B, so increment J times
     % by 1 the index, initially with value 0.
-    \cntb\cstB
+    \cntb=\cstB
     \advance\cntb-\@ne
     \divide\cntb\tw@
     \Replicate{\the\cntb}{%
@@ -233,24 +237,24 @@
       \ifdim\fontdimen\indexa\_svobjarray=\z@ %
         % yes, so let's sieve out its multiples
         % starting with factor*factor
-        \cntc \indexa      % will hold the factor
+        \cntc=\indexa      % will hold the factor
         \advance\cntc\cntc
         \advance\cntc\@ne % \cntc = 2j+1 = odd factor
         %
-        \cntb \cntc
+        \cntb=\cntc
         \multiply \cntb \cntb % factor*factor
         %
-        \indexb \cntb
+        \indexb=\cntb
         \divide \indexb \tw@ % (odd number x) //2 gives j such that x=2j+1
         \fontdimen\indexb\_svobjarray=\onesp % factor * factor now sieved out
          %
-        \cnta \cstA % Range
+        \cnta=\cstA % Range
         \advance\cnta-\cntb % Range - factor * factor
         \divide \cnta\cntc  % how many odd numbers still to sieve out ?
         \divide \cnta\tw@   % that many
         %
         % let's work with batches of 1000 at a time
-        \cntb\cnta
+        \cntb=\cnta
         \divide\cntb\@m % \@m is 1000
         %
         \Replicate{\the\cntb}{%
@@ -277,16 +281,16 @@
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
     % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
     % is defined to gobble a {}...
-    \cstA\csname _svobj.#1.range\endcsname{}\relax
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
     %
-    \cnta\cstA
+    \cnta=\cstA
     \advance\cnta-\@ne
     \divide\cnta\tw@
     %
-    \indexa\z@
+    \indexa=\z@
     %
         % let's work with batches of 1000 at a time
-        \cntb\cnta
+        \cntb=\cnta
         \divide\cntb\@m % \@m is 1000
         %
         \Replicate{\the\cntb}{%
@@ -311,17 +315,17 @@
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
     % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
     % is defined to gobble a {}...
-    \cstA\csname _svobj.#1.range\endcsname{}\relax
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
     % Get the length of the fontdimen array: 2J+1<=N
-    \cnta\cstA
+    \cnta=\cstA
     \advance\cnta-\@ne
     \divide\cnta\tw@
     % index will get incremented by 1, initialize it at 0
-    \indexa \z@
+    \indexa=\z@
     % \cntc will hold the count of primes, set it to 1 as 2 is prime
-    \cntc \@ne
+    \cntc=\@ne
     % Proceed by batches of 1000 at a time
-    \cntb\cnta
+    \cntb=\cnta
     \divide\cntb\@m
     \Replicate{\the\cntb}{%
         \ReplicateM{%
@@ -359,25 +363,25 @@
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
     % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
     % is defined to gobble a {}...
-    \cstA\csname _svobj.#1.range\endcsname{}\relax
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
     % Get the length of the fontdimen array: 2J+1<=N
-    \cnta\cstA
+    \cnta=\cstA
     \advance\cnta-\@ne
     \divide\cnta\tw@
     % index will get incremented by 1, initialize it at 0
     \indexa \z@
     % 2 is prime
   \immediate\write\out{2}%
-  \cntd\@ne
+  \cntd=\@ne
     % Proceed by batches of 1000 at a time
-    \cntb\cnta
+    \cntb=\cnta
     \divide\cntb\@m
     \Replicate{\the\cntb}{%
         \ReplicateM{%
           \advance\indexa\@ne
           \ifdim\fontdimen\indexa\_svobjarray=\z@
   % we have a prime
-  \cntc\indexa
+  \cntc=\indexa
   \advance\cntc\cntc
   \advance\cntc\@ne
   \immediate\write\out{\the\cntc}%
@@ -393,7 +397,7 @@
           \advance\indexa\@ne
           \ifdim\fontdimen\indexa\_svobjarray=\z@
   % we have a prime
-  \cntc\indexa
+  \cntc=\indexa
   \advance\cntc\cntc
   \advance\cntc\@ne
   \immediate\write\out{\the\cntc}%
