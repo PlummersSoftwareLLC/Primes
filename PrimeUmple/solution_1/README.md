@@ -26,5 +26,5 @@ java PrimeUmple.java
 ### Output
 
 ```
-mmcdon20_umple;3709,5.000000;1;algorithm=base,faithful=yes,bits=1
+mmcdon20_umple;3709;5.000000;1;algorithm=base,faithful=yes,bits=1
 ```

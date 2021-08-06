@@ -10,4 +10,4 @@ cython -3 --embed PrimeCY_32.pyx -o PrimeCY_32.c -X cdivision=True -X boundschec
 
 $CC -O3 $CFLAGS $LDFLAGS PrimeCY_bytearray.c -o PrimeCY_bytearray
 $CC -O3 $CFLAGS $LDFLAGS PrimeCY_bitarray.c -o PrimeCY_bitarray
-$CC -O3 -fopenmp $CFLAGS $LDFLAGS PrimeCY_32.c -o PrimeCY_32
+$CC -O3 -march=native -fopenmp $CFLAGS $LDFLAGS PrimeCY_32.c -o PrimeCY_32
