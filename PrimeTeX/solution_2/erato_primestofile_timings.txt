@@ -1,18 +1,3 @@
-% Prime Sieve with TeX
-% author: jfbu
-% date:   2021/07/24-25
-%
-
-Done on a
-
-hardware: 2 GHz Intel Core i7
-          8 Go 1600 MHz DDR3
-OS: mac osx high sierra
-
-(tex and pdftex binaries are self-compiled from TeXLive sources at my locale,
-they are not the ones from TeXLive darwin-legacy but the luatex is from
-darwin-legacy)
-
 =============
 N = 1,000,000
 =============
@@ -32,9 +17,9 @@ Outputting to file listofprimes-1000000.txt...
 No pages of output.
 Transcript written on erato_primestofile.log.
 
-real	0m1.048s
-user	0m1.023s
-sys	0m0.020s
+real	0m0.698s
+user	0m0.644s
+sys	0m0.025s
 
 $ time pdftex erato_primestofile
 This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
@@ -43,19 +28,19 @@ entering extended mode
 (./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 1000000...
-...done (0.00317s)
+...done (0.00308s)
 Sieving...
-...done (0.65s)
+...done (0.1964s)
 Outputting to file listofprimes-1000000.txt...
 78498 primes were written to file listofprimes-1000000.txt
-...done (0.32672s)
+...done (0.32129s)
  ) )
 No pages of output.
 Transcript written on erato_primestofile.log.
 
-real	0m1.163s
-user	0m1.137s
-sys	0m0.020s
+real	0m0.715s
+user	0m0.688s
+sys	0m0.021s
 
 ==============
 N = 10,000,000
@@ -76,9 +61,9 @@ Outputting to file listofprimes-10000000.txt...
 No pages of output.
 Transcript written on erato_primestofile.log.
 
-real	0m9.463s
-user	0m9.365s
-sys	0m0.064s 
+real	0m5.147s
+user	0m5.087s
+sys	0m0.050s
 
 $ time pdftex \\def\\Range{10000000}\\input erato_primestofile
 This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
@@ -87,19 +72,19 @@ entering extended mode
 (./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 10000000...
-...done (0.0237s)
+...done (0.02281s)
 Sieving...
-...done (7.16238s)
+...done (2.12775s)
 Outputting to file listofprimes-10000000.txt...
 664579 primes were written to file listofprimes-10000000.txt
-...done (3.1574s)
+...done (3.1084s)
  ) )
 No pages of output.
 Transcript written on erato_primestofile.log.
 
-real	0m10.527s
-user	0m10.465s
-sys	0m0.048s
+real	0m5.445s
+user	0m5.396s
+sys	0m0.040s
 
 $ time luatex \\def\\Range{10000000}\\input erato_primestofile
 This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
@@ -107,25 +92,23 @@ This is LuaTeX, Version 1.13.0 (TeX Live 2021)
 (./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 10000000...
-...done (0.38243s)
+...done (0.38802s)
 Sieving...
-...done (5.52905s)
+...done (2.26599s)
 Outputting to file listofprimes-10000000.txt...
 664579 primes were written to file listofprimes-10000000.txt
-...done (3.93869s)
+...done (3.73978s)
 ))
 warning  (pdf backend): no pages of output.
 Transcript written on erato_primestofile.log.
 
-real	0m10.292s
-user	0m10.201s
-sys	0m0.077s
+real	0m6.706s
+user	0m6.630s
+sys	0m0.066s
 
-=============
-N=100,000,000 
-=============
-
-(possible with pdftex if font memory is enlarged via TEXMFCNF and texmf.cnf)
+===============
+N = 100,000,000 
+===============
 
 $ time luatex \\def\\Range{100000000}\\input erato_primestofile
 This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
@@ -133,28 +116,23 @@ This is LuaTeX, Version 1.13.0 (TeX Live 2021)
 (./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 100000000...
-...done (3.79669s)
+...done (3.97836s)
 Sieving...
-...done (59.38228s)
+...done (24.47266s)
 Outputting to file listofprimes-100000000.txt...
 5761455 primes were written to file listofprimes-100000000.txt
-...done (37.46085s)
+...done (35.46765s)
 ))
 warning  (pdf backend): no pages of output.
 Transcript written on erato_primestofile.log.
 
-real	1m41.216s
-user	1m40.649s
-sys	0m0.422s
-
-This gives 5,761,455 primes less than 100,000,000 and the largest one is
-99,999,989. The output file has 51,099,000 bytes at my locale.
+real	1m4.359s
+user	1m3.823s
+sys	0m0.423s
 
 ===============
 N = 999,999,999
 ===============
-
-(only possible with luatex, or with a pdftex re-compiled from sources)
 
 $ time luatex \\def\\Range{999999999}\\input erato_primestofile
 This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
@@ -162,19 +140,16 @@ This is LuaTeX, Version 1.13.0 (TeX Live 2021)
 (./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
 (./shared_primestofile.tex
 Instantiate object for sieving up to 999999999...
-...done (38.77844s)
+...done (38.58249s)
 Sieving...
-...done (646.84377s)
+...done (268.19083s)
 Outputting to file listofprimes-999999999.txt...
 50847534 primes were written to file listofprimes-999999999.txt
-...done (372.62837s)
+...done (342.9771s)
 ))
 warning  (pdf backend): no pages of output.
 Transcript written on erato_primestofile.log.
 
-real	17m42.136s
-user	17m34.170s
-sys	0m4.729s
-
-It finds 50,847,534 primes, the largest one being 999,999,937. The
-output file has 501,959,790 bytes at my locale.
+real	10m52.208s
+user	10m46.585s
+sys	0m3.640s

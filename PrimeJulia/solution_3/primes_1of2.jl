@@ -11,22 +11,9 @@
 # signatures containing `::Integer` to `::UInt` as well as patch the
 # count_primes and get_found_primes functions to use UInts.
 
-
-const _uint_bit_length = sizeof(UInt) * 8
-# This is basically `log2(_uint_bit_length)`.
-if UInt == UInt8
-    const _div_uint_size_shift = 3
-elseif UInt == UInt16
-    const _div_uint_size_shift = 4
-elseif UInt == UInt32
-    const _div_uint_size_shift = 5
-elseif UInt == UInt64
-    const _div_uint_size_shift = 6
-elseif UInt == UInt128
-    const _div_uint_size_shift = 7
-else
-    error("Unknown UInt type ($UInt)")
-end
+const MainUInt = UInt32
+const _uint_bit_length = sizeof(MainUInt) * 8
+const _div_uint_size_shift = Int(log2(_uint_bit_length))
 
 # Functions like the ones defined below are also used in Julia's Base
 # library to speed up things such as Julia's native BitArray type.
@@ -38,15 +25,11 @@ end
 # This function also takes inspiration from Base._mod64 (bitarray.jl).
 @inline _mod_uint_size(i::Integer) = i & (_uint_bit_length - 1)
 @inline _div_uint_size(i::Integer) = i >> _div_uint_size_shift
-# These functions are similar to Base.get_chunk_id (bitarray.jl).
-# This is definitely a bit more complicated due to one-based indexing.
-@inline _get_chunk_index(i::Integer) = _div_uint_size(i - 1) + 1
-@inline _get_bit_index_mask(i::Integer) = UInt(1) << _mod_uint_size(i - 1)
 
 
 struct PrimeSieve
     sieve_size::UInt
-    is_not_prime::Vector{UInt}
+    is_not_prime::Vector{MainUInt}
 end
 
 # This is more accurate than _div_uint_size(_div2(i)) + 1
@@ -60,49 +43,39 @@ end
 )
 
 function PrimeSieve(sieve_size::UInt)
-    return PrimeSieve(sieve_size, zeros(UInt, _get_num_uints(sieve_size)))
+    return PrimeSieve(sieve_size, zeros(MainUInt, _get_num_uints(sieve_size)))
 end
 
 # The main() function uses the UInt constructor; this is mostly useful
 # for testing in the REPL.
 PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
 
-@inline function unsafe_get_bit_at_index(arr::Vector{UInt}, index::Integer)
-    return @inbounds arr[_get_chunk_index(index)] & _get_bit_index_mask(index)
-end
 
-# This is used in unsafe_find_next_factor_index since we bitrotate the
-# bitmask there instead of calling unsafe_get_bit_index_mask each time.
-@inline function unsafe_get_bit_at_index_with_bitmask(arr::Vector{UInt}, index::Integer, bitmask::Integer)
-    return @inbounds arr[_get_chunk_index(index)] & bitmask
-end
-
-@inline function unsafe_set_bit_at_index!(arr::Vector{UInt}, index::Integer)
-    @inbounds arr[_get_chunk_index(index)] |= _get_bit_index_mask(index)
-end
-
-function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, max_index::Integer)
-    # Bit rotating the mask might be slower on platforms without a
-    # native bit rotate instruction. Requires at least Julia 1.5.
-    bitmask = _get_bit_index_mask(start_index)
-    for index in start_index:max_index
-        if iszero(unsafe_get_bit_at_index_with_bitmask(arr, index, bitmask))
-            return index
+@inline function unsafe_find_next_factor_index(arr::Vector{<:Unsigned}, start_index::Integer, max_index::Integer)
+    # This loop calculates indices as if they are zero-based then adds
+    # 1 when accessing the array since Julia uses 1-based indexing.
+    zero_index = start_index
+    @inbounds while zero_index < max_index
+        if iszero(
+            arr[_div_uint_size(zero_index) + 1] & (MainUInt(1) << _mod_uint_size(zero_index))
+        )
+            return zero_index + 1
         end
-        bitmask = bitrotate(bitmask, 1)
+        zero_index += 1
     end
     # UNSAFE: you need to check this in the caller or make sure it
     # never happens
     return max_index + 1
 end
 
-function clear_factors!(arr::Vector{UInt}, factor_index::Integer, max_index::Integer)
+@inline function unsafe_clear_factors!(arr::Vector{<:Unsigned}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
-    # Since the for loop carries some memory dependencies (no two
-    # iterations should access the same UInt at the same time), we can
-    # only use `@simd` and not `@simd ivdep`.
-    @simd for index in _div2(factor * factor):factor:max_index
-        unsafe_set_bit_at_index!(arr, index)
+    # This function also uses zero-based indexing calculations similar
+    # to unsafe_find_next_factor_index.
+    zero_index = _div2(factor * factor) - 1
+    @inbounds while zero_index < max_index
+        arr[_div_uint_size(zero_index) + 1] |= MainUInt(1) << _mod_uint_size(zero_index)
+        zero_index += factor
     end
 end
 
@@ -113,15 +86,21 @@ function run_sieve!(sieve::PrimeSieve)
     max_factor_index = _map_to_index(unsafe_trunc(UInt, sqrt(sieve_size)))
     factor_index = UInt(1) # 1 => 3, 2 => 5, 3 => 7, ...
     while factor_index <= max_factor_index
-        factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_bits_index)
-        clear_factors!(is_not_prime, factor_index, max_bits_index)
-        factor_index += UInt(1)
+        unsafe_clear_factors!(is_not_prime, factor_index, max_bits_index)
+        factor_index = unsafe_find_next_factor_index(is_not_prime, factor_index, max_factor_index)
     end
     return is_not_prime
 end
 
+
 # These functions aren't optimized, but they aren't being benchmarked,
 # so it's fine.
+
+@inline function unsafe_get_bit_at_index(arr::Vector{<:Unsigned}, index::Integer)
+    zero_index = index - 1
+    return @inbounds arr[_div_uint_size(zero_index) + 1] & (MainUInt(1) << _mod_uint_size(zero_index))
+end
+
 function count_primes(sieve::PrimeSieve)
     arr = sieve.is_not_prime
     max_bits_index = _map_to_index(sieve.sieve_size)

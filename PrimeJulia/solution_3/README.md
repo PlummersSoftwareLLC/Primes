@@ -13,20 +13,16 @@ Julia to get as much as speed as possible out of the language. It is
 This solution requires at least **Julia 1.5** to run. Julia 1.6 is
 recommended and is used in the Docker image.
 
-### Things to note
-
-1. The `@simd` annotation on the loop inside `clear_factors!` may
-   actually hurt performance on older and/or slower systems for some
-   reason, such as on older x86 processors and on the Raspberry Pi.
-   You can safely remove the `@simd` annotation if you wish to.
-   Feedback is appreciated as to whether `@simd` helps or hurts
-   performance in your case.
-
 ## Description
 
 Instead of using Julia's native `BitVector` type, this solution
-manually implements a bit array using a `Vector{UInt}` where `UInt`
-maps to the unsigned integer type of the native word size.
+manually implements a bit array using a `Vector{UInt32}` since 32-bit
+integers seem to give the best performance. You can switch which
+unsigned integer type you want to use by changing the line:
+```
+const MainUInt = UInt32
+```
+Change `UInt32` to whichever unsigned integer type you wish to use.
 
 Manual bit shifting and bit masking is employed to both read and set
 bits in the bit array. Bitwise operations are used as much as possible
@@ -143,8 +139,8 @@ Core i5-9300H CPU and 24 GB of RAM running Windows 10 Home:
 PS D:\Office Files\Programming\Primes> julia primes_1of2.jl
 Settings: sieve_size = 1000000 | duration = 5
 Number of trues: 78498
-primes_1of2.jl: Passes: 8588 | Elapsed: 5.0 | Passes per second: 1717.6 | Average pass duration: 0.0005822077317186772
-louie-github_port_1of2;8588;5.0;1;algorithm=base,faithful=yes,bits=
+primes_1of2.jl: Passes: 9146 | Elapsed: 5.0 | Passes per second: 1829.2 | Average pass duration: 0.0005466870763175158
+louie-github_port_1of2;9146;5.0;1;algorithm=base,faithful=yes,bits=1
 ```
-On said machine, the number of passes usually ranges between 8200
-and 8700.
+On said machine, when no heavy tasks are running, the number of passes
+usually ranges between 8900 and 9300.
