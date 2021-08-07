@@ -56,13 +56,13 @@
         (if showResults 
             (printf "2, "))
         
-        (def count (if (>= sieveSize 2) 1 0))
+        (def total (if (>= sieveSize 2) 1 0))
 
         (loop [num 3]
             (if (. this getBit num) 
                 (do (if showResults 
                         (printf "%d, " num))
-                    (def count (inc count))))
+                    (def total (inc total))))
             (if (<= num sieveSize) 
                 (recur (+ num 2))))
 
@@ -70,7 +70,7 @@
             (do (printf "\n")
                 (printf "Passes: %d, Time: %f, " passes duration)
                 (printf "Avg: %f, Limit: %d, " (/ duration passes) sieveSize)
-                (printf "Count1: %d, Count2: %d, " count (. this countPrimes))
+                (printf "Count1: %d, Count2: %d, " total (. this countPrimes))
                 (printf "Valid: %s\n" (if (. this validateResults) "True" "False"))
                 (printf "\n")))
 
