@@ -11,8 +11,8 @@
 # signatures containing `::Integer` to `::UInt` as well as patch the
 # count_primes and get_found_primes functions to use UInts.
 
-
-const _uint_bit_length = sizeof(UInt) * 8
+const MainUInt = UInt32
+const _uint_bit_length = sizeof(MainUInt) * 8
 const _div_uint_size_shift = Int(log2(_uint_bit_length))
 
 # Functions like the ones defined below are also used in Julia's Base
@@ -29,7 +29,7 @@ const _div_uint_size_shift = Int(log2(_uint_bit_length))
 
 struct PrimeSieve
     sieve_size::UInt
-    is_not_prime::Vector{UInt}
+    is_not_prime::Vector{MainUInt}
 end
 
 # This is more accurate than _div_uint_size(_div2(i)) + 1
@@ -43,7 +43,7 @@ end
 )
 
 function PrimeSieve(sieve_size::UInt)
-    return PrimeSieve(sieve_size, zeros(UInt, _get_num_uints(sieve_size)))
+    return PrimeSieve(sieve_size, zeros(MainUInt, _get_num_uints(sieve_size)))
 end
 
 # The main() function uses the UInt constructor; this is mostly useful
@@ -51,13 +51,13 @@ end
 PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
 
 
-@inline function unsafe_find_next_factor_index(arr::Vector{UInt}, start_index::Integer, max_index::Integer)
+@inline function unsafe_find_next_factor_index(arr::Vector{<:Unsigned}, start_index::Integer, max_index::Integer)
     # This loop calculates indices as if they are zero-based then adds
     # 1 when accessing the array since Julia uses 1-based indexing.
     zero_index = start_index
     @inbounds while zero_index < max_index
         if iszero(
-            arr[_div_uint_size(zero_index) + 1] & (UInt(1) << _mod_uint_size(zero_index))
+            arr[_div_uint_size(zero_index) + 1] & (MainUInt(1) << _mod_uint_size(zero_index))
         )
             return zero_index + 1
         end
@@ -68,13 +68,13 @@ PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
     return max_index + 1
 end
 
-@inline function unsafe_clear_factors!(arr::Vector{UInt}, factor_index::Integer, max_index::Integer)
+@inline function unsafe_clear_factors!(arr::Vector{<:Unsigned}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
     # This function also uses zero-based indexing calculations similar
     # to unsafe_find_next_factor_index.
     zero_index = _div2(factor * factor) - 1
     @inbounds while zero_index < max_index
-        arr[_div_uint_size(zero_index) + 1] |= UInt(1) << _mod_uint_size(zero_index)
+        arr[_div_uint_size(zero_index) + 1] |= MainUInt(1) << _mod_uint_size(zero_index)
         zero_index += factor
     end
 end
@@ -96,9 +96,9 @@ end
 # These functions aren't optimized, but they aren't being benchmarked,
 # so it's fine.
 
-@inline function unsafe_get_bit_at_index(arr::Vector{UInt}, index::Integer)
+@inline function unsafe_get_bit_at_index(arr::Vector{<:Unsigned}, index::Integer)
     zero_index = index - 1
-    return @inbounds arr[_div_uint_size(zero_index) + 1] & (UInt(1) << _mod_uint_size(zero_index))
+    return @inbounds arr[_div_uint_size(zero_index) + 1] & (MainUInt(1) << _mod_uint_size(zero_index))
 end
 
 function count_primes(sieve::PrimeSieve)
