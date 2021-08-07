@@ -7,9 +7,8 @@ WORKDIR /opt/app
 COPY *.sh ./
 COPY *.s ./
 
-RUN chmod a+x ./*.sh
-
-RUN ./build.sh
+RUN chmod a+x ./*.sh && \
+    ./build.sh
 
 ENTRYPOINT [ "./run.sh" ]
 
