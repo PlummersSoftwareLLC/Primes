@@ -1,4 +1,8 @@
-# Delphi solution by JakeTapper
+# Delphi solutions by Kim Bo Madsen http://www.Components4Developers.com
+
+Project1.dpr contains an optimized 1 byte per 1 prime candidate variant.
+Project2.dpr contains an optimized 1 bit per 1 prime candidate variant.
+MTProject1.dpr contains a multithreaded 1 bit per 1 prime candidate variant.
 
 ![Category](https://img.shields.io/badge/Category-faithful-green)
 
