@@ -72,7 +72,7 @@
     % and apply *integer* babylonian square root
     % ATTENTION: using Plain TeX's \loop here would make this macro not usable in a \loop...
     \xloop
-     \tmpcntc\tmpcnta
+     \tmpcntc=\tmpcnta
      \divide\tmpcntc\tmpcntb  % TeX's \divide truncates (like Python's // for
                               % positive)
      \advance\tmpcntb\tmpcntc
@@ -80,7 +80,7 @@
     \ifnum\tmpcntb>\tmpcntc
     \repeat
     % do the final assignment
-    #2\tmpcntb
+    #2=\tmpcntb
 }%
 
 % REPLICATION
@@ -123,9 +123,9 @@
 \long\expandafter\def\csname Repf9\endcsname #1{\z@ #1#1#1#1#1#1#1#1#1}%
 %
 % specialized variant optimized for replicating exactly 1000 times
-\long\def\ReplicateM#1{\ReplicateM_i{#1#1#1#1#1#1#1#1#1#1}}%
-\long\def\ReplicateM_i#1{\ReplicateM_ii{#1#1#1#1#1#1#1#1#1#1}}%
-\long\def\ReplicateM_ii#1{#1#1#1#1#1#1#1#1#1#1}%
+\long\def\ReplicateM#1{\ReplicateC{#1#1#1#1#1#1#1#1#1#1}}%
+\long\def\ReplicateC#1{\ReplicateX{#1#1#1#1#1#1#1#1#1#1}}%
+\long\def\ReplicateX#1{#1#1#1#1#1#1#1#1#1#1}%
 
 \endinput
 

@@ -35,6 +35,7 @@ type
     private
       sieveSize: uint64;
       bits: PBitsArr;
+      mask: array [0..31] of uint32;
 
       procedure ClearBits(n, skip: uint64); inline;
       function IsPrime(n: uint64): boolean; inline;
@@ -52,6 +53,7 @@ type
 
 constructor prime_sieve.Create(n: uint64);
 var
+  i: byte;
   bitsArrSize: uint32; // 32 bits size array because each value is 32 bits (containing 32 flags for prime numbers)
 
 begin
@@ -59,11 +61,9 @@ begin
   //allocating bitsArrSize = sieveSize/64 uint32s on the heap to store the bits for odd numbers
   bitsArrSize:=(n>>6) + ord(((n>>1) and 31)<>0); //and extra uint32 is added in case sieveSize/2 is not a multiple of 32
   bits:=GetMem(bitsArrSize*4); // 32 bits = 4 bytes
-  {$if defined(CPUAARCH64) or defined(CPUARM)}
-  fillDWord(bits^[0], bitsArrSize, $FFFFFFFF); // setting bits to true on AARCH64 or ARM machines (see why in ClearBits)
-  {$else}
-  fillDWord(bits^[0], bitsArrSize, $0); // setting bits to false on other machines than AARCH64 or ARM (see why in ClearBits)
-  {$endif}
+  fillDWord(bits^[0], bitsArrSize, $0); // setting bits to false
+
+  for i:=0 to 31 do mask[i]:=uint32(1) << i; // this avoids re-calculating the mask over and over in ClearBits and IsPrime
 end;
 
 destructor prime_sieve.Destroy;
@@ -84,22 +84,14 @@ begin
 
   while n<=maxSize do
   begin
-    {$if defined(CPUAARCH64) or defined(CPUARM)}
-    bits^[n>>5]:=bits^[n>>5] and not(uint32(1) << (n and 31)); // setting bit to 0 specifying the number is not prime ("and not" seems faster than "or" on AARCH64 or ARM machines)
-    {$else}
-    bits^[n>>5]:=bits^[n>>5] or (uint32(1) << (n and 31)); // setting bit to 1 specifying the number is not prime ("or" seems faster than "and not" on non AARCH64 or ARM machines)
-    {$endif}
+    bits^[n>>5]:=bits^[n>>5] or mask[n and 31]; // setting bit to 1 specifying the number is not prime
     n+=skip;
   end;
 end;
 
 function prime_sieve.IsPrime(n: uint64): boolean;
 begin
-  {$if defined(CPUAARCH64) or defined(CPUARM)}
-  result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))<>0; // checking whether the bit is set to 0
-  {$else}
-  result:=(bits^[n>>6] and (uint32(1) << ((n>>1) and 31)))=0; // checking whether the bit is set to 1
-  {$endif}
+  result:=(bits^[n>>6] and mask[(n>>1) and 31])=0; // checking whether the bit is set to 0
 end;
 
 procedure prime_sieve.RunSieve;
@@ -219,7 +211,7 @@ begin
     writeln;
   end;
 
-  writeln(format('olivierbrun;%d;%.6f;%d;algorithm=base,faithful=yes,bits=1', [totalPasses, duration, threads]));
+  writeln(format('olivierbrun-%d-threads;%d;%.6f;%d;algorithm=base,faithful=yes,bits=1', [threads, totalPasses, duration, threads]));
 end;
 
 // retrieve command line options
