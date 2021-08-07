@@ -11,7 +11,7 @@ namespace PrimeSieveCS
     /// A simplified version of the striped algorithm used by rust solution_1.
     /// Instead of having the sieve oriented "vertically", we keep the normal bit array representaion.
     /// What we do instead is create the mask and push the pointer by factor. 
-    /// That we we effectively mark every 8th factor. 
+    /// That way we effectively mark every 8th factor. 
     /// 
     /// This simplifies the code a whole lot.
     /// </summary>
