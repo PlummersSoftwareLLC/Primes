@@ -56,19 +56,22 @@
   (declare (fixnum maxints))
   (make-instance 'sieve-state
     :maxints maxints
-    :a (make-array (1+ (floor (floor maxints +bits-per-word+) 2))
+    :a (make-array (ceiling (ceiling maxints +bits-per-word+) 2)
          :element-type 'sieve-element-type
          :initial-element 0)))
 
 
 (defun nth-bit-set-p (a n)
+  "Returns t if n-th bit is set in array a, nil otherwise."
   (declare (sieve-array-type a)
            (fixnum n))
   (multiple-value-bind (q r) (floor n +bits-per-word+)
     (declare (fixnum q r))
     (logbitp r (aref a q))))
 
+
 (defun set-nth-bit (a n)
+  "Set n-th bit in array a to 1."
   (declare (type sieve-array-type a)
            (type fixnum n))
   (multiple-value-bind (q r) (floor n +bits-per-word+)
@@ -78,13 +81,28 @@
 
 
 (defun set-bits (bits first-incl last-excl every-nth)
+  "Set every every-nth bit in array bits between first-incl and last-excl."
   (declare (type fixnum first-incl last-excl every-nth)
            (type sieve-array-type bits))
-  (loop for num of-type fixnum
-        from first-incl
-        to (1- last-excl)
-        by every-nth
-        do (set-nth-bit bits num)))
+
+  ; use an unrolled loop to set every every-th bit to 1
+  (let* ((i first-incl)
+         (every-nth-times-2 (+ every-nth every-nth))
+         (every-nth-times-3 (+ every-nth-times-2 every-nth))
+         (every-nth-times-4 (+ every-nth-times-3 every-nth))
+         (end1 (- last-excl every-nth-times-3)))
+    (declare (fixnum i every-nth-times-2 every-nth-times-3 every-nth-times-4 end1))
+
+    (loop while (< i end1)
+          do (set-nth-bit bits i)
+             (set-nth-bit bits (+ i every-nth))
+             (set-nth-bit bits (+ i every-nth-times-2))
+             (set-nth-bit bits (+ i every-nth-times-3))
+             (incf i every-nth-times-4))
+
+    (loop while (< i last-excl)
+          do (set-nth-bit bits i)
+             (incf i every-nth))))
 
 
 (defun run-sieve (sieve-state)
@@ -93,12 +111,11 @@
   (let* ((rawbits (sieve-state-a sieve-state))
          (sieve-size (sieve-state-maxints sieve-state))
          (sieve-sizeh (ceiling sieve-size 2))
+         (factor 0)
+         (factorh 1)
          (qh (ceiling (floor (sqrt sieve-size)) 2)))
-    (declare (fixnum sieve-size sieve-sizeh qh) (type sieve-array-type rawbits))
-    (do ((factor 0)
-         (factorh 1))
-        (nil)
-      (declare (fixnum factor factorh))
+    (declare (fixnum sieve-size sieve-sizeh factor factorh qh) (type sieve-array-type rawbits))
+    (loop do
 
       (loop for num of-type fixnum
             from factorh
@@ -168,10 +185,9 @@ according to the historical data in +results+."
        result)
   (declare (fixnum passes))
 
-  (do () ((>= (get-internal-real-time) end))
-    (setq result (create-sieve 1000000))
-    (run-sieve result)
-    (incf passes))
+  (loop while (<= (get-internal-real-time) end)
+        do (setq result (run-sieve (create-sieve 1000000)))
+           (incf passes))
 
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
