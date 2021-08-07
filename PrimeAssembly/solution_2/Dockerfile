@@ -1,6 +1,6 @@
 FROM alpine:3.13
 
-RUN apk add --update build-base
+RUN apk add --no-cache build-base
 
 WORKDIR /opt/app
 

@@ -1,6 +1,6 @@
 FROM alpine:3.13
 
-RUN apk add --update build-base nasm
+RUN apk add --no-cache build-base nasm
 
 WORKDIR /opt/app
 
