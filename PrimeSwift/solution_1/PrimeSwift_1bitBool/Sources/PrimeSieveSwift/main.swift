@@ -2,70 +2,87 @@ import Foundation
 import ArgumentParser
 
 // This is a very limited single bit Boolean Array
-struct BooleanBitArray<Word> where Word: FixedWidthInteger {
-    private let words: UnsafeMutableBufferPointer<Word>
+struct BooleanBitArray {
+    typealias Word = UInt
+    let wordArraySize: Int
     private let wordSize: Int = 8*MemoryLayout<Word>.size
     
+    private let words: UnsafeMutableBufferPointer<Word>
+    
     init(repeating value: Bool, count arraySize: Int){
-        let wordArraySize = (arraySize + (wordSize - 1)) / wordSize
+        wordArraySize = (arraySize + (wordSize - 1)) / wordSize
         words = UnsafeMutableBufferPointer<Word>.allocate(capacity: wordArraySize)
-        words.initialize(repeating: value ? Word.max : 0)
+        words.initialize(repeating: value ? Word.max : Word(0))
     }
 
     func deallocate(){
         words.deallocate()
     }
 
-    @usableFromInline internal func maskIndex(_ num: Int) -> (Int, Word) {
+    @inline(__always) internal func maskIndex(_ num: Int) -> (Int, Word) {
         let wordIndex = num / wordSize
         let mask = Word(1) << (num % wordSize)
         return (wordIndex, mask)
     }
 
-    @inlinable func getBit(atIndex num: Int) -> Bool {
+    @inline(__always) func getBit(atIndex num: Int) -> Bool {
         let (i, m) = maskIndex(num)
         return (words[i] & m) != 0
     }
 
-    @inlinable func setBit(atIndex num: Int, to value: Bool) {
+    @inline(__always) func setBit(atIndex num: Int) {
         let (i, m) = maskIndex(num)
-        if value { words[i] |= m } else { words[i] &= ~m }
+        words[i] |= m
+    }
+
+    @inline(__always) func clearBit(atIndex num: Int) {
+        let (i, m) = maskIndex(num)
+        words[i] &= ~m
     }
 
 }
 
 class Sieve {
-    let sieveSize: Int
-    let factorLimit: Int
-    var primeArray: BooleanBitArray<UInt>
+    let sieveLimit: Int
+    private let factorLimit: Int
+    let arraySize: Int
+    
+    var primeArray: BooleanBitArray
 
     init(limit: Int) {
-        sieveSize = limit
-        factorLimit = Int(sqrt(Double(sieveSize)))
-        primeArray = BooleanBitArray(repeating: true, count: (limit + 1) / 2)
+        sieveLimit = limit
+        factorLimit = Int(sqrt(Double(limit)))
+        arraySize = (limit + 1) / 2
+        primeArray = BooleanBitArray(repeating: true, count: arraySize)
     }
 
     deinit {
         primeArray.deallocate()
     }
 
-    func index(for num: Int) -> Int {
-        assert(num % 2 == 1, "Error: BitArray:get property should not have accessed an even number.")
-        return num >> 1 - 1 // 3 -> 0, 5 -> 1, 7 -> 2, etc.
+    @inline(__always) internal func index(for num: Int) -> Int {
+        return num / 2 - 1 // 3 -> 0, 5 -> 1, 7 -> 2, etc.
+    }
+    
+    @inline(__always) internal func number(at index: Int) -> Int {
+        return index * 2 + 3 // 0 -> 3, 1 -> 5, 2 -> 7, etc.
     }
 
     func runSieve() {
-        var factor = 3
-        while factor <= factorLimit {
-            while !primeArray.getBit(atIndex: index(for: factor)) {
-                factor += 2
+        var factorIndex = 0
+        let factorIndexLimit = factorLimit / 2 - 1
+        let nonPrimeIndexLimit = index(for: sieveLimit)
+        
+        while factorIndex <= factorIndexLimit {
+            let factor = number(at: factorIndex)
+            let isPrime = primeArray.getBit(atIndex: factorIndex)
+            var nonPrimeIndex = index(for: factor*factor)
+            
+            while isPrime && ( nonPrimeIndex <= nonPrimeIndexLimit ) {
+                primeArray.clearBit(atIndex: nonPrimeIndex)
+                nonPrimeIndex += factor
             }
-            var nFactor = factor*factor
-            while nFactor <= sieveSize {
-                primeArray.setBit(atIndex: index(for: nFactor), to: false)
-                nFactor += 2*factor
-            }
-            factor += 2
+            factorIndex += 1
         }
     }
 
@@ -89,7 +106,7 @@ extension Sieve {
     /// Assumes you've already called `runSieve`, of course!
     func countPrimes() -> Int {
         var count = 1
-        for num in stride(from: 3, to: sieveSize, by: 2) {
+        for num in stride(from: 3, to: sieveLimit, by: 2) {
             if primeArray.getBit(atIndex: index(for: num)) {
                 count += 1
             }
@@ -99,7 +116,7 @@ extension Sieve {
 
     /// Look up our count of primes in the historical data (if we have it) to see if it matches
     func validateResults() -> Bool {
-        guard let correctCount = Self.primeCounts[sieveSize] else {
+        guard let correctCount = Self.primeCounts[sieveLimit] else {
             return false
         }
         return correctCount == countPrimes()
@@ -110,14 +127,14 @@ extension Sieve {
     func printResults(showingNumbers: Bool, duration: TimeInterval, passes: Int) {
         if showingNumbers {
             print(2, terminator: ", ")
-            for num in stride(from: 3, to: sieveSize, by: 2) {
+            for num in stride(from: 3, to: sieveLimit, by: 2) {
                 if primeArray.getBit(atIndex: index(for: num)) {
                     print(num, terminator: ", ")
                 }
             }
         }
 
-        print("\nPasses: \(passes), Time: \(duration), Avg: \(duration/Double(passes)), Limit: \(sieveSize), Count: \(countPrimes()), Valid: \(validateResults())")
+        print("\nPasses: \(passes), Time: \(duration), Avg: \(duration/Double(passes)), Limit: \(sieveLimit), Count: \(countPrimes()), Valid: \(validateResults())")
         
         /// Following 2 lines added by rbergen to conform to drag race output format
         print()

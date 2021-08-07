@@ -1,6 +1,6 @@
 % Prime Sieve with Knuth TeX using the 2*3*5*7*11 wheel(480 cogs out of 2310)
 % author: jfbu
-% date:   2021/07/27
+% date:   2021/07/27--2021/08/06
 %
 % This file defines syntax for a  "Sieve object" in TeX lingua with its
 % associated methods: sieve, reset (not implemented), settocount, outtofile.
@@ -55,7 +55,7 @@
 \input shared_batteries.tex
 
 % this will serve to mark composites
-\newdimen\onesp \onesp 1sp
+\newdimen\onesp \onesp=1sp
 
 % additional count registers 
 \newcount\indexa
@@ -114,16 +114,16 @@
 % reserve enough space:
 \fontdimen\wheelmodulus\wheelcogids=\z@
 % sieve out multiples of three up to 2310
-\indexa-3
+\indexa=-3
 \Replicate{385}{\advance\indexa6 \fontdimen\indexa\wheelcogids=\onesp }%
 % sieve out multiples of five up to 2310
-\indexa-5
+\indexa=-5
 \Replicate{231}{\advance\indexa10 \fontdimen\indexa\wheelcogids=\onesp }%
 % sieve out multiples of seven up to 2310
-\indexa-7
+\indexa=-7
 \Replicate{165}{\advance\indexa14 \fontdimen\indexa\wheelcogids=\onesp }%
 % sieve out multiples of eleven up to 2310
-\indexa-11
+\indexa=-11
 \Replicate{105}{\advance\indexa22 \fontdimen\indexa\wheelcogids=\onesp }%
 
 % before giving to the cogids[n] their final values let's initiate
@@ -143,18 +143,18 @@
 \font\wheelcogs=cmr10 at 669sp
 \fontdimen1\wheelcogids=\onesp % 1 is first cog
 \fontdimen1\wheelcogs  =\onesp % first cog is at 1
-\indexa\@ne
-\indexb\@ne
-\indexc\@ne
+\indexa=\@ne
+\indexb=\@ne
+\indexc=\@ne
 \Replicate{1154}{\advance\indexb\tw@
-    \ifdim\fontdimen\indexb\wheelcogids=\z@ % relatively prime to 2310
+    \ifcase\fontdimen\indexb\wheelcogids % relatively prime to 2310
       \advance\indexc\@ne
       \fontdimen\indexc\wheelcogs    =\indexb sp %
       %
       \fontdimen\indexb\wheelcogids  =\indexc sp %
       \fontdimen\indexa\wheelcognext =\indexb sp %
       %
-      \cnta\indexb\advance\cnta-\indexa
+      \cnta=\indexb\advance\cnta-\indexa
 %%% main sieving array will use j->2j+1 representation
 %%% whereas the cogwheel is represented k->k
 %%% so the deltas are divided by 2 here
@@ -162,7 +162,7 @@
 %%%
       \fontdimen\indexa\wheelcogdeltas=\cnta sp %
       %
-      \indexa\indexb
+      \indexa=\indexb
     \else
       \fontdimen\indexb\wheelcogids  =\indexc sp
     \fi
@@ -174,7 +174,7 @@
 % and useful wheel data.
 % Let's keep memory of the number of relatively prime classes.
 \newcount\wheelcogcount
-\wheelcogcount\indexc % i.e. 480
+\wheelcogcount=\indexc % i.e. 480
 
 % % debugging during code development to check we got it right
 % \indexb-\@ne
@@ -234,14 +234,14 @@
   %
   \expandafter\def\csname _svobj.#1\endcsname##1##{\csname _svobj.#1.##1\endcsname}%
   % range A
-  \cstA#2\relax
+  \cstA=#2\relax
   %  (the ##1 is only to gobble the {} from the method calling syntax)
   \expandafter\edef\csname _svobj.#1.range\endcsname##1{\the\cstA}%
   %
   % array size 2J+1<= A
   % (we don't replace A by largest number prime to 2310 and less than A
   %  but we possibly should for some -surely- limited gain)
-  \cnta\cstA
+  \cnta=\cstA
   \advance\cnta-\@ne
   \divide\cnta\tw@
   %
@@ -250,7 +250,7 @@
   \expandafter\edef\csname _svobj.#1.instance\endcsname##1{\the\instance}%
   %
   % an array of font dimensions (each a 32bits word)
-  \cntb 669 % as 666, 667, 668, 669 are already in use
+  \cntb=669 % as 666, 667, 668, 669 are already in use
   \advance\cntb\instance % instance id at least 1 so this will be 670 at least
   % Initialize a font
   \font\_svobjarray=cmr10 at \cntb sp % each class instantiation impacts memory
@@ -305,7 +305,7 @@
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
     % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
     % is defined to gobble a {}...
-    \cstA\csname _svobj.#1.range\endcsname{}\relax
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
     % Set \cstB to its square root
     % nota bene: move this to the "init" and add corresponding attribute to
     % object data?
@@ -316,14 +316,14 @@
     % We need to precompute a priori how many elementary steps of the wheel
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
     % 
-    \cntb\cstB
+    \cntb=\cstB
         % make sure we never get an even number modulo 2310 as our cogids array indices
         % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cntb\else\advance\cntb-\@ne\fi
-    \cntc\cntb
+    \cntc=\cntb
     % For the sieve range set to 1000000, this division gives zero as 1000<2310
     \divide\cntc\wheelmodulus
-    \cntd\cntc
+    \cntd=\cntc
     \multiply\cntd\wheelcogcount
     \multiply\cntc\wheelmodulus
     \advance\cntb-\cntc
@@ -346,9 +346,9 @@
     % keep information helpful to know for a given factor F
     % exactly how many F*G's will be sieved out
     %
-    \indexa\z@
-    \indexc\@ne
-    \cntf\@ne
+    \indexa=\z@
+    \indexc=\@ne
+    \cntf=\@ne
     %
     \Replicate{\the\cntd}{%
       % step indexa by suitable delta
@@ -358,33 +358,32 @@
       % update the iteration count
       \advance\cntf\@ne
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % yes, so let's sieve out its multiples
         % starting with factor*factor
         %
-        \cntc \indexa      % will hold the factor
+        \cntc=\indexa      % will hold the factor
         \advance\cntc\cntc
         \advance\cntc\@ne % \cntc = 2j+1 = odd factor
         %
-        \cntb \cntc
-        \multiply \cntb \cntb % factor*factor
+        \indexb=\cntc
+        \multiply \indexb \indexb % factor*factor
         %
-        \indexb \cntb
         \divide \indexb \tw@ 
         \fontdimen\indexb\_svobjarray=\onesp % factor * factor now sieved out
         %
         % we now need to know exactly how many iterations are needed
         % 
-        \cnta \cstA % Range
+        \cnta=\cstA % Range
         \divide\cnta\cntc % Range//factor
         % make sure we never get an even number modulo 2310 as our cogids array indices
         % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cnta\else\advance\cnta-\@ne\fi
         %
-        \cntb\cnta
-        \cntd\cntb
+        \cntb=\cnta
+        \cntd=\cntb
         \divide\cntb\wheelmodulus
-        \cnte\cntb
+        \cnte=\cntb
         \multiply\cntb\wheelmodulus
         \advance\cntd-\cntb % this is modulo modulus
         %
@@ -393,37 +392,37 @@
                                 % the left
         % get finally how many iterations must be done: cnte - cntf
         \advance\cnte-\cntf
-        \indexd\indexc %  indexd will follow modulo modulus the quantity G
+        \indexd=\indexc %  indexd will follow modulo modulus the quantity G
                        %  from F * G. Initially G = F which maps to
                        %  indexc
         % indexb will be (F * G - 1)/2, currently G = F
         % let's work with batches of 1000 at a time
-        \cntb\cnte
+        \cntb=\cnte
         \divide\cntb\@m % \@m is 1000
         %
         \Replicate{\the\cntb}{%
           \ReplicateM{%
             % step indexb by suitable delta * factor
-            \cntd\cntc % factor
+            \cntd=\cntc % factor
             \multiply\cntd\fontdimen\indexd\wheelcogdeltas
             \advance\indexb\cntd
             % and mark this index as sieved out
             \fontdimen\indexb\_svobjarray=\onesp % sieved out 
             % update the class of G modulo modulus
-            \indexd\fontdimen\indexd\wheelcognext
+            \indexd=\fontdimen\indexd\wheelcognext
            }%
          }%
         \multiply\cntb\@m
         \advance\cnte-\cntb % this is what remains to be done
         \Replicate{\the\cnte}{%
             % step indexb by suitable delta * factor
-            \cntd\cntc % factor
+            \cntd=\cntc % factor
             \multiply\cntd\fontdimen\indexd\wheelcogdeltas
             \advance\indexb\cntd
             % and mark this index as sieved out
             \fontdimen\indexb\_svobjarray=\onesp % sieved out 
             % update the class of G modulo modulus
-            \indexd\fontdimen\indexd\wheelcognext
+            \indexd=\fontdimen\indexd\wheelcognext
         }%
       \fi
     }%
@@ -440,18 +439,18 @@
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
     % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
     % is defined to gobble a {}...
-    \cstA\csname _svobj.#1.range\endcsname{}\relax
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
     %
     % We need to precompute a priori how many elementary steps of the wheel
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
     % 
-    \cnta\cstA
+    \cnta=\cstA
         % make sure we never get an even number modulo 2310 as our cogids array indices
         % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cnta\else\advance\cnta-\@ne\fi
-    \cntc\cnta
+    \cntc=\cnta
     \divide\cntc\wheelmodulus
-    \cntd\cntc
+    \cntd=\cntc
     \multiply\cntd\wheelcogcount
     \multiply\cntc\wheelmodulus
     \advance\cnta-\cntc % this is A modulo 2310 (A odd so this is odd too)
@@ -472,21 +471,21 @@
     %
     % \cntf will stepped by one each time a prime is found
     %
-    \indexa\z@
-    \indexc\@ne
-    \cntf 5 % 2, 3, 5, 7, 11
+    \indexa=\z@
+    \indexc=\@ne
+    \cntf=5 % 2, 3, 5, 7, 11
     %
     % let's proceed by batches if 1000 at a time
-    \cntb\cntd
+    \cntb=\cntd
     \divide\cntb\@m % divide by 1000
     \Replicate{\the\cntb}{%
      \ReplicateM{%
       % step indexa by suitable delta
       \advance\indexa\fontdimen\indexc\wheelcogdeltas
       % and now update the class modulo wheel modulus
-      \indexc\fontdimen\indexc\wheelcognext
+      \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % we have a prime
         \advance\cntf\@ne
       \fi
@@ -500,9 +499,9 @@
       % step indexa by suitable delta
       \advance\indexa\fontdimen\indexc\wheelcogdeltas
       % and now update the class modulo wheel modulus
-      \indexc\fontdimen\indexc\wheelcognext
+      \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % we have a prime
         \advance\cntf\@ne
       \fi
@@ -528,18 +527,18 @@
     \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
     % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
     % is defined to gobble a {}...
-    \cstA\csname _svobj.#1.range\endcsname{}\relax
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
     %
     % We need to precompute a priori how many elementary steps of the wheel
     % will happen until we have exhausted all potential factors up to B = isqrt(range)
     % 
-    \cnta\cstA
+    \cnta=\cstA
         % make sure we never get an even number modulo 2310 as our cogids indices
         % start at 1 and the array entries are meaningful only for odd indices
         \ifodd\cnta\else\advance\cnta-\@ne\fi
-    \cntc\cnta
+    \cntc=\cnta
     \divide\cntc\wheelmodulus
-    \cntd\cntc
+    \cntd=\cntc
     \multiply\cntd\wheelcogcount
     \multiply\cntc\wheelmodulus
     \advance\cnta-\cntc % this is A modulo 2310 (A odd so this is odd too)
@@ -560,23 +559,23 @@
     %
     % \cntf will stepped by one each time a prime is found
     %
-    \indexa\z@
-    \indexc\@ne
+    \indexa=\z@
+    \indexc=\@ne
     \cntf 5 % 2, 3, 5, 7, 11
     %
     % let's proceed by batches if 1000 at a time
-    \cntb\cntd
+    \cntb=\cntd
     \divide\cntb\@m % divide by 1000
     \Replicate{\the\cntb}{%
      \ReplicateM{%
       % step indexa by suitable delta
       \advance\indexa\fontdimen\indexc\wheelcogdeltas
       % and now update the class modulo wheel modulus
-      \indexc\fontdimen\indexc\wheelcognext
+      \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
         % we have a prime
-        \cnta\indexa
+        \cnta=\indexa
         \advance\cnta\cnta
         \advance\cnta\@ne
         \immediate\write\out{\the\cnta}%
@@ -592,11 +591,11 @@
       % step indexa by suitable delta
       \advance\indexa\fontdimen\indexc\wheelcogdeltas
       % and now update the class modulo wheel modulus
-      \indexc\fontdimen\indexc\wheelcognext
+      \indexc=\fontdimen\indexc\wheelcognext
       % do we have a prime?
-      \ifdim\fontdimen\indexa\_svobjarray=\z@ %
+      \ifcase\fontdimen\indexa\_svobjarray
       % we have a prime
-        \cnta\indexa
+        \cnta=\indexa
         \advance\cnta\cnta
         \advance\cnta\@ne
         \immediate\write\out{\the\cnta}%
