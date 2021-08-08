@@ -459,7 +459,7 @@ string generateSieveRT(alias BitType)()
 
     // q{} are token strings: Strings that must evaluate to D tokens.
     return format!q{
-    final class SieveRT_%s
+    final class SieveRTB1_%s
     {
         mixin CommonSieveFunctions!%s;
 
@@ -511,17 +511,17 @@ string generateSieveRTRunner(string Alias, alias BitType, bool UseLeaderboardVer
     {
         return format!RUN_SIEVE_LEADERBOARD_FORMAT(
             Alias, bits,
-            Alias, bits,
-            Alias, bits
+            Alias, 1,
+            Alias, 1
         );
     }
     else
     {
         return format!RUN_SIEVE_FORMAT(
             Alias, bits,
-            Alias, bits,
-            Alias, bits,
-            Alias, bits
+            Alias, 1,
+            Alias, 1,
+            Alias, 1
         );
     }
 }
