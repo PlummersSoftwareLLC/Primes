@@ -6,7 +6,7 @@
 import Data.Time.Clock.POSIX ( getPOSIXTime, POSIXTime )
 import Data.Word ( Word8, Word64 )
 import Data.Bits ( Bits((.|.), (.&.), shiftL, shiftR) )
-import Control.Monad ( forM_ )
+import Control.Monad ( forM_, foldM_, foldM )
 import Control.Monad.ST ( ST, runST )
 import Data.Array.Base ( MArray(newArray), STUArray, castSTUArray,
                          unsafeRead, unsafeWrite,
@@ -17,6 +17,12 @@ type Prime = Word64
 
 cLIMIT :: Prime
 cLIMIT = 1000000
+
+cFORTIME :: POSIXTime
+cFORTIME = 5
+
+cCPUL1CACHE :: Int 
+cCPUL1CACHE = 16384 -- in bytes, must be power of two
 
 -- | Historical data for validating our results - the number of primes
 -- to be found under some limit, such as 168 primes under 1000
@@ -37,9 +43,10 @@ cEXPECTED = maybe 0 id $ lookup cLIMIT primeCounts
 cBITMASK :: UArray Int Word8
 cBITMASK = listArray (0, 7) [ 1, 2, 4, 8, 16, 32, 64, 128 ]
 
-primesSoE :: Prime -> [Prime] -- force evaluation of array
-primesSoE limit = cmpsts `seq` 2 : [ fromIntegral (i + i + 3)
-                                       | (i, False) <- assocs cmpsts ] where
+primesSoEUnpeeled :: Prime -> [Prime] -- force evaluation of array
+primesSoEUnpeeled limit =
+    cmpsts `seq` 2 : [ fromIntegral (i + i + 3)
+                         | (i, False) <- assocs cmpsts ] where
   cmpsts = runSTUArray $ do -- following in ST Monad so can mutate array
     let bitlmt = fromIntegral ((limit - 3) `div` 2)
     csb <- newArray (0, bitlmt) False -- boolean and Word8 views of array
@@ -61,25 +68,82 @@ primesSoE limit = cmpsts `seq` 2 : [ fromIntegral (i + i + 3)
             v <- unsafeRead cs cull; unsafeWrite cs cull (v .|. mask)
     return csb -- actual deliverable is boolean for convenience in decoding
 
-printResults :: Double -> Int -> Int -> IO ()
-printResults duration passes count = do
-  if count == cEXPECTED then
-    putStrLn $ "GordonBGood_unpeeled;" ++ show passes ++ ";" ++ show (1.0 *duration) ++
-               ";1;algorithm=base;faithful=yes;bits=1\n"
-  else putStrLn $ "Invalid result:  " ++ show count ++ " primes."
+primesSoEUnpeeledBlock :: Prime -> [Prime] -- force evaluation of array
+primesSoEUnpeeledBlock limit =
+    cmpsts `seq` 2 : [ fromIntegral (i + i + 3)
+                         | (i, False) <- assocs cmpsts ] where
+  cmpsts = runSTUArray $ do -- following in ST Monad so can mutate array
+    let bitlmt = fromIntegral ((limit - 3) `div` 2)
+    csb <- newArray (0, bitlmt) False -- boolean and Word8 views of array
+    cs <- (castSTUArray :: STUArray s Int Bool ->
+                             ST s (STUArray s Int Word8)) csb
+    strts <- newArray (0, 7) 0 :: ST s (STUArray s Int Int)
+    let lastByteIndex = bitlmt `shiftR` 3
+        sqrtlmtndx = floor (sqrt (fromIntegral limit) - 3) `div` 2
+    forM_ [ 0 .. sqrtlmtndx ] $ \ ndx -> do -- outer loop finding base primes
+      b <- unsafeRead csb ndx
+      if b then return () else do -- all cases must be covered; found one!
+        let basePrime = ndx + ndx + 3
+            startIndex = (basePrime * basePrime - 3) `shiftR` 1
+            firstPageIndex = (startIndex `shiftR` 3) .&. (-cCPUL1CACHE)
+            loopLimit = min bitlmt $ startIndex + (basePrime `shiftL` 3) - 1
+        -- initialize start byte addresses...
+        forM_ [ startIndex, startIndex + basePrime .. loopLimit ]
+          $ \ v -> unsafeWrite strts (v .&. 7) (v `shiftR` 3)
+        forM_ [firstPageIndex, firstPageIndex + cCPUL1CACHE
+                                 .. lastByteIndex] $ \ pageByteIndex -> do
+          let pageByteLimit =
+                min lastByteIndex $ pageByteIndex + cCPUL1CACHE - 1
+              lastUnrolledIndex = pageByteLimit - basePrime * 3
 
-benchMark :: POSIXTime -> [Prime] -> IO ()
-benchMark strttm = loop 0 where
-  loop _ [] = error "Should never get here!!!"
-  loop passes (hd : rst) = do
-    let primes = primesSoE hd
-    now <- primes `seq` getPOSIXTime -- force immediate, no deferred, execution
-    let duration = now - strttm
-    if duration < 5 then passes `seq` loop (passes + 1) rst
-    else printResults (realToFrac duration) passes (length primes)
+          forM_ [ 0 .. 7 ] $ \ i -> do -- up to eight sub culling loops...
+            let mask = unsafeAt cBITMASK i
+            -- up to eight sub loops by constant mask; unrolled by four;
+            -- use foldM to thread the last cull value through...
+            startByteIndex <- unsafeRead strts i
+            nextByteIndex <- foldM (\ _ cull -> do
+                -- unroll by four culls...
+                v0 <- unsafeRead cs cull; unsafeWrite cs cull (v0 .|. mask)
+                let c1 = cull + basePrime
+                v1 <- unsafeRead cs c1; unsafeWrite cs c1 (v1 .|. mask)
+                let c2 = c1 + basePrime
+                v2 <- unsafeRead cs c2; unsafeWrite cs c2 (v2 .|. mask)
+                let c3 = c2 + basePrime
+                v3 <- unsafeRead cs c3; unsafeWrite cs c3 (v3 .|. mask)
+                return $ c3 + basePrime) -- previous index returned here
+              startByteIndex -- default case for no loops!
+              [ startByteIndex, startByteIndex + (basePrime * 4) ..
+                                                      lastUnrolledIndex ]
+            -- do culls that can't be unrolled (too few)...
+            succByteIndex <- foldM (\ _ cull -> do
+                v <- unsafeRead cs cull; unsafeWrite cs cull (v .|. mask)
+                return $ cull + basePrime)
+              nextByteIndex -- in case of no loops
+              [ nextByteIndex, nextByteIndex + basePrime .. pageByteLimit ]
+            unsafeWrite strts i succByteIndex
+    return csb -- actual deliverable is boolean for convenience in decoding
+
+benchMark :: String -> (Prime -> [Prime]) -> IO ()
+benchMark label testprimefnc = do
+  strttm <- getPOSIXTime
+  let loop _ [] = error "Should never get here!!!"
+      loop passes (hd : rst) = do
+        let primes = testprimefnc hd
+        now <- primes `seq` getPOSIXTime -- force immediate execution
+        let duration = now - strttm
+        if duration < cFORTIME then passes `seq` loop (passes + 1) rst else
+          let count = length primes in
+          if count == cEXPECTED then
+            putStrLn $ "GordonBGood_" ++ label ++ ";"
+                      ++ show passes ++ ";" ++ show (realToFrac duration)
+                      ++ ";1;algorithm=base,faithful=yes,bits=1"
+          else putStrLn $ "Invalid result:  " ++ show count ++ " primes." ++ show passes
+  loop 0 (repeat cLIMIT)
 
 main :: IO ()
 main = do
-  startTime <- getPOSIXTime
-  benchMark startTime $ repeat cLIMIT
+
+  forM_ [ ("unpeeled", primesSoEUnpeeled)
+        , ("unpeeled_block", primesSoEUnpeeledBlock)
+        ] $ uncurry benchMark
 
