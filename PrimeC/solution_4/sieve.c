@@ -47,6 +47,30 @@
 
 #define DEFAULT_SIZE (1000 * 1000)
 
+void memCpy( void *pDest, void const *pSrc, unsigned int bytes )
+{
+    if( 15 < bytes )
+    {
+        uint64_t *pDestU64 = pDest;
+        uint64_t const *pSrcU64 = pSrc;
+        unsigned int words = bytes / 8;
+        bytes -= words * 8;
+        while( words-- )
+        {
+            *pDestU64++ = *pSrcU64++;
+        }
+        pDest = pDestU64;
+        pSrc = pSrcU64;
+    }
+
+    uint8_t *pDestU8 = pDest;
+    uint8_t const *pSrcU8 = pSrc;
+    while( bytes-- )
+    {
+        *pDestU8++ = *pSrcU8++;
+    }
+}
+
 unsigned int maxNumber = DEFAULT_SIZE;
 
 WORD const ones = 0xFFFFFFFFFFFFFFFFuLL;
@@ -57,7 +81,7 @@ typedef struct {
 } SIEVE;
 
 // Search the bit array for the next set bit, which corresponds to the next prime
-static inline unsigned int nextPrime( WORD *buffer, unsigned int lastPrime )
+unsigned int nextPrime( WORD *buffer, unsigned int lastPrime )
 {
     unsigned int const primeCandidate = lastPrime + 2;
 
@@ -79,7 +103,7 @@ static inline unsigned int nextPrime( WORD *buffer, unsigned int lastPrime )
 // remaining bits, so we search for set bits and map from bits to factors.
 // Search from highest possible set bit to lowest in order that we do not remove a
 // factor that we still need to use.
-static inline void sieveOnePrime( WORD *buffer, unsigned int prime, unsigned int maxNumber )
+void sieveOnePrime( WORD *buffer, unsigned int prime, unsigned int maxNumber )
 {
     // Factor to use in eliminating a multiple
     unsigned int const maxFactor = maxNumber / prime;
@@ -133,17 +157,16 @@ void primes( SIEVE const *pSieve )
     for( ;; )
     {
         // Make prime-1 more copies of initialized bytes until buffer is full
-        for( i = 1u; i < prime; ++i )
+        unsigned int const bytesToCopy = primesProduct * (prime-1);
+        if( byteMax < bytesToCopy + primesProduct )
         {
-            if( byteMax < (i+1) * primesProduct )
-            {
-                // Complete initialization of bit array
-                unsigned int const remainingBytes = byteMax - i * primesProduct;
-                memcpy( bufferU8 + i * primesProduct, bufferU8, remainingBytes );
-                goto doneInit;
-            }
-            memcpy( bufferU8 + i * primesProduct, bufferU8, primesProduct );
+            // bytesToCopy would go off the end of the array
+            // Just copy to byteMax and stop
+            memCpy( bufferU8 + primesProduct, bufferU8, byteMax - primesProduct );
+            break;
         }
+        // Exploit simplistic memcpy to create all required copies with one call
+        memCpy( bufferU8 + primesProduct, bufferU8, bytesToCopy );
         primesProduct *= prime;
         sieveOnePrime( buffer, prime, primeOf( primesProduct * 8 ) );
         // Remove these small primes from buffer and save in smallPrimes
@@ -151,7 +174,6 @@ void primes( SIEVE const *pSieve )
         setBit( &smallPrimes, prime );
         prime = nextPrime( buffer, prime );
     }
-    doneInit:
     // Restore small primes to buffer
     buffer[0] |= smallPrimes;
 
