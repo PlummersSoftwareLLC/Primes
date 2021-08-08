@@ -21,7 +21,7 @@ struct BooleanBitArray {
 
     @inline(__always) internal func maskIndex(_ num: Int) -> (Int, Word) {
         let wordIndex = num / wordSize
-        let mask = Word(1) << (num % wordSize)
+        let mask = Word(1) << ( num & (wordSize - 1) )
         return (wordIndex, mask)
     }
 
@@ -69,20 +69,21 @@ class Sieve {
     }
 
     func runSieve() {
-        var factorIndex = 0
+        var factorIndex = -1
         let factorIndexLimit = factorLimit / 2 - 1
         let nonPrimeIndexLimit = index(for: sieveLimit)
         
-        while factorIndex <= factorIndexLimit {
+        while factorIndex < factorIndexLimit {
+            factorIndex += 1
+            if !primeArray.getBit(atIndex: factorIndex) { continue }
+            
             let factor = number(at: factorIndex)
-            let isPrime = primeArray.getBit(atIndex: factorIndex)
             var nonPrimeIndex = index(for: factor*factor)
             
-            while isPrime && ( nonPrimeIndex <= nonPrimeIndexLimit ) {
+            while ( nonPrimeIndex <= nonPrimeIndexLimit ) {
                 primeArray.clearBit(atIndex: nonPrimeIndex)
                 nonPrimeIndex += factor
             }
-            factorIndex += 1
         }
     }
 
