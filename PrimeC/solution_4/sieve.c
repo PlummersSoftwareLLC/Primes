@@ -26,10 +26,19 @@
 #define TRUE (1)
 #define FALSE (0)
 #define BOOL int
-
-#define WORD uint64_t
-#define BITS_PER_WORD (64)
 #define BYTE unsigned char
+
+#if defined __x86_64__
+#   define WORD uint64_t
+#   define BITS_PER_WORD (64)
+#   define firstSetBit( word_ ) ( BITS_PER_WORD - 1 - __builtin_clzll( (WORD)(word_) ) )
+#   define leastSetBit( word_ ) (                     __builtin_ctzll( (WORD)(word_) ) )
+#else /* 32-bit */
+#   define WORD uint32_t
+#   define BITS_PER_WORD (32)
+#   define firstSetBit( word_ ) ( BITS_PER_WORD - 1 - __builtin_clz( (WORD)(word_) ) )
+#   define leastSetBit( word_ ) (                     __builtin_ctz( (WORD)(word_) ) )
+#endif
 
 #define wordIndexOf(n)  ( ((n) / 2) / BITS_PER_WORD )
 #define bitIndexOf(n)   ( ((n) / 2) % BITS_PER_WORD )
@@ -42,8 +51,6 @@
 #define clearBit( buffer_, bitIndex_ ) ( (buffer_)[wordIndexOf(bitIndex_)] &= ~maskOf(bitIndex_) )
 #define setBit(   buffer_, bitIndex_ ) ( (buffer_)[wordIndexOf(bitIndex_)] |=  maskOf(bitIndex_) )
 
-#define firstSetBit( word_ ) ( BITS_PER_WORD - 1 - __builtin_clzll( (WORD)(word_) ) )
-#define leastSetBit( word_ ) (                     __builtin_ctzll( (WORD)(word_) ) )
 
 #define DEFAULT_SIZE (1000 * 1000)
 
@@ -51,10 +58,11 @@ void memCpy( void *pDest, void const *pSrc, unsigned int bytes )
 {
     if( 15 < bytes )
     {
-        uint64_t *pDestU64 = pDest;
-        uint64_t const *pSrcU64 = pSrc;
-        unsigned int words = bytes / 8;
-        bytes -= words * 8;
+        WORD *pDestU64 = pDest;
+        WORD const *pSrcU64 = pSrc;
+        unsigned int words = bytes / sizeof(WORD);
+        bytes -= words * sizeof(WORD);
+
         while( words-- )
         {
             *pDestU64++ = *pSrcU64++;
@@ -63,8 +71,8 @@ void memCpy( void *pDest, void const *pSrc, unsigned int bytes )
         pSrc = pSrcU64;
     }
 
-    uint8_t *pDestU8 = pDest;
-    uint8_t const *pSrcU8 = pSrc;
+    BYTE *pDestU8 = pDest;
+    BYTE const *pSrcU8 = pSrc;
     while( bytes-- )
     {
         *pDestU8++ = *pSrcU8++;
@@ -73,11 +81,11 @@ void memCpy( void *pDest, void const *pSrc, unsigned int bytes )
 
 unsigned int maxNumber = DEFAULT_SIZE;
 
-WORD const ones = 0xFFFFFFFFFFFFFFFFuLL;
+WORD const ones = (WORD)0xFFFFFFFFFFFFFFFFuLL;
 
 typedef struct {
     unsigned int const maxNumber;
-    WORD * const buffer;
+    WORD *buffer;
 } SIEVE;
 
 // Search the bit array for the next set bit, which corresponds to the next prime
@@ -115,7 +123,7 @@ void sieveOnePrime( WORD *buffer, unsigned int prime, unsigned int maxNumber )
         while( 0u != word )
         {
             unsigned int bitIndex = firstSetBit( word );
-            WORD const mask = 1uLL << bitIndex;
+            WORD const mask = (WORD)1uLL << bitIndex;
             unsigned int factor = bitIndex * 2 + 1 + wordIndex * BITS_PER_WORD * 2;
             if( factor < prime ) break;
             word &= ~mask;
@@ -138,15 +146,16 @@ void sieveOnePrime( WORD *buffer, unsigned int prime, unsigned int maxNumber )
 
 // maxNumber - find all primes strictly LESS than this number.
 //
-void primes( SIEVE const *pSieve )
+void primes( SIEVE *pSieve )
 {
     unsigned int i; // Loop index
     unsigned int prime          = 3u;
     unsigned int primesProduct  = 1u; // Not including 2
 
-    unsigned int const wordMax  = allocOf( maxNumber );
-    unsigned int const byteMax  = 8 * wordMax;
     unsigned int const maxNumber = pSieve->maxNumber;
+    unsigned int const wordMax  = allocOf( maxNumber );
+    pSieve->buffer = malloc( wordMax * sizeof(WORD) );
+    unsigned int const byteMax  = sizeof(WORD) * wordMax;
     WORD * const buffer         = pSieve->buffer;
     BYTE * const bufferU8       = (BYTE *)buffer;
 
@@ -225,7 +234,7 @@ unsigned int countPrimes(SIEVE const *pSieve)
     return count;
 }
 
-void timedTest( int secs, void primeFinder( SIEVE const *pSieve ), char *title )
+void timedTest( int secs, void primeFinder( SIEVE *pSieve ), char *title )
 {
     clock_t startTicks = clock( );
     clock_t currentTicks;
@@ -236,11 +245,12 @@ void timedTest( int secs, void primeFinder( SIEVE const *pSieve ), char *title )
     clock_t limitTicks = secs * CLOCKS_PER_SEC + startTicks;
 
     // Allocate sieve "object" once
-    SIEVE const sieve = { maxNumber, malloc( allocOf( maxNumber ) * sizeof(WORD) ) };
+    SIEVE sieve = { maxNumber, NULL };
 
     // Check first for accuracy against known values.
     primeFinder( &sieve );
     unsigned int primeCount = countPrimes( &sieve );
+    free( sieve.buffer );
 
 #if defined DEBUG
     printf("Found %d primes up to %d.\n\n", primeCount, maxNumber);
@@ -268,6 +278,7 @@ void timedTest( int secs, void primeFinder( SIEVE const *pSieve ), char *title )
         }
         passes++;
         primeFinder( &sieve );
+        free( sieve.buffer );
     }
     while
 #if defined DEBUG
