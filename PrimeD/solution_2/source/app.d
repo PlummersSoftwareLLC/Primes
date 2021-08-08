@@ -26,7 +26,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
     // share most of their functionality.
     //
     // This is explained more at the actual definition of `CommonSieveFunctions`, which is defined after this class.
-    mixin CommonSieveFunctions;
+    mixin CommonSieveFunctions!8;
 
     // You can apply qualifiers and attributes in a block, kind of like `public:` from C/C++, 
     // but less annoying.
@@ -96,7 +96,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
 // to shoe-horn as many of D's cool features as I could.
 //
 // Mixin templates have some pretty cool uses, but this is one of the simpler ways to use them.
-mixin template CommonSieveFunctions()
+mixin template CommonSieveFunctions(size_t bitSize)
 {   
     // D allows nesting imports into _any_ scope, in order to avoid symbol pollution, and
     // it also allows D to write more "file-portable" code.
@@ -112,12 +112,12 @@ mixin template CommonSieveFunctions()
     {
         // Fairly standard bitty stuff.
         assert(index % 2 == 1, "Index is even?");
-        return (this._bits[index / 8] & (1 << (index % 8))) != 0;
+        return (this._bits[index / bitSize] & (1 << (index % bitSize))) != 0;
     }
 
     private void clearBit(size_t index) @nogc nothrow
     {
-        this._bits[index / 8] &= ~(1 << (index % 8));
+        this._bits[index / bitSize] &= ~(1 << (index % bitSize));
     }
 
     private size_t countPrimes() nothrow inout
@@ -264,7 +264,7 @@ mixin template RunSieve()
 // This is the faithful, runtime-based version of `SieveRT`
 final class SieveRT
 {
-    mixin CommonSieveFunctions;
+    mixin CommonSieveFunctions!8;
 
     private ubyte[] _bits;
     private size_t _sieveSize;
@@ -461,7 +461,7 @@ string generateSieveRT(alias BitType)()
     return format!q{
     final class SieveRT_%s
     {
-        mixin CommonSieveFunctions;
+        mixin CommonSieveFunctions!%s;
 
         private %s[] _bits;
         private size_t _sieveSize;
@@ -471,8 +471,8 @@ string generateSieveRT(alias BitType)()
 
         this(size_t sieveSize)
         {
-            this._bits.length = alignTo!8(sieveSize) / 8;
-            this._bits[] = ubyte.max;
+            this._bits.length = alignTo!%s(sieveSize) / %s;
+            this._bits[] = %s.max;
             this._sieveSize = sieveSize;
         }
 
@@ -485,6 +485,10 @@ string generateSieveRT(alias BitType)()
     }
     }(
         BitType.sizeof * 8,
+        BitType.sizeof * 8,
+        BitType.stringof,
+        BitType.sizeof * 8,
+        BitType.sizeof * 8,
         BitType.stringof
     );
 }
@@ -495,18 +499,31 @@ mixin(generateSieveRT!ulong);
 // ditto, but for running them!
 // But.. what if we got the format string from an external file first?
 immutable RUN_SIEVE_FORMAT = import("run_sieve.d"); // String import paths are relative to the /views/ folder.
-string generateSieveRTRunner(string Alias, alias BitType)()
+immutable RUN_SIEVE_LEADERBOARD_FORMAT = import("run_sieve_leaderboard.d");
+string generateSieveRTRunner(string Alias, alias BitType, bool UseLeaderboardVersion = false)()
 {
     import std.format : format;
 
     // Now, I didn't promise maintainable code, but I think I've snuck in the vast majority of D's cooler features.
     const bits = BitType.sizeof * 8;
-    return format!RUN_SIEVE_FORMAT(
-        Alias, bits,
-        Alias,
-        Alias, bits,
-        Alias, bits
-    );
+    
+    static if(UseLeaderboardVersion)
+    {
+        return format!RUN_SIEVE_LEADERBOARD_FORMAT(
+            Alias, bits,
+            Alias, bits,
+            Alias, bits
+        );
+    }
+    else
+    {
+        return format!RUN_SIEVE_FORMAT(
+            Alias, bits,
+            Alias, bits,
+            Alias, bits,
+            Alias, bits
+        );
+    }
 }
 
 enum PRIME_COUNT = 1_000_000;
@@ -559,6 +576,10 @@ void main(string[] args)
 
             alias s4 = SieveRTCT_Cheatiness!PRIME_COUNT;
             runMultiThreaded!(s4, st)(IsFaithful.no, "other", 0);
+
+            mixin(generateSieveRTRunner!("s5", ushort, true));
+            mixin(generateSieveRTRunner!("s6", uint, true));
+            mixin(generateSieveRTRunner!("s7", ulong, true));
             break;
 
         case all:
