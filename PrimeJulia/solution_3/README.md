@@ -16,8 +16,13 @@ recommended and is used in the Docker image.
 ## Description
 
 Instead of using Julia's native `BitVector` type, this solution
-manually implements a bit array using a `Vector{UInt}` where `UInt`
-maps to the unsigned integer type of the native word size.
+manually implements a bit array using a `Vector{UInt32}` since 32-bit
+integers seem to give the best performance. You can switch which
+unsigned integer type you want to use by changing the line:
+```
+const MainUInt = UInt32
+```
+Change `UInt32` to whichever unsigned integer type you wish to use.
 
 Manual bit shifting and bit masking is employed to both read and set
 bits in the bit array. Bitwise operations are used as much as possible

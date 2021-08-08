@@ -1,6 +1,8 @@
 ignored:
   - DL3008
+  - DL3015
   - DL3018
+  - DL3047
   - DL4006
 
 override:
