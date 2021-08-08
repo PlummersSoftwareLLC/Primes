@@ -1,16 +1,22 @@
 FROM python:3-alpine
 
-USER root
-
-WORKDIR /code/
-
 RUN apk add build-base
 
-ARG CACHEBUST_APP=1
+RUN /usr/sbin/adduser -u 1001 -D michaelgrn
+WORKDIR /home/michaelgrn
 
-COPY setup.py /code/
-COPY src/ /code/src/
+RUN python -m venv venv \
+    && chown -R michaelgrn /home/michaelgrn
 
-RUN pip install -e .
+USER michaelgrn
 
-CMD pysieve
+ENV HOME=/home/michaelgrn
+ENV PATH=$HOME/.local/bin:$PATH
+
+COPY --chown=michaelgrn setup.py .
+COPY --chown=michaelgrn src/ ./src/
+
+RUN . venv/bin/activate
+RUN python -m pip install -e . --user
+
+CMD python -m pysieve

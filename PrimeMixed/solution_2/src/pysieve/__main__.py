@@ -12,3 +12,6 @@ def main():
 
     time_delta = time.time() - start_time
     sieve.print_results(time_delta, passes)
+
+if __name__ == "__main__":
+    main()

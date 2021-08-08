@@ -12,9 +12,6 @@ extensions = [
 ]
 
 setup(
-    entry_points={
-        'console_scripts': ['pysieve=pysieve:main']
-    },
     ext_modules = extensions,
     include_package_data=True,
     name='pysieve',
