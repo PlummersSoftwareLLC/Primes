@@ -4,6 +4,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
