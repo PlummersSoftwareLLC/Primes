@@ -10,7 +10,7 @@ COPY *.cs /source
 RUN dotnet publish -c release -o /app --no-restore
 
 # final stage/image
-FROM mcr.microsoft.com/dotnet/runtime:3.1-focal
+FROM mcr.microsoft.com/dotnet/runtime:5.0-focal
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["/app/PrimeSieveCS"]
