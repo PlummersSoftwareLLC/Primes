@@ -15,12 +15,12 @@ This implementation makes use of that dynamic, by interfacing with the parameter
 this module runs in docker, simply build and run.
 
 ```
-docker build -t primepython-solution3 .
-docker run primepython-solution3
+docker build -t primemixed-cpython-solution2 .
+docker run --rm primemixed-cpython-solution2
 ```
 
 ## Output
 
 ```
-1mikegrn;1853;5.001447677612305;1;valid=True,algorithm=base,faithful=yes,bits=32
+1mikegrn;1853;5.001447677612305;1;algorithm=base,faithful=yes,bits=32
 ```
