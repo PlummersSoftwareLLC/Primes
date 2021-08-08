@@ -1,15 +1,14 @@
 FROM alpine:3.13
 
-RUN apk add --update build-base
+RUN apk add --no-cache build-base
 
 WORKDIR /opt/app
 
 COPY *.sh ./
 COPY *.s ./
 
-RUN chmod a+x *.sh
-
-RUN ./build.sh
+RUN chmod a+x ./*.sh && \
+    ./build.sh
 
 ENTRYPOINT [ "./run.sh" ]
 
