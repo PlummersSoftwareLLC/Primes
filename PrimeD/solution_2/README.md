@@ -21,6 +21,8 @@ This implementation is well commented on the D specific parts.
 
 If you're not familiar with some of the antics D can achieve... have fun with the code.
 
+You must specify a command line flag `-m` whose value is either `leaderboard` or `all` in order to select which sets to run.
+
 ## Run instructions
 
 ### Without Docker
@@ -32,9 +34,9 @@ These installations will come with a tool called [dub](https://dub.pm/getting_st
 You can then run any of the following commands, depending on your needs:
 
 ```
-dub run                     # Runs a debug build using the default D compiler
-dub run --compiler=ldc2     # Runs using a specific compiler
-dub run -b release          # Runs a release build
+dub run -- -m leaderboard                     # Runs a debug build using the default D compiler
+dub run --compiler=ldc2 -- -m leaderboard     # Runs using a specific compiler
+dub run -b release -- -m leaderboard          # Runs a release build
 ```
 
 To run unittests in D (this solution only has a single one) you can use:
@@ -43,6 +45,34 @@ To run unittests in D (this solution only has a single one) you can use:
 dub test
 dub test --compiler=...
 ```
+
+## Classifications
+
+There are 3 test types currently: single, dynamicThreads, and staticThreads:
+
+* **Single** - The test is ran in a single thread.
+* **staticThreads** - The test is ran in multiple threads (cpu core count) where the threads are allocated once and run continuously.
+* **dynamicThreads** - The test is ran in multiple threads where the threads are assigned (not allocated since I assume it uses a thread pool) every loop iteration.
+
+In general "RT" means "Runtime" and "CT" means "Compile time". Compile time does not mean it runs completely at compile time, but only parts of it might.
+
+## Graphs
+
+The Y-axis refers to passes/second.
+
+![dynamic faithful](https://i.imgur.com/my4ULlC.png)
+
+![dynamic unfaithful](https://i.imgur.com/ntNgqsX.png)
+
+![static faithful](https://i.imgur.com/g8KwGxO.png)
+
+![static unfaithful](https://i.imgur.com/4IuxHdf.png)
+
+![single faithful](https://i.imgur.com/a0eNtrX.png)
+
+![single unfaithful](https://i.imgur.com/YMa6Nod.png)
+
+![cheaty](https://i.imgur.com/k1cHbQy.png)
 
 <!--MDGEN_START-->
 ## Solutions
