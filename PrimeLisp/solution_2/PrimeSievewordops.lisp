@@ -9,7 +9,6 @@
   (optimize (speed 3) (safety 0) (debug 0) (space 0))
 
   (inline shl)
-  (inline bit-pattern)
   (inline nth-bit-set-p)
   (inline set-nth-bit)
   (inline set-bits))
@@ -61,7 +60,7 @@
   (declare (fixnum maxints))
   (make-instance 'sieve-state
     :maxints maxints
-    :a (make-array (1+ (floor (floor maxints +bits-per-word+) 2))
+    :a (make-array (ceiling (ceiling maxints +bits-per-word+) 2)
          :element-type 'sieve-element-type
          :initial-element 0)))
 
@@ -91,43 +90,28 @@
          (logior #1# (expt 2 r)))) 0)
 
 
-(defun bit-pattern (n)
-  "Return a 64bit pattern where every n-th bit is 1, starting from least significant bit."
-  (declare (fixnum n))
-  (logand (1- (ash 1 +bits-per-word+))
-    (case  n
-      (2  #b0101010101010101010101010101010101010101010101010101010101010101)
-      (3  #b1001001001001001001001001001001001001001001001001001001001001001)
-      (4  #b0001000100010001000100010001000100010001000100010001000100010001)
-      (5  #b0001000010000100001000010000100001000010000100001000010000100001)
-      (6  #b0001000001000001000001000001000001000001000001000001000001000001)
-      (7  #b1000000100000010000001000000100000010000001000000100000010000001)
-      (8  #b0000000100000001000000010000000100000001000000010000000100000001)
-      (9  #b0100000001000000001000000001000000001000000001000000001000000001)
-      (10 #b0001000000000100000000010000000001000000000100000000010000000001)
-      (11 #b0000000010000000000100000000001000000000010000000000100000000001)
-      (12 #b0001000000000001000000000001000000000001000000000001000000000001)
-      (13 #b0000000000010000000000001000000000000100000000000010000000000001)
-      (14 #b0000000100000000000001000000000000010000000000000100000000000001)
-      (15 #b0001000000000000001000000000000001000000000000001000000000000001)
-      (16 #b0000000000000001000000000000000100000000000000010000000000000001)
-      (17 #b0000000000001000000000000000010000000000000000100000000000000001)
-      (18 #b0000000001000000000000000001000000000000000001000000000000000001)
-      (19 #b0000001000000000000000000100000000000000000010000000000000000001)
-      (20 #b0001000000000000000000010000000000000000000100000000000000000001)
-      (21 #b1000000000000000000001000000000000000000001000000000000000000001)
-      (22 #b0000000000000000000100000000000000000000010000000000000000000001)
-      (23 #b0000000000000000010000000000000000000000100000000000000000000001)
-      (24 #b0000000000000001000000000000000000000001000000000000000000000001)
-      (25 #b0000000000000100000000000000000000000010000000000000000000000001)
-      (26 #b0000000000010000000000000000000000000100000000000000000000000001)
-      (27 #b0000000001000000000000000000000000001000000000000000000000000001)
-      (28 #b0000000100000000000000000000000000010000000000000000000000000001)
-      (29 #b0000010000000000000000000000000000100000000000000000000000000001)
-      (30 #b0001000000000000000000000000000001000000000000000000000000000001)
-      (31 #b0100000000000000000000000000000010000000000000000000000000000001)
-      (32 #b0000000000000000000000000000000100000000000000000000000000000001)
-      )))
+(defun patterns ()
+  "Create a vector of bit-patterns."
+  (labels ((pattern (n)
+             "Return a bit pattern where every n-th bit is 1, starting from least significant bit."
+             (let ((result 0))
+               (loop for b fixnum from (1- +bits-per-word+) downto 0 do
+                 (if (zerop (mod b n))
+                       (setq result (logior (shl result 1) 1))
+                   (setq result (shl result 1))))
+               result)))
+
+    (let ((res (make-array 33 :element-type 'sieve-element-type :initial-element 0)))
+      (loop for x fixnum
+            from 2
+            to 32
+            do (setf (aref res x) (pattern x)))
+      res)))
+
+
+(defconstant +patterns+ (coerce (patterns) '(simple-array sieve-element-type 1))
+  "A vector of bit pattern where every n-th bit is 1, starting from least significant bit.
+E.g. (aref +patterns+ 7) is a bitpattern with every 7th bit set.")
 
 
 (defun set-bits (bits first-incl last-excl every-nth)
@@ -136,7 +120,7 @@
            (type sieve-array-type bits))
   (if (<= every-nth 32)
 
-        (let* ((pattern (bit-pattern every-nth)) (tmp 0) (shift 0) (total 0))
+        (let* ((pattern (aref +patterns+ every-nth)) (tmp 0) (shift 0) (total 0))
           (declare (type sieve-element-type pattern) (fixnum tmp shift total))
 
           ; set first word and prepare pattern
@@ -191,12 +175,11 @@
   (let* ((rawbits (sieve-state-a sieve-state))
          (sieve-size (sieve-state-maxints sieve-state))
          (sieve-sizeh (ceiling sieve-size 2))
+         (factor 0)
+         (factorh 1)
          (qh (ceiling (floor (sqrt sieve-size)) 2)))
-    (declare (fixnum sieve-size sieve-sizeh qh) (type sieve-array-type rawbits))
-    (do ((factor 3)
-         (factorh 1))
-        (nil)
-      (declare (fixnum factor factorh))
+    (declare (fixnum sieve-size sieve-sizeh factor factorh qh) (type sieve-array-type rawbits))
+    (loop do
 
       (loop for num of-type fixnum
             from factorh
@@ -266,10 +249,9 @@ according to the historical data in +results+."
        result)
   (declare (fixnum passes))
 
-  (do () ((>= (get-internal-real-time) end))
-    (setq result (create-sieve 1000000))
-    (run-sieve result)
-    (incf passes))
+  (loop while (<= (get-internal-real-time) end)
+        do (setq result (run-sieve (create-sieve 1000000)))
+           (incf passes))
 
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
@@ -277,4 +259,4 @@ according to the historical data in +results+."
     (format *error-output* "Algorithm: base w/ wordops  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
             passes duration (* 1000 avg) (count-primes result) (validate result))
 
-    (format t "mayerrobert-cl-words;~d;~f;1;algorithm=base,faithful=no,bits=1~%" passes duration)))
+    (format t "mayerrobert-cl-words;~d;~f;1;algorithm=other,faithful=yes,bits=1~%" passes duration)))
