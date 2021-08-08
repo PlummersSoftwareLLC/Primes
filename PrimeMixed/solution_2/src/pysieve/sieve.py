@@ -31,4 +31,4 @@ class PrimeSieve:
         return False
 
     def print_results(self, duration, passes):
-        print(f"1mikegrn;{passes};{duration};1;valid={self.validate_results()},algorithm=base,faithful=yes,bits=32")
+        print(f"1mikegrn/CPython;{passes};{duration};1;valid={self.validate_results()},algorithm=base,faithful=no,bits=32")
