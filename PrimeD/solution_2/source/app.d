@@ -405,11 +405,11 @@ final class SieveRT_LookupTable(size_t SieveSize)
     }
 }
 
-final class SieveRT_8
+final class SieveRTBX(alias BitT)
 {
     mixin RunSieve; 
 
-    private bool[] _bits;
+    private BitT[] _bits;
     private size_t _sieveSize;
     private alias SieveSize = _sieveSize;
 
@@ -418,18 +418,18 @@ final class SieveRT_8
     this(size_t sieveSize)
     {
         this._bits.length = sieveSize/2;
-        this._bits[] = true;
+        this._bits[] = 1;
         this._sieveSize = sieveSize;
     }
 
     private bool getBit(size_t index) nothrow inout
     {
-        return this._bits[index/2];
+        return this._bits[index/2] == 1;
     }
 
     private void clearBit(size_t index) @nogc nothrow
     {
-        this._bits[index/2] = false;
+        this._bits[index/2] = 0;
     }
 
     private size_t countPrimes() nothrow inout
@@ -570,7 +570,7 @@ void main(string[] args)
             runSingleThreaded!s2(IsFaithful.yes);
             runMultiThreaded!(s2, st)(Yes.faithful);
 
-            alias s3 = SieveRT_8;
+            alias s3 = SieveRTBX!ubyte;
             runSingleThreaded!s3(IsFaithful.yes, "base", 8);
             runMultiThreaded!(s3, st)(IsFaithful.yes, "base", 8);
 
@@ -603,7 +603,7 @@ void main(string[] args)
             runMultiThreaded!(s4, dt)(IsFaithful.no, "lookup", 1);
             runMultiThreaded!(s4, st)(IsFaithful.no, "lookup", 1);
 
-            alias s5 = SieveRT_8;
+            alias s5 = SieveRTBX!ubyte;
             runSingleThreaded!s5(IsFaithful.yes, "base", 8);
             runMultiThreaded!(s5, dt)(IsFaithful.yes, "base", 8);
             runMultiThreaded!(s5, st)(IsFaithful.yes, "base", 8);
@@ -611,6 +611,21 @@ void main(string[] args)
             mixin(generateSieveRTRunner!("s6", ushort));
             mixin(generateSieveRTRunner!("s7", uint));
             mixin(generateSieveRTRunner!("s8", ulong));
+
+            alias s9 = SieveRTBX!ushort;
+            runSingleThreaded!s9(IsFaithful.yes, "base", 16);
+            runMultiThreaded!(s9, dt)(IsFaithful.yes, "base", 16);
+            runMultiThreaded!(s9, st)(IsFaithful.yes, "base", 16);
+
+            alias s10 = SieveRTBX!ushort;
+            runSingleThreaded!s10(IsFaithful.yes, "base", 32);
+            runMultiThreaded!(s10, dt)(IsFaithful.yes, "base", 32);
+            runMultiThreaded!(s10, st)(IsFaithful.yes, "base", 32);
+
+            alias s11 = SieveRTBX!ushort;
+            runSingleThreaded!s11(IsFaithful.yes, "base", 64);
+            runMultiThreaded!(s11, dt)(IsFaithful.yes, "base", 64);
+            runMultiThreaded!(s11, st)(IsFaithful.yes, "base", 64);
             break;
     }
 }
@@ -649,7 +664,7 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = 
         // #1: Using the `is()` expression on a concrete type.
         // #5: We can also execute some code to make it even more generic.
         static if(
-            /*#1*/ is(SieveType == SieveRT) || is(SieveType == SieveRT_8)
+            /*#1*/ is(SieveType == SieveRT) || is(SieveType == SieveRTBX!ubyte)
             /*#5*/ || __traits(identifier, SieveType).canFind("RT")
         )
             scope sieve = new SieveType(PRIME_COUNT);
