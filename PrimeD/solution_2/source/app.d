@@ -556,6 +556,9 @@ void main(string[] args)
             alias s3 = SieveRT_8;
             runSingleThreaded!s3(IsFaithful.yes, "base", 8);
             runMultiThreaded!(s3, st)(IsFaithful.yes, "base", 8);
+
+            alias s4 = SieveRTCT_Cheatiness!PRIME_COUNT;
+            runMultiThreaded!(s4, st)(IsFaithful.no, "other", 0);
             break;
 
         case all:
