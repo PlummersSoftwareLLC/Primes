@@ -1,4 +1,4 @@
-# Clojure solution by Alex Vear (axvr) 
+# Clojure solution 2 by Alex Vear (axvr)
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
@@ -14,14 +14,17 @@ algorithm.
 
 1. Install a JDK.
 2. Install the [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
-3. Run with `clojure -X:run`
+3. Run with `clojure -X:run` or `clojure -X:run :warm-up? true` to reduce
+   variability of results.
+
+(Warm-up is enabled by default on the Docker image.)
 
 
 ## Output
 
 ```
-Passes: 4854, Time: 5.000670276, Avg: 0.0010302163, Limit: 1000000, Count: 78498, Valid: true
-axvr;4854;5.000670276;1;algorithm=base,faithful=yes,bits=8
+Passes: 6652, Time: 5.000029983, Avg: 7.5165817E-4, Limit: 1000000, Count: 78498, Valid: True
+axvr-clj-sln-2;6652;5.000029983;1;algorithm=base,faithful=yes,bits=8
 ```
 
-(On an Intel Core i7-8550U @1.80GHz x8 CPU with 16GB of RAM.)
+(On an Intel Core i7-8550U @1.80GHz x8 CPU with 16GB of RAM using warm-up.)

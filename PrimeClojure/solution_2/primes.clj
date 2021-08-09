@@ -11,23 +11,39 @@
 (set! *unchecked-math* :warn-on-boxed)
 
 
-(defn sieve [limit]
-  (let [limit (int limit)
-        sieve (boolean-array limit true)
-        q     (int (inc (Math/sqrt limit)))]
+;; This macro exists to improve readability of the `sieve` function.  It's
+;; a macro rather than a function to improve performance.
+(defmacro doubl
+  "Efficiently double a number."
+  [n]
+  `(bit-shift-left ~n 1))
+
+
+;; This macro exists to improve readability of the `sieve` function.  It's
+;; a macro rather than a function to improve performance.
+(defmacro halve
+  "Efficiently halve a number."
+  [n]
+  `(bit-shift-right ~n 1))
+
+
+(defn sieve [^long limit]
+  (let [q (inc (Math/sqrt limit))
+        ^booleans sieve (make-array Boolean/TYPE (halve limit))]
     ;; Highly optimised Sieve of Eratosthenes algorithm.
     (loop [factor 3]
       (when (< factor q)
-        (if (aget sieve factor)
-          (let [factor*2 (+ factor factor)]
+        (if-not (aget sieve (halve factor))
+          (let [factor*2 (doubl factor)]
             (loop [num (* factor factor)]
               (when (<= num limit)
-                (aset sieve num false)
+                (aset sieve (halve num) true)
                 (recur (+ num factor*2))))))
         (recur (+ 2 factor))))
     ;; Return sequence of found prime numbers.
     (cons 2 (->> (range 3 limit 2)
-                 (map #(when (aget sieve %) %))
+                 (map (fn [^long n]
+                        (if-not (aget sieve (halve n)) n)))
                  (filter some?)))))
 
 
@@ -50,11 +66,11 @@
   []
   (let [limit       1000000
         start-time  (Instant/now)
-        start-milli (.toEpochMilli start-time)]
+        end-by      (+ (.toEpochMilli start-time) 5000)]
     (loop [pass 1]
       (let [primes   (sieve limit)
             cur-time (System/currentTimeMillis)]
-        (if (< (- cur-time start-milli) 5000)
+        (if (< cur-time end-by)
           (recur (inc pass))
           ;; Return benchmark report.
           {:primes primes
@@ -82,8 +98,12 @@
          "Count: " (count primes) ", "
          "Valid: " (if valid? "True" "False")
          "\n"
-         "axvr;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
+         "axvr-clj-sln-2;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
 
 
-(defn run [_]
+(defn run [{:keys [warm-up?]
+            :or   {warm-up? false}}]
+  (when warm-up?
+    ;; Warm-up reduces the variability of results.
+    (format-results (benchmark)))
   (println (format-results (benchmark))))
