@@ -13,10 +13,6 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
     const s2 = step * 2;
     const s3 = step * 3;
     const s4 = step * 4;
-    const s5 = step * 5;
-    const s6 = step * 6;
-    const s7 = step * 7;
-    const s8 = step * 8;
 
     end = (end + BITS - 1) / BITS;
     for (let i: u32 = 0; i < BITS; ++i) {
@@ -24,20 +20,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         let idx = start / BITS;
         start += step;
 
-        while (idx + s8 < end) {
-            unchecked(bits[idx +  0] |= mask);
-            unchecked(bits[idx + s1] |= mask);
-            unchecked(bits[idx + s2] |= mask);
-            unchecked(bits[idx + s3] |= mask);
-
-            unchecked(bits[idx + s4] |= mask);
-            unchecked(bits[idx + s5] |= mask);
-            unchecked(bits[idx + s6] |= mask);
-            unchecked(bits[idx + s7] |= mask);
-            idx += s8;
-        }
-
-        if (idx + s4 < end) {
+        while (idx + s4 < end) {
             unchecked(bits[idx +  0] |= mask);
             unchecked(bits[idx + s1] |= mask);
             unchecked(bits[idx + s2] |= mask);
