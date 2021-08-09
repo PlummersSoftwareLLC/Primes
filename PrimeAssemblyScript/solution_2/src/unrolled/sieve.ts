@@ -30,6 +30,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
     @inline runSieve(): void {
         const bits = this.bits;
         const end = (this.size + 1) / 2;
+        const tail = (end + BITS - 1) / BITS;
         let factor: u32 = 0;
 
         while (true) {
@@ -50,7 +51,6 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
             const s3 = step * 3;
             const s4 = step * 4;
 
-            let tail = (end + BITS - 1) / BITS;
             for (let i: u32 = 0; i < BITS; ++i) {
                 let mask = 1 << start;
                 let idx = start / BITS;
