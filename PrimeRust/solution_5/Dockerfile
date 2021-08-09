@@ -6,7 +6,7 @@
 # Note: Debian based, not Alpine; for some reason, the 
 # Alpine malloc call is slower than it should be.
 #
-FROM rust:1.53 AS build
+FROM rust:1.54 AS build
 
 WORKDIR /app
 COPY . .
