@@ -19,7 +19,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
     const s8 = step * 8;
 
     end = (end + BITS - 1) / BITS;
-    for (let i: u32 = 0; i < BITS; i++) {
+    for (let i: u32 = 0; i < BITS; ++i) {
         let mask = rotl(1, start);
         let idx = start / BITS;
         start += step;
@@ -29,11 +29,20 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
             unchecked(bits[idx + s1] |= mask);
             unchecked(bits[idx + s2] |= mask);
             unchecked(bits[idx + s3] |= mask);
+
             unchecked(bits[idx + s4] |= mask);
             unchecked(bits[idx + s5] |= mask);
             unchecked(bits[idx + s6] |= mask);
             unchecked(bits[idx + s7] |= mask);
             idx += s8;
+        }
+
+        if (idx + s4 < end) {
+            unchecked(bits[idx +  0] |= mask);
+            unchecked(bits[idx + s1] |= mask);
+            unchecked(bits[idx + s2] |= mask);
+            unchecked(bits[idx + s3] |= mask);
+            idx += s4;
         }
 
         while (idx < end) {
@@ -68,29 +77,20 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         );
     }
 
-    @inline find(val: bool, start: u32, stop: u32): u32 {
-        while (start < stop && val != (i32(this.bits[start / BITS] & rotl(1, start)) != 0)) start++;
-        return start;
-    }
-
     @inline runSieve(): void {
-        const size = this.size;
         const bits = this.bits;
-
-        let start: u32, step: u32;
-        let end = (size + 1) / 2;
+        const end = (this.size + 1) / 2;
         let factor: u32 = 0;
 
         while (true) {
             // search factor
             ++factor;
-            while (factor < end && (unchecked(bits[factor / BITS]) & rotl(1, factor))) ++factor;
+            while (factor < end && (unchecked(bits[factor / BITS]) & rotl(1, factor)) != 0) ++factor;
 
-            start = (factor * 2) * (factor + 1);
-		    step = factor * 2 + 1;
-
+            let start = (factor * 2) * (factor + 1);
             if (start >= end) break;
 
+            let step = factor * 2 + 1;
             setBitsUnrolled(bits, start, end, step);
         }
     }
@@ -99,7 +99,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         const size = this.size;
         let count = 0;
         let len = (size + 1) / 2;
-        for (let i: u32 = 0; i < len; i++) {
+        for (let i: u32 = 0; i < len; ++i) {
             if (!(this.bits[i / BITS] & rotl(1, i))) {
                 if (showResults)
                     console.log(i.toString() + ", ");
@@ -124,7 +124,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         const size = this.size;
         let count: u32 = 0;
         let len = (size + 1) / 2;
-        for (let i: u32 = 0; i < len; i++) {
+        for (let i: u32 = 0; i < len; ++i) {
             count += i32(!(this.bits[i / BITS] & rotl(1, i)));
         }
         return count;
