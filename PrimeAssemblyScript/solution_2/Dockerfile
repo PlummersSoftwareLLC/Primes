@@ -7,7 +7,6 @@ RUN npm install
 COPY . .
 
 
-RUN npm run build:orig
-RUN npm run build:unrolled
+RUN npm run build:all
 
 CMD [ "npm", "run", "bench:all" ]
