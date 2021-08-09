@@ -4,4 +4,4 @@ WORKDIR /opt/app
 
 COPY *.jl ./
 
-ENTRYPOINT [ "julia", "primes_1of2.jl" ]
+ENTRYPOINT [ "julia", "main.jl" ]

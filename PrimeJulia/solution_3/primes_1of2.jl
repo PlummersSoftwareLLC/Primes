@@ -11,6 +11,14 @@
 # signatures containing `::Integer` to `::UInt` as well as patch the
 # count_primes and get_found_primes functions to use UInts.
 
+module Primes1of2
+export PrimeSieve1of2,
+       unsafe_find_next_factor_index,
+       unsafe_clear_factors!,
+       run_sieve!,
+       count_primes,
+       get_found_primes
+
 const MainUInt = UInt32
 const _uint_bit_length = sizeof(MainUInt) * 8
 const _div_uint_size_shift = Int(log2(_uint_bit_length))
@@ -27,7 +35,7 @@ const _div_uint_size_shift = Int(log2(_uint_bit_length))
 @inline _div_uint_size(i::Integer) = i >> _div_uint_size_shift
 
 
-struct PrimeSieve
+struct PrimeSieve1of2
     sieve_size::UInt
     is_not_prime::Vector{MainUInt}
 end
@@ -42,13 +50,13 @@ end
     )
 )
 
-function PrimeSieve(sieve_size::UInt)
-    return PrimeSieve(sieve_size, zeros(MainUInt, _get_num_uints(sieve_size)))
+function PrimeSieve1of2(sieve_size::UInt)
+    return PrimeSieve1of2(sieve_size, zeros(MainUInt, _get_num_uints(sieve_size)))
 end
 
 # The main() function uses the UInt constructor; this is mostly useful
 # for testing in the REPL.
-PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
+PrimeSieve1of2(sieve_size::Int) = PrimeSieve1of2(UInt(sieve_size))
 
 
 @inline function unsafe_find_next_factor_index(arr::Vector{<:Unsigned}, start_index::Integer, max_index::Integer)
@@ -79,7 +87,7 @@ end
     end
 end
 
-function run_sieve!(sieve::PrimeSieve)
+function run_sieve!(sieve::PrimeSieve1of2)
     is_not_prime = sieve.is_not_prime
     sieve_size = sieve.sieve_size
     max_bits_index = _map_to_index(sieve_size)
@@ -101,7 +109,7 @@ end
     return @inbounds arr[_div_uint_size(zero_index) + 1] & (MainUInt(1) << _mod_uint_size(zero_index))
 end
 
-function count_primes(sieve::PrimeSieve)
+function count_primes(sieve::PrimeSieve1of2)
     arr = sieve.is_not_prime
     max_bits_index = _map_to_index(sieve.sieve_size)
     # Since we start clearing factors at 3, we include 2 in the count
@@ -115,7 +123,7 @@ function count_primes(sieve::PrimeSieve)
     return count
 end
 
-function get_found_primes(sieve::PrimeSieve)
+function get_found_primes(sieve::PrimeSieve1of2)
     arr = sieve.is_not_prime
     sieve_size = sieve.sieve_size
     max_bits_index = _map_to_index(sieve_size)
@@ -130,47 +138,4 @@ function get_found_primes(sieve::PrimeSieve)
     return output
 end
 
-function main_benchmark(sieve_size::Integer, duration::Integer)
-    println(stderr, "Settings: sieve_size = $sieve_size | duration = $duration")
-    start_time = time()
-    elapsed = 0
-    passes = 0
-    # Ensure precompilation before we run the main benchmark.
-    sieve_instance = PrimeSieve(sieve_size)
-    run_sieve!(sieve_instance)
-    while elapsed < duration
-        run_sieve!(PrimeSieve(sieve_size))
-        passes += 1
-        elapsed = time() - start_time
-    end
-    println(stderr, "Number of trues: ", count_primes(sieve_instance))
-    println(
-        stderr,
-        "primes_1of2.jl: ",
-        join(
-            [
-                "Passes: $passes",
-                "Elapsed: $elapsed",
-                "Passes per second: $(passes / elapsed)",
-                "Average pass duration: $(elapsed / passes)",
-            ],
-            " | ",
-        )
-    )
-    println("louie-github_port_1of2;$passes;$elapsed;1;algorithm=base,faithful=yes,bits=1")
-end
-
-function main(args::Vector{String}=ARGS)
-    args_sieve_size = length(args) >= 1 ? tryparse(Int, args[1]) : nothing
-    args_duration = length(args) >= 2 ? tryparse(Int, args[2]) : nothing
-    # Techincally, we could just keep sieve_size as an Int since we
-    # have an Int constructor for PrimeSieve, but let's just use UInt
-    # to be consistent.
-    sieve_size = isnothing(args_sieve_size) ? UInt(1_000_000) : UInt(args_sieve_size)
-    duration = isnothing(args_duration) ? 5 : args_duration
-    main_benchmark(sieve_size, duration)
-end
-
-if abspath(PROGRAM_FILE) == @__FILE__
-    main()
 end
