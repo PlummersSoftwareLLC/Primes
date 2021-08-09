@@ -8,8 +8,6 @@ export unsafe_find_next_factor_index,
        get_found_primes,
 # Main exported names from module PrimesSolution3
        AbstractPrimeSieve,
-       IMPLEMENTATIONS,
-       IMPLEMENTATION_NAMES,
        benchmark_implementation
 
 

@@ -23,7 +23,7 @@ else
     push!(resultsDictionary, 10000000000 => 455052511)
 end
 
-function validate_results(PrimeSieveType::Type{<:PrimesSolution3.AbstractPrimeSieve})
+function validate_results(PrimeSieveType::Type{<:AbstractPrimeSieve})
     output = Bool[]
     for (sieve_size, expected_result) in resultsDictionary
         print("$sieve_size => $expected_result: ")
