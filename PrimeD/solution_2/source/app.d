@@ -572,14 +572,16 @@ void main(string[] args)
 
             alias s3 = SieveRTBX!ubyte;
             runSingleThreaded!s3(IsFaithful.yes, "base", 8);
-            runMultiThreaded!(s3, st)(IsFaithful.yes, "base", 8);
 
             alias s4 = SieveRTCT_Cheatiness!PRIME_COUNT;
-            runMultiThreaded!(s4, st)(IsFaithful.no, "other", 0);
+            runMultiThreaded!(s4, st)(IsFaithful.no, "other", 1);
 
             mixin(generateSieveRTRunner!("s5", ushort, true));
             mixin(generateSieveRTRunner!("s6", uint, true));
             mixin(generateSieveRTRunner!("s7", ulong, true));
+
+            alias s8 = SieveRTBX!ulong;
+            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 64); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
             break;
 
         case all:
@@ -594,9 +596,9 @@ void main(string[] args)
             runMultiThreaded!(s2, dt)(Yes.faithful);
 
             alias s3 = SieveRTCT_Cheatiness!PRIME_COUNT;
-            runSingleThreaded!s3(IsFaithful.no & IsFaithful.no & IsFaithful.no, "other", 0);
-            runMultiThreaded!(s3, st)(IsFaithful.no, "other", 0);
-            runMultiThreaded!(s3, dt)(IsFaithful.no, "other", 0);
+            runSingleThreaded!s3(IsFaithful.no & IsFaithful.no & IsFaithful.no, "other", 1);
+            runMultiThreaded!(s3, st)(IsFaithful.no, "other", 1);
+            runMultiThreaded!(s3, dt)(IsFaithful.no, "other", 1);
 
             alias s4 = SieveRT_LookupTable!PRIME_COUNT;
             runSingleThreaded!s4(IsFaithful.no, "lookup", 1);
