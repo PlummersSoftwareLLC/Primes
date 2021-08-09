@@ -512,7 +512,6 @@ string generateSieveRTRunner(string Alias, alias BitType, bool UseLeaderboardVer
         return format!RUN_SIEVE_LEADERBOARD_FORMAT(
             Alias, bits,
             Alias, 1,
-            Alias, 1
         );
     }
     else
@@ -580,8 +579,12 @@ void main(string[] args)
             mixin(generateSieveRTRunner!("s6", uint, true));
             mixin(generateSieveRTRunner!("s7", ulong, true));
 
-            alias s8 = SieveRTBX!ulong;
-            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 64); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
+            alias s8 = SieveRTB1_64;
+            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
+
+            // This one is here just to have a "non-bool yet used as a bool" version there.
+            alias s9 = SieveRTBX!ulong;
+            runSingleThreaded!s9(IsFaithful.yes, "base", 64);
             break;
 
         case all:
