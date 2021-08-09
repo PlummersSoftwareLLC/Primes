@@ -177,31 +177,30 @@ function Test-Results {
 # 'runSieve' method, which has been renamed to conform with standard PS verbs.
 function Invoke-Sieve {
     [CmdletBinding()]
-    [OutputType([Sieve])]
     param (
-        [Parameter(Mandatory, ValueFromPipeline)]
+        [Parameter(Mandatory)]
         [Sieve] $Sieve
     )
-    $factor = 3
-    $q = [int] [System.Math]::Sqrt($Sieve.SieveSize)
+    [int]$factor = 3
+    [int]$q = [System.Math]::Sqrt($Sieve.SieveSize)
+    [int]$size = $Sieve.SieveSize
+    [System.Collections.BitArray]$array = $Sieve.BitArray
 
     while ($factor -le $q) {
-        for ($i = $factor; $i -lt $Sieve.SieveSize; ++$i) {
-            if (($i -band 1) -or $Sieve.BitArray[$i -shr 1]) {
+        for ([int]$i = $factor; $i -lt $size; ++$i) {
+            if (($i -band 1) -or $array[$i -shr 1]) {
                 $factor = $i
                 break;
             }
         }
 
-        $step = 2 * $factor
-        for ($i = $factor * $factor; $i -lt $Sieve.SieveSize; $i += $step) {
-            $Sieve.BitArray[$i -shr 1] = $false;
+        [int]$step = 2 * $factor
+        for ([int]$i = $factor * $factor; $i -lt $size; $i += $step) {
+            $array[$i -shr 1] = $false;
         }
 
         $factor += 2
     }
-
-    return $Sieve
 }
 
 
@@ -257,14 +256,11 @@ function Write-Results {
 # Resets the sieve object in order to reuse it.
 function Reset-Sieve {
     [CmdletBinding()]
-    [OutputType([Sieve])]
     param (
-        [Parameter(Mandatory, ValueFromPipeline)]
+        [Parameter(Mandatory)]
         [Sieve] $Sieve
     )
     $Sieve.BitArray.SetAll($true)
-
-    return $Sieve
 }
 
 
@@ -275,6 +271,7 @@ function Reset-Sieve {
 $stopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
 $passes = 0
 $sieve = $null
+[long]$minimumticks = $MinimumRuntime * [System.Diagnostics.Stopwatch]::Frequency
 
 if ($ResetState) {
     Write-Verbose "Starting benchmark with reusable state ..."
@@ -283,8 +280,9 @@ if ($ResetState) {
 
     $stopWatch.Start()
 
-    while ($stopWatch.Elapsed.TotalSeconds -lt $MinimumRuntime) {
-        $sieve | Reset-Sieve | Invoke-Sieve | Out-Null
+    while ($stopWatch.ElapsedTicks -lt $minimumticks) {
+        Reset-Sieve $sieve
+        Invoke-Sieve $sieve
         ++$passes
     }
 
@@ -296,8 +294,9 @@ else {
 
     $stopWatch.Start()
 
-    while ($stopWatch.Elapsed.TotalSeconds -lt $MinimumRuntime) {
-        $sieve = New-PrimeSieve $SieveSize | Invoke-Sieve
+    while ($stopWatch.ElapsedTicks -lt $minimumticks) {
+        $sieve = New-PrimeSieve $SieveSize
+        Invoke-Sieve $sieve
         ++$passes
     }
 
