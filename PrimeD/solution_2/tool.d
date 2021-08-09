@@ -1,17 +1,96 @@
 #!/usr/bin/env dub
 /+dub.sdl:
-    name "mdgen"
-    description "Generates part of the markdown file based off of the program's output"
+    name "tool"
+    description "For single-file scripts, we can embed a dub.sdl, and call it with `dub run --single my_script.d`!"
+    dependency "jcli" version="~>0.12.1"
 +/
-module mdgen;
+module tool;
 
-import std;
+import std, jcli;
 
-const RUN_COMMAND = "dub run -b release --compiler=ldc2";
-const MARKER = "<!--MDGEN_START-->";
-const DUB_LINES = 4;
-const INFO_REGEX = regex("^(.+);(.+);(.+);(.+);algorithm=(.+),bits=(.+),faithful=(.+)$");
-                   // [1] = Tag. [2] = Passes. [3] = Time. [4] = Threads. [5] = Algorithm. [6] = Bits. [7] = Faithful
+const RUN_COMMAND   = "dub run -b release --compiler=ldc2 -- -m all";
+const MARKER        = "<!--MDGEN_START-->";
+const DUB_LINES     = 4;
+const INFO_REGEX    = regex("^(.+);(.+);(.+);(.+);algorithm=(.+),bits=(.+),faithful=(.+)$");
+                    // [1] = Tag. [2] = Passes. [3] = Time. [4] = Threads. [5] = Algorithm. [6] = Bits. [7] = Faithful
+
+int main(string[] args)
+{
+    // btw we're passing in the module itself as a template parameter.
+    return (new CommandLineInterface!tool()).parseAndExecute(args);
+}
+
+@Command("remove comments", "Creates a version of source/app.d where most of the comment spam is removed.")
+struct RemoveCommentsCommand
+{
+    @CommandNamedArg("o|output", "Where to place the output.")
+    Nullable!string output;
+
+    void onExecute()
+    {
+        const contents = readText("source/app.d");
+        auto output = File(this.output.get("source/app_without_comments.d"), "w");
+        
+        contents
+            .splitter('\n')
+            .filter!(line => !line.strip.startsWith("//"))
+            .each!(line => output.writeln(line));
+    }
+}
+
+@Command("generate markdown", "Generates a portion of the markdown file based off the run results on your machine.")
+struct MdgenCommand
+{
+    void onExecute()
+    {
+        const file = readText("README.md");
+        const cursor = findStartCursor(file);
+        
+        Appender!(char[]) output;
+        output.put(file[0..cursor]); // Erase previous run's contents.
+        output.put('\n');
+
+        const runResult = runAndCollectOutput();
+        const solutions = findSolutions(runResult);
+
+        writeSolutionSection(output, solutions);
+        writeOutputSection(output, runResult);
+        std.file.write("README.md", output.data);
+    }
+}
+
+@Command("generate csv", "Generates a CSV file which contains certain information about the run results.")
+struct CsvgenCommand
+{
+    enum Type
+    {
+        passesPerSecond,
+    }
+
+    @CommandNamedArg("t|type", "What type of data to export.")
+    Nullable!Type type;
+
+    @CommandNamedArg("o|output", "Where to place the exported data.")
+    Nullable!string output;
+
+    void onExecute()
+    {
+        const t = this.type.get(Type.passesPerSecond);
+        auto file = File(this.output.get("results.csv"), "w");
+
+        const runResult = runAndCollectOutput();
+        const solutions = findSolutions(runResult);
+
+        final switch(t) with(Type)
+        {
+            case passesPerSecond:
+                file.writeln("Tag,ThreadMode,Faithful,PassesPerSecond");
+                foreach(sol; solutions)
+                    file.writefln("%s,%s,%s,%s", sol.tag, sol.threadMode, sol.isFaithful, round(sol.passes / sol.time.to!double).to!ulong);
+                break;
+        }
+    }
+}
 
 struct Output
 {
@@ -36,23 +115,6 @@ enum ThreadMode
     single,
     staticThreads,
     dynamicThreads
-}
-
-void main()
-{
-    const file = readText("README.md");
-    const cursor = findStartCursor(file);
-    
-    Appender!(char[]) output;
-    output.put(file[0..cursor]); // Erase previous run's contents.
-    output.put('\n');
-
-    const runResult = runAndCollectOutput();
-    const solutions = findSolutions(runResult);
-
-    writeSolutionSection(output, solutions);
-    writeOutputSection(output, runResult);
-    std.file.write("README.md", output.data);
 }
 
 size_t findStartCursor(string file)
