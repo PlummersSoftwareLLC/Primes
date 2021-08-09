@@ -233,7 +233,7 @@ void Seiveor<SIEVEOR_ARG>::printResults(uint64_t maxBit, bool showResults, doubl
 
    // Following 2 lines added by rbergen to conform to drag race output format
    printf("\n");
-   printf("davepl_pol;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
+   printf("schmide;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", passes, duration);
 }
 
 template<SIEVEOR_TYPE>
