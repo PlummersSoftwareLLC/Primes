@@ -16,7 +16,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
 
     end = (end + BITS - 1) / BITS;
     for (let i: u32 = 0; i < BITS; ++i) {
-        let mask = rotl(1, start);
+        let mask = 1 << start;
         let idx = start / BITS;
         start += step;
 
@@ -68,7 +68,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         while (true) {
             // search factor
             ++factor;
-            while (factor < end && (unchecked(bits[factor / BITS]) & rotl(1, factor)) != 0) ++factor;
+            while (factor < end && (unchecked(bits[factor / BITS]) & (1 << factor as BitWord)) != 0) ++factor;
 
             let start = (factor * 2) * (factor + 1);
             if (start >= end) break;
@@ -83,7 +83,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         let count = 0;
         let len = (size + 1) / 2;
         for (let i: u32 = 0; i < len; ++i) {
-            if (!(this.bits[i / BITS] & rotl(1, i))) {
+            if (!(this.bits[i / BITS] & (1 << i as BitWord))) {
                 if (showResults)
                     console.log(i.toString() + ", ");
                 count++;
@@ -108,7 +108,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         let count: u32 = 0;
         let len = (size + 1) / 2;
         for (let i: u32 = 0; i < len; ++i) {
-            count += i32(!(this.bits[i / BITS] & rotl(1, i)));
+            count += i32(!(this.bits[i / BITS] & (1 << i as BitWord)));
         }
         return count;
     }
