@@ -2,39 +2,6 @@ type BitWord = u32;
 
 const BITS = (sizeof<BitWord>() * 8) as BitWord;
 
-// @ts-ignore
-@inline function setBitsUnrolled(
-    bits: StaticArray<BitWord>,
-    start: u32,
-    end: u32,
-    step: u32
-): void {
-    const s1 = step * 1;
-    const s2 = step * 2;
-    const s3 = step * 3;
-    const s4 = step * 4;
-
-    end = (end + BITS - 1) / BITS;
-    for (let i: u32 = 0; i < BITS; ++i) {
-        let mask = 1 << start;
-        let idx = start / BITS;
-        start += step;
-
-        while (idx + s4 < end) {
-            unchecked(bits[idx +  0] |= mask);
-            unchecked(bits[idx + s1] |= mask);
-            unchecked(bits[idx + s2] |= mask);
-            unchecked(bits[idx + s3] |= mask);
-            idx += s4;
-        }
-
-        while (idx < end) {
-            unchecked(bits[idx] |= mask);
-            idx += s1;
-        }
-    }
-}
-
 @final export class PrimeSieve {
     private static primeCounts: Map<u32, u32> = new Map<u32, u32>()
         .set(10, 4)
@@ -74,7 +41,31 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
             if (start >= end) break;
 
             let step = factor * 2 + 1;
-            setBitsUnrolled(bits, start, end, step);
+
+            const s1 = step * 1;
+            const s2 = step * 2;
+            const s3 = step * 3;
+            const s4 = step * 4;
+
+            let tail = (end + BITS - 1) / BITS;
+            for (let i: u32 = 0; i < BITS; ++i) {
+                let mask = 1 << start;
+                let idx = start / BITS;
+                start += step;
+
+                while (idx + s4 < tail) {
+                    unchecked(bits[idx +  0] |= mask);
+                    unchecked(bits[idx + s1] |= mask);
+                    unchecked(bits[idx + s2] |= mask);
+                    unchecked(bits[idx + s3] |= mask);
+                    idx += s4;
+                }
+
+                while (idx < tail) {
+                    unchecked(bits[idx] |= mask);
+                    idx += s1;
+                }
+            }
         }
     }
 

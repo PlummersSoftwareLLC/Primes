@@ -68,9 +68,9 @@ maxgraey;7670;5.0;1;algorithm=base,faithful=yes,bits=1
 
 Unrolled:
 ```text
-Passes: 12337,
+Passes: 12402,
 Time: 5.0,
-Avg: 0.0004052849253639579,
+Avg: 0.00040316078229807317,
 Limit: 1000000,
 Count1: 78498,
 Count2: 78498,
@@ -78,5 +78,5 @@ Valid: true
 ```
 
 ```bash
-maxgraey_unrolled;12337;5.0;1;algorithm=base,faithful=yes,bits=1
+maxgraey_unrolled;12402;5.0;1;algorithm=base,faithful=yes,bits=1
 ```
