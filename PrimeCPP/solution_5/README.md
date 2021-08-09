@@ -31,7 +31,7 @@ PrimeBuckets is for debugging
 
 ## Output
 
-(note: output below is 3900x visual studio 2019 x64 release)
-Passes: 17018, Time: 5.000000, Avg: 0.000294, Limit: 1000000, Count: 78498, Valid: 1
+(note: output below is 3900x Ubuntu 20.04)
+Passes: 18428, Time: 5.000000, Avg: 0.000271, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: 1
 
-davepl_pol;17018;5.000000;1;algorithm=base,faithful=yes,bits=1
+schmide;18428;5.000000;1;algorithm=base,faithful=yes,bits=1
