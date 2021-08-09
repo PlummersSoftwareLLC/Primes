@@ -1,4 +1,4 @@
-include("main.jl")
+using PrimesSolution3
 
 # Taken from PrimeCPP/solution_1/PrimeCPP.cpp
 const resultsDictionary = Dict(
@@ -23,7 +23,7 @@ else
     push!(resultsDictionary, 10000000000 => 455052511)
 end
 
-function validate_results(PrimeSieveType::Type{<:AbstractPrimeSieve})
+function validate_results(PrimeSieveType::Type{<:PrimesSolution3.AbstractPrimeSieve})
     output = Bool[]
     for (sieve_size, expected_result) in resultsDictionary
         print("$sieve_size => $expected_result: ")
@@ -37,7 +37,7 @@ function validate_results(PrimeSieveType::Type{<:AbstractPrimeSieve})
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    for implementation in IMPLEMENTATIONS
+    for implementation in PrimesSolution3.IMPLEMENTATIONS
         println("Testing implementation: $(nameof(implementation))")
         is_valid = validate_results(implementation)
         println("All tests return true: $is_valid")

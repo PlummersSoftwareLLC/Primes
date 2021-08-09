@@ -1,16 +1,29 @@
-include("primes_1of2.jl") ; using .Primes1of2
+module PrimesSolution3
+
+# Exported functions from the individual implementations
+export unsafe_find_next_factor_index,
+       unsafe_clear_factors!,
+       run_sieve!,
+       count_primes,
+       get_found_primes,
+# Main exported names from module PrimesSolution3
+       AbstractPrimeSieve,
+       IMPLEMENTATIONS,
+       IMPLEMENTATION_NAMES,
+       benchmark_implementation
+
+
+abstract type AbstractPrimeSieve end
+
+include("primes_1of2.jl")
+using .Primes1of2
 
 const IMPLEMENTATIONS = [
     PrimeSieve1of2
 ]
 const IMPLEMENTATION_NAMES = Set(string(i) for i in IMPLEMENTATIONS)
-# We use this instead of defining an abstract supertype since we want
-# each module to be as self-contained as possible. This is probably not
-# very clean nor extensible, so this might need to be changed sometime
-# in the future.
-AbstractPrimeSieve = Union{IMPLEMENTATIONS...}
 
-function main_benchmark(
+function benchmark_implementation(
     PrimeSieveImplementation::Type{<:AbstractPrimeSieve},
     sieve_size::Integer,
     duration::Integer
@@ -58,11 +71,9 @@ function main(args::Vector{String}=ARGS)
     println(stderr, "Settings: sieve_size = $sieve_size | duration = $duration")
     for implementation in IMPLEMENTATIONS
         println(stderr, "Benchmarking implementation: $(nameof(implementation))")
-        main_benchmark(implementation, sieve_size, duration)
+        benchmark_implementation(implementation, sieve_size, duration)
         println(stderr)
     end
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    main()
 end

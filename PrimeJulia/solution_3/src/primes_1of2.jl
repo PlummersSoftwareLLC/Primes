@@ -19,6 +19,8 @@ export PrimeSieve1of2,
        count_primes,
        get_found_primes
 
+import ..AbstractPrimeSieve
+
 const MainUInt = UInt32
 const _uint_bit_length = sizeof(MainUInt) * 8
 const _div_uint_size_shift = Int(log2(_uint_bit_length))
@@ -35,7 +37,7 @@ const _div_uint_size_shift = Int(log2(_uint_bit_length))
 @inline _div_uint_size(i::Integer) = i >> _div_uint_size_shift
 
 
-struct PrimeSieve1of2
+struct PrimeSieve1of2 <: AbstractPrimeSieve
     sieve_size::UInt
     is_not_prime::Vector{MainUInt}
 end
