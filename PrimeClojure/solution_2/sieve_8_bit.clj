@@ -1,7 +1,9 @@
-(ns primes
+(ns sieve-8-bit
   "Clojure implementation of Sieve of Eratosthenes by Alex Vear (axvr)
 
-  This implementation is fast and faithful to Dave's original implementation."
+  This implementation is fast and faithful to Dave's original implementation,
+  is twice the speed of the 1-bit version as it uses an 8-bit data structure
+  instead."
   (:import [java.time Instant Duration]))
 
 
@@ -70,7 +72,7 @@
     (loop [pass 1]
       (let [primes   (sieve limit)
             cur-time (System/currentTimeMillis)]
-        (if (< cur-time end-by)
+        (if (<= cur-time end-by)
           (recur (inc pass))
           ;; Return benchmark report.
           {:primes primes
@@ -98,7 +100,7 @@
          "Count: " (count primes) ", "
          "Valid: " (if valid? "True" "False")
          "\n"
-         "axvr-clj-sln-2;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
+         "axvr_clj-sln-2_8-bit;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
 
 
 (defn run [{:keys [warm-up?]

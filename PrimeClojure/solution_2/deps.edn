@@ -1,3 +1,2 @@
 {:paths ["."]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
- :aliases {:run {:exec-fn primes/run}}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
