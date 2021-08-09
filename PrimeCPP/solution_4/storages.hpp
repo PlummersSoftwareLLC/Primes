@@ -340,7 +340,7 @@ class MaskedBitStorage {
 // Bit storage that uses a stride of STORAGE_WIDTH to store consecutive bits.
 // For example using two bytes (uint8_t) to store the bits labeled 0, 1, 2, 3 looks like this using the regular bit storage:
 // 0123xxxx xxxxxxxx
-// With strided bit storage consecutive bits are 8-bits apart, looping around (and incremeneting the bit pos) at the end.
+// With strided bit storage consecutive bits are 8-bits apart, looping around (and incrementing the bit pos) at the end.
 // 02xxxxxx 13xxxxxx
 
 template<typename T, bool Invert = true>

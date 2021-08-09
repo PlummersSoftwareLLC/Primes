@@ -7,7 +7,7 @@
 
 Modified by rbergen as indicated in the source code. Optimizations by Braden "Blzut3" Obrzut.
 
-Contains multiple implemenations as follows:
+Contains multiple implementations as follows:
 
 1. An optimized base implementation written with natural code.
 2. A variation of the base implementation where the bit accessing functions are inlined.
