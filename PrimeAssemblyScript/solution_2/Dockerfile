@@ -10,5 +10,4 @@ COPY . .
 RUN npm run build:orig
 RUN npm run build:unrolled
 
-CMD [ "npm", "run", "bench:orig" ]
-CMD [ "npm", "run", "bench:unrolled" ]
+CMD [ "npm", "run", "bench:all" ]
