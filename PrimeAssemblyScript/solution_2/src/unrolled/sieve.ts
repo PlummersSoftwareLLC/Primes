@@ -35,7 +35,10 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
         while (true) {
             // search factor
             ++factor;
-            while (factor < end && (unchecked(bits[factor / BITS]) & (1 << factor as BitWord)) != 0) ++factor;
+            while (
+                factor < end &&
+                (unchecked(bits[factor / BITS]) & (1 << factor as BitWord)) != 0
+            ) ++factor;
 
             let start = (factor * 2) * (factor + 1);
             if (start >= end) break;
@@ -63,7 +66,7 @@ const BITS = (sizeof<BitWord>() * 8) as BitWord;
 
                 while (idx < tail) {
                     unchecked(bits[idx] |= mask);
-                    idx += s1;
+                    idx += step;
                 }
             }
         }
