@@ -1,4 +1,4 @@
-#
+#!/usr/bin/env pwsh
 # PrimePowerShell.ps1
 #
 # Copyright (C) 2021 Christoph Müller
@@ -109,7 +109,7 @@ $KnowResults = @{
 class Sieve {
     Sieve([int]$Size) {
         $this.SieveSize = $Size
-        $this.BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList ([int] (($Size / 2) + ($Size % 2))), $true)
+        $this.BitArray = (New-Object -TypeName System.Collections.BitArray -ArgumentList $Size, $true)
     }
     [int]$SieveSize
     [System.Collections.BitArray]$BitArray
@@ -142,9 +142,9 @@ function Measure-Primes {
         [Parameter(Mandatory, ValueFromPipeline)]
         [Sieve]$Sieve
     )
-    $retval = 0
+    $retval = $Sieve.SieveSize -ge 2 ? 1 : 0
 
-    for ($i = 0; $i -lt $Sieve.BitArray.Count; ++$i) {
+    for ($i = 1; $i -lt $Sieve.BitArray.Count; $i += 2) {
         if ($Sieve.BitArray[$i]) {
             ++$retval
         }
@@ -165,7 +165,9 @@ function Test-Results {
         [Sieve] $Sieve
     )
     if ($KnowResults.ContainsKey($Sieve.SieveSize)) {
-        return ($KnowResults[$Sieve.SieveSize] -eq (Measure-Primes $Sieve))
+        $result = Measure-Primes $Sieve
+        Write-Verbose "Comparing known result $($KnowResults[$Sieve.SieveSize]) to $result"
+        return ($KnowResults[$Sieve.SieveSize] -eq $result)
     }
     else {
         return $false
@@ -185,10 +187,12 @@ function Invoke-Sieve {
     [int]$q = [System.Math]::Sqrt($Sieve.SieveSize)
     [int]$size = $Sieve.SieveSize
     [System.Collections.BitArray]$array = $Sieve.BitArray
+    $array[0] = $false
+    $array[1] = $false
 
     while ($factor -le $q) {
         for ([int]$i = $factor; $i -lt $size; ++$i) {
-            if (($i -band 1) -or $array[$i -shr 1]) {
+            if (($i -band 1) -or $array[$i]) {
                 $factor = $i
                 break;
             }
@@ -196,7 +200,7 @@ function Invoke-Sieve {
 
         [int]$step = 2 * $factor
         for ([int]$i = $factor * $factor; $i -lt $size; $i += $step) {
-            $array[$i -shr 1] = $false;
+            $array[$i] = $false;
         }
 
         $factor += 2
@@ -228,8 +232,8 @@ function Write-Results {
     $retval = [System.Collections.Generic.List[int]]::New($Sieve.SieveSize)
     $retval.Add(2)
     
-    for ($i = 3; $i -le $Sieve.SieveSize; $i+=2) {
-        if ($Sieve.BitArray[$i -shr 1]) {
+    for ($i = 3; $i -le $Sieve.SieveSize; $i += 2) {
+        if ($Sieve.BitArray[$i]) {
             ++$count
             $retval.Add($i)
         }
@@ -305,7 +309,7 @@ else {
 
 
 Write-Verbose "Processing results ..."
-$primes = (Write-Results $sieve $ShowResults $stopWatch.Elapsed.TotalSeconds $passes)
+$primes = (Write-Results $sieve $ShowResults $stopWatch.Elapsed.TotalSeconds $passes -Verbose:$VerbosePreference)
 
 New-Object -TypeName PsObject -Property @{
     AverageDuration = ($stopWatch.Elapsed.TotalSeconds / $passes)
@@ -313,5 +317,5 @@ New-Object -TypeName PsObject -Property @{
     Passes          = $passes;
     Primes          = $primes;
     SieveSize       = $SieveSize;
-    Valid           = ($sieve | Test-Results);
+    Valid           = ($sieve | Test-Results -Verbose:$VerbosePreference);
 }
