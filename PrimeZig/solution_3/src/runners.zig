@@ -6,18 +6,20 @@ const expected_1M_result = 78_498;
 
 pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
     return struct {
+        // passthrough information from the sieve.
+        pub const algo = Sieve.algo;
+        pub const bits = Sieve.bits;
+
         const Self = @This();
         sieve: Sieve = undefined,
         factor: usize = undefined,
         sieve_size: usize = undefined,
-        allocator: *Allocator = undefined,
         passes: *u64 = undefined,
 
         // no special thread-related things to do
-        pub fn init(allocator: *Allocator, sieve_size: usize, passes: *u64) !Self {
+        pub fn init(sieve_size: usize, passes: *u64) !Self {
             return Self{
                 .sieve_size = sieve_size,
-                .allocator = allocator,
                 .passes = passes,
             };
         }
@@ -25,7 +27,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         pub fn deinit(self: *Self) void {}
 
         pub fn sieveInit(self: *Self) !void {
-            self.sieve = try Sieve.init(self.allocator, self.sieve_size);
+            self.sieve = try Sieve.init(self.sieve_size);
             self.factor = self.sieve.reset();
         }
 
@@ -104,9 +106,8 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
         started: bool = false,
         finished: bool = false,
         passes: *u64,
-        allocator: *Allocator,
 
-        pub fn init(allocator: *Allocator, sieve_size: usize, passes: *u64) !Self {
+        pub fn init(sieve_size: usize, passes: *u64) !Self {
             // set up the global worker pool, by abstracting a slice out of the available slots.
             var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction) - 1;
             worker_pool = worker_slots[0..totalWorkers];
@@ -118,7 +119,6 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
                 .stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size))),
                 .sieve_size = sieve_size,
                 .passes = passes,
-                .allocator = allocator,
             };
         }
 
@@ -133,7 +133,7 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
 
         pub fn sieveInit(self: *Self) !void {
             // create the sieve and initialize the threadPool
-            var sieve = try Sieve.init(self.allocator, self.sieve_size);
+            var sieve = try Sieve.init(self.sieve_size);
             errdefer sieve.deinit();
 
             if (! self.started) {
@@ -255,7 +255,6 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
         const Self = @This();
         const field_size = sieve_size >> 1;
 
-        allocator: *Allocator,
         passes: *u64,
         sieve_size: usize,
         started: bool = false,
@@ -264,7 +263,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
         sieve: Sieve = undefined,
         factor: usize = undefined,
 
-        pub fn init(allocator: *Allocator, sieve_size: usize, passes: *u64) !Self {
+        pub fn init(sieve_size: usize, passes: *u64) !Self {
             // set up the global worker pool, by abstracting a slice out of the available slots.
             var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction) - 1;
             worker_pool = worker_slots[0..totalWorkers];
@@ -273,7 +272,6 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             init_hold = init_mutex.acquire();
 
             return Self{
-                .allocator = allocator,
                 .passes = passes,
                 .sieve_size = sieve_size,
             };
@@ -301,7 +299,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             }
 
             // reset the sieve
-            self.sieve = try Sieve.init(self.allocator, self.sieve_size);
+            self.sieve = try Sieve.init(self.sieve_size);
             errdefer sieve.deinit();
 
             self.factor = self.sieve.reset();
@@ -322,7 +320,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             blockOnInit();
 
             while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
-                var sieve = Sieve.init(runner.allocator, runner.sieve_size) catch unreachable;
+                var sieve = Sieve.init(runner.sieve_size) catch unreachable;
                 defer sieve.deinit();
 
                 var factor = sieve.reset();

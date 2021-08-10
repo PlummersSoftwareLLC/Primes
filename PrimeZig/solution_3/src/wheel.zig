@@ -31,7 +31,6 @@ pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
     // the init function, we must set the field directly.
     var generator = IntSieve(comptime u8, .{}){
         .field = field[0..],
-        .allocator = std.heap.page_allocator, //just as a placeholder.  won't be used.
     };
 
     // this takes a bunch of computational power:  Let it happen.

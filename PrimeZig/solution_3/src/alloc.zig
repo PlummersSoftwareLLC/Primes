@@ -3,192 +3,300 @@
 //! only allow completely freeing the memory space.
 
 const std = @import("std");
-const builtin = std.builtin;
-const Allocator = std.mem.Allocator;
-const assert = std.debug.assert;
-const mem = std.mem;
-const c_stdlib = @cImport({
-    @cInclude("stdlib.h");
-});
+pub const c_std_lib = @cImport({@cInclude("stdlib.h");});
+pub const default_allocator = VAlloc(.{});
+const page_size = std.mem.page_size;
 
-fn CAlloc(c: anytype) type {
+// common getHeader function that is going to be used by both calloc and malloc.
+fn getHeader(ptr: [*] u8) *[*]u8 {
+    return @intToPtr(*[*]u8, @ptrToInt(ptr) - @sizeOf(usize));
+}
+
+/// shims c standard library's "calloc" function.
+pub fn CAlloc(c: anytype) type {
     return struct {
-        allocator: Allocator = .{.allocFn = alloc, .resizeFn = resize},
+        pub fn calloc_pages(comptime init: anytype, count: usize) ![*]u8 {
+            // CAlloc can only be used with 0 initialization value.
+            std.debug.assert(init == 0);
 
-        // shamelessly copied from https://github.com/ziglang/zig/blob/master/lib/std/heap.zig
-        comptime {
-            if (!builtin.link_libc) {
-                @compileError("ClearingAllocator is only available when linking against libc");
-            }
-        }
+            // calculate how many pages we'll need.
+            const pages = count / page_size + if (count % page_size == 0) @as(usize, 0) else @as(usize, 1);
+            const pages_len = pages * page_size;
+            const length_with_padding = pages_len + page_size + @sizeOf(usize);
 
-        fn getHeader(ptr: [*]u8) *[*]u8 {
-            return @intToPtr(*[*]u8, @ptrToInt(ptr) - @sizeOf(usize));
-        }
+            // fetch the desired memory with c's calloc function, calculate aligned pointer.
+            // it's possible calloc can try to optimize by using word-length allocations, so use those.
+            var unaligned_ptr = @ptrCast([*]u8,
+              c.calloc(length_with_padding / @sizeOf(usize), @sizeOf(usize)) orelse return error.OutOfMemory);
 
-        fn alignedAlloc(len: usize, alignment: usize) ?[*]u8 {
-            // Thin wrapper around regular calloc, overallocate to account for
-            // alignment padding.
-            const length_with_padding = len + alignment - 1 + @sizeOf(usize);
-            var index: usize = 0;
-            var unaligned_ptr = @ptrCast([*]u8, c.calloc(length_with_padding, 1) orelse return null);
             const unaligned_addr = @ptrToInt(unaligned_ptr);
-            const aligned_addr = mem.alignForward(unaligned_addr + @sizeOf(usize), alignment);
+            const aligned_addr = std.mem.alignForward(unaligned_addr + @sizeOf(usize), page_size);
             var aligned_ptr = unaligned_ptr + (aligned_addr - unaligned_addr);
+
+            // assert that we have the desired alignment.
+            std.debug.assert(aligned_addr % page_size == 0);
+
             getHeader(aligned_ptr).* = unaligned_ptr;
-            return aligned_ptr;
+            return @ptrCast([*]u8, aligned_ptr);
         }
 
-        fn alignedFree(ptr: [*]u8) void {
+        pub fn free(ptr: [*]u8) void {
             const unaligned_ptr = getHeader(ptr).*;
             c.free(unaligned_ptr);
         }
 
-        fn alloc(
-            allocator: *Allocator,
-            len: usize,
-            alignment: u29,
-            len_align: u29,
-            return_address: usize,
-        ) error{OutOfMemory}![]u8 {
-            _ = allocator;
-            _ = return_address;
-            _ = len_align;
-            assert(len > 0);
-            assert(std.math.isPowerOfTwo(alignment));
+        pub fn allocator_deinit() void {}
+    };
+}
 
-            var ptr = alignedAlloc(len, alignment) orelse return error.OutOfMemory;
-            return ptr[0..len];
+/// shims c standard library's "malloc" function, followed by a memset operation.
+pub fn SAlloc(c: anytype) type {
+    return struct {
+        pub fn calloc_pages(comptime init: anytype, count: usize) ![*]u8 {
+            // calculate how many pages we'll need.
+            const pages = count / page_size + if (count % page_size == 0) @as(usize, 0) else @as(usize, 1);
+            const pages_len = pages * page_size;
+            const length_with_padding = pages_len + page_size + 1;
+
+            // fetch the desired memory with c's calloc function, calculate aligned pointer.
+            var unaligned_ptr = @ptrCast([*]u8, c.calloc(length_with_padding, @sizeOf(usize)) orelse return error.OutOfMemory);
+            const unaligned_addr = @ptrToInt(unaligned_ptr);
+            const aligned_addr = std.mem.alignForward(unaligned_addr + @sizeOf(usize), page_size);
+            var aligned_ptr = unaligned_ptr + (aligned_addr - unaligned_addr);
+
+            // memset, but only memset the bytes we ask for!
+            @memset(aligned_ptr, init, count);
+
+            // assert that we have the desired alignment.
+            std.debug.assert(aligned_addr % page_size == 0);
+
+            getHeader(aligned_ptr).* = unaligned_ptr;
+            return @ptrCast([*]u8, aligned_ptr);
         }
 
-        fn resize(
-            allocator: *Allocator,
-            buf: []u8,
-            buf_align: u29,
-            new_len: usize,
-            len_align: u29,
-            return_address: usize,
-        ) Allocator.Error!usize {
-            _ = allocator;
-            _ = buf_align;
-            _ = return_address;
-            _ = len_align;
+        pub fn free(ptr: [*]u8) void {
+            const unaligned_ptr = getHeader(ptr).*;
+            c.free(unaligned_ptr);
+        }
 
-            if (new_len == 0) {
-                alignedFree(buf.ptr);
-                return 0;
+        pub fn allocator_deinit() void {}
+    };
+}
+
+threadlocal var cached_ptr: ?[*]u8 = null;
+threadlocal var cached_len: usize = undefined;
+
+const V = std.meta.Vector(8, u64);
+const VAllocOpts = struct{
+    allocator: *std.mem.Allocator = std.heap.page_allocator,
+    should_clear: bool = true,
+};
+
+/// for super-fast threadsafe "single-use" allocations.
+/// vector-allocates memory, using the direct page allocator and a per-thread cache.  Internally remembers
+/// how much you allocated the last time, so each thread can only hold onto one allocation at a time.
+pub fn VAlloc(comptime opts: VAllocOpts) type {
+    const allocator = opts.allocator;
+    return struct {
+        pub fn calloc_pages(comptime init: anytype, count: usize) ![*]u8 {
+            // align the number of total bytes allocated to page_size.
+            const overhang = count % page_size;
+            const bytes = if (overhang == 0) count else count + page_size - overhang;
+
+            const result = ptr: {
+                if (cached_ptr) |cache| {
+                    if (cached_len == count) {
+                        break :ptr cache;
+                    } else {
+                        allocator.free(cache[0..cached_len]);
+                        const new_slice = try allocator.allocAdvanced(u8, page_size, bytes, .at_least);
+                        break :ptr @ptrCast([*]u8, new_slice.ptr);
+                    }
+                } else {
+                    const new_slice = try allocator.allocAdvanced(u8, page_size, bytes, .at_least);
+                    break :ptr @ptrCast([*]u8, new_slice.ptr);
+                }
+            };
+
+            cached_len = bytes;
+
+            if (opts.should_clear) {
+                const extra_bytes = count % @sizeOf(V);
+                const total_vectors = count / @sizeOf(V) + if (extra_bytes == 0) @as(usize, 0) else @as(usize, 1);
+                const vector_ptr = @ptrCast([*]V, @alignCast(@alignOf(V), result));
+                vector_clear(vector_ptr[0..total_vectors], init);
             }
 
-            return error.OutOfMemory;
+            return result;
+        }
+
+        pub fn free(ptr: [*]u8) void {
+            // save it as "cached".  cached_len should be remembered from previous invocation.
+            cached_ptr = ptr;
+        }
+
+        pub fn allocator_deinit() void {
+            if (cached_ptr) | cache | {
+                allocator.free(cache[0..cached_len]);
+            }
+            // set the cached_ptr to nil in case we want to reuse it (as in, in tests)
+            cached_ptr = null;
+        }
+
+        fn vector_clear(slice: []V, content: anytype) void {
+            var byte_buffer: [64]u8 align(@alignOf(V)) = undefined;
+
+            //initialize the byte buffer
+            for (byte_buffer) | *byte | {
+                byte.* = if (@TypeOf(content) == bool) @boolToInt(content) else content;
+            }
+
+            const membuff: V = @ptrCast(*V, &byte_buffer[0]).*;
+            for (slice) | *vector | {
+                vector.* = membuff;
+            }
         }
     };
 }
 
-// instantiate calloc, as wrapped by zig.
-var calloc: CAlloc(c_stdlib) = .{};
+// for testing purposes only, a mock of the c stdlib that provides calloc and malloc backed by the
+// testing allocator.  Stores last length in a global: Definitely not threadsafe.
+var test_allocator_total_length: usize = undefined;
 
-pub fn calloc_aligned(comptime T: type, count: usize, comptime alignment: u28) ![]T {
-    return try calloc_aligned_gen(T, &calloc.allocator, count, alignment);
-}
-
-pub fn free(slice: anytype) void {
-    free_gen(slice, &calloc.allocator);
-}
-
-// generalized aligned, clearing allocator implementation.
-fn calloc_aligned_gen(comptime T: type, allocator: *Allocator, count: usize, comptime alignment: u28) ![]T {
-    const slice = try allocator.allocAdvanced(T, alignment, count, .exact);
-    if (getRuntimeSafety()) {
-        // zig drops 0xaa in all of the data slots in the case of release-safe modes.
-        const sliceptr = @ptrCast([*]u8, slice.ptr);
-        @memset(sliceptr, 0, count * @sizeOf(T));
+const MockedLibC = struct {
+    pub fn calloc(count: usize, size: usize) ?[*]u8 {
+        test_allocator_total_length = count * size;
+        var slice = std.testing.allocator.alloc(u8, test_allocator_total_length) catch return null;
+        const result_pointer = @ptrCast([*]u8, slice.ptr);
+        @memset(result_pointer, 0, test_allocator_total_length);
+        return result_pointer;
     }
-    return slice;
-}
 
-// generalized clearing allocator.
-fn free_gen(slice: anytype, allocator: *Allocator) void {
-    allocator.free(slice);
-}
-
-fn getRuntimeSafety() comptime bool {
-    return switch(std.builtin.mode) {
-        std.builtin.Mode.Debug => true,
-        std.builtin.Mode.ReleaseSafe => true,
-        std.builtin.Mode.ReleaseFast => false,
-        std.builtin.Mode.ReleaseSmall => false,
-    };
-}
-
-test "produces an aligned memory slot that is empty" {
-    const datatypes = .{u8, u32, u64};
-
-    inline for (datatypes) |T| {
-        const alignment = @alignOf(T);
-        var slice = try calloc_aligned(T, 10, @alignOf(T));
-        defer free(slice);
-
-        try std.testing.expectEqual(@ptrToInt(slice.ptr) % alignment, 0);
-
-        for (slice) |value| {
-            try std.testing.expectEqual(value, 0);
-        }
-    }
-}
-
-test "can produce higher alignments" {
-    const datatypes = .{u8, u32, u64};
-
-    inline for (datatypes) |T| {
-        const alignment = @alignOf(T);
-        var slice = try calloc_aligned(T, 10, std.mem.page_size);
-        defer free(slice);
-
-        try std.testing.expectEqual(@ptrToInt(slice.ptr) % alignment, 0);
-
-        for (slice) |value| {
-            try std.testing.expectEqual(value, 0);
-        }
-    }
-}
-
-const testing_allocator = std.testing.allocator;
-
-var last_allocation: usize = undefined;
-// instantiate a mock calloc, which instead uses test_allocator, to double check
-// we aren't leaking memory.  Definitely NOT threadsafe, only one at a time plz.
-var mock_calloc: CAlloc(struct {
-    pub fn calloc(count: usize, bytes: usize) ?[*]u8 {
-        last_allocation = count * bytes;
-        const slice = testing_allocator.alloc(u8, last_allocation) catch |_| return null;
+    pub fn malloc(byte_length: usize) ?[*]u8 {
+        test_allocator_total_length = byte_length;
+        var slice = std.testing.allocator.alloc(u8, test_allocator_total_length) catch return null;
         return @ptrCast([*]u8, slice.ptr);
     }
-    pub fn free(pointer: [*]u8) void {
-        const slice = pointer[0..last_allocation];
-        testing_allocator.free(slice);
-    }
-}) = .{};
 
-fn mock_calloc_aligned(comptime T: type, count: usize, comptime alignment: u28) ![]T {
-    return try calloc_aligned_gen(T, &mock_calloc.allocator, count, alignment);
+    pub fn free(memory: [*]u8) void {
+        std.testing.allocator.free(memory[0..test_allocator_total_length]);
+        test_allocator_total_length = undefined;
+    }
+};
+
+const TWOPAGES = page_size * 2;
+
+fn expectSliceAligned(slice: anytype) !void {
+    try std.testing.expectEqual(@ptrToInt(slice.ptr) % page_size, 0);
 }
 
-fn mock_free(slice: anytype) void {
-    free_gen(slice, &mock_calloc.allocator);
+fn basic_test(a: anytype, size: usize, comptime expected_value: u8) !void {
+    var ptr = try a.calloc_pages(expected_value, size);
+    var slice = ptr[0..size];
+    defer a.free(ptr);
+
+    try expectSliceAligned(slice);
+
+    for (slice) |value| {
+        try std.testing.expectEqual(value, expected_value);
+    }
 }
 
-test "can produce higher alignments" {
-    const datatypes = .{u8, u32, u64};
+// tests on CAlloc
+test "CAlloc produces an aligned memory slot that is filled with zeros." {
+    const a = CAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0);
+}
 
-    inline for (datatypes) |T| {
-        const alignment = @alignOf(T);
-        var slice = try mock_calloc_aligned(T, 10, std.mem.page_size);
-        defer mock_free(slice);
+test "CAlloc can produce multi-page allocations" {
+    const a = CAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0);
+}
 
-        try std.testing.expectEqual(@ptrToInt(slice.ptr) % alignment, 0);
+test "CAlloc doesn't leak on small allocations" {
+    const a = CAlloc(MockedLibC);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0);
+}
 
-        for (slice) |value| {
-            try std.testing.expectEqual(value, 0);
-        }
-    }
+test "CAlloc doesn't leak on multi-page allocations" {
+    const a = CAlloc(MockedLibC);
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0);
+}
+
+// tests on SAlloc
+test "SAlloc produces an aligned memory slot that is filled with zeros." {
+    const a = SAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0);
+}
+
+test "SAlloc produces an aligned memory slot that is filled with arbitrary values." {
+    const a = SAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0xFF);
+}
+
+test "SAlloc can produce multi-page allocations" {
+    const a = SAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0);
+}
+
+test "SAlloc can produce multi-page allocations with arbitrary values" {
+    const a = SAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0xFF);
+}
+
+test "SAlloc doesn't leak on small allocations" {
+    const a = SAlloc(MockedLibC);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0);
+}
+
+test "SAlloc doesn't leak on multi-page allocations" {
+    const a = SAlloc(MockedLibC);
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0);
+}
+
+// tests on VAlloc
+test "VAlloc produces an aligned memory slot that is filled with zeros." {
+    const a = VAlloc(.{});
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0);
+}
+
+test "VAlloc produces an aligned memory slot that is filled with arbitrary values." {
+    const a = VAlloc(.{});
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0xFF);
+}
+
+test "VAlloc can produce multi-page allocations" {
+    const a = VAlloc(.{});
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0);
+}
+
+test "VAlloc can produce multi-page allocations with arbitrary values" {
+    const a = VAlloc(.{});
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0xFF);
+}
+
+test "VAlloc doesn't leak on small allocations" {
+    const a = VAlloc(.{.allocator = std.testing.allocator});
+    defer a.allocator_deinit();
+    try basic_test(a, 10, 0);
+}
+
+test "VAlloc doesn't leak on multi-page allocations" {
+    const a = VAlloc(.{.allocator = std.testing.allocator});
+    defer a.allocator_deinit();
+    try basic_test(a, TWOPAGES, 0);
 }
