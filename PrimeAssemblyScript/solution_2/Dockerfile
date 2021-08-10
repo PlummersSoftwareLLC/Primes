@@ -7,6 +7,6 @@ RUN npm install
 COPY . .
 
 
-RUN npm run build:bench
+RUN npm run build:all
 
-CMD [ "npm", "run", "bench" ]
+CMD [ "npm", "run", "bench:all" ]
