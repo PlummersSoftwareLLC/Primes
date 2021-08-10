@@ -354,6 +354,7 @@ Here are the supported values:
 * chart
 * csv
 * json (this also includes the machine information data)
+* minifiedjson (same as json, but not pretty-printed)
 
 The output format can be controlled via the `FORMATTER` variable like this:
 
