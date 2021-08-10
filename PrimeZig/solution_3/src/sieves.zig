@@ -9,6 +9,8 @@ const IntSieveOpts = comptime struct {
 };
 
 pub fn IntSieve(comptime opts: IntSieveOpts) type {
+    // only allow 1-byte datatypes.
+    std.debug.assert(@sizeOf(opts.T) == 1);
     const wheel_name = "";
     return struct {
         pub const T = opts.T;
@@ -25,7 +27,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
         usingnamespace opts.allocator;
 
         // storage
-        field: []T,
+        field: [*]u8,
 
         // member functions
 
@@ -33,7 +35,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
             // allocates an array of data.  We only need half as many slots because
             // we are only going to operate on odd values.
             const field_size = sieve_size / 2;
-            var field = try alloc_page(T, PRIME, field_size, std.mem.page_size);
+            var field = try calloc_page(T, PRIME, field_size, std.mem.page_size);
             return Self{ .field = field[0..field_size] };
         }
 

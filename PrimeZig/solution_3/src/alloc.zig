@@ -16,8 +16,9 @@ fn getHeader(ptr: [*] u8) *[*]u8 {
 pub fn CAlloc(c: anytype) type {
     return struct {
         pub fn calloc_pages(comptime init: anytype, count: usize) ![*]u8 {
-            // CAlloc can only be used with 0 initialization value.
-            std.debug.assert(init == 0);
+            // CAlloc can only be used with 0-ish initialization values.
+            const init_val = if (@TypeOf(init) == bool) @boolToInt(init) else init;
+            std.debug.assert(init_val == 0);
 
             // calculate how many pages we'll need.
             const pages = count / page_size + if (count % page_size == 0) @as(usize, 0) else @as(usize, 1);
@@ -59,13 +60,14 @@ pub fn SAlloc(c: anytype) type {
             const length_with_padding = pages_len + page_size + 1;
 
             // fetch the desired memory with c's calloc function, calculate aligned pointer.
-            var unaligned_ptr = @ptrCast([*]u8, c.calloc(length_with_padding, @sizeOf(usize)) orelse return error.OutOfMemory);
+            var unaligned_ptr = @ptrCast([*]u8, c.malloc(length_with_padding) orelse return error.OutOfMemory);
             const unaligned_addr = @ptrToInt(unaligned_ptr);
             const aligned_addr = std.mem.alignForward(unaligned_addr + @sizeOf(usize), page_size);
             var aligned_ptr = unaligned_ptr + (aligned_addr - unaligned_addr);
 
             // memset, but only memset the bytes we ask for!
-            @memset(aligned_ptr, init, count);
+            const init_val = if (@TypeOf(init) == bool) @boolToInt(init) else init;
+            @memset(aligned_ptr, init_val, count);
 
             // assert that we have the desired alignment.
             std.debug.assert(aligned_addr % page_size == 0);
@@ -190,7 +192,8 @@ fn expectSliceAligned(slice: anytype) !void {
     try std.testing.expectEqual(@ptrToInt(slice.ptr) % page_size, 0);
 }
 
-fn basic_test(a: anytype, size: usize, comptime expected_value: u8) !void {
+fn basic_test(a: anytype, size: usize, comptime expected_value: anytype) !void {
+    const expected = if (@TypeOf(expected_value) == bool) @boolToInt(expected_value) else expected_value;
     var ptr = try a.calloc_pages(expected_value, size);
     var slice = ptr[0..size];
     defer a.free(ptr);
@@ -198,7 +201,7 @@ fn basic_test(a: anytype, size: usize, comptime expected_value: u8) !void {
     try expectSliceAligned(slice);
 
     for (slice) |value| {
-        try std.testing.expectEqual(value, expected_value);
+        try std.testing.expectEqual(value, expected);
     }
 }
 
@@ -207,6 +210,12 @@ test "CAlloc produces an aligned memory slot that is filled with zeros." {
     const a = CAlloc(c_std_lib);
     defer a.allocator_deinit();
     try basic_test(a, 10, 0);
+}
+
+test "CAlloc produces an aligned memory slot that is filled with bools." {
+    const a = CAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, false);
 }
 
 test "CAlloc can produce multi-page allocations" {
@@ -232,6 +241,18 @@ test "SAlloc produces an aligned memory slot that is filled with zeros." {
     const a = SAlloc(c_std_lib);
     defer a.allocator_deinit();
     try basic_test(a, 10, 0);
+}
+
+test "SAlloc produces an aligned memory slot that is filled with false." {
+    const a = SAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, false);
+}
+
+test "SAlloc produces an aligned memory slot that is filled with true." {
+    const a = SAlloc(c_std_lib);
+    defer a.allocator_deinit();
+    try basic_test(a, 10, true);
 }
 
 test "SAlloc produces an aligned memory slot that is filled with arbitrary values." {
@@ -276,6 +297,19 @@ test "VAlloc produces an aligned memory slot that is filled with arbitrary value
     defer a.allocator_deinit();
     try basic_test(a, 10, 0xFF);
 }
+
+test "VAlloc produces an aligned memory slot that is filled with false." {
+    const a = VAlloc(.{});
+    defer a.allocator_deinit();
+    try basic_test(a, 10, false);
+}
+
+test "VAlloc produces an aligned memory slot that is filled with true." {
+    const a = VAlloc(.{});
+    defer a.allocator_deinit();
+    try basic_test(a, 10, true);
+}
+
 
 test "VAlloc can produce multi-page allocations" {
     const a = VAlloc(.{});
