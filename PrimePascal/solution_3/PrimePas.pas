@@ -34,10 +34,10 @@ type
   prime_sieve = class
     private
       sieveSize: uint64;
-      bits: PBitsArr;
-      mask: array [0..31] of uint32;
+      bits: PbitsArr;
+      mask: array [0..31] of uint32; // masks used for the IsPrime and ClearBits methods
 
-      procedure ClearBits(n, skip: uint64); inline;
+      procedure ClearBits(factor, nMax: uint64); inline;
       function IsPrime(n: uint64): boolean; inline;
       function CountPrimes: uint64;
       procedure PrintResults(showResults, showValidation: boolean; duration: double; totalPasses, threads: integer);
@@ -53,17 +53,18 @@ type
 
 constructor prime_sieve.Create(n: uint64);
 var
-  i: byte;
   bitsArrSize: uint32; // 32 bits size array because each value is 32 bits (containing 32 flags for prime numbers)
+  i: byte;
 
 begin
   sieveSize:=n;
   //allocating bitsArrSize = sieveSize/64 uint32s on the heap to store the bits for odd numbers
   bitsArrSize:=(n>>6) + ord(((n>>1) and 31)<>0); //and extra uint32 is added in case sieveSize/2 is not a multiple of 32
-  bits:=GetMem(bitsArrSize*4); // 32 bits = 4 bytes
-  fillDWord(bits^[0], bitsArrSize, $0); // setting bits to false
+  bits:=GetMem(bitsArrSize*4); // 32 bits = 4 bytes => allocating sieveSize/2/4 bytes of memory
+  fillDWord(bits^[0], bitsArrSize, $FFFFFFFF); // setting all bits to true
 
-  for i:=0 to 31 do mask[i]:=uint32(1) << i; // this avoids re-calculating the mask over and over in ClearBits and IsPrime
+  // generating masks for ClearBits and GetBis (IsPrime) methods
+  for i:=0 to 31 do mask[i]:=1 << i;
 end;
 
 destructor prime_sieve.Destroy;
@@ -72,26 +73,23 @@ begin
   inherited Destroy;
 end;
 
-procedure prime_sieve.ClearBits(n, skip: uint64);
+procedure prime_sieve.ClearBits(factor, nMax: uint64);
 var
-  maxSize: uint64;
+  n: uint64;
 
 begin
-  // dividing all values by 2 as we only store bits for odd numbers in the uint32 array
-  n:=n>>1;
-  skip:=skip>>1;
-  maxSize:=sieveSize>>1;
+  n:=(factor*factor)>>1;
 
-  while n<=maxSize do
+  while n<=nMax do
   begin
-    bits^[n>>5]:=bits^[n>>5] or mask[n and 31]; // setting bit to 1 specifying the number is not prime
-    n+=skip;
+    bits^[n>>5]:=bits^[n>>5] and not mask[n and 31];
+    n+=factor;
   end;
 end;
 
 function prime_sieve.IsPrime(n: uint64): boolean;
 begin
-  result:=(bits^[n>>6] and mask[(n>>1) and 31])=0; // checking whether the bit is set to 0
+  result:=(bits^[n>>6] and mask[(n>>1) and 31])<>0; // checking whether the bit is set to 1
 end;
 
 procedure prime_sieve.RunSieve;
@@ -103,13 +101,14 @@ begin
   factor:=3;
   q:=trunc(sqrt(sieveSize));
 
-  while factor <= q do
+  while factor<=q do
   begin
     // searching the next prime number to set the factor
-    while not IsPrime(factor) and (factor < sieveSize) do
+    while ((bits^[factor>>6] and mask[(factor>>1) and 31])=0) and (factor<SieveSize) do
       factor+=2;
 
-    ClearBits(factor*factor, factor+factor);
+    ClearBits(factor, sieveSize>>1); // clearing bits for multiples of the factor
+
     factor+=2;
   end;
 end;
