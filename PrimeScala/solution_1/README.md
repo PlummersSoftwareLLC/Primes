@@ -5,11 +5,11 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-This is a Scala implementation of the "drag race" for Scala, targetting both Scala Native (see https://scala-native.org) and the JVM (see https://scala-lang.org)
+This is a Scala implementation of the "drag race" for Scala, targeting both Scala Native (see https://scala-native.org) and the JVM (see https://scala-lang.org)
 
 # Run Instructions
 
-You may compile this scala source targetting either native or the JVM:
+You may compile this scala source targeting either native or the JVM:
 
 - JVM
 

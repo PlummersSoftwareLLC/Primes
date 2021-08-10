@@ -4,7 +4,7 @@ Python Prime Sieve using Numpy
 Based on MyFirstPython Program (tm) Dave Plummer 8/9/2018
 Adapted by Emil Sauer Lynge 08/07/2021
 
-This particular version is based on the PrimePython/solution2, whic itself is adapted from Dave Plummer original.
+This particular version is based on the PrimePython/solution2, which itself is adapted from Dave Plummer original.
 """
 import numpy as np
 from math import sqrt
