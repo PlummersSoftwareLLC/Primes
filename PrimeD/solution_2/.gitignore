@@ -14,3 +14,4 @@ solution_2-test-*
 *.obj
 *.lst
 app_without_comments.d
+results.csv

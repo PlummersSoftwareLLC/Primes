@@ -18,12 +18,14 @@ npm install
 
 Build the optimized binary
 ```
-npm run build:bench
+npm run build:orig
+npm run build:unrolled
 ```
 
 Run the benchmark
 ```
-npm run bench
+npm run bench:orig
+npm run bench:unrolled
 ```
 
 ### Docker
@@ -43,10 +45,12 @@ Currently the docker version almost halves the passes number vs the local versio
 
 ### Env
 
-Node.JS: `v16.6.0`
+Node.JS: `v16.6.1`
 CPU: `Intel Core i9 2.3 GHz`
 
-### Result
+### Results
+
+Original:
 
 ```text
 Passes: 7670,
@@ -60,4 +64,19 @@ Valid: true
 
 ```bash
 maxgraey;7670;5.0;1;algorithm=base,faithful=yes,bits=1
+```
+
+Unrolled:
+```text
+Passes: 12563,
+Time: 5.0,
+Avg: 0.00039799409569241107,
+Limit: 1000000,
+Count1: 78498,
+Count2: 78498,
+Valid: true
+```
+
+```bash
+maxgraey_unrolled;12563;5.0;1;algorithm=base,faithful=yes,bits=1
 ```
