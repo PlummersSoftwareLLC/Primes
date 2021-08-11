@@ -91,7 +91,7 @@ fun create_sieve limit =
                 else 
                     ()
             in
-                print ("NotMatthewGriffin_SMLofNJ;" ^ (Int.toString passes) ^ ";" ^ (Time.toString duration) ^ ";1;algorithm=base,faithful=yes,bits=1")
+                print ("NotMatthewGriffin_SML;" ^ (Int.toString passes) ^ ";" ^ (Time.toString duration) ^ ";1;algorithm=base,faithful=yes,bits=1")
             end
     in
         {
