@@ -6,7 +6,7 @@ A Windows Batch file implementation of the prime sieve.
 
 It takes advantage of the worker model to imitate classes, spawning a new `cmd` window per pass. This also means multithreading is supported, but is disabled by default.
 
-> Note: This implementation runs really *really* slowly. I'd recommend skipping this one if anyone intended to run all benchmarks at once. Check the [output](#output) section for reference.
+> Note: This implementation runs really *really* slowly & is thus skipped from the automated benchmark. Check the [output](#output) section for reference of speed, & check [run instructions](#run-instructions) for methods to run it manually.
 
 
 
@@ -15,6 +15,12 @@ It takes advantage of the worker model to imitate classes, spawning a new `cmd` 
 These instructions assumes that you're in the directory of `PrimeBatch/solution_1` & have all the dependencies installed as stated in `BENCHMARK.md`.
 
 Both arguments `workers` & `sieveSize` can be omitted, they will default to the values shown in the examples below.
+
+> Note: The examples & the defaults use the prime count size based on the rules. If you'd like to actually run these, it's probably better you decrease them. I found a sieve size of ~1000 gives the implementation a much better chance of going through more than 1 pass per 5 seconds. Example to run on Windows:
+>
+> ```
+> main.bat /workers:%NUMBER_OF_PROCESSORS% /sieveSize:1000
+> ```
 
 ### Natively on Windows
 
@@ -40,11 +46,9 @@ This uses `Docker`, which you should have already installed if coming from `BENC
 docker build --platform amd64 --build-arg workers=1 --build-arg sieveSize=1000000 -t primebatch -f ManualDockerfile . && docker run -d primebatch
 ```
 
-
-
 ## Output
 
-This output was gotten from a run natively on Windows, without using Docker or Wine. 
+This output was gotten from a sieve of 1,000,000 natively on Windows, without using Docker or Wine. 
 
 ```
 elapsed: 10:31:55.85 (37915.85s total)
