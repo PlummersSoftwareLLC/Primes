@@ -153,7 +153,7 @@ static inline void block_cross_out(
                 next_start_index += prime;
             }
             // now apply this mask to all words with steps of the prime
-                        save_len = 0;
+            save_len = 0;
             if (max_word_block > prime_3) {
                 save_len = max_word_block - prime_3;
             }
