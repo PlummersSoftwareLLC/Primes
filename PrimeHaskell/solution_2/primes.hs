@@ -1,5 +1,3 @@
--- implementation of "unpeeling"/"striping" Sieve of Eratosthenes benchmark...
-
 {-# OPTIONS_GHC -O2 -fllvm #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -14,6 +12,7 @@ import Data.Array.Base ( MArray(newArray), STUArray, castSTUArray,
 import Data.Array.ST ( runSTUArray )
 
 type Prime = Word64
+type SieveBuffer = UArray Int Bool
 
 cLIMIT :: Prime
 cLIMIT = 1000000
@@ -43,11 +42,8 @@ cEXPECTED = maybe 0 id $ lookup cLIMIT primeCounts
 cBITMASK :: UArray Int Word8
 cBITMASK = listArray (0, 7) [ 1, 2, 4, 8, 16, 32, 64, 128 ]
 
-primesSoEUnpeeled :: Prime -> [Prime] -- force evaluation of array
-primesSoEUnpeeled limit =
-    cmpsts `seq` 2 : [ fromIntegral (i + i + 3)
-                         | (i, False) <- assocs cmpsts ] where
-  cmpsts = runSTUArray $ do -- following in ST Monad so can mutate array
+primesSoEUnpeeled :: Prime -> SieveBuffer
+primesSoEUnpeeled limit = runSTUArray $ do -- following in ST Monad so can mutate array
     let bitlmt = fromIntegral ((limit - 3) `div` 2)
     csb <- newArray (0, bitlmt) False -- boolean and Word8 views of array
     cs <- (castSTUArray :: STUArray s Int Bool ->
@@ -66,13 +62,12 @@ primesSoEUnpeeled limit =
           forM_ [ startByteIndex, startByteIndex + basePrime .. lastByteIndex ]
                     $ \ cull -> do -- simple sub loops by constant mask
             v <- unsafeRead cs cull; unsafeWrite cs cull (v .|. mask)
+    lstv <- unsafeRead cs lastByteIndex -- mask primes above bitlmt
+    unsafeWrite cs lastByteIndex (lstv .|. (0xFE `shiftL` (bitlmt .&. 7)))
     return csb -- actual deliverable is boolean for convenience in decoding
 
-primesSoEUnpeeledBlock :: Prime -> [Prime] -- force evaluation of array
-primesSoEUnpeeledBlock limit =
-    cmpsts `seq` 2 : [ fromIntegral (i + i + 3)
-                         | (i, False) <- assocs cmpsts ] where
-  cmpsts = runSTUArray $ do -- following in ST Monad so can mutate array
+primesSoEUnpeeledBlock :: Prime -> SieveBuffer
+primesSoEUnpeeledBlock limit = runSTUArray $ do -- in ST Monad to mutate array
     let bitlmt = fromIntegral ((limit - 3) `div` 2)
     csb <- newArray (0, bitlmt) False -- boolean and Word8 views of array
     cs <- (castSTUArray :: STUArray s Int Bool ->
@@ -121,18 +116,24 @@ primesSoEUnpeeledBlock limit =
               nextByteIndex -- in case of no loops
               [ nextByteIndex, nextByteIndex + basePrime .. pageByteLimit ]
             unsafeWrite strts i succByteIndex
+    lstv <- unsafeRead cs lastByteIndex -- mask primes above bitlmt
+    unsafeWrite cs lastByteIndex (lstv .|. (0xFE `shiftL` (bitlmt .&. 7)))
     return csb -- actual deliverable is boolean for convenience in decoding
 
-benchMark :: String -> (Prime -> [Prime]) -> IO ()
+listPrimes :: SieveBuffer -> [Prime]
+listPrimes sb =
+   sb `seq` 2 : [ fromIntegral (i + i + 3) | (i, False) <- assocs sb ]
+
+benchMark :: String -> (Prime -> SieveBuffer) -> IO ()
 benchMark label testprimefnc = do
   strttm <- getPOSIXTime
   let loop _ [] = error "Should never get here!!!"
       loop passes (hd : rst) = do
-        let primes = testprimefnc hd
-        now <- primes `seq` getPOSIXTime -- force immediate execution
+        let cmpstsBuffer = testprimefnc hd
+        now <- cmpstsBuffer `seq` getPOSIXTime -- force immediate execution
         let duration = now - strttm
         if duration < cFORTIME then passes `seq` loop (passes + 1) rst else
-          let count = length primes in
+          let count = length $ listPrimes cmpstsBuffer in
           if count == cEXPECTED then
             putStrLn $ "GordonBGood_" ++ label ++ ";"
                       ++ show passes ++ ";" ++ show (realToFrac duration)
@@ -142,7 +143,6 @@ benchMark label testprimefnc = do
 
 main :: IO ()
 main = do
-
   forM_ [ ("unpeeled", primesSoEUnpeeled)
         , ("unpeeled_block", primesSoEUnpeeledBlock)
         ] $ uncurry benchMark
