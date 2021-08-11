@@ -12,7 +12,7 @@ It takes advantage of the worker model to imitate classes, spawning a new `cmd` 
 
 ## Run instructions
 
-These instructions assumes that you're in the directory of `PrimeBatch` & have all the dependencies installed as stated in `BENCHMARK.md`.
+These instructions assumes that you're in the directory of `PrimeBatch/solution_1` & have all the dependencies installed as stated in `BENCHMARK.md`.
 
 Both arguments `workers` & `sieveSize` can be omitted, they will default to the values shown in the examples below.
 
