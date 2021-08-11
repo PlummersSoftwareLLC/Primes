@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 # PrimePowerShell.ps1
 #
-# Copyright (C) 2021 Christoph Müller
+# Copyright (C) 2021 Robert Cannon
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+# This is a modification of the code found here:
+# https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimePowerShell/solution_2
 
 <#
 .SYNOPSIS 
