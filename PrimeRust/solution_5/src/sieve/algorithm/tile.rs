@@ -71,9 +71,7 @@ fn get_primes<F: FlagDataExecute<D>, D: DataType>(
         F::fall_through(&mut data.slice()[..cutoff], start_index, prime);
         primes.push(prime);
 
-        bit = (bit + 1..data_size)
-            .find(|n| data.is_prime(*n))
-            .unwrap();
+        bit = (bit + 1..data_size).find(|n| data.is_prime(*n)).unwrap();
         prime = bit * 2 + 1;
     }
 

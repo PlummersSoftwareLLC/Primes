@@ -14,8 +14,8 @@ impl Algorithm for Stream {
 impl<F: FlagDataExecute<D>, D: DataType> SieveExecute<Stream> for Sieve<Stream, F, D> {
     #[inline]
     fn sieve(&mut self) {
-        let slice_size = ((self.data.flag_count() * F::FLAG_SIZE + F::BITS - 1) / F::BITS)
-            .max(64 * 8 / F::BITS);
+        let slice_size =
+            ((self.data.flag_count() * F::FLAG_SIZE + F::BITS - 1) / F::BITS).max(64 * 8 / F::BITS);
         self.data
             .slice()
             .par_chunks_mut(slice_size)
