@@ -1,8 +1,14 @@
+//! Normal sieving of bit-sized flags.
+
 use super::{FlagData, FlagDataBase, FlagDataExecute};
 use crate::Integer;
 
 use rayon::prelude::*;
 
+/// Marker for bit handling of flag data.
+///
+/// Sieving functions as normal, each flag only occupies one bit so the data is effectively
+/// compressed to the minimal possible size.
 pub struct Bit;
 
 impl<D: Integer> FlagDataExecute<D> for FlagData<Bit, D> {

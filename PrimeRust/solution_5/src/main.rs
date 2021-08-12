@@ -1,13 +1,10 @@
 //! # Rust solution 5 by Kulasko
 //!
 //! As it's written in the readme, this solution focuses in different multithreading algorithms.
-//! There are currently three algorithms, each run with a bit vector and a bool vector.
-//!
-//! The algorithms are implemented as a trait specialisation of the corresponding data struct. They
-//! are a bit unwieldy because of the verbose instantiation, this could be improved by taking the
-//! constructor out of the trait.
+//! Each algorithm is run with a set of different prime flag storage types.
 
-#[warn(missing_docs)]
+#![warn(missing_docs)]
+
 mod data_type;
 mod sieve;
 
@@ -20,7 +17,7 @@ use std::time::{Duration, Instant};
 use structopt::StructOpt;
 
 /// Most things are hardcoded. Performs one bench for each combination of algorithm and data
-/// structure.
+/// structure that makes sense.
 pub fn main() {
     let arguments = Arguments::from_args();
 
@@ -46,6 +43,26 @@ pub fn main() {
     );
 }
 
+/// Compresses calls to the bench function by only taking sieve size and duration once, as well as
+/// stripping away redundant type declarations and structures acting as types from each call.
+///
+/// The reason this is a macro instead of a function is that types can't guarantee that
+/// `SieveExecute` is implemented on `Sieve` for any algorithm and `FlagDataExecute` is implemented
+/// on `FlagData` for any flag data type and element type.
+///
+/// This is meant to be private, but needs to be public when defined inside the crate root.
+///
+///
+/// # Example
+///
+/// ```
+/// benches!(
+///     1_000_000; // sieve size
+///     5; // duration in seconds
+///     <algorithm::Stream, flag_data::Bool, u8>(algorithm::Stream);
+///     <algorithm::Stream, flag_data::Bit, u8>(algorithm::Stream);
+/// );
+/// ```
 #[macro_export]
 macro_rules! benches {
     ($size: expr; $duration: expr; $(<$A: ty, $T: ty, $D: ty>($algorithm: expr);)+) => {
@@ -114,6 +131,8 @@ fn perform_bench<S: SieveExecute<A>, A: Algorithm>(
 }
 
 /// Contains the arguments of the program.
+///
+/// This is filled at program startup by the `structopt` crate.
 #[derive(Debug, StructOpt)]
 #[structopt(name = "kulasko-rust")]
 struct Arguments {
@@ -170,6 +189,7 @@ mod test {
         }
     }
 
+    /// Strips away redundant type parameters and static struct types from a [`run_test`] call.
     macro_rules! test {
         (<$A: ty, $T: ty, $D: ty>($algorithm: expr)) => {
             run_test::<Sieve<$A, FlagData<$T, $D>, $D>, $A>($algorithm);

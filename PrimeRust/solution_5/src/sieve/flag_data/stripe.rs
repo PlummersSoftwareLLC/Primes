@@ -1,9 +1,28 @@
+//! Striped bit-sieving using blocks of elements.
+
 use super::{FlagData, FlagDataBase, FlagDataExecute};
 use crate::DataType;
 
+/// Marker for striped bit handling of flag data.
+///
+/// This defines an array of N elements as a block and instead of saving consecutive numbers as
+/// different bits of the same element, it saves them as the same bit for different elements.
+/// This enables it to sieve through each "stripe" of the block without needing to recalculate the
+/// mask. On the other hand, those blocks enforce a much coarser graining for thread work units
+/// since only one thread can be active in a block at a time to prevent data collisions.
+///
+/// This aligns more with the `FlagStorageBitVectorStripedBlocks` struct from `solution_1`, instead
+/// of the `FlagStorageBitVectorStriped` struct. The reason is that striping the entire sieve
+/// doesn't make sense for this solution since it would basically prevent any multi-threaded access.
 pub struct Stripe;
 
+/// The element count of each striped block.
+///
+/// This size is a compromise between speed and scalability; larger blocks have less overhead and
+/// thus perform faster, but smaller blocks allow finer-grained distribution of work to threads.
+/// For this reason, a smaller block size than the one used by `solution_1` is selected.
 pub const STRIPE_SIZE: usize = 1024;
+/// The bit and thus flag count of a striped block.
 const STRIPE_BITS: usize = STRIPE_SIZE * u8::BITS as usize;
 
 impl FlagDataExecute<[u8; STRIPE_SIZE]> for FlagData<Stripe, [u8; STRIPE_SIZE]> {

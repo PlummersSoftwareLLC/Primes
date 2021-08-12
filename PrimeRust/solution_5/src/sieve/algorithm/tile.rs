@@ -1,9 +1,27 @@
+//! Multi-threaded sieving of tiles.
+
 use super::{calculate_batch_size, calculate_block_offset, Algorithm};
 use crate::sieve::{FlagDataExecute, Sieve, SieveBase, SieveExecute};
 use crate::DataType;
 
 use rayon::prelude::*;
 
+/// Marker for tiled execution. Contains the working set size in bytes.
+///
+/// This algorithm works by first finding all primes up to the square root of the sieve size (and
+/// sieving that part of the sieve) with a single thread. Then, the rest of the sieve is split into
+/// work units capped by the provided working set size. For each of this units, one thread sieves
+/// all found primes.
+///
+/// This algorithm has some interesting properties. At infinite cores, its performance is mostly
+/// constrained by searching for the first primes. After that, each thread keeps working on the same
+/// set of memory, providing very high data locality. A working set no larger than the L1 data cache
+/// of a CPU core is essential for optimal performance.
+///
+/// In general, the algorithm should provide near-linear scaling with cores, provided a big enough
+/// working set and sieve size. In practice, the linear portion of the algorithm, the overhead for
+/// each work unit, a working size that doesn't fit into the L1 data cache and suboptimal division
+/// of work between threads can greatly hamper its performance.
 #[derive(Clone, Copy)]
 pub struct Tile(pub usize);
 
@@ -20,18 +38,21 @@ impl<F: FlagDataExecute<D>, D: DataType> SieveExecute<Tile> for Sieve<Tile, F, D
         let primes = get_primes(&mut self.data, cutoff, sqrt);
         let batch_size = calculate_batch_size::<D>(
             self.data.slice().len() - cutoff,
-            self.algorithm.0 * 8 / F::BITS,
+            self.algorithm.0 * 8 / F::BITS, // limit size to parameter
         );
 
+        // second part: tiled sieving in parallel
         self.data.slice()[cutoff..]
             .par_chunks_mut(batch_size)
             .into_par_iter()
             .enumerate()
             .for_each(|(i, slice)| {
+                // flag data initialisation
                 for n in slice.iter_mut() {
                     *n = F::INIT_VALUE;
                 }
 
+                // main loop
                 let offset = (cutoff + i * batch_size) * (F::BITS / F::FLAG_SIZE);
                 for prime in &primes {
                     let start_index = calculate_block_offset(prime * prime / 2, offset, *prime);

@@ -1,3 +1,5 @@
+//! The [`Algorithm`] interface, as well as the implementations.
+
 mod serial;
 mod stream;
 mod tile;
@@ -8,10 +10,13 @@ pub use tile::Tile;
 
 use crate::DataType;
 
+/// Defines an algorithm (and optional execution parameters) for sieve execution.
 pub trait Algorithm: Copy {
+    /// The identification of the algorithm, used for printing.
     const ID_STR: &'static str;
 }
 
+/// Helper method that returns the amount of elements each chunk should contain.
 #[inline]
 fn calculate_batch_size<D: DataType>(data_len: usize, max_size: usize) -> usize {
     let elements_per_line = (64 * 8 / D::BITS).max(1);
@@ -21,6 +26,8 @@ fn calculate_batch_size<D: DataType>(data_len: usize, max_size: usize) -> usize 
     cache_line_align.max(elements_per_line).min(max_size)
 }
 
+/// Calculates the start offset for a sieve pass for a block that is offset to the start of the
+/// sieve.
 #[inline]
 fn calculate_block_offset(start_index: usize, offset: usize, prime: usize) -> usize {
     if offset <= start_index {

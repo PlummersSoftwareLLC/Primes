@@ -1,3 +1,5 @@
+//! Provides the sieve, including all generic components.
+
 pub mod algorithm;
 pub mod flag_data;
 
@@ -7,25 +9,41 @@ pub use flag_data::FlagDataExecute;
 
 use std::marker::PhantomData;
 
+/// Sieve methods and constants that have the same implementation for each algorithm and therefore
+/// only need to be implemented once.
 pub trait SieveBase<A: Algorithm> {
+    /// Identification string for printing.
     const ID_STR: &'static str;
+    /// How many bits each flag occupies.
     const FLAG_SIZE: usize;
+    /// How many bits each data element in the sieve has. Used for printing.
     const BITS: usize;
 
+    /// Provides a new Sieve instance.
+    ///
+    /// # Important
+    ///
+    /// The flag data in the sieve is **not** initialized. Each algorithm is responsible for doing
+    /// that.
     fn new(size: usize, algorithm: A) -> Self;
 
+    /// Returns how many primes were found.
     fn count_primes(&self) -> usize;
 
+    /// Prints all found primes.
     fn print_primes(&self);
 }
 
+/// Sieve methods that are implemented once for each algorithm.
 pub trait SieveExecute<A: Algorithm>: SieveBase<A> {
+    /// Performs the sieving. Other methods can only rely on correct data after this was called.
     fn sieve(&mut self);
 
+    /// Returns the amount of used threads.
     fn thread_count(&self) -> usize;
 }
 
-/// A generic sieve that is used by all [`FlagData`] and [`Algorithm`] types.
+/// A generic sieve that is used by all [`FlagData`](flag_data::FlagData) and [`Algorithm`] types.
 ///
 /// The trait bounds don't really need to be declared here, but it helps with error messages if
 /// something goes wrong.

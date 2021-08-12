@@ -36,7 +36,7 @@ There are some noteworthy exceptions:
 You can just supply the argument to the docker script. For cargo, you have to tell it to treat the argument as a program argument like so:
 `cargo run --release -- --set-size 16`
 
-This solution features extensive documentation (WIP). To take a look at a compiled version, simply run `cargo doc --document-private-items --open`.
+This solution features extensive documentation. To take a look at a compiled version, simply run `cargo doc --document-private-items --open`.
 
 ## Output
 

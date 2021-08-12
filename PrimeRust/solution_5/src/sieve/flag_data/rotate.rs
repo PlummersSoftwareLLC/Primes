@@ -1,8 +1,14 @@
+//! Bit-sieving with a rotating mask.
+
 use super::{FlagData, FlagDataBase, FlagDataExecute};
 use crate::Integer;
 
 use rayon::prelude::*;
 
+/// Marker for bit handling with rotating masks.
+///
+/// This distinguishes itself from the normal bit version by rotating a mask instead of calculating
+/// the mask anew for each flag.
 pub struct Rotate;
 
 impl<D: Integer> FlagDataExecute<D> for FlagData<Rotate, D> {

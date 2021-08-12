@@ -1,6 +1,12 @@
+//! Normal sieving of flag elements.
+
 use super::{FlagData, FlagDataBase, FlagDataExecute};
 use crate::Integer;
 
+/// Marker for boolean (element) handling of flag data.
+///
+/// Sieving works as normal, each flag occupies one element. This is the most straight-forward or
+/// naive version to do flag data.
 pub struct Bool;
 
 impl<D: Integer> FlagDataExecute<D> for FlagData<Bool, D> {
@@ -18,6 +24,7 @@ impl<D: Integer> FlagDataExecute<D> for FlagData<Bool, D> {
     fn fall_through(data: &mut [D], start: usize, interval: usize) {
         let mut i = start;
 
+        // 4-times unrolled loop
         let limit = data.len().saturating_sub(interval * 3);
         while i < limit {
             unsafe {
@@ -29,6 +36,7 @@ impl<D: Integer> FlagDataExecute<D> for FlagData<Bool, D> {
             i += interval * 4;
         }
 
+        // handling of remainder
         while i < data.len() {
             unsafe {
                 *data.get_unchecked_mut(i) = D::ZERO;
