@@ -14,7 +14,7 @@ pub trait Algorithm: Copy {
 
 #[inline]
 fn calculate_batch_size<D: DataType>(data_len: usize, max_size: usize) -> usize {
-    let elements_per_line = 64 * 8 / D::BITS;
+    let elements_per_line = (64 * 8 / D::BITS).max(1);
 
     let thread_align = (data_len + rayon::current_num_threads() - 1) / rayon::current_num_threads();
     let cache_line_align = (thread_align + elements_per_line - 1) & !(elements_per_line - 1);

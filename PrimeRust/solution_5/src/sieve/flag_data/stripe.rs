@@ -56,6 +56,7 @@ impl FlagDataExecute<[u8; STRIPE_SIZE]> for FlagData<Stripe, [u8; STRIPE_SIZE]> 
         }
     }
 
+    #[inline]
     fn is_prime(&self, index: usize) -> bool {
         self.0[index / STRIPE_BITS][index % STRIPE_SIZE]
             & (1 << (index % STRIPE_BITS / STRIPE_SIZE))

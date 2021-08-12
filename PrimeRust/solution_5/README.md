@@ -10,13 +10,13 @@
 Contributors:
 - Kai Rese @Kulasko https://git.h3n.eu/Kulasko
 
-This solution aims to be an extension of `solution_01` by Michael Barker by multiple multithreaded algorithms. Contrary to most approaches that just run independent sieves in parallel, this solution provides algorithms that work on the same sieve. It really is a shame there is no differentiation for this competition.
+This solution aims to extend `solution_01` of Michael Barker by multiple multithreaded algorithms. Contrary to most approaches that just run independent sieves in parallel, this solution provides algorithms that work on the same sieve. It really is a shame there is no differentiation for this competition.
 
 Currently, there are two algorithms:
 - Streaming. After finding a new prime number, all threads work together on a flag unset pass. This takes no advantage of data locality whatsoever, also threads can steal memory from each other's caches between passes, so it should be bottlenecked by cache bandwidth and crosstalk latency. Also, this isn't expected to scale well in any way.
 - Tiled. After a single thread fetches all the primes up to the square root of the total number, a number of threads receive the list of primes and each apply them on their part of the sieve. This has very good data locality, but as threads don't move to where the action happens, they are bound to run dry. If there are no other bottlenecks, this should approach around 50% of CPU core scaling.
 
-Each algorithm is run on each combination of flag handling and internal data primitive that makes sense to test. Others (such as boolean with u32 elements) are tested, but not run.
+Each algorithm runs on each combination of flag handling and internal data primitive that makes sense to test. Others (such as boolean with u32 elements) are tested, but not run.
 
 ## Run instructions
 
@@ -40,15 +40,19 @@ This solution features extensive documentation (WIP). To take a look at a compil
 
 ## Output
 
-This is the output on `stdout` from my old trusty (slow) AMD FX 8350 running at 4.0 Ghz on Manjaro and Rust 1.53:
+This is the output on `stdout` from my old trusty (slow) AMD FX 8350 running at 4.0 Ghz on Manjaro and Rust 1.54:
 
 ```
-kulasko-rust-serial-bool-u8;3551;5.000967992;1;algorithm=base,faithful=yes,bits=8
-kulasko-rust-serial-bit-u32;4385;5.000471221;1;algorithm=base,faithful=yes,bits=1
-kulasko-rust-stream-bool-u8;901;5.000556986;8;algorithm=base,faithful=yes,bits=8
-kulasko-rust-stream-bit-u8;1180;5.002886401;8;algorithm=base,faithful=yes,bits=1
-kulasko-rust-stream-bit-u32;1167;5.004061427;8;algorithm=base,faithful=yes,bits=1
-kulasko-rust-tile-bool-u8;7761;5.000411964;8;algorithm=base,faithful=yes,bits=8
-kulasko-rust-tile-bit-u8;14717;5.000355348;8;algorithm=base,faithful=yes,bits=1
-kulasko-rust-tile-bit-u32;14439;5.000358052;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-stream-bool-u8;1040;5.003987673;8;algorithm=base,faithful=yes,bits=8
+kulasko-rust-stream-bit-u8;1337;5.001003802;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-stream-bit-u32;1346;5.004885685;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-stream-rotate-u8;1343;5.001519454;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-stream-rotate-u32;1328;5.003164175;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-stream-stripe-u8192;1424;5.000396013;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-tile-bool-u8;9521;5.000284562;8;algorithm=base,faithful=yes,bits=8
+kulasko-rust-tile-bit-u8;19683;5.000171782;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-tile-bit-u32;18942;5.000023863;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-tile-rotate-u8;20716;5.000247453;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-tile-rotate-u32;18717;5.000054697;8;algorithm=base,faithful=yes,bits=1
+kulasko-rust-tile-stripe-u8192;22407;5.000130579;8;algorithm=base,faithful=yes,bits=1
 ```

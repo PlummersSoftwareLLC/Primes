@@ -45,6 +45,7 @@ impl<D: Integer> FlagDataExecute<D> for FlagData<Rotate, D> {
         }
     }
 
+    #[inline]
     fn is_prime(&self, index: usize) -> bool {
         (self.0[index / D::BITS] & (D::ONE << (index % D::BITS))) != D::ZERO
     }
