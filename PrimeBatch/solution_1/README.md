@@ -43,7 +43,7 @@ wine cmd /c main.bat /workers:1 /sieveSize:1000000
 This uses `Docker`, which you should have already installed if coming from `BENCHMARK.md`.
 
 ```bash
-docker build --platform amd64 --build-arg workers=1 --build-arg sieveSize=1000000 -t primebatch -f ManualDockerfile . && docker run -d primebatch
+docker build --build-arg workers=1 --build-arg sieveSize=1000000 -t primebatch -f ManualDockerfile . && docker run -d primebatch
 ```
 
 ## Output
