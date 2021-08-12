@@ -23,18 +23,16 @@ impl FlagDataExecute<[u8; STRIPE_SIZE]> for FlagData<Stripe, [u8; STRIPE_SIZE]> 
         let mut bit = start % STRIPE_BITS / STRIPE_SIZE;
         let mut stripe_index = start % STRIPE_SIZE;
 
-        for stripe in start / STRIPE_BITS..data.len() {
-            let block = &mut data[stripe];
-
+        for stripe in data.iter_mut().skip(start / STRIPE_BITS) {
             while bit < u8::BITS as usize {
                 let mask = !(1 << bit);
 
                 while stripe_index < unroll_limit {
                     unsafe {
-                        *block.get_unchecked_mut(stripe_index) &= mask;
-                        *block.get_unchecked_mut(stripe_index + interval) &= mask;
-                        *block.get_unchecked_mut(stripe_index + interval * 2) &= mask;
-                        *block.get_unchecked_mut(stripe_index + interval * 3) &= mask;
+                        *stripe.get_unchecked_mut(stripe_index) &= mask;
+                        *stripe.get_unchecked_mut(stripe_index + interval) &= mask;
+                        *stripe.get_unchecked_mut(stripe_index + interval * 2) &= mask;
+                        *stripe.get_unchecked_mut(stripe_index + interval * 3) &= mask;
                     }
 
                     stripe_index += interval * 4;
@@ -42,7 +40,7 @@ impl FlagDataExecute<[u8; STRIPE_SIZE]> for FlagData<Stripe, [u8; STRIPE_SIZE]> 
 
                 while stripe_index < STRIPE_SIZE {
                     unsafe {
-                        *block.get_unchecked_mut(stripe_index) &= mask;
+                        *stripe.get_unchecked_mut(stripe_index) &= mask;
                     }
 
                     stripe_index += interval;

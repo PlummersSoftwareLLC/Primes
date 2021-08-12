@@ -26,67 +26,33 @@ pub fn main() {
 
     eprintln!("Starting benchmark");
     eprintln!("Working set size is {} kB", arguments.set_size);
-    perform_bench::<Sieve<algorithm::Stream, FlagData<flag_data::Bool, u8>, u8>, algorithm::Stream>(
-        algorithm::Stream,
-        arguments.sieve_size,
-        arguments.duration,
+    benches!(
+        arguments.sieve_size;
+        arguments.duration;
+        <algorithm::Stream, flag_data::Bool, u8>(algorithm::Stream);
+        <algorithm::Stream, flag_data::Bit, u8>(algorithm::Stream);
+        <algorithm::Stream, flag_data::Bit, u32>(algorithm::Stream);
+        <algorithm::Stream, flag_data::Rotate, u8>(algorithm::Stream);
+        <algorithm::Stream, flag_data::Rotate, u32>(algorithm::Stream);
+        <algorithm::Stream, flag_data::Stripe, [u8; STRIPE_SIZE]>(algorithm::Stream);
+        <algorithm::Tile, flag_data::Bool, u8>(algorithm::Tile(arguments.set_size * 1024));
+        <algorithm::Tile, flag_data::Bit, u8>(algorithm::Tile(arguments.set_size * 1024));
+        <algorithm::Tile, flag_data::Bit, u32>(algorithm::Tile(arguments.set_size * 1024));
+        <algorithm::Tile, flag_data::Rotate, u8>(algorithm::Tile(arguments.set_size * 1024));
+        <algorithm::Tile, flag_data::Rotate, u32>(algorithm::Tile(arguments.set_size * 1024));
+        <algorithm::Tile, flag_data::Stripe, [u8; STRIPE_SIZE]>(
+            algorithm::Tile(arguments.set_size * 1024)
+        );
     );
-    perform_bench::<Sieve<algorithm::Stream, FlagData<flag_data::Bit, u8>, u8>, algorithm::Stream>(
-        algorithm::Stream,
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<Sieve<algorithm::Stream, FlagData<flag_data::Bit, u32>, u32>, algorithm::Stream>(
-        algorithm::Stream,
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<Sieve<algorithm::Stream, FlagData<flag_data::Rotate, u8>, u8>, algorithm::Stream>(
-        algorithm::Stream,
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<
-        Sieve<algorithm::Stream, FlagData<flag_data::Rotate, u32>, u32>,
-        algorithm::Stream,
-    >(algorithm::Stream, arguments.sieve_size, arguments.duration);
-    perform_bench::<
-        Sieve<algorithm::Stream, FlagData<flag_data::Stripe, [u8; STRIPE_SIZE]>, [u8; STRIPE_SIZE]>,
-        algorithm::Stream,
-    >(algorithm::Stream, arguments.sieve_size, arguments.duration);
-    perform_bench::<Sieve<algorithm::Tile, FlagData<flag_data::Bool, u8>, u8>, algorithm::Tile>(
-        algorithm::Tile(arguments.set_size * 1024),
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<Sieve<algorithm::Tile, FlagData<flag_data::Bit, u8>, u8>, algorithm::Tile>(
-        algorithm::Tile(arguments.set_size * 1024),
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<Sieve<algorithm::Tile, FlagData<flag_data::Bit, u32>, u32>, algorithm::Tile>(
-        algorithm::Tile(arguments.set_size * 1024),
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<Sieve<algorithm::Tile, FlagData<flag_data::Rotate, u8>, u8>, algorithm::Tile>(
-        algorithm::Tile(arguments.set_size * 1024),
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<Sieve<algorithm::Tile, FlagData<flag_data::Rotate, u32>, u32>, algorithm::Tile>(
-        algorithm::Tile(arguments.set_size * 1024),
-        arguments.sieve_size,
-        arguments.duration,
-    );
-    perform_bench::<
-        Sieve<algorithm::Tile, FlagData<flag_data::Stripe, [u8; STRIPE_SIZE]>, [u8; STRIPE_SIZE]>,
-        algorithm::Tile,
-    >(
-        algorithm::Tile(arguments.set_size * 1024),
-        arguments.sieve_size,
-        arguments.duration,
-    );
+}
+
+#[macro_export]
+macro_rules! benches {
+    ($size: expr; $duration: expr; $(<$A: ty, $T: ty, $D: ty>($algorithm: expr);)+) => {
+        $(
+            perform_bench::<Sieve<$A, FlagData<$T, $D>, $D>, $A>($algorithm, $size, $duration);
+        )+
+    };
 }
 
 /// Executes a specific bench and prints the result.
@@ -204,153 +170,114 @@ mod test {
         }
     }
 
+    macro_rules! test {
+        (<$A: ty, $T: ty, $D: ty>($algorithm: expr)) => {
+            run_test::<Sieve<$A, FlagData<$T, $D>, $D>, $A>($algorithm);
+        };
+    }
+
     #[test]
     fn serial_bool_u8() {
-        run_test::<Sieve<algorithm::Serial, FlagData<flag_data::Bool, u8>, u8>, algorithm::Serial>(
-            algorithm::Serial,
-        );
+        test!(<algorithm::Serial, flag_data::Bool, u8>(algorithm::Serial));
     }
 
     #[test]
     fn serial_bool_u32() {
-        run_test::<Sieve<algorithm::Serial, FlagData<flag_data::Bool, u32>, u32>, algorithm::Serial>(
-            algorithm::Serial,
-        );
+        test!(<algorithm::Serial, flag_data::Bool, u32>(algorithm::Serial));
     }
 
     #[test]
     fn serial_bit_u8() {
-        run_test::<Sieve<algorithm::Serial, FlagData<flag_data::Bit, u8>, u8>, algorithm::Serial>(
-            algorithm::Serial,
-        );
+        test!(<algorithm::Serial, flag_data::Bit, u8>(algorithm::Serial));
     }
 
     #[test]
     fn serial_bit_u32() {
-        run_test::<Sieve<algorithm::Serial, FlagData<flag_data::Bit, u32>, u32>, algorithm::Serial>(
-            algorithm::Serial,
-        );
+        test!(<algorithm::Serial, flag_data::Bit, u32>(algorithm::Serial));
     }
 
     #[test]
     fn serial_rotate_u8() {
-        run_test::<Sieve<algorithm::Serial, FlagData<flag_data::Rotate, u8>, u8>, algorithm::Serial>(
-            algorithm::Serial,
-        );
+        test!(<algorithm::Serial, flag_data::Rotate, u8>(algorithm::Serial));
     }
 
     #[test]
     fn serial_rotate_u32() {
-        run_test::<
-            Sieve<algorithm::Serial, FlagData<flag_data::Rotate, u32>, u32>,
-            algorithm::Serial,
-        >(algorithm::Serial);
+        test!(<algorithm::Serial, flag_data::Rotate, u32>(algorithm::Serial));
     }
 
     #[test]
     fn serial_stripe() {
-        run_test::<
-            Sieve<
-                algorithm::Serial,
-                FlagData<flag_data::Stripe, [u8; STRIPE_SIZE]>,
-                [u8; STRIPE_SIZE],
-            >,
-            algorithm::Serial,
-        >(algorithm::Serial);
+        test!(<algorithm::Serial, flag_data::Stripe, [u8; STRIPE_SIZE]>(algorithm::Serial));
     }
 
     #[test]
     fn stream_bool_u8() {
-        run_test::<Sieve<algorithm::Stream, FlagData<flag_data::Bool, u8>, u8>, algorithm::Stream>(
-            algorithm::Stream,
-        );
+        test!(<algorithm::Stream, flag_data::Bool, u8>(algorithm::Stream));
     }
 
     #[test]
     fn stream_bool_u32() {
-        run_test::<Sieve<algorithm::Stream, FlagData<flag_data::Bool, u32>, u32>, algorithm::Stream>(
-            algorithm::Stream,
-        );
+        test!(<algorithm::Stream, flag_data::Bool, u32>(algorithm::Stream));
     }
 
     #[test]
     fn stream_bit_u8() {
-        run_test::<Sieve<algorithm::Stream, FlagData<flag_data::Bit, u8>, u8>, algorithm::Stream>(
-            algorithm::Stream,
-        );
+        test!(<algorithm::Stream, flag_data::Bit, u8>(algorithm::Stream));
     }
 
     #[test]
     fn stream_bit_u32() {
-        run_test::<Sieve<algorithm::Stream, FlagData<flag_data::Bit, u32>, u32>, algorithm::Stream>(
-            algorithm::Stream,
-        );
+        test!(<algorithm::Stream, flag_data::Bit, u32>(algorithm::Stream));
     }
 
     #[test]
     fn stream_rotate_u8() {
-        run_test::<Sieve<algorithm::Stream, FlagData<flag_data::Rotate, u8>, u8>, algorithm::Stream>(
-            algorithm::Stream,
-        );
+        test!(<algorithm::Stream, flag_data::Rotate, u8>(algorithm::Stream));
     }
 
     #[test]
     fn stream_rotate_u32() {
-        run_test::<
-            Sieve<algorithm::Stream, FlagData<flag_data::Rotate, u32>, u32>,
-            algorithm::Stream,
-        >(algorithm::Stream);
+        test!(<algorithm::Stream, flag_data::Rotate, u32>(algorithm::Stream));
     }
 
     #[test]
     fn stream_stripe() {
-        run_test::<
-            Sieve<
-                algorithm::Stream,
-                FlagData<flag_data::Stripe, [u8; STRIPE_SIZE]>,
-                [u8; STRIPE_SIZE],
-            >,
-            algorithm::Stream,
-        >(algorithm::Stream);
+        test!(<algorithm::Stream, flag_data::Stripe, [u8; STRIPE_SIZE]>(algorithm::Stream));
     }
 
     #[test]
     fn tile_bool_u8() {
-        run_test::<Sieve<algorithm::Tile, FlagData<flag_data::Bool, u8>, u8>, algorithm::Tile>(
-            algorithm::Tile(1 << 14),
-        );
+        test!(<algorithm::Tile, flag_data::Bool, u8>(algorithm::Tile(1 << 14)));
     }
 
     #[test]
     fn tile_bool_u32() {
-        run_test::<Sieve<algorithm::Tile, FlagData<flag_data::Bool, u32>, u32>, algorithm::Tile>(
-            algorithm::Tile(1 << 14),
-        );
+        test!(<algorithm::Tile, flag_data::Bool, u32>(algorithm::Tile(1 << 14)));
     }
 
     #[test]
     fn tile_bit_u8() {
-        run_test::<Sieve<algorithm::Tile, FlagData<flag_data::Bit, u8>, u8>, algorithm::Tile>(
-            algorithm::Tile(1 << 14),
-        );
+        test!(<algorithm::Tile, flag_data::Bit, u8>(algorithm::Tile(1 << 14)));
     }
 
     #[test]
     fn tile_bit_u32() {
-        run_test::<Sieve<algorithm::Tile, FlagData<flag_data::Bit, u32>, u32>, algorithm::Tile>(
-            algorithm::Tile(1 << 14),
-        );
+        test!(<algorithm::Tile, flag_data::Bit, u32>(algorithm::Tile(1 << 14)));
+    }
+
+    #[test]
+    fn tile_rotate_u8() {
+        test!(<algorithm::Tile, flag_data::Rotate, u8>(algorithm::Tile(1 << 14)));
+    }
+
+    #[test]
+    fn tile_rotate_u32() {
+        test!(<algorithm::Tile, flag_data::Rotate, u32>(algorithm::Tile(1 << 14)));
     }
 
     #[test]
     fn tile_stripe() {
-        run_test::<
-            Sieve<
-                algorithm::Tile,
-                FlagData<flag_data::Stripe, [u8; STRIPE_SIZE]>,
-                [u8; STRIPE_SIZE],
-            >,
-            algorithm::Tile,
-        >(algorithm::Tile(1 << 14));
+        test!(<algorithm::Tile, flag_data::Stripe, [u8; STRIPE_SIZE]>(algorithm::Tile(1 << 14)));
     }
 }
