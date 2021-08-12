@@ -6,14 +6,14 @@ pub use serial::Serial;
 pub use stream::Stream;
 pub use tile::Tile;
 
-use crate::Integer;
+use crate::DataType;
 
 pub trait Algorithm: Copy {
     const ID_STR: &'static str;
 }
 
 #[inline]
-fn calculate_batch_size<D: Integer>(data_len: usize, max_size: usize) -> usize {
+fn calculate_batch_size<D: DataType>(data_len: usize, max_size: usize) -> usize {
     let elements_per_line = 64 * 8 / D::BITS;
 
     let thread_align = (data_len + rayon::current_num_threads() - 1) / rayon::current_num_threads();

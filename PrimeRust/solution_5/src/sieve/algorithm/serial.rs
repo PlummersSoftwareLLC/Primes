@@ -1,6 +1,6 @@
 use super::Algorithm;
 use crate::sieve::{FlagDataExecute, Sieve, SieveExecute};
-use crate::Integer;
+use crate::DataType;
 
 #[derive(Clone, Copy)]
 pub struct Serial;
@@ -9,7 +9,7 @@ impl Algorithm for Serial {
     const ID_STR: &'static str = "serial";
 }
 
-impl<F: FlagDataExecute<D>, D: Integer> SieveExecute<Serial> for Sieve<Serial, F, D> {
+impl<F: FlagDataExecute<D>, D: DataType> SieveExecute<Serial> for Sieve<Serial, F, D> {
     #[inline]
     fn sieve(&mut self) {
         for n in self.data.slice() {

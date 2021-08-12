@@ -1,22 +1,26 @@
 mod bit;
 mod bool;
+mod rotate;
+mod stripe;
 
 pub use self::bool::Bool;
 pub use bit::Bit;
+pub use rotate::Rotate;
+pub use stripe::{Stripe, STRIPE_SIZE};
 
-use crate::integer::Integer;
-
+use crate::data_type::DataType;
 use std::marker::PhantomData;
 
-pub trait FlagDataBase<D: Integer> {
+pub trait FlagDataBase<D: DataType> {
     fn allocate(data_size: usize) -> Self;
     fn slice(&mut self) -> &mut [D];
 }
 
-pub trait FlagDataExecute<D: Integer>: FlagDataBase<D> {
+pub trait FlagDataExecute<D: DataType>: FlagDataBase<D> {
     const ID_STR: &'static str;
     const FLAG_SIZE: usize;
     const INIT_VALUE: D;
+    const BITS: usize;
 
     fn new(size: usize) -> Self;
 
@@ -29,9 +33,9 @@ pub trait FlagDataExecute<D: Integer>: FlagDataBase<D> {
     fn count_primes(&self, size: usize) -> usize;
 }
 
-pub struct FlagData<T, D: Integer>(Box<[D]>, PhantomData<T>);
+pub struct FlagData<T, D: DataType>(Box<[D]>, PhantomData<T>);
 
-impl<T, D: Integer> FlagDataBase<D> for FlagData<T, D> {
+impl<T, D: DataType> FlagDataBase<D> for FlagData<T, D> {
     #[inline]
     fn allocate(data_size: usize) -> Self {
         let data = unsafe {

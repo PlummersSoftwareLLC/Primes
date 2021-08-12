@@ -1,7 +1,7 @@
 pub mod algorithm;
 pub mod flag_data;
 
-use crate::Integer;
+use crate::DataType;
 pub use algorithm::Algorithm;
 pub use flag_data::FlagDataExecute;
 
@@ -29,7 +29,7 @@ pub trait SieveExecute<A: Algorithm>: SieveBase<A> {
 ///
 /// The trait bounds don't really need to be declared here, but it helps with error messages if
 /// something goes wrong.
-pub struct Sieve<A: Algorithm, F: FlagDataExecute<D>, D: Integer> {
+pub struct Sieve<A: Algorithm, F: FlagDataExecute<D>, D: DataType> {
     /// The data container.
     data: F,
     /// The amount of numbers the sieve data represents.
@@ -47,11 +47,11 @@ impl<A, F, D> SieveBase<A> for Sieve<A, F, D>
 where
     A: Algorithm,
     F: FlagDataExecute<D>,
-    D: Integer,
+    D: DataType,
 {
     const ID_STR: &'static str = F::ID_STR;
     const FLAG_SIZE: usize = F::FLAG_SIZE;
-    const BITS: usize = D::BITS;
+    const BITS: usize = F::BITS;
 
     #[inline]
     fn new(size: usize, algorithm: A) -> Self {

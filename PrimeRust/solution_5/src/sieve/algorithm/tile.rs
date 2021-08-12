@@ -1,6 +1,6 @@
 use super::{calculate_batch_size, calculate_block_offset, Algorithm};
 use crate::sieve::{FlagDataExecute, Sieve, SieveBase, SieveExecute};
-use crate::Integer;
+use crate::DataType;
 
 use rayon::prelude::*;
 
@@ -11,16 +11,16 @@ impl Algorithm for Tile {
     const ID_STR: &'static str = "tile";
 }
 
-impl<F: FlagDataExecute<D>, D: Integer> SieveExecute<Tile> for Sieve<Tile, F, D> {
+impl<F: FlagDataExecute<D>, D: DataType> SieveExecute<Tile> for Sieve<Tile, F, D> {
     fn sieve(&mut self) {
         let sqrt = (self.size as f64).sqrt() as usize;
-        let cutoff = ((sqrt + 1) / 2 * F::FLAG_SIZE + D::BITS - 1) / D::BITS;
+        let cutoff = ((sqrt + 1) / 2 * F::FLAG_SIZE + F::BITS - 1) / F::BITS;
 
         // first part: get the primes that have to be checked
         let primes = get_primes(&mut self.data, cutoff, sqrt);
         let batch_size = calculate_batch_size::<D>(
             self.data.slice().len() - cutoff,
-            self.algorithm.0 * 8 / D::BITS,
+            self.algorithm.0 * 8 / F::BITS,
         );
 
         self.data.slice()[cutoff..]
@@ -32,7 +32,7 @@ impl<F: FlagDataExecute<D>, D: Integer> SieveExecute<Tile> for Sieve<Tile, F, D>
                     *n = F::INIT_VALUE;
                 }
 
-                let offset = (cutoff + i * batch_size) * (D::BITS / F::FLAG_SIZE);
+                let offset = (cutoff + i * batch_size) * (F::BITS / F::FLAG_SIZE);
                 for prime in &primes {
                     let start_index = calculate_block_offset(prime * prime / 2, offset, *prime);
                     F::fall_through(slice, start_index, *prime);
@@ -50,7 +50,7 @@ impl<F: FlagDataExecute<D>, D: Integer> SieveExecute<Tile> for Sieve<Tile, F, D>
     }
 }
 
-fn get_primes<F: FlagDataExecute<D>, D: Integer>(
+fn get_primes<F: FlagDataExecute<D>, D: DataType>(
     data: &mut F,
     cutoff: usize,
     sqrt: usize,
@@ -59,7 +59,7 @@ fn get_primes<F: FlagDataExecute<D>, D: Integer>(
         *n = F::INIT_VALUE;
     }
 
-    let data_size = cutoff * D::BITS / F::FLAG_SIZE;
+    let data_size = cutoff * F::BITS / F::FLAG_SIZE;
     let inner_sqrt = ((data_size * 2 + 1) as f64).sqrt() as usize;
     let mut primes = Vec::with_capacity(sqrt / 2);
     let mut bit = 1;
