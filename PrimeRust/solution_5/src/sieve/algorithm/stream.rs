@@ -72,8 +72,14 @@ impl<F: FlagDataExecute<D>, D: DataType> SieveExecute<Stream> for Sieve<Stream, 
     }
 
     fn thread_count(&self) -> usize {
+        let data_size =
+            ((self.data.flag_count() * F::FLAG_SIZE + F::BITS - 1) / F::BITS).max(64 * 8 / F::BITS);
+        let batch_size = calculate_batch_size::<D>(data_size, usize::MAX);
+
+        println!("Batch size {}", batch_size);
+
         std::cmp::min(
-            (self.size + 1) / 2 * Self::FLAG_SIZE / 64,
+            (data_size + batch_size - 1) / batch_size,
             rayon::current_num_threads(),
         )
     }
