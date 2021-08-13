@@ -4,18 +4,17 @@
   "description": "Prime Sieve Implementation in AssemblyScript",
   "main": "index.js",
   "scripts": {
-    "build": "asc -O3",
     "build:bench": "asc -O3 --noAssert --converge --initialMemory 256",
     "build:debug": "asc --debug",
-    "bench": "node --experimental-wasi-unstable-preview1 --wasm-loop-unrolling --no-liftoff index.js"
+    "bench": "node --experimental-wasi-unstable-preview1 --no-wasm-bounds-checks --no-wasm-stack-checks --wasm-loop-unrolling --no-liftoff --turbo-instruction-scheduling index.js"
   },
   "type": "module",
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@assemblyscript/loader": "0.19.7"
+    "@assemblyscript/loader": "0.19.10"
   },
   "devDependencies": {
-    "assemblyscript": "0.19.7"
+    "assemblyscript": "0.19.10"
   }
 }

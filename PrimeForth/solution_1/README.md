@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is a straighforward port of Dave's algorithm to Forth (tested with GForth).
+This is a straightforward port of Dave's algorithm to Forth (tested with GForth).
 
 The state of the sieve is stored in dictionary-allocated memory, and allocated,
 initialized and deallocated on every iteration.

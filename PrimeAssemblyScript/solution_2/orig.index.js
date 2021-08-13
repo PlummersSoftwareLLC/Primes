@@ -5,7 +5,7 @@ import loader from "@assemblyscript/loader";
 import { WASI } from 'wasi';
 
 const wasi = new WASI();
-const binary = fs.readFile("./dist/release.wasm");
+const binary = fs.readFile("./dist/orig.wasm");
 const result = await loader.instantiate(binary, { wasi_snapshot_preview1: wasi.wasiImport });
 
 wasi.start(result);

@@ -52,8 +52,8 @@ fun create_sieve limit =
                             (* Clear prime's multiples *)
                             val clear_start = new_factor * new_factor
                             val increment = new_factor * 2
-                            val clear_indices = until (fn x => x > limit) (map (fn x => x * increment + clear_start) (count 0))
-                            val _ = app clear_bit clear_indices
+                            val clear_indices = Vector.tabulate ((limit - clear_start) div increment + 1, fn x => x*increment+clear_start)
+                            val _ = Vector.app clear_bit clear_indices
                         in
                             run (new_factor + 2)
                         end
@@ -91,7 +91,7 @@ fun create_sieve limit =
                 else 
                     ()
             in
-                print ("NotMatthewGriffin_SMLofNJ;" ^ (Int.toString passes) ^ ";" ^ (Time.toString duration) ^ ";1;algorithm=base,faithful=yes,bits=1")
+                print ("NotMatthewGriffin_SML;" ^ (Int.toString passes) ^ ";" ^ (Time.toString duration) ^ ";1;algorithm=base,faithful=yes,bits=1")
             end
     in
         {

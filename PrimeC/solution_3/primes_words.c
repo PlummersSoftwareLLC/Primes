@@ -113,6 +113,10 @@ static inline void block_cross_out(
     unsigned int grow;
     unsigned int end_of_block_idx;
 
+    unsigned int prime_2 = prime * 2;
+    unsigned int prime_3 = prime * 3;
+    unsigned int prime_4 = prime * 4;
+    unsigned int save_len = 0;
     if (prime < 32U) {
         // crossout so we are atleast in the next word
         while (current_word == start_word) {
@@ -149,6 +153,19 @@ static inline void block_cross_out(
                 next_start_index += prime;
             }
             // now apply this mask to all words with steps of the prime
+            save_len = 0;
+            if (max_word_block > prime_3) {
+                save_len = max_word_block - prime_3;
+            }
+
+            while (current_word <= save_len && save_len !=0) {
+                sieve_state->bit_array[current_word] |=  current_mask;
+                sieve_state->bit_array[current_word + prime] |=  current_mask;
+                sieve_state->bit_array[current_word + prime_2] |=  current_mask;
+                sieve_state->bit_array[current_word + prime_3] |=  current_mask;
+                current_word += prime_4;
+            }
+
             while (current_word <= max_word_block) {
                 sieve_state->bit_array[current_word] |=  current_mask;
                 current_word += prime;
@@ -169,7 +186,11 @@ static inline void block_cross_out(
             current_word = next_start_index >> SHIFT;
             start_word = current_word;
         }
-        max_word_block = max_word;
+
+        max_word_block += BLOCK_SIZE;
+        if (max_word_block > max_word) {
+            max_word_block = max_word;
+        }
     }
 }
 

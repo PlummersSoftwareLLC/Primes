@@ -26,7 +26,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
     // share most of their functionality.
     //
     // This is explained more at the actual definition of `CommonSieveFunctions`, which is defined after this class.
-    mixin CommonSieveFunctions;
+    mixin CommonSieveFunctions!8;
 
     // You can apply qualifiers and attributes in a block, kind of like `public:` from C/C++, 
     // but less annoying.
@@ -96,7 +96,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
 // to shoe-horn as many of D's cool features as I could.
 //
 // Mixin templates have some pretty cool uses, but this is one of the simpler ways to use them.
-mixin template CommonSieveFunctions()
+mixin template CommonSieveFunctions(size_t bitSize)
 {   
     // D allows nesting imports into _any_ scope, in order to avoid symbol pollution, and
     // it also allows D to write more "file-portable" code.
@@ -112,12 +112,12 @@ mixin template CommonSieveFunctions()
     {
         // Fairly standard bitty stuff.
         assert(index % 2 == 1, "Index is even?");
-        return (this._bits[index / 8] & (1 << (index % 8))) != 0;
+        return (this._bits[index / bitSize] & (1 << (index % bitSize))) != 0;
     }
 
     private void clearBit(size_t index) @nogc nothrow
     {
-        this._bits[index / 8] &= ~(1 << (index % 8));
+        this._bits[index / bitSize] &= ~(1 << (index % bitSize));
     }
 
     private size_t countPrimes() nothrow inout
@@ -264,7 +264,7 @@ mixin template RunSieve()
 // This is the faithful, runtime-based version of `SieveRT`
 final class SieveRT
 {
-    mixin CommonSieveFunctions;
+    mixin CommonSieveFunctions!8;
 
     private ubyte[] _bits;
     private size_t _sieveSize;
@@ -405,11 +405,11 @@ final class SieveRT_LookupTable(size_t SieveSize)
     }
 }
 
-final class SieveRT_8
+final class SieveRTBX(alias BitT)
 {
     mixin RunSieve; 
 
-    private bool[] _bits;
+    private BitT[] _bits;
     private size_t _sieveSize;
     private alias SieveSize = _sieveSize;
 
@@ -418,18 +418,18 @@ final class SieveRT_8
     this(size_t sieveSize)
     {
         this._bits.length = sieveSize/2;
-        this._bits[] = true;
+        this._bits[] = 1;
         this._sieveSize = sieveSize;
     }
 
     private bool getBit(size_t index) nothrow inout
     {
-        return this._bits[index/2];
+        return this._bits[index/2] == 1;
     }
 
     private void clearBit(size_t index) @nogc nothrow
     {
-        this._bits[index/2] = false;
+        this._bits[index/2] = 0;
     }
 
     private size_t countPrimes() nothrow inout
@@ -459,9 +459,9 @@ string generateSieveRT(alias BitType)()
 
     // q{} are token strings: Strings that must evaluate to D tokens.
     return format!q{
-    final class SieveRT_%s
+    final class SieveRTB1_%s
     {
-        mixin CommonSieveFunctions;
+        mixin CommonSieveFunctions!%s;
 
         private %s[] _bits;
         private size_t _sieveSize;
@@ -471,8 +471,8 @@ string generateSieveRT(alias BitType)()
 
         this(size_t sieveSize)
         {
-            this._bits.length = alignTo!8(sieveSize) / 8;
-            this._bits[] = ubyte.max;
+            this._bits.length = alignTo!%s(sieveSize) / %s;
+            this._bits[] = %s.max;
             this._sieveSize = sieveSize;
         }
 
@@ -485,6 +485,10 @@ string generateSieveRT(alias BitType)()
     }
     }(
         BitType.sizeof * 8,
+        BitType.sizeof * 8,
+        BitType.stringof,
+        BitType.sizeof * 8,
+        BitType.sizeof * 8,
         BitType.stringof
     );
 }
@@ -495,18 +499,30 @@ mixin(generateSieveRT!ulong);
 // ditto, but for running them!
 // But.. what if we got the format string from an external file first?
 immutable RUN_SIEVE_FORMAT = import("run_sieve.d"); // String import paths are relative to the /views/ folder.
-string generateSieveRTRunner(string Alias, alias BitType)()
+immutable RUN_SIEVE_LEADERBOARD_FORMAT = import("run_sieve_leaderboard.d");
+string generateSieveRTRunner(string Alias, alias BitType, bool UseLeaderboardVersion = false)()
 {
     import std.format : format;
 
     // Now, I didn't promise maintainable code, but I think I've snuck in the vast majority of D's cooler features.
     const bits = BitType.sizeof * 8;
-    return format!RUN_SIEVE_FORMAT(
-        Alias, bits,
-        Alias,
-        Alias, bits,
-        Alias, bits
-    );
+    
+    static if(UseLeaderboardVersion)
+    {
+        return format!RUN_SIEVE_LEADERBOARD_FORMAT(
+            Alias, bits,
+            Alias, 1,
+        );
+    }
+    else
+    {
+        return format!RUN_SIEVE_FORMAT(
+            Alias, bits,
+            Alias, 1,
+            Alias, 1,
+            Alias, 1
+        );
+    }
 }
 
 enum PRIME_COUNT = 1_000_000;
@@ -553,9 +569,22 @@ void main(string[] args)
             runSingleThreaded!s2(IsFaithful.yes);
             runMultiThreaded!(s2, st)(Yes.faithful);
 
-            alias s3 = SieveRT_8;
+            alias s3 = SieveRTBX!ubyte;
             runSingleThreaded!s3(IsFaithful.yes, "base", 8);
-            runMultiThreaded!(s3, st)(IsFaithful.yes, "base", 8);
+
+            alias s4 = SieveRTCT_Cheatiness!PRIME_COUNT;
+            runMultiThreaded!(s4, st)(IsFaithful.no, "other", 1);
+
+            mixin(generateSieveRTRunner!("s5", ushort, true));
+            mixin(generateSieveRTRunner!("s6", uint, true));
+            mixin(generateSieveRTRunner!("s7", ulong, true));
+
+            alias s8 = SieveRTB1_64;
+            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
+
+            // This one is here just to have a "non-bool yet used as a bool" version there.
+            alias s9 = SieveRTBX!ulong;
+            runSingleThreaded!s9(IsFaithful.yes, "base", 64);
             break;
 
         case all:
@@ -570,16 +599,16 @@ void main(string[] args)
             runMultiThreaded!(s2, dt)(Yes.faithful);
 
             alias s3 = SieveRTCT_Cheatiness!PRIME_COUNT;
-            runSingleThreaded!s3(IsFaithful.no & IsFaithful.no & IsFaithful.no, "other", 0);
-            runMultiThreaded!(s3, st)(IsFaithful.no, "other", 0);
-            runMultiThreaded!(s3, dt)(IsFaithful.no, "other", 0);
+            runSingleThreaded!s3(IsFaithful.no & IsFaithful.no & IsFaithful.no, "other", 1);
+            runMultiThreaded!(s3, st)(IsFaithful.no, "other", 1);
+            runMultiThreaded!(s3, dt)(IsFaithful.no, "other", 1);
 
             alias s4 = SieveRT_LookupTable!PRIME_COUNT;
             runSingleThreaded!s4(IsFaithful.no, "lookup", 1);
             runMultiThreaded!(s4, dt)(IsFaithful.no, "lookup", 1);
             runMultiThreaded!(s4, st)(IsFaithful.no, "lookup", 1);
 
-            alias s5 = SieveRT_8;
+            alias s5 = SieveRTBX!ubyte;
             runSingleThreaded!s5(IsFaithful.yes, "base", 8);
             runMultiThreaded!(s5, dt)(IsFaithful.yes, "base", 8);
             runMultiThreaded!(s5, st)(IsFaithful.yes, "base", 8);
@@ -587,6 +616,21 @@ void main(string[] args)
             mixin(generateSieveRTRunner!("s6", ushort));
             mixin(generateSieveRTRunner!("s7", uint));
             mixin(generateSieveRTRunner!("s8", ulong));
+
+            alias s9 = SieveRTBX!ushort;
+            runSingleThreaded!s9(IsFaithful.yes, "base", 16);
+            runMultiThreaded!(s9, dt)(IsFaithful.yes, "base", 16);
+            runMultiThreaded!(s9, st)(IsFaithful.yes, "base", 16);
+
+            alias s10 = SieveRTBX!ushort;
+            runSingleThreaded!s10(IsFaithful.yes, "base", 32);
+            runMultiThreaded!(s10, dt)(IsFaithful.yes, "base", 32);
+            runMultiThreaded!(s10, st)(IsFaithful.yes, "base", 32);
+
+            alias s11 = SieveRTBX!ushort;
+            runSingleThreaded!s11(IsFaithful.yes, "base", 64);
+            runMultiThreaded!(s11, dt)(IsFaithful.yes, "base", 64);
+            runMultiThreaded!(s11, st)(IsFaithful.yes, "base", 64);
             break;
     }
 }
@@ -625,7 +669,7 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = 
         // #1: Using the `is()` expression on a concrete type.
         // #5: We can also execute some code to make it even more generic.
         static if(
-            /*#1*/ is(SieveType == SieveRT) || is(SieveType == SieveRT_8)
+            /*#1*/ is(SieveType == SieveRT) || is(SieveType == SieveRTBX!ubyte)
             /*#5*/ || __traits(identifier, SieveType).canFind("RT")
         )
             scope sieve = new SieveType(PRIME_COUNT);
