@@ -5,8 +5,8 @@
 # different functions for all possible start index offsets and skip
 # modulo pattern bit masks, so instead we settle for 8 * 8 (64).
 const MainUInt = UInt8
-const UINT_BIT_LENGTH = UInt(sizeof(MainUInt) * 8)
-const UINT_DIV_SHIFT = UInt(log2(UINT_BIT_LENGTH))
+const UINT_BIT_LENGTH = sizeof(MainUInt) * 8
+const UINT_BIT_SHIFT = Int(log2(UINT_BIT_LENGTH))
 
 @inline _mul2(i::Integer) = i << 1
 @inline _div2(i::Integer) = i >> 1
@@ -15,7 +15,7 @@ const UINT_DIV_SHIFT = UInt(log2(UINT_BIT_LENGTH))
 @inline _map_to_factor(i::Integer) = _mul2(i) + 1
 # This function also takes inspiration from Base._mod64 (bitarray.jl).
 @inline _mod_uint_length(i::Integer) = i & (UINT_BIT_LENGTH - 1)
-@inline _div_uint_length(i::Integer) = i >> UINT_DIV_SHIFT
+@inline _div_uint_length(i::Integer) = i >> UINT_BIT_SHIFT
 
 
 struct PrimeSieve
@@ -51,13 +51,11 @@ This function should return a `Vector` of length `bit_length`, even if
 the corresponding modulo pattern is shorter than that.
 """
 
-function get_modulo_pattern(start_index::Integer, skip::Integer, bit_length::Integer)
+function get_modulo_pattern(start::Integer, skip::Integer, bit_length::Integer)
     @assert (skip >= 0) "skip must not be less than 0."
     modulo_increment = skip % bit_length
     output = Vector{typeof(modulo_increment)}(undef, bit_length)
-    offset = start_index % bit_length
-    current_modulo = modulo_increment + offset
-    current_modulo %= bit_length
+    current_modulo = start % bit_length
     for index in eachindex(output)
         output[index] = current_modulo
         current_modulo += modulo_increment
@@ -66,29 +64,53 @@ function get_modulo_pattern(start_index::Integer, skip::Integer, bit_length::Int
     return output
 end
 
-function get_modulo_pattern(skip::Integer, bit_length::Integer)
-    return get_modulo_pattern(zero(skip), skip, bit_length)
-end
-
 function generate_modulo_patterns(bit_length::T) where T <: Integer
     output = Dict{Tuple{T,T},Vector{T}}()
-    for start_index in 0:bit_length - 1
+    for start in 0:bit_length - 1
         for skip in 0:bit_length - 1
-            output[(start_index, skip)] = get_modulo_pattern(start_index, skip, bit_length)
+            output[(start, skip)] = get_modulo_pattern(start, skip, bit_length)
         end
     end
     return output
 end
 
+function generate_loop_clearing_function(
+    start::Integer, skip::Integer, modulo_pattern::AbstractVector{T}
+) where T <: Integer
+    func_name = Symbol("_unrolled_clear_bits_start_", start, "_skip_", skip)
+    body_expr = Expr(:block)
+    body_A = body_expr.args
+    for (skip_iter, bit_index) in enumerate(modulo_pattern)
+        push!(body_A, :(
+            arr[(index + skip * $(skip_iter - 1)) >> $UINT_BIT_SHIFT + 1] |=
+            $(MainUInt(1) << bit_index)
+        ))
+    end
+    return :(
+        function $func_name(
+            arr::Vector{MainUInt}, start::Integer, skip::Integer, unrolled_stop::Integer
+        )
+        index = start
+        @inbounds while index < unrolled_stop
+            $body_expr
+            index += skip * $(length(modulo_pattern))
+        end
+    end
+    )
+end
+
+function generate_loop_clearing_function(start::Integer, skip::Integer)
+    return generate_loop_clearing_function(
+        start, skip, get_modulo_pattern(start, skip, UINT_BIT_LENGTH)
+    )
+end
+
 # This is really hacky; we are evaluating function definitions in
-# global scope. It's better than creating a 700 or so line function,
-# though, I guess.
-#= 
-for ((skip, offset), modulo_pattern) in generate_modulo_patterns(UINT_BIT_LENGTH)
-    func_name = Symbol("_clear_loop_skip_", skip, "_offset_", offset)
-    println("func_name: ", func_name)
-    println("mod: ", modulo_pattern)
-end =#
+# global scope. It's better than manually creating a 700 or so line
+# function, though, I guess.
+for ((start, skip), modulo_pattern) in generate_modulo_patterns(UINT_BIT_LENGTH)
+    eval(generate_loop_clearing_function(start, skip, modulo_pattern))
+end
 
 @inline function unsafe_clear_factors!(arr::Vector{<:Unsigned}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
