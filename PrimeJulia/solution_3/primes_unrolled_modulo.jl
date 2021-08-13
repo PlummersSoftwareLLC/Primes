@@ -1,19 +1,21 @@
 # Solution based on PrimeNim/solution_3 by GordonBGood.
 
-const MainUInt = UInt32
-const _uint_bit_length = sizeof(MainUInt) * 8
-const _div_uint_size_shift = Int(log2(_uint_bit_length))
+# This implementation uses a Vector{UInt8} instead of UInt32 since
+# using 32-bit integers would mean needing to generate 32 * 32 (1024)
+# different functions for all possible start index offsets and skip
+# modulo pattern bit masks, so instead we settle for 8 * 8 (64).
+const MainUInt = UInt8
+const UINT_BIT_LENGTH = UInt(sizeof(MainUInt) * 8)
+const UINT_DIV_SHIFT = UInt(log2(UINT_BIT_LENGTH))
 
-# Functions like the ones defined below are also used in Julia's Base
-# library to speed up things such as Julia's native BitArray type.
 @inline _mul2(i::Integer) = i << 1
 @inline _div2(i::Integer) = i >> 1
 # Map factor to index (3 => 1, 5 => 2, 7 => 3, ...) and vice versa.
 @inline _map_to_index(i::Integer) = _div2(i - 1)
 @inline _map_to_factor(i::Integer) = _mul2(i) + 1
 # This function also takes inspiration from Base._mod64 (bitarray.jl).
-@inline _mod_uint_size(i::Integer) = i & (_uint_bit_length - 1)
-@inline _div_uint_size(i::Integer) = i >> _div_uint_size_shift
+@inline _mod_uint_length(i::Integer) = i & (UINT_BIT_LENGTH - 1)
+@inline _div_uint_length(i::Integer) = i >> UINT_DIV_SHIFT
 
 
 struct PrimeSieve
@@ -22,9 +24,9 @@ struct PrimeSieve
 end
 
 # This is more accurate than _div_uint_size(_div2(i)) + 1
-@inline _get_num_uints(i::Integer) = _div_uint_size(
+@inline _get_num_uints(i::Integer) = _div_uint_length(
     # We only store odd numbers starting from 3.
-    _div2(i + (2 * _uint_bit_length - 1))
+    _div2(i + (2 * UINT_BIT_LENGTH - 1))
 )
 
 function PrimeSieve(sieve_size::UInt)
@@ -35,13 +37,66 @@ end
 # for testing in the REPL.
 PrimeSieve(sieve_size::Int) = PrimeSieve(UInt(sieve_size))
 
+"""
+```
+get_modulo_pattern([start_index::Integer], skip::Integer, bit_length::Integer)
+```
+
+This function calculates the modulo patterns used for the factor
+clearing loop. It takes into account both the start index and the skip.
+The modulo patterns of the skip are calculated first, and then shifted
+by the initial offset of the start index.
+
+This function should return a `Vector` of length `bit_length`, even if
+the corresponding modulo pattern is shorter than that.
+"""
+
+function get_modulo_pattern(start_index::Integer, skip::Integer, bit_length::Integer)
+    @assert (skip >= 0) "skip must not be less than 0."
+    modulo_increment = skip % bit_length
+    output = Vector{typeof(modulo_increment)}(undef, bit_length)
+    offset = start_index % bit_length
+    current_modulo = modulo_increment + offset
+    current_modulo %= bit_length
+    for index in eachindex(output)
+        output[index] = current_modulo
+        current_modulo += modulo_increment
+        current_modulo %= bit_length
+    end
+    return output
+end
+
+function get_modulo_pattern(skip::Integer, bit_length::Integer)
+    return get_modulo_pattern(zero(skip), skip, bit_length)
+end
+
+function generate_modulo_patterns(bit_length::T) where T <: Integer
+    output = Dict{Tuple{T,T},Vector{T}}()
+    for start_index in 0:bit_length - 1
+        for skip in 0:bit_length - 1
+            output[(start_index, skip)] = get_modulo_pattern(start_index, skip, bit_length)
+        end
+    end
+    return output
+end
+
+# This is really hacky; we are evaluating function definitions in
+# global scope. It's better than creating a 700 or so line function,
+# though, I guess.
+#= 
+for ((skip, offset), modulo_pattern) in generate_modulo_patterns(UINT_BIT_LENGTH)
+    func_name = Symbol("_clear_loop_skip_", skip, "_offset_", offset)
+    println("func_name: ", func_name)
+    println("mod: ", modulo_pattern)
+end =#
+
 @inline function unsafe_clear_factors!(arr::Vector{<:Unsigned}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
     # This function also uses zero-based indexing calculations similar
     # to unsafe_find_next_factor_index.
     zero_index = _div2(factor * factor)
     @inbounds while zero_index < max_index
-        arr[_div_uint_size(zero_index) + 1] |= MainUInt(1) << _mod_uint_size(zero_index)
+        arr[_div_uint_length(zero_index) + 1] |= MainUInt(1) << _mod_uint_length(zero_index)
         zero_index += factor
     end
 end
@@ -54,8 +109,8 @@ function run_sieve!(sieve::PrimeSieve)
     factor_index = UInt(1) # 0 => 1, 1 => 3, 1 => 5, 2 => 7, ...
     @inbounds while factor_index <= max_factor_index
         if iszero(
-            is_not_prime[_div_uint_size(factor_index) + 1] &
-            (MainUInt(1) << _mod_uint_size(factor_index))
+            is_not_prime[_div_uint_length(factor_index) + 1] &
+            (MainUInt(1) << _mod_uint_length(factor_index))
         )
             unsafe_clear_factors!(is_not_prime, factor_index, max_bits_index)
         end
@@ -70,7 +125,9 @@ end
 
 @inline function unsafe_get_bit_at_index(arr::Vector{<:Unsigned}, index::Integer)
     zero_index = index - 1
-    return @inbounds arr[_div_uint_size(zero_index) + 1] & (MainUInt(1) << _mod_uint_size(zero_index))
+    return @inbounds(
+        arr[_div_uint_length(zero_index) + 1] & (MainUInt(1) << _mod_uint_length(zero_index))
+    )
 end
 
 function count_primes(sieve::PrimeSieve)
