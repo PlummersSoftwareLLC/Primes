@@ -145,7 +145,6 @@ struct Arguments {
     /// The size of the working set in kibibytes. Is used by the tiling algorithm. Should not
     /// exceed your memory layer of choice.
     #[structopt(
-        short,
         long,
         help = "The working set size in kibibytes",
         default_value = "16"
