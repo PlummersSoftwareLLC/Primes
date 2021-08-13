@@ -6,11 +6,12 @@ struct BooleanBitArray {
     typealias Word = UInt
     let wordArraySize: Int
     private let wordSize: Int = 8*MemoryLayout<Word>.size
+    private let log2_wordSize = 8*MemoryLayout<Word>.size &- 1 &- Word(8*MemoryLayout<Word>.size).leadingZeroBitCount
     
     private let words: UnsafeMutableBufferPointer<Word>
     
     init(repeating value: Bool, count arraySize: Int){
-        wordArraySize = (arraySize + (wordSize - 1)) / wordSize
+        wordArraySize = (arraySize &+ (wordSize &- 1)) &>> log2_wordSize
         words = UnsafeMutableBufferPointer<Word>.allocate(capacity: wordArraySize)
         words.initialize(repeating: value ? Word.max : Word(0))
     }
@@ -23,34 +24,35 @@ struct BooleanBitArray {
     //   - This takes advantage of wordSize being a power of 2 to compute
     //     the modulus (%) faster by masking wordSize -1
     @inline(__always) internal func maskIndex(at index: Int) -> (Int, Int) {
-        let wordIndex = index / wordSize
-        let subIndex = index & (wordSize - 1)
+        // a faster implementation of index / wordSize by shifting by log2(wordSize)
+        let wordIndex = index &>> log2_wordSize
+        let subIndex = index & (wordSize &- 1)
         return (wordIndex, subIndex)
     }
 
     @inline(__always) func getBit(at index: Int) -> Bool {
         let (i, m) = maskIndex(at: index)
-        return (words[i] & (Word(1) << m) ) != 0
+        return (words[i] & (Word(1) &<< m) ) != 0
     }
 
     @inline(__always) func setBit(at index: Int) {
         let (i, m) = maskIndex(at: index)
-        words[i] |= (Word(1) << m)
+        words[i] |= (Word(1) &<< m)
     }
 
     @inline(__always) func clearBit(at index: Int) {
         let (i, m) = maskIndex(at: index)
-        words[i] &= ~(Word(1) << m)
+        words[i] &= ~(Word(1) &<< m)
     }
 
 }
 
 func iSqrt(_ x: Int) -> Int {
     if x == 0 { return 0 }
-    let z = x >> 2
-    let r2 = iSqrt(z) << 1
-    let r3 = r2 + 1
-    if x < (r3 * r3) { return r2 }
+    let z = x &>> 2
+    let r2 = iSqrt(z) &<< 1
+    let r3 = r2 &+ 1
+    if x < (r3 &* r3) { return r2 }
     return r3
 }
 
@@ -64,7 +66,7 @@ class Sieve {
     init(limit: Int) {
         sieveLimit = limit
         factorLimit = iSqrt(limit)
-        arraySize = (limit + 1) / 2
+        arraySize = (limit &+ 1) &>> 1
         primeArray = BooleanBitArray(repeating: true, count: arraySize)
     }
 
@@ -73,11 +75,11 @@ class Sieve {
     }
 
     @inline(__always) internal func index(for num: Int) -> Int {
-        return num / 2 - 1 // {3, 5, 7, ...} -> {0, 1, 2, ...}
+        return num &>> 1 &- 1 // {3, 5, 7, ...} -> {0, 1, 2, ...}
     }
     
     @inline(__always) internal func number(at index: Int) -> Int {
-        return index * 2 + 3 // {0, 1, 2, ...} -> {3, 5, 7, ...}
+        return index &<< 1 &+ 3 // {0, 1, 2, ...} -> {3, 5, 7, ...}
     }
 
     func runSieve() {
@@ -86,15 +88,15 @@ class Sieve {
         
         var factorIndex = -1
         repeat {
-            factorIndex += 1
+            factorIndex &+= 1
             if !primeArray.getBit(at: factorIndex) { continue }
             
             let factor = number(at: factorIndex)
-            var nonPrimeIndex = index(for: factor*factor)
+            var nonPrimeIndex = index(for: factor &* factor)
             
             repeat {
                 primeArray.clearBit(at: nonPrimeIndex)
-                nonPrimeIndex += factor
+                nonPrimeIndex &+= factor
             } while ( nonPrimeIndex <= nonPrimeIndexLimit )
         } while factorIndex < factorIndexLimit
     }
@@ -184,7 +186,7 @@ struct PrimeSieveSwift: ParsableCommand {
         repeat {
             let sieve = Sieve(limit: upperLimit)
             sieve.runSieve()
-            passes += 1
+            passes &+= 1
 
             if stopWatch.lap() < maxTime { continue }
             
