@@ -1,4 +1,7 @@
-include("primes_1of2.jl")
+if length(ARGS) != 1
+    error("Please specify the filename of the implementation you wish to test.")
+end
+include(ARGS[1])
 
 # Taken from PrimeCPP/solution_1/PrimeCPP.cpp
 const resultsDictionary = Dict(

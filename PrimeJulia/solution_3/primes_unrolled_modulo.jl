@@ -163,6 +163,7 @@ function generate_final_loop_clearing_function()
     end
 end
 
+# eval is scary!
 eval(generate_final_loop_clearing_function())
 
 
@@ -171,6 +172,8 @@ eval(generate_final_loop_clearing_function())
     # This function also uses zero-based indexing calculations similar
     # to unsafe_find_next_factor_index.
     zero_index = _div2(factor * factor)
+    # This thing is probably going to show up as a possible method
+    # call error.
     unsafe_clear_factors!(arr, zero_index, factor, max_index)
 end
 
@@ -182,8 +185,8 @@ function run_sieve!(sieve::PrimeSieve)
     factor_index = UInt(1) # 0 => 1, 1 => 3, 1 => 5, 2 => 7, ...
     @inbounds while factor_index <= max_factor_index
         if iszero(
-            is_not_prime[_div_uint_length(factor_index) + 1] &
-            (1 << _mod_uint_length(factor_index))
+            is_not_prime[factor_index >> UINT_BIT_SHIFT + 1] &
+            (1 << (factor_index & (UINT_BIT_LENGTH - 1)))
         )
             unsafe_clear_factors!(is_not_prime, factor_index, max_bits_index)
         end
