@@ -17,8 +17,8 @@ Without owning the game:
  - In the server console text box, enter `reload` and press enter
  - After seeing the message `[server] loaded`, run the command `function sieve:full`. This should start the sieve, marked by the message `[server] started`.
  - Upon completion of the calculation, the message `[server] end` should appear, which can take several minutes.
- - Enter `data get primes amount` to return the calculated amount of prime numbers.
- - Enter `data get primes list` to return the full calculated list of prime numbers. This is all also written to `/logs/latest.txt` or one of the `/logs/[date]-[number].log.gz` which can be read and analyzed for accuracy by other programs.
+ - Enter `data get storage primes amount` to return the calculated amount of prime numbers.
+ - Enter `data get storage primes list` to return the full calculated list of prime numbers. This is all also written to `/logs/latest.txt` or one of the `/logs/[date]-[number].log.gz` which can be read and analyzed for accuracy by other programs.
  - To close the server, enter `stop` in the console
  - To do another calculation, run the command `function sieve:reset`, which should finish very quickly and will delete existing data so `function sieve:full` can be run again.
 
@@ -33,8 +33,8 @@ Instructions to run with a singleplayer game client:
  - Re-enter the world. A table titled "sieve" should appear on the right-hand side of the screen.
  - Open the chat (default key: 'T') and enter `/function sieve:full`. This should start the sieve, marked by the message `[username] started`.
  - Upon completion of the calculation, the message `[username] end` should appear, which can take several minutes. These messages are also timestamped in the output log to the millisecond so that performance can be measured.
- - Enter `/data get primes amount` to return the calculated amount of prime numbers.
- - Enter `/data get primes list` to return the full calculated list of prime numbers. This is all also written to the output log and the game log, which can be read and analyzed for accuracy by other programs.
+ - Enter `/data get storage primes amount` to return the calculated amount of prime numbers.
+ - Enter `/data get storage primes list` to return the full calculated list of prime numbers. This is all also written to the output log and the game log, which can be read and analyzed for accuracy by other programs.
  - To do another calculation, run the command `/function sieve:reset` in the chat, which should finish very quickly and will delete existing data so `/function sieve:full` can be run again.
 
 ## Performance
