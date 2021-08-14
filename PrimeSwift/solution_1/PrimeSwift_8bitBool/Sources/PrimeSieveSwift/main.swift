@@ -15,22 +15,33 @@ class Sieve {
 
     deinit { bits.deallocate() }
 
-    @inlinable func index(forNumber num: Int) -> Int {num >> 1 - 1}
+    @inline(__always) internal func index(for num: Int) -> Int {
+        return num / 2 &- 1 // {3, 5, 7, ...} -> {0, 1, 2, ...}
+    }
+    
+    @inline(__always) internal func number(at index: Int) -> Int {
+        return index &* 2 &+ 3 // {0, 1, 2, ...} -> {3, 5, 7, ...}
+    }
 
     func runSieve() {
-        var factor = 3
-        while factor <= factorLimit {
-            while !bits[index(forNumber: factor)] {
-                factor += 2
-            }
-            var nFactor = factor*factor
-            while nFactor <= sieveSize {
-                bits[index(forNumber: nFactor)] = false
-                nFactor += 2*factor
-            }
-            factor += 2
-        }
+        let factorIndexLimit = index(for: factorLimit)
+        let nonPrimeIndexLimit = index(for: sieveSize)
+        
+        var factorIndex = -1
+        repeat {
+            factorIndex &+= 1
+            if !bits[factorIndex] { continue }
+            
+            let factor = number(at: factorIndex)
+            var nonPrimeIndex = index(for: factor &* factor)
+            
+            repeat {
+                bits[nonPrimeIndex] = false
+                nonPrimeIndex &+= factor
+            } while ( nonPrimeIndex <= nonPrimeIndexLimit )
+        } while factorIndex < factorIndexLimit
     }
+    
 }
 
 
@@ -53,7 +64,7 @@ extension Sieve {
     func countPrimes() -> Int {
         var count = 1
         for num in stride(from: 3, to: sieveSize, by: 2) {
-            if bits[index(forNumber: num)] {
+            if bits[index(for: num)] {
                 count += 1
             }
         }
@@ -74,7 +85,7 @@ extension Sieve {
         if showingNumbers {
             print("2, ", terminator: "")
             for num in stride(from: 3, to: sieveSize, by: 2) {
-                if bits[index(forNumber: num)] {
+                if bits[index(for: num)] {
                     print(num, terminator: ", ")
                 }
             }
@@ -84,7 +95,7 @@ extension Sieve {
         
         /// Following 2 lines added by rbergen to conform to drag race output format
         print()
-        print("j-f1_ycub_bool;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=\(8*MemoryLayout<Bool>.size)\n")
+        print("j-f1_yellowcub_bool;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=\(8*MemoryLayout<Bool>.size)\n")
     }
 }
 
@@ -114,17 +125,17 @@ struct PrimeSieveSwift: ParsableCommand {
         var passes = 0
         
         var stopWatch = StopWatch()
-        while true {
+        repeat {
             let sieve = Sieve(limit: upperLimit)
             sieve.runSieve()
-            passes += 1
-
-            if stopWatch.lap() >= maxTime {
-                sieve.printResults(showingNumbers: listResults, duration: stopWatch.stop, passes: passes)
-                break
-            }
-        }
-
+            passes &+= 1
+            
+            if stopWatch.lap() < maxTime { continue }
+            
+            sieve.printResults(showingNumbers: listResults, duration: stopWatch.stop, passes: passes)
+            break
+        } while true
+        
     }
 
 }
