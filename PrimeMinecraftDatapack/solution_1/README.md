@@ -2,7 +2,7 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
-![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-unknown-yellowgreen)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 This sieve uses blocks in Minecraft as array values, and uses Minecraft commands to traverse and modify the array
