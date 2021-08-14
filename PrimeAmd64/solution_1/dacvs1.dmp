@@ -35,7 +35,7 @@
 00 00 40 00 00 00 00 00 # 58 p_vaddr: virtual address of segment in memory (x86: 08048000; amd64: 00400000)
     
 00 00 00 00 00 00 00 00 # 60 p_paddr: physical address of segment, unspecified by 386 supplement
-B5 02 00 00 00 00 00 00 # 68 p_filesz: size in bytes of the segment in the file image ############
+FD 02 00 00 00 00 00 00 # 68 p_filesz: size in bytes of the segment in the file image ############
 
 00 00 C0 7F 00 00 00 00 # 70 p_memsz: size in bytes of the segment in memory; p_filesz <= p_memsz
 00 10 00 00 00 00 00 00 # 78 p_align: 1000 for x86
@@ -90,14 +90,17 @@ EB F0                   #-jump Char             jmp rel8            EB cb
 
 #########################
 # Sift:             =0C #
-E8 D9 01 00 00          #+call Time()           call rel32          E8 cd
+E8 21 02 00 00          #+call Time()           call rel32          E8 cd
 48 89 46 F8             # [rsi-8] = rax         mov r/m64, r64      REX.W + 89 /r       0100 1000   01 000 110
 4D 31 E4                # I.r12 = 0             xor r/m64, r64      REX.W + 31 /r       0100 1101   11 100 100
 
-# Top:              =0A # K < (M+1)/2 =: V
+# Top:              =16 # K < (M+1)/2 =: V
 4C 8D 7D 01             # V.r15 = M.rbp + 1     lea r64, m          REX.W + 8D /r       0100 1100   01 111 101
 49 D1 EF                # V.r15 >>= 1           shr r/m64, 1        REX.W + D1 /5       0100 1001   11 101 111
-4C 89 F8                # rax = V.r15           mov r/m64, r64      REX.W + 89 /r       0100 1100   11 111 000
+49 8D 47 7F             # rax = V.r15 + 7F      lea r64, m          REX.W + 8D /r       0100 1001   01 000 111
+48 C1 E8 06             # rax >>= 6             shr r/m64, imm8     REX.W + C1 /5 ib    0100 1000   11 101 000
+48 C1 E0 03             # rax <<= 3             shl r/m64, imm8     REX.W + C1 /4 ib    0100 1000   11 100 000
+48 89 C6                # rsi = rax             mov r/m64, r64      REX.W + 89 /r       0100 1000   11 000 110
 
 # Calloc:           =1A # RAX=L=#bytes -- RAX=addr RCX=? RDI=?      memory object is an 8-byte int (=L) followed by L bytes
 4D 85 ED                # cmp r13, 0            test r/m64, r64     REX.W + 85 /r       0100 1101   11 101 101
@@ -108,11 +111,11 @@ E8 D9 01 00 00          #+call Time()           call rel32          E8 cd
 48 91                   # rax=0, rcx=L          xchg rax, r64       REX.W + 90+rd       0100 1000
 49 8D 7D 08             # rdi = r13 + 8         lea r64, m          REX.W + 8D /r       0100 1001   01 111 101
 F3 48 AA                # store bytes           rep stos m8         F3 REX.W AA         0100 1000
-49 95                   # rax=addr, r13=0       xchg rax, r64       REX.WB + 90+rd      0100 1001   REX.B, not REX.R. Vol 2A Sec 3.1.1.1
+49 95                   # rax=addr, r13=0       xchg rax, r64       REX.WB + 90+rd      0100 1001
 EB 2A                   #+jump Mark             jmp rel8            EB cb
 
 # Mmap:             =23 # (*) /usr/include/asm-generic/mman-common.h; flag: 2 (private) | 20 (anon)
-49 8D 77 08             # rsi = V.r15 + 8       lea r/m64, m        REX.W + 8D /r       0100 1001   01 110 111
+48 83 C6 08             # rsi += 8              add r/m64, imm8     REX.W + 83 /0 ib    0100 1000   11 000 110
 6A 09 58                # rax = mmap            push imm8; pop      6A ib ; 58+rd
 31 FF                   # rdi = addr (0: any)   xor r/m64, r64      31 /r                           11 111 111
 6A 03 5A                # rdx = prot (*)        push imm8; pop      6A ib ; 58+rd       1 (read) | 2 (write)
@@ -135,31 +138,59 @@ EB 2A                   #+jump Mark             jmp rel8            EB cb
 6A 01 59                # N.rcx = 1             push imm8; pop      6A ib ; 58+rd
 49 89 C9                # NN.r9 = N.rcx         mov r/m64, r64      REX.W + 89 /r       0100 1001   11 001 001
 
-# Odd:              =1B #
+# Odd:              =3B #
 4D 8D 4C 89 04          # NN.r9 = 4*N.rcx+NN.r9+4   lea r64, m      REX.W + 8D /r       0100 1101   01 001 100  10 001 001
 48 83 C1 02             # N.rcx += 2            add r/m64, imm8     REX.W + 83 /0 ib    0100 1000   11 000 001
 49 39 E9                # cmp NN.r9, M.rbp      cmp r/m64, r64      REX.W + 39 /r       0100 1001   11 101 001
-7F 2C                   #+jump Obj if >         jg rel8             7F cb
+7F 69                   #+jump Obj if >         jg rel8             7F cb
 49 89 CB                # K.r11 = N.rcx         mov r/m64, r64      REX.W + 89 /r       0100 1001   11 001 011
 49 D1 EB                # K.r11 >>= 1           shr r/m64, 1        REX.W + D1 /5       0100 1001   11 101 011
-4B 80 3C 1E 00          # [1*K.r11+A.r14]?      cmp r/m8, imm8      REX.W + 80 /7 ib    0100 1011   00 111 100  00 011 110
-75 E5                   #-jump Odd if !=        jne rel8            75 cb
+4D 0F A3 1E             # [A.r14][K.r11]?       bt r/m64, r64       REX.W + 0F A3 /r    0100 1101   00 011 110
+72 E6                   #-jump Odd if CF=1      jc rel8             72 cb
 
-# For:              =10 # for (K = NN/2 - V; K < 0; K += N) [K+A+V] = 1
+90
+90 90 90 90 90 90 90 90
+90 90 90 90 90 90 90 90
+90 90 90 90 90 90 90 90
+90 90 90 90 90 90 90 90
+
+# I tried a solution with the bit test instruction BTS in critical loop Clear.
+# This was shorter but ran slower than the present solution with explicit bit-shifting.
+
+# Loop Clear is faster without an explicit comparison before the jump at the end of the loop.
+# Flags are set after K is augmented.
+# In order to use the flags, we translate K down by V, and we exit the loop when K rolls over.
+# Modifying the untranslated algorithm, the arithmetic works out nicely if V is a multiple of 2^6 (the size of an integer).
+# Same as when we allocate memory for the sieve, we round V up to a multiple of 2^6.
+
+                        # for (K = NN/2    ; K < V; K += N) set [A+8(K/64)][1<<(K%64)]  (before K-translation)
+# For:              =18 # for (K = NN/2 - V; K < 0; K += N) set [A+8((K+V)/64)][1<<((K+V)%64)] = [A+V/8+8(K/64)][1<<(K%64)] if 64 | V
 4D 89 CB                # K.r11 = NN.r9         mov r/m64, r64      REX.W + 89 /r       0100 1101   11 001 011
 49 D1 EB                # K.r11 >>= 1           shr r/m64, 1        REX.W + D1 /5       0100 1001   11 101 011
-4D 29 FB                # K.r11 -= V.r15        sub r/m64, r64      REX.W + 29 /r       0100 1101   11 111 011
-4D 01 F7                # V.r15 += A.r14        add r/m64, r64      REX.W + 01 /r       0100 1101   11 110 111
-90 90 90 90             # Aligning the following important loop makes the program faster on my Skylake machine.
+49 8D 5F 3F             # rbx = V.r15 + 3F      lea r64, m          REX.W + 8D /r       0100 1001   01 011 111
+48 83 E3 C0             # rbx &= C0             and r/m64, imm8     REX.W + 83 /4 ib    0100 1000   11 100 011
+49 29 DB                # K.r11 -= rbx          sub r/m64, r64      REX.W + 29 /r       0100 1001   11 011 011
+48 C1 EB 03             # rbx >>= 3             shr r/m64, imm8     REX.W + C1 /5 ib    0100 1000   11 101 011
+49 01 DE                # A.r14 += rbx          add r/m64, r64      REX.W + 01 /r       0100 1001   11 011 110
 
-# Clear: (crit)     =0A # Unrolling this important loop makes the program no faster on my Skylake machine.
-43 C6 04 1F 01          # [1*K.r11+V.r15] = 1   mov r/m8, imm8      REX + C6 /0 ib      0100 0011   00 000 100  00 011 111       1
+# Init_r10:         =0C #
+51                      # push rcx              push r64            50+rd           S: N
+4C 89 D9                # rcx = K.r11           mov r/m64, r64      REX.W + 89 /r       0100 1100   11 011 001
+6A 01 49 5A             # r10 = 1               push imm8; pop  6A ib ; REX.WB + 58+rd  0100 1001 
+49 D3 C2                # roll r10 left by cl   rol r/m64, cl       REX.W + D3 /0       0100 1001   11 000 010
+59                      # pop rcx               pop r64             58+rd           S:
+
+# Clear: (crit)     =13 #
+4C 89 D8                # rax = K.r11           mov r/m64, r64      REX.W + 89 /r       0100 1100   11 011 000
+48 C1 F8 06             # rax >>= 6             sar r/m64, imm8     REX.W + C1 /7 ib    0100 1000   11 111 000              1  .5
+4D 09 14 C6             # [8*rax+A.r14] |= r10  or r/m64, r64       REX.W + 09 /r       0100 1101   00 010 100  11 000 110  5   1
+49 D3 C2                # roll r10 left by cl   rol r/m64, cl       REX.W + D3 /0       0100 1001   11 000 010              2   2 (1 .5 for r,i)
 49 01 CB                # K.r11 += N.rcx        add r/m64, r64      REX.W + 01 /r       0100 1001   11 001 011              1    .25
-73 F6                   #-jump Clear if <       jnc rel8            73 cb               TODO try PREFETCH instructions?          1-2
+73 ED                   #-jump Clear if CF=0    jnc rel8            73 cb
 
 # End:              =05 #
-4D 29 F7                # V.r15 -= A.r14        sub r/m64, r64      REX.W + 29 /r       0100 1101   11 110 111
-EB C6                   #-jump Odd              jmp rel8            EB cb
+49 29 DE                # A.r14 -= rbx          sub r/m64, r64      REX.W + 29 /r       0100 1001   11 011 110
+EB 89                   #-jump Odd              jmp rel8            EB cd
 
 # Obj:              =04 #
 49 8D 46 F0             # rax = A.r14 - 10      lea r64, m          REX.W + 8D /r       0100 1001   01 000 110
@@ -182,26 +213,26 @@ EB 1B                   #+jump Bot              jmp rel8            EB cb
 6A 3C 58                # rax = exit            push imm8; pop      6A ib ; 58+rd
 0F 05                   # syscall               syscall             0F 05
 
-# Bot:              =15 #
+# Bot:              =1F #
 49 FF C4                # I.r12++               inc r/m64           REX.W + FF /0       0100 1001   11 000 100
-E8 0B 01 00 00          #+call Time()           call rel32          E8 cd
+E8 0A 01 00 00          #+call Time()           call rel32          E8 cd
 48 2B 46 F8             # rax -= [rsi-8]        sub r64, r/m64      REX.W + 2B /r       0100 1000   01 000 110
 BF 00 CA 9A 3B          # rdi = billion         mov r32, imm32      B8+rd id
 48 8D 3C BF             # rdi = 4*rdi+rdi       lea r64, m          REX.W + 8D /r       0100 1000   00 111 100  10 111 111
 48 39 C7                # cmp rdi, rax          cmp r/m64, r64      REX.W + 39 /r       0100 1000   11 000 111
-0F 8F 23 FF FF FF       #-jump Top if >         jg rel32            0F 8F cd
+0F 8F DA FE FF FF       #-jump Top if >         jg rel32            0F 8F cd
 50                      # push rax              push r64            50+rd
 
 #########################
 # Report:           =0C #
 4D 31 C0                # P.r8 = 0              xor r/m64, r64      REX.W + 31 /r       0100 1101   11 000 000
 48 83 FD 02             # cmp M.rbp, 2          cmp r/m64, imm8     REX.W + 83 /7 ib    0100 1000   11 111 101
-7C 29                   #+jump Finish if <      jl rel8             7C cb
+7C 28                   #+jump Finish if <      jl rel8             7C cb
 4D 31 DB                # K.r11 = 0             xor r/m64, r64      REX.W + 31 /r       0100 1101   11 011 011
 
-# Entry:            =1E #
-4B 80 3C 1E 00          # [1*K.r11+A.r14]?      cmp r/m8, imm8      REX.W + 80 /7 ib    0100 1011   00 111 100  00 011 110
-75 17                   #+jump RepEnd if !=     jne rel8            75 cb
+# Entry:            =1D #
+4D 0F A3 1E             # [A.r14][K.r11]?       bt r/m64, r64       REX.W + 0F A3 /r    0100 1101   00 011 110
+72 17                   #+jump RepEnd if CF=1   jc rel8             72 cb
 49 FF C0                # P.r8++                inc r/m64           REX.W + FF /0       0100 1001   11 000 000
 4B 8D 44 1B 01          # rax = 1*K.r11+K.r11+1 lea r64, m          REX.W + 8D /r       0100 1011   01 000 100  00 011 011
 4D 85 DB                # cmp K.r11, 0          test r/m64, r64     REX.W + 85 /r       0100 1101   11 011 011
@@ -209,11 +240,12 @@ BF 00 CA 9A 3B          # rdi = billion         mov r32, imm32      B8+rd id
 48 FF C0                # rax++                 inc r/m64           REX.W + FF /0       0100 1000   11 000 000
 # _mov:                 #            
 B3 50 E8 30 00 00 00    #+call Show(rax, 'P')   call rel32          E8 cd
+#90 90 90 90 90 90 90
 
 # RepEnd:           =08 #
 49 FF C3                # K.r11++               inc r/m64           REX.W + FF /0       0100 1001   11 000 011
 4D 39 FB                # cmp K.r11, V.r15      cmp r/m64, r64      REX.W + 39 /r       0100 1101   11 111 011
-7C DA                   #-jump Entry if <       jl rel8             7C cb
+7C DB                   #-jump Entry if <       jl rel8             7C cb
 
 # Finish:           =28 #
 4C 89 C0                # rax = P.r8            mov r/m64, r64      REX.W + 89 /r       0100 1100   11 000 000
@@ -289,13 +321,13 @@ C3                      # return                ret                 C3
 0F 05                   # syscall               syscall             0F 05
 
 #########################
-# Time():           =1A # -- RAX=time (in nanoseconds since the Unix epoch) RSI=addr RDI=0
+# Time():           =2A # -- RAX=time (in nanoseconds since the Unix epoch) RSI=addr RDI=0
 B8 E4 00 00 00          # rax = clock_gettime   mov r32, imm32      B8+rd id
 31 FF                   # rdi = CLOCK_REALTIME  xor r/m32, r32      31 /r                           11 111 111
 BE 00 00 4F 00          # rsi = addr            mov r32, imm32      B8+rd id
 0F 05                   # syscall               syscall             0F 05
 48 85 C0                # cmp rax, 0            test r/m64, r64     REX.W + 85 /r       0100 1000   11 000 000
-7C 04                   # jump _err if <        jl rel8             7C cb
+7C 0F                   # jump _err if <        jl rel8             7C cb
 48 8B 06                # rax = [rsi]           mov r64, r/m64      REX.W + 8B /r       0100 1000   00 000 110
 48 69 C0 00 CA 9A 3B    # rax *= billion    imul r64, r/m64, imm32  REX.W + 69 /r id    0100 1000   11 000 000
 48 03 46 08             # rax += [rsi+8]        add r64, r/m64      REX.W + 03 /r       0100 1000   01 000 110

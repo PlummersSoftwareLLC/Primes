@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-var label string = "ssovest-go-other-B"
+var label string = "ssovest-go-other-blocks-B"
+
+var blockSize uint64 = 600_000
 
 var primeCounts = map[uint64]uint64{
 	10:        4,
@@ -27,9 +29,13 @@ func NewBitarray(length uint64) Bitarray {
 }
 
 func (b Bitarray) SetSliceTrue(start, stop, step uint64) {
-	var index, next, end uint64
+	var index, next, end, b8e, blockStart, blockEnd uint64
 	var mask uint64
 	end = (stop + 63) / 64
+
+	indices := [64]uint64{}
+	masks := [64]uint64{}
+	idx := 0
 
 	step2 := step * 2
 	step3 := step * 3
@@ -48,35 +54,60 @@ func (b Bitarray) SetSliceTrue(start, stop, step uint64) {
 		start += step
 		next = start / 64
 	}
-
 	b[index] |= mask
 
-	for i := 0; i < 64 && next < end; {
-
-		mask = 0
-		index = next
-		for next == index {
-			mask |= bits.RotateLeft64(1, int(start))
+	
+	for i := 0; i < 64; {
+		indices[idx] = next
+		for next == indices[idx] {
+			masks[idx] |= bits.RotateLeft64(1, int(start))
 			i++
 			start += step
 			next = start / 64
 		}
-
-		for ; index+step8 < end; index += step8 {
-			b[index] |= mask
-			b[index+step] |= mask
-			b[index+step2] |= mask
-			b[index+step3] |= mask
-			b[index+step4] |= mask
-			b[index+step5] |= mask
-			b[index+step6] |= mask
-			b[index+step7] |= mask
-		}
-
-		for ; index < end; index += step {
-			b[index] |= mask
-		}
+		idx++
 	}
+
+	for blockEnd < end {
+		blockEnd += blockSize
+		if blockEnd > end {
+			blockEnd = end
+		}
+
+		b8e = blockEnd - step8
+		if step8 > blockEnd {
+			b8e = 0
+		}
+
+		for i, mask := range masks[:idx] {
+			index = indices[i]
+
+			for ; index < b8e; index += step8 {
+				b[index] |= mask
+				b[index+step] |= mask
+				b[index+step2] |= mask
+				b[index+step3] |= mask
+				b[index+step4] |= mask
+				b[index+step5] |= mask
+				b[index+step6] |= mask
+				b[index+step7] |= mask
+			}
+
+			for ; index+step2 < blockEnd; index += step2 {
+				b[index] |= mask
+				b[index+step] |= mask
+			}
+
+			for ; index < blockEnd; index += step {
+				b[index] |= mask
+			}
+
+			indices[i] = index
+		}
+
+		blockStart += blockSize
+	}
+
 }
 
 func (b Bitarray) Find(val bool, start, stop uint64) uint64 {
@@ -104,14 +135,18 @@ type Sieve struct {
 func (s Sieve) RunSieve() {
 	var factor, start, stop, step uint64
 	stop = (s.size + 1) / 2
+
 	for {
 		factor = s.bits.Find(false, factor+1, stop)
+
 		start = 2 * factor * (factor + 1)
 		step = factor*2 + 1
+
 		// start is factor squared, so it's the same as factor <= q
 		if start >= stop {
 			break
 		}
+
 		s.bits.SetSliceTrue(start, stop, step)
 	}
 }
@@ -126,16 +161,22 @@ func (s Sieve) ValidateResults() bool {
 }
 
 func main() {
-	var limit uint64
+	var limit, bsize uint64
 	var duration time.Duration
 	var verbose bool
 	var sieve Sieve
 
-	flag.Uint64Var(&limit, "limit", 1000000, "limit")
+	flag.Uint64Var(&limit, "limit", 1_000_000, "limit")
+	flag.Uint64Var(&bsize, "block", 128_000, "block size")
 	flag.DurationVar(&duration, "time", 5*time.Second, "duration")
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 
 	flag.Parse()
+
+	if bsize == 0 {
+		bsize = 128_000
+	}
+	blockSize = bsize / 32
 
 	stop := make(chan struct{})
 	passes := 0
