@@ -99,5 +99,5 @@ jobs:
       - name: Scan image
         uses: anchore/scan-action@v2
         with:
-          image: ${{ steps.solution-name.outputs.normalized }}
+          image: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           severity-cutoff: critical
