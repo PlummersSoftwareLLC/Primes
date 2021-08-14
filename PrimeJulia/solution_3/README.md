@@ -77,8 +77,11 @@ machines because of the large code size from having to compile and
 inline 64 (8 \* 8) unrolled loop functions, as well as having to decide
 which one to jump to for each start index and skip value.
 
-To illustrate this, you can check the generated `unsafe_clear_factors!`
-function Expr object:
+It might also take some time to precompile the functions before running
+the benchmark proper, especially on older and/or slower machines.
+
+To better explain this implementation, we can take a look at the
+generated `unsafe_clear_factors!` function Expr object:
 
 ```
 julia> generate_final_loop_clearing_function() |> Base.remove_linenums!
