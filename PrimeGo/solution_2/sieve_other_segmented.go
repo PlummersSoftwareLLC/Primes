@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-var label string = "ssovest-go-other-B"
+var label string = "ssovest-go-other-segmented-B"
+
+var blockSize uint64 = 128_000
 
 var primeCounts = map[uint64]uint64{
 	10:        4,
@@ -39,6 +41,15 @@ func (b Bitarray) SetSliceTrue(start, stop, step uint64) {
 	step7 := step * 7
 	step8 := step * 8
 
+	e8 := end - step8
+	if step8 > end {
+		e8 = 0
+	}
+	e2 := end - step2
+	if step2 > end {
+		e2 = 0
+	}
+
 	next = start / 64
 	mask = 0
 	index = next
@@ -51,18 +62,22 @@ func (b Bitarray) SetSliceTrue(start, stop, step uint64) {
 
 	b[index] |= mask
 
-	for i := 0; i < 64 && next < end; {
+	i := 0
+	for {
 
 		mask = 0
 		index = next
-		for next == index {
+		for {
 			mask |= bits.RotateLeft64(1, int(start))
 			i++
 			start += step
 			next = start / 64
+			if index != next {
+				break
+			}
 		}
 
-		for ; index+step8 < end; index += step8 {
+		for ; index < e8; index += step8 {
 			b[index] |= mask
 			b[index+step] |= mask
 			b[index+step2] |= mask
@@ -73,8 +88,17 @@ func (b Bitarray) SetSliceTrue(start, stop, step uint64) {
 			b[index+step7] |= mask
 		}
 
+		for ; index < e2; index += step2 {
+			b[index] |= mask
+			b[index+step] |= mask
+		}
+
 		for ; index < end; index += step {
 			b[index] |= mask
+		}
+
+		if i >= 64 {
+			break
 		}
 	}
 }
@@ -101,18 +125,47 @@ type Sieve struct {
 	size uint64
 }
 
+func (s Sieve) processFactor(factor, blockStart, blockEnd uint64) bool {
+	start := 2 * factor * (factor + 1)
+	step := factor*2 + 1
+	if start >= blockEnd {
+		return false
+	}
+	if start < blockStart {
+		start += ((blockStart - start) / step) * step
+	}
+	if start < blockStart {
+		start += step
+	}
+	s.bits.SetSliceTrue(start, blockEnd, step)
+	return true
+}
+
 func (s Sieve) RunSieve() {
-	var factor, start, stop, step uint64
+	var factor, stop, blockStart, blockEnd uint64
 	stop = (s.size + 1) / 2
-	for {
-		factor = s.bits.Find(false, factor+1, stop)
-		start = 2 * factor * (factor + 1)
-		step = factor*2 + 1
-		// start is factor squared, so it's the same as factor <= q
-		if start >= stop {
-			break
+
+	factors := make([]uint64, 0, 1)
+
+	for blockStart < stop {
+
+		blockEnd += blockSize
+		if blockEnd > stop {
+			blockEnd = stop
 		}
-		s.bits.SetSliceTrue(start, stop, step)
+
+		for _, factor = range factors {
+			s.processFactor(factor, blockStart, blockEnd)
+		}
+
+		factor = s.bits.Find(false, factor+1, blockEnd)
+		factors = append(factors, factor)
+		for s.processFactor(factor, blockStart, blockEnd) {
+			factor = s.bits.Find(false, factor+1, blockEnd)
+			factors = append(factors, factor)
+		}
+
+		blockStart += blockSize
 	}
 }
 
@@ -126,16 +179,22 @@ func (s Sieve) ValidateResults() bool {
 }
 
 func main() {
-	var limit uint64
+	var limit, bsize uint64
 	var duration time.Duration
 	var verbose bool
 	var sieve Sieve
 
-	flag.Uint64Var(&limit, "limit", 1000000, "limit")
+	flag.Uint64Var(&limit, "limit", 1_000_000, "limit")
+	flag.Uint64Var(&bsize, "block", 128_000, "block size")
 	flag.DurationVar(&duration, "time", 5*time.Second, "duration")
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 
 	flag.Parse()
+
+	if bsize == 0 {
+		bsize = 128_000
+	}
+	blockSize = bsize
 
 	stop := make(chan struct{})
 	passes := 0
