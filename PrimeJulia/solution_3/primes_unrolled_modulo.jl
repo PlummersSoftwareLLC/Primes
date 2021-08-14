@@ -121,26 +121,17 @@ end
 function generate_final_loop_clearing_function()
     prev_outer_expr = current_outer_expr = main_if_expr = Expr(:if)
     for start_modulo in 0:UINT_BIT_LENGTH - 1
-        func_prefix = Symbol("_unrolled_clear_bits_start_", start_modulo, "_skip_")
-        func_name = Symbol(func_prefix, 0)
-        inner_if_expr = Expr(
-            :if, :(skip_modulo == 0),
-            quote index = $func_name(arr, start, skip, unrolled_stop) end
-        )
-        prev_inner_expr = inner_if_expr
-        for skip_modulo in 1:UINT_BIT_LENGTH - 1
-            func_name = Symbol(func_prefix, skip_modulo)
-            push!(prev_inner_expr.args, Expr(
-                :elseif, :(skip_modulo == $skip_modulo),
-                quote index = $func_name(arr, start, skip, unrolled_stop) end
-            ))
-            prev_inner_expr = prev_inner_expr.args[end]
+        for skip_modulo in 0:UINT_BIT_LENGTH - 1
+            test_value = start_modulo << 3 + skip_modulo
+            func_name = Symbol("_unrolled_clear_bits_start_", start_modulo, "_skip_", skip_modulo)
+            push!(current_outer_expr.args, :(test_value == $test_value))
+            push!(current_outer_expr.args, quote
+                index = $func_name(arr, start, skip, unrolled_stop)
+            end)
+            push!(current_outer_expr.args, Expr(:elseif))
+            prev_outer_expr = current_outer_expr
+            current_outer_expr = current_outer_expr.args[end]
         end
-        push!(current_outer_expr.args, :(start_modulo == $start_modulo))
-        push!(current_outer_expr.args, Expr(:block, inner_if_expr))
-        push!(current_outer_expr.args, Expr(:elseif))
-        prev_outer_expr = current_outer_expr
-        current_outer_expr = current_outer_expr.args[end]
     end
     pop!(prev_outer_expr.args)
     return quote
@@ -149,6 +140,7 @@ function generate_final_loop_clearing_function()
         )
             start_modulo = start & $(UINT_BIT_LENGTH - 1)
             skip_modulo = skip & $(UINT_BIT_LENGTH - 1)
+            test_value = start_modulo << 3 + skip_modulo
             index = start
             if stop > skip * $(UINT_BIT_LENGTH - 1)
                 unrolled_stop = stop - (skip * $(UINT_BIT_LENGTH - 1))
