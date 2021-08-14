@@ -79,30 +79,24 @@ function generate_loop_clearing_function(
 ) where T <: Integer
     func_name = Symbol("_unrolled_clear_bits_start_", start, "_skip_", skip)
     body_expr = Expr(:block)
-    body_A = body_expr.args
     for (skip_iter, bit_index) in enumerate(modulo_pattern)
-        push!(body_A, :(
+        push!(body_expr.args, :(
             arr[(index + skip * $(skip_iter - 1)) >> $UINT_BIT_SHIFT + 1] |=
-            $(MainUInt(1) << bit_index)
+            $(1 << bit_index)
         ))
     end
-    return :(
-        function $func_name(
+    return quote
+        @inline function $func_name(
             arr::Vector{MainUInt}, start::Integer, skip::Integer, unrolled_stop::Integer
         )
-        index = start
-        @inbounds while index < unrolled_stop
-            $body_expr
-            index += skip * $(length(modulo_pattern))
+            index = start
+            @inbounds while index < unrolled_stop
+                $body_expr
+                index += skip * $(length(modulo_pattern))
+            end
+            return index
         end
     end
-    )
-end
-
-function generate_loop_clearing_function(start::Integer, skip::Integer)
-    return generate_loop_clearing_function(
-        start, skip, get_modulo_pattern(start, skip, UINT_BIT_LENGTH)
-    )
 end
 
 # This is really hacky; we are evaluating function definitions in
@@ -112,15 +106,69 @@ for ((start, skip), modulo_pattern) in generate_modulo_patterns(UINT_BIT_LENGTH)
     eval(generate_loop_clearing_function(start, skip, modulo_pattern))
 end
 
+@inline function _unrolled_clear_bits_finalizer(
+    arr::Vector{MainUInt}, start::Integer, skip::Integer, stop::Integer
+)
+    index = start
+    @inbounds while index < stop
+        arr[index >> UINT_BIT_SHIFT + 1] |= 1 << (index & (UINT_BIT_LENGTH - 1))
+        index += skip
+    end
+end
+
+# Here we go. The main factor clearing loop. Lots of if-elseif
+# statements. Hopefully Julia can optimize this thing, somehow.
+function generate_final_loop_clearing_function()
+    current_outer_expr = main_if_expr = Expr(:if)
+    for start_modulo in 0:UINT_BIT_LENGTH - 1
+        func_prefix = Symbol("_unrolled_clear_bits_start_", start_modulo, "_skip_")
+        func_name = Symbol(func_prefix, 0)
+        inner_if_expr = Expr(
+            :if, :(skip_modulo == 0),
+            quote index = $func_name(arr, start, skip, unrolled_stop) end
+        )
+        prev_inner_expr = inner_if_expr
+        for skip_modulo in 1:UINT_BIT_LENGTH - 1
+            func_name = Symbol(func_prefix, skip_modulo)
+            push!(prev_inner_expr.args, Expr(
+                :elseif, :(skip_modulo == $skip_modulo),
+                quote index = $func_name(arr, start, skip, unrolled_stop) end
+            ))
+            prev_inner_expr = prev_inner_expr.args[end]
+        end
+        push!(current_outer_expr.args, :(start_modulo == $start_modulo))
+        push!(current_outer_expr.args, Expr(:block, inner_if_expr))
+        push!(current_outer_expr.args, Expr(:elseif))
+        current_outer_expr = current_outer_expr.args[end]
+    end
+    # This is *really* hacky. We're removing the final elseif Expr
+    # since it is empty.
+    pop!(main_if_expr.args[end].args[end].args[end].args[end].args[end].args[end].args[end].args)
+    return quote
+        function unsafe_clear_factors!(
+            arr::Vector{MainUInt}, start::Integer, skip::Integer, stop::Integer
+        )
+            start_modulo = start & $(UINT_BIT_LENGTH - 1)
+            skip_modulo = skip & $(UINT_BIT_LENGTH - 1)
+            index = start
+            if stop > skip * $(UINT_BIT_LENGTH - 1)
+                unrolled_stop = stop - (skip * $(UINT_BIT_LENGTH - 1))
+                $main_if_expr
+            end
+            _unrolled_clear_bits_finalizer(arr, index, skip, stop)
+        end
+    end
+end
+
+eval(generate_final_loop_clearing_function())
+
+
 @inline function unsafe_clear_factors!(arr::Vector{<:Unsigned}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
     # This function also uses zero-based indexing calculations similar
     # to unsafe_find_next_factor_index.
     zero_index = _div2(factor * factor)
-    @inbounds while zero_index < max_index
-        arr[_div_uint_length(zero_index) + 1] |= MainUInt(1) << _mod_uint_length(zero_index)
-        zero_index += factor
-    end
+    unsafe_clear_factors!(arr, zero_index, factor, max_index)
 end
 
 function run_sieve!(sieve::PrimeSieve)
@@ -132,7 +180,7 @@ function run_sieve!(sieve::PrimeSieve)
     @inbounds while factor_index <= max_factor_index
         if iszero(
             is_not_prime[_div_uint_length(factor_index) + 1] &
-            (MainUInt(1) << _mod_uint_length(factor_index))
+            (1 << _mod_uint_length(factor_index))
         )
             unsafe_clear_factors!(is_not_prime, factor_index, max_bits_index)
         end
@@ -224,4 +272,32 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     main()
+end
+
+function foo(a, b)
+    if x == 1
+        x * 7
+    elseif x == 2
+        x * 8
+    elseif x == 3
+        x * 9
+    elseif x == 4
+        x * 10
+    elseif x == 5
+        x * 11
+    elseif x == 6
+        x * 12
+    elseif x == 7
+        x * 13
+    elseif x == 8
+        x * 14
+    elseif x == 9
+        x * 15
+    elseif x == 10
+        x * 16
+    elseif x == 11
+        x * 17
+    else
+        x * 0
+    end
 end
