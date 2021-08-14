@@ -98,9 +98,3 @@ jobs:
           push: true
           cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           cache-to: type=inline
-
-      - name: Scan image
-        uses: anchore/scan-action@v2
-        with:
-          image: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
-          severity-cutoff: critical
