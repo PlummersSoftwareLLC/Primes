@@ -46,11 +46,7 @@ This function calculates the modulo patterns used for the factor
 clearing loop. It takes into account both the start index and the skip.
 The modulo patterns of the skip are calculated first, and then shifted
 by the initial offset of the start index.
-
-This function should return a `Vector` of length `bit_length`, even if
-the corresponding modulo pattern is shorter than that.
 """
-
 function get_modulo_pattern(start::Integer, skip::Integer, bit_length::Integer)
     @assert (skip >= 0) "skip must not be less than 0."
     first_modulo = start % bit_length
@@ -163,18 +159,19 @@ function generate_final_loop_clearing_function()
     end
 end
 
-# eval is scary!
+# Doing this to avoid a "Possible method call error" warning in VS Code.
+function unsafe_clear_factors!(
+    arr::Vector{MainUInt}, start::Integer, skip::Integer, stop::Integer
+)
+end
+# This eval should overwrite the above method signature.
 eval(generate_final_loop_clearing_function())
 
 
-@inline function unsafe_clear_factors!(arr::Vector{<:Unsigned}, factor_index::Integer, max_index::Integer)
+@inline function unsafe_clear_factors!(arr::Vector{MainUInt}, factor_index::Integer, max_index::Integer)
     factor = _map_to_factor(factor_index)
-    # This function also uses zero-based indexing calculations similar
-    # to unsafe_find_next_factor_index.
-    zero_index = _div2(factor * factor)
-    # This thing is probably going to show up as a possible method
-    # call error.
-    unsafe_clear_factors!(arr, zero_index, factor, max_index)
+    start_index = _div2(factor * factor)
+    unsafe_clear_factors!(arr, start_index, factor, max_index)
 end
 
 function run_sieve!(sieve::PrimeSieve)

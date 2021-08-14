@@ -5,7 +5,7 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 
-This solution contains mutiple implementations:
+This solution contains multiple implementations:
 
 1.  [primes_1of2.jl](primes_1of2.jl)
 
@@ -68,9 +68,14 @@ This implementation is similar to primes_1of2.jl, except that it
 pre-generates every possible bit mask for all the starting indices and
 skip values using modulo patterns.
 
-It then uses an unrolled loop to set the corresponding bits using the
-calculated bit masks. This saves some time since we don't have to do
-a modulo and bit shift each time we set a bit.
+It then uses an unrolled loop wrapped in a function to set the
+corresponding bits using the calculated bit masks. This saves some time
+since we don't have to do a modulo and bit shift each time we set a bit.
+
+This implementation will probably run a lot slower, though, on older
+machines because of the large code size from having to compile and
+inline 64 (8 \* 8) unrolled loop functions, as well as having to decide
+which one to jump to for each start index and skip value.
 
 To illustrate this, you can check the generated `unsafe_clear_factors!`
 function Expr object:
