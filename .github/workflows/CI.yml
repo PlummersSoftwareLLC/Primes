@@ -85,6 +85,8 @@ jobs:
           context: ${{ matrix.solution }}
           platforms: linux/arm64
           push: true
+          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          cache-to: type=inline
 
       - name: Build amd64
         if: steps.arch-amd64.outputs.build
@@ -94,6 +96,8 @@ jobs:
           context: ${{ matrix.solution }}
           platforms: linux/amd64
           push: true
+          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          cache-to: type=inline
 
       - name: Scan image
         uses: anchore/scan-action@v2
