@@ -77,17 +77,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build arm64
-        if: steps.arch-arm64.outputs.build
-        uses: docker/build-push-action@v2
-        with:
-          tags: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
-          context: ${{ matrix.solution }}
-          platforms: linux/arm64
-          push: true
-          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
-          cache-to: type=inline
-
       - name: Build amd64
         if: steps.arch-amd64.outputs.build
         uses: docker/build-push-action@v2
@@ -95,6 +84,17 @@ jobs:
           tags: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           context: ${{ matrix.solution }}
           platforms: linux/amd64
-          push: true
+          push: ${{ github.ref == 'refs/heads/drag-race' }}
+          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          cache-to: type=inline
+      
+      - name: Build arm64
+        if: steps.arch-arm64.outputs.build
+        uses: docker/build-push-action@v2
+        with:
+          tags: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          context: ${{ matrix.solution }}
+          platforms: linux/arm64
+          push: ${{ github.ref == 'refs/heads/drag-race' }}
           cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           cache-to: type=inline
