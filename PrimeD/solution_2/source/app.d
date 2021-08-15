@@ -186,11 +186,8 @@ mixin template RunSieve()
                 continue;
             }
 
-            // This is a more functional style of for each.
-            // Note that we create and pass a delegate/lambda into a _template_ parameter.
-            // This can allow D compilers to perform optimisations, including inlining.
-            iota(factor * 3, SieveSize, factor * 2)
-                .each!(num => this.setBit(num));
+            for(ulong num = factor * 3; num < SieveSize; num += factor * 2)
+                this.setBit(num);
 
             factor += 2;
         }
