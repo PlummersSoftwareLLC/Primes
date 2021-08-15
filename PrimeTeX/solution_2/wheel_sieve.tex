@@ -354,7 +354,7 @@
       % step indexa by suitable delta
       \advance\indexa\fontdimen\indexc\wheelcogdeltas
       % and now update the class modulo wheel modulus
-      \indexc\fontdimen\indexc\wheelcognext
+      \indexc=\fontdimen\indexc\wheelcognext
       % update the iteration count
       \advance\cntf\@ne
       % do we have a prime?
@@ -511,7 +511,10 @@
 }% END OF \SieveSetToCount
 
 %
-% outtofile method
+% outtofile method. Writing out to a file is significantly
+% more time costly than doing the actual sieving. I tried
+% with no great success to group the primes into batches
+% before each \write.
 %
 \def\SieveOutToFile#1#2{%
   % #1 is the sieve object name
