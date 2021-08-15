@@ -180,14 +180,10 @@ mixin template RunSieve()
 
         while(factor < q)
         {
-            // Semi-traditional style of a for each loop.
-            foreach(i; iota(factor, q, 2UL)) // every number from `factor` to `q`(exclusive), with a step of 2
+            if(this.getBit(factor))
             {
-                if(!this.getBit(i))
-                {
-                    factor = i;
-                    break;
-                }
+                factor += 2;
+                continue;
             }
 
             // This is a more functional style of for each.
