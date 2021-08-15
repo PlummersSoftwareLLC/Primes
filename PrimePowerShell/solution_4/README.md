@@ -6,17 +6,17 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This is a PowerShell implementation of davepl's sieve of Erastosthenes for
-benchmarking programming languages and CPUs. This implementation used the
+benchmarking programming languages and CPUs. This implementation uses the
 capability of PowerShell to build a dynamic assembly from C# and run that.
-The C# code is based on the current fastest C# implementation by tannergooding, 
-solution_3.  I am not sure if this is faithful or not since it is mostly using 
-C# and not PowerShell.  I think it is as this has long been a capability of 
-PowerShell that allows a script to jump to a lower level when it is needed for 
-speed or accessing some feature not available in PowerShell.  Since this 
-capability is built into PowerShell and does not need and external dependancies, 
+The C# code is based on the current fastest C# implementation by tannergooding,
+solution_3. While the core parts of this solution are implemented in another
+language, I think it is a faithful implementation since it has long been a capability of
+PowerShell to allow a script to access .NET directly when it is needed for
+speed or accessing some feature not available in PowerShell. Since this
+capability is built into PowerShell and does not need and external dependencies,
 it should count as faithful, IMO.
 
-The implementation maintains the used of the `PsObject` to the pipeline from crowbar27's implementation, which can be discarded by piping to `Out-Null`.
+The implementation maintains the use of the `PsObject` to the pipeline from crowbar27's implementation, which can be discarded by piping to `Out-Null`.
 
 ## Run instructions
 Run `.\PrimePowerShell.ps1` in a PowerShell. In order to suppress the pipeline output and only have the results written to the console in the standard output format, use `.\PrimePowerShell.ps1 | Out-Null`.
