@@ -158,12 +158,11 @@ mixin template RunSieve()
         // We can also selectively specify which symbols from a package we want to import.
         // It's good practice to do so (less symbol bloat), but it's also super tedious.
         import std.algorithm : each;
-        import std.conv      : to;
         import std.math      : sqrt, round;
         import std.range     : iota;
 
         // Something to note about the below code:
-        //      We're using the `to` function from `std.conv` using member function syntax?
+        //      We're using the `round` function from `std.math` using member function syntax?
         //      That's because D has a concept called UFCS (Uniform Function Call Syntax)
         //      Most function calls written as `func(a, b, c)` can be written as `a.func(b, c)`.
         //
@@ -171,10 +170,13 @@ mixin template RunSieve()
         // If there's only one template parameter, then you can usually use the form `!templateP(runtimeP1, runtimeP2)`
         //
         // Also, also, if a function doesn't need any runtime parameters, you can just completely omit the parenthesis:
-        //  `.to!int` and `.to!int()` are exactly the same.
+        //  `.round()` and `.round` are exactly the same.
+        //
+        // Normally one would use `std.conv.to` to do casting, e.g. `sqrt(123).to!size_t` but it was generating
+        // inefficient ASM, so I'm now using raw casts.
 
         auto factor = 3UL;
-        const q = sqrt(SieveSize.to!float).round.to!size_t;
+        const q = cast(size_t)sqrt(cast(double)SieveSize).round;
 
         while(factor < q)
         {
@@ -575,8 +577,8 @@ void main(string[] args)
             mixin(generateSieveRTRunner!("s6", uint, true));
             mixin(generateSieveRTRunner!("s7", ulong, true));
 
-            alias s8 = SieveRTB1_64;
-            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
+            alias s8 = SieveRTB1_32;
+            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 32 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
 
             // This one is here just to have a "non-bool yet used as a bool" version there.
             alias s9 = SieveRTBX!ulong;
