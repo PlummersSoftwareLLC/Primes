@@ -162,7 +162,7 @@ mixin template RunSieve()
         import std.range     : iota;
 
         // Something to note about the below code:
-        //      We're using the `round` function from `std.math` using member function syntax?
+        //      We're using the `sqrt` function from `std.math` using member function syntax?
         //      That's because D has a concept called UFCS (Uniform Function Call Syntax)
         //      Most function calls written as `func(a, b, c)` can be written as `a.func(b, c)`.
         //
@@ -170,13 +170,13 @@ mixin template RunSieve()
         // If there's only one template parameter, then you can usually use the form `!templateP(runtimeP1, runtimeP2)`
         //
         // Also, also, if a function doesn't need any runtime parameters, you can just completely omit the parenthesis:
-        //  `.round()` and `.round` are exactly the same.
+        //  `.sqrt()` and `.sqrt` are exactly the same.
         //
         // Normally one would use `std.conv.to` to do casting, e.g. `sqrt(123).to!size_t` but it was generating
         // inefficient ASM, so I'm now using raw casts.
 
         auto factor = 3UL;
-        const q = cast(size_t)sqrt(cast(double)SieveSize);
+        const q = cast(size_t)((cast(double)SieveSize).sqrt);
 
         while(factor <= q)
         {
