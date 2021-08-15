@@ -35,7 +35,7 @@ class PrimeSieve(sieveSize: Int) {
 
     while (factor < q) {
       (factor until sieveSize by 2).iterator
-        .dropWhile(i => rawBits(i / 2))
+        .dropWhile(i => !rawBits(i / 2))
         .nextOption() match {
         case Some(value) => factor = value
         case _           =>

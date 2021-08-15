@@ -74,19 +74,14 @@ namespace PrimeCSharp.Sieves
 
         private bool GetBit(int index)
         {
-            if (index % 2 == 0)
-                return false;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
             return bitArray[index >> 1];
         }
 
         private void ClearBit(int index)
         {
-            if (index % 2 == 0)
-            {
-                Console.WriteLine("You are setting even bits, which is sub-optimal");
-                return;
-            }
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
             bitArray[index / 2] = false;
         }

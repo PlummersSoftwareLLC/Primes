@@ -47,30 +47,43 @@ The following software must be installed:
 
 - /bin/bash
 - make
+- cc
 - git
 - Node.js
 - Docker
 
 The details for each required software are described below.
 
+Note: although optional, it's generally a good idea to update the package database and installed packages before installing new ones. The instructions for doing this vary across distributions. For Debian based distributions, use:
+
+```bash
+sudo apt-get update && sudo apt-get upgrade
+```
+
+On a Fedora based distribution:
+
+```bash
+sudo dnf upgrade --refresh
+```
+
 #### /bin/bash
 
 Most Linux distributions include `/bin/bash` by default. If this is not the case for your distribution then please check your distribution specific documentation on how to install.
 
-#### make
+#### cc and make
 
-Most Linux distributions include `make` by default. If this is not the case for your distribution then please check your distribution specific documentation on how to install. Below are some examples:
+Many Linux distributions will have `cc` (the C compiler) and `make` installed by default. If this is not the case for your distribution then please check your distribution specific documentation on how to install them. Below are some examples:
 
 Debian based distributions:
 
 ```bash
-sudo apt-get install make
+sudo apt-get install build-essential
 ```
 
 Fedora based distributions:
 
 ```bash
-sudo dnf make
+sudo dnf install make automake gcc gcc-c++ kernel-devel
 ```
 
 #### Git for Linux
@@ -129,7 +142,7 @@ Take the following steps to run all benchmarks:
 1. Make sure you have installed the [required software](#windows-installation-and-prerequisites)
 2. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.
    For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`
-3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)
 4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
 5. `cd Primes`
 6. `make`
@@ -140,8 +153,9 @@ Take the following steps to run all benchmarks:
 
 The following software must be installed:
 
-- Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 20.04 LST distribution
+- Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 20.04 LTS distribution
 - make
+- cc
 - Node.js
 - Docker Desktop for Windows
 
@@ -149,14 +163,14 @@ WSL2 has special [hardware requirements](https://docs.microsoft.com/en-us/window
 
 #### Install WSL2
 
-Windows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL2 follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 20.04 LSTas the default distribution to use. Start the Ubuntu app once to create a user, as described in the above instructions.
+Windows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL2 follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 20.04 LTS as the default distribution to use. Start the Ubuntu app once to create a user, as described in the above instructions.
 
-#### Install make inside the Ubuntu distribution
+#### Install cc and make inside the Ubuntu distribution
 
-Take the following steps to install make inside the Ubuntu distribution:
+Take the following steps to install cc and make inside the Ubuntu distribution:
 
 1. Open an Ubuntu terminal
-2. `sudo apt-get install make`
+2. `sudo apt-get install build-essential`
 
 #### Install Node.js inside the Ubuntu distribution
 
@@ -176,16 +190,16 @@ Take the following steps to install Node.js inside the Ubuntu distribution:
 
 Take the following steps to install Docker Desktop for Windows with the WSL2 backend:
 
-1. Make sure [WSL2 is installed](#install-wsl2) with the Ubuntu 20.04 LST before you start with the installation of Docker.
+1. Make sure [WSL2 is installed](#install-wsl2) with the Ubuntu 20.04 LTS before you start with the installation of Docker.
 2. For the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-windows/install/#install-docker-desktop-on-windows>. At step 2 select **install required Windows components for WSl2**.
 3. Once Docker is installed, start Docker Desktop
 4. In Docker Desktop navigate to **Settings --> Resources --> WSL Integration**
 5. Check Ubuntu 18.04 and click Apply & Restart
-6. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+6. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)
 7. ```sudo groupadd docker```
 8. ```sudo usermod -aG docker $USER```
 9. Close the Ubuntu window
-10. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LST)
+10. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)
 11. Verify that you can run docker inside the Ubuntu WSL2 container:
 
    ```bash
@@ -212,15 +226,15 @@ Take the following steps to run all benchmarks:
 
 The following software must be installed:
 
-- xcode-select (make and git)
+- xcode-select (make, cc and git)
 - nodejs
 - Docker Desktop for macOS
 
 The details for each required software are described below.
 
-#### xcode-select (make and git) for macOS
+#### xcode-select (make, cc and git) for macOS
 
-Take the following steps to install make and git on macOS:
+Take the following steps to install make, cc and git on macOS:
 
 1. Open a terminal
 2. `xcode-select --install`
@@ -253,7 +267,7 @@ For the installation of Docker follow the instructions as described in <https://
 Below is an example of the benchmark output.
 
 ```bash
-                                                                   Single-threaded                                                                    
+                                                                   Single-threaded
 ┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬───────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration  │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼───────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
@@ -268,7 +282,7 @@ etc
 │  74   │ powershell     │ 1        │ crowbar27_ps1                     │   1    │ 150.03900 │    1    │   base    │   yes    │ 1    │    0.00666    │
 └───────┴────────────────┴──────────┴───────────────────────────────────┴────────┴───────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 
-                                                                   Multi-threaded                                                                    
+                                                                   Multi-threaded
 ┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
@@ -286,32 +300,26 @@ etc
 
 ## Running a single benchmark
 
-Running te following command:
+Running the following command:
 
 ```bash
-make one SOLUTION=PrimesCrystal/solution1
+make DIRECTORY=PrimeCrystal/solution_1
 ```
 
 should return something like:
 
 ```bash
-❯ make one SOLUTION=PrimeCrystal/solution_1
-[*] Running primecrystal-solution_1
-Passes: 4232 Time: 5.000194 Avg: 0.001182 Limit: 1000000 Count1: 78498 Count2: 78498 Valid: true
-marghidanu;4232;5.000194;1;algorithm=base,faithful=yes,bits=1
-
-added 196 packages, and audited 197 packages in 3s
-
-33 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-
-> primes@0.1.0 start
-> ts-node ./src/index.ts "report" "-d" "/var/folders/cp/szjr187549j7zps8zqzw_n940000gn/T/tmp.cQQFnuZm" "else" "echo" "Not specified!"
-
-
-                                                       Single-threaded                                                        
+❯ make DIRECTORY=PrimeCrystal/solution_1
+make[1]: Entering directory '/home/user/source/Primes/tools/node_modules/node-uname/build'
+  CC(target) Release/obj.target/uname/uname.o
+  SOLINK_MODULE(target) Release/obj.target/uname.node
+  COPY Release/uname.node
+make[1]: Leaving directory '/home/user/source/Primes/tools/node_modules/node-uname/build'
+added 229 packages in 11.074s
+info: Detected architecture: amd64
+info: [PrimeCrystal][solution_1] Building...
+info: [PrimeCrystal][solution_1] Running...
+                                                       Single-threaded
 ┌───────┬────────────────┬──────────┬────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label      │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
@@ -319,18 +327,38 @@ found 0 vulnerabilities
 └───────┴────────────────┴──────────┴────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
 
+## Running a benchmark of all solutions for a particular language
+
+Make the `DIRECTORY` variable point to the directory that contains the solutions you want to run. For instance, to run a benchmark of all C++ solutions, run:
+
+```bash
+make DIRECTORY=PrimeCPP
+```
+
+## Running in unconfined mode
+
+For some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero effect slowing CPU-intensive code.
+See https://github.com/moby/moby/issues/41389 for the related docker issue. You can disable some of the sandboxing
+to obtain near-native performance (at least on Linux) with the `UNCONFINED=1` option:
+```bash
+make UNCONFINED=1
+make DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED=1
+```
+
 ## Output formats
 
-The benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format. 
+The benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format.
 Here are the supported values:
 
 * table
+* chart
 * csv
 * json (this also includes the machine information data)
+* minifiedjson (same as json, but not pretty-printed)
 
 The output format can be controlled via the `FORMATTER` variable like this:
 
 ```
 make FORMATTER=json
-make one SOLUTION=PrimeCrystal/solution_1 FORMATTER=csv
+make DIRECTORY=PrimeCrystal/solution_1 FORMATTER=csv
 ```
