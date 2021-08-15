@@ -187,7 +187,7 @@ mixin template RunSieve()
             }
         
             enum LOOP_UNROLL_FACTOR = 64;
-            auto num = factor * 3;
+            auto num = factor * factor;
             while(num < SieveSize)
             {
                 if(num + (factor * LOOP_UNROLL_FACTOR) < SieveSize)
