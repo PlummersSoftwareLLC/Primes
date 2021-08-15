@@ -176,9 +176,9 @@ mixin template RunSieve()
         // inefficient ASM, so I'm now using raw casts.
 
         auto factor = 3UL;
-        const q = cast(size_t)sqrt(cast(double)SieveSize).round;
+        const q = cast(size_t)sqrt(cast(double)SieveSize);
 
-        while(factor < q)
+        while(factor <= q)
         {
             if(this.getBit(factor))
             {
