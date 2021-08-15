@@ -112,12 +112,12 @@ mixin template CommonSieveFunctions(size_t bitSize)
     {
         // Fairly standard bitty stuff.
         assert(index % 2 == 1, "Index is even?");
-        return (this._bits[index / bitSize] & (1 << (index % bitSize))) != 0;
+        return (this._bits[index / bitSize] & (1UL << (index % bitSize))) != 0;
     }
 
     private void setBit(size_t index) @nogc nothrow
     {
-        this._bits[index / bitSize] |= 1 << (index % bitSize);
+        this._bits[index / bitSize] |= 1UL << (index % bitSize);
     }
 
     private size_t countPrimes() nothrow inout
@@ -573,8 +573,9 @@ void main(string[] args)
 
             mixin(generateSieveRTRunner!("s5", ushort, true));
             mixin(generateSieveRTRunner!("s6", uint, true));
+            mixin(generateSieveRTRunner!("s7", ulong, true));
 
-            alias s8 = SieveRTB1_32;
+            alias s8 = SieveRTB1_64;
             runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
 
             // This one is here just to have a "non-bool yet used as a bool" version there.
