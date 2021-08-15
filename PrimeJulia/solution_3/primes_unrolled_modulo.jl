@@ -72,6 +72,21 @@ function generate_modulo_patterns(bit_length::T) where T <: Integer
     return output
 end
 
+function to_if_expr(arr::AbstractVector{Tuple{Expr,Expr}})
+    isempty(arr) && error("Expr collection must not be empty.")
+    current_expr = second_to_last_expr = output_expr = Expr(:if)
+    for (conditional, body) in arr
+        push!(current_expr.args, conditional)
+        push!(current_expr.args, body)
+        push!(current_expr.args, Expr(:elseif))
+        second_to_last_expr = current_expr
+        current_expr = current_expr.args[end]
+    end
+    # Remove the final elseif Expr, since it should be empty.
+    pop!(second_to_last_expr.args)
+    return output_expr
+end
+
 function generate_loop_clearing_function(
     start::Integer, skip::Integer, modulo_pattern::AbstractVector{T}
 ) where T <: Integer
@@ -98,8 +113,11 @@ function generate_loop_clearing_function(
 end
 
 # This is really hacky; we are evaluating function definitions in
-# global scope. It's better than manually creating a 700 or so line
+# global scope. It's better than manually creating a 64 or so line
 # function, though, I guess. It also helps with optimization.
+# The eval is wrapped in a function so that the global namespace isn't
+# polluted with temporary variables. Yeah, this function calling style
+# looks like JavaScript.
 (function ()
     for ((start, skip), modulo_pattern) in generate_modulo_patterns(UINT_BIT_LENGTH)
         eval(generate_loop_clearing_function(start, skip, modulo_pattern))
@@ -119,21 +137,18 @@ end
 # Here we go. The main factor clearing loop. Lots of if-elseif
 # statements. Hopefully Julia can optimize this thing, somehow.
 function generate_final_loop_clearing_function()
-    prev_outer_expr = current_outer_expr = main_if_expr = Expr(:if)
+    inner_if_exprs = Vector{Tuple{Expr,Expr}}()
     for start_modulo in 0:UINT_BIT_LENGTH - 1
         for skip_modulo in 0:UINT_BIT_LENGTH - 1
             test_value = start_modulo << 3 + skip_modulo
             func_name = Symbol("_unrolled_clear_bits_start_", start_modulo, "_skip_", skip_modulo)
-            push!(current_outer_expr.args, :(test_value == $test_value))
-            push!(current_outer_expr.args, quote
-                index = $func_name(arr, start, skip, unrolled_stop)
-            end)
-            push!(current_outer_expr.args, Expr(:elseif))
-            prev_outer_expr = current_outer_expr
-            current_outer_expr = current_outer_expr.args[end]
+            push!(inner_if_exprs, (
+                quote test_value == $test_value end,
+                quote index = $func_name(arr, start, skip, unrolled_stop) end
+            ))
         end
     end
-    pop!(prev_outer_expr.args)
+    main_if_expr = to_if_expr(inner_if_exprs)
     return quote
         function unsafe_clear_factors!(
             arr::Vector{MainUInt}, start::Integer, skip::Integer, stop::Integer
