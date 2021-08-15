@@ -185,9 +185,25 @@ mixin template RunSieve()
                 factor += 2;
                 continue;
             }
-
-            for(ulong num = factor * 3; num < SieveSize; num += factor * 2)
-                this.setBit(num);
+        
+            enum LOOP_UNROLL_FACTOR = 64;
+            auto num = factor * 3;
+            while(num < SieveSize)
+            {
+                if(num + (factor * LOOP_UNROLL_FACTOR) < SieveSize)
+                {
+                    static foreach(i; 0..LOOP_UNROLL_FACTOR / 2)
+                    {
+                        this.setBit(num);
+                        num += factor * 2;
+                    }
+                }
+                else
+                {
+                    this.setBit(num);
+                    num += factor * 2;
+                }
+            }
 
             factor += 2;
         }
