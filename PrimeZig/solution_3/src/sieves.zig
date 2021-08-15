@@ -15,7 +15,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
     return struct {
         pub const T = opts.T;
         pub const PRIME: T = opts.primeval;
-        pub const COMPOSITE: T = if (T == bool) (!opts.primeval) else (if (opts.primeval == 0) 1 else 0);
+        pub const COMPOSITE: T = if (T == bool) (!opts.primeval) else (1 - opts.primeval);
 
         // informational content.
         pub const name = "sieve-" ++ @typeName(T) ++ wheel_name;
@@ -28,15 +28,17 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
 
         // storage
         field: [*]u8,
+        field_count: usize,
 
         // member functions
-
         pub fn init(sieve_size: usize) !Self {
             // allocates an array of data.  We only need half as many slots because
             // we are only going to operate on odd values.
-            const field_size = sieve_size / 2;
-            var field = try calloc_page(T, PRIME, field_size, std.mem.page_size);
-            return Self{ .field = field[0..field_size] };
+            const field_count = sieve_size / 2;
+            return Self{
+                .field = try calloc_pages(PRIME, field_count),
+                .field_count = field_count,
+            };
         }
 
         pub fn deinit(self: *Self) void {
@@ -51,7 +53,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
             var count: usize = 0;
             var idx: usize = 0;
 
-            for (self.field) |value| {
+            for (self.field[0..self.field_count]) |value| {
                 if (value == PRIME) { count += 1; }
             }
 
@@ -61,7 +63,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
         pub fn findNextFactor(self: *Self, factor: usize) usize {
             const field = self.field;
             var slot = factor / 2 + 1;
-            while (slot < self.field.len) : (slot += 1) {
+            while (slot < self.field_count) : (slot += 1) {
                 if (field[slot] == PRIME) {
                     return slot * 2 + 1;
                 }
@@ -72,7 +74,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
         pub fn runFactor(self: *Self, factor: usize) void {
             const field = self.field;
             var slot = (factor * factor) / 2;
-            while (slot < self.field.len) : (slot += factor) {
+            while (slot < self.field_count) : (slot += factor) {
                 field[slot] = COMPOSITE;
             }
         }
@@ -88,13 +90,12 @@ const BitSieveOpts = comptime struct {
     primeval: anytype = 0,
     wheel: bool = false,
     allocator: type = default_allocator,
+    RunFactorChunk: type = u32,
+    cached_masks: bool = false, // used cached mask lookup instead?
+    FindFactorChunk: type = u8,
 };
 
 pub fn BitSieve(comptime opts: BitSieveOpts) type {
-    // std.debug.assert(@typeInfo(opts.T).Int.signedness == .unsigned);
-    // std.debug.assert(std.math.isPowerOfTwo(@typeInfo(opts.T).Int.bits));
-    // std.debug.assert(@typeInfo(opts.T).Int.bits >= 8);
-
     comptime const PRIME: u1 = opts.primeval;
     // store the wheel type
     const wheel_name = "";
@@ -111,8 +112,8 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         // stateful storage.  Use a naked bytes pointer for the field!  This will make it
         // easier to switch up the type for the findNextFactor and runFactor operations.
         field: [*]u8,
-        field_size: usize = undefined,
-        needs_pad: bool = undefined,
+        field_count: usize = undefined,
+        field_bytes: usize = undefined,
 
         const init_fill_unit: u8 = if (PRIME == 0) 0 else @as(u8, 0) -% @as(u8, 1);
 
@@ -120,22 +121,25 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
             // allocates an array of data.  We only need half as many slots because
             // we are only going to operate on odd values.  Moreover, the total number
             // of slots is divided by the number of bits in the value.
-            const field_size = sieve_size / 2;
-            const needs_pad = (field_size % 8) != 0;
-            const field_len = field_size / 8 + if (needs_pad) @as(usize, 1) else @as(usize, 0);
+            const field_count = sieve_size / 2;
+            const field_bytes = divRoundUp(field_count, 8);
 
             // allocates the field slice.  Note that this will *always* allocate at least a page.
-            var field = try alloc_page(T, init_fill_unit, field_len);
-            return Self{ .field = field, .field_size = field_size, .needs_pad = needs_pad };
+            var field = try calloc_pages(init_fill_unit, field_bytes);
+            return Self{
+                .field = field,
+                .field_count = field_count,
+                .field_bytes = field_bytes,
+            };
         }
 
         pub fn reset(self: *Self) usize {
-            comptime const trailing_masks = make_trailing_masks();
+            comptime const trailing_masks = make_trailing_masks(u8, PRIME);
             // perform wheel operations if needed.
             // mask out the last bits of the field if they are needed.
-            if (self.needs_pad) {
-                const padding = (self.field_size % @bitSizeOf(T));
-                const last_slot = self.field.len - 1;
+            if (self.field_count % 8 != 0) {
+                const padding = (self.field_count % 8);
+                const last_slot = self.field_bytes - 1;
                 if (PRIME == 1) {
                     self.field[last_slot] &= ~trailing_masks[padding];
                 } else {
@@ -153,297 +157,72 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
             var count: usize = 0;
             var idx: usize = 0;
 
-            for (self.field) |value| {
-                count += if (PRIME == 1) @popCount(T, value) else @bitSizeOf(T) - @popCount(T, value);
+            for (self.field[0..self.field_bytes]) |value| {
+                count += if (PRIME == 1) @popCount(u8, value) else 8 - @popCount(u8, value);
             }
 
             return count;
         }
 
-        const EMPTY:T = if (PRIME == 1) @as(T, 0) else @as(T, 0) -% @as(T, 1);
-
-        const shift_bits = @floatToInt(comptime_int, @log2(@intToFloat(f64, @bitSizeOf(T))));
-        const shift_t = @Type(std.builtin.TypeInfo{.Int = .{.signedness = .unsigned, .bits = shift_bits}});
-
         pub fn findNextFactor(self: *Self, factor: usize) usize {
-            comptime const trailing_masks = make_trailing_masks();
-
-            const field = self.field;
-            // start on the next odd number after the factor.
-            const num = (factor + 2) / 2;
-            // determine the location of
-            var slot = num / @bitSizeOf(T);
-
-            // mask out all values prior to the checked prime.
-            var slot_primes = if (PRIME == 1) field[slot] & trailing_masks[num % @bitSizeOf(T)]
-                              else field[slot] | trailing_masks[num % @bitSizeOf(T)];
-
-            // if there are no primes in this slot, continue scanning until
-            // a prime is found.
-            if (slot_primes == EMPTY) {
-                for (field[slot + 1 ..]) |s| {
-                    slot += 1;
-                    slot_primes = s;
-                    if (s != EMPTY) {
-                        break;
-                    }
+            // naive implementation
+            const T = opts.FindFactorChunk;
+            const shift_t = ShiftTypeFor(T);
+            const max_index = self.field_count;
+            const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
+            // start on the next odd number after the supplied factor.
+            var search_index = factor / 2 + 1;
+            while (search_index < max_index) : (search_index +=  1) {
+                const mask = @as(T, 1) << (@intCast(shift_t, search_index % @bitSizeOf(T)));
+                const bit: T = (field[search_index / @bitSizeOf(T)] & mask);
+                if (PRIME == 0) {
+                    if (bit == 0) { break; }
+                } else {
+                    if (bit != 0) { break; }
                 }
             }
-
-            const empty_bits = if (PRIME == 1) @ctz(T, slot_primes) else @ctz(T, ~slot_primes);
-
-            return ((slot * @bitSizeOf(T) + empty_bits) * 2) + 1;
-        }
-
-        // creates a compile-time lookup table for masks which will blot out values
-        // before a given position in a single slot.
-        fn make_trailing_masks() comptime [@bitSizeOf(T)]T {
-            var masks = std.mem.zeroes([@bitSizeOf(T)]T);
-            for (masks) |*value, index| {
-                value.* = @as(T, 0) -% (@as(T, 1) << @intCast(shift_t, index));
-                if (PRIME == 0) {value.* = ~value.*; }
-            }
-            return masks;
+            return search_index * 2 + 1;
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
-            comptime const masks = make_bit_masks();
-            const field = self.field;
-            const limit = self.field_size;
-
-            var num = (factor * factor) / 2;
-            while (num < limit) : (num += factor) {
-                var slot = num / @bitSizeOf(T);
+            const T = opts.RunFactorChunk;
+            const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
+            // naive factoring algorithm.  calculate mask each time.
+            const max_index = self.field_count;
+            var multiple_index = (factor * factor) / 2;
+            while (multiple_index < max_index) : (multiple_index += factor) {
                 if (PRIME == 1) {
-                    field[slot] &= masks[num % @bitSizeOf(T)];
+                    const mask = mask_for(T, multiple_index);
+                    field[multiple_index / @bitSizeOf(T)] &= mask;
                 } else {
-                    field[slot] |= masks[num % @bitSizeOf(T)];
+                    const mask = mask_for(T, multiple_index);
+                    field[multiple_index / @bitSizeOf(T)] |= mask;
                 }
             }
         }
 
-        // creates a compile-time lookup table for bit masks for each
-        // slot.  There should be one mask for each bit-positional index
-        // e.g. for u8, there are 8 u8 masks; for u64, there are 64 u64 masks.
-        fn make_bit_masks() comptime [@bitSizeOf(T)]T {
-            var masks = std.mem.zeroes([@bitSizeOf(T)]T);
-            for (masks) |*value, bit_index| {
-                value.* = (@as(T, 1) << @intCast(shift_t, bit_index));
+        fn mask_for(comptime T: type, index: usize) T {
+            if (opts.cached_masks) {
+                // reduces the number of cycles per dispatch to 2 but whether it's worth it may be
+                // architecture-dependent.
+                comptime const bit_masks = make_bit_masks(T, PRIME);
+                return bit_masks[index % @bitSizeOf(T)];
+            } else {
+                const shift_t = ShiftTypeFor(T);
                 if (PRIME == 1) {
-                    value.* ^= (@as(T, 0) -% @as(T, 1));
+                    return ~(@as(T, 1) << (@intCast(shift_t, index % @bitSizeOf(T))));
+                } else {
+                    return @as(T, 1) << (@intCast(shift_t, index % @bitSizeOf(T)));
                 }
             }
-            return masks;
         }
 
         // testing convenience
         pub fn dump(self: *Self) void {
-            std.debug.print("\n{b}\n", .{self.field});
+            std.debug.print("\n{b:0>8}\n", .{self.field[0..self.field_bytes]});
         }
     };
 }
-
-pub fn BitSieveClassic(opts: anytype) type {
-    // store the wheel type
-    const Wheel: ?type = null;
-
-    return struct {
-        // values
-        const T = opts.T;
-        const Self = @This();
-        const bit_width = @bitSizeOf(T);
-        const one: T = 1;
-        const bit_shift = switch (T) {
-            u64 => 6,
-            u32 => 5,
-            u16 => 4,
-            u8 => 3,
-            else => unreachable,
-        };
-        const smallint_t = std.meta.Int(.unsigned, bit_shift);
-        const bit_mask: T = (1 << bit_shift) - 1;
-        pub const algo = "base";
-        pub const bits = 1;
-
-        // storage
-        field: []T,
-        field_size: usize,
-        needs_pad: bool,
-
-        usingnamespace opts.allocator;
-
-        // member functions
-        pub fn init(field_size: usize) !Self {
-            const needs_pad: bool = ((field_size >> 1) & bit_mask) != 0;
-            const padding: usize = (if (needs_pad) 1 else 0);
-            const field_units: usize = (field_size >> (bit_shift + 1)) + padding;
-
-            // allocates an array of data.
-            var field = try calloc_aligned(T, 0xFF, field_units, std.mem.page_size);
-            return Self{ .field = field[0..], .field_size = field_size, .needs_pad = needs_pad };
-        }
-
-        pub fn deinit(self: *Self) void {
-            free(self.field);
-        }
-
-        pub fn reset(self: *Self) usize {
-            const finalmask: T = (one << @intCast(smallint_t, (self.field_size >> 1) & bit_mask)) - 1;
-
-            var starting_point: usize = 0;
-
-            fill_memory(self.field);
-            starting_point = 3;
-
-            if (self.needs_pad) {
-                // point of finalmask is that there might be some stray bits at the end.
-                // we need to mask those bits off.
-                self.field[self.field.len - 1] &= finalmask;
-            }
-            return starting_point;
-        }
-
-        fn fill_memory(field: []T) void {
-            @memset(@ptrCast([*]u8, field.ptr), 0xFF, @sizeOf(T) * field.len);
-        }
-
-        pub fn primeCount(self: *Self) usize {
-            var count: usize = 0;
-            var idx: usize = 0;
-
-
-            for (self.field) |value| {
-                count += @popCount(T, value);
-            }
-
-            return count;
-        }
-
-        const src_units = if (Wheel) |W| W.template.len else 1;
-        // TODO: move this to Wheel?
-
-        fn copyBits(bit_field: []T, src: *const *[src_units]u8) void {
-            const field_len = bit_field.len;
-            if (T == u8) {
-                const dest_len = field_len * @sizeOf(T);
-                var start: usize = 0;
-                var finish: usize = src_units;
-                while (finish < dest_len) : ({
-                    start += src_units;
-                    finish += src_units;
-                }) {
-                    copy(bit_field[start..finish], src.*[0..]);
-                }
-                copy(bit_field[start..field_len], src.*[0 .. field_len - start]);
-            } else {
-                var src_index: usize = 0;
-                for (bit_field) |*dest| {
-                    dest.* = findBits(src, &src_index);
-                }
-            }
-        }
-
-        fn copy(dst: []u8, src: []const u8) void {
-            std.debug.assert(dst.len == src.len);
-            std.mem.copy(u8, dst, src);
-        }
-
-        inline fn findBits(src: *const *[src_units]u8, src_index: *usize) T {
-            var buf: [@sizeOf(T)]u8 = undefined;
-            var next_index = src_index.* + @sizeOf(T);
-            if (next_index < src_units) {
-                std.mem.copy(u8, &buf, src.*[(src_index.*)..next_index]);
-                src_index.* = next_index;
-            } else {
-                copyWrapping(&buf, src, src_index);
-            }
-
-            var result = @bitCast(T, buf);
-
-            comptime const should_swap = comptime blk: {
-                break :blk (std.builtin.cpu.arch.endian() == .Big);
-            };
-
-            return if (should_swap) @byteSwap(T, result) else result;
-        }
-
-        inline fn copyWrapping(buf: []u8, src: *const *[src_units]u8, src_index: *usize) void {
-            var buf_index: usize = 0;
-            while (src_index.* < src_units) : (src_index.* += 1) {
-                buf[buf_index] = src.*[src_index.*];
-                buf_index += 1;
-            }
-            src_index.* = 0;
-            while (buf_index < @sizeOf(T)) : (buf_index += 1) {
-                buf[buf_index] = src.*[src_index.*];
-                src_index.* += 1;
-            }
-        }
-
-        // a mask that is usable to obtain the residual (remainder) from the
-        // bitshift operation.  This is the bit position within the datastructure
-        // that represents the primeness of the requested number.
-        const residue_mask = (1 << bit_shift) - 1;
-
-        pub fn findNextFactor(self: *Self, factor: usize) usize {
-            comptime const masks = trailing_masks();
-            const field = self.field;
-            const num = (factor + 2) >> 1;
-            var index = num >> bit_shift;
-            var slot = field[index] & masks[num & residue_mask];
-            if (slot == 0) {
-                for (field[index + 1 ..]) |s| {
-                    index += 1;
-                    slot = s;
-                    if (s != 0) {
-                        break;
-                    }
-                }
-            }
-            return (((index << bit_shift) + @ctz(T, slot)) << 1) + 1;
-        }
-
-        pub fn runFactor(self: *Self, factor: usize) void {
-            comptime const masks = bit_masks();
-            const field = self.field;
-            const limit = self.field_size >> 1;
-            var num = (factor * factor) >> 1;
-            while (num < limit) : (num += factor) {
-                var index = num >> bit_shift;
-                field[index] &= masks[num & residue_mask];
-            }
-        }
-
-        const shift_t = switch (T) {
-            u8 => u3,
-            u16 => u4,
-            u32 => u5,
-            u64 => u6,
-            else => unreachable,
-        };
-
-        fn trailing_masks() comptime [bit_width]T {
-            var masks = std.mem.zeroes([bit_width]T);
-            for (masks) |*value, index| {
-                value.* = @as(T, 0) -% (@as(T, 1) << @intCast(shift_t, index));
-            }
-            return masks;
-        }
-
-        fn bit_masks() comptime [bit_width]T {
-            var masks = std.mem.zeroes([bit_width]T);
-            for (masks) |*value, index| {
-                value.* = (@as(T, 1) << @intCast(shift_t, index));
-                value.* ^= (@as(T, 0) -% @as(T, 1));
-            }
-            return masks;
-        }
-
-        pub const wheel_name = if (Wheel) |W| ("-" ++ W.name) else "";
-        pub const name = "bitSieve-" ++ @typeName(T) ++ wheel_name;
-    };
-}
-
 
 pub const FastSieve = struct {
     // values
@@ -451,7 +230,7 @@ pub const FastSieve = struct {
 
     // storage
     field: []align(8) u8,
-    field_size: usize,
+    field_count: usize,
     allocator: *Allocator,
 
     const PatternChunk = std.meta.Vector(64, u8);
@@ -474,14 +253,14 @@ pub const FastSieve = struct {
     };
 
     // member functions
-    pub fn init(field_size: usize) !Self {
-        const bit_size = field_size / 2;
-        const field_size_bytes = (bit_size + @bitSizeOf(u8) - 1) / @bitSizeOf(u8);
+    pub fn init(field_count: usize) !Self {
+        const bit_size = field_count / 2;
+        const field_count_bytes = (bit_size + @bitSizeOf(u8) - 1) / @bitSizeOf(u8);
 
         // allocates an array of data.
         // Overallocate so we can do unchecked writes at the end.
-        const field = try a.alignedAlloc(u8, 8, field_size_bytes + @sizeOf(PatternChunk) - 1);
-        return Self{ .field = field, .allocator = allocator, .field_size = field_size };
+        const field = try a.alignedAlloc(u8, 8, field_count_bytes + @sizeOf(PatternChunk) - 1);
+        return Self{ .field = field, .allocator = allocator, .field_count = field_count };
     }
 
     pub fn deinit(self: *Self) void {
@@ -491,7 +270,7 @@ pub const FastSieve = struct {
     pub fn reset(self: *Self) usize {
         const field = self.field;
         @memset(field.ptr, 0xFF, field.len);
-        const num_bits = self.field_size >> 1;
+        const num_bits = self.field_count >> 1;
         const final_index = num_bits / 8;
         const final_bits = num_bits % 8;
 
@@ -541,7 +320,7 @@ pub const FastSieve = struct {
 
     pub inline fn runSparseFactor(self: *Self, factor: usize) void {
         const field = self.field;
-        const limit = self.field_size >> 1;
+        const limit = self.field_count >> 1;
         var num = (factor * factor) >> 1;
         while (num < limit) : (num += factor) {
             field[num / 8] &= bit_masks[num % 8];
@@ -551,7 +330,7 @@ pub const FastSieve = struct {
     pub inline fn runSmallFactor(self: *Self, factor: u32) void {
         std.debug.assert(factor < small_factor_max);
         const field = self.field;
-        const limit = self.field_size >> 1;
+        const limit = self.field_count >> 1;
 
         // Fill in a pattern buffer
         var pattern_raw: [small_factor_max + @sizeOf(PatternChunk)-1]u8 = undefined;
@@ -584,3 +363,103 @@ pub const FastSieve = struct {
 
     pub const name = "fastSieve";
 };
+
+// common tools
+fn divRoundUp(number: anytype, divisor: anytype) @TypeOf(number) {
+    const T = @TypeOf(number);
+    std.debug.assert(std.math.isPowerOfTwo(divisor));
+    return number / divisor + if (number % divisor == 0) @as(T, 0) else @as(T, 1);
+}
+
+test "divRoundUp" {
+    try std.testing.expectEqual(divRoundUp(3, 8), 1);
+    try std.testing.expectEqual(divRoundUp(8, 8), 1);
+    try std.testing.expectEqual(divRoundUp(17, 16), 2);
+}
+
+fn ShiftTypeFor(comptime T: type) type {
+    const t_size = @bitSizeOf(T);
+    return @Type(
+        std.builtin.TypeInfo{
+            .Int = .{
+                .signedness = .unsigned,
+                .bits = std.math.log2(t_size)
+            }
+        }
+    );
+}
+
+test "ShiftType analysis" {
+    try std.testing.expectEqual(ShiftTypeFor(u8), u3);
+    try std.testing.expectEqual(ShiftTypeFor(u16), u4);
+    try std.testing.expectEqual(ShiftTypeFor(u32), u5);
+    try std.testing.expectEqual(ShiftTypeFor(u64), u6);
+}
+
+// creates a compile-time lookup table for masks which will blot out values
+// before a given position in a single byte.
+fn make_trailing_masks(comptime T: type, prime: u1) comptime [@bitSizeOf(T)]T {
+    const t_size = @bitSizeOf(T);
+    const shift_t = ShiftTypeFor(T);
+    var masks = std.mem.zeroes([t_size]T);
+    for (masks) |*value, index| {
+        value.* = @as(T, 0) -% (@as(T, 1) << @intCast(shift_t, index));
+        if (prime == 0) {value.* = ~value.*; }
+    }
+    return masks;
+}
+
+test "trailing mask generation" {
+    try std.testing.expectEqual(
+        make_trailing_masks(u8, 0),
+        [_]u8{0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F});
+
+    try std.testing.expectEqual(
+        make_trailing_masks(u8, 1),
+        [_]u8{0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80});
+
+    try std.testing.expectEqual(
+        make_trailing_masks(u16, 0),
+        [_]u16{0x0000, 0x0001, 0x0003, 0x0007, 0x000F, 0x001F, 0x003F, 0x007F,
+               0x00FF, 0x01FF, 0x03FF, 0x07FF, 0x0FFF, 0x1FFF, 0x3FFF, 0x7FFF});
+
+    try std.testing.expectEqual(
+        make_trailing_masks(u16, 1),
+        [_]u16{0xFFFF, 0xFFFE, 0xFFFC, 0xFFF8, 0xFFF0, 0xFFE0, 0xFFC0, 0xFF80,
+               0xFF00, 0xFE00, 0xFC00, 0xF800, 0xF000, 0xE000, 0xC000, 0x8000});
+}
+
+// creates a compile-time lookup table for bit masks for each
+// slot.  There should be one mask for each bit-positional index
+// e.g. for u8, there are 8 u8 masks; for u64, there are 64 u64 masks.
+fn make_bit_masks(comptime T: type, prime: u1) comptime [@bitSizeOf(T)]T {
+    const shift_t = ShiftTypeFor(T);
+    var masks = std.mem.zeroes([@bitSizeOf(T)]T);
+    for (masks) |*value, bit_index| {
+        value.* = (@as(T, 1) << @intCast(shift_t, bit_index));
+        if (prime == 1) {
+            value.* ^= (@as(T, 0) -% @as(T, 1));
+        }
+    }
+    return masks;
+}
+
+test "bit mask generation" {
+    try std.testing.expectEqual(
+        make_bit_masks(u8, 0),
+        [_]u8{0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80});
+
+    try std.testing.expectEqual(
+        make_bit_masks(u8, 1),
+        [_]u8{0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F});
+
+    try std.testing.expectEqual(
+        make_bit_masks(u16, 0),
+        [_]u16{0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080,
+               0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000});
+
+    try std.testing.expectEqual(
+        make_bit_masks(u16, 1),
+        [_]u16{0xFFFE, 0xFFFD, 0xFFFB, 0xFFF7, 0xFFEF, 0xFFDF, 0xFFBF, 0xFF7F,
+               0xFEFF, 0xFDFF, 0xFBFF, 0xF7FF, 0xEFFF, 0xDFFF, 0xBFFF, 0x7FFF});
+}

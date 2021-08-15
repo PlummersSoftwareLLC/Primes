@@ -4,7 +4,7 @@
 
 const std = @import("std");
 pub const c_std_lib = @cImport({@cInclude("stdlib.h");});
-pub const default_allocator = VAlloc(.{});
+pub const default_allocator = CAlloc(c_std_lib);
 const page_size = std.mem.page_size;
 
 // common getHeader function that is going to be used by both calloc and malloc.
@@ -309,7 +309,6 @@ test "VAlloc produces an aligned memory slot that is filled with true." {
     defer a.allocator_deinit();
     try basic_test(a, 10, true);
 }
-
 
 test "VAlloc can produce multi-page allocations" {
     const a = VAlloc(.{});

@@ -10,8 +10,10 @@ const runners = @import("runners.zig");
 const SingleThreadedRunner = runners.SingleThreadedRunner;
 const ParallelAmdahlRunner = runners.AmdahlRunner;
 const ParallelGustafsonRunner = runners.GustafsonRunner;
-const VAlloc = @import("alloc.zig").VAlloc;
-const CAlloc = @import("alloc.zig").CAlloc;
+const allocators = @import("alloc.zig");
+const VAlloc = allocators.VAlloc;
+const CAlloc = allocators.CAlloc;
+const SAlloc = allocators.SAlloc;
 const c_std_lib = @import("alloc.zig").c_std_lib;
 
 const SIZE = 1_000_000;
@@ -33,7 +35,7 @@ pub fn main() anyerror!void {
 
     comptime const specs = .{
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{}},
-        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{})}},
+        .{ SingleThreadedRunner, .{}, IntSieve, .{}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = u8, .primeval = 1}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = bool, .primeval = false}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = bool, .primeval = true}},
@@ -41,10 +43,10 @@ pub fn main() anyerror!void {
 //        .{ ParallelAmdahlRunner, IntSieve, true, false, false },
 //        .{ ParallelGustafsonRunner, IntSieve, false, false, false },
 //        .{ ParallelGustafsonRunner, IntSieve, true, false, false },
-//      .{ SingleThreadedRunner, .{}, BitSieve, .{.allocator = VAlloc(.{}), .T = u8, .primeval = 0}},
-      .{ SingleThreadedRunner, .{}, BitSieve, .{.allocator = VAlloc(.{}), .T = u8, .primeval = 0}},
-      .{ SingleThreadedRunner, .{}, BitSieve, .{.allocator = VAlloc(.{}), .T = u8, .primeval = 1}},
-      .{ SingleThreadedRunner, .{}, BitSieve, .{.allocator = CAlloc(c_std_lib), .T = u8}},
+      .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u32}}, // equivalent to "c solution"
+      .{ SingleThreadedRunner, .{}, BitSieve, .{}},
+      .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u8, .cached_masks = true}},
+      .{ SingleThreadedRunner, .{}, BitSieve, .{.primeval = 1, .allocator = VAlloc(.{})}},
 //        .{ SingleThreadedRunner, BitSieve, false, false, true },
 //        .{ ParallelGustafsonRunner, BitSieve, false, false, false },
 //        .{ ParallelGustafsonRunner, BitSieve, false, false, true },
