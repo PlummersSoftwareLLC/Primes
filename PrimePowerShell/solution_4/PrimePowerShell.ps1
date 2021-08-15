@@ -93,139 +93,212 @@ param(
 
 $code = @"
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 public class PrimeCS
 {
+    private static readonly Dictionary<ulong, ulong> myDict = new Dictionary<ulong, ulong>
+    {
+        [10] = 4,                 // Historical data for validating our results - the number of primes
+        [100] = 25,               // to be found under some limit, such as 168 primes under 1000
+        [1000] = 168,
+        [10000] = 1229,
+        [100000] = 9592,
+        [1000000] = 78498,
+        [10000000] = 664579,
+        [100000000] = 5761455,
+        [1000000000] = 50847534,
+        [10000000000] = 455052511,
+    };
+
     class prime_sieve
     {
-        private readonly int sieveSize = 0;
-        private readonly BitArray bitArray; //making it readonly so we tell the compiler that the variable reference cant change. around 5% increase in performance
-        private Dictionary<int, int> myDict = new Dictionary<int, int> 
-        { 
-            { 10 , 4 },                 // Historical data for validating our results - the number of primes
-            { 100 , 25 },               // to be found under some limit, such as 168 primes under 1000
-            { 1000 , 168 },
-            { 10000 , 1229 },
-            { 100000 , 9592 },
-            { 1000000 , 78498 },
-            { 10000000 , 664579 },
-            { 100000000 , 5761455 } 
-        };
+        private readonly ulong sieveSize;
+        private readonly byte[] rawbits;
 
-        public prime_sieve(int size) 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public prime_sieve(ulong n)
         {
-            sieveSize = size;
-            bitArray = new BitArray(((this.sieveSize + 1) / 2), true);
+            sieveSize = n;
+            rawbits = GC.AllocateUninitializedArray<byte>((int)((n / 8) + 1), pinned: true);
+            rawbits.AsSpan().Fill(0xFF);
         }
 
-        public int countPrimes()
+        public ulong countPrimes()
         {
-            int count = 0;
-            for (int i = 0; i < this.bitArray.Count; i++)
-                if (bitArray[i])
+            var sieveSize = this.sieveSize;
+            var rawbits = this.rawbits;
+
+            // hoist null check
+            _ = getrawbits(rawbits, 0);
+
+            ulong count = (sieveSize >= 2) ? 1UL : 0UL;
+            for (ulong i = 3; i < sieveSize; i+=2)
+                if (GetBit(rawbits, i))
                     count++;
             return count;
         }
 
-        public bool validateResults()
+        private bool validateResults()
         {
-            if (myDict.ContainsKey(this.sieveSize))
-                return this.myDict[this.sieveSize] == this.countPrimes();
-            return false;
+            return myDict.TryGetValue(sieveSize, out ulong sieveResult) && (sieveResult == countPrimes());
         }
 
-        private bool GetBit(int index)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool GetBit(byte[] rawbits, ulong index)
         {
-            if (index % 2 == 0)
-                return false;
-            return bitArray[index / 2];
+            Debug.Assert((index % 2) != 0);
+            index /= 2;
+            return (getrawbits(rawbits, index / 8U) & (1u << (int)(index % 8))) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void ClearBit(byte[] rawbits, ulong index)
+        {
+            Debug.Assert((index % 2) != 0);
+            index /= 2;
+            getrawbits(rawbits, index / 8) &= (byte)~(1u << (int)(index % 8));
         }
 
         // primeSieve
         // 
         // Calculate the primes up to the specified limit
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void runSieve()
         {
-            int factor = 3;
-            int q = (int) Math.Sqrt(this.sieveSize);
+            var sieveSize = this.sieveSize;
+            var rawbits = this.rawbits;
 
-            while (factor < q)
+            // hoist null check
+            _ = getrawbits(rawbits, 0);
+
+            ulong factor = 3;
+            ulong q = (ulong)Math.Sqrt(sieveSize);
+
+            while (factor <= q)
             {
-                for (int num = factor / 2; num <= this.bitArray.Count; num++)
+                for (ulong num = factor; num < sieveSize; num += 2)
                 {
-                    if (bitArray[num])
+                    if (GetBit(rawbits, num))
                     {
-                        factor = num * 2 + 1;
+                        factor = num;
                         break;
                     }
                 }
 
                 // If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-                // We can then step by factor * 2 because every second one is going to be even by definition.
-                // Note that bitArray is only storing odd numbers. That means an increment of "num" by "factor" is actually an increment of 2 * "factor"
+                // We can then step by factor * 2 because every second one is going to be even by definition
 
-                for (int num = factor * 3 / 2; num < this.bitArray.Count; num += factor)
-                    this.bitArray[num] = false;
+                for (ulong num = factor * factor; num < sieveSize; num += factor * 2)
+                    ClearBit(rawbits, num);
 
                 factor += 2;
             }
         }
 
-        public void printResults(bool showResults, double duration, int passes)
+        public void printResults(bool showResults, double duration, ulong passes)
         {
+            var sieveSize = this.sieveSize;
+            var rawbits = this.rawbits;
+
+            // hoist null check
+            _ = getrawbits(rawbits, 0);
+
             if (showResults)
                 Console.Write("2, ");
 
-            int count = 1;
-            for (int num = 3; num <= this.sieveSize; num++)
+            ulong count = (sieveSize >= 2) ? 1UL : 0UL;
+            for (ulong num = 3; num <= sieveSize; num += 2)
             {
-                if (GetBit(num))
+                if (GetBit(rawbits, num))
                 {
                     if (showResults)
                         Console.Write(num + ", ");
                     count++;
                 }
             }
+
             if (showResults)
-                Console.WriteLine("");
+                Console.WriteLine();
+            Console.WriteLine($"Passes: {passes}, Time: {duration}, Avg: {duration / passes}, Limit: {sieveSize}, Count: {countPrimes()}, Valid: {validateResults()}");
 
-            CultureInfo.CurrentCulture = new CultureInfo("en_US", false);
-
-            Console.WriteLine("Passes: " + passes + ", Time: " + duration + ", Avg: " + (duration / passes) + ", Limit: " + this.sieveSize + ", Count: " + count + ", Valid: " + validateResults());
-        
-            // Following 2 lines added by rbergen to conform to drag race output format
             Console.WriteLine();
-            Console.WriteLine($"davepl;{passes};{duration:G6};1;algorithm=base,faithful=yes,bits=1");
+            Console.WriteLine($"tannergooding;{passes};{duration};1;algorithm=base,faithful=yes,bits=1", passes, duration);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ref byte getrawbits(byte[] rawbits, ulong index)
+        {
+            return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(rawbits), (nint)index);
         }
     }
 
     public static void Main()
     {
-        CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
+        const ulong SieveSize = 1000000;
+        const long MillisecondsPerSecond = 1000;
+        const long MicrosecondsPerSecond = 1000000;
 
-        var tStart = DateTime.UtcNow;
-        var passes = 0;
+        ulong passes = 0;
         prime_sieve sieve = null;
 
-        while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
+        var stopwatch = Stopwatch.StartNew();
+
+        while (stopwatch.ElapsedMilliseconds < (5 * MillisecondsPerSecond))
         {
-            sieve = new prime_sieve(1000000);
+            sieve = new prime_sieve(SieveSize);
             sieve.runSieve();
             passes++;
         }
+        stopwatch.Stop();
 
-        var tD = DateTime.UtcNow - tStart;
         if (sieve != null)
-            sieve.printResults(false, tD.TotalSeconds, passes);
+            sieve.printResults(false, (stopwatch.Elapsed.TotalSeconds * MicrosecondsPerSecond) / SieveSize, passes);
     }
 }
 "@
 
-
-Add-Type -TypeDefinition $code
+Add-Type -TypeDefinition $code -CompilerOptions "-unsafe","-optimize","-langversion:preview"
 
 [PrimeCS]::Main()
+
+
+
+# $stopWatch = [System.Diagnostics.Stopwatch]::new()
+# [long]$minimumticks = $MinimumRuntime * [System.Diagnostics.Stopwatch]::Frequency
+
+# $SieveSize | % {
+#   $passes = 0
+#   $size = $_
+#   Write-Verbose "Starting benchmark ..."
+
+#   $stopWatch.Restart()
+
+#   while ($stopWatch.ElapsedTicks -lt $minimumticks) {
+#     $sieve = [Sieve]::new($size)
+#     $sieve.runSieve()
+#     $passes++
+#   }
+
+#   $stopWatch.Stop()
+
+#   Write-Verbose "Processing results ..."
+#   # Force current session to 'en-US' for output.
+#   [System.Threading.Thread]::CurrentThread.CurrentUICulture = `
+#     [System.Threading.Thread]::CurrentThread.CurrentCulture = `
+#     [System.Globalization.CultureInfo]::GetCultureInfo('en-US')    
+#   $sieve.printResults($ShowResults, $stopWatch.Elapsed.TotalSeconds, $passes, 1)
+
+#   [PsObject]@{
+#     AverageDuration = ($stopWatch.Elapsed.TotalSeconds / $passes)
+#     Duration        = $stopWatch.Elapsed
+#     Passes          = $passes
+#     Primes          = $sieve.countPrimes()
+#     SieveSize       = $size
+#     Valid           = $sieve.validateResults()
+#   }
+# }
