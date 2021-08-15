@@ -35,7 +35,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
         // Because SieveSize is a templated value, we know what it is at compile-time, so can stack allocate here.
         // Most D functions can be ran at compile-time. This is called Compile Time Function Execution (CTFE).
         // `alignTo` is being used in CTFE here.
-        ubyte[alignTo!8(SieveSize) / 8] _bits = ubyte.max;
+        ubyte[alignTo!8(SieveSize) / 8] _bits;
     }
 
     // We'll use this helper func at compile-time to ensure that the user passes
@@ -115,9 +115,9 @@ mixin template CommonSieveFunctions(size_t bitSize)
         return (this._bits[index / bitSize] & (1 << (index % bitSize))) != 0;
     }
 
-    private void clearBit(size_t index) @nogc nothrow
+    private void setBit(size_t index) @nogc nothrow
     {
-        this._bits[index / bitSize] &= ~(1 << (index % bitSize));
+        this._bits[index / bitSize] |= 1 << (index % bitSize);
     }
 
     private size_t countPrimes() nothrow inout
@@ -140,7 +140,7 @@ mixin template CommonSieveFunctions(size_t bitSize)
         // Then:
         //  Evalulate all values of the pipeline, and find the sum of all the mapped results.
         return iota(3, SieveSize, 2)
-                .map!(num => this.getBit(num) ? 1 : 0) // Ternary operator is just to make it more clear, not actually needed.
+                .map!(num => this.getBit(num) ? 0 : 1) // Ternary operator is just to make it more clear, not actually needed.
                 .sum + 1; // + 1 is to account for '2' being a special case.
     }
 }
@@ -181,7 +181,7 @@ mixin template RunSieve()
             // Semi-traditional style of a for each loop.
             foreach(i; iota(factor, q, 2UL)) // every number from `factor` to `q`(exclusive), with a step of 2
             {
-                if(this.getBit(i))
+                if(!this.getBit(i))
                 {
                     factor = i;
                     break;
@@ -192,7 +192,7 @@ mixin template RunSieve()
             // Note that we create and pass a delegate/lambda into a _template_ parameter.
             // This can allow D compilers to perform optimisations, including inlining.
             iota(factor * 3, SieveSize, factor * 2)
-                .each!(num => this.clearBit(num));
+                .each!(num => this.setBit(num));
 
             factor += 2;
         }
@@ -222,7 +222,7 @@ mixin template RunSieve()
         auto count = 1;
         foreach(num; iota(3, SieveSize, 2))
         {
-            if(this.getBit(num))
+            if(!this.getBit(num))
             {
                 if(showResults)
                     output.put(format!"%s, "(num)); // We can pass the format specification as a template parameter
@@ -280,7 +280,6 @@ final class SieveRT
     this(size_t sieveSize)
     {
         this._bits.length = alignTo!8(sieveSize) / 8;
-        this._bits[] = ubyte.max;
         this._sieveSize = sieveSize;
     }
 
@@ -418,7 +417,6 @@ final class SieveRTBX(alias BitT)
     this(size_t sieveSize)
     {
         this._bits.length = sieveSize/2;
-        this._bits[] = 1;
         this._sieveSize = sieveSize;
     }
 
@@ -427,9 +425,9 @@ final class SieveRTBX(alias BitT)
         return this._bits[index/2] == 1;
     }
 
-    private void clearBit(size_t index) @nogc nothrow
+    private void setBit(size_t index) @nogc nothrow
     {
-        this._bits[index/2] = 0;
+        this._bits[index/2] = 1;
     }
 
     private size_t countPrimes() nothrow inout
@@ -439,7 +437,7 @@ final class SieveRTBX(alias BitT)
 
         // Slightly different way instead of using .count
         return iota(3, SieveSize, 2)
-                .map!(num => this.getBit(num))
+                .map!(num => !this.getBit(num))
                 .filter!(b => b)
                 .walkLength + 1;
     }
@@ -472,7 +470,6 @@ string generateSieveRT(alias BitType)()
         this(size_t sieveSize)
         {
             this._bits.length = alignTo!%s(sieveSize) / %s;
-            this._bits[] = %s.max;
             this._sieveSize = sieveSize;
         }
 
@@ -489,7 +486,6 @@ string generateSieveRT(alias BitType)()
         BitType.stringof,
         BitType.sizeof * 8,
         BitType.sizeof * 8,
-        BitType.stringof
     );
 }
 mixin(generateSieveRT!ushort);
@@ -577,9 +573,8 @@ void main(string[] args)
 
             mixin(generateSieveRTRunner!("s5", ushort, true));
             mixin(generateSieveRTRunner!("s6", uint, true));
-            mixin(generateSieveRTRunner!("s7", ulong, true));
 
-            alias s8 = SieveRTB1_64;
+            alias s8 = SieveRTB1_32;
             runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
 
             // This one is here just to have a "non-bool yet used as a bool" version there.
