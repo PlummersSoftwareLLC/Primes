@@ -29,6 +29,9 @@ jobs:
       solutions: ${{ steps.solutions.outputs.solutions }}
 
   build:
+    env: 
+      ENABLE_DOCKER_PUSH: ${{ secrets.DOCKER_PASSWORD != '' && github.ref == 'refs/heads/drag-race' }}
+
     runs-on: "ubuntu-20.04"
 
     needs: ["collect-solutions"]
@@ -77,6 +80,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
+        if: ${{ env.ENABLE_DOCKER_PUSH == 'true' }}
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -89,7 +93,7 @@ jobs:
           tags: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           context: ${{ matrix.solution }}
           platforms: linux/amd64
-          push: ${{ github.ref == 'refs/heads/drag-race' }}
+          push: ${{ env.ENABLE_DOCKER_PUSH }}
           cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           cache-to: type=inline
       
@@ -100,6 +104,6 @@ jobs:
           tags: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           context: ${{ matrix.solution }}
           platforms: linux/arm64
-          push: ${{ github.ref == 'refs/heads/drag-race' }}
+          push: ${{ env.ENABLE_DOCKER_PUSH }}
           cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           cache-to: type=inline
