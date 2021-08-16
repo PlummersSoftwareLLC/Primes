@@ -24,10 +24,10 @@ Run `.\PrimePowerShell.ps1` in a PowerShell. In order to suppress the pipeline o
 Intel Core i7-1165G7 @ 2.80GHz on Windows 11 with PowerShell 7.1.3 in Windows Subsystem for Linus for a sieve size of 10, 100, 1000, 10000, 100000 and 1000000:
 
 ```
-RobCannon_ps4;29621618;5.00004;1;algorithm=base,faithful=yes,bits=1
-RobCannon_ps4;23481503;5.00089;1;algorithm=base,faithful=yes,bits=1
-RobCannon_ps4;6305039;5;1;algorithm=base,faithful=yes,bits=1
-RobCannon_ps4;704742;5;1;algorithm=base,faithful=yes,bits=1
-RobCannon_ps4;66692;5.00007;1;algorithm=base,faithful=yes,bits=1
-RobCannon_ps4;5984;5.00021;1;algorithm=base,faithful=yes,bits=1
+RobCannon_ps4;29621618;5.00004;1;algorithm=base,faithful=no,bits=1
+RobCannon_ps4;23481503;5.00089;1;algorithm=base,faithful=no,bits=1
+RobCannon_ps4;6305039;5;1;algorithm=base,faithful=no,bits=1
+RobCannon_ps4;704742;5;1;algorithm=base,faithful=no,bits=1
+RobCannon_ps4;66692;5.00007;1;algorithm=base,faithful=no,bits=1
+RobCannon_ps4;5984;5.00021;1;algorithm=base,faithful=no,bits=1
 ```
