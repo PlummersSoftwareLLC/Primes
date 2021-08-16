@@ -35,7 +35,7 @@ if(SieveSize > 0) // We can attach constraints onto templated things that must s
         // Because SieveSize is a templated value, we know what it is at compile-time, so can stack allocate here.
         // Most D functions can be ran at compile-time. This is called Compile Time Function Execution (CTFE).
         // `alignTo` is being used in CTFE here.
-        ubyte[alignTo!8(SieveSize) / 8] _bits = ubyte.max;
+        ubyte[alignTo!8(SieveSize) / 8] _bits;
     }
 
     // We'll use this helper func at compile-time to ensure that the user passes
@@ -112,12 +112,12 @@ mixin template CommonSieveFunctions(size_t bitSize)
     {
         // Fairly standard bitty stuff.
         assert(index % 2 == 1, "Index is even?");
-        return (this._bits[index / bitSize] & (1 << (index % bitSize))) != 0;
+        return (this._bits[index / bitSize] & (1UL << (index % bitSize))) != 0;
     }
 
-    private void clearBit(size_t index) @nogc nothrow
+    private void setBit(size_t index) @nogc nothrow
     {
-        this._bits[index / bitSize] &= ~(1 << (index % bitSize));
+        this._bits[index / bitSize] |= 1UL << (index % bitSize);
     }
 
     private size_t countPrimes() nothrow inout
@@ -140,7 +140,7 @@ mixin template CommonSieveFunctions(size_t bitSize)
         // Then:
         //  Evalulate all values of the pipeline, and find the sum of all the mapped results.
         return iota(3, SieveSize, 2)
-                .map!(num => this.getBit(num) ? 1 : 0) // Ternary operator is just to make it more clear, not actually needed.
+                .map!(num => this.getBit(num) ? 0 : 1) // Ternary operator is just to make it more clear, not actually needed.
                 .sum + 1; // + 1 is to account for '2' being a special case.
     }
 }
@@ -158,12 +158,11 @@ mixin template RunSieve()
         // We can also selectively specify which symbols from a package we want to import.
         // It's good practice to do so (less symbol bloat), but it's also super tedious.
         import std.algorithm : each;
-        import std.conv      : to;
         import std.math      : sqrt, round;
         import std.range     : iota;
 
         // Something to note about the below code:
-        //      We're using the `to` function from `std.conv` using member function syntax?
+        //      We're using the `sqrt` function from `std.math` using member function syntax?
         //      That's because D has a concept called UFCS (Uniform Function Call Syntax)
         //      Most function calls written as `func(a, b, c)` can be written as `a.func(b, c)`.
         //
@@ -171,28 +170,40 @@ mixin template RunSieve()
         // If there's only one template parameter, then you can usually use the form `!templateP(runtimeP1, runtimeP2)`
         //
         // Also, also, if a function doesn't need any runtime parameters, you can just completely omit the parenthesis:
-        //  `.to!int` and `.to!int()` are exactly the same.
+        //  `.sqrt()` and `.sqrt` are exactly the same.
+        //
+        // Normally one would use `std.conv.to` to do casting, e.g. `sqrt(123).to!size_t` but it was generating
+        // inefficient ASM, so I'm now using raw casts.
 
         auto factor = 3UL;
-        const q = sqrt(SieveSize.to!float).round.to!size_t;
+        const q = cast(size_t)((cast(double)SieveSize).sqrt);
 
-        while(factor < q)
+        while(factor <= q)
         {
-            // Semi-traditional style of a for each loop.
-            foreach(i; iota(factor, q, 2UL)) // every number from `factor` to `q`(exclusive), with a step of 2
+            if(this.getBit(factor))
             {
-                if(this.getBit(i))
+                factor += 2;
+                continue;
+            }
+        
+            enum LOOP_UNROLL_FACTOR = 64;
+            auto num = factor * factor;
+            while(num < SieveSize)
+            {
+                if(num + (factor * LOOP_UNROLL_FACTOR) < SieveSize)
                 {
-                    factor = i;
-                    break;
+                    static foreach(i; 0..LOOP_UNROLL_FACTOR / 2)
+                    {
+                        this.setBit(num);
+                        num += factor * 2;
+                    }
+                }
+                else
+                {
+                    this.setBit(num);
+                    num += factor * 2;
                 }
             }
-
-            // This is a more functional style of for each.
-            // Note that we create and pass a delegate/lambda into a _template_ parameter.
-            // This can allow D compilers to perform optimisations, including inlining.
-            iota(factor * 3, SieveSize, factor * 2)
-                .each!(num => this.clearBit(num));
 
             factor += 2;
         }
@@ -222,7 +233,7 @@ mixin template RunSieve()
         auto count = 1;
         foreach(num; iota(3, SieveSize, 2))
         {
-            if(this.getBit(num))
+            if(!this.getBit(num))
             {
                 if(showResults)
                     output.put(format!"%s, "(num)); // We can pass the format specification as a template parameter
@@ -280,7 +291,6 @@ final class SieveRT
     this(size_t sieveSize)
     {
         this._bits.length = alignTo!8(sieveSize) / 8;
-        this._bits[] = ubyte.max;
         this._sieveSize = sieveSize;
     }
 
@@ -418,7 +428,6 @@ final class SieveRTBX(alias BitT)
     this(size_t sieveSize)
     {
         this._bits.length = sieveSize/2;
-        this._bits[] = 1;
         this._sieveSize = sieveSize;
     }
 
@@ -427,9 +436,9 @@ final class SieveRTBX(alias BitT)
         return this._bits[index/2] == 1;
     }
 
-    private void clearBit(size_t index) @nogc nothrow
+    private void setBit(size_t index) @nogc nothrow
     {
-        this._bits[index/2] = 0;
+        this._bits[index/2] = 1;
     }
 
     private size_t countPrimes() nothrow inout
@@ -439,7 +448,7 @@ final class SieveRTBX(alias BitT)
 
         // Slightly different way instead of using .count
         return iota(3, SieveSize, 2)
-                .map!(num => this.getBit(num))
+                .map!(num => !this.getBit(num))
                 .filter!(b => b)
                 .walkLength + 1;
     }
@@ -472,7 +481,6 @@ string generateSieveRT(alias BitType)()
         this(size_t sieveSize)
         {
             this._bits.length = alignTo!%s(sieveSize) / %s;
-            this._bits[] = %s.max;
             this._sieveSize = sieveSize;
         }
 
@@ -489,7 +497,6 @@ string generateSieveRT(alias BitType)()
         BitType.stringof,
         BitType.sizeof * 8,
         BitType.sizeof * 8,
-        BitType.stringof
     );
 }
 mixin(generateSieveRT!ushort);
@@ -579,8 +586,8 @@ void main(string[] args)
             mixin(generateSieveRTRunner!("s6", uint, true));
             mixin(generateSieveRTRunner!("s7", ulong, true));
 
-            alias s8 = SieveRTB1_64;
-            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 64 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
+            alias s8 = SieveRTB1_32;
+            runMultiThreaded!(s8, st)(IsFaithful.yes, "base", 1); // 32 has the best performance on my machine, so I'll use that for the multithreaded leaderboard.
 
             // This one is here just to have a "non-bool yet used as a bool" version there.
             alias s9 = SieveRTBX!ulong;
