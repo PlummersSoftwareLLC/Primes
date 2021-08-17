@@ -319,8 +319,19 @@ pub mod primes {
     /// This is a variation of [`FlagStorageBitVectorStriped`] that has better locality.
     /// The striped storage is divided up into smaller blocks, and we do multiple
     /// passes over the smaller block rather than the entire sieve.
-    pub struct FlagStorageBitVectorStripedBlocks<const N: usize, const HYBRID: bool> {
-        blocks: Vec<[u8; N]>,
+    ///
+    /// The implementation is generic over two parameters, making use of Rust's new
+    /// const generics.
+    /// - `BLOCK_SIZE` is the size of the blocks, in words (bytes seem to work best)
+    /// - `HYBRID` is a boolean specifying whether to enable a slightly different
+    ///   algorithm for resetting smaller factors.
+    ///   - `false` disables the algorithm, falling back on only the original striped block resets
+    ///   - `true` enables the new algorithm for smaller skip factors (under 8)
+    ///
+    /// Since there are a lot of bits to reset for smaller factors, there is a moderate
+    /// performance gain from using the `HYBRID` approach.
+    pub struct FlagStorageBitVectorStripedBlocks<const BLOCK_SIZE: usize, const HYBRID: bool> {
+        blocks: Vec<[u8; BLOCK_SIZE]>,
         length_bits: usize,
     }
 
@@ -338,6 +349,8 @@ pub mod primes {
     {
         const BLOCK_SIZE_BITS: usize = BLOCK_SIZE * U8_BITS;
 
+        /// Returns `1` if the `index` for a given `start`, and `skip`
+        /// should be reset; `0` otherwise.
         fn should_reset(index: usize, start: usize, skip: usize) -> u8 {
             let rel = index as isize - start as isize;
             if rel % skip as isize == 0 {
@@ -347,6 +360,23 @@ pub mod primes {
             }
         }
 
+        /// This is the new algorithm for resetting words in a different
+        /// order from the original `reset_flags_general` algorithm below.
+        ///
+        /// In the original algorithm, we reset all the first bits in the block,
+        /// then all the second bits, and so on. This works really well in the
+        /// general case, when we have a large skip factor, as we don't touch
+        /// most words.
+        ///
+        /// We use this algorithm when the skip factors are small, say less
+        /// than 8. In this case, we're typically touching every word in the block,
+        /// and we can expect each word to have multiple bits that need to be reset.
+        /// So we proceed in a different order, one word at a time. And for each
+        /// word, we reset the bits one by one.
+        ///
+        /// Note that the algorithm is generic over the `SKIP` factor, which
+        /// allows the compiler to do some extra optimisation. Each skip factor
+        /// we specify will result in specific code.
         #[inline(always)]
         fn reset_flags_dense<const SKIP: usize>(&mut self) {
             // earliest start to avoid resetting the factor itself
@@ -366,9 +396,10 @@ pub mod primes {
                     0
                 };
 
-                // Calculate the masks we're going to apply first.
-                // Note that we _could_ calculate a single mask word and apply it,
-                // but I believe that would be against the rules of the competition as
+                // Calculate the masks we're going to apply first. Note that each mask
+                // will reset only a single bit, which is why we have 8 separate masks.
+                // Note that we _could_ calculate a single mask word and apply it in a
+                // single operation, but I believe that would be against the rules as
                 // we would be resetting multiple bits in one operation if we did that.
                 let mut mask_set = [[0u8; U8_BITS]; SKIP];
                 for word_idx in 0..SKIP {
@@ -388,8 +419,8 @@ pub mod primes {
                     *word = masks.iter().fold(*word, |w, mask| w & mask);
                 }
 
-                // run through all exact size chunks; compiler loves to optimise
-                // known sizes
+                // run through all exact `SKIP` size chunks - the compiler is able to
+                // optimise known sizes quite well.
                 block.chunks_exact_mut(SKIP).for_each(|words| {
                     words
                         .iter_mut()
@@ -399,7 +430,7 @@ pub mod primes {
                         });
                 });
 
-                // run through the last stub of fewer than SKIP items
+                // run through the remaining stub of fewer than SKIP items
                 block
                     .chunks_exact_mut(SKIP)
                     .into_remainder()
@@ -417,6 +448,10 @@ pub mod primes {
             }
         }
 
+        /// This is the original striped-blocks algorithm, and proceeds to
+        /// set the first bit in every applicable word, then the second bit
+        /// and so on. This works really well for larger skip sizes, as the
+        /// words we need to reset are generally quite far apart.
         #[inline(always)]
         fn reset_flags_general(&mut self, start: usize, skip: usize) {
             // determine first block, start bit, and first word
@@ -485,11 +520,13 @@ pub mod primes {
             }
         }
 
+        /// Reset flags specified by the sieve. We use the optional
+        /// hybrid/dense reset methods for small factors if the
+        /// `HYBRID` type parameter is true, with the general
+        /// algorithm for higher skip factors. If `HYBRID` is false,
+        /// we rely only on the general approach for all skip factors.
         #[inline(always)]
         fn reset_flags(&mut self, start: usize, skip: usize) {
-            // Reset flags using the dense reset approach if HYBRID
-            // is enabled. Otherwise use the general approach for
-            // all skip factors.
             if HYBRID {
                 match skip {
                     // We only really gain an advantage from dense
