@@ -110,7 +110,7 @@ function PrimeSieve:printResults(showResults, duration, passes)
     ", Valid: " .. tostring(self:validateResults()) 
 
 	-- rbergen: added drag-race output format
-	s = s .. "\n\nlua;" .. passes .. ";" .. duration .. ";1;algorithm=base,faithful=no,bits=64\n"
+  s = s .. "\n\nlua;" .. passes .. ";" .. duration .. ";1;algorithm=base,faithful=yes,bits=64\n"
 
   print(s)
 end
