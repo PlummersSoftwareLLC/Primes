@@ -30,7 +30,7 @@ jobs:
 
   build:
     env: 
-      ENABLE_DOCKER_PUSH: ${{ secrets.DOCKER_PASSWORD != '' && github.ref == 'refs/heads/drag-race' }}
+      ENABLE_DOCKER_PUSH: ${{ github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/drag-race' }}
 
     runs-on: "ubuntu-20.04"
 
