@@ -532,7 +532,7 @@ pub mod primes {
                     // We only really gain an advantage from dense
                     // resetting up to skip factors under 8, as after
                     // that, we're expecting the resets to be sparse.
-                    // We only get called for skip factors, so there's
+                    // We only get called for odd skip factors, so there's
                     // no point adding cases for even numbers.
                     1 => self.reset_flags_dense::<1>(),
                     3 => self.reset_flags_dense::<3>(),
