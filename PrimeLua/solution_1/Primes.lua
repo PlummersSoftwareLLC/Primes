@@ -112,7 +112,7 @@ function PrimeSieve:printResults(showResults, duration, passes)
 	-- rbergen: added drag-race output format
 	s = s .. "\n\nlua;" .. passes .. ";" .. duration .. ";1;algorithm=base,faithful=no,bits=64\n"
 
-	return s
+  print(s)
 end
 
 local tStart = os.time()
@@ -131,4 +131,4 @@ end
 
 local tD = os.time() - tStart
 
-print(sieve:printResults(false, tD, passes))
+sieve:printResults(false, tD, passes)
