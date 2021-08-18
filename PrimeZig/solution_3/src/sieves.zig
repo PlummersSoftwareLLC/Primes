@@ -1,5 +1,6 @@
 const std = @import("std");
 const default_allocator = @import("alloc.zig").default_allocator;
+const unrolled = @import("unrolled.zig");
 
 const IntSieveOpts = comptime struct {
     T: type = u8,
@@ -93,6 +94,7 @@ const BitSieveOpts = comptime struct {
     RunFactorChunk: type = u32,
     cached_masks: bool = false, // used cached mask lookup instead?
     FindFactorChunk: type = u8,
+    unrolled: bool = false
 };
 
 pub fn BitSieve(comptime opts: BitSieveOpts) type {
@@ -185,19 +187,36 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
-            const T = opts.RunFactorChunk;
-            const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
-            // naive factoring algorithm.  calculate mask each time.
-            const max_index = self.field_count;
-            var multiple_index = (factor * factor) / 2;
-            while (multiple_index < max_index) : (multiple_index += factor) {
-                if (PRIME == 1) {
-                    const mask = mask_for(T, multiple_index);
-                    field[multiple_index / @bitSizeOf(T)] &= mask;
-                } else {
-                    const mask = mask_for(T, multiple_index);
-                    field[multiple_index / @bitSizeOf(T)] |= mask;
-                }
+            if (opts.unrolled and factor == 3) {
+              runFactorUnrolled(self, factor);
+            } else {
+              const T = opts.RunFactorChunk;
+              const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
+              // naive factoring algorithm.  calculate mask each time.
+              const max_index = self.field_count;
+              var multiple_index = (factor * factor) / 2;
+              while (multiple_index < max_index) : (multiple_index += factor) {
+                  if (PRIME == 1) {
+                      const mask = mask_for(T, multiple_index);
+                      field[multiple_index / @bitSizeOf(T)] &= mask;
+                  } else {
+                      const mask = mask_for(T, multiple_index);
+                      field[multiple_index / @bitSizeOf(T)] |= mask;
+                  }
+              }
+            }
+        }
+
+        fn runFactorUnrolled(self: *Self, factor: usize) void {
+            const FIRST_FUNS = comptime unrolled.makeUnrolledLUT(u8, .{.start_at_square = true});
+            const CYCLE_FUNS = comptime unrolled.makeUnrolledLUT(u8, .{});
+            // how many times do we need to unroll?
+            const cycles = unrolled.cycles(u8, self.field_count, factor);
+            var index : usize = 0;
+            var field = self.field;
+            field = FIRST_FUNS[1](field);
+            while (index < cycles) : (index += 1) {
+                field = CYCLE_FUNS[1](field);
             }
         }
 
@@ -221,6 +240,17 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         pub fn dump(self: *Self) void {
             std.debug.print("\n{b:0>8}\n", .{self.field[0..self.field_bytes]});
         }
+
+        pub fn describe(self: *Self) void {
+            var index: usize = 1;
+            while (index < self.field_count) : (index += 1) {
+                const byte = index / 8;
+                const bit = @intCast(u3, index % 8);
+                if ((self.field[byte] >> bit) & 0x01 == PRIME) {
+                    std.debug.print("{} is prime\n", .{2 * index + 1});
+                }
+            }
+        }
     };
 }
 
@@ -235,7 +265,6 @@ pub const FastSieve = struct {
 
     const PatternChunk = std.meta.Vector(64, u8);
     const small_factor_max = @sizeOf(PatternChunk) * 8;
-
     const bit_masks = blk: {
         var masks: [8]u8 = undefined;
         for (masks) |*value, index| {

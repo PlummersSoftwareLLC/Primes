@@ -34,7 +34,6 @@ pub fn main() anyerror!void {
     comptime const BitSieveDataTypes = .{ u8, u16, u32, u64, u128, u256 };
 
     comptime const specs = .{
-//        .{ SingleThreadedRunner, .{}, IntSieve, .{}},
         .{ SingleThreadedRunner, .{}, IntSieve, .{}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = u8, .primeval = 1}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = bool, .primeval = false}},
@@ -45,6 +44,7 @@ pub fn main() anyerror!void {
 //        .{ ParallelGustafsonRunner, IntSieve, true, false, false },
       .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u32}}, // equivalent to "c solution"
       .{ SingleThreadedRunner, .{}, BitSieve, .{}},
+      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true}},
       .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u8, .cached_masks = true}},
       .{ SingleThreadedRunner, .{}, BitSieve, .{.primeval = 1, .allocator = VAlloc(.{})}},
 //        .{ SingleThreadedRunner, BitSieve, false, false, true },

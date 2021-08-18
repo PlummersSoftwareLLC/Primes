@@ -70,6 +70,7 @@ test "single threaded, inverted intsieve" {
 }
 
 test "Single threaded with bitsieve" {
+    std.debug.print("\n", .{});
     inline for (expected_results) |result| {
         const field_size = result[0];
         const expected_primes = result[1];
@@ -80,11 +81,22 @@ test "Single threaded with bitsieve" {
     }
 }
 
-test "Single threaded with inverted bitsieve" {
+//test "Single threaded with inverted bitsieve" {
+//    inline for (expected_results) |result| {
+//        const field_size = result[0];
+//        const expected_primes = result[1];
+//        const Sieve = BitSieve(.{.primeval = 1, .allocator = a.SAlloc(a.c_std_lib)});
+//
+//        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes);
+//        try std.testing.expectEqual(passes, 1);
+//    }
+//}
+
+test "Single threaded with unrolled bitsieve" {
     inline for (expected_results) |result| {
         const field_size = result[0];
         const expected_primes = result[1];
-        const Sieve = BitSieve(.{.primeval = 1, .allocator = a.SAlloc(a.c_std_lib)});
+        const Sieve = BitSieve(.{.unrolled = true});
 
         var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes);
         try std.testing.expectEqual(passes, 1);
