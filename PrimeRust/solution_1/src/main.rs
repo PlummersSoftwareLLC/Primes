@@ -241,8 +241,8 @@ pub mod primes {
     /// There is a computation / memory bandwidth tradeoff here. This works well
     /// only for sieves that fit inside the processor cache. For processors with
     /// smaller caches or larger sieves, this algorithm will result in a lot of
-    /// cache thrashing due to multiple passes. It really doesn't work well on something 
-    /// like a raspberry pi. 
+    /// cache thrashing due to multiple passes. It really doesn't work well on something
+    /// like a raspberry pi.
     ///
     /// [`FlagStorageBitVectorStripedBlocks`] takes a more cache-friendly approach.
     pub struct FlagStorageBitVectorStriped {
@@ -319,8 +319,19 @@ pub mod primes {
     /// This is a variation of [`FlagStorageBitVectorStriped`] that has better locality.
     /// The striped storage is divided up into smaller blocks, and we do multiple
     /// passes over the smaller block rather than the entire sieve.
-    pub struct FlagStorageBitVectorStripedBlocks<const N: usize> {
-        blocks: Vec<[u8; N]>,
+    ///
+    /// The implementation is generic over two parameters, making use of Rust's new
+    /// const generics.
+    /// - `BLOCK_SIZE` is the size of the blocks, in words (bytes seem to work best)
+    /// - `HYBRID` is a boolean specifying whether to enable a slightly different
+    ///   algorithm for resetting smaller factors.
+    ///   - `false` disables the algorithm, falling back on only the original striped block resets
+    ///   - `true` enables the new algorithm for smaller skip factors (under 8)
+    ///
+    /// Since there are a lot of bits to reset for smaller factors, there is a moderate
+    /// performance gain from using the `HYBRID` approach.
+    pub struct FlagStorageBitVectorStripedBlocks<const BLOCK_SIZE: usize, const HYBRID: bool> {
+        blocks: Vec<[u8; BLOCK_SIZE]>,
         length_bits: usize,
     }
 
@@ -333,27 +344,121 @@ pub mod primes {
     /// in parallel.
     pub const BLOCK_SIZE_SMALL: usize = 4 * 1024;
 
-    impl<const N: usize> FlagStorageBitVectorStripedBlocks<N> {
-        const BLOCK_SIZE: usize = N;
-        const BLOCK_SIZE_BITS: usize = Self::BLOCK_SIZE * U8_BITS;
-    }
+    impl<const BLOCK_SIZE: usize, const HYBRID: bool>
+        FlagStorageBitVectorStripedBlocks<BLOCK_SIZE, HYBRID>
+    {
+        const BLOCK_SIZE_BITS: usize = BLOCK_SIZE * U8_BITS;
 
-    impl<const N: usize> FlagStorage for FlagStorageBitVectorStripedBlocks<N> {
-        fn create_true(size: usize) -> Self {
-            let num_blocks = size / Self::BLOCK_SIZE_BITS + (size % Self::BLOCK_SIZE_BITS).min(1);
-            Self {
-                length_bits: size,
-                blocks: vec![[u8::MAX; N]; num_blocks],
+        /// Returns `1` if the `index` for a given `start`, and `skip`
+        /// should be reset; `0` otherwise.
+        fn should_reset(index: usize, start: usize, skip: usize) -> u8 {
+            let rel = index as isize - start as isize;
+            if rel % skip as isize == 0 {
+                1
+            } else {
+                0
             }
         }
 
+        /// This is the new algorithm for resetting words in a different
+        /// order from the original `reset_flags_general` algorithm below.
+        ///
+        /// In the original algorithm, we reset all the first bits in the block,
+        /// then all the second bits, and so on. This works really well in the
+        /// general case, when we have a large skip factor, as we don't touch
+        /// most words.
+        ///
+        /// We use this algorithm when the skip factors are small, say less
+        /// than 8. In this case, we're typically touching every word in the block,
+        /// and we can expect each word to have multiple bits that need to be reset.
+        /// So we proceed in a different order, one word at a time. And for each
+        /// word, we reset the bits one by one.
+        ///
+        /// Note that the algorithm is generic over the `SKIP` factor, which
+        /// allows the compiler to do some extra optimisation. Each skip factor
+        /// we specify will result in specific code.
         #[inline(always)]
-        fn reset_flags(&mut self, start: usize, skip: usize) {
+        fn reset_flags_dense<const SKIP: usize>(&mut self) {
+            // earliest start to avoid resetting the factor itself
+            let start = SKIP / 2 + SKIP;
+            debug_assert!(
+                start < BLOCK_SIZE,
+                "algorithm only correct for small skip factors"
+            );
+            for (block_idx, block) in self.blocks.iter_mut().enumerate() {
+                // Preserve the first bit of one word we know we're going to overwrite
+                // with the masks. Its cheaper to put it back afterwards than break the loop
+                // into two sections with different rules. Only applicable on the first block:
+                // this is the factor itself, and we don't want to reset that flag.
+                let preserved_word_mask = if block_idx == 0 {
+                    block[SKIP / 2] & 1
+                } else {
+                    0
+                };
+
+                // Calculate the masks we're going to apply first. Note that each mask
+                // will reset only a single bit, which is why we have 8 separate masks.
+                // Note that we _could_ calculate a single mask word and apply it in a
+                // single operation, but I believe that would be against the rules as
+                // we would be resetting multiple bits in one operation if we did that.
+                let mut mask_set = [[0u8; U8_BITS]; SKIP];
+                for word_idx in 0..SKIP {
+                    for bit in 0..8 {
+                        let block_index_offset = block_idx * BLOCK_SIZE * U8_BITS;
+                        let bit_index_offset = bit * BLOCK_SIZE;
+                        let index = block_index_offset + bit_index_offset + word_idx;
+                        mask_set[word_idx][bit] = !(Self::should_reset(index, start, SKIP) << bit);
+                    }
+                }
+                // rebind as immutable
+                let mask_set = mask_set;
+
+                /// apply all 8 masks - one for each bit - using a fold, mostly
+                /// because folds are fun
+                fn apply_masks(word: &mut u8, masks: &[u8; U8_BITS]) {
+                    *word = masks.iter().fold(*word, |w, mask| w & mask);
+                }
+
+                // run through all exact `SKIP` size chunks - the compiler is able to
+                // optimise known sizes quite well.
+                block.chunks_exact_mut(SKIP).for_each(|words| {
+                    words
+                        .iter_mut()
+                        .zip(mask_set.iter().copied())
+                        .for_each(|(word, masks)| {
+                            apply_masks(word, &masks);
+                        });
+                });
+
+                // run through the remaining stub of fewer than SKIP items
+                block
+                    .chunks_exact_mut(SKIP)
+                    .into_remainder()
+                    .iter_mut()
+                    .zip(mask_set.iter().copied())
+                    .for_each(|(word, masks)| {
+                        apply_masks(word, &masks);
+                    });
+
+                // restore the first bit on the preserved word in the first block,
+                // as noted above
+                if block_idx == 0 {
+                    block[SKIP / 2] |= preserved_word_mask;
+                }
+            }
+        }
+
+        /// This is the original striped-blocks algorithm, and proceeds to
+        /// set the first bit in every applicable word, then the second bit
+        /// and so on. This works really well for larger skip sizes, as the
+        /// words we need to reset are generally quite far apart.
+        #[inline(always)]
+        fn reset_flags_general(&mut self, start: usize, skip: usize) {
             // determine first block, start bit, and first word
             let block_idx_start = start / Self::BLOCK_SIZE_BITS;
             let offset_idx = start % Self::BLOCK_SIZE_BITS;
-            let mut bit_idx = offset_idx / Self::BLOCK_SIZE;
-            let mut word_idx = offset_idx % Self::BLOCK_SIZE;
+            let mut bit_idx = offset_idx / BLOCK_SIZE;
+            let mut word_idx = offset_idx % BLOCK_SIZE;
 
             for block_idx in block_idx_start..self.blocks.len() {
                 // Safety: we have ensured the block_idx < length
@@ -361,9 +466,8 @@ pub mod primes {
                 while bit_idx < U8_BITS {
                     // calculate effective end position: we might have a shorter stripe on the last iteration
                     let stripe_start_position =
-                        block_idx * Self::BLOCK_SIZE_BITS + bit_idx * Self::BLOCK_SIZE;
-                    let effective_len =
-                        Self::BLOCK_SIZE.min(self.length_bits - stripe_start_position);
+                        block_idx * Self::BLOCK_SIZE_BITS + bit_idx * BLOCK_SIZE;
+                    let effective_len = BLOCK_SIZE.min(self.length_bits - stripe_start_position);
 
                     // get mask for this bit position
                     let mask = !(1 << bit_idx);
@@ -390,17 +494,54 @@ pub mod primes {
                     }
 
                     // early termination: this is the last stripe
-                    if effective_len != Self::BLOCK_SIZE {
+                    if effective_len != BLOCK_SIZE {
                         return;
                     }
 
                     // bit/stripe complete; advance to next bit
                     bit_idx += 1;
-                    word_idx -= Self::BLOCK_SIZE;
+                    word_idx -= BLOCK_SIZE;
                 }
 
                 // block complete; reset bit index and proceed with the next block
                 bit_idx = 0;
+            }
+        }
+    }
+
+    impl<const BLOCK_SIZE: usize, const HYBRID: bool> FlagStorage
+        for FlagStorageBitVectorStripedBlocks<BLOCK_SIZE, HYBRID>
+    {
+        fn create_true(size: usize) -> Self {
+            let num_blocks = size / Self::BLOCK_SIZE_BITS + (size % Self::BLOCK_SIZE_BITS).min(1);
+            Self {
+                length_bits: size,
+                blocks: vec![[u8::MAX; BLOCK_SIZE]; num_blocks],
+            }
+        }
+
+        /// Reset flags specified by the sieve. We use the optional
+        /// hybrid/dense reset methods for small factors if the
+        /// `HYBRID` type parameter is true, with the general
+        /// algorithm for higher skip factors. If `HYBRID` is false,
+        /// we rely only on the general approach for all skip factors.
+        #[inline(always)]
+        fn reset_flags(&mut self, start: usize, skip: usize) {
+            if HYBRID {
+                match skip {
+                    // We only really gain an advantage from dense
+                    // resetting up to skip factors under 8, as after
+                    // that, we're expecting the resets to be sparse.
+                    // We only get called for odd skip factors, so there's
+                    // no point adding cases for even numbers.
+                    1 => self.reset_flags_dense::<1>(),
+                    3 => self.reset_flags_dense::<3>(),
+                    5 => self.reset_flags_dense::<5>(),
+                    7 => self.reset_flags_dense::<7>(),
+                    _ => self.reset_flags_general(start, skip),
+                }
+            } else {
+                self.reset_flags_general(start, skip);
             }
         }
 
@@ -411,8 +552,8 @@ pub mod primes {
             }
             let block = index / Self::BLOCK_SIZE_BITS;
             let offset = index % Self::BLOCK_SIZE_BITS;
-            let bit_index = offset / Self::BLOCK_SIZE;
-            let word_index = offset % Self::BLOCK_SIZE;
+            let bit_index = offset / BLOCK_SIZE;
+            let word_index = offset % BLOCK_SIZE;
             let word = self.blocks.get(block).unwrap().get(word_index).unwrap();
             *word & (1 << bit_index) != 0
         }
@@ -581,6 +722,11 @@ struct CommandLineOptions {
     #[structopt(long)]
     bits_striped_blocks: bool,
 
+    /// Run variant that uses bit-level storage, using striped storage in blocks with
+    /// hybrid dense resets for smaller skip factors
+    #[structopt(long)]
+    bits_striped_hybrid: bool,
+
     /// Run variant that uses byte-level storage
     #[structopt(long)]
     bytes: bool,
@@ -606,6 +752,7 @@ fn main() {
         opt.bits_rotate,
         opt.bits_striped,
         opt.bits_striped_blocks,
+        opt.bits_striped_hybrid,
         opt.bytes,
     ]
     .iter()
@@ -676,7 +823,7 @@ fn main() {
             thread::sleep(Duration::from_secs(1));
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>(
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>(
                     "bit-storage-striped-blocks",
                     1,
                     run_duration,
@@ -687,8 +834,34 @@ fn main() {
             }
 
             for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>(
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, false>>(
                     "bit-storage-striped-blocks-small",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+        }
+
+        if opt.bits_striped_hybrid || run_all {
+            thread::sleep(Duration::from_secs(1));
+            print_header(threads, limit, run_duration);
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>(
+                    "bit-storage-striped-hybrid",
+                    1,
+                    run_duration,
+                    threads,
+                    limit,
+                    opt.print,
+                );
+            }
+
+            for _ in 0..repetitions {
+                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, true>>(
+                    "bit-storage-striped-hybrid-small",
                     1,
                     run_duration,
                     threads,
@@ -758,7 +931,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
         // print results to stderr for convenience
         print_results_stderr(
             label,
-            &sieve,
+            sieve,
             print_primes,
             duration,
             total_passes,
@@ -791,10 +964,17 @@ mod tests {
     }
 
     #[test]
-    fn sieve_known_correct_bits_striped_blocks() {
+    fn sieve_known_correct_bits_striped_blocks_general() {
         // check both sizes
-        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>();
-        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>();
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>();
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, false>>();
+    }
+
+    #[test]
+    fn sieve_known_correct_bits_striped_blocks_hybrid() {
+        // check both sizes
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>();
+        sieve_known_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, true>>();
     }
 
     #[test]
@@ -837,12 +1017,21 @@ mod tests {
     }
 
     #[test]
-    fn storage_bit_striped_block_correct() {
+    fn storage_bit_striped_block_general_correct() {
         // test small as well as default block sizes
-        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<7>>();
-        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<1024>>();
-        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL>>();
-        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<7, false>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<1024, false>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, false>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>();
+    }
+
+    #[test]
+    fn storage_bit_striped_block_hybrid_correct() {
+        // test small as well as default block sizes
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<50, true>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<1024, true>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, true>>();
+        basic_storage_correct::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>();
     }
 
     fn basic_storage_correct<T: FlagStorage>() {
@@ -852,10 +1041,11 @@ mod tests {
             assert!(storage.get(i), "expected initially true for index {}", i);
         }
 
-        // not primes; we're just checking the storage works
-        storage.reset_flags(30, 7);
+        // use realistic start values, as hybrid storage makes assumptions
+        // about where to start resetting
+        storage.reset_flags(7, 5);
         for i in 0..size {
-            let expected_inv = (i >= 30) && ((i - 30) % 7 == 0);
+            let expected_inv = (i >= 7) && ((i - 7) % 5 == 0);
             assert_eq!(
                 storage.get(i),
                 !expected_inv,
@@ -864,10 +1054,10 @@ mod tests {
             );
         }
 
-        storage.reset_flags(72, 100);
+        storage.reset_flags(19, 13);
         for i in 0..size {
-            let first = (i >= 30) && ((i - 30) % 7 == 0);
-            let second = (i >= 72) && ((i - 72) % 100 == 0);
+            let first = (i >= 7) && ((i - 7) % 5 == 0);
+            let second = (i >= 19) && ((i - 19) % 13 == 0);
             let expected_inv = first || second;
             assert_eq!(
                 storage.get(i),
