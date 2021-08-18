@@ -108,7 +108,7 @@ E8 D9 01 00 00          #+call Time()           call rel32          E8 cd
 48 91                   # rax=0, rcx=L          xchg rax, r64       REX.W + 90+rd       0100 1000
 49 8D 7D 08             # rdi = r13 + 8         lea r64, m          REX.W + 8D /r       0100 1001   01 111 101
 F3 48 AA                # store bytes           rep stos m8         F3 REX.W AA         0100 1000
-49 95                   # rax=addr, r13=0       xchg rax, r64       REX.W + 90+rd       0100 1001   REX.B, not REX.R. Vol 2A Sec 3.1.1.1
+49 95                   # rax=addr, r13=0       xchg rax, r64       REX.WB + 90+rd      0100 1001   REX.B, not REX.R. Vol 2A Sec 3.1.1.1
 EB 2A                   #+jump Mark             jmp rel8            EB cb
 
 # Mmap:             =23 # (*) /usr/include/asm-generic/mman-common.h; flag: 2 (private) | 20 (anon)
@@ -117,7 +117,7 @@ EB 2A                   #+jump Mark             jmp rel8            EB cb
 31 FF                   # rdi = addr (0: any)   xor r/m64, r64      31 /r                           11 111 111
 6A 03 5A                # rdx = prot (*)        push imm8; pop      6A ib ; 58+rd       1 (read) | 2 (write)
 49 83 C8 FF             # r8 = fd (-1: anon)    or r/m64, imm8      REX.W + 83 /1 ib    0100 1001   11 001 000
-6A 22 49 5A             # r10 = stat            push imm8; pop  6A ib ; REX.R + 58+rd   0100 1001 
+6A 22 49 5A             # r10 = stat            push imm8; pop  6A ib ; REX.WB + 58+rd  0100 1001 
 0F 05                   # syscall               syscall             0F 05
 48 85 C0                # cmp rax, 0            test r/m64, r64     REX.W + 85 /r       0100 1000   11 000 000
 7F 08                   #+jump Size if >        jg rel8             7F cb
@@ -275,9 +275,9 @@ BE 00 00 60 00          # rsi = obuf            mov r32, imm32      B8+rd id
 6A 01 5F                # rdi = fd (1: stdout)  push imm8; pop      6A ib ; 58+rd
 # _flush:            17 #
 6A 01 58                # rax = write           push imm8; pop      6A ib ; 58+rd
-49 53                   # push r11              push r64            REX.R + 50+rd       0100 1001
+49 53                   # push r11              push r64            REX.WB + 50+rd      0100 1001
 0F 05                   # syscall               syscall             0F 05
-49 5B                   # pop r11               pop r64             REX.R + 58+rd       0100 1001
+49 5B                   # pop r11               pop r64             REX.WB + 58+rd      0100 1001
 48 85 C0                # cmp rax, 0            test r/m64, r64     REX.W + 85 /r       0100 1000   11 000 000
 7C 09                   #+jump _err if <        jl rel8             7C cb
 48 01 C6                # rsi += rax            add r/m64, r64      REX.W + 01 /r       0100 1000   11 000 110

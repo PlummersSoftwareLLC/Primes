@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var label string = "ssovest-go-uint8"
+var label string = "ssovest-go-u8-B"
 
 var primeCounts = map[uintptr]uintptr{
 	10:        4,

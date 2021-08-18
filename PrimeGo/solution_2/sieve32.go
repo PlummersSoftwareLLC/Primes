@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var label string = "ssovest-go-uint32"
+var label string = "ssovest-go-u32-B"
 
 var primeCounts = map[uint64]uint64{
 	10:        4,

@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-var label string = "ssovest-go-ptr"
+var label string = "ssovest-go-ptr-B"
 
 var primeCounts = map[uintptr]uintptr{
 	10:        4,
