@@ -187,40 +187,42 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
-            if (opts.unrolled and factor == 3) {
-              runFactorUnrolled(self, factor);
+            if (opts.unrolled and unrolled.isDense(u8, factor)) {
+                runFactorUnrolled(self, factor);
             } else {
-              const T = opts.RunFactorChunk;
-              const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
-              // naive factoring algorithm.  calculate mask each time.
-              const max_index = self.field_count;
-              var multiple_index = (factor * factor) / 2;
-              while (multiple_index < max_index) : (multiple_index += factor) {
-                  if (PRIME == 1) {
-                      const mask = mask_for(T, multiple_index);
-                      field[multiple_index / @bitSizeOf(T)] &= mask;
-                  } else {
-                      const mask = mask_for(T, multiple_index);
-                      field[multiple_index / @bitSizeOf(T)] |= mask;
-                  }
-              }
+                const T = opts.RunFactorChunk;
+                const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
+                // naive factoring algorithm.  calculate mask each time.
+                const max_index = self.field_count;
+                var multiple_index = (factor * factor) / 2;
+                while (multiple_index < max_index) : (multiple_index += factor) {
+                    if (PRIME == 1) {
+                        const mask = mask_for(T, multiple_index);
+                        field[multiple_index / @bitSizeOf(T)] &= mask;
+                    } else {
+                        const mask = mask_for(T, multiple_index);
+                        field[multiple_index / @bitSizeOf(T)] |= mask;
+                    }
+                }
             }
         }
 
         fn runFactorUnrolled(self: *Self, factor: usize) void {
-            const FIRST_FUNS = comptime unrolled.makeUnrolledLUT(
+            const FIRST_FUNS = comptime unrolled.makeDenseLUT(
                 u8,
                 .{.primeval = opts.primeval, .start_at_square = true});
-            const CYCLE_FUNS = comptime unrolled.makeUnrolledLUT(
+            const CYCLE_FUNS = comptime unrolled.makeDenseLUT(
                 u8,
                 .{.primeval = opts.primeval});
+
             // how many times do we need to unroll?
-            const cycles = unrolled.cycles(u8, self.field_count, factor);
+            const cycles = unrolled.denseCycles(u8, self.field_count, factor);
+            const fun_index = factor / 2;
             var index : usize = 0;
             var field = self.field;
-            field = FIRST_FUNS[1](field);
+            field = FIRST_FUNS[fun_index](field);
             while (index < cycles) : (index += 1) {
-                field = CYCLE_FUNS[1](field);
+                field = CYCLE_FUNS[fun_index](field);
             }
         }
 
