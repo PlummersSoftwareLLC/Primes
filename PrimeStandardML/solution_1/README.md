@@ -32,5 +32,5 @@ A Dockerfile has been provided.
 
 ## Output
 ```
-NotMatthewGriffin_SML;1252;5.003;1;algorithm=base,faithful=yes,bits=1
+NotMatthewGriffin_SML;1492;5.003;1;algorithm=base,faithful=yes,bits=1
 ```
