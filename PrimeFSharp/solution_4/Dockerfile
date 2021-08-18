@@ -7,7 +7,7 @@ RUN dotnet restore
 RUN ls -l
 # copy and publish app and libraries
 COPY *.fs /source
-RUN dotnet publish -c release -o /app --no-restore
+RUN dotnet publish -c=Release -o /app --no-restore
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/runtime:5.0-focal

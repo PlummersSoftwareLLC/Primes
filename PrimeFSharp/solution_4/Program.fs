@@ -1,4 +1,11 @@
+// Software Drag Race submission - base faithful 1-bit...
+// compile with "dotnet build -c=Release" for speed...
+
 open System
+open Microsoft.FSharp.NativeInterop
+
+# nowarn "9"
+# nowarn "51"
 
 let cLIMIT = 1000000
 
@@ -22,22 +29,26 @@ let newPrimeSieve sieveSize =
   let sqrtlmtndx = ((sieveSize |> float |> sqrt |> int) - 3) >>> 1
   let bitlmt = (sieveSize - 3) >>> 1
   let cmpsts = Array.zeroCreate ((bitlmt + 8) >>> 3)
+  let cmpstsplmti: nativeint = NativePtr.toNativeInt &&cmpsts.[cmpsts.Length - 1]
   let inline isprimendx i = cmpsts.[i >>> 3] &&& cBITMASK.[i &&& 7] = 0uy
 
   let rec loopndx ndx =
     if ndx <= sqrtlmtndx then
       if isprimendx ndx then
         let bp = ndx + ndx + 3
+        let bpni : nativeint = nativeint bp
         let swi = (bp * bp - 3) >>> 1
         let llmt = min bitlmt (swi + (bp <<< 3) - 1)
         let rec loopl l =
           if l <= llmt then
             let mask = cBITMASK.[l &&& 7]
-            let rec loopcull cull =
-              if cull < cmpsts.Length then
-                cmpsts.[cull] <- cmpsts.[cull] ||| mask
-                loopcull (cull + bp)
-            loopcull (l >>> 3); loopl (l + bp)   
+            let rec loopcull cullpi =
+              if cullpi <= cmpstsplmti then
+                let cullp = NativePtr.ofNativeInt<uint8> cullpi
+                NativePtr.write cullp (NativePtr.read cullp ||| mask)
+                loopcull (cullpi + bpni)
+            loopcull <| NativePtr.toNativeInt &&cmpsts.[l >>> 3]
+            loopl (l + bp)   
         loopl swi
       loopndx (ndx + 1)
   loopndx 0
