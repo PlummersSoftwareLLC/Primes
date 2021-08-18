@@ -208,8 +208,12 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         }
 
         fn runFactorUnrolled(self: *Self, factor: usize) void {
-            const FIRST_FUNS = comptime unrolled.makeUnrolledLUT(u8, .{.start_at_square = true});
-            const CYCLE_FUNS = comptime unrolled.makeUnrolledLUT(u8, .{});
+            const FIRST_FUNS = comptime unrolled.makeUnrolledLUT(
+                u8,
+                .{.primeval = opts.primeval, .start_at_square = true});
+            const CYCLE_FUNS = comptime unrolled.makeUnrolledLUT(
+                u8,
+                .{.primeval = opts.primeval});
             // how many times do we need to unroll?
             const cycles = unrolled.cycles(u8, self.field_count, factor);
             var index : usize = 0;
