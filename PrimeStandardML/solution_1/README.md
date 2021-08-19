@@ -27,10 +27,21 @@ mlton -link-opt '-static' primes.mlb
 ./primes
 ```
 
+### MLTON with llvm
+
+With a recent enough version of the mlton compiler (since release 20180207) llvm can be used for code generation. If the tools `llvm-as`, `opt`, `llc` are available in the compilation environment then this option can be used to compile a faster sieve program.
+
+Execute the following from this directory:
+
+```
+mlton -link-opt '-static' -codegen llvm primes.mlb
+./primes
+```
+
 ### Docker
 A Dockerfile has been provided.
 
 ## Output
 ```
-NotMatthewGriffin_SML;1492;5.003;1;algorithm=base,faithful=yes,bits=1
+NotMatthewGriffin_SML;2181;5.001;1;algorithm=base,faithful=yes,bits=1
 ```
