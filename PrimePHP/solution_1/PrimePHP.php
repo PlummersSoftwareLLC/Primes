@@ -53,8 +53,8 @@ class PrimeSieve
             }
 
             $ft2 = $factor;
-            $start = $factor * $factor * 0.5;
-            for ($i = $start; $i <= $rawBitsSize; $i += $ft2) {
+            $start = (int)($factor * $factor * 0.5);
+            for ($i = $start; $i < $rawBitsSize; $i += $ft2) {
                 $rb[$i] = 1;
             }
 
