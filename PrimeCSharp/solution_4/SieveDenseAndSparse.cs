@@ -6,9 +6,19 @@ using System.Runtime.CompilerServices;
 
 namespace PrimeSieveCS
 {
+    readonly struct SieveDenseAndSparseRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize)
+        {
+            var sieve = new SieveDenseAndSparse(sieveSize);
+            sieve.RunSieve();
+            return sieve;
+        }
+    }
+
     class SieveDenseAndSparse : ISieve
     {
-        public readonly uint sieveSize = 0;
+        public readonly uint sieveSize;
         readonly uint halfLimit;
         readonly ulong[] bits;
 
