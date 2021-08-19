@@ -28,7 +28,7 @@ class PrimeUmple {
     }
 
     before getBit {
-        assert index % 2 == 0: "You are getting even bits, which is sub-optimal";
+        assert index % 2 != 0: "You are getting even bits, which is sub-optimal";
     }
 
     private boolean getBit(int index) {
@@ -36,7 +36,7 @@ class PrimeUmple {
     }
 
     before clearBit {
-        assert index % 2 == 0: "You are setting even bits, which is sub-optimal";
+        assert index % 2 != 0: "You are setting even bits, which is sub-optimal";
     }
 
     private void clearBit(int index) {
