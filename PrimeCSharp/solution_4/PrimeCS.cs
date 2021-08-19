@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -49,6 +50,8 @@ namespace PrimeSieveCS
 
         static void RunSieve<TRunner>(TRunner runner, uint sieveSize) where TRunner : ISieveRunner
         {
+            var sw = Stopwatch.StartNew();
+
             //warmup - 5 seconds permitted
             while (sw.Elapsed.TotalSeconds < 5)
                 runner.RunSieve(sieveSize);
@@ -58,20 +61,18 @@ namespace PrimeSieveCS
             GC.Collect(0, GCCollectionMode.Forced, true, true);
 
             //running the dragrace
-            var tStart = DateTime.UtcNow;
             var passes = 0;
             ISieve sieve = default;
-
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
+            sw.Restart();
+            while (sw.Elapsed.TotalSeconds < 5)
             {
                 sieve = runner.RunSieve(sieveSize);
                 passes++;
             }
-
-            var tD = DateTime.UtcNow - tStart;
+            sw.Stop();
 
             if (sieve != null)
-                PrintResults(sieve, false, tD.TotalSeconds, passes);
+                PrintResults(sieve, false, sw.Elapsed.TotalSeconds, passes);
         }
 
         static void PrintResults(ISieve sieve, bool showResults, double duration, int passes)
