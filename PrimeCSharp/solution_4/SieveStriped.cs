@@ -1,12 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace PrimeSieveCS
 {
+    readonly struct SieveStripedRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize)
+        {
+            var sieve = new SieveStriped(sieveSize);
+            sieve.RunSieve();
+            return sieve;
+        }
+    }
+
     /// <summary>
     /// A simplified version of the striped algorithm used by rust solution_1.
     /// Instead of having the sieve oriented "vertically", we keep the normal bit array representaion.
@@ -17,7 +25,7 @@ namespace PrimeSieveCS
     /// </summary>
     class SieveStriped : ISieve
     {
-        public readonly uint sieveSize = 0;
+        public readonly uint sieveSize;
         readonly uint halfLimit;
         readonly ulong[] bits;
 

@@ -18,3 +18,4 @@ TODO
 Contributors:
 - @ItalyToast https://www.github.com/ItalyToast -- original author
 - Michael Barber @mike-barber https://www.github.com/mike-barber -- fixed 8X over allocation, contributor
+- Theodore Tsirpanis @teo-tsirpanis https://www.github.com/teo-tsirpanis -- contributor
