@@ -5,11 +5,12 @@ This document describes how to built and run all benchmarks (solutions) for diff
 ## Table of contents
 
 1. [General working mechanism](#general-working-mechanism)
-2. [Linux](#linux)
-3. [Windows](#windows)
-4. [macOS](#macos)
-5. [Example output](#example-output)
-6. [Running a single benchmark](#running-a-single-benchmark)
+2. [Docker](#docker) (no need for gcc or nodejs)
+3. [Linux](#linux)
+4. [Windows](#windows)
+5. [macOS](#macos)
+6. [Example output](#example-output)
+7. [Running a single benchmark](#running-a-single-benchmark)
 
 ## What operating system to use?
 
@@ -24,6 +25,24 @@ The main directory contains a file named "`Makefile`". This Makefile implements 
 - If a solution requires a specific hardware architecture that does not match your hardware then this solution is skipped. For example, `PrimeAssembly\solution_1` contains a file named `arch-arm64`. If you are running on different hardware then this solution is skipped
 - Each solution is built and run with the Dockerfile that is provided in the solution directory.
 - After all solutions have been run a summary report is created in the temp directory that was created in the first step.
+
+## Docker
+
+Only `docker` and `git` are required to run benchmarks.
+
+For the installation of Docker first follow the instructions as described in <https://docs.docker.com/engine/install/>.
+
+Take the following steps to run all benchmarks:
+
+1. Install `docker` and `git`
+2. Open a terminal.
+3. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`
+4. `cd Primes`
+5. _(will require `sudo` if your user is not a member of `docker` group)_ `docker build -t primes-env .`
+6. _(will require `sudo` if your user is not a member of `docker` group)_ `docker run --privileged -v /var/run/docker.sock:/var/run/docker.sock --rm -it -v $(pwd):/primes primes-env make`
+7. All benchmarks will now be built and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.
+8. Once complete a report is written to the terminal, see [example output](#example-output).
+9. You may want to delete unnecessary docker images.
 
 ## Linux
 
