@@ -29,7 +29,7 @@ namespace PrimeSieveCS
         readonly uint halfLimit;
         readonly ulong[] bits;
 
-        public string Name => "italytoast-striped";
+        public string Name => "italytoast-stride8";
 
         public uint SieveSize => sieveSize;
 
