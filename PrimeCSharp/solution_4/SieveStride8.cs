@@ -7,13 +7,9 @@ namespace PrimeSieveCS
 {
     readonly struct SieveStride8Runner : ISieveRunner
     {
-        public ISieve RunSieve(uint sieveSize)
-        {
-            var sieve = new SieveStride8(sieveSize);
-            sieve.RunSieve();
-            return sieve;
-        }
+        public ISieve RunSieve(uint sieveSize) => new SieveStride8(sieveSize).RunSieve();
     }
+
 
     /// <summary>
     /// A simplified version of the striped algorithm used by rust solution_1.
@@ -25,7 +21,7 @@ namespace PrimeSieveCS
     /// </summary>
     class SieveStride8 : ISieve
     {
-        public readonly uint sieveSize;
+        readonly uint sieveSize;
         readonly uint halfLimit;
         readonly ulong[] bits;
 
@@ -75,7 +71,7 @@ namespace PrimeSieveCS
         /// Calculate the primes up to the specified limit
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        unsafe public void RunSieve()
+        unsafe public SieveStride8 RunSieve()
         {
             uint factor = 3;
             uint halfFactor = factor >> 1;
@@ -107,6 +103,7 @@ namespace PrimeSieveCS
 
                     ClearBitsStriped((byte*)ptr, (factor * factor) / 2, factor, halfLimit);
                 }
+            return this;
         }
     }
 }

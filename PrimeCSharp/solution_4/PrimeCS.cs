@@ -13,6 +13,10 @@ namespace PrimeSieveCS
         IEnumerable<uint> EnumeratePrimes();
     }
 
+    /// <summary>
+    /// This is just a workaround to avoid an indirect function call to construct the sieve.
+    /// This can be replaced with a static function call when we get statics in interfaces.
+    /// </summary>
     interface ISieveRunner
     {
         ISieve RunSieve(uint sieveSize);
@@ -46,7 +50,9 @@ namespace PrimeSieveCS
 
             RunSieve(default(SieveDenseAndSparseRunner), sieveSize);
             RunSieve(default(SieveStride8Runner), sieveSize);
-            RunSieve(default(SieveStride8BlocksRunner), sieveSize);
+            RunSieve(default(SieveStride8Blocks16kRunner), sieveSize);
+            RunSieve(default(SieveStride8Blocks32kRunner), sieveSize);
+            RunSieve(default(SieveStride8Blocks64kRunner), sieveSize);
         }
 
         static void RunSieve<TRunner>(TRunner runner, uint sieveSize) where TRunner : ISieveRunner

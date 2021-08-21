@@ -7,16 +7,20 @@ using System.Text;
 
 namespace PrimeSieveCS
 {
-    readonly struct SieveStride8BlocksRunner : ISieveRunner
+    readonly struct SieveStride8Blocks16kRunner : ISieveRunner
     {
-        public ISieve RunSieve(uint sieveSize)
-        {
-            var sieve = new SieveStride8Blocks(sieveSize);
-            sieve.RunSieve();
-            return sieve;
-        }
+        public ISieve RunSieve(uint sieveSize) => new SieveStride8Blocks(sieveSize, 0x4000, "italytoast-stride8-blocks16k").RunSieve();
     }
 
+    readonly struct SieveStride8Blocks32kRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize) => new SieveStride8Blocks(sieveSize, 0x8000, "italytoast-stride8-blocks32k").RunSieve();
+    }
+
+    readonly struct SieveStride8Blocks64kRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize) => new SieveStride8Blocks(sieveSize, 0x10000, "italytoast-stride8-blocks64k").RunSieve();
+    }
 
     /// <summary>
     /// A simplified version of the striped algorithm used by rust solution_1.
@@ -28,19 +32,22 @@ namespace PrimeSieveCS
     /// </summary>
     class SieveStride8Blocks : ISieve
     {
-        const int blocksize = 0x4000; //16k blocksize in bytes, that should fit in most processors L1 cache
         readonly uint sieveSize = 0;
         readonly uint halfLimit;
         readonly ulong[] bits;
+        readonly uint blockSize;
+        readonly string name;
 
-        public string Name => "italytoast-stride8-blocks16k";
+        public string Name => name;
 
         public uint SieveSize => sieveSize;
 
-        public SieveStride8Blocks(uint size)
+        public SieveStride8Blocks(uint size, uint blocksize, string name)
         {
             const int wordBits = sizeof(ulong) * 8;
 
+            this.name = name;
+            blockSize = blocksize;
             sieveSize = size;
             halfLimit = (size + 1) / 2;
             bits = new ulong[(int)(halfLimit / wordBits + 1)];
@@ -55,7 +62,7 @@ namespace PrimeSieveCS
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe static void ClearBitsStride8BlocksUnrolled(byte* ptr, uint start, uint factor, uint limit)
+        unsafe static void ClearBitsStride8BlocksUnrolled(byte* ptr, uint start, uint factor, uint limit, uint blocksize)
         {
             Span<(uint, byte)> strides = stackalloc (uint, byte)[8];
             for (uint i = 0; i < 8; i++)
@@ -110,7 +117,7 @@ namespace PrimeSieveCS
         /// Calculate the primes up to the specified limit
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        unsafe public void RunSieve()
+        unsafe public SieveStride8Blocks RunSieve()
         {
             uint factor = 3;
             uint halfFactor = factor >> 1;
@@ -140,8 +147,9 @@ namespace PrimeSieveCS
 
                     if (halfFactor > halfRoot) break;
 
-                    ClearBitsStride8BlocksUnrolled((byte*)ptr, (factor * factor) / 2, factor, halfLimit);
+                    ClearBitsStride8BlocksUnrolled((byte*)ptr, (factor * factor) / 2, factor, halfLimit, blockSize);
                 }
+            return this;
         }
     }
 }
