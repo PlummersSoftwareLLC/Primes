@@ -12,7 +12,7 @@ type Prime = uint(64);
 
 const RANGE: Prime = 1000000;
 
-enum Techniques { OddsOnly, Unpeeled, UnpeeledBlock, Unrolled }
+enum Techniques { BitTwiddle, Unpeeled, UnpeeledBlock, Unrolled, UnrolledHybrid }
 
 const CPUL1CACHE: int = 16384; // in bytes
 
@@ -38,7 +38,7 @@ class UR {
     return 42; }
 }
 
-// each different generic parame instantiation makes a different sub class...
+// each different generic param instantiation makes a different sub class...
 class URr: UR {
   param ndx: uint(8);
   param pp = (ndx >> 3) & 7;
@@ -87,9 +87,9 @@ class URr: UR {
   }
 }
 
-// a computed goto jump table using closure classes...
+// a computed goto jump table using modulo pattern closure classes...
 type OUR = owned UR; // shorten it up!
-const unrollr = [
+const unrollr = [ // note that only cases 15, 27, 43, and 63 are used!
   new URr(0): OUR, new URr(1): OUR, new URr(2): OUR, new URr(3): OUR,
   new URr(4): OUR, new URr(5): OUR, new URr(6): OUR, new URr(7): OUR,
   new URr(8): OUR, new URr(9): OUR, new URr(10): OUR, new URr(11): OUR,
@@ -107,6 +107,756 @@ const unrollr = [
   new URr(56): OUR, new URr(57): OUR, new URr(58): OUR, new URr(59): OUR,
   new URr(60): OUR, new URr(61): OUR, new URr(62): OUR, new URr(63): OUR ];
 
+// each different generic param instantiation makes a different sub class...
+// don't have macros, so must generate code by hand or with generator...
+
+class URh3: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000000100: uint(64);
+      v = v | 0x0000000000000800: uint(64);
+      v = v | 0x0000000000004000: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      v = v | 0x0000800000000000: uint(64);
+      v = v | 0x0004000000000000: uint(64);
+      v = v | 0x0020000000000000: uint(64);
+      v = v | 0x0100000000000000: uint(64);
+      v = v | 0x0800000000000000: uint(64);
+      rp(0) = v | 0x4000000000000000: uint(64);
+      v = rp(1) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000000080: uint(64);
+      v = v | 0x0000000000000400: uint(64);
+      v = v | 0x0000000000002000: uint(64);
+      v = v | 0x0000000000010000: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      v = v | 0x0002000000000000: uint(64);
+      v = v | 0x0010000000000000: uint(64);
+      v = v | 0x0080000000000000: uint(64);
+      v = v | 0x0400000000000000: uint(64);
+      rp(1) = v | 0x2000000000000000: uint(64);
+      v = rp(2) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000000200: uint(64);
+      v = v | 0x0000000000001000: uint(64);
+      v = v | 0x0000000000008000: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      v = v | 0x0001000000000000: uint(64);
+      v = v | 0x0008000000000000: uint(64);
+      v = v | 0x0040000000000000: uint(64);
+      v = v | 0x0200000000000000: uint(64);
+      v = v | 0x1000000000000000: uint(64);
+      rp(2) = v | 0x8000000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh5: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000000080: uint(64);
+      v = v | 0x0000000000001000: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      v = v | 0x0000800000000000: uint(64);
+      v = v | 0x0010000000000000: uint(64);
+      v = v | 0x0200000000000000: uint(64);
+      rp(0) = v | 0x4000000000000000: uint(64);
+      v = rp(1) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000000100: uint(64);
+      v = v | 0x0000000000002000: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      v = v | 0x0001000000000000: uint(64);
+      v = v | 0x0020000000000000: uint(64);
+      v = v | 0x0400000000000000: uint(64);
+      rp(1) = v | 0x8000000000000000: uint(64);
+      v = rp(2) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000000200: uint(64);
+      v = v | 0x0000000000004000: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      v = v | 0x0002000000000000: uint(64);
+      v = v | 0x0040000000000000: uint(64);
+      rp(2) = v | 0x0800000000000000: uint(64);
+      v = rp(3) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000000400: uint(64);
+      v = v | 0x0000000000008000: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      v = v | 0x0004000000000000: uint(64);
+      v = v | 0x0080000000000000: uint(64);
+      rp(3) = v | 0x1000000000000000: uint(64);
+      v = rp(4) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000000800: uint(64);
+      v = v | 0x0000000000010000: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      v = v | 0x0008000000000000: uint(64);
+      v = v | 0x0100000000000000: uint(64);
+      rp(4) = v | 0x2000000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh7: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000000100: uint(64);
+      v = v | 0x0000000000008000: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      v = v | 0x0004000000000000: uint(64);
+      rp(0) = v | 0x0200000000000000: uint(64);
+      v = rp(1) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000000080: uint(64);
+      v = v | 0x0000000000004000: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      v = v | 0x0002000000000000: uint(64);
+      v = v | 0x0100000000000000: uint(64);
+      rp(1) = v | 0x8000000000000000: uint(64);
+      v = rp(2) | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000002000: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      v = v | 0x0001000000000000: uint(64);
+      v = v | 0x0080000000000000: uint(64);
+      rp(2) = v | 0x4000000000000000: uint(64);
+      v = rp(3) | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000001000: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      v = v | 0x0000800000000000: uint(64);
+      v = v | 0x0040000000000000: uint(64);
+      rp(3) = v | 0x2000000000000000: uint(64);
+      v = rp(4) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000000800: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      v = v | 0x0020000000000000: uint(64);
+      rp(4) = v | 0x1000000000000000: uint(64);
+      v = rp(5) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000000400: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      v = v | 0x0010000000000000: uint(64);
+      rp(5) = v | 0x0800000000000000: uint(64);
+      v = rp(6) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000000200: uint(64);
+      v = v | 0x0000000000010000: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      v = v | 0x0008000000000000: uint(64);
+      rp(6) = v | 0x0400000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh9: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000000800: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      v = v | 0x0000800000000000: uint(64);
+      rp(0) = v | 0x0100000000000000: uint(64);
+      v = rp(1) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000000400: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      rp(1) = v | 0x0080000000000000: uint(64);
+      v = rp(2) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000000200: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      v = v | 0x0040000000000000: uint(64);
+      rp(2) = v | 0x8000000000000000: uint(64);
+      v = rp(3) | 0x0000000000000100: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      v = v | 0x0020000000000000: uint(64);
+      rp(3) = v | 0x4000000000000000: uint(64);
+      v = rp(4) | 0x0000000000000080: uint(64);
+      v = v | 0x0000000000010000: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      v = v | 0x0010000000000000: uint(64);
+      rp(4) = v | 0x2000000000000000: uint(64);
+      v = rp(5) | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000008000: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      v = v | 0x0008000000000000: uint(64);
+      rp(5) = v | 0x1000000000000000: uint(64);
+      v = rp(6) | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000004000: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      v = v | 0x0004000000000000: uint(64);
+      rp(6) = v | 0x0800000000000000: uint(64);
+      v = rp(7) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000002000: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      v = v | 0x0002000000000000: uint(64);
+      rp(7) = v | 0x0400000000000000: uint(64);
+      v = rp(8) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000001000: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      v = v | 0x0001000000000000: uint(64);
+      rp(8) = v | 0x0200000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh11: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      v = v | 0x0004000000000000: uint(64);
+      rp(0) = v | 0x2000000000000000: uint(64);
+      v = rp(1) | 0x0000000000000100: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      v = v | 0x0010000000000000: uint(64);
+      rp(1) = v | 0x8000000000000000: uint(64);
+      v = rp(2) | 0x0000000000000400: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      rp(2) = v | 0x0040000000000000: uint(64);
+      v = rp(3) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000001000: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      rp(3) = v | 0x0100000000000000: uint(64);
+      v = rp(4) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000004000: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      v = v | 0x0000800000000000: uint(64);
+      rp(4) = v | 0x0400000000000000: uint(64);
+      v = rp(5) | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000010000: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      v = v | 0x0002000000000000: uint(64);
+      rp(5) = v | 0x1000000000000000: uint(64);
+      v = rp(6) | 0x0000000000000080: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      v = v | 0x0008000000000000: uint(64);
+      rp(6) = v | 0x4000000000000000: uint(64);
+      v = rp(7) | 0x0000000000000200: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      rp(7) = v | 0x0020000000000000: uint(64);
+      v = rp(8) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000000800: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      rp(8) = v | 0x0080000000000000: uint(64);
+      v = rp(9) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000002000: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      rp(9) = v | 0x0200000000000000: uint(64);
+      v = rp(10) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000008000: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      v = v | 0x0001000000000000: uint(64);
+      rp(10) = v | 0x0800000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh13: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000000080: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      rp(0) = v | 0x0800000000000000: uint(64);
+      v = rp(1) | 0x0000000000000100: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      v = v | 0x0000800000000000: uint(64);
+      rp(1) = v | 0x1000000000000000: uint(64);
+      v = rp(2) | 0x0000000000000200: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      v = v | 0x0001000000000000: uint(64);
+      rp(2) = v | 0x2000000000000000: uint(64);
+      v = rp(3) | 0x0000000000000400: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      v = v | 0x0002000000000000: uint(64);
+      rp(3) = v | 0x4000000000000000: uint(64);
+      v = rp(4) | 0x0000000000000800: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      v = v | 0x0004000000000000: uint(64);
+      rp(4) = v | 0x8000000000000000: uint(64);
+      v = rp(5) | 0x0000000000001000: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      rp(5) = v | 0x0008000000000000: uint(64);
+      v = rp(6) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000002000: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      rp(6) = v | 0x0010000000000000: uint(64);
+      v = rp(7) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000004000: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      rp(7) = v | 0x0020000000000000: uint(64);
+      v = rp(8) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000008000: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      rp(8) = v | 0x0040000000000000: uint(64);
+      v = rp(9) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000010000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      rp(9) = v | 0x0080000000000000: uint(64);
+      v = rp(10) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      rp(10) = v | 0x0100000000000000: uint(64);
+      v = rp(11) | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      rp(11) = v | 0x0200000000000000: uint(64);
+      v = rp(12) | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      rp(12) = v | 0x0400000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh15: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000002000: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      rp(0) = v | 0x0400000000000000: uint(64);
+      v = rp(1) | 0x0000000000000200: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      rp(1) = v | 0x0040000000000000: uint(64);
+      v = rp(2) | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      rp(2) = v | 0x0004000000000000: uint(64);
+      v = rp(3) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000010000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      rp(3) = v | 0x2000000000000000: uint(64);
+      v = rp(4) | 0x0000000000001000: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      rp(4) = v | 0x0200000000000000: uint(64);
+      v = rp(5) | 0x0000000000000100: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      rp(5) = v | 0x0020000000000000: uint(64);
+      v = rp(6) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      rp(6) = v | 0x0002000000000000: uint(64);
+      v = rp(7) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000008000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      rp(7) = v | 0x1000000000000000: uint(64);
+      v = rp(8) | 0x0000000000000800: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      rp(8) = v | 0x0100000000000000: uint(64);
+      v = rp(9) | 0x0000000000000080: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      rp(9) = v | 0x0010000000000000: uint(64);
+      v = rp(10) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      v = v | 0x0001000000000000: uint(64);
+      rp(10) = v | 0x8000000000000000: uint(64);
+      v = rp(11) | 0x0000000000004000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      rp(11) = v | 0x0800000000000000: uint(64);
+      v = rp(12) | 0x0000000000000400: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      rp(12) = v | 0x0080000000000000: uint(64);
+      v = rp(13) | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      rp(13) = v | 0x0008000000000000: uint(64);
+      v = rp(14) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      v = v | 0x0000800000000000: uint(64);
+      rp(14) = v | 0x4000000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh17: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+     var v = rp(0) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      rp(0) = v | 0x0020000000000000: uint(64);
+      v = rp(1) | 0x0000000000000040: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      rp(1) = v | 0x0200000000000000: uint(64);
+      v = rp(2) | 0x0000000000000400: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      rp(2) = v | 0x2000000000000000: uint(64);
+      v = rp(3) | 0x0000000000004000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      rp(3) = v | 0x0001000000000000: uint(64);
+      v = rp(4) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000040000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      rp(4) = v | 0x0010000000000000: uint(64);
+      v = rp(5) | 0x0000000000000020: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      rp(5) = v | 0x0100000000000000: uint(64);
+      v = rp(6) | 0x0000000000000200: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      rp(6) = v | 0x1000000000000000: uint(64);
+      v = rp(7) | 0x0000000000002000: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      rp(7) = v | 0x0000800000000000: uint(64);
+      v = rp(8) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000020000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      rp(8) = v | 0x0008000000000000: uint(64);
+      v = rp(9) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      rp(9) = v | 0x0080000000000000: uint(64);
+      v = rp(10) | 0x0000000000000100: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      rp(10) = v | 0x0800000000000000: uint(64);
+      v = rp(11) | 0x0000000000001000: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      v = v | 0x0000400000000000: uint(64);
+      rp(11) = v | 0x8000000000000000: uint(64);
+      v = rp(12) | 0x0000000000010000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      rp(12) = v | 0x0004000000000000: uint(64);
+      v = rp(13) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      rp(13) = v | 0x0040000000000000: uint(64);
+      v = rp(14) | 0x0000000000000080: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      rp(14) = v | 0x0400000000000000: uint(64);
+      v = rp(15) | 0x0000000000000800: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      v = v | 0x0000200000000000: uint(64);
+      rp(15) = v | 0x4000000000000000: uint(64);
+      v = rp(16) | 0x0000000000008000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      rp(16) = v | 0x0002000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+class URh19: UR {
+  // hybrid bit setting by densely packed uint64's...
+  override proc this(arrp: c_ptr(uint(8)), si: int, lmti: int, stp: int): int {
+    const ilmt = si | 63; // make stop limit to next 64-bit boundary
+    var biti = si;
+    while biti <= ilmt { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    const rlmtp =
+      c_ptrTo(arrp(((lmti >> 3) & (-8)) - 8 * (stp - 1))): c_ptr(uint(64));
+    var rp = c_ptrTo(arrp((biti >> 3) & (-8))): c_ptr(uint(64));
+    while rp: int(64) <= rlmtp: int(64) {
+      var v = rp(0) | 0x0000000000000040: uint(64);
+      v = v | 0x0000000002000000: uint(64);
+      v = v | 0x0000100000000000: uint(64);
+      rp(0) = v | 0x8000000000000000: uint(64);
+      v = rp(1) | 0x0000000000040000: uint(64);
+      v = v | 0x0000002000000000: uint(64);
+      rp(1) = v | 0x0100000000000000: uint(64);
+      v = rp(2) | 0x0000000000000800: uint(64);
+      v = v | 0x0000000040000000: uint(64);
+      rp(2) = v | 0x0002000000000000: uint(64);
+      v = rp(3) | 0x0000000000000010: uint(64);
+      v = v | 0x0000000000800000: uint(64);
+      v = v | 0x0000040000000000: uint(64);
+      rp(3) = v | 0x2000000000000000: uint(64);
+      v = rp(4) | 0x0000000000010000: uint(64);
+      v = v | 0x0000000800000000: uint(64);
+      rp(4) = v | 0x0040000000000000: uint(64);
+      v = rp(5) | 0x0000000000000200: uint(64);
+      v = v | 0x0000000010000000: uint(64);
+      rp(5) = v | 0x0000800000000000: uint(64);
+      v = rp(6) | 0x0000000000000004: uint(64);
+      v = v | 0x0000000000200000: uint(64);
+      v = v | 0x0000010000000000: uint(64);
+      rp(6) = v | 0x0800000000000000: uint(64);
+      v = rp(7) | 0x0000000000004000: uint(64);
+      v = v | 0x0000000200000000: uint(64);
+      rp(7) = v | 0x0010000000000000: uint(64);
+      v = rp(8) | 0x0000000000000080: uint(64);
+      v = v | 0x0000000004000000: uint(64);
+      rp(8) = v | 0x0000200000000000: uint(64);
+      v = rp(9) | 0x0000000000000001: uint(64);
+      v = v | 0x0000000000080000: uint(64);
+      v = v | 0x0000004000000000: uint(64);
+      rp(9) = v | 0x0200000000000000: uint(64);
+      v = rp(10) | 0x0000000000001000: uint(64);
+      v = v | 0x0000000080000000: uint(64);
+      rp(10) = v | 0x0004000000000000: uint(64);
+      v = rp(11) | 0x0000000000000020: uint(64);
+      v = v | 0x0000000001000000: uint(64);
+      v = v | 0x0000080000000000: uint(64);
+      rp(11) = v | 0x4000000000000000: uint(64);
+      v = rp(12) | 0x0000000000020000: uint(64);
+      v = v | 0x0000001000000000: uint(64);
+      rp(12) = v | 0x0080000000000000: uint(64);
+      v = rp(13) | 0x0000000000000400: uint(64);
+      v = v | 0x0000000020000000: uint(64);
+      rp(13) = v | 0x0001000000000000: uint(64);
+      v = rp(14) | 0x0000000000000008: uint(64);
+      v = v | 0x0000000000400000: uint(64);
+      v = v | 0x0000020000000000: uint(64);
+      rp(14) = v | 0x1000000000000000: uint(64);
+      v = rp(15) | 0x0000000000008000: uint(64);
+      v = v | 0x0000000400000000: uint(64);
+      rp(15) = v | 0x0020000000000000: uint(64);
+      v = rp(16) | 0x0000000000000100: uint(64);
+      v = v | 0x0000000008000000: uint(64);
+      rp(16) = v | 0x0000400000000000: uint(64);
+      v = rp(17) | 0x0000000000000002: uint(64);
+      v = v | 0x0000000000100000: uint(64);
+      v = v | 0x0000008000000000: uint(64);
+      rp(17) = v | 0x0400000000000000: uint(64);
+      v = rp(18) | 0x0000000000002000: uint(64);
+      v = v | 0x0000000100000000: uint(64);
+      rp(18) = v | 0x0008000000000000: uint(64);
+      rp += stp;
+    }
+    biti = ((rp: int(64) - arrp: int(64)) << 3) + (biti & 63);
+    while biti <= lmti { arrp(biti >> 3) |= BITMASK(biti & 7); biti += stp; }
+    return biti;
+  }
+}
+
+// a computed goto jump table using modulo pattern closure classes...
+const hybrid = [ // note only cases 3, 5, 7 .. 19 are used; 9 and 15 never hit!
+  new URr(0): OUR, new URr(1): OUR, new URr(2): OUR, new URh3(): OUR,
+  new URr(4): OUR, new URh5(): OUR, new URr(6): OUR, new URh7(): OUR,
+  new URr(8): OUR, new URh9(): OUR, new URr(10): OUR, new URh11(): OUR,
+  new URr(12): OUR, new URh13(): OUR, new URr(14): OUR, new URh15(): OUR,
+  new URr(16): OUR, new URh17(): OUR, new URr(18): OUR, new URh19(): OUR,
+  new URr(20): OUR, new URr(21): OUR, new URr(22): OUR, new URr(23): OUR ];
+
 class PrimeSieve {
   const limit: Prime;
   const size: int = 0;
@@ -119,7 +869,7 @@ class PrimeSieve {
     this.buffer = 0;
     const bufferp = c_ptrTo(this.buffer[0]);
     select tec {
-      when Techniques.OddsOnly do
+      when Techniques.BitTwiddle do
         for i in 0 .. bitlmt {
           if bufferp[i >> 3] & BITMASK[i & 7] == 0 {
             var startndx = (i + i) * (i + 3) + 3;
@@ -179,7 +929,19 @@ class PrimeSieve {
             var startndx = (i + i) * (i + 3) + 3;
             if startndx > bitlmt then break;
             const bp = i + i + 3;
-            unrollr[((bp & 7) << 3) | (startndx & 7)](bufferp, startndx, bitlmt, bp);
+            unrollr[((bp & 7) << 3) | (startndx & 7)]
+              (bufferp, startndx, bitlmt, bp);
+          }
+        }
+      when Techniques.UnrolledHybrid do
+        for i in 0 .. bitlmt {
+          if bufferp[i >> 3] & BITMASK[i & 7] == 0 {
+            var startndx = (i + i) * (i + 3) + 3;
+            if startndx > bitlmt then break;
+            const bp = i + i + 3;
+            if bp <= 19 then hybrid[bp](bufferp, startndx, bitlmt, bp);
+            else unrollr[((bp & 7) << 3) | (startndx & 7)]
+                   (bufferp, startndx, bitlmt, bp);
           }
         }
     }
@@ -214,13 +976,15 @@ proc benchmark(tech: Techniques) {
   if count == EXPECTED {
     const lbl: string =
       "GordonBGood_" +
-        if tech == Techniques.OddsOnly then "1of2;"
+        if tech == Techniques.BitTwiddle then "bittwiddle;"
         else if tech == Techniques.Unpeeled then "unpeeled;"
         else if tech == Techniques.UnpeeledBlock then "unpeeled_block;"
-        else "unrolled;";
+        else if tech == Techniques.Unrolled then "unrolled;"
+        else "unrolled_hybrid;";
     writeln(lbl, passes, ";", duration, ";1;algorithm=base,faithful=yes,bits=1");
   }
   else { writeln("Invalid result!"); }  
 }
 
 for t in Techniques do benchmark(t);
+
