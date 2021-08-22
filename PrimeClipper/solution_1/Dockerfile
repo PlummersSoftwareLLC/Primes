@@ -10,7 +10,7 @@ RUN apt-get update && \
     apt-get install -y "./${HARBOUR_PKG}" && \
     rm "${HARBOUR_PKG}" 
 
-COPY . /opt
+COPY . /opt/
 
 RUN hbmk2 ./test.prg
 
