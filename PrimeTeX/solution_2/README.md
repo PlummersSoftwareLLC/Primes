@@ -220,6 +220,13 @@ sieves up to `100,000,000` in about `7s` at my locale, but then needs
 an additional `18s` to produce the file with the `5,761,455` primes
 `<100,000,000`, one per line.
 
+The above syntax (without the `time`) works also on Windows with TeXLive. On Windows with MikTeX, try this:
+
+```
+pdftex.exe -font-mem-size=51000000 -extra-mem-top=13000000 "\def\Range{100000000}\input wheel48of210_primestofile"
+```
+
+
 Even with maximal font memory, `pdftex` will not allow sieving up to about `295,000,000` and beyond. With `luatex` we can go up to `999,999,999`:
 
 ```
@@ -233,7 +240,7 @@ array (about two minutes).
 See files `{erato,wheel8of30,wheel48of210,wheel}_primestofile_timings.txt` for
 some further typical timings as seen on my hardware. These files contain the
 console commands needed to execute the various runs in a syntax which I am
-told is Windows-compatible, apart from the usage of `time` utility.
+told is Windows-compatible (if using TeXLive), apart from the usage of `time` utility.
 
 
 ## More info on native runs with pdftex
