@@ -47,8 +47,8 @@ range of `1,000,000`, as each pass consumes about `500,000` words of font
 memory which can not be released (the memory could be re-used, but for
 fairness of the benchmark each pass re-allocates new memory).
 
-As at my locale I achieve with `pdftex` about `77` passes for the
-`wheel48of210` implementation, a computer about `4` times faster than mine
+As at my locale I achieve with `pdftex` running in the Docker container about `80` passes for the
+`wheel48of210` implementation, a computer about `3.7` times faster than mine
 would exhaust the `pdftex` maximal font memory during the benchmark, even with
 `pdftex` configured to use the maximal possibly font memory setting, as is
 done via the `runpdftex.sh` script used by the Dockerfile.
@@ -99,19 +99,19 @@ DDR3 of memory (mid-2012 machine, native OS: mac osx high sierra).
 Docker run with `pdftex`:
 
 ```
-jfbu-tex;24;5.20622;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-8of30;62;5.07578;1;algorithm=wheel,faithful=no,bits=32
-jfbu-tex-48of210;71;5.04659;1;algorithm=wheel,faithful=no,bits=32
-jfbu-tex-480of2310;40;5.11597;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;28;5.14409;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-8of30;73;5.0266;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex-48of210;81;5.00916;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex-480of2310;45;5.04994;1;algorithm=wheel,faithful=no,bits=32
 ```
 
-Docker run, when Dockerfile was using `luatex` (via `run.sh`):
+Docker run (with a Dockerfile modified to use `luatex` via `run.sh` in place of `runpdftex.sh`):
 
 ```
-jfbu-tex;22;5.02206;1;algorithm=base,faithful=no,bits=32
-jfbu-tex-8of30;55;5.0123;1;algorithm=wheel,faithful=no,bits=32
-jfbu-tex-48of210;60;5.03543;1;algorithm=wheel,faithful=no,bits=32
-jfbu-tex-480of2310;35;5.09851;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex;26;5.0469;1;algorithm=base,faithful=no,bits=32
+jfbu-tex-8of30;63;5.05162;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex-48of210;71;5.06566;1;algorithm=wheel,faithful=no,bits=32
+jfbu-tex-480of2310;41;5.12201;1;algorithm=wheel,faithful=no,bits=32
 ```
 
 The reason why the 480-of-2310 wheel is significantly slower than the two
@@ -146,21 +146,14 @@ TeXLive 2021.
 The native `pdftex` is compiled
 locally from sources with compiler flags for speed.
 
-The Dockerfile is based on a minimal TeXLive 2018 install.
+The Dockerfile is based on Ubuntu 20.04 and installs its
+[texlive-base](https://packages.ubuntu.com/focal/texlive-base) package
+(which uses TeXLive 2019).
 
 I don't know why the speed ratio wheel/base is higher with `pdftex`, or with
 the `luatex` in a Docker container, than with the native `luatex`.
 
 ## Information on some of the files
-
-`Dockerfile` is based on
-[`texlive-minimal`](https://hub.docker.com/r/phipsgabler/texlive-minimal) from
-phipsgabler and uses a TeXLive 2018 installation.  In case you wan't to re-use it and expand it with addition of more TeXLive 2018 contents, this can be useful:
-
-```
-RUN tlmgr update --repository http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2018/tlnet-final/ --self
-RUN tlmgr install --repository http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2018/tlnet-final/ <whatever>
-```
 
 `texmf.cnf` is a file which instructs `pdftex` to use more memory, once the
 `TEXMFCNF` environment variable is suitably set, as done by `runpdftex.sh`. It
