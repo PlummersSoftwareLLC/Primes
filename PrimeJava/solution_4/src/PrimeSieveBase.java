@@ -43,8 +43,9 @@ public abstract class PrimeSieveBase {
 	
 	public int countPrimes() {
 		int c = 0;
-		for(int i = 1; i <= sieveSize; i++)
-			if(getBit(i++))
+		
+		for(int i = 0; (++i) <= sieveSize; i++)
+			if(getBit(i))
 				c++;
 		
 		return c;
@@ -54,9 +55,9 @@ public abstract class PrimeSieveBase {
 	public abstract void clearBit(int index);
 	
 	private int getFactor(int factor) {
-		for (int num = factor; num <= sieveSize; num++)
-			if (getBit(num++))
-				return --num;
+		for (int num = factor-1; (++num) <= sieveSize; num++)
+			if (getBit(num))
+				return num;
 		
 		return factor;
 	}
@@ -166,7 +167,7 @@ public abstract class PrimeSieveBase {
 		private final ReentrantReadWriteLock canRunLock = new ReentrantReadWriteLock();
 		private final ReadLock canRunReadLock = canRunLock.readLock();
 		private final WriteLock canRunWriteLock = canRunLock.writeLock();
-		private boolean canRun = true;
+		private volatile boolean canRun = true;
 		
 		public void run(final Supplier<PrimeSieveBase> factory, SieveArgs args) throws InterruptedException {
 			canRun = true;
