@@ -2,7 +2,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -44,9 +43,10 @@ public abstract class PrimeSieveBase {
 	
 	public int countPrimes() {
 		int c = 0;
-		for(int i = 1; i <= sieveSize;i += 2) {
-			if(getBit(i)) c++;
-		}
+		for(int i = 1; i <= sieveSize; i++)
+			if(getBit(i++))
+				c++;
+		
 		return c;
 	}
 	
@@ -54,17 +54,17 @@ public abstract class PrimeSieveBase {
 	public abstract void clearBit(int index);
 	
 	private int getFactor(int factor) {
-		for (int num = factor; num <= sieveSize; num += 2)
-			if (getBit(num))
-				return num;
+		for (int num = factor; num <= sieveSize; num++)
+			if (getBit(num++))
+				return --num;
 		
-		throw new IllegalStateException("Some shit happened.");
+		return factor;
 	}
-	
+
 	public void runSieve() {
 		final double q = Math.sqrt(sieveSize);
 		
-		for (int factor = 3; factor <= q; factor += 2) {
+		for (int factor = 2; (++factor) <= q; factor++) {
 			factor = getFactor(factor);
 						
 			for(int num = factor * factor; num <= sieveSize; num += factor << 1)
@@ -88,7 +88,7 @@ public abstract class PrimeSieveBase {
 		public RunModes runMode = RunModes.Sequential;
 		public boolean warmup = false;
 		public boolean isWarmup = false;
-		public int numThreads = Runtime.getRuntime().availableProcessors();
+		public int numThreads = 1;
 		
 		public int getThreads() {
 			return runMode == RunModes.MultiThreaded ? numThreads : 1;
@@ -101,7 +101,8 @@ public abstract class PrimeSieveBase {
 	
 	public static void run(Supplier<PrimeSieveBase> factory, String[] args) throws InterruptedException {
 		SieveArgs a = new SieveArgs();
-		for(int i = 0; i < args.length;i++) {
+		
+		for(int i = 0; i < args.length; i++) {
 			if(args[i].equals("-postfix") && args.length - 1 > i) {
 				a.postfix = args[i + 1];
 			}
@@ -143,49 +144,51 @@ public abstract class PrimeSieveBase {
 	public static class SequentialRunMode implements RunMode {
 		public void run(Supplier<PrimeSieveBase> factory, SieveArgs args) {
 			long runtime = args.getRuntime();
-			PrimeSieveBase sieve = factory.get();
 			int passes = 0;
 			long deadline = System.currentTimeMillis() + runtime;
 
 			do {
-				sieve.runSieve();
+				factory.get().runSieve();
 				passes++;
 			} while (System.currentTimeMillis() < deadline);
 	
-			long delta = System.currentTimeMillis() - (deadline - runtime);
-			sieve.printResults(delta / 1000d, passes, args);
+			{
+				long delta = System.currentTimeMillis() - (deadline - runtime);
+				PrimeSieveBase sieve = factory.get();
+				
+				sieve.runSieve();
+				sieve.printResults(delta / 1000d, passes, args);
+			}
 		}
 	}
 	
 	public static class MultiThreadRunMode implements RunMode {
-		private final ReentrantLock sumLock = new ReentrantLock();
-		private int sumOfPasses = 0;
-		
 		private final ReentrantReadWriteLock canRunLock = new ReentrantReadWriteLock();
 		private final ReadLock canRunReadLock = canRunLock.readLock();
 		private final WriteLock canRunWriteLock = canRunLock.writeLock();
 		private boolean canRun = true;
 		
 		public void run(final Supplier<PrimeSieveBase> factory, SieveArgs args) throws InterruptedException {
+			canRun = true;
+			
 			PrimeSieveBase sieve = factory.get();
 			sieve.runSieve();// for verification
 			
-			List<Thread> ts = new ArrayList<>();
+			List<Thread> ts = new ArrayList<>(args.numThreads);
+			int[] passesPerThread = new int[args.numThreads];
 			
-			for(int i = 0; i < args.numThreads; i++)
+			for(int i = 0; i < args.numThreads; i++) {
+				final int tNumber = i;
+				
 				ts.add(new Thread(new Runnable() {
-					private volatile int passes = 0;
-					
 					@Override
 					public void run() {
-						final PrimeSieveBase primeSieveRunner = factory.get();
-						
 						canRunReadLock.lock();
 						try {
-							for(; canRun; passes++) {
+							for(; canRun; passesPerThread[tNumber]++) {
 								canRunReadLock.unlock();
 								try {
-									primeSieveRunner.runSieve();
+									factory.get().runSieve();
 								} finally {
 									canRunReadLock.lock();
 								}
@@ -193,15 +196,9 @@ public abstract class PrimeSieveBase {
 						} finally {
 							canRunReadLock.unlock();
 						}
-						
-						sumLock.lock();
-						try {
-							sumOfPasses += passes;
-						} finally {
-							sumLock.unlock();
-						}
 					}
 				}));
+			}
 			
 			long start = System.currentTimeMillis();
 			
@@ -210,6 +207,7 @@ public abstract class PrimeSieveBase {
 			canRunWriteLock.lock();
 			try {
 				canRunWriteLock.newCondition().awaitNanos(args.getRuntime() * 1000000);
+//				Thread.sleep(args.getRuntime());
 				canRun = false;
 			} finally {
 				canRunWriteLock.unlock();
@@ -217,8 +215,16 @@ public abstract class PrimeSieveBase {
 			
 			for(Thread t : ts)
 				t.join();
-		
-			sieve.printResults((System.currentTimeMillis() - start) / 1000d, sumOfPasses, args);
+			
+			{
+				long delta = System.currentTimeMillis() - start;
+				int sumOfPasses = 0;
+				
+				for (int passes : passesPerThread)
+					sumOfPasses += passes;
+			
+				sieve.printResults(delta / 1000d, sumOfPasses, args);
+			}
 		}
 	}
 }
