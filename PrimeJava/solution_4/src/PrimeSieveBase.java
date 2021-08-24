@@ -54,19 +54,15 @@ public abstract class PrimeSieveBase {
 	public abstract boolean getBit(int index);
 	public abstract void clearBit(int index);
 	
-	private int getFactor(int factor) {
-		for (int num = factor-1; (++num) <= sieveSize; num++)
-			if (getBit(num))
-				return num;
-		
-		return factor;
-	}
-
 	public void runSieve() {
 		final double q = Math.sqrt(sieveSize);
 		
 		for (int factor = 2; (++factor) <= q; factor++) {
-			factor = getFactor(factor);
+			for (int num = factor-1; (++num) <= sieveSize; num++)
+				if (getBit(num)) {
+					factor = num;
+					break;
+				}
 						
 			for(int num = factor * factor; num <= sieveSize; num += factor << 1)
 				clearBit(num);
@@ -74,11 +70,10 @@ public abstract class PrimeSieveBase {
 	}
 
 	public void printResults(double duration, int passes, SieveArgs args) {
-		if(args.isWarmup)
-			return;
-		
-		validateResults();
-		System.out.printf("chrvanorle%s%s%s;%d;%f;%d;algorithm=%s,faithful=yes,bits=%d\n", toString(), args.warmup ? "W" : "", args.postfix,passes, duration, args.getThreads(), type, bits);
+		if(!args.isWarmup) {
+			validateResults();
+			System.out.printf("chrvanorle%s%s%s;%d;%f;%d;algorithm=%s,faithful=yes,bits=%d\n", toString(), args.warmup ? "W" : "", args.postfix,passes, duration, args.getThreads(), type, bits);
+		}
 	}
 	
 	public String toString() {
