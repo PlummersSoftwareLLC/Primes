@@ -94,13 +94,20 @@ const BitSieveOpts = comptime struct {
     RunFactorChunk: type = u32,
     cached_masks: bool = false, // used cached mask lookup instead?
     FindFactorChunk: type = u8,
-    unrolled: bool = false
+    unrolled: bool = false,
+    max_vector: ?u32 = null
 };
+
 
 pub fn BitSieve(comptime opts: BitSieveOpts) type {
     comptime const PRIME: u1 = opts.primeval;
     // store the wheel type
     const wheel_name = "";
+
+    // static assertions that we are working with int types.
+    _ = @typeInfo(opts.RunFactorChunk).Int.bits;
+    _ = @typeInfo(opts.RunFactorChunk).Int.bits;
+
     return struct {
         // informational content.
         pub const name = "bitSieve-" ++ wheel_name;
@@ -187,10 +194,10 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
-            if (opts.unrolled and unrolled.isDense(u8, factor)) {
+            const T = opts.RunFactorChunk;
+            if (opts.unrolled and unrolled.isDense(T, factor)) {
                 runFactorUnrolled(self, factor);
             } else {
-                const T = opts.RunFactorChunk;
                 const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
                 // naive factoring algorithm.  calculate mask each time.
                 const max_index = self.field_count;
@@ -208,22 +215,14 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         }
 
         fn runFactorUnrolled(self: *Self, factor: usize) void {
-            const FIRST_FUNS = comptime unrolled.makeDenseLUT(
-                u8,
-                .{.primeval = opts.primeval, .start_at_square = true});
-            const CYCLE_FUNS = comptime unrolled.makeDenseLUT(
-                u8,
-                .{.primeval = opts.primeval});
+            const T = opts.RunFactorChunk;
+            const unrolledDense = comptime
+                unrolled.makeDenseLUT(T, .{.primeval = opts.primeval, .max_vector = opts.max_vector});
 
-            // how many times do we need to unroll?
-            const cycles = unrolled.denseCycles(u8, self.field_count, factor);
             const fun_index = factor / 2;
-            var index : usize = 0;
-            var field = self.field;
-            field = FIRST_FUNS[fun_index](field);
-            while (index < cycles) : (index += 1) {
-                field = CYCLE_FUNS[fun_index](field);
-            }
+            const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
+
+            unrolledDense[fun_index](field, self.field_bytes / @sizeOf(T));
         }
 
         fn mask_for(comptime T: type, index: usize) T {
