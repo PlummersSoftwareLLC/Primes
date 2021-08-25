@@ -8,7 +8,8 @@ const IntSieveOpts = comptime struct {
     Wheel: ?type = null
 };
 
-pub fn IntSieve(comptime opts: IntSieveOpts) type {
+pub fn IntSieve(comptime opts_: anytype) type {
+    const opts: IntSieveOpts = opts_;
     const wheel_name = "";
     return struct {
         pub const T = if (@TypeOf(opts.primeval) == bool) bool else u8;
@@ -93,8 +94,8 @@ const BitSieveOpts = comptime struct {
     half_extent: bool = false,
 };
 
-
-pub fn BitSieve(comptime opts: BitSieveOpts) type {
+pub fn BitSieve(comptime opts_: anytype) type {
+    const opts: BitSieveOpts = opts_;
     comptime const PRIME: u1 = opts.primeval;
     // store the wheel type
     const wheel_name = "";
