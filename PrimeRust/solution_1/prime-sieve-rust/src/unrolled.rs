@@ -107,10 +107,10 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// them. Larger skip factors have 8 different sparse resetters, and we delegate
     /// to one of them based on the `modulo` of the skip factor; the patterns required
     /// have a periodicity of 8 (odd) numbers, with 3 == 19, etc.
-    /// 
+    ///
     /// We have a nice procedural macro to create the big case statement that dispatches
     /// to the correct specific function, [`generic_dispatch`]. In summary, we create
-    /// a match statement of the form: 
+    /// a match statement of the form:
     /// ```ignore
     /// match skip {
     ///     3 => ResetterDenseU64::<3>::reset_dense(&mut self.words),
@@ -129,15 +129,27 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
         // dense resets for all odd numbers in {3, 5, ... =65}
-        generic_dispatch!(skip, 3, 2, 65, 
+        generic_dispatch!(
+            skip,
+            3,
+            2,
+            65,
             ResetterDenseU64::<N>::reset_dense(&mut self.words),
             {
                 // fallback to sparse resetter, and dispatch to the correct one
                 // given the equivalent skip
                 let equivalent_skip = pattern_equivalent_skip(skip, 8);
-                generic_dispatch!(equivalent_skip, 3, 2, 17, 
+                generic_dispatch!(
+                    equivalent_skip,
+                    3,
+                    2,
+                    17,
                     ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
-                    debug_assert!(false, "this case should not occur skip {} equivalent {}", skip, equivalent_skip)
+                    debug_assert!(
+                        false,
+                        "this case should not occur skip {} equivalent {}",
+                        skip, equivalent_skip
+                    )
                 );
             }
         );
@@ -223,6 +235,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
         // cast our wide word vector to bytes
         let bytes_slice: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
         bytes_slice.chunks_exact_mut(skip).for_each(|chunk| {
+            #[allow(clippy::needless_range_loop)]
             for i in 0..8 {
                 let word_idx = relative_indices[i];
                 // Safety: relative indices are all smaller than `skip` by construction
@@ -233,6 +246,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
         });
 
         let remainder = bytes_slice.chunks_exact_mut(skip).into_remainder();
+        #[allow(clippy::needless_range_loop)]
         for i in 0..8 {
             let word_idx = relative_indices[i];
             if word_idx < remainder.len() {

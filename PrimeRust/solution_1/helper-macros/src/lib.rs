@@ -1,7 +1,5 @@
 extern crate proc_macro;
 
-use std::iter::FromIterator;
-
 use proc_macro::TokenStream;
 use proc_macro2::{Group, Literal, TokenTree};
 use quote::{quote, ToTokens};
@@ -12,12 +10,12 @@ use syn::{
 };
 
 fn parse_as_usize(expr: &Expr) -> Option<usize> {
-    if let Expr::Lit(syn::ExprLit { attrs: _, lit }) = expr {
-        if let syn::Lit::Int(i) = lit {
-            Some(i.base10_parse().unwrap())
-        } else {
-            None
-        }
+    if let Expr::Lit(syn::ExprLit {
+        attrs: _,
+        lit: syn::Lit::Int(i),
+    }) = expr
+    {
+        Some(i.base10_parse().unwrap())
     } else {
         None
     }
@@ -131,22 +129,24 @@ fn substitute_placeholder(
     ts: proc_macro2::TokenStream,
     substitute_value: usize,
 ) -> proc_macro2::TokenStream {
-    proc_macro2::TokenStream::from_iter(ts.clone().into_iter().map(|tt| {
-        match tt {
-            TokenTree::Ident(id) => {
-                if id.to_string() == "N" {
-                    // replace with our literal value
-                    TokenTree::Literal(Literal::usize_suffixed(substitute_value))
-                } else {
-                    // unmodified
-                    TokenTree::Ident(id)
+    ts.into_iter()
+        .map(|tt| {
+            match tt {
+                TokenTree::Ident(id) => {
+                    if id == "N" {
+                        // replace with our literal value
+                        TokenTree::Literal(Literal::usize_suffixed(substitute_value))
+                    } else {
+                        // unmodified
+                        TokenTree::Ident(id)
+                    }
                 }
+                TokenTree::Group(group) => {
+                    let tsm = substitute_placeholder(group.stream(), substitute_value);
+                    TokenTree::Group(Group::new(group.delimiter(), tsm))
+                }
+                _ => tt,
             }
-            TokenTree::Group(group) => {
-                let tsm = substitute_placeholder(group.stream(), substitute_value);
-                TokenTree::Group(Group::new(group.delimiter(), tsm))
-            }
-            _ => tt,
-        }
-    }))
+        })
+        .collect()
 }
