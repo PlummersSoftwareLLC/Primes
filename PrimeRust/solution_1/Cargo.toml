@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "prime-sieve-rust"
+    "prime-sieve-rust",
+    "helper-macros"
 ]
 
 [profile.release]

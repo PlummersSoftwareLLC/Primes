@@ -53,6 +53,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "helper-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -87,6 +96,7 @@ dependencies = [
 name = "prime-sieve-rust"
 version = "0.1.0"
 dependencies = [
+ "helper-macros",
  "num_cpus",
  "structopt",
 ]

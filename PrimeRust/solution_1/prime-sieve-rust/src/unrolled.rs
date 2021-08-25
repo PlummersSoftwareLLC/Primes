@@ -1,4 +1,6 @@
-use crate::primes::FlagStorage;
+use helper_macros::generic_dispatch;
+
+use crate::{primes::FlagStorage, unrolled::patterns::pattern_equivalent_skip};
 
 use self::patterns::{index_pattern, mask_pattern_set_u64, mask_pattern_set_u8};
 
@@ -61,6 +63,15 @@ mod patterns {
             i += 1;
         }
         masks
+    }
+
+    /// Calculate the equivalent (base) skip factor that will yield
+    /// the same modulo pattern as a higher skip factor, for a given
+    /// number of bits. They are periodic.
+    pub const fn pattern_equivalent_skip(skip: usize, bits: usize) -> usize {
+        let index = (skip - 3) / 2;
+        let modulo = index % bits;
+        (modulo * 2) + 3
     }
 }
 
@@ -143,56 +154,41 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// them. Larger skip factors have 8 different sparse resetters, and we delegate
     /// to one of them based on the `modulo` of the skip factor; the patterns required
     /// have a periodicity of 8 (odd) numbers, with 3 == 19, etc.
+    /// 
+    /// We have a nice procedural macro to create the big case statement that dispatches
+    /// to the correct specific function, [`generic_dispatch`]. In summary, we create
+    /// a match statement of the form: 
+    /// ```ignore
+    /// match skip {
+    ///     3 => ResetterDenseU64::<3>::reset_dense(&mut self.words),
+    ///     5 => ResetterDenseU64::<5>::reset_dense(&mut self.words),
+    ///     //... etc
+    ///     63 => ResetterDenseU64::<63>::reset_dense(&mut self.words),
+    ///     65 => ResetterDenseU64::<65>::reset_dense(&mut self.words),
+    ///     skip_sparse => match pattern_equivalent_skip(skip_sparse, 8) {
+    ///         3 => self.reset_flags_sparse::<3>(skip),
+    ///         5 => self.reset_flags_sparse::<5>(skip),
+    ///         //...
+    ///         17 => self.reset_flags_sparse::<17>(skip),
+    ///         _ => debug_assert!(false, "this case should not occur"),
+    ///     },
+    /// }
+    /// ```
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
-        // call into dispatcher
-        // TODO: autogenerate match_reset_dispatch!(self, skip, 19, reset_flags_dense, reset_flags_sparse);
-        match skip {
-            3 => ResetterDenseU64::<3>::reset_dense(&mut self.words),
-            5 => ResetterDenseU64::<5>::reset_dense(&mut self.words),
-            7 => ResetterDenseU64::<7>::reset_dense(&mut self.words),
-            9 => ResetterDenseU64::<9>::reset_dense(&mut self.words),
-            11 => ResetterDenseU64::<11>::reset_dense(&mut self.words),
-            13 => ResetterDenseU64::<13>::reset_dense(&mut self.words),
-            15 => ResetterDenseU64::<15>::reset_dense(&mut self.words),
-            17 => ResetterDenseU64::<17>::reset_dense(&mut self.words),
-            19 => ResetterDenseU64::<19>::reset_dense(&mut self.words),
-            21 => ResetterDenseU64::<21>::reset_dense(&mut self.words),
-            23 => ResetterDenseU64::<23>::reset_dense(&mut self.words),
-            25 => ResetterDenseU64::<25>::reset_dense(&mut self.words),
-            27 => ResetterDenseU64::<27>::reset_dense(&mut self.words),
-            29 => ResetterDenseU64::<29>::reset_dense(&mut self.words),
-            31 => ResetterDenseU64::<31>::reset_dense(&mut self.words),
-            33 => ResetterDenseU64::<33>::reset_dense(&mut self.words),
-            35 => ResetterDenseU64::<35>::reset_dense(&mut self.words),
-            37 => ResetterDenseU64::<37>::reset_dense(&mut self.words),
-            39 => ResetterDenseU64::<39>::reset_dense(&mut self.words),
-            41 => ResetterDenseU64::<41>::reset_dense(&mut self.words),
-            43 => ResetterDenseU64::<43>::reset_dense(&mut self.words),
-            45 => ResetterDenseU64::<45>::reset_dense(&mut self.words),
-            47 => ResetterDenseU64::<47>::reset_dense(&mut self.words),
-            49 => ResetterDenseU64::<49>::reset_dense(&mut self.words),
-            51 => ResetterDenseU64::<51>::reset_dense(&mut self.words),
-            53 => ResetterDenseU64::<53>::reset_dense(&mut self.words),
-            55 => ResetterDenseU64::<55>::reset_dense(&mut self.words),
-            57 => ResetterDenseU64::<57>::reset_dense(&mut self.words),
-            59 => ResetterDenseU64::<59>::reset_dense(&mut self.words),
-            61 => ResetterDenseU64::<61>::reset_dense(&mut self.words),
-            63 => ResetterDenseU64::<63>::reset_dense(&mut self.words),
-            65 => ResetterDenseU64::<65>::reset_dense(&mut self.words),
-            skip_sparse => match ((skip_sparse / 2) - 1) % 8 {
-                // TODO: this needs a clean up; we're doing unnecessary conversions
-                0 => self.reset_flags_sparse::<3>(skip),
-                1 => self.reset_flags_sparse::<5>(skip),
-                2 => self.reset_flags_sparse::<7>(skip),
-                3 => self.reset_flags_sparse::<9>(skip),
-                4 => self.reset_flags_sparse::<11>(skip),
-                5 => self.reset_flags_sparse::<13>(skip),
-                6 => self.reset_flags_sparse::<15>(skip),
-                7 => self.reset_flags_sparse::<17>(skip),
-                _ => debug_assert!(false, "this case should not occur"),
-            },
-        };
+        // dense resets for all odd numbers in {3, 5, ... =65}
+        generic_dispatch!(skip, 3, 2, 65, 
+            ResetterDenseU64::<N>::reset_dense(&mut self.words),
+            {
+                // fallback to sparse resetter, and dispatch to the correct one
+                // given the equivalent skip
+                let equivalent_skip = pattern_equivalent_skip(skip, 8);
+                generic_dispatch!(equivalent_skip, 3, 2, 17, 
+                    self.reset_flags_sparse::<N>(skip),
+                    debug_assert!(false, "this case should not occur skip {} equivalent {}", skip, equivalent_skip)
+                );
+            }
+        );
     }
 
     #[inline(always)]
