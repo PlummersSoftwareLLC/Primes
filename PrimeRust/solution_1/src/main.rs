@@ -1,7 +1,7 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
     FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageBitVectorStripedBlocks,
-    FlagStorageByteVector, BLOCK_SIZE_DEFAULT, BLOCK_SIZE_SMALL,
+    FlagStorageByteVector, PrimeSieve, BLOCK_SIZE_DEFAULT, BLOCK_SIZE_SMALL,
 };
 
 use std::{
@@ -904,7 +904,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
                 let mut local_passes = 0;
                 let mut last_sieve = None;
                 while (Instant::now() - start_time) < run_duration {
-                    let mut sieve = primes::PrimeSieve::<T>::new(limit);
+                    let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
                     sieve.run_sieve();
                     last_sieve.replace(sieve);
                     local_passes += 1;
@@ -942,7 +942,6 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::PrimeValidator;
 
     #[test]
     fn sieve_known_correct_bits() {
