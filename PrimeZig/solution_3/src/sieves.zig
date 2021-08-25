@@ -134,11 +134,12 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
             const field_bytes = divRoundUp(field_count, 8);
 
             // if we use loop-unrolling we will need extra padding because our prime
-            // number function will overrun the end.
+            // number function will overrun the end.  It's worth the speed!
             const extra_padding = if (opts.unrolled) extraPadding(sieve_size) else 0;
 
             // allocates the field slice.  Note that this will *always* allocate at least a page.
             var field = try calloc_pages(init_fill_unit, field_bytes + extra_padding);
+
             return Self{
                 .field = field,
                 .field_count = field_count,
