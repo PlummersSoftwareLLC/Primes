@@ -93,53 +93,6 @@ pub struct FlagStorageUnrolledHybrid {
     length_bits: usize,
 }
 
-impl FlagStorageUnrolledHybrid {
-    // TODO: consider inlining
-    /// Specific implementation for the sparse resetter where we have words that
-    /// are relatively far apart. This is generic on `EQUIVALENT_SKIP`, which allows
-    /// the compiler to calculate the mask-patterns efficiently. However, we still
-    /// need to calculate the index-pattern dynamically, so this is less efficient,
-    /// but more general, than dense resetting.
-    #[inline(never)]
-    fn reset_flags_sparse<const EQUIVALENT_SKIP: usize>(&mut self, skip: usize) {
-        let single_bit_mask_set = mask_pattern_set_u8(EQUIVALENT_SKIP); // MUCH faster!
-        let relative_indices = index_pattern::<8>(skip);
-
-        // cast our wide word vector to bytes
-        let bytes_slice: &mut [u8] = reinterpret_slice_mut_u64_u8(&mut self.words);
-        bytes_slice.chunks_exact_mut(skip).for_each(|chunk| {
-            for i in 0..8 {
-                let word_idx = relative_indices[i];
-                // TODO: safety note
-                unsafe {
-                    *chunk.get_unchecked_mut(word_idx) |= single_bit_mask_set[i];
-                }
-            }
-        });
-
-        let remainder = bytes_slice.chunks_exact_mut(skip).into_remainder();
-        for i in 0..8 {
-            let word_idx = relative_indices[i];
-            if word_idx < remainder.len() {
-                // TODO: safety note
-                unsafe {
-                    *remainder.get_unchecked_mut(word_idx) |= single_bit_mask_set[i];
-                }
-            } else {
-                break;
-            }
-        }
-
-        // restore original factor bit -- we have clobbered it, and it is the prime
-        let factor_index = skip / 2;
-        let factor_word = factor_index / 8;
-        let factor_bit = factor_index % 8;
-        if let Some(w) = bytes_slice.get_mut(factor_word) {
-            *w &= !(1 << factor_bit);
-        }
-    }
-}
-
 impl FlagStorage for FlagStorageUnrolledHybrid {
     fn create_true(size: usize) -> Self {
         let num_words = size / 64 + (size % 64).min(1);
@@ -166,10 +119,9 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     ///     63 => ResetterDenseU64::<63>::reset_dense(&mut self.words),
     ///     65 => ResetterDenseU64::<65>::reset_dense(&mut self.words),
     ///     skip_sparse => match pattern_equivalent_skip(skip_sparse, 8) {
-    ///         3 => self.reset_flags_sparse::<3>(skip),
-    ///         5 => self.reset_flags_sparse::<5>(skip),
+    ///         3 => ResetterSparseU8::<3>::reset_sparse(&mut self.words, skip),
     ///         //...
-    ///         17 => self.reset_flags_sparse::<17>(skip),
+    ///         17 => ResetterSparseU8::<17>::reset_sparse(&mut self.words, skip)
     ///         _ => debug_assert!(false, "this case should not occur"),
     ///     },
     /// }
@@ -184,7 +136,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
                 // given the equivalent skip
                 let equivalent_skip = pattern_equivalent_skip(skip, 8);
                 generic_dispatch!(equivalent_skip, 3, 2, 17, 
-                    self.reset_flags_sparse::<N>(skip),
+                    ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
                     debug_assert!(false, "this case should not occur skip {} equivalent {}", skip, equivalent_skip)
                 );
             }
@@ -225,7 +177,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
                         .iter()
                         .zip(masks)
                         .for_each(|(word_idx, single_bit_mask)| unsafe {
-                            // TODO: safety note
+                            // Safety: relative indices are all smaller than `skip` by construction
                             *chunk.get_unchecked_mut(*word_idx) |= single_bit_mask;
                         });
                 });
@@ -235,7 +187,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
         for i in 0..Self::BITS {
             let word_idx = Self::RELATIVE_INDICES[i];
             if word_idx < remainder.len() {
-                // TODO: safety note
+                // Safety: check above breaks the loop before we exceed remainder.len()
                 unsafe {
                     *remainder.get_unchecked_mut(word_idx) |= Self::SINGLE_BIT_MASK_SET[i];
                 }
@@ -249,6 +201,55 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
         let factor_word = factor_index / Self::BITS;
         let factor_bit = factor_index % Self::BITS;
         if let Some(w) = words.get_mut(factor_word) {
+            *w &= !(1 << factor_bit);
+        }
+    }
+}
+
+/// Specific implementation for the sparse resetter where we have words that
+/// are relatively far apart. This is generic on `EQUIVALENT_SKIP`, which allows
+/// the compiler to calculate the mask-patterns efficiently. However, we still
+/// need to calculate the index-pattern dynamically, so this is less efficient,
+/// but more general, than dense resetting. We're still resetting bits one
+/// at a time.
+pub struct ResetterSparseU8<const EQUIVALENT_SKIP: usize>();
+impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
+    const SINGLE_BIT_MASK_SET: [u8; 8] = mask_pattern_set_u8(EQUIVALENT_SKIP);
+
+    #[inline(never)]
+    fn reset_sparse(words: &mut [u64], skip: usize) {
+        let relative_indices = index_pattern::<8>(skip);
+
+        // cast our wide word vector to bytes
+        let bytes_slice: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
+        bytes_slice.chunks_exact_mut(skip).for_each(|chunk| {
+            for i in 0..8 {
+                let word_idx = relative_indices[i];
+                // Safety: relative indices are all smaller than `skip` by construction
+                unsafe {
+                    *chunk.get_unchecked_mut(word_idx) |= Self::SINGLE_BIT_MASK_SET[i];
+                }
+            }
+        });
+
+        let remainder = bytes_slice.chunks_exact_mut(skip).into_remainder();
+        for i in 0..8 {
+            let word_idx = relative_indices[i];
+            if word_idx < remainder.len() {
+                // Safety: check above breaks the loop before we exceed remainder.len()
+                unsafe {
+                    *remainder.get_unchecked_mut(word_idx) |= Self::SINGLE_BIT_MASK_SET[i];
+                }
+            } else {
+                break;
+            }
+        }
+
+        // restore original factor bit -- we have clobbered it, and it is the prime
+        let factor_index = skip / 2;
+        let factor_word = factor_index / 8;
+        let factor_bit = factor_index % 8;
+        if let Some(w) = bytes_slice.get_mut(factor_word) {
             *w &= !(1 << factor_bit);
         }
     }
