@@ -3,20 +3,17 @@ const default_allocator = @import("alloc.zig").default_allocator;
 const unrolled = @import("unrolled.zig");
 
 const IntSieveOpts = comptime struct {
-    T: type = u8,
     primeval: anytype = 0,
     allocator: type = default_allocator,
     Wheel: ?type = null
 };
 
 pub fn IntSieve(comptime opts: IntSieveOpts) type {
-    // only allow 1-byte datatypes.
-    std.debug.assert(@sizeOf(opts.T) == 1);
     const wheel_name = "";
     return struct {
-        pub const T = opts.T;
+        pub const T = if (@TypeOf(opts.primeval) == bool) bool else u8;
         pub const PRIME: T = opts.primeval;
-        pub const COMPOSITE: T = if (T == bool) (!opts.primeval) else (1 - opts.primeval);
+        pub const COMPOSITE: T = if (T == bool) !PRIME else 1 - PRIME;
         pub const STARTING_FACTOR = 3;
 
         // informational content.
@@ -29,7 +26,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
         usingnamespace opts.allocator;
 
         // storage
-        field: [*]u8,
+        field: [*]T,
         field_count: usize,
 
         // member functions
