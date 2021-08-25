@@ -904,7 +904,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
                 let mut local_passes = 0;
                 let mut last_sieve = None;
                 while (Instant::now() - start_time) < run_duration {
-                    let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
+                    let mut sieve = primes::PrimeSieve::<T>::new(limit);
                     sieve.run_sieve();
                     last_sieve.replace(sieve);
                     local_passes += 1;
