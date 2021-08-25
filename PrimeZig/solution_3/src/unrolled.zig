@@ -18,8 +18,20 @@
 
 const std = @import("std");
 
-pub fn isDense(comptime T: type, factor: usize) bool {
-    return factor < @bitSizeOf(T);
+pub fn isDense(comptime T: type, comptime half_extent: bool, factor: usize) bool {
+    if (half_extent) {
+        return factor < @bitSizeOf(T);
+    } else {
+        return factor / 2 < @bitSizeOf(T);
+    }
+}
+
+fn lutCount(comptime T: type, comptime half_extent: bool) usize {
+    if (half_extent) {
+        return @bitSizeOf(T) / 2;
+    } else {
+        return @bitSizeOf(T);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,8 +48,9 @@ fn DenseFn(comptime T: type) type {
 }
 
 const UnrolledOpts = struct {
-    primeval: u1 = 0, // are 1s or 0's prime?
-    max_vector: ?u32 = null, // should we use vectors?  what's the biggest vector size?
+    primeval: u1 = 0,          // are 1s or 0's prime?
+    max_vector: ?u32 = null,   // should we use vectors?  what's the biggest vector size?
+    half_extent: bool = false, // how many lookup entries?
 };
 
 /// returns a function wrapped in an struct; this is the simplest variadic way
@@ -145,14 +158,10 @@ fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) typ
     };
 }
 
-fn lutCount(comptime T: type) usize {
-    return @bitSizeOf(T) / 2;
-}
-
 /// builds a function LUT.  Must be run at comptime.
-pub fn makeDenseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T)]DenseFn(T) {
+pub fn makeDenseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T, opts.half_extent)]DenseFn(T) {
     // we only need odd factors.
-    const count = lutCount(T);
+    const count = lutCount(T, opts.half_extent);
     var myFuns: [count]DenseFn(T) = undefined;
     for (myFuns) | *f, index | {
         f.* = DenseFnFactory(T, 2 * index + 1, opts).fill;
@@ -284,8 +293,8 @@ fn SparseFn(comptime T: type) type {
     return fn([*]T, usize, usize) void;
 }
 
-pub fn makeSparseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T)]SparseFn(T) {
-    var myFuns: [lutCount(T)]SparseFn(T) = undefined;
+pub fn makeSparseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T, opts.half_extent)]SparseFn(T) {
+    var myFuns: [lutCount(T, opts.half_extent)]SparseFn(T) = undefined;
     for (myFuns) | *f, index | {
         f.* = SparseFnFactory(T, 2 * index + 1, opts).fill;
     }

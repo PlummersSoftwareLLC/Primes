@@ -255,6 +255,10 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
         const Self = @This();
         const field_size = sieve_size >> 1;
 
+        // passthrough information from sieve.
+        pub const algo = Sieve.algo;
+        pub const bits = Sieve.bits;
+
         passes: *u64,
         sieve_size: usize,
         started: bool = false,

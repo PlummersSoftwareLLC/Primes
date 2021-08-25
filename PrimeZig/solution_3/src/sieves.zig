@@ -95,7 +95,8 @@ const BitSieveOpts = comptime struct {
     cached_masks: bool = false, // used cached mask lookup instead?
     FindFactorChunk: type = u8,
     unrolled: bool = false,
-    max_vector: ?u32 = null
+    max_vector: ?u32 = null,
+    half_extent: bool = false,
 };
 
 
@@ -106,7 +107,7 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
 
     // static assertions that we are working with int types.
     _ = @typeInfo(opts.RunFactorChunk).Int.bits;
-    _ = @typeInfo(opts.RunFactorChunk).Int.bits;
+    _ = @typeInfo(opts.FindFactorChunk).Int.bits;
 
     return struct {
         // informational content.
@@ -226,14 +227,17 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
 
         fn runFactorUnrolled(self: *Self, factor: usize) void {
             const T = opts.RunFactorChunk;
-            const unrolledDense = comptime
-                unrolled.makeDenseLUT(T, .{.primeval = opts.primeval, .max_vector = opts.max_vector});
-            const unrolledSparse = comptime
-                unrolled.makeSparseLUT(T, .{.primeval = opts.primeval});
+            comptime const unrolled_opts = .{
+                .primeval = opts.primeval,
+                .max_vector = opts.max_vector,
+                .half_extent = opts.half_extent};
+
+            const unrolledDense = comptime unrolled.makeDenseLUT(T, unrolled_opts);
+            const unrolledSparse = comptime unrolled.makeSparseLUT(T, unrolled_opts);
 
             const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
 
-            if (unrolled.isDense(T, factor)) {
+            if (unrolled.isDense(T, opts.half_extent, factor)) {
                 const fun_index = factor / 2;
                 unrolledDense[fun_index](field, self.field_bytes / @sizeOf(T));
             } else {
