@@ -1,64 +1,42 @@
-//! implementation of the ability to wheelerate primes at compile-time
-//! and use them. should generate into the compiled artifact exactly the
-//! memory layout to be copied in as a "wheel" for the first (n) primes
+//! implementation of the ability to pregenerate composites at compile-time
+//! and use them. should generate into the compiled artifact, which is a
+//! span of memory
 
 const std = @import("std");
-const OEIS_PRIMES = [_]comptime_int{ 3, 5, 7, 11, 13, 17, 19 };
-const IntSieve = @import("sieves.zig").IntSieve;
-const Unit = enum { byte, bit };
+const Alloc = @import("alloc.zig").ComptimeAlloc;
 
-pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
-    var prods = std.mem.zeroes([OEIS_PRIMES.len]comptime usize);
-    var source_primes = std.mem.zeroes([count]comptime_int);
+const OEIS_PRIMES = struct {
+    const values = [_]usize{ 3, 5, 7, 11, 13, 17 };
+    const products = [_]usize{ 3, 15, 105, 1155, 15105, 255255};
+};
 
-    var prod: comptime_int = 1;
+const WheelOpts = struct {
+    num_primes: u8,
+};
 
-    // fail if we are trying too hard.
-    if (count > 5) unreachable;
-
-    for (OEIS_PRIMES) |prime, index| {
-        prod *= prime;
-        prods[index] = prod;
-        if (index < count) {
-            source_primes[index] = prime;
-        }
-    }
-    const max_prime = prods[count - 1];
-    var field: [max_prime]u8 = undefined;
-
-    // fill out key values to make the generator usable.  Note we are not using
-    // an allocator here (because you don't get one at comptime), so instead od using
-    // the init function, we must set the field directly.
-    var generator = IntSieve(comptime u8, .{}){
-        .field = field[0..],
-    };
-
-    // this takes a bunch of computational power:  Let it happen.
-    @setEvalBranchQuota(1000000);
-
-    _ = generator.reset();
-
-    // elucidate the pattern for each of the primes.
-    for (OEIS_PRIMES) |prime, index| {
-        if (index < count) {
-            generator.runFactor(prime);
-            generator.field[prime >> 1] = 0;
-        }
-    }
-
-    var bigenoughbuf: [20]u8 = undefined;
-    var buf = try std.fmt.bufPrint(bigenoughbuf[0..], "{}of{}", .{ generator.primeCount(), max_prime * 2 });
-    const buf_len = buf.len;
-
-    if (gsize == .bit) {
-        compress(generator.field[0..]);
-    }
+pub fn Wheel(opts: WheelOpts) type {
+    const src_bytes = OEIS_PRIMES.products[opts.num_primes];
+    const alloc_aligned = Alloc(src_bytes).alloc_aligned;
 
     return struct {
-        pub const primes = source_primes;
-        pub const template: *[max_prime]u8 = generator.field[0..max_prime];
-        pub const first_prime = OEIS_PRIMES[count];
-        pub const name = bigenoughbuf[0..buf_len];
+        /// rolls the wheel out onto the field.
+        pub fn roll(field: [*]u8, field_bytes: usize) void {
+            const src = comptime makeTemplate();
+            var segment_end = src_bytes;
+            var chunk = field;
+            while (segment_end < field_bytes) : (segment_end += src_bytes) {
+                @memcpy(chunk, src.*, src_bytes);
+                chunk += src_bytes;
+            } else {
+                @memcpy(chunk, src.*, src_bytes - (segment_end - field_bytes));
+            }
+        }
+
+        fn makeTemplate() *[src_bytes]u8 {
+            var template_buffer = alloc_aligned(src_bytes);
+            for (buffer) |*item| { item.* = 0; }
+            return template_buffer;
+        }
     };
 }
 

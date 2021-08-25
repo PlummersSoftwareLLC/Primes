@@ -15,6 +15,7 @@ const VAlloc = allocators.VAlloc;
 const CAlloc = allocators.CAlloc;
 const SAlloc = allocators.SAlloc;
 const c_std_lib = @import("alloc.zig").c_std_lib;
+const Wheel = @import("wheel.zig").Wheel;
 
 const SIZE = 1_000_000;
 
@@ -35,6 +36,7 @@ pub fn main() anyerror!void {
 
     comptime const specs = .{
         .{ SingleThreadedRunner, .{}, IntSieve, .{}},
+        .{ SingleThreadedRunner, .{}, IntSieve, .{.Wheel = Wheel(.{.num_primes = 1})}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = u8, .primeval = 1}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = bool, .primeval = false}},
 //        .{ SingleThreadedRunner, .{}, IntSieve, .{.allocator = VAlloc(.{}), .T = bool, .primeval = true}},
@@ -44,7 +46,7 @@ pub fn main() anyerror!void {
 //        .{ ParallelGustafsonRunner, IntSieve, true, false, false },
       .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u32}}, // equivalent to "c solution"
       .{ SingleThreadedRunner, .{}, BitSieve, .{}},
-      .{ SingleThreadedRunner, .{}, BitSieve, .{.Wheel = Wheel(.{})}},
+//      .{ SingleThreadedRunner, .{}, BitSieve, .{.Wheel = Wheel(.{.num_primes = 1})}},
 //      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8}},
 //      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64}},
 //      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .half_extent = true}},

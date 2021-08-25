@@ -5,8 +5,8 @@ const unrolled = @import("unrolled.zig");
 const IntSieveOpts = comptime struct {
     T: type = u8,
     primeval: anytype = 0,
-    wheel: bool = false,
     allocator: type = default_allocator,
+    Wheel: ?type = null
 };
 
 pub fn IntSieve(comptime opts: IntSieveOpts) type {
