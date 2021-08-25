@@ -45,13 +45,12 @@ pub fn main() anyerror!void {
       .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u32}}, // equivalent to "c solution"
       .{ SingleThreadedRunner, .{}, BitSieve, .{}},
 //      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8}},
-//      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32}},
       .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64}},
-      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .max_vector = 2}},
+//      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .max_vector = 2}},
+      // not sure why, but this seems to be the optimal SIMD vectorization.
       .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .max_vector = 4}},
-      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .max_vector = 8}},
-//      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = std.meta.Vector(4, u32)}},
-//      .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u8, .cached_masks = true}},
+//      .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .max_vector = 8}},
+//    .{ SingleThreadedRunner, .{}, BitSieve, .{.FindFactorChunk = u8, .cached_masks = true}},
 //      .{ SingleThreadedRunner, .{}, BitSieve, .{.primeval = 1, .allocator = VAlloc(.{})}},
 //        .{ SingleThreadedRunner, BitSieve, false, false, true },
 //        .{ ParallelGustafsonRunner, BitSieve, false, false, false },

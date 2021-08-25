@@ -133,13 +133,22 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
             const field_count = sieve_size / 2;
             const field_bytes = divRoundUp(field_count, 8);
 
+            // if we use loop-unrolling we will need extra padding because our prime
+            // number function will overrun the end.
+            const extra_padding = if (opts.unrolled) extraPadding(sieve_size) else 0;
+
             // allocates the field slice.  Note that this will *always* allocate at least a page.
-            var field = try calloc_pages(init_fill_unit, field_bytes);
+            var field = try calloc_pages(init_fill_unit, field_bytes + extra_padding);
             return Self{
                 .field = field,
                 .field_count = field_count,
                 .field_bytes = field_bytes,
             };
+        }
+
+        fn extraPadding(sieve_size: usize) usize {
+            const biggest_possible_factor = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+            return biggest_possible_factor * @bitSizeOf(opts.RunFactorChunk);
         }
 
         pub fn reset(self: *Self) usize {
@@ -195,7 +204,7 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
 
         pub fn runFactor(self: *Self, factor: usize) void {
             const T = opts.RunFactorChunk;
-            if (opts.unrolled and unrolled.isDense(T, factor)) {
+            if (opts.unrolled) {
                 runFactorUnrolled(self, factor);
             } else {
                 const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
@@ -218,11 +227,18 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
             const T = opts.RunFactorChunk;
             const unrolledDense = comptime
                 unrolled.makeDenseLUT(T, .{.primeval = opts.primeval, .max_vector = opts.max_vector});
+            const unrolledSparse = comptime
+                unrolled.makeSparseLUT(T, .{.primeval = opts.primeval});
 
-            const fun_index = factor / 2;
             const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
 
-            unrolledDense[fun_index](field, self.field_bytes / @sizeOf(T));
+            if (unrolled.isDense(T, factor)) {
+                const fun_index = factor / 2;
+                unrolledDense[fun_index](field, self.field_bytes / @sizeOf(T));
+            } else {
+                const fun_index = (factor % @bitSizeOf(T)) / 2;
+                unrolledSparse[fun_index](field, self.field_bytes / @sizeOf(T), factor);
+            }
         }
 
         fn mask_for(comptime T: type, index: usize) T {
