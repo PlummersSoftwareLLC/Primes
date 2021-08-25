@@ -1,9 +1,36 @@
-# Dart solution by Eagerestwolf
+# Dart solution by Eagerestwolf and mmcdon20
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+
+### PrimeDart.dart
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+
+### PrimeDartParallel.dart
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+
+### PrimeDartOneBit.dart
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+
+### PrimeDartParallelOneBit.dart
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+
 
 This implementation of the Prime Sieve uses the Dart Programming Language,
 created by Google. The source file `bin/PrimeDart.dart` contains a lot of
@@ -67,26 +94,27 @@ platform, but Dart will generate a standard ELF binary on *nix systems.
 * **GPU**: Nvidia GeForce GTX 1650 with Max-Q Design
 * **OS**: Windows 10 (Build 19042)
 
-### Docker Results
+### Docker Results (runs all implementations)
 
 ```
-Passes: 1051, Time: 5.00003, Avg: 0.004757402473834443, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
-
-eagerestwolf;1051;5.00003;1;algorithm=base,faithful=yes
+eagerestwolf&mmcdon20_8bit;4661;5.000105;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_8bit_par;10710;5.001459;12;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20_1bit;4234;5.000628;1;algorithm=base,faithful=yes,bits=1
+eagerestwolf&mmcdon20_1bit_par;24644;5.001196;12;algorithm=base,faithful=yes,bits=1
 ```
 
-### Dart SDK
+### Dart SDK (running PrimeDart.dart)
 
 ```
-Passes: 817, Time: 5.014207, Avg: 0.0061373402692778455, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
+Passes: 5213, Time: 5.000862, Avg: 0.0009593059658545943, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf;817;5.014207;1;algorithm=base,faithful=yes
+eagerestwolf&mmcdon20_8bit;5213;5.000862;1;algorithm=base,faithful=yes,bits=8
 ```
 
-### Dart Compiled
+### Dart Compiled (running PrimeDart.exe)
 
 ```
-Passes: 849, Time: 5.000307, Avg: 0.005889643109540636, Limit: 1000000, Count1: 1, Count2: 78498, Valid: true
+Passes: 5588, Time: 5.000777, Avg: 0.0008949135647816751, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf;849;5.000307;1;algorithm=base,faithful=yes
+eagerestwolf&mmcdon20_8bit;5588;5.000777;1;algorithm=base,faithful=yes,bits=8
 ```

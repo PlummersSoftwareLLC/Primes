@@ -1,0 +1,24 @@
+{
+  "name": "primeassemblyscript",
+  "version": "1.0.0",
+  "description": "Prime Sieve Implementation in AssemblyScript",
+  "main": "index.js",
+  "scripts": {
+    "build:all": "npm run build:orig && npm run build:unrolled",
+    "build:orig": "asc ./src/orig/index.ts -O3 --noAssert --converge --initialMemory 256 -b ./dist/orig.wasm",
+    "build:unrolled": "asc ./src/unrolled/index.ts -O3 --noAssert --converge --initialMemory 256 -b ./dist/unrolled.wasm",
+
+    "bench:all": "npm run bench:orig && npm run bench:unrolled",
+    "bench:orig": "node --experimental-wasi-unstable-preview1 --no-wasm-bounds-checks --no-wasm-stack-checks --wasm-loop-unrolling --no-liftoff --turbo-instruction-scheduling orig.index.js",
+    "bench:unrolled": "node --experimental-wasi-unstable-preview1 --no-wasm-bounds-checks --no-wasm-stack-checks --wasm-loop-unrolling --no-liftoff --turbo-instruction-scheduling unrolled.index.js"
+  },
+  "type": "module",
+  "author": "",
+  "license": "BSD-3",
+  "dependencies": {
+    "@assemblyscript/loader": "0.19.10"
+  },
+  "devDependencies": {
+    "assemblyscript": "0.19.10"
+  }
+}

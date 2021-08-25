@@ -2,8 +2,8 @@ FROM golang:1.16-alpine3.13
 
 WORKDIR /opt/app
 
-COPY main.go .
+COPY *.go build.sh run.sh ./
 
-RUN go build main.go
+RUN sh ./build.sh
 
-ENTRYPOINT [ "./main" ]
+ENTRYPOINT [ "sh", "./run.sh" ]

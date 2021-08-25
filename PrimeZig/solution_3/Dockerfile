@@ -7,9 +7,9 @@ RUN apk update && \
 
 RUN mkdir -p /deps
 WORKDIR /deps
-RUN curl https://ziglang.org/download/0.8.0/zig-linux-$(uname -m)-0.8.0.tar.xz  -O && \
-    tar xf zig-linux-$(uname -m)-0.8.0.tar.xz && \
-    mv zig-linux-$(uname -m)-0.8.0 local/
+RUN curl https://ziglang.org/download/0.8.0/zig-linux-"$(uname -m)"-0.8.0.tar.xz  -O && \
+    tar xf zig-linux-"$(uname -m)"-0.8.0.tar.xz && \
+    mv zig-linux-"$(uname -m)"-0.8.0 local/
 
 FROM alpine:3.13
 COPY --from=builder /deps/local/ /deps/local/

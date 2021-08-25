@@ -2,11 +2,10 @@ FROM python:3.9
 
 WORKDIR /root
 
-RUN [ "pip", "install", "cython"]
+RUN [ "pip", "install", "--no-cache-dir", "Cython==0.29.24"]
 
-COPY PrimeCY.pyx .
+COPY PrimeCY_bytearray.pyx PrimeCY_bitarray.pyx PrimeCY_32.pyx buildall.sh ./
 
-RUN [ "cython", "-3", "--embed", "PrimeCY.pyx", "-o", "PrimeCY.c" ]
-RUN [ "gcc", "-I", "/usr/local/include/python3.9", "-l", "python3.9", "-lm", "PrimeCY.c", "-o", "PrimeCY"]
+RUN [ "./buildall.sh" ]
 
-ENTRYPOINT [ "./PrimeCY" ]
+ENTRYPOINT ["sh", "-c", "./PrimeCY_bytearray && ./PrimeCY_bitarray && ./PrimeCY_32"]

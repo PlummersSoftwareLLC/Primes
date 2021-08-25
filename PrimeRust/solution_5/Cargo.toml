@@ -1,0 +1,16 @@
+[package]
+name = "rust-solution-5"
+version = "0.1.0"
+authors = ["Kai Rese"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rayon = "^1"
+structopt = "^0.3"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
