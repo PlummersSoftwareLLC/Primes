@@ -17,6 +17,7 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
         pub const T = opts.T;
         pub const PRIME: T = opts.primeval;
         pub const COMPOSITE: T = if (T == bool) (!opts.primeval) else (1 - opts.primeval);
+        pub const STARTING_FACTOR = 3;
 
         // informational content.
         pub const name = "sieve-" ++ @typeName(T) ++ wheel_name;
@@ -44,10 +45,6 @@ pub fn IntSieve(comptime opts: IntSieveOpts) type {
 
         pub fn deinit(self: *Self) void {
             free(self.field);
-        }
-
-        pub fn reset(self: *Self) usize {
-            return 3;
         }
 
         pub fn primeCount(self: *Self) usize {
@@ -114,6 +111,7 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         pub const name = "bitSieve-" ++ wheel_name;
         pub const algo = "base";
         pub const bits = 1;
+        pub const STARTING_FACTOR = 3;
 
         // type helpers
         const Self = @This();
@@ -141,6 +139,19 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
             // allocates the field slice.  Note that this will *always* allocate at least a page.
             var field = try calloc_pages(init_fill_unit, field_bytes + extra_padding);
 
+            comptime const trailing_masks = make_trailing_masks(u8, PRIME);
+
+            // mask out the last bits of the field if they are needed.
+            if (field_count % 8 != 0) {
+                const padding = (field_count % 8);
+                const last_slot = field_bytes - 1;
+                if (PRIME == 1) {
+                    field[last_slot] &= ~trailing_masks[padding];
+                } else {
+                    field[last_slot] |= ~trailing_masks[padding];
+                }
+            }
+
             return Self{
                 .field = field,
                 .field_count = field_count,
@@ -151,22 +162,6 @@ pub fn BitSieve(comptime opts: BitSieveOpts) type {
         fn extraPadding(sieve_size: usize) usize {
             const biggest_possible_factor = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
             return biggest_possible_factor * @bitSizeOf(opts.RunFactorChunk);
-        }
-
-        pub fn reset(self: *Self) usize {
-            comptime const trailing_masks = make_trailing_masks(u8, PRIME);
-            // perform wheel operations if needed.
-            // mask out the last bits of the field if they are needed.
-            if (self.field_count % 8 != 0) {
-                const padding = (self.field_count % 8);
-                const last_slot = self.field_bytes - 1;
-                if (PRIME == 1) {
-                    self.field[last_slot] &= ~trailing_masks[padding];
-                } else {
-                    self.field[last_slot] |= ~trailing_masks[padding];
-                }
-            }
-            return 3;
         }
 
         pub fn deinit(self: *Self) void {

@@ -28,7 +28,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
 
         pub fn sieveInit(self: *Self) !void {
             self.sieve = try Sieve.init(self.sieve_size);
-            self.factor = self.sieve.reset();
+            self.factor = Sieve.STARTING_FACTOR;
         }
 
         pub fn sieveDeinit(self: *Self) void {
@@ -306,7 +306,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             self.sieve = try Sieve.init(self.sieve_size);
             errdefer sieve.deinit();
 
-            self.factor = self.sieve.reset();
+            self.factor = Sieve.STARTING_FACTOR;
         }
 
         pub fn sieveDeinit(self: *Self) void {
@@ -327,7 +327,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
                 var sieve = Sieve.init(runner.sieve_size) catch unreachable;
                 defer sieve.deinit();
 
-                var factor = sieve.reset();
+                var factor: usize = Sieve.STARTING_FACTOR;
                 runSieve(&sieve, runner.sieve_size, factor);
 
                 // increment the number of passes.
