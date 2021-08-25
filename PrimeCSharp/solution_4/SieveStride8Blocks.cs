@@ -7,6 +7,21 @@ using System.Text;
 
 namespace PrimeSieveCS
 {
+    readonly struct SieveStride8Blocks16kRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize) => new SieveStride8Blocks(sieveSize, 0x4000, "italytoast-stride8-blocks16k").RunSieve();
+    }
+
+    readonly struct SieveStride8Blocks32kRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize) => new SieveStride8Blocks(sieveSize, 0x8000, "italytoast-stride8-blocks32k").RunSieve();
+    }
+
+    readonly struct SieveStride8Blocks64kRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize) => new SieveStride8Blocks(sieveSize, 0x10000, "italytoast-stride8-blocks64k").RunSieve();
+    }
+
     /// <summary>
     /// A simplified version of the striped algorithm used by rust solution_1.
     /// Instead of having the sieve oriented "vertically", we keep the normal bit array representaion.
@@ -15,20 +30,24 @@ namespace PrimeSieveCS
     /// 
     /// This simplifies the code a whole lot.
     /// </summary>
-    class SieveStriped : ISieve
+    class SieveStride8Blocks : ISieve
     {
-        public readonly uint sieveSize = 0;
+        readonly uint sieveSize = 0;
         readonly uint halfLimit;
         readonly ulong[] bits;
+        readonly uint blockSize;
+        readonly string name;
 
-        public string Name => "italytoast-striped";
+        public string Name => name;
 
         public uint SieveSize => sieveSize;
 
-        public SieveStriped(uint size)
+        public SieveStride8Blocks(uint size, uint blocksize, string name)
         {
             const int wordBits = sizeof(ulong) * 8;
 
+            this.name = name;
+            blockSize = blocksize;
             sieveSize = size;
             halfLimit = (size + 1) / 2;
             bits = new ulong[(int)(halfLimit / wordBits + 1)];
@@ -43,23 +62,54 @@ namespace PrimeSieveCS
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe static void ClearBitsStriped(byte* ptr, uint start, uint factor, uint limit)
+        unsafe static void ClearBitsStride8BlocksUnrolled(byte* ptr, uint start, uint factor, uint limit, uint blocksize)
         {
-            var stripedMask = 0;
-            var count = limit / 8;
-            while (true)
+            Span<(uint, byte)> strides = stackalloc (uint, byte)[8];
+            for (uint i = 0; i < 8; i++)
             {
-                var index = start / 8;
-                byte mask = (byte)(1 << (int)(start % 8));
+                var s = start + factor * i;
+                strides[(int)i] = (s / 8, (byte)(1 << ((int)s % 8)));
+            }
 
-                if ((mask & stripedMask) != 0) break;//checks if we have cleared the stripe already. If so we are finnished.
+            var bytecount = limit / 8;
+            var blockStart = start / 8;
 
-                for (uint i = index; i < count; i += factor)
+            while (blockStart <= bytecount)
+            {
+                for (int stride = 0; stride < 8; stride++)
                 {
-                    ptr[i] |= mask;
+                    var (index, mask) = strides[stride];
+                    var blockEnd = Math.Min(bytecount + 1, index + blocksize);
+                    var blockEndPtr = ptr + blockEnd;
+
+                    var i0 = ptr + index;
+                    var i1 = ptr + index + factor;
+                    var i2 = ptr + index + factor * 2;
+                    var i3 = ptr + index + factor * 3;
+
+                    uint factor4 = factor * 4; 
+                    for (; i3 < blockEndPtr;)
+                    {
+                        i0[0] |= mask;
+                        i1[0] |= mask;
+                        i2[0] |= mask;
+                        i3[0] |= mask;
+
+                        i0 += factor4;
+                        i1 += factor4;
+                        i2 += factor4;
+                        i3 += factor4;
+                    }
+
+                    for (; i0 < blockEndPtr; i0 += factor)
+                    {
+                        i0[0] |= mask;
+                    }
+
+                    strides[stride] = ((uint)(i0 - ptr), mask);
                 }
-                start += factor;// push start forward by factor so we start in the next stripe.
-                stripedMask |= mask;
+
+                blockStart += blocksize;
             }
         }
 
@@ -67,7 +117,7 @@ namespace PrimeSieveCS
         /// Calculate the primes up to the specified limit
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        unsafe public void RunSieve()
+        unsafe public SieveStride8Blocks RunSieve()
         {
             uint factor = 3;
             uint halfFactor = factor >> 1;
@@ -97,8 +147,9 @@ namespace PrimeSieveCS
 
                     if (halfFactor > halfRoot) break;
 
-                    ClearBitsStriped((byte*)ptr, (factor * factor) / 2, factor, halfLimit);
+                    ClearBitsStride8BlocksUnrolled((byte*)ptr, (factor * factor) / 2, factor, halfLimit, blockSize);
                 }
+            return this;
         }
     }
 }

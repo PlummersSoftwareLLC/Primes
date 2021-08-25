@@ -1,0 +1,2358 @@
+% Prime Sieve with Knuth TeX using the 2*3*5*7  wheel (48 out of 210)
+% author: jfbu
+% date:   2021/07/27--2021/08/06--2021/08/15
+%
+% This file defines syntax for a  "Sieve object" in TeX lingua with its
+% associated methods: sieve, reset (not implemented), settocount, outtofile.
+%
+% Usage:
+%
+% \NewSieve{<name>}{<range>}
+%
+% **** THE RANGE MUST BE > 7 ****
+%
+% \Sieve <name>.sieve{} executes the sieve
+% %%% \Sieve <name>.reset{} resets all array entries to 0 (not implemented)
+%
+% after sieve method has been executed one has access to:
+%
+% \Sieve <name>.settocount{\macro} sets \macro to the number of primes
+% \Sieve <name>.outtofile{<filename>} ships out all found primes,
+%    one per line to file <filename>.
+%    It will also write to stdout the number of primes found
+% 
+% Algorithm: sieve of Eratosthenes with a 2*3*5*7 wheel
+%
+%
+% TeXnicalities:
+%
+% - ////                                                   \\\\
+%   This library file uses only base Knuth's tex, i.e. it
+%   doesn't use the e-TeX extensions such as \numexpr but,
+%   only the TeX's syntax with \multiply, \divide, \advance.
+%   \\\\                                                   ////
+%
+% - TeX has no native array type so we use "font dimension arrays".
+%   There is no way that I know of to release the memory, only
+%   to re-use it (and the array size can not be modified as soon
+%   as some other font is defined).
+%
+% - Maximal pdftex font memory is at 147,483,647 32bits words
+%   and for sieving up to range N, this needs a bit more than
+%   N/2 words of memory.
+%
+% - luatex has dynamic memory allocation so is not constrained
+%   but maximal N is at 999,999,999 due to a limitation
+%   (which could be lifted) from a shared_batteries.tex
+%   auxiliary macro (square root)
+
+
+% activate @ as a letter for being more mysterious
+\catcode`@ 11
+% and use also _ as a letter to appear even more TeXnical
+\catcode`_ 11
+
+\input shared_batteries.tex
+
+% this will serve to mark composites
+\newdimen\onesp \onesp=1sp
+
+% additional count registers 
+\newcount\indexa
+\newcount\indexb 
+\newcount\indexc
+\newcount\indexd
+
+\newcount\cntFactor
+\newcount\cntFactorClass
+
+\newcount\cnta
+\newcount\cntb
+\newcount\cntc
+\newcount\cntd
+\newcount\cnte
+\newcount\cntf
+
+\newcount\cstRange
+\newcount\cstRangeSqrt
+
+\newcount\instance
+\mathchardef\onethousandeight=1008
+
+% we need a write stream for the \Sieve <sieveobject>.outtofile{} method
+\newwrite\out
+
+\newcount\wheelmodulus
+% we will work with residue classes prime to 210=2*3*5*7
+\wheelmodulus=210
+% 
+% Some of what follows was originally thought out for the larger
+% 2*3*5*7*11=2310 wheel which has 480 cogs.
+% We downgrade it to the 48 out of 210 wheel, and we will add
+% for optimization usage of some dedicated counts holding
+% the successive "deltas" (divided by 2), up to some cyclic
+% permutation
+%
+% We will "roll-out" the inner loops by batches
+% of length 210 numbers, this would be more complicated
+% to do in TeX for the 2310 modulus, in part due to using
+% \count registers for which only 255 are available in TeX.
+%
+% (to handle 480 out of 2310 we could try using the x-->2310-x
+%  symmetry, reducing to 240 < 255 cogs,...)
+%
+% construction of the wheel (it is done once only)
+\font\wheelcogids=cmr10 at 666sp
+% we will completely ignore even indices
+%
+% **ultimately** cogids[n] for 1<= n <= 210 will be the number
+% of integers m<=n prime to 210. In other terms it is the
+% index i of the largest cog value at most equal to n
+%
+% **the array is configured and meaningful only for odd indices**
+%
+% reserve enough space:
+\fontdimen\wheelmodulus\wheelcogids=\z@
+% (1 will be set directly, 3, 5 and 7 are handled next)
+% sieve out multiples of three up to 210
+\indexa=-3
+\Replicate{35}{\advance\indexa6 \fontdimen\indexa\wheelcogids=\onesp }%
+% sieve out multiples of five up to 210
+\indexa=-5
+\Replicate{21}{\advance\indexa10 \fontdimen\indexa\wheelcogids=\onesp }%
+% sieve out multiples of seven up to 210
+\indexa=-7
+\Replicate{15}{\advance\indexa14 \fontdimen\indexa\wheelcogids=\onesp }%
+
+% before giving to the cogids[n] their final values let's initiate
+% the cognext and cogdeltas arrays.
+
+\font\wheelcognext=cmr10 at 667sp
+\fontdimen\wheelmodulus\wheelcognext=\z@
+% we don't care about the possibly already set values
+% we ignore indices not prime to 210
+
+\font\wheelcogdeltas=cmr10 at 668sp
+\fontdimen\wheelmodulus\wheelcogdeltas=\z@
+% we don't care about the possibly already set values
+% we ignore indices not prime to 210
+
+% As long as we don't use "\font" we can append
+% to the \wheelcogs array.
+% Of course it would be more readable code to
+% do it explicitly manually, but we do this
+% abstractly, as for the lengther 480 of 2310 case
+\font\wheelcogs=cmr10 at 669sp
+\fontdimen1\wheelcogids=\onesp % 1 is first cog
+\fontdimen1\wheelcogs  =\onesp % first cog is at 1
+\indexa=\@ne
+\indexb=\@ne
+\indexc=\@ne
+\Replicate{104}{\advance\indexb\tw@
+    \ifcase\fontdimen\indexb\wheelcogids % relatively prime to 210
+      \advance\indexc\@ne
+      \fontdimen\indexc\wheelcogs    =\indexb sp %
+      %
+      \fontdimen\indexb\wheelcogids  =\indexc sp %
+      \fontdimen\indexa\wheelcognext =\indexb sp %
+      %
+      \cnta=\indexb\advance\cnta-\indexa
+%%% main sieving array will use j->2j+1 representation
+%%% whereas the cogwheel is represented k->k
+%%% so the deltas are divided by 2 here
+   \divide\cnta \tw@
+%%%
+      \fontdimen\indexa\wheelcogdeltas=\cnta sp %
+      %
+      \indexa=\indexb
+    \else
+      % attention that wheelcogids array now takes its final entries
+      % which are configured only for odd indices, by the way
+      \fontdimen\indexb\wheelcogids  =\indexc sp
+    \fi
+}%
+\fontdimen 209\wheelcognext=\onesp %
+\fontdimen 209\wheelcogdeltas=\onesp % see divide by 2 above
+
+% we have finished our job with constructing the necessary
+% and useful 48 out of 210 wheel data.
+% Let's keep memory of the number of relatively prime classes.
+\newcount\wheelcogcount
+\wheelcogcount=\indexc % i.e. 48
+
+% % debugging during code development to check we got it right
+% \indexb-\@ne
+%   \immediate\write128{class,
+%                       id,
+%                       nextclass,
+%                       delta (last 2 meaningful only for primes to 210)
+%                       }%
+% \Replicate{105}{\advance\indexb\tw@
+%   \immediate\write128{\the\indexb,
+%                       \the\numexpr\fontdimen\indexb\wheelcogids,
+%                       \the\numexpr\fontdimen\indexb\wheelcognext,
+%                       \the\numexpr\fontdimen\indexb\wheelcogdeltas
+%                       }%
+% }%
+% \immediate\write128{\the\wheelcogcount, \the\numexpr\fontdimen\wheelcogcount\wheelcogs}
+% \bye
+
+% INSTANTIATION OF A SIEVING OBJECT
+% =================================
+
+\def\Sieve #1.{\csname _svobj.#1\endcsname}%
+
+\def\NewSieve#1{%
+  % #1 is the name given by user
+  % As it may need expansion, we do this expansion once immediately
+  \edef\tmp{{#1}}%
+  \expandafter\_NewSieve\tmp
+}%
+
+\def\_NewSieve#1#2{%
+  % This is the "init" method for a new Sieve instantiation
+  %
+  % #1 is the name given by user to the sieve object.
+  % #2 is its range (included in array if odd)
+  %
+  % Access to its methods or attributes is done either via this syntax:
+  %    \Sieve foo.<method>{}
+  % where the {} is mandatory,
+  %
+  % Or via this syntax (with CamelCase for the method name)
+  %     \Sieve<method>{foo}
+  % (some methods may use a second argument)
+  %
+  % attributes:
+  % - range
+  % - instance (used internally)
+  %
+  % methods:
+  % sieve: execute the sieving of the array
+  % reset: clear the array, cancelling all sieving work
+  % settocount: compute the number of primes in the given range
+  %             and assigns it to macro argument
+  %     (the sieve method must have been executed first)
+  % outtofile: outputs primes one per line to given filename
+  %     (the sieve method must have been executed first)
+  %
+  \expandafter\def\csname _svobj.#1\endcsname##1##{\csname _svobj.#1.##1\endcsname}%
+  % range A
+  \cstRange=#2\relax
+  %  (the ##1 is only to gobble the {} from the method calling syntax)
+  \expandafter\edef\csname _svobj.#1.range\endcsname##1{\the\cstRange}%
+  %
+  % array size 2J+1<= A
+  % (we don't replace A by largest number prime to 210 and less than A
+  %  but we possibly should for some -surely- limited gain)
+  \cnta=\cstRange
+  \advance\cnta-\@ne
+  \divide\cnta\tw@
+  %
+  % object instance number (used internally to label class instantiations)
+  \advance\instance\@ne
+  \expandafter\edef\csname _svobj.#1.instance\endcsname##1{\the\instance}%
+  %
+  % an array of font dimensions (each a 32bits word)
+  \cntb=669 % as 666, 667, 668, 669 are already in use
+  \advance\cntb\instance % instance id at least 1 so this will be 670 at least
+  % Initialize a font
+  \font\_svobjarray=cmr10 at \cntb sp % each class instantiation impacts memory
+  % Create the array of its parameters 
+  \fontdimen\cnta\_svobjarray=\z@
+  % and save its name in the object attributes
+  \expandafter\let\csname _svobjarray.#1\endcsname\_svobjarray
+  %
+  % Array entries with indices 1 to 7 (or 8 with luatex) are not
+  % initialized to zero, let's fix this
+  \fontdimen1\_svobjarray=\z@ 
+  \fontdimen2\_svobjarray=\z@
+  \fontdimen3\_svobjarray=\z@
+  \fontdimen4\_svobjarray=\z@
+  \fontdimen5\_svobjarray=\z@
+  \fontdimen6\_svobjarray=\z@
+  \fontdimen7\_svobjarray=\z@
+  \fontdimen8\_svobjarray=\z@ % needed for usage with luatex
+  %
+  % sieve method (the ##1 gobbles the {} of the syntax)
+  %
+  \expandafter\def\csname _svobj.#1.sieve\endcsname##1{%
+      \SieveSieve{#1}%
+  }%
+  %
+  % reset method (the ##1 gobbles the {} of the syntax)
+  %
+  \expandafter\def\csname _svobj.#1.reset\endcsname##1{%
+      \SieveReset{#1}%
+  }%
+  %
+  % settocount method (assigns to the second argument the count of primes)
+  %
+  \expandafter\def\csname _svobj.#1.settocount\endcsname{%
+      \SieveSetToCount{#1}%
+  }%
+  %
+  % outtofile method (outputs to the filename given as second argument the list
+  % of primes, one per line)
+  %
+  \expandafter\def\csname _svobj.#1.outtofile\endcsname{%
+      \SieveOutToFile{#1}%
+  }%
+  % 
+}% end of \_NewSieve
+
+%
+% sieve method
+%
+\newcount\cntDeltaAA
+\newcount\cntDeltaAB
+\newcount\cntDeltaAC
+\newcount\cntDeltaAD
+\newcount\cntDeltaAE
+\newcount\cntDeltaAF
+\newcount\cntDeltaAG
+\newcount\cntDeltaAH
+%
+\newcount\cntDeltaBA
+\newcount\cntDeltaBB
+\newcount\cntDeltaBC
+\newcount\cntDeltaBD
+\newcount\cntDeltaBE
+\newcount\cntDeltaBF
+\newcount\cntDeltaBG
+\newcount\cntDeltaBH
+%
+\newcount\cntDeltaCA
+\newcount\cntDeltaCB
+\newcount\cntDeltaCC
+\newcount\cntDeltaCD
+\newcount\cntDeltaCE
+\newcount\cntDeltaCF
+\newcount\cntDeltaCG
+\newcount\cntDeltaCH
+%
+\newcount\cntDeltaDA
+\newcount\cntDeltaDB
+\newcount\cntDeltaDC
+\newcount\cntDeltaDD
+\newcount\cntDeltaDE
+\newcount\cntDeltaDF
+\newcount\cntDeltaDG
+\newcount\cntDeltaDH
+%
+\newcount\cntDeltaEA
+\newcount\cntDeltaEB
+\newcount\cntDeltaEC
+\newcount\cntDeltaED
+\newcount\cntDeltaEE
+\newcount\cntDeltaEF
+\newcount\cntDeltaEG
+\newcount\cntDeltaEH
+%
+\newcount\cntDeltaFA
+\newcount\cntDeltaFB
+\newcount\cntDeltaFC
+\newcount\cntDeltaFD
+\newcount\cntDeltaFE
+\newcount\cntDeltaFF
+\newcount\cntDeltaFG
+\newcount\cntDeltaFH
+%
+%
+\def\SieveSieve#1{%
+    % Set \_svobjarray to the font array
+    \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
+    % Set \cstRange to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstRange=\csname _svobj.#1.range\endcsname{}\relax
+    % Set \cstRangeSqrt to its square root
+    % nota bene: move this to the "init" and add corresponding attribute to
+    % object data?
+    \SetToSqrt\cstRange\cstRangeSqrt
+    %
+    % Start the actual wheel sieving
+    % 
+    % We need to precompute a priori how many elementary steps of the wheel
+    % will happen until we have exhausted all potential factors up to B = isqrt(range)
+    % 
+    \cntb=\cstRangeSqrt
+        % make sure we never get an even number modulo 210 as our cogids array indices
+        % start at 1 and the array entries are meaningful only for odd indices
+        \ifodd\cntb\else\advance\cntb-\@ne\fi
+    \cntc=\cntb
+    \divide\cntc\wheelmodulus
+    \cntd=\cntc
+    \multiply\cntd\wheelcogcount
+    \multiply\cntc\wheelmodulus
+    \advance\cntb-\cntc
+    \advance\cntd\fontdimen\cntb\wheelcogids
+    %
+    % We need to iterate \cntd-1 times to go from
+    % 1 to the ultimate N which is prime to 210 and at most equal to B
+    % stepping only along numbers all primes to 210
+    \advance\cntd-\@ne
+% debugging
+% \immediate\write128{I will do \the\cntd\space iterations}%
+    %
+    % \indexa will index sieve array (j maps to 2j+1)
+    % and will step by entries of the delta array
+    % 
+    % \indexc will index cogs modulo 210 (k mapsto k)
+    % and will evolve via the entries of the cognext array
+    %
+    % \cntf will step by one at each iteration and will thus
+    % keep information helpful to know for a given factor F
+    % exactly how many F*G's will be sieved out
+    %
+    \indexa=\z@
+    \cntFactorClass=\@ne
+    \cntf=\@ne
+    %
+    \Replicate{\the\cntd}{%
+      % step indexa by suitable delta
+      \advance\indexa\fontdimen\cntFactorClass\wheelcogdeltas
+      % and now update the class modulo wheel modulus
+      \cntFactorClass=\fontdimen\cntFactorClass\wheelcognext
+      % update the iteration count
+      \advance\cntf\@ne
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+        % yes, so let's sieve out its multiples
+        % starting with factor*factor
+        %
+        \cntFactor=\indexa      % will hold the factor
+        \advance\cntFactor\cntFactor
+        \advance\cntFactor\@ne  % 2j+1 = odd factor
+        %
+        \indexb=\cntFactor
+        \multiply \indexb \indexb % factor*factor is odd
+        %
+        \divide \indexb \tw@ 
+        \fontdimen\indexb\_svobjarray=\onesp % factor * factor now sieved out
+        % Now set up the counts holding deltas for optimizing assignment speed
+        % This step is hard-coded for the 48 out of 210 case
+            \indexd=\cntFactorClass
+\cntDeltaAA=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAA\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaAB=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAB\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaAC=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAC\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaAD=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAD\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaAE=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAE\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaAF=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAF\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaAG=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAG\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaAH=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaAH\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBA=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBA\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBB=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBB\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBC=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBC\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBD=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBD\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBE=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBE\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBF=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBF\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBG=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBG\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaBH=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaBH\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCA=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCA\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCB=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCB\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCC=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCC\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCD=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCD\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCE=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCE\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCF=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCF\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCG=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCG\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaCH=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaCH\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDA=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDA\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDB=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDB\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDC=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDC\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDD=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDD\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDE=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDE\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDF=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDF\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDG=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDG\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaDH=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaDH\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaEA=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaEA\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaEB=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaEB\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaEC=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaEC\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaED=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaED\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaEE=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaEE\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaEF=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaEF\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaEG=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaEG\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaEH=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaEH\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFA=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFA\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFB=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFB\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFC=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFC\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFD=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFD\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFE=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFE\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFF=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFF\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFG=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFG\cntFactor
+\indexd=\fontdimen\indexd\wheelcognext
+\cntDeltaFH=\fontdimen\indexd\wheelcogdeltas
+\multiply\cntDeltaFH\cntFactor
+        %
+        % we now need to know exactly how many iterations are needed
+        % 
+        \cnta=\cstRange % Range
+        \divide\cnta\cntFactor % Range//factor
+        % make sure we never get an even number modulo 210 as our cogids array indices
+        % start at 1 and the array entries are meaningful only for odd indices
+        \ifodd\cnta\else\advance\cnta-\@ne\fi
+        %
+        \cntb=\cnta
+        \cntd=\cnta
+        \divide\cnta\wheelmodulus
+        \cnte=\cnta
+        \multiply\cnta\wheelmodulus
+        \advance\cntd-\cnta % this is modulo modulus
+        %
+        \multiply\cnte\wheelcogcount
+        \advance\cnte\fontdimen\cntd\wheelcogids % get id of maximal cog to
+                                % the left
+        % get finally how many iterations must be done: cnte - cntf
+        \advance\cnte-\cntf
+        % cofactor G is initially F which maps to \cntFactorClass modulo 210
+        % indexb will be (F * G - 1)/2, currently G = F
+        \cnta=\cnte
+        \divide\cnta\onethousandeight
+        %
+        \Replicate{\the\cnta}{%
+          \ReplicateTwentyOne{% 1008 = 21 x 48
+            % step indexb by suitable delta * factor
+            \advance\indexb\cntDeltaAA
+            % and mark this index as sieved out
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out
+            % and now for 47 more
+            \advance\indexb\cntDeltaAB
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out 
+            \advance\indexb\cntDeltaAC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaED
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFH
+            \fontdimen\indexb\_svobjarray=\onesp
+          }%
+        }%
+        \multiply\cnta\onethousandeight
+        \advance\cnte-\cnta % this is what remains to be done (< 1008)
+        \cnta\cnte
+        \divide\cnta\wheelcogcount
+        \Replicate{\the\cnta}{%
+            % step indexb by suitable delta * factor
+            \advance\indexb\cntDeltaAA
+            % and mark this index as sieved out
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out
+            % and now for 47 more
+            \advance\indexb\cntDeltaAB
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out 
+            \advance\indexb\cntDeltaAC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaAH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaBH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaCH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaDH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaED
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaEH
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFA
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFB
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFC
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFD
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFE
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFF
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFG
+            \fontdimen\indexb\_svobjarray=\onesp
+            \advance\indexb\cntDeltaFH
+            \fontdimen\indexb\_svobjarray=\onesp
+        }%
+        \multiply\cnta\wheelcogcount
+        \advance\cnte-\cnta % this is what remains to be done
+        % \cntFactorClass is also same class modulo 210 as class of current coFactor
+        \indexd=\cntFactorClass
+        % for the last 0 to 47 needed steps, let's use slower technique
+        \Replicate{\the\cnte}{%
+            % step indexb by suitable delta * factor
+            \cntd=\cntFactor % factor
+            \multiply\cntd\fontdimen\indexd\wheelcogdeltas
+            \advance\indexb\cntd
+            % and mark this index as sieved out
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out 
+            % update the class of G modulo modulus
+            \indexd=\fontdimen\indexd\wheelcognext
+        }%
+      \fi
+    }%
+}% end of \SieveSieve
+
+
+%
+% settocount method
+%
+\def\SieveSetToCount#1#2{%
+  % #1 is the sieve object name
+  % #2 is the macro to define
+  % The sieve method of the #1 object must have been executed first
+    % Set \_svobjarray to the font array
+    \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
+    % Set \cstRange to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstRange=\csname _svobj.#1.range\endcsname{}\relax
+    %
+    % We need to precompute a priori how many elementary steps of the wheel
+    % will happen until we have exhausted all potential factors up to B = isqrt(range)
+    % 
+    \cnta=\cstRange
+        % make sure we never get an even number modulo 210 as our cogids indices
+        % start at 1 and the array entries are meaningful only for odd indices
+        \ifodd\cnta\else\advance\cnta-\@ne\fi
+    \cntc=\cnta
+    \divide\cntc\wheelmodulus
+    \cntd=\cntc
+    \multiply\cntd\wheelcogcount
+    \multiply\cntc\wheelmodulus
+    \advance\cnta-\cntc % this is A modulo 210 (A odd so this is odd too)
+    \advance\cntd\fontdimen\cnta\wheelcogids
+    %
+    % We need to iterate \cntd-1 times to go from
+    % 1 to the maximal N which is prime to 210 and at most A
+    % stepping along the way only through numbers primes to 210
+    \advance\cntd-\@ne
+    %
+    % \indexa will index sieve array (j maps to 2j+1)
+    % and will step by entries of the delta array
+    % 
+    % \indexc will index cogs modulo 210 (k mapsto k)
+    % and will evolve via the entries of the cognext array
+    %
+    % \cntf will stepped by one each time a prime is found
+    %
+    \indexa=\z@
+    \indexc=\@ne
+    \cntf=4 % 2, 3, 5, 7
+    %
+        % This step is hard-coded for the 48 out of 210 case
+    \indexd=\indexc % 1
+    \cntDeltaAA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaED=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFH=\fontdimen\indexd\wheelcogdeltas
+    \cntb=\cntd
+    \divide\cntb\onethousandeight
+    \Replicate{\the\cntb}{%
+     \ReplicateTwentyOne{%
+      % step indexa by suitable delta
+      \advance\indexa\cntDeltaAA
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+        % we have a prime
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaED
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+     }%
+    }%
+    % get how many remain to be checked
+    \multiply\cntb\onethousandeight
+    \advance\cntd-\cntb % this is what remains to be done (< 1008)
+    \cntb\cntd
+    % and do it
+    \divide\cntb\wheelcogcount
+    \Replicate{\the\cntb}{%
+      % step indexa by suitable delta
+      \advance\indexa\cntDeltaAA
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+        % we have a prime
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaED
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \advance\cntf\@ne
+      \fi
+    }%
+    \multiply\cntb\wheelcogcount
+    \advance\cntd-\cntb
+    % \indexc equal to 1 modulo 210 is valid unchanged
+    \Replicate{\the\cntd}{%
+      % step indexa by suitable delta
+      \advance\indexa\fontdimen\indexc\wheelcogdeltas
+      % and now update the class modulo wheel modulus
+      \indexc=\fontdimen\indexc\wheelcognext
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+      % we have a prime
+        \advance\cntf\@ne
+      \fi
+    }%
+  % set macro #2 to count of primes
+  \edef#2{\the\cntf}%
+}% END OF \SieveSetToCount
+
+%
+% outtofile method. Writing out to a file is significantly
+% more time costly than doing the actual sieving. I tried
+% with no great success to group the primes into batches
+% before each \write.
+%
+\def\SieveOutToFile#1#2{%
+  % #1 is the sieve object name
+  % #2 is the file name
+  % The sieve method of the #1 object must have been executed first
+  \immediate\openout\out=#2\relax
+  \immediate\write\out{2}%
+  \immediate\write\out{3}%
+  \immediate\write\out{5}%
+  \immediate\write\out{7}%
+    % Set \_svobjarray to the font array
+    \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
+    % Set \cstRange to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstRange=\csname _svobj.#1.range\endcsname{}\relax
+    %
+    % We need to precompute a priori how many elementary steps of the wheel
+    % will happen until we have exhausted all potential factors up to B = isqrt(range)
+    % 
+    \cnta=\cstRange
+        % make sure we never get an even number modulo 210 as our cogids indices
+        % start at 1 and the array entries are meaningful only for odd indices
+        \ifodd\cnta\else\advance\cnta-\@ne\fi
+    \cntc=\cnta
+    \divide\cntc\wheelmodulus
+    \cntd=\cntc
+    \multiply\cntd\wheelcogcount
+    \multiply\cntc\wheelmodulus
+    \advance\cnta-\cntc % this is A modulo 210 (A odd so this is odd too)
+    \advance\cntd\fontdimen\cnta\wheelcogids
+    %
+    % We need to iterate \cntd-1 times to go from
+    % 1 to the maximal N which is prime to 210 and at most A
+    % stepping along the way only through numbers primes to 210
+    \advance\cntd-\@ne
+    %
+    % \indexa will index sieve array (j maps to 2j+1)
+    % and will step by entries of the delta array
+    % 
+    % \indexc will index cogs modulo 210 (k mapsto k)
+    % and will evolve via the entries of the cognext array
+    %
+    % \cntf will stepped by one each time a prime is found
+    %
+    \indexa=\z@
+    \indexc=\@ne
+    \cntf=4 % 2, 3, 5, 7
+    %
+        % This step is hard-coded for the 48 out of 210 case
+    \indexd=\indexc % 1
+    \cntDeltaAA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaAH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaBH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaCH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaDH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaED=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaEH=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFA=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFB=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFC=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFD=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFE=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFF=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFG=\fontdimen\indexd\wheelcogdeltas
+        \indexd=\fontdimen\indexd\wheelcognext
+    \cntDeltaFH=\fontdimen\indexd\wheelcogdeltas
+    \cntb=\cntd
+    \divide\cntb\onethousandeight
+    \Replicate{\the\cntb}{%
+     \ReplicateTwentyOne{%
+      % step indexa by suitable delta
+      \advance\indexa\cntDeltaAA
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+        % we have a prime
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaED
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+     }%
+    }%
+    % get how many remain to be checked
+    \multiply\cntb\onethousandeight
+    \advance\cntd-\cntb % this is what remains to be done (< 1008)
+    \cntb\cntd
+    % and do it
+    \divide\cntb\wheelcogcount
+    \Replicate{\the\cntb}{%
+      % step indexa by suitable delta
+      \advance\indexa\cntDeltaAA
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+        % we have a prime
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaAH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaBH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaCH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaDH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaED
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaEH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFA
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFB
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFC
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFD
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFE
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFF
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFG
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+      \advance\indexa\cntDeltaFH
+      \ifcase\fontdimen\indexa\_svobjarray
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+    }%
+    \multiply\cntb\wheelcogcount
+    \advance\cntd-\cntb
+    % \indexc equal to 1 modulo 210 is valid unchanged
+    \Replicate{\the\cntd}{%
+      % step indexa by suitable delta
+      \advance\indexa\fontdimen\indexc\wheelcogdeltas
+      % and now update the class modulo wheel modulus
+      \indexc=\fontdimen\indexc\wheelcognext
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+      % we have a prime
+        \cnta=\indexa
+        \advance\cnta\cnta
+        \advance\cnta\@ne
+        \immediate\write\out{\the\cnta}%
+        \advance\cntf\@ne
+      \fi
+    }%
+  \immediate\closeout\out
+  % print to stdout the count of primes
+  \immediate\write128{\the\cntf\space primes were written to file #2}%
+}% END OF \SieveOutToFile
+
+\endinput
+

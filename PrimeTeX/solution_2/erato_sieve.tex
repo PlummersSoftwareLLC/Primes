@@ -365,7 +365,10 @@
 }% end of \SieveSetToCount
 
 %
-% outtofile method
+% outtofile method. Writing out to a file is significantly
+% more time costly than doing the actual sieving. I tried
+% with no great success to group the primes into batches
+% before each \write.
 %
 \def\SieveOutToFile#1#2{%
   % #1 is the sieve object name

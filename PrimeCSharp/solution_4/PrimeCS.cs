@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -12,7 +13,16 @@ namespace PrimeSieveCS
         IEnumerable<uint> EnumeratePrimes();
     }
 
-    class PrimeCS
+    /// <summary>
+    /// This is just a workaround to avoid an indirect function call to construct the sieve.
+    /// This can be replaced with a static function call when we get statics in interfaces.
+    /// </summary>
+    interface ISieveRunner
+    {
+        ISieve RunSieve(uint sieveSize);
+    }
+
+    static class PrimeCS
     {
         static Dictionary<uint, int> validationDict = new Dictionary<uint, int>
         {
@@ -28,77 +38,48 @@ namespace PrimeSieveCS
 
         static bool ContainsValidResults(ISieve sieve)
         {
-            return validationDict.ContainsKey(sieve.SieveSize) && validationDict[sieve.SieveSize] == sieve.EnumeratePrimes().Count();
+            return validationDict.ContainsKey(sieve.SieveSize) &&
+                   validationDict[sieve.SieveSize] == sieve.EnumeratePrimes().Count();
         }
 
-        static void Main(string[] args)
+        static void Main()
         {
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
-            RunSieveDefault();
-            RunSieveStriped();
+            const int sieveSize = 1_000_000;
+
+            RunSieve(default(SieveDenseAndSparseRunner), sieveSize);
+            RunSieve(default(SieveStride8Runner), sieveSize);
+            RunSieve(default(SieveStride8Blocks16kRunner), sieveSize);
+            RunSieve(default(SieveStride8Blocks32kRunner), sieveSize);
+            RunSieve(default(SieveStride8Blocks64kRunner), sieveSize);
         }
 
-        static void RunSieveDefault()
+        static void RunSieve<TRunner>(TRunner runner, uint sieveSize) where TRunner : ISieveRunner
         {
-            //setup
-            const int sieveSize = 1_000_000;
-            
+            var sw = Stopwatch.StartNew();
+
             //warmup - 5 seconds permitted
-            var wStart = DateTime.UtcNow;
-            while ((DateTime.UtcNow - wStart).TotalSeconds < 5)
-                new SieveDenseAndSparse(sieveSize).RunSieve();
+            while (sw.Elapsed.TotalSeconds < 5)
+                runner.RunSieve(sieveSize);
 
             //Forcing a GC to give us as much space on the heap as possible (dont do this in real code).
+            //It's not part of the measurement either way.
             GC.Collect(0, GCCollectionMode.Forced, true, true);
 
             //running the dragrace
-            var tStart = DateTime.UtcNow;
             var passes = 0;
-            SieveDenseAndSparse sieve = null;
-
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
+            ISieve sieve = default;
+            sw.Restart();
+            while (sw.Elapsed.TotalSeconds < 5)
             {
-                sieve = new SieveDenseAndSparse(sieveSize);
-                sieve.RunSieve();
+                sieve = runner.RunSieve(sieveSize);
                 passes++;
             }
-
-            var tD = DateTime.UtcNow - tStart;
-
-            if (sieve != null)
-                PrintResults(sieve, false, tD.TotalSeconds, passes);
-        }
-
-        static void RunSieveStriped()
-        {
-            //setup
-            const int sieveSize = 1_000_000;
-
-            //warmup - 5 seconds permitted
-            var wStart = DateTime.UtcNow;
-            while ((DateTime.UtcNow - wStart).TotalSeconds < 5)
-                new SieveStriped(sieveSize).RunSieve();
-
-            //Forcing a GC to give us as much space on the heap as possible (dont do this in real code).
-            GC.Collect(0, GCCollectionMode.Forced, true, true);
-
-            //running the dragrace
-            var tStart = DateTime.UtcNow;
-            var passes = 0;
-            SieveStriped sieve = null;
-
-            while ((DateTime.UtcNow - tStart).TotalSeconds < 5)
-            {
-                sieve = new SieveStriped(sieveSize);
-                sieve.RunSieve();
-                passes++;
-            }
-
-            var tD = DateTime.UtcNow - tStart;
+            sw.Stop();
 
             if (sieve != null)
-                PrintResults(sieve, false, tD.TotalSeconds, passes);
+                PrintResults(sieve, false, sw.Elapsed.TotalSeconds, passes);
         }
 
         static void PrintResults(ISieve sieve, bool showResults, double duration, int passes)
