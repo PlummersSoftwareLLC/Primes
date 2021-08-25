@@ -1,7 +1,7 @@
 use primes::{
     print_results_stderr, report_results_stdout, FlagStorage, FlagStorageBitVector,
     FlagStorageBitVectorRotate, FlagStorageBitVectorStriped, FlagStorageBitVectorStripedBlocks,
-    FlagStorageByteVector, BLOCK_SIZE_DEFAULT, BLOCK_SIZE_SMALL,
+    FlagStorageByteVector, PrimeSieve, BLOCK_SIZE_DEFAULT, BLOCK_SIZE_SMALL,
 };
 
 use std::{
