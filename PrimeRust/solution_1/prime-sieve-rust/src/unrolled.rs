@@ -118,6 +118,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     ///     //... etc
     ///     63 => ResetterDenseU64::<63>::reset_dense(&mut self.words),
     ///     65 => ResetterDenseU64::<65>::reset_dense(&mut self.words),
+    ///     //... etc
     ///     skip_sparse => match pattern_equivalent_skip(skip_sparse, 8) {
     ///         3 => ResetterSparseU8::<3>::reset_sparse(&mut self.words, skip),
     ///         //...
@@ -133,7 +134,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
             skip,
             3,
             2,
-            65,
+            129, // 64 unique sets
             ResetterDenseU64::<N>::reset_dense(&mut self.words),
             {
                 // fallback to sparse resetter, and dispatch to the correct one
@@ -177,7 +178,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
     const SINGLE_BIT_MASK_SET: [u64; 64] = mask_pattern_set_u64(SKIP);
     const RELATIVE_INDICES: [usize; 64] = index_pattern(SKIP);
 
-    #[inline(always)]
+    #[inline(never)]
     pub fn reset_dense(words: &mut [u64]) {
         words.chunks_exact_mut(SKIP).for_each(|chunk| {
             const CHUNK_SIZE: usize = 16; // 8, 16, or 32 seems to work
