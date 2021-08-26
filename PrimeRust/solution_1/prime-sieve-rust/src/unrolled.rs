@@ -129,7 +129,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// ```
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
-        // dense resets for all odd numbers in {3, 5, ... =65}
+        // dense resets for all odd numbers in {3, 5, ... =129}
         generic_dispatch!(
             skip,
             3,
