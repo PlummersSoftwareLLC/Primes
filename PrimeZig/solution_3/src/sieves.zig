@@ -1,21 +1,29 @@
 const std = @import("std");
 const default_allocator = @import("alloc.zig").default_allocator;
 const unrolled = @import("unrolled.zig");
+const wheel = @import("wheel.zig");
 
 const IntSieveOpts = comptime struct {
-    primeval: anytype = 0,
+    PRIME: anytype = @as(u8, 0),
     allocator: type = default_allocator,
-    Wheel: ?type = null
+    wheel_primes: u8 = 0
 };
 
 pub fn IntSieve(comptime opts_: anytype) type {
     const opts: IntSieveOpts = opts_;
     const wheel_name = "";
+
+    const Wheel: ?type = if (opts.wheel_primes > 0)
+      wheel.Wheel(.{
+          .num_primes = opts.wheel_primes,
+          .PRIME = opts.PRIME}) else null;
+
+    const PRIME = opts.PRIME;
+    const COMPOSITE = if (@TypeOf(PRIME) == bool) !PRIME else 1 - PRIME;
+
     return struct {
-        pub const T = if (@TypeOf(opts.primeval) == bool) bool else u8;
-        pub const PRIME: T = opts.primeval;
-        pub const COMPOSITE: T = if (T == bool) !PRIME else 1 - PRIME;
-        pub const STARTING_FACTOR = 3;
+        pub const T = @TypeOf(PRIME);
+        pub const STARTING_FACTOR: usize = if (Wheel) |W| W.STARTING_FACTOR else 3;
 
         // informational content.
         pub const name = "sieve-" ++ @typeName(T) ++ wheel_name;
@@ -35,8 +43,14 @@ pub fn IntSieve(comptime opts_: anytype) type {
             // allocates an array of data.  We only need half as many slots because
             // we are only going to operate on odd values.
             const field_count = sieve_size / 2;
+            const field = try calloc_pages(PRIME, field_count);
+
+            if (Wheel) |W| {
+                W.roll(field, field_count);
+            }
+
             return Self{
-                .field = try calloc_pages(PRIME, field_count),
+                .field = field,
                 .field_count = field_count,
             };
         }
@@ -83,22 +97,27 @@ pub fn IntSieve(comptime opts_: anytype) type {
 }
 
 const BitSieveOpts = comptime struct {
-    primeval: anytype = 0,
-    wheel: bool = false,
+    PRIME: anytype = @as(u8, 0),
     allocator: type = default_allocator,
+    wheel_primes: u8 = 0,
+
     RunFactorChunk: type = u32,
     cached_masks: bool = false, // used cached mask lookup instead?
     FindFactorChunk: type = u8,
     unrolled: bool = false,
     max_vector: ?u32 = null,
-    half_extent: bool = false,
+    half_extent: bool = false
 };
 
 pub fn BitSieve(comptime opts_: anytype) type {
     const opts: BitSieveOpts = opts_;
-    comptime const PRIME: u1 = opts.primeval;
-    // store the wheel type
-    const wheel_name = "";
+    const PRIME = opts.PRIME;
+
+    const Wheel: ?type = if (opts.wheel_primes > 0)
+      wheel.Wheel(.{
+          .num_primes = opts.wheel_primes,
+          .PRIME = opts.PRIME,
+          .bits = true}) else null;
 
     // static assertions that we are working with int types.
     _ = @typeInfo(opts.RunFactorChunk).Int.bits;
@@ -106,10 +125,12 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
     return struct {
         // informational content.
-        pub const name = "bitSieve-" ++ wheel_name;
+        pub const name = "bitSieve-";
         pub const algo = "base";
         pub const bits = 1;
-        pub const STARTING_FACTOR = 3;
+        pub const STARTING_FACTOR: usize = if (Wheel) |W| W.STARTING_FACTOR else 3;
+
+        pub fn foo() [*]const u8 { return "base"; }
 
         // type helpers
         const Self = @This();
@@ -136,6 +157,11 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
             // allocates the field slice.  Note that this will *always* allocate at least a page.
             var field = try calloc_pages(init_fill_unit, field_bytes + extra_padding);
+
+            // roll out the wheel, if used.
+            if (Wheel) |W| {
+                W.roll(field, field_bytes);
+            }
 
             comptime const trailing_masks = make_trailing_masks(u8, PRIME);
 
@@ -221,7 +247,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
         fn runFactorUnrolled(self: *Self, factor: usize) void {
             const T = opts.RunFactorChunk;
             comptime const unrolled_opts = .{
-                .primeval = opts.primeval,
+                .primeval = opts.PRIME,
                 .max_vector = opts.max_vector,
                 .half_extent = opts.half_extent};
 

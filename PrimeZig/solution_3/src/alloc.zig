@@ -336,18 +336,10 @@ test "VAlloc doesn't leak on multi-page allocations" {
 
 // comptime allocator, used by the wheel.  Uses the same duck-typed interface
 // as the other allocators.
-pub fn ComptimeAlloc(comptime tag: anytype, comptime size: usize) type {
+pub fn comptimeAlloc(comptime tag: anytype, comptime T: type, comptime size: usize) *[size]T {
     _ = tag;
-    var padding = size + (std.mem.page_size - size % std.mem.page_size);
-    return struct {
+    return @ptrCast(*[size]T, &struct {
         // this is a dirty zig trick that is very likely not going to be a thing in the future.
-        var buffer: [size + padding]u8 align(std.mem.page_size) = undefined;
-
-        /// a bit of a lie, this isn't going to do anything but return a pointer to the parent.
-        /// It's guaranteed to be page-aligned.
-        pub fn alloc_aligned(comptime T: type, count: usize) *[size]T {
-            std.debug.assert(count == size);
-            return @ptrCast(*[size]T, &buffer);
-        }
-    };
+        var buffer: [size]u8 align(std.mem.page_size) = undefined;
+    }.buffer);
 }

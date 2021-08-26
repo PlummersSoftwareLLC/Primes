@@ -144,7 +144,7 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             }
 
             self.sieve = sieve;
-            var factor = self.sieve.reset();
+            var factor = Sieve.STARTING_FACTOR;
             self.current_job = Job{.factor = factor};
         }
 
