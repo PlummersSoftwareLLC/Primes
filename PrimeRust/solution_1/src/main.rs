@@ -397,12 +397,12 @@ pub mod primes {
                 // single operation, but I believe that would be against the rules as
                 // we would be resetting multiple bits in one operation if we did that.
                 let mut mask_set = [[0u8; U8_BITS]; SKIP];
-                for (word_idx, word) in mask_set.iter_mut().enumerate().take(SKIP) {
-                    for (bit_idx, bit) in word.iter_mut().enumerate().take(8) {
+                for word_idx in 0..SKIP {
+                    for bit in 0..8 {
                         let block_index_offset = block_idx * BLOCK_SIZE * U8_BITS;
-                        let bit_index_offset = bit_idx * BLOCK_SIZE;
+                        let bit_index_offset = bit * BLOCK_SIZE;
                         let index = block_index_offset + bit_index_offset + word_idx;
-                        *bit = !(Self::should_reset(index, start, SKIP) << bit_idx);
+                        mask_set[word_idx][bit] = !(Self::should_reset(index, start, SKIP) << bit);
                     }
                 }
                 // rebind as immutable
