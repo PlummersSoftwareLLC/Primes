@@ -789,7 +789,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageByteVector>(
-                    "byte-storage",
+                    "byte",
                     8,
                     run_duration,
                     threads,
@@ -804,7 +804,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVector>(
-                    "bit-storage",
+                    "bit",
                     1,
                     run_duration,
                     threads,
@@ -819,7 +819,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorRotate>(
-                    "bit-storage-rotate",
+                    "bit-rotate",
                     1,
                     run_duration,
                     threads,
@@ -834,7 +834,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStriped>(
-                    "bit-storage-striped",
+                    "bit-striped",
                     1,
                     run_duration,
                     threads,
@@ -849,7 +849,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>(
-                    "bit-storage-striped-blocks",
+                    "bit-striped-blocks16k",
                     1,
                     run_duration,
                     threads,
@@ -860,7 +860,7 @@ fn main() {
 
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, false>>(
-                    "bit-storage-striped-blocks-small",
+                    "bit-striped-blocks4k",
                     1,
                     run_duration,
                     threads,
@@ -875,7 +875,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>(
-                    "bit-storage-striped-hybrid",
+                    "bit-striped-hybrid-blocks16k",
                     1,
                     run_duration,
                     threads,
@@ -886,7 +886,7 @@ fn main() {
 
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, true>>(
-                    "bit-storage-striped-hybrid-small",
+                    "bit-striped-hybrid-blocks4k",
                     1,
                     run_duration,
                     threads,
@@ -901,7 +901,7 @@ fn main() {
             print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageUnrolledHybrid>(
-                    "bit-storage-unrolled-hybrid",
+                    "bit-unrolled-hybrid",
                     1,
                     run_duration,
                     threads,
