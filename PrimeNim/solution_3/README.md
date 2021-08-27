@@ -34,7 +34,7 @@ This version runs about the same speed run either on the Docker image or locally
 
 The following is as run on an Intel SkyLake i5-6500 at 3.6 GHz (single-threaded):
 ```
-GordonBGood_unrolled_hybrid;41183;5.000098727;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme_hybrid;41183;5.000098727;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Benchmarks
@@ -54,7 +54,7 @@ Which matches the results when run with Docker on the same machine as follows:
 ┌───────┬────────────────┬──────────┬─────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                       │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼─────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-│   1   │ nim            │ 3        │ GordonBGood_unrolled_hybrid │ 41322  │ 5.00004  │    1    │   base    │   yes    │ 1    │  8264.33563   │
+│   1   │ nim            │ 3        │ GordonBGood_extreme_hybrid │ 41322  │ 5.00004  │    1    │   base    │   yes    │ 1    │  8264.33563   │
 └───────┴────────────────┴──────────┴─────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 
 

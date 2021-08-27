@@ -174,8 +174,8 @@ macro denseSetBits(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
   )
   result.add quote do:
     `csstmnt`
-#  echo csstmnt[10].astGenRepr # see AST for a given case (plus one - 1 .. 32)
-#  echo csstmnt[50].toStrLit # see code for a given case (plus one - 1 .. 32)
+#  echo csstmnt[1].astGenRepr # see AST for a given case (this is for step 3)
+#  echo csstmnt[1].toStrLit # see code for a given case (this is for step 3)
 #  echo result.toStrLit # see entire produced code at compile time
 
 type # encloses all bit sequence operations used...
@@ -279,5 +279,5 @@ let primeCount = rslt.countPrimes
 isValid = isValid and primeCount == RESULT # a thrid check
 
 stderr.writeLine(&"Passes: {passes}, Time: {elapsed}, Avg: {(elapsed / passes.float64)}, Limit: {LIMIT}, Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
-echo &"GordonBGood_unrolled_hybrid;{passes};{elapsed};1;algorithm=base,faithful=yes,bits=1"
+echo &"GordonBGood_extreme_hybrid;{passes};{elapsed};1;algorithm=base,faithful=yes,bits=1"
 
