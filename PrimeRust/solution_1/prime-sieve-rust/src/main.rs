@@ -661,9 +661,8 @@ pub mod primes {
         }
 
         let count = prime_sieve.count_primes();
-
         eprintln!(
-            "{:15} Passes: {}, Threads: {}, Time: {:.10}, Average: {:.10}, Limit: {}, Counts: {}, Valid: {}",
+            "{:30} Passes: {}, Threads: {}, Time: {:.10}, Average: {:.10}, Limit: {}, Counts: {}, Valid: {}",
             label,
             passes,
             threads,
@@ -784,9 +783,10 @@ fn main() {
     .all(|b| !*b);
 
     for threads in thread_options {
+        print_header(threads, limit, run_duration);
+        
         if opt.bytes || run_all {
             thread::sleep(Duration::from_secs(1));
-            print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageByteVector>(
                     "byte",
@@ -801,7 +801,6 @@ fn main() {
 
         if opt.bits || run_all {
             thread::sleep(Duration::from_secs(1));
-            print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVector>(
                     "bit",
@@ -816,7 +815,6 @@ fn main() {
 
         if opt.bits_rotate || run_all {
             thread::sleep(Duration::from_secs(1));
-            print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorRotate>(
                     "bit-rotate",
@@ -831,7 +829,6 @@ fn main() {
 
         if opt.bits_striped || run_all {
             thread::sleep(Duration::from_secs(1));
-            print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStriped>(
                     "bit-striped",
@@ -846,7 +843,6 @@ fn main() {
 
         if opt.bits_striped_blocks || run_all {
             thread::sleep(Duration::from_secs(1));
-            print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>(
                     "bit-striped-blocks16k",
@@ -858,6 +854,7 @@ fn main() {
                 );
             }
 
+            thread::sleep(Duration::from_secs(1));
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, false>>(
                     "bit-striped-blocks4k",
@@ -872,7 +869,6 @@ fn main() {
 
         if opt.bits_striped_hybrid || run_all {
             thread::sleep(Duration::from_secs(1));
-            print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>(
                     "bit-striped-hybrid-blocks16k",
@@ -898,7 +894,6 @@ fn main() {
 
         if opt.bits_unrolled || run_all {
             thread::sleep(Duration::from_secs(1));
-            print_header(threads, limit, run_duration);
             for _ in 0..repetitions {
                 run_implementation::<FlagStorageUnrolledHybrid>(
                     "bit-unrolled-hybrid",
@@ -915,6 +910,7 @@ fn main() {
 
 fn print_header(threads: usize, limit: usize, run_duration: Duration) {
     eprintln!();
+    eprintln!("-------------------------------------------------------");
     eprintln!(
         "Computing primes to {} on {} thread{} for {} second{}.",
         limit,
@@ -929,6 +925,8 @@ fn print_header(threads: usize, limit: usize, run_duration: Duration) {
             _ => "s",
         }
     );
+    eprintln!("-------------------------------------------------------");
+    eprintln!();
 }
 
 fn run_implementation<T: 'static + FlagStorage + Send>(
@@ -981,6 +979,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
         );
         // and report results to stdout for reporting
         report_results_stdout(label, bits_per_prime, duration, total_passes, num_threads);
+        eprintln!();
     }
 }
 
