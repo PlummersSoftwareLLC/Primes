@@ -218,11 +218,15 @@ fn extreme_reset_word(
 ) -> proc_macro2::TokenStream {
     let masks = calculate_masks(skip, word_idx);
     let code = quote! {
-        let mut word = unsafe { *#slice_expr.get_unchecked(#word_idx) };
-        #(
-            word |= #masks;
-        )*
-        unsafe { *#slice_expr.get_unchecked_mut(#word_idx) = word; }
+        unsafe {
+            let word = #slice_expr.get_unchecked_mut(#word_idx);
+            *word = *word #(| #masks)*;
+        }
+        //let mut word = unsafe { *#slice_expr.get_unchecked(#word_idx) };
+        // #(
+        //     word |= #masks;
+        // )*
+        //unsafe { *#slice_expr.get_unchecked_mut(#word_idx) = word; }
     };
     code
 }
