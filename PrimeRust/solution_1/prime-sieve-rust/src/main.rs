@@ -785,6 +785,7 @@ fn main() {
         opt.bits_striped_blocks,
         opt.bits_striped_hybrid,
         opt.bits_unrolled,
+        opt.bits_extreme,
         opt.bytes,
     ]
     .iter()
