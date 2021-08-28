@@ -564,7 +564,12 @@ string generateSieveRTRunner(string Alias, alias BitType, bool UseLeaderboardVer
     }
 }
 
-enum PRIME_COUNT = 1_000_000;
+version(Prime_100_000)
+    enum PRIME_COUNT = 100_000;
+else
+    enum PRIME_COUNT = 1_000_000;
+
+
 enum MAX_SECONDS = 5;
 
 import std.typecons : Flag, Yes, No;
@@ -600,7 +605,6 @@ void main(string[] args)
     final switch(mode) with(Mode)
     {
         case leaderboard:
-
             alias s1 = SieveCT!PRIME_COUNT;
             runSingleThreaded!s1(IsFaithful.no);
             runMultiThreaded!(s1, st)(No.faithful);
@@ -625,6 +629,12 @@ void main(string[] args)
             // This one is here just to have a "non-bool yet used as a bool" version there.
             alias s9 = SieveRTBX!ulong;
             runSingleThreaded!s9(IsFaithful.yes, "base", 64);
+
+            version(CompileUnrolled)
+            {
+                alias s10 = SieveCT_MegaUnroll!PRIME_COUNT;
+                runSingleThreaded!s10(IsFaithful.no);
+            }
             break;
 
         case all:
