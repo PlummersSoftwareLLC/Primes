@@ -590,6 +590,7 @@ pub mod primes {
     where
         T: FlagStorage,
     {
+        #[inline(always)]
         pub fn new(sieve_size: usize) -> Self {
             let num_flags = sieve_size / 2 + 1;
             PrimeSieve {
@@ -614,6 +615,7 @@ pub mod primes {
         }
 
         // calculate the primes up to the specified limit
+        #[inline(always)]
         pub fn run_sieve(&mut self) {
             let mut factor = 3;
             let q = (self.sieve_size as f32).sqrt() as usize;
@@ -662,12 +664,12 @@ pub mod primes {
 
         let count = prime_sieve.count_primes();
         eprintln!(
-            "{:30} Passes: {}, Threads: {}, Time: {:.10}, Average: {:.10}, Limit: {}, Counts: {}, Valid: {}",
+            "{:30} Passes: {}, Threads: {}, Time: {:.10}, Passes / sec: {:.2}, Limit: {}, Counts: {}, Valid: {}",
             label,
             passes,
             threads,
             duration.as_secs_f32(),
-            duration.as_secs_f32() / passes as f32,
+            passes as f32 / duration.as_secs_f32(),
             prime_sieve.sieve_size,
             count,
             match validator.is_valid(prime_sieve.sieve_size, count) {
@@ -784,126 +786,109 @@ fn main() {
 
     for threads in thread_options {
         print_header(threads, limit, run_duration);
-        
+
         if opt.bytes || run_all {
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageByteVector>(
-                    "byte",
-                    8,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageByteVector>(
+                "byte",
+                8,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
         }
 
         if opt.bits || run_all {
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVector>(
-                    "bit",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageBitVector>(
+                "bit",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
         }
 
         if opt.bits_rotate || run_all {
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorRotate>(
-                    "bit-rotate",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageBitVectorRotate>(
+                "bit-rotate",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
         }
 
         if opt.bits_striped || run_all {
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStriped>(
-                    "bit-striped",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageBitVectorStriped>(
+                "bit-striped",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
         }
 
         if opt.bits_striped_blocks || run_all {
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>(
-                    "bit-striped-blocks16k",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>(
+                "bit-striped-blocks16k",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
 
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, false>>(
-                    "bit-striped-blocks4k",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, false>>(
+                "bit-striped-blocks4k",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
         }
 
         if opt.bits_striped_hybrid || run_all {
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>(
-                    "bit-striped-hybrid-blocks16k",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>(
+                "bit-striped-hybrid-blocks16k",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
 
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, true>>(
-                    "bit-striped-hybrid-blocks4k",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_SMALL, true>>(
+                "bit-striped-hybrid-blocks4k",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
         }
 
         if opt.bits_unrolled || run_all {
-            thread::sleep(Duration::from_secs(1));
-            for _ in 0..repetitions {
-                run_implementation::<FlagStorageUnrolledHybrid>(
-                    "bit-unrolled-hybrid",
-                    1,
-                    run_duration,
-                    threads,
-                    limit,
-                    opt.print,
-                );
-            }
+            run_implementation::<FlagStorageUnrolledHybrid>(
+                "bit-unrolled-hybrid",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
         }
     }
 }
@@ -929,7 +914,80 @@ fn print_header(threads: usize, limit: usize, run_duration: Duration) {
     eprintln!();
 }
 
+/// Run sieve on specific implementation of storage given in T. It will
+/// call either the single- or multi-threaded runner, given the number
+/// of threads requested.
 fn run_implementation<T: 'static + FlagStorage + Send>(
+    label: &str,
+    bits_per_prime: usize,
+    run_duration: Duration,
+    num_threads: usize,
+    limit: usize,
+    print_primes: bool,
+    repetitions: usize,
+) {
+    for _ in 0..repetitions {
+        thread::sleep(Duration::from_secs(1));
+        match num_threads {
+            1 => {
+                run_implementation_st::<T>(label, bits_per_prime, run_duration, limit, print_primes)
+            }
+            _ => run_implementation_mt::<T>(
+                label,
+                bits_per_prime,
+                run_duration,
+                num_threads,
+                limit,
+                print_primes,
+            ),
+        };
+    }
+}
+
+/// Single-threaded runner: simpler than spinning up a single thread
+/// to do the work.
+fn run_implementation_st<T: 'static + FlagStorage + Send>(
+    label: &str,
+    bits_per_prime: usize,
+    run_duration: Duration,
+    limit: usize,
+    print_primes: bool,
+) {
+    // run sieves
+    let start_time = Instant::now();
+    let mut local_passes = 0;
+    let mut last_sieve = None;
+    while (Instant::now() - start_time) < run_duration {
+        let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
+        sieve.run_sieve();
+        last_sieve.replace(sieve);
+        local_passes += 1;
+    }
+
+    // record end time
+    let end_time = Instant::now();
+
+    // get totals and print results based on one of the sieves
+    if let Some(sieve) = last_sieve {
+        let duration = end_time - start_time;
+        // print results to stderr for convenience
+        print_results_stderr(
+            label,
+            &sieve,
+            print_primes,
+            duration,
+            local_passes,
+            1,
+            &primes::PrimeValidator::default(),
+        );
+        // and report results to stdout for reporting
+        report_results_stdout(label, bits_per_prime, duration, local_passes, 1);
+        eprintln!();
+    }
+}
+
+/// Multithreaded runner
+fn run_implementation_mt<T: 'static + FlagStorage + Send>(
     label: &str,
     bits_per_prime: usize,
     run_duration: Duration,
