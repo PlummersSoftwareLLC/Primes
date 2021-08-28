@@ -150,3 +150,72 @@ fn substitute_placeholder(
         })
         .collect()
 }
+
+fn calculate_masks(skip: usize, word_idx: usize) -> Vec<u64> {
+    let start = skip / 2;
+    let first_idx = word_idx * u64::BITS as usize;
+    let mut res = vec![];
+    for bit in 0..u64::BITS {
+        let idx = first_idx as isize + bit as isize;
+        if (idx - start as isize) % skip as isize == 0 {
+            let mask = 1 << bit;
+            res.push(mask);
+        }
+    }
+    res
+}
+
+fn extreme_reset(skip: usize) -> TokenStream {
+    let index_range = 0..skip;
+
+    // word reset statements
+    let word_resets: Vec<_> = index_range.clone()
+        .map(|idx| extreme_reset_word(skip, idx))
+        .collect();
+
+    let code = quote! {
+        // whole chunks
+        words.chunks_exact_mut(#skip).foreach(|chunk| {
+            let slice = chunk;
+            #(
+                #word_resets
+            )*
+        });
+
+        // remainder
+        let remainder = words.chunks_exact_mut(#skip).into_remainder();
+        // ??? how to dispatch lots of ifs ???
+        #(
+            let slice = remainder;
+            if #index_range < remainder.len() {
+                #word_resets
+            }
+        )*
+
+        // restore original factor bit -- we have clobbered it, and it is the prime
+        let factor_index = #skip / 2;
+        let factor_word = factor_index / 64;
+        let factor_bit = factor_index % 64;
+        if let Some(w) = words.get_mut(factor_word) {
+            *w &= !(1 << factor_bit);
+        }
+    };
+
+    println!("Extreme reset: {}", code.to_string());
+
+    code.into()
+}
+
+fn extreme_reset_word(skip: usize, word_idx: usize) -> proc_macro2::TokenStream {
+    let masks = calculate_masks(skip, word_idx);
+    let code = quote! {
+        unsafe {
+            let mut word = *slice.get_unchecked(#word_idx);
+            #(
+                *word |= #masks;
+            )*
+            *slice.get_unchecked_mut(#word_idx) = word;
+        }
+    };
+    code
+}

@@ -13,6 +13,7 @@ use structopt::StructOpt;
 use crate::unrolled::FlagStorageUnrolledHybrid;
 
 mod unrolled;
+mod unrolled_extreme;
 
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
