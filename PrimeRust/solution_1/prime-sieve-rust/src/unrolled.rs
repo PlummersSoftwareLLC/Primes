@@ -4,7 +4,7 @@ use crate::{primes::FlagStorage, unrolled::patterns::pattern_equivalent_skip};
 
 use self::patterns::{index_pattern, mask_pattern_set_u64, mask_pattern_set_u8};
 
-mod patterns {
+pub mod patterns {
 
     /// Calculate index pattern for a given word width (BITS) and given skip
     /// factor. These are the relative addresses of the words we need to set
@@ -230,7 +230,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     const SINGLE_BIT_MASK_SET: [u8; 8] = mask_pattern_set_u8(EQUIVALENT_SKIP);
 
     #[inline(never)]
-    fn reset_sparse(words: &mut [u64], skip: usize) {
+    pub fn reset_sparse(words: &mut [u64], skip: usize) {
         let relative_indices = index_pattern::<8>(skip);
 
         // cast our wide word vector to bytes

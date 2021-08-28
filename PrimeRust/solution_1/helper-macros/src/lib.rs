@@ -165,20 +165,25 @@ fn calculate_masks(skip: usize, word_idx: usize) -> Vec<u64> {
     res
 }
 
-fn extreme_reset(skip: usize) -> TokenStream {
+fn extreme_reset_for_skip(skip: usize) -> proc_macro2::TokenStream {
     let index_range = 0..skip;
 
     // word reset statements
-    let word_resets: Vec<_> = index_range.clone()
-        .map(|idx| extreme_reset_word(skip, idx))
+    let word_resets_chunk: Vec<_> = index_range
+        .clone()
+        .map(|idx| extreme_reset_word(quote! { chunk }, skip, idx))
+        .collect();
+
+    let word_resets_remainder: Vec<_> = index_range
+        .clone()
+        .map(|idx| extreme_reset_word(quote! {remainder}, skip, idx))
         .collect();
 
     let code = quote! {
         // whole chunks
-        words.chunks_exact_mut(#skip).foreach(|chunk| {
-            let slice = chunk;
+        words.chunks_exact_mut(#skip).for_each(|chunk| {
             #(
-                #word_resets
+                #word_resets_chunk
             )*
         });
 
@@ -186,9 +191,8 @@ fn extreme_reset(skip: usize) -> TokenStream {
         let remainder = words.chunks_exact_mut(#skip).into_remainder();
         // ??? how to dispatch lots of ifs ???
         #(
-            let slice = remainder;
             if #index_range < remainder.len() {
-                #word_resets
+                #word_resets_remainder
             }
         )*
 
@@ -201,21 +205,75 @@ fn extreme_reset(skip: usize) -> TokenStream {
         }
     };
 
-    println!("Extreme reset: {}", code.to_string());
-
-    code.into()
+    //println!("Extreme reset: {}", code.to_string());
+    code
 }
 
-fn extreme_reset_word(skip: usize, word_idx: usize) -> proc_macro2::TokenStream {
+/// Retrieves single word, then applies each mask in turn. When all masks
+/// have been applied, write the word back to the slice.
+fn extreme_reset_word(
+    slice_expr: proc_macro2::TokenStream,
+    skip: usize,
+    word_idx: usize,
+) -> proc_macro2::TokenStream {
     let masks = calculate_masks(skip, word_idx);
     let code = quote! {
-        unsafe {
-            let mut word = *slice.get_unchecked(#word_idx);
-            #(
-                *word |= #masks;
-            )*
-            *slice.get_unchecked_mut(#word_idx) = word;
-        }
+        let mut word = unsafe { *#slice_expr.get_unchecked(#word_idx) };
+        #(
+            word |= #masks;
+        )*
+        unsafe { *#slice_expr.get_unchecked_mut(#word_idx) = word; }
     };
     code
+}
+
+struct ExtremeResetParmams {
+    match_var: Ident,
+    fallback: Expr,
+}
+
+impl Parse for ExtremeResetParmams {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let match_var: Ident = input.parse()?;
+        input.parse::<Token![,]>()?;
+
+        let fallback: Expr = input.parse()?;
+        Ok(Self {
+            match_var,
+            fallback,
+        })
+    }
+}
+
+#[proc_macro]
+pub fn extreme_reset(input: TokenStream) -> TokenStream {
+    let params = parse_macro_input!(input as ExtremeResetParmams);
+
+    // all odd numbers in [3,129]
+    let last = 129_usize;
+    let extreme_reset_vals: Vec<_> = (3..=last).filter(|skip| skip % 2 != 0).collect();
+
+    // code for extreme resets
+    let extreme_reset_codes: Vec<_> = extreme_reset_vals
+        .iter()
+        .map(|&skip| extreme_reset_for_skip(skip))
+        .collect();
+
+    let match_var = params.match_var;
+    let fallback = params.fallback;
+    let code = quote! {
+        if #match_var > #last {
+            #fallback
+        } else {
+            match #match_var {
+                #(
+                    #extreme_reset_vals => { #extreme_reset_codes },
+                )*
+                //3 => {#reset3},
+                _ => panic!("unexpected value")
+            }
+        }
+    };
+    //println!("Code: {}", code.to_string());
+    TokenStream::from(code)
 }

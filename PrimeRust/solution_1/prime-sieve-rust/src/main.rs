@@ -10,7 +10,7 @@ use std::{
 };
 use structopt::StructOpt;
 
-use crate::unrolled::FlagStorageUnrolledHybrid;
+use crate::{unrolled::FlagStorageUnrolledHybrid, unrolled_extreme::FlagStorageExtremeHybrid};
 
 mod unrolled;
 mod unrolled_extreme;
@@ -753,6 +753,11 @@ struct CommandLineOptions {
     #[structopt(long)]
     bits_unrolled: bool,
 
+    /// Run variant that uses normal, linear bit-level storage, but uses a procedural
+    /// macro to write the code for the dense resets directly. Collaboration with @GordonBGood.
+    #[structopt(long)]
+    bits_extreme: bool,
+
     /// Run variant that uses byte-level storage
     #[structopt(long)]
     bytes: bool,
@@ -883,6 +888,18 @@ fn main() {
         if opt.bits_unrolled || run_all {
             run_implementation::<FlagStorageUnrolledHybrid>(
                 "bit-unrolled-hybrid",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
+        }
+
+        if opt.bits_extreme || run_all {
+            run_implementation::<FlagStorageExtremeHybrid>(
+                "bit-extreme-hybrid",
                 1,
                 run_duration,
                 threads,
@@ -1045,7 +1062,7 @@ fn run_implementation_mt<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::{minimum_start, square_start, PrimeValidator};
+    use crate::{primes::{minimum_start, square_start, PrimeValidator}, unrolled_extreme::FlagStorageExtremeHybrid};
 
     #[test]
     fn sieve_known_correct_bits() {
@@ -1082,8 +1099,13 @@ mod tests {
     }
 
     #[test]
-    fn sieve_known_correct_unrolled8_bits() {
+    fn sieve_known_correct_unrolled_bits() {
         sieve_known_correct::<FlagStorageUnrolledHybrid>();
+    }
+
+    #[test]
+    fn sieve_known_correct_extreme_bits() {
+        sieve_known_correct::<FlagStorageExtremeHybrid>();
     }
 
     fn sieve_known_correct<T: FlagStorage>() {
@@ -1143,8 +1165,13 @@ mod tests {
     }
 
     #[test]
-    fn storage_bit_unrolled8_correct() {
+    fn storage_bit_unrolled_correct() {
         basic_storage_correct::<FlagStorageUnrolledHybrid>();
+    }
+
+    #[test]
+    fn storage_bit_extreme_correct() {
+        basic_storage_correct::<FlagStorageExtremeHybrid>();
     }
 
     fn basic_storage_correct<T: FlagStorage>() {
