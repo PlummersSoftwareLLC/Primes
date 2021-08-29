@@ -17,6 +17,6 @@ COPY --chown=michaelgrn setup.py .
 COPY --chown=michaelgrn src/ ./src/
 
 RUN . venv/bin/activate
-RUN python -m pip install -e . --user
+RUN python -m pip install -e . --user --no-cache-dir
 
-CMD python -m pysieve
+CMD ["python", "-m", "pysieve"]
