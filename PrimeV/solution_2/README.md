@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 ## Run
 
@@ -25,16 +25,16 @@ docker run --rm primes
 As run on an Intel SkyLake i5-6500 at 3.6 GHz (single-threaded):
 
 ```
-Passes: 782, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 811, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 858, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 858, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 860, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 853, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 854, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 853, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 857, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 850, Time: 5, Avg: 0, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+                                                                Single-threaded                                                                 
+┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ v              │ 2        │ GordonBGood_extreme-hybrid   │ 19984  │ 5.00032  │    1    │   base    │   yes    │ 1    │  3996.54662   │
+│   2   │ v              │ 2        │ GordonBGood_stride8-block16K │ 13654  │ 5.00027  │    1    │   base    │   yes    │ 1    │  2730.65254   │
+│   3   │ v              │ 2        │ GordonBGood_extreme          │ 11179  │ 5.00005  │    1    │   base    │   yes    │ 1    │  2235.77809   │
+│   4   │ v              │ 2        │ GordonBGood_stride8          │ 10151  │ 5.00031  │    1    │   base    │   yes    │ 1    │  2030.07251   │
+│   5   │ v              │ 2        │ GordonBGood_bittwiddle       │  6823  │ 5.00071  │    1    │   base    │   yes    │ 1    │  1364.40544   │
+└───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
 Performance-wise it's not the best nor the worst either.
 
