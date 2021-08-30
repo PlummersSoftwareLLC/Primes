@@ -10,7 +10,7 @@ This is an initial stab at a Lean4 implementation. Other than directly translati
 ## Run instructions
 
 - Install the Lean version manager [elan](https://github.com/leanprover/elan).
-- Run `leanpkg build` in the solution directory
+- Run `leanpkg build bin` in the solution directory
 - Run `./build/bin/PrimeLean4`
 
 ## Output
