@@ -40,9 +40,12 @@ for the benchmark.
 
 ## Run Instructions
 
-This program is known to work with [Rc/Funge-98](https://rcfunge98.com) (V2) and
-[cfunge](https://github.com/VorpalBlade/cfunge) (latest git), but cfunge is
-faster by about two orders of magnitude. If you have cfunge installed, run
+This program is known to work with  [cfunge](https://github.com/VorpalBlade/cfunge)
+(latest git), [CCBI](https://github.com/Deewiant/CCBI),
+[rfunge](https://github.com/tjol/rfunge), [Rc/Funge-98](https://rcfunge98.com) (V2),
+and [Pyfunge](https://pypi.org/project/PyFunge/#files), though the latter two are
+rather slow and cfunge is easily the fastest of the lot. If you have cfunge installed,
+run
 
     cfunge primes.b98
 
@@ -55,4 +58,5 @@ to print the primes below 1000.
 ## Ouput
 
     78498 primes: valid
-    tjol-bf98;4;5.552825;1;algorithm=base;faithful=no;bits=1
+    tjol-bf98;6;5.794812;1;algorithm=base;faithful=no;bits=1
+
