@@ -15,7 +15,7 @@
         };
       in {
 
-        packages = ({ inherit (leanPkgs) lean; } // primePkg).modRoot;
+        defaultPackage = primePkg.modRoot;
 
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
