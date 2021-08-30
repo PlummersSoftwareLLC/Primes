@@ -84,7 +84,7 @@ structure Output :=
 
 instance : ToString Output where
   toString o := 
-    let tags := ";".intercalate (o.impl.tags.map toString)
+    let tags := ",".intercalate (o.impl.tags.map toString)
     let total_s := o.total_ms.toFloat / 1000
     s!"{o.impl.label};{o.iterations};{total_s};{o.impl.num_threads};{tags}"
 
