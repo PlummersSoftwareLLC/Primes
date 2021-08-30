@@ -1,9 +1,9 @@
-FROM golang:1.16-alpine3.13
+FROM golang:1.17-alpine3.13
 
 WORKDIR /opt/app
 
-COPY *.go build.sh run.sh ./
+COPY ./ ./
 
-RUN sh ./build.sh
+RUN go generate && go build -gcflags="-B"
 
-ENTRYPOINT [ "sh", "./run.sh" ]
+ENTRYPOINT [ "./primego" ]
