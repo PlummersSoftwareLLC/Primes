@@ -1,9 +1,9 @@
 FROM alpine:3.13 AS build
 
-RUN apk add --no-cache build-base bash git
+RUN apk update && apk add --no-cache build-base bash git
 
 WORKDIR /opt/vlang
-RUN git clone https://github.com/vlang/v /opt/vlang && make
+RUN git clone https://github.com/vlang/v /opt/vlang && git checkout 0.2.4 && make
 
 ENV PATH=/opt/vlang:$PATH
 
