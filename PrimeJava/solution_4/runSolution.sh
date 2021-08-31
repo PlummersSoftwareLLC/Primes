@@ -10,3 +10,7 @@ java -cp src PrimeSieveI64PatternCalc -warmup
 java -cp src PrimeSieveI64PatternCalc -parallel -warmup
 java -cp src PrimeSieveI8 -warmup
 java -cp src PrimeSieveI8 -parallel -warmup
+java -cp src PrimeSieveI32CUnroll -warmup
+java -cp src PrimeSieveI32CUnroll -parallel -warmup
+java -cp src PrimeSieveStrided32Blocks -warmup
+java -cp src PrimeSieveStrided32Blocks -parallel -warmup
