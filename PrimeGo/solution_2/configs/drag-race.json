@@ -1,0 +1,77 @@
+[
+	{
+		"storage": "MultibitStorage64",
+		"label": "ssovest-go-other-u64",
+		"sieve": "base",
+		"algorithm": "other",
+		"bits": 1,
+		"faithful": true
+	},
+	{
+		"storage": "MultibitStorage32",
+		"label": "ssovest-go-other-u32-seg-16k",
+		"sieve": "seg",
+		"block_size": 128000,
+		"algorithm": "other",
+		"bits": 1,
+		"faithful": true
+	},
+	{
+		"storage": "MultibitStorage32",
+		"label": "ssovest-go-other-u32-block-16k",
+		"sieve": "base",
+		"storage_mods": ["blocks"],
+		"block_size": 128000,
+		"algorithm": "other",
+		"bits": 1,
+		"faithful": true
+	},
+	{
+		"storage": "MultibitStorage32",
+		"label": "ssovest-go-other-u32-rblock-16k",
+		"sieve": "base",
+		"storage_mods": ["rblocks"],
+		"block_size": 128000,
+		"algorithm": "other",
+		"bits": 1,
+		"faithful": true
+	},
+
+	{
+		"storage": "StrideStorage32",
+		"label": "ssovest-go-stride-u32",
+		"sieve": "base",
+		"algorithm": "base",
+		"bits": 1,
+		"faithful": true
+	},
+	{
+		"storage": "StrideStorage32",
+		"label": "ssovest-go-stride-u32-block-16k",
+		"sieve": "base",
+		"storage_mods": ["blocks"],
+		"block_size": 128000,
+		"algorithm": "base",
+		"bits": 1,
+		"faithful": true
+	},
+	{
+		"storage": "StrideStorage32",
+		"label": "ssovest-go-stride-u32-rblock-16k",
+		"sieve": "base",
+		"storage_mods": ["rblocks"],
+		"block_size": 128000,
+		"algorithm": "base",
+		"bits": 1,
+		"faithful": true
+	},
+
+	{
+		"storage": "SimpleStorage32",
+		"label": "ssovest-go-simple-u32",
+		"sieve": "base",
+		"algorithm": "base",
+		"bits": 1,
+		"faithful": true
+	}
+]
