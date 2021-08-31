@@ -1,3 +1,7 @@
+# Extreme-Loop-Unrolled Odds-Only Bit-Packed Sieve of Eratosthenes Benchmark...
+# This was created for the "Software Drag Racing" GitHub repo as per:
+# https://github.com/PlummersSoftwareLLC/Primes...
+ 
 import std/[ monotimes, tables, strformat ] # timing, verifying, displaying
 import std/macros
 from std/math import sqrt
@@ -19,6 +23,8 @@ const DICT = {
     10000000000.Prime : 455052511,
 }.toTable()
 const RESULT = DICT[LIMIT]
+
+const DENSETHRESHOLD = 63
 
 const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
 
@@ -75,15 +81,11 @@ macro unrollLoops(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
       newLit(n),
       ofbrstmnts
     )
-  for n in 0x80'u8 .. 255'u8: # fill in defaults for remaining possibilities
-    csstmnt.add nnkOfBranch.newTree(
-      newLit(n),
-      nnkStmtList.newTree(
-        nnkDiscardStmt.newTree(
-          newEmptyNode()
-        )
-      )
+  csstmnt.add nnkElse.newTree(
+    nnkDiscardStmt.newTree(
+      newEmptyNode()
     )
+  )
   result.add quote do:
     let `endalmtid` = `bufalmtid` - `strt7id`
     var `setaid` = `bitbufa` + `strt0id`
@@ -92,13 +94,97 @@ macro unrollLoops(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
 #  echo csstmnt[50].toStrLit # see code for a given case (plus one - 1 .. 32)
 #  echo result.toStrLit # see entire produced code at compile time
 
+# This macro adds special treatment for base prime values which
+# are less than some threshold like 31 and still have multiple culls within
+# a given 64-bit word...
+macro denseSetBits(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
+  let endalmtid = "endalmt".newIdentNode
+  let strt0id = "strt0".newIdentNode
+  let mod0id = "mod0".newIdentNode
+  let advid = "adv".newIdentNode
+  let setaid = "seta".newIdentNode
+  let ndxlmtid = "ndxlmt".newIdentNode
+  let cptrid = "cptr".newIdentNode
+  result = quote do:
+    let `ndxlmtid` = `ndx0` or 63
+    while `ndx0` <= ndxlmt:
+      let `cptrid` = cast[ptr byte](`bitbufa` +  (`ndx0` shr 3))
+      `cptrid`[] = `cptrid`[] or BITMASK[`ndx0` and 7]
+      `ndx0` += `step`
+    let `strt0id` = `ndx0` shr 3
+    let `mod0id` = `ndx0` and 63
+    let `advid` = `step` shl 3 # eight byte per step
+    let `endalmtid` = `bitbufa` + `bytelen` - (`advid` - 8) - 1
+    var `setaid` = `bitbufa` + (`strt0id` and (-8))
+  let csstmnt = quote do:
+    case `step`.uint8
+    of 0'u8: discard
+  csstmnt.del 1 # delete last dummy "of"
+  for stpv in countup(3, DENSETHRESHOLD, 2):
+    let swi = (stpv * stpv - 3) shr 1
+    let r = ((((swi + 64) shr 3) and (-8)) * 8 - swi) mod stpv
+    var bi = (if r == 0: 0 else: stpv - r); var wi = 0
+    let vid = "v".newIdentNode
+    let msk0id = newLit((1 shl (bi and 63)).uint64)
+    let loopstmnts = nnkStmtList.newTree()
+    if (bi + stpv) shr 6 > 0:
+      loopstmnts.add quote do:
+        let `cptrid` = cast[ptr UncheckedArray[uint64]](`setaid`)
+        var `vid`: uint64
+        `cptrid`[0] = `cptrid`[0] or `msk0id`
+    else:
+      loopstmnts.add quote do:
+        let `cptrid` = cast[ptr UncheckedArray[uint64]](`setaid`)
+        var `vid` = `cptrid`[0] or `msk0id`
+    bi += stpv
+    while wi < stpv:
+      let mskid = newLit((1 shl (bi and 63)).uint64)
+      if bi shr 6 > wi:
+        wi += 1
+        let wrdid = newLit(wi.int)
+        if (bi + stpv) shr 6 > wi:
+          loopstmnts.add quote do:
+            `cptrid`[`wrdid`] = `cptrid`[`wrdid`] or `mskid`
+          bi += stpv; continue
+        else:
+          loopstmnts.add quote do:
+            `vid` = `cptrid`[`wrdid`] or `mskid`
+      bi += stpv
+      if bi shr 6 > wi:
+        let wrdid = newLit(wi.int)
+        loopstmnts.add quote do:
+          `cptrid`[`wrdid`] = `vid` or `mskid`
+      else:
+        loopstmnts.add quote do:
+          `vid` = `vid` or `mskid`
+    loopstmnts.add quote do:
+      `setaid` += `advid`
+    let ofbrstmnts = quote do:
+      while `setaid` <= `endalmtid`:
+        `loopstmnts`
+      `ndx0` = ((`setaid` - `bitbufa`) shl 3) or `mod0id`.int
+    csstmnt.add nnkOfBranch.newTree(
+      newLit(stpv.uint8),
+      ofbrstmnts
+    )
+  csstmnt.add nnkElse.newTree(
+    nnkDiscardStmt.newTree(
+      newEmptyNode()
+    )
+  )
+  result.add quote do:
+    `csstmnt`
+#  echo csstmnt[1].astGenRepr # see AST for a given case (this is for step 3)
+#  echo csstmnt[1].toStrLit # see code for a given case (this is for step 3)
+#  echo result.toStrLit # see entire produced code at compile time
+
 type # encloses all bit sequence operations used...
   BitSeq = ref object
     size: Natural
     buffer: seq[byte]
 
-func newBitSeq(size: int): BitSeq =
-  BitSeq(size: size, buffer: newSeq[byte](((size - 1) shr 3) + 1))
+func newBitSeq(size: int): BitSeq = # round up to even 64-bit size
+  BitSeq(size: size, buffer: newSeq[byte](((size - 1 + 64) shr 3) and (-8)))
 
 func `[]`(bitseq: BitSeq; i: int): bool {.inline.} =
   (bitseq.buffer[i shr 3] and BITMASK[i and 7]) != 0'u8
@@ -119,10 +205,11 @@ func setRange(bitseq: BitSeq; start, stop: int; step: int = 1) =
   var ndx = start
   let sz = min(bitseq.buffer.len, (stop + 8) shr 3) # round up
   if start <= sz * 8 - 16 * step: # enough loops to be worth the setup
-    unrollLoops(bitbufa, sz, ndx, step)
+    if step <= DENSETHRESHOLD: denseSetBits(bitbufa, sz, ndx, step)
+    else: unrollLoops(bitbufa, sz, ndx, step)
   while ndx <= stop:
     let cp = cast[ptr byte](bitbufa + (ndx shr 3))
-    cp[] = cp[] or (1'u8 shl (ndx and 7)) # BITMASK[result and 7]
+    cp[] = cp[] or BITMASK[ndx and 7] # BITMASK[result and 7]
     ndx += step
 
 func countTrues(bitseq: BitSeq): int =
@@ -192,4 +279,5 @@ let primeCount = rslt.countPrimes
 isValid = isValid and primeCount == RESULT # a thrid check
 
 stderr.writeLine(&"Passes: {passes}, Time: {elapsed}, Avg: {(elapsed / passes.float64)}, Limit: {LIMIT}, Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
-echo &"GordonBGood_1of2;{passes};{elapsed};1;algorithm=base,faithful=yes,bits=1"
+echo &"GordonBGood_extreme_hybrid;{passes};{elapsed};1;algorithm=base,faithful=yes,bits=1"
+
