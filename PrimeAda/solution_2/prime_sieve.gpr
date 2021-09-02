@@ -1,0 +1,71 @@
+project Prime_Sieve is
+   type Mode_Type is ("debug0", "debug1", "debug2", "debug3", "release", "opt-debug", "optimised");
+
+   Mode : Mode_Type := external ("MODE", "debug0");
+
+   for Source_Dirs use ("./src");
+   for Object_Dir  use "./obj";
+   for Exec_Dir    use ".";
+   for Main        use ("sieves.adb");
+
+   package Compiler is
+      Common_Switches      := ("-ffunction-sections", "-fdata-sections");
+      Debug_Switches       := ("-g", "-ggdb");
+      Ada_Style_Switches   := ("-gnat2012",
+                               "-gnaty", "-gnaty-s", "-gnatyO", "-gnatyM120", "-gnatyx");
+      Enable_Ada_Checks    := ("-gnata", "-gnato", "-gnatE", "-gnatwa");
+      Opt_Switches         := ("-Ofast", "-march=native", "-mtune=native", "-funroll-all-loops", "-flto",
+                               "-gnatp"   --  Suppress all checks
+                              );
+      Debug_Level_Switches := ("");
+      Debug_0_Switches     := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O0");
+      Debug_1_Switches     := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O1");
+      Debug_2_Switches     := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O2");
+      Debug_3_Switches     := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & ("-O3");
+      Profile_Switches     := Debug_0_Switches & ("-pg");
+      Release_Switches     := Debug_Level_Switches & Enable_Ada_Checks & ("-O3");
+      OptDebug_Switches    := Debug_Level_Switches & Debug_Switches & Enable_Ada_Checks & Opt_Switches;
+      Optimise_Switches    := Debug_Level_Switches & Opt_Switches & ("-gnatec=../optimised.adc");
+
+      case Mode is
+         when "debug0" =>
+            --  No optimisation.
+            -- Debug_Level_Switches := Debug_0_Switches;
+            for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & Debug_0_Switches;
+
+         when "debug1" =>
+            -- Debug_Level_Switches := Debug_1_Switches;
+            for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & Debug_1_Switches;
+
+         when "debug2" =>
+            -- Debug_Level_Switches := Debug_2_Switches;
+            for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & Debug_2_Switches;
+
+         when "debug3" =>
+            -- Debug_Level_Switches := Debug_3_Switches;
+            for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & Debug_3_Switches;
+
+         -- when "profile" =>
+         --    -- Debug_Level_Switches := Profile_Switches;
+         --    for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & Profile_Switches;
+
+         when "release" =>
+            -- Debug_Level_Switches := Release_Switches;
+            for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & Release_Switches;
+
+         when "opt-debug" =>
+            -- Debug_Level_Switches := OptDebug_Switches;
+            for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & OptDebug_Switches;
+
+         when "optimised" =>
+            -- Debug_Level_Switches := Optimise_Switches;
+            for Default_Switches ("Ada") use Common_Switches & Ada_Style_Switches & Optimise_Switches;
+      end case;
+
+      -- for Default_Switches ("Ada") use Common_Switches & Debug_Level_Switches & Ada_Style_Switches;
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("Ada") use ("-Wl,--gc-sections");
+   end Linker;
+end Prime_Sieve;
