@@ -190,7 +190,8 @@ impl FlagStorageUnrolledHybrid {
         let mut i = start;
         while i < self.length_bits {
             unsafe {
-                // Safety: idx / U64_BITS is always less than self.length bits
+                // Safety: idx / U64_BITS is always less the extend of the array, as this 
+                // is determined by self.length_bits in the first place.
                 *self.words.get_unchecked_mut(i / U64_BITS) |= 1 << (i % U64_BITS);
             }
             i += skip;
