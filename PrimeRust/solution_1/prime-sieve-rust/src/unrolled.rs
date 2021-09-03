@@ -1,6 +1,9 @@
 use helper_macros::generic_dispatch;
 
-use crate::{primes::FlagStorage, unrolled::patterns::pattern_equivalent_skip};
+use crate::{
+    primes::{square_start, FlagStorage},
+    unrolled::patterns::pattern_equivalent_skip,
+};
 
 use self::patterns::{index_pattern, mask_pattern_set_u64, mask_pattern_set_u8};
 
@@ -129,31 +132,51 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// ```
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
-        // dense resets for all odd numbers in {3, 5, ... =129}
-        generic_dispatch!(
-            skip,
-            3,
-            2,
-            129, // 64 unique sets
-            ResetterDenseU64::<N>::reset_dense(&mut self.words),
-            {
-                // fallback to sparse resetter, and dispatch to the correct one
-                // given the equivalent skip
-                let equivalent_skip = pattern_equivalent_skip(skip, 8);
-                generic_dispatch!(
-                    equivalent_skip,
-                    3,
-                    2,
-                    17,
-                    ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
-                    debug_assert!(
-                        false,
-                        "this case should not occur skip {} equivalent {}",
-                        skip, equivalent_skip
-                    )
-                );
+        const U64_BITS: usize = u64::BITS as usize;
+        const MIN_ITERATIONS: usize = 1200;
+
+        // estimate number of iterations required; if it's only a few, then
+        // apply the simple approach
+        let start = square_start(skip);
+        let approximate_iterations = self.length_bits.saturating_sub(start) / skip;
+        if approximate_iterations < MIN_ITERATIONS {
+            // simple case: not enough iterations to be worth the setup cost
+            // of the unrolled sparse functions.
+            let mut idx = start;
+            while idx < self.length_bits {
+                unsafe {
+                    // Safety: idx / U64_BITS is always less than self.length bits
+                    *self.words.get_unchecked_mut(idx / U64_BITS) |= 1 << (idx % U64_BITS);
+                }
+                idx += skip;
             }
-        );
+        } else {
+            // dense resets for all odd numbers in {3, 5, ... =129}
+            generic_dispatch!(
+                skip,
+                3,
+                2,
+                129, // 64 unique sets
+                ResetterDenseU64::<N>::reset_dense(&mut self.words),
+                {
+                    // fallback to sparse resetter, and dispatch to the correct one
+                    // given the equivalent skip
+                    let equivalent_skip = pattern_equivalent_skip(skip, 8);
+                    generic_dispatch!(
+                        equivalent_skip,
+                        3,
+                        2,
+                        17,
+                        ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+                        debug_assert!(
+                            false,
+                            "this case should not occur skip {} equivalent {}",
+                            skip, equivalent_skip
+                        )
+                    );
+                }
+            );
+        }
     }
 
     #[inline(always)]
