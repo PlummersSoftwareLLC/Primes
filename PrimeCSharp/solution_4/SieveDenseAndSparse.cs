@@ -6,9 +6,14 @@ using System.Runtime.CompilerServices;
 
 namespace PrimeSieveCS
 {
+    readonly struct SieveDenseAndSparseRunner : ISieveRunner
+    {
+        public ISieve RunSieve(uint sieveSize) => new SieveDenseAndSparse(sieveSize).RunSieve();
+    }
+
     class SieveDenseAndSparse : ISieve
     {
-        public readonly uint sieveSize = 0;
+        readonly uint sieveSize;
         readonly uint halfLimit;
         readonly ulong[] bits;
 
@@ -117,7 +122,7 @@ namespace PrimeSieveCS
         /// Calculate the primes up to the specified limit
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        unsafe public void RunSieve()
+        unsafe public SieveDenseAndSparse RunSieve()
         {
             uint factor = 3;
             uint halfFactor = factor >> 1;
@@ -158,6 +163,7 @@ namespace PrimeSieveCS
                         ClearBitsSparseUnrolled4Rev(ptr, (factor * factor) / 2, factor, halfLimit);
                     }
                 }
+            return this;
         }
     }
 }

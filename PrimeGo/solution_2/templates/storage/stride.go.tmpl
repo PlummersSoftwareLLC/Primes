@@ -1,0 +1,81 @@
+{{- $storage := . }}
+{{- range .Options }}
+{{- $w := .Width }}
+{{- $name := ($storage.NameFor $w) }}
+
+type {{ $name }} struct {
+	BaseStorage{{ $w }}
+}
+
+func New{{ $name }}(length uint64) Storage {
+	return {{ $name }}{
+		BaseStorage{{ $w }}{
+			make(bitarray{{ $w }}, (length+{{ (Sub $w 1) }})/{{ $w }}),
+			length,
+		},
+	}
+}
+
+func (b {{ $name }}) SetRange(start, stop, step uint64) {
+	var index, numPasses uint64
+	var mask uint{{ $w }}
+
+	numPasses = (stop - start + step - 1) / step
+	if numPasses > {{ $w }} {
+		numPasses = {{ $w }}
+	}
+
+	step2 := step * 2
+	step3 := step * 3
+
+	var arr0, arr1, arr2 []uint{{ $w }}
+	{{- /* this one is just for readability */}}
+	arr0 = b.bitarray{{ $w }}
+	{{- /* and these two slices help us to avoid index calculations in the
+	unrolled loop */}}
+	if step < uint64(len(arr0)) {
+		arr1 = b.bitarray{{ $w }}[step:]
+	}
+	if step2 < uint64(len(arr0)) {
+		arr2 = b.bitarray{{ $w }}[step2:]
+	}
+	
+	stop = (stop + {{ (Sub $w 1) }}) / {{ $w }}
+	if stop > uint64(len(b.bitarray{{ $w }})) {
+		stop = uint64(len(b.bitarray{{ $w }}))
+	}
+
+	stop1 := stop - step
+	{{- /* this simple overflow protection is redundant in the context of primes 
+	calculation, but somehow it enables the Go complier to better optimize
+	the code*/}}
+	if step > stop {
+		stop1 = 0
+	}
+
+	stop2 := stop - step2
+	if step2 > stop {
+		stop2 = 0
+	}
+
+	for pass := uint64(0); pass < numPasses; pass++ {
+		index = start / {{ $w }}
+		mask = bits.RotateLeft{{ $w }}(1, int(start))
+		
+		for ; index < stop2; index += step3 {
+			arr2[index] |= mask
+			arr1[index] |= mask
+			arr0[index] |= mask
+		}
+
+		if index < stop1 {
+			arr1[index] |= mask
+			arr0[index] |= mask
+		} else if index < stop {
+			arr0[index] |= mask
+		}
+
+		start += step
+	}
+}
+{{- end }}

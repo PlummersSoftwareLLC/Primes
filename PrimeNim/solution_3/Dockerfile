@@ -1,4 +1,4 @@
-FROM nimlang/nim:ubuntu
+FROM primeimages/nim:1.4.8
 
 WORKDIR /opt/app
 COPY primes.nim .

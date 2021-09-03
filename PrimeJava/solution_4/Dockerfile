@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk15:jdk-15.0.2_7-alpine-slim
+FROM adoptopenjdk:16-jdk-hotspot
 
 WORKDIR /opt/app
 

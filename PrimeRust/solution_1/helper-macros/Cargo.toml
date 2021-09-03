@@ -1,0 +1,15 @@
+[package]
+name = "helper-macros"
+version = "0.1.0"
+authors = ["Michael Barber <60610888+mike-barber@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+proc-macro2 = "1.0"
+syn = { version = "1.0", features = ["full"] }
