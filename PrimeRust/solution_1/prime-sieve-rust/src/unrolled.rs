@@ -181,76 +181,19 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     }
 }
 
+/// Very simple reset implementation for larger skip factors, where
+/// it's not worth the cost of calculating all of the relative indices
+/// as we do in [`ResetterSparseU8`]
 impl FlagStorageUnrolledHybrid {
     fn reset_simple(&mut self, start: usize, skip: usize) {
         const U64_BITS: usize = u64::BITS as usize;
-
-        let mut idx = start;
-        while idx < self.length_bits {
+        let mut i = start;
+        while i < self.length_bits {
             unsafe {
                 // Safety: idx / U64_BITS is always less than self.length bits
-                *self.words.get_unchecked_mut(idx / U64_BITS) |= 1 << (idx % U64_BITS);
-            }
-            idx += skip;
-        }
-    }
-
-    fn reset_simple_rolling1(&mut self, start: usize, skip: usize) {
-        const U64_BITS: usize = u64::BITS as usize;
-        let roll_bits = skip as u32;
-
-        let mut i = start;
-        let mut rolling_mask = 1 << (start % U64_BITS);
-        while i < self.words.len() * U64_BITS {
-            let word_idx = i / U64_BITS;
-            // Safety: We have ensured that word_index < self.words.len().
-            // Unsafe required to ensure that we elide the bounds check reliably.
-            unsafe {
-                *self.words.get_unchecked_mut(word_idx) |= rolling_mask;
+                *self.words.get_unchecked_mut(i / U64_BITS) |= 1 << (i % U64_BITS);
             }
             i += skip;
-            rolling_mask = rolling_mask.rotate_left(roll_bits);
-        }
-    }
-
-    fn reset_simple_rolling2(&mut self, start: usize, skip: usize) {
-        const U64_BITS: usize = u64::BITS as usize;
-
-        let mut i = start;
-        let roll_bits = skip as u32;
-        let mut rolling_mask1 = 1 << (start % U64_BITS);
-        let mut rolling_mask2 = 1 << ((start + skip) % U64_BITS);
-
-        // if the skip is larger than the word size, we're clearing bits in different
-        // words each time: we can unroll the loop
-        if skip > U64_BITS {
-            let roll_bits_double = roll_bits * 2;
-            let unrolled_end = (self.words.len() * U64_BITS).saturating_sub(skip);
-            while i < unrolled_end {
-                let word_idx1 = i / U64_BITS;
-                let word_idx2 = (i + skip) / U64_BITS;
-                // Safety: We have ensured that (i+skip) < self.words.len() * U32_BITS.
-                // The compiler will not elide these bounds checks,
-                // so there is a performance benefit to using get_unchecked_mut here.
-                unsafe {
-                    *self.words.get_unchecked_mut(word_idx1) |= rolling_mask1;
-                    *self.words.get_unchecked_mut(word_idx2) |= rolling_mask2;
-                }
-                rolling_mask1 = rolling_mask1.rotate_left(roll_bits_double);
-                rolling_mask2 = rolling_mask2.rotate_left(roll_bits_double);
-                i += skip * 2;
-            }
-        }
-
-        while i < self.words.len() * U64_BITS {
-            let word_idx = i / U64_BITS;
-            // Safety: We have ensured that word_index < self.words.len().
-            // Unsafe required to ensure that we elide the bounds check reliably.
-            unsafe {
-                *self.words.get_unchecked_mut(word_idx) |= rolling_mask1;
-            }
-            i += skip;
-            rolling_mask1 = rolling_mask1.rotate_left(roll_bits);
         }
     }
 }
