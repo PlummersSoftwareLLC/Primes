@@ -1,13 +1,23 @@
 import Foundation
 import ArgumentParser
 
+typealias Word = UInt8
+let wordSize: Int = Word.bitWidth
+let log2_wordSize = wordSize &- 1 &- Word(wordSize).leadingZeroBitCount
+let modulus_wordSize = wordSize &- 1
+
+// This should establish an array of masks for accessing individual bits from a Word that
+// is built during compile.  Accessing this array is faster than computing the bit shift
+// mask during each bit twiddling operation.
+let bitMasks = UnsafeMutableBufferPointer<Word>.allocate(capacity: wordSize)
+_ = bitMasks.initialize(from: ContiguousArray((0..<wordSize).lazy.map{ Word(1) &<< $0 }))
+defer {
+    bitMasks.deallocate()
+}
+
 // This is a very limited single bit Boolean Array
 struct BooleanBitArray {
-    typealias Word = UInt32
-    let wordArraySize: Int
-    private let wordSize: Int = 8*MemoryLayout<Word>.size
-    private let log2_wordSize = 8*MemoryLayout<Word>.size &- 1 &- Word(8*MemoryLayout<Word>.size).leadingZeroBitCount
-    
+    private let wordArraySize: Int
     private let words: UnsafeMutableBufferPointer<Word>
     
     init(repeating value: Bool, count arraySize: Int){
@@ -21,28 +31,25 @@ struct BooleanBitArray {
     }
 
     // Returns the array word index and sub index for an input bit index
-    //   - This takes advantage of wordSize being a power of 2 to compute
-    //     the modulus (%) faster by masking wordSize -1
     @inline(__always) internal func maskIndex(at index: Int) -> (Int, Int) {
-        // a faster implementation of index / wordSize by shifting by log2(wordSize)
-        let wordIndex = index &>> log2_wordSize
-        let subIndex = index & (wordSize &- 1)
+        let wordIndex = index &>> log2_wordSize // faster than index / wordSize
+        let subIndex = index & modulus_wordSize // faster than index % wordSize
         return (wordIndex, subIndex)
     }
 
     @inline(__always) func getBit(at index: Int) -> Bool {
         let (i, m) = maskIndex(at: index)
-        return (words[i] & (Word(1) &<< m) ) != 0
+        return ( words[i] & bitMasks[m] ) != 0
     }
 
     @inline(__always) func setBit(at index: Int) {
         let (i, m) = maskIndex(at: index)
-        words[i] |= (Word(1) &<< m)
+        words[i] |= bitMasks[m]
     }
 
     @inline(__always) func clearBit(at index: Int) {
         let (i, m) = maskIndex(at: index)
-        words[i] &= ~(Word(1) &<< m)
+        words[i] &= ~bitMasks[m]
     }
 
 }
@@ -57,16 +64,14 @@ func iSqrt(_ x: Int) -> Int {
 }
 
 class Sieve {
-    let sieveLimit: Int
+    private let sieveLimit: Int
     private let factorLimit: Int
-    let arraySize: Int
-    
-    var primeArray: BooleanBitArray
+    private let primeArray: BooleanBitArray
 
     init(limit: Int) {
         sieveLimit = limit
         factorLimit = iSqrt(limit)
-        arraySize = (limit &+ 1) &>> 1
+        let arraySize = (limit &+ 1) &>> 1
         primeArray = BooleanBitArray(repeating: true, count: arraySize)
     }
 
@@ -94,11 +99,12 @@ class Sieve {
             let factor = number(at: factorIndex)
             var nonPrimeIndex = index(for: factor &* factor)
             
-            repeat {
+            while nonPrimeIndex <= nonPrimeIndexLimit {
                 primeArray.clearBit(at: nonPrimeIndex)
                 nonPrimeIndex &+= factor
-            } while ( nonPrimeIndex <= nonPrimeIndexLimit )
-        } while factorIndex < factorIndexLimit
+            }
+            
+        } while factorIndex <= factorIndexLimit
     }
 
 }
@@ -153,7 +159,7 @@ extension Sieve {
         
         /// Following 2 lines added by rbergen to conform to drag race output format
         print()
-        print("yellowcub_bit32;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=1\n")
+        print("yellowcub_1bit_UInt8;\(passes);\(duration);1;algorithm=base,faithful=yes,bits=1\n")
     }
 }
 
