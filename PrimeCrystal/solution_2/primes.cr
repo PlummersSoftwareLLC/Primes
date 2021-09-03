@@ -171,16 +171,21 @@ class PrimeSieve
         swi = (i + i) * (i + 3) + 3 # calculate start marking index
         break if swi > bits
         next if (@bufp[i >> 3] & BITMASKP[i & 7]) != 0
-        bp = i + i + 3
+        bp = i + i + 3; bp2 = bp + bp; bp3 = bp + bp2; bp4 = bp + bp3
         pagebytendx = (swi >> 3) & (-CPUL1CACHE)
         (0..7).each { |_| strtsp[swi & 7] = @bufp + (swi >> 3); swi += bp }
         while pagebytendx < bytesize
           blocklmtp = @bufp + (pagebytendx + CPUL1CACHE - 1)
           blocklmtp = bytendxlmtp if blocklmtp > bytendxlmtp
+          blockstopp = blocklmtp - bp3
           8.times do |si|
             mask = BITMASKP[si]; bytendxp = strtsp[si]
+            while bytendxp <= blockstopp
+              bytendxp[0] |= mask; bytendxp[bp] |= mask
+              bytendxp[bp2] |= mask; bytendxp[bp3] |= mask ; bytendxp += bp4
+            end
             while bytendxp <= blocklmtp
-              bytendxp[0] |= mask; bytendxp += bp
+              bytendxp[0] |= mask ; bytendxp += bp
             end
             strtsp[si] = bytendxp
           end
