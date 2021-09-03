@@ -32,6 +32,7 @@ end
 BITMASKP = Pointer.malloc(8) { |i| 1_u8 << i }
 
 macro unroll_setbits(bitarrp, starti, limiti, stepi)
+  bap = {{bitarrp}}
   ndx: Int32 = {{starti}} & 7
   r0 = {{starti}} >> 3
   r1 = {{starti}} + {{stepi}}
@@ -47,8 +48,8 @@ macro unroll_setbits(bitarrp, starti, limiti, stepi)
   r3 = (r3 >> 3) - r0
   r2 = (r2 >> 3) - r0
   r1 = (r1 >> 3) - r0
-  bytep: Pointer(UInt8) = {{bitarrp}} + r0
-  looplmtp: Pointer(UInt8) = {{bitarrp}} + (({{limiti}} >> 3) - r7)
+  bytep: Pointer(UInt8) = bap + r0
+  looplmtp: Pointer(UInt8) = bap + (({{limiti}} >> 3) - r7)
   case ((({{stepi}} & 7) << 3) | ({{starti}} & 7)).to_u8
   {% for n in (0_u8..0x3F) %}
     when {{n}}
@@ -68,7 +69,7 @@ macro unroll_setbits(bitarrp, starti, limiti, stepi)
   end
   ndx += (bytep - {{bitarrp}}) << 3
   while ndx <= {{limiti}}
-    {{bitarrp}}[ndx >> 3] |= BITMASKP[ndx & 7]; ndx += {{stepi}}
+    bap[ndx >> 3] |= BITMASKP[ndx & 7]; ndx += {{stepi}}
   end
 end
 
@@ -81,16 +82,16 @@ STARTIS = [ 2, 2, 1, 2, 6, 7, 13, 2, 6, 5, 12, 16, 6, 0, 29, 0,
             6, 16, 30, 25, 6, 32, 45, 32, 6, 48, 30, 16, 6, 0 ]
 
 macro dense_setbits(bitarrp, starti, limiti, stepi)
+  bap = {{bitarrp}}
   dndx = {{starti}}
   dndxlmt = {{starti}} | 63
   while dndx <= dndxlmt # cull to an even 64-bit boundary...
-    {{bitarrp}}[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
+    bap[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
   end
-  wordp: Pointer(UInt64) =
-    ({{bitarrp}} + ((dndx >> 3) & (-8))).as(Pointer(UInt64))
+  wordp: Pointer(UInt64) = (bap + ((dndx >> 3) & (-8))).as(Pointer(UInt64))
   keep = wordp
-  wordlmtp: Pointer(UInt64) = ({{bitarrp}} + ((({{limiti}} >> 3) & (-8)) -
-                                  (({{stepi}} << 3)-8))).as(Pointer(UInt64))
+  wordlmtp: Pointer(UInt64) = (bap + ((({{limiti}} >> 3) & (-8)) -
+                                  (({{stepi}} << 3) - 8))).as(Pointer(UInt64))
   dndx &= 63
   case {{stepi}}.to_u8
     {% for stpvi in (0...STARTIS.size) %} # odd primes STARTIS.size
@@ -121,9 +122,9 @@ macro dense_setbits(bitarrp, starti, limiti, stepi)
     {% end %}
     else
   end
-  dndx |= (wordp.as(Pointer(UInt8)) - {{bitarrp}}) << 3
+  dndx |= (wordp.as(Pointer(UInt8)) - bap) << 3
   while dndx <= {{limiti}}
-    {{bitarrp}}[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
+    bap[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
   end
 end
 
@@ -243,7 +244,7 @@ def bench(tec : Techniques)
     in Techniques::Stride8
       label += "stride8"
     in Techniques::Stride8Block16K
-      label += "stride8-block16K"
+      label += "stride8-rblock16K"
     in Techniques::Extreme
       label += "extreme"
     in Techniques::ExtremeHybrid
