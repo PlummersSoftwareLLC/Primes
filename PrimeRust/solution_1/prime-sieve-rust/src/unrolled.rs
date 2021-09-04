@@ -235,31 +235,21 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
 
     #[inline(never)]
     fn reset_sparse(words: &mut [u64], skip: usize, length_bits: usize) {
+        let square_start = square_start(skip);
+        debug_assert!(square_start < length_bits, "square_start should be less than length_bits");
+
+        // calculate relative indices for the words we need to reset
         let relative_indices = index_pattern::<8>(skip);
-
         
-        // estimate number of iterations required; if it's only a few, then
-        // apply the simple approach
-        const MIN_ITERATIONS: usize = 1200;
-        let start = square_start(skip);
-        let approximate_iterations = (words.len() * 64).saturating_sub(start) / skip;
-        if approximate_iterations < MIN_ITERATIONS {
-            const U64_BITS: usize = u64::BITS as usize;
-            let mut i = start;
-            while i < length_bits {
-                unsafe {
-                    // Safety: idx / U64_BITS is always less the extend of the array, as this
-                    // is determined by self.length_bits in the first place.
-                    *words.get_unchecked_mut(i / U64_BITS) |= 1 << (i % U64_BITS);
-                }
-                i += skip;
-            }
-            return;
-        }
-
         // cast our wide word vector to bytes
-        let bytes_slice: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
-        bytes_slice.chunks_exact_mut(skip).for_each(|chunk| {
+        let bytes: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
+
+        // determine the offset of the first skip-size chunk we need 
+        // to touch, and proceed from there. 
+        let start_chunk_offset = square_start / 8 / skip * skip;
+        let slice = &mut bytes[start_chunk_offset ..];
+
+        slice.chunks_exact_mut(skip).for_each(|chunk| {
             #[allow(clippy::needless_range_loop)]
             for i in 0..8 {
                 let word_idx = relative_indices[i];
@@ -270,7 +260,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             }
         });
 
-        let remainder = bytes_slice.chunks_exact_mut(skip).into_remainder();
+        let remainder = slice.chunks_exact_mut(skip).into_remainder();
         #[allow(clippy::needless_range_loop)]
         for i in 0..8 {
             let word_idx = relative_indices[i];
@@ -284,11 +274,11 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             }
         }
 
-        // restore original factor bit -- we have clobbered it, and it is the prime
+        // restore original factor bit -- we *may* have clobbered it, and it is the prime
         let factor_index = skip / 2;
         let factor_word = factor_index / 8;
         let factor_bit = factor_index % 8;
-        if let Some(w) = bytes_slice.get_mut(factor_word) {
+        if let Some(w) = bytes.get_mut(factor_word) {
             *w &= !(1 << factor_bit);
         }
     }
