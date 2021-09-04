@@ -1,6 +1,9 @@
 use helper_macros::generic_dispatch;
 
-use crate::{primes::FlagStorage, unrolled::patterns::pattern_equivalent_skip};
+use crate::{
+    primes::{square_start, FlagStorage},
+    unrolled::patterns::pattern_equivalent_skip,
+};
 
 use self::patterns::{index_pattern, mask_pattern_set_u64, mask_pattern_set_u8};
 
@@ -231,11 +234,23 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
 
     #[inline(never)]
     fn reset_sparse(words: &mut [u64], skip: usize) {
+        // calculate relative indices for the words we need to reset
         let relative_indices = index_pattern::<8>(skip);
 
         // cast our wide word vector to bytes
-        let bytes_slice: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
-        bytes_slice.chunks_exact_mut(skip).for_each(|chunk| {
+        let bytes: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
+
+        // determine the offset of the first skip-size chunk we need
+        // to touch, and proceed from there.
+        let square_start = square_start(skip);
+        debug_assert!(
+            square_start < bytes.len() * 8,
+            "square_start should be within the bounds of our array; check caller"
+        );
+        let start_chunk_offset = square_start / 8 / skip * skip;
+        let slice = &mut bytes[start_chunk_offset..];
+
+        slice.chunks_exact_mut(skip).for_each(|chunk| {
             #[allow(clippy::needless_range_loop)]
             for i in 0..8 {
                 let word_idx = relative_indices[i];
@@ -246,7 +261,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             }
         });
 
-        let remainder = bytes_slice.chunks_exact_mut(skip).into_remainder();
+        let remainder = slice.chunks_exact_mut(skip).into_remainder();
         #[allow(clippy::needless_range_loop)]
         for i in 0..8 {
             let word_idx = relative_indices[i];
@@ -260,11 +275,11 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             }
         }
 
-        // restore original factor bit -- we have clobbered it, and it is the prime
+        // restore original factor bit -- we *may* have clobbered it, and it is the prime
         let factor_index = skip / 2;
         let factor_word = factor_index / 8;
         let factor_bit = factor_index % 8;
-        if let Some(w) = bytes_slice.get_mut(factor_word) {
+        if let Some(w) = bytes.get_mut(factor_word) {
             *w &= !(1 << factor_bit);
         }
     }
