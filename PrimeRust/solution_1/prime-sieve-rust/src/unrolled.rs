@@ -132,43 +132,31 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// ```
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
-        const MIN_ITERATIONS: usize = 1200;
-
-        // estimate number of iterations required; if it's only a few, then
-        // apply the simple approach
-        let start = square_start(skip);
-        let approximate_iterations = self.length_bits.saturating_sub(start) / skip;
-        if approximate_iterations < MIN_ITERATIONS {
-            // simple case: not enough iterations to be worth the setup cost
-            // of the unrolled sparse functions.
-            self.reset_simple(start, skip);
-        } else {
-            // dense resets for all odd numbers in {3, 5, ... =129}
-            generic_dispatch!(
-                skip,
-                3,
-                2,
-                129, // 64 unique sets
-                ResetterDenseU64::<N>::reset_dense(&mut self.words),
-                {
-                    // fallback to sparse resetter, and dispatch to the correct one
-                    // given the equivalent skip
-                    let equivalent_skip = pattern_equivalent_skip(skip, 8);
-                    generic_dispatch!(
-                        equivalent_skip,
-                        3,
-                        2,
-                        17,
-                        ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
-                        debug_assert!(
-                            false,
-                            "this case should not occur skip {} equivalent {}",
-                            skip, equivalent_skip
-                        )
-                    );
-                }
-            );
-        }
+        // dense resets for all odd numbers in {3, 5, ... =129}
+        generic_dispatch!(
+            skip,
+            3,
+            2,
+            129, // 64 unique sets
+            ResetterDenseU64::<N>::reset_dense(&mut self.words),
+            {
+                // fallback to sparse resetter, and dispatch to the correct one
+                // given the equivalent skip
+                let equivalent_skip = pattern_equivalent_skip(skip, 8);
+                generic_dispatch!(
+                    equivalent_skip,
+                    3,
+                    2,
+                    17,
+                    ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip, self.length_bits),
+                    debug_assert!(
+                        false,
+                        "this case should not occur skip {} equivalent {}",
+                        skip, equivalent_skip
+                    )
+                );
+            }
+        );
     }
 
     #[inline(always)]
@@ -181,23 +169,6 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     }
 }
 
-/// Very simple reset implementation for larger skip factors, where
-/// it's not worth the cost of calculating all of the relative indices
-/// as we do in [`ResetterSparseU8`]
-impl FlagStorageUnrolledHybrid {
-    fn reset_simple(&mut self, start: usize, skip: usize) {
-        const U64_BITS: usize = u64::BITS as usize;
-        let mut i = start;
-        while i < self.length_bits {
-            unsafe {
-                // Safety: idx / U64_BITS is always less the extend of the array, as this 
-                // is determined by self.length_bits in the first place.
-                *self.words.get_unchecked_mut(i / U64_BITS) |= 1 << (i % U64_BITS);
-            }
-            i += skip;
-        }
-    }
-}
 
 /// Specific implementation for the dense resetter where we have words that
 /// are close together. Since the `SKIP` is a constant (generic) parameter,
@@ -263,8 +234,28 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     const SINGLE_BIT_MASK_SET: [u8; 8] = mask_pattern_set_u8(EQUIVALENT_SKIP);
 
     #[inline(never)]
-    fn reset_sparse(words: &mut [u64], skip: usize) {
+    fn reset_sparse(words: &mut [u64], skip: usize, length_bits: usize) {
         let relative_indices = index_pattern::<8>(skip);
+
+        
+        // estimate number of iterations required; if it's only a few, then
+        // apply the simple approach
+        const MIN_ITERATIONS: usize = 1200;
+        let start = square_start(skip);
+        let approximate_iterations = (words.len() * 64).saturating_sub(start) / skip;
+        if approximate_iterations < MIN_ITERATIONS {
+            const U64_BITS: usize = u64::BITS as usize;
+            let mut i = start;
+            while i < length_bits {
+                unsafe {
+                    // Safety: idx / U64_BITS is always less the extend of the array, as this
+                    // is determined by self.length_bits in the first place.
+                    *words.get_unchecked_mut(i / U64_BITS) |= 1 << (i % U64_BITS);
+                }
+                i += skip;
+            }
+            return;
+        }
 
         // cast our wide word vector to bytes
         let bytes_slice: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
