@@ -1,0 +1,5 @@
+pragma Restrictions (No_Elaboration_Code);
+-- pragma Restrictions (No_Exceptions);
+-- pragma Restrictions (No_Exception_Handlers);
+-- pragma Restrictions (No_Exception_Propagation);
+-- pragma Restrictions (No_Exception_Registration);
