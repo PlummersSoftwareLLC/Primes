@@ -169,7 +169,6 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     }
 }
 
-
 /// Specific implementation for the dense resetter where we have words that
 /// are close together. Since the `SKIP` is a constant (generic) parameter,
 /// the compiler produces a specific separate type for each `SKIP` factor,
@@ -236,18 +235,21 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     #[inline(never)]
     fn reset_sparse(words: &mut [u64], skip: usize, length_bits: usize) {
         let square_start = square_start(skip);
-        debug_assert!(square_start < length_bits, "square_start should be less than length_bits");
+        debug_assert!(
+            square_start < length_bits,
+            "square_start should be less than length_bits"
+        );
 
         // calculate relative indices for the words we need to reset
         let relative_indices = index_pattern::<8>(skip);
-        
+
         // cast our wide word vector to bytes
         let bytes: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
 
-        // determine the offset of the first skip-size chunk we need 
-        // to touch, and proceed from there. 
+        // determine the offset of the first skip-size chunk we need
+        // to touch, and proceed from there.
         let start_chunk_offset = square_start / 8 / skip * skip;
-        let slice = &mut bytes[start_chunk_offset ..];
+        let slice = &mut bytes[start_chunk_offset..];
 
         slice.chunks_exact_mut(skip).for_each(|chunk| {
             #[allow(clippy::needless_range_loop)]
