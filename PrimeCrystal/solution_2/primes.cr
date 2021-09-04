@@ -32,7 +32,6 @@ end
 BITMASKP = Pointer.malloc(8) { |i| 1_u8 << i }
 
 macro unroll_setbits(bitarrp, starti, limiti, stepi)
-  bap = {{bitarrp}}
   ndx: Int32 = {{starti}} & 7
   r0 = {{starti}} >> 3
   r1 = {{starti}} + {{stepi}}
@@ -48,8 +47,8 @@ macro unroll_setbits(bitarrp, starti, limiti, stepi)
   r3 = (r3 >> 3) - r0
   r2 = (r2 >> 3) - r0
   r1 = (r1 >> 3) - r0
-  bytep: Pointer(UInt8) = bap + r0
-  looplmtp: Pointer(UInt8) = bap + (({{limiti}} >> 3) - r7)
+  bytep: Pointer(UInt8) = {{bitarrp}} + r0
+  looplmtp: Pointer(UInt8) = {{bitarrp}} + (({{limiti}} >> 3) - r7)
   case ((({{stepi}} & 7) << 3) | ({{starti}} & 7)).to_u8
   {% for n in (0_u8..0x3F) %}
     when {{n}}
@@ -69,7 +68,7 @@ macro unroll_setbits(bitarrp, starti, limiti, stepi)
   end
   ndx += (bytep - {{bitarrp}}) << 3
   while ndx <= {{limiti}}
-    bap[ndx >> 3] |= BITMASKP[ndx & 7]; ndx += {{stepi}}
+    {{bitarrp}}[ndx >> 3] |= BITMASKP[ndx & 7]; ndx += {{stepi}}
   end
 end
 
@@ -79,18 +78,17 @@ end
 #  r = ((swi | 63) + 1 - swi) % (ndx + ndx + 3)
 #  starti = if r == 0 then 0 else ndx + ndx + 3 - r
 STARTIS = [ 2, 2, 1, 2, 6, 7, 13, 2, 6, 5, 12, 16, 6, 0, 29, 0,
-            6, 16, 30, 25, 6, 32, 45, 32, 6, 48, 30, 16, 6, 0 ]
+            6, 16, 30, 25, 6, 32, 45, 32, 6, 48, 30, 16, 6, 0, 62 ]
 
 macro dense_setbits(bitarrp, starti, limiti, stepi)
-  bap = {{bitarrp}}
   dndx = {{starti}}
   dndxlmt = {{starti}} | 63
   while dndx <= dndxlmt # cull to an even 64-bit boundary...
-    bap[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
+    {{bitarrp}}[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
   end
-  wordp: Pointer(UInt64) = (bap + ((dndx >> 3) & (-8))).as(Pointer(UInt64))
+  wordp: Pointer(UInt64) = ({{bitarrp}} + ((dndx >> 3) & (-8))).as(Pointer(UInt64))
   keep = wordp
-  wordlmtp: Pointer(UInt64) = (bap + ((({{limiti}} >> 3) & (-8)) -
+  wordlmtp: Pointer(UInt64) = ({{bitarrp}} + ((({{limiti}} >> 3) & (-8)) -
                                   (({{stepi}} << 3) - 8))).as(Pointer(UInt64))
   dndx &= 63
   case {{stepi}}.to_u8
@@ -100,19 +98,14 @@ macro dense_setbits(bitarrp, starti, limiti, stepi)
           # for all modulo pattern 64-bit words
           {% for wi in (0 ... (stpvi + stpvi + 3)) %}
             # for all modulo pattern 64-bit words
-            {% for bi in (((wi * 64) / (stpvi + stpvi + 3)) .. ((wi * 64 + 63 - STARTIS[stpvi]) / (stpvi + stpvi + 3))) %}
-#              printf "%d, %d, %d, %d:  ", {{stepi}}, {{stpvi}}, {{wi}}, {{bi}} if keep == wordp
+            {% for bi in (((wi * 64 - 1 - STARTIS[stpvi]) / (stpvi + stpvi + 3) + 1) .. ((wi * 64 + 63 - STARTIS[stpvi]) / (stpvi + stpvi + 3))) %}
               {% if (STARTIS[stpvi] + (bi - 1) * (stpvi + stpvi + 3)) < wi * 64 && (STARTIS[stpvi] + (bi + 1) * (stpvi + stpvi + 3)) >= (wi + 1) * 64  %} # only one bit
-#                print "wordp[{{wi}}] |= {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}\n" if keep == wordp
                 wordp[{{wi}}] |= {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
               {% elsif (STARTIS[stpvi] + (bi - 1) * (stpvi + stpvi + 3)) < wi * 64 %} # first bit of many in word
-#                print "v = wordp[{{wi}}] | {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}\n" if keep == wordp
                 v = wordp[{{wi}}] | {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
               {% elsif (STARTIS[stpvi] + (bi + 1) * (stpvi + stpvi + 3)) >= (wi + 1) * 64 %} # last bit of many in word
-#                print "wordp[{{wi}}] = v | {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}\n" if keep == wordp
                 wordp[{{wi}}] = v | {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
               {% else %} # not the first nor the last bit in the word
-#                print "v |= {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}\n" if keep == wordp
                 v |= {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
               {% end %} 
             {% end %}
@@ -122,9 +115,9 @@ macro dense_setbits(bitarrp, starti, limiti, stepi)
     {% end %}
     else
   end
-  dndx |= (wordp.as(Pointer(UInt8)) - bap) << 3
+  dndx |= (wordp.as(Pointer(UInt8)) - {{bitarrp}}) << 3
   while dndx <= {{limiti}}
-    bap[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
+    {{bitarrp}}[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
   end
 end
 
@@ -270,13 +263,14 @@ def bench(tec : Techniques)
   end
 end
 
-# def test(bp : Int)
-#  bap = Pointer.malloc(16384, 0_u8)
-#  swi = (bp * bp - 3) >> 3
-#  lmti = 131071
-#  dense_setbits(bap, swi, lmti, bp)
-# end
-# test(3)
-
-Techniques.each do |t| bench(t) end
+{% if flag? :expand_macro  %} # only one bit
+  bap = Pointer.malloc(16384, 0_u8)
+  bp = 3
+  swi = (bp * bp - 3) >> 3
+  lmti = 131071
+  unroll_setbits(bap, swi, lmti, bp)
+  dense_setbits(bap, swi, lmti, bp)
+{% else %}
+  Techniques.each do |t| bench(t) end
+{% end %}
 
