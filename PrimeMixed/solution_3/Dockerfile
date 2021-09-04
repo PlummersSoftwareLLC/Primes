@@ -1,6 +1,6 @@
 FROM python:3-alpine
 
-RUN apk add build-base
+RUN apk add build-base --no-cache
 
 RUN /usr/sbin/adduser -u 1001 -D michaelgrn
 WORKDIR /home/michaelgrn
