@@ -148,7 +148,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
                     3,
                     2,
                     17,
-                    ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip, self.length_bits),
+                    ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
                     debug_assert!(
                         false,
                         "this case should not occur skip {} equivalent {}",
@@ -233,13 +233,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     const SINGLE_BIT_MASK_SET: [u8; 8] = mask_pattern_set_u8(EQUIVALENT_SKIP);
 
     #[inline(never)]
-    fn reset_sparse(words: &mut [u64], skip: usize, length_bits: usize) {
-        let square_start = square_start(skip);
-        debug_assert!(
-            square_start < length_bits,
-            "square_start should be less than length_bits"
-        );
-
+    fn reset_sparse(words: &mut [u64], skip: usize) {
         // calculate relative indices for the words we need to reset
         let relative_indices = index_pattern::<8>(skip);
 
@@ -248,6 +242,11 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
 
         // determine the offset of the first skip-size chunk we need
         // to touch, and proceed from there.
+        let square_start = square_start(skip);
+        debug_assert!(
+            square_start < bytes.len() * 8,
+            "square_start should be within the bounds of our array; check caller"
+        );
         let start_chunk_offset = square_start / 8 / skip * skip;
         let slice = &mut bytes[start_chunk_offset..];
 
