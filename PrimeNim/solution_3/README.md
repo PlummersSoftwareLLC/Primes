@@ -24,7 +24,7 @@ docker build -t primes .
 docker run --rm primes
 ```
 
-The Dockerfile builds a Nim compiler in a Fedora container from source on whatever architecture it is run.
+The Dockerfile uses the custom built `primeimages/nim:1.4.8` so it can run on both arm64 and amd64.
 
 ## Benchmarks
 
@@ -34,7 +34,7 @@ This version runs about the same speed run either on the Docker image or locally
 
 The following is as run on an Intel SkyLake i5-6500 at 3.6 GHz (single-threaded):
 ```
-GordonBGood_extreme_hybrid;41183;5.000098727;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme_hybrid;44473;5.000062845;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Benchmarks
