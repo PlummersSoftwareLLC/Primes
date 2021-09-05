@@ -192,7 +192,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
         );
         let start_chunk_offset = square_start / 64 / SKIP * SKIP;
         let slice = &mut words[start_chunk_offset..];
-        
+
         slice.chunks_exact_mut(SKIP).for_each(|chunk| {
             const CHUNK_SIZE: usize = 16; // 8, 16, or 32 seems to work
             Self::RELATIVE_INDICES
@@ -246,18 +246,18 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     fn reset_sparse(words: &mut [u64], skip: usize) {
         // calculate relative indices for the words we need to reset
         // TODO: check this is faster
-        // let relative_indices = index_pattern::<8>(skip);
-        let st = skip / 2;
-        let relative_indices = [
-            (st + 0 * skip) / 8,
-            (st + 1 * skip) / 8,
-            (st + 2 * skip) / 8,
-            (st + 3 * skip) / 8,
-            (st + 4 * skip) / 8,
-            (st + 5 * skip) / 8,
-            (st + 6 * skip) / 8,
-            (st + 7 * skip) / 8,
-        ];
+        let relative_indices = index_pattern::<8>(skip);
+        // let st = skip / 2;
+        // let relative_indices = [
+        //     (st + 0 * skip) / 8,
+        //     (st + 1 * skip) / 8,
+        //     (st + 2 * skip) / 8,
+        //     (st + 3 * skip) / 8,
+        //     (st + 4 * skip) / 8,
+        //     (st + 5 * skip) / 8,
+        //     (st + 6 * skip) / 8,
+        //     (st + 7 * skip) / 8,
+        // ];
 
         // cast our wide word vector to bytes
         let bytes: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
@@ -284,18 +284,34 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
         });
 
         let remainder = slice.chunks_exact_mut(skip).into_remainder();
-        #[allow(clippy::needless_range_loop)]
-        for i in 0..8 {
-            let word_idx = relative_indices[i];
-            if word_idx < remainder.len() {
-                // Safety: check above breaks the loop before we exceed remainder.len()
-                unsafe {
-                    *remainder.get_unchecked_mut(word_idx) |= Self::SINGLE_BIT_MASK_SET[i];
+        // #[allow(clippy::needless_range_loop)]
+        // for i in 0..8 {
+        //     let word_idx = relative_indices[i];
+        //     if word_idx < remainder.len() {
+        //         // Safety: check above breaks the loop before we exceed remainder.len()
+        //         unsafe {
+        //             *remainder.get_unchecked_mut(word_idx) |= Self::SINGLE_BIT_MASK_SET[i];
+        //         }
+        //     } else {
+        //         break;
+        //     }
+        // }
+        // let remainder_len = remainder.len();
+        // relative_indices
+        //     .iter()
+        //     .zip(Self::SINGLE_BIT_MASK_SET)
+        //     .take_while(|(&word_idx, _)| word_idx < remainder_len)
+        //     .for_each(|(&word_idx, mask)| unsafe {
+        //         *remainder.get_unchecked_mut(word_idx) |= mask;
+        //     });
+        relative_indices
+            .iter()
+            .zip(Self::SINGLE_BIT_MASK_SET)
+            .for_each(|(&word_idx, mask)| {
+                if let Some(word) = remainder.get_mut(word_idx) {
+                    *word |= mask;
                 }
-            } else {
-                break;
-            }
-        }
+            });
 
         // restore original factor bit -- we *may* have clobbered it, and it is the prime
         let factor_index = skip / 2;
