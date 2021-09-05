@@ -183,7 +183,17 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
 
     #[inline(never)]
     pub fn reset_dense(words: &mut [u64]) {
-        words.chunks_exact_mut(SKIP).for_each(|chunk| {
+        // determine the offset of the first skip-size chunk we need
+        // to touch, and proceed from there.
+        let square_start = square_start(SKIP);
+        debug_assert!(
+            square_start < words.len() * 64,
+            "square_start should be within the bounds of our array; check caller"
+        );
+        let start_chunk_offset = square_start / 64 / SKIP * SKIP;
+        let slice = &mut words[start_chunk_offset..];
+        
+        slice.chunks_exact_mut(SKIP).for_each(|chunk| {
             const CHUNK_SIZE: usize = 16; // 8, 16, or 32 seems to work
             Self::RELATIVE_INDICES
                 .chunks_exact(CHUNK_SIZE)
@@ -199,7 +209,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
                 });
         });
 
-        let remainder = words.chunks_exact_mut(SKIP).into_remainder();
+        let remainder = slice.chunks_exact_mut(SKIP).into_remainder();
         for i in 0..Self::BITS {
             let word_idx = Self::RELATIVE_INDICES[i];
             if word_idx < remainder.len() {
