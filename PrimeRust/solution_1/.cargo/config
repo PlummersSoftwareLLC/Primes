@@ -1,10 +1,13 @@
 [build]
 
+# Note - AVX512 disabled on both x86 targets, as it causes a performance 
+# issue on newer Skylake Xeons that support it.
+
 [target.x86_64-pc-windows-msvc]
-rustflags = [ "-C", "target-cpu=native" ]
+rustflags = [ "-C", "target-cpu=native", "-C", "target-feature=-avx512f"  ]
 
 [target.x86_64-unknown-linux-gnu]
-rustflags = [ "-C", "target-cpu=native" ]
+rustflags = [ "-C", "target-cpu=native", "-C", "target-feature=-avx512f" ]
 
 [target.aarch64-unknown-linux-gnu]
 rustflags = [ "-C", "target-cpu=native" ]

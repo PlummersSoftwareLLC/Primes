@@ -1,57 +1,56 @@
 # Go solution by ssovest
 
-Collection of 1-bit single-threaded Go solutions.
-
-*sieve8.go* stores bits in []uint8. Implements the base algorithm. The slowest one, it's here just for comparison.
-
-*sieve32.go* stores bits in []uint32. Implements the base algorithm, but uses a datatype optimized for setting ranges of bits.
-
-*sieve32_block.go* is a modified version of the above. Optimized for CPUs with small cache. Slower than sieve32.go if cache is not a problem.
-
-*sieve_ptr.go* stores bits in []uint32 and uses unsafe pointers instead of slice indexing. Implements the base algorithm.
-
-*sieve_other.go* stores bits in []uint32. Implements the Sieve of Eratosthenes, but doesn't fit into the definition of the `base` algorithm.
-
-*sieve_other_block.go* is a modified version of the above. Uses the same optimizations as sieve32_block.go
-
-*sieve_other_segmented.go* is a segmented version of sieve_other.go. It's not as fast as the `block` version on small limits, but is quite performant on large numbers.
-
-Every version is compiled with boundscheck disabled (`-B` compiler flag).
+Collection of single-threaded Go solutions.
 
 ## Run instructions
 
  - Install [Go](https://golang.org/)
 
+ - Generate code
+```
+cd path/to/solution
+go generate
+```
+
+ - (Optional) Run tests
+```
+go test
+```
+
+ - Build
+```
+go build -gcflags="-B"
+```
+
  - Run
 ```
-go run sieve8.go [args]
-```
-or with disabled bounds check:
-```
-go run --gcflags="-B" sieve8.go [args]
+./primego [args]
 ```
 
 ### Command line args:
 
-`-limit X`: Limit. Default is 1000000
+`-drag-race=X`: Run the solution in the drag-race mode. If `true`, it will run implementations from the preset defined in `configs/drag-race.json` and produce output in the "official" format. Other flags do nothing in the drag-race mode. Default is `true`.
 
-`-time X`: Duration, in [Go duration format](https://golang.org/pkg/time/#ParseDuration). Default is "5s"
+`-limit=X`: Limit. Default is `1_000_000`.
 
-`-v`: Provide additional human-readable output
+`-time=X`: Duration, in [Go duration format](https://pkg.go.dev/time@go1.17#ParseDuration). Default is `"5s"`.
 
-And for `block`/`segmented` versions:
+`-run=X`: Run only implementations that match a provided [Go regex](https://pkg.go.dev/regexp/syntax@go1.17). Default is `"."`.
 
-`-block`: Block size, in bits. Default is 128_000
+`-block=X`: Block size for `blocks` and `segmented` versions, *in bits*. Default is `128_000`.
+
+`-prof`: If set, running implementations will be profiled, profile data will be written to the `profile` folder to a file with a name corresponding to the implementation's label. Refer to https://go.dev/blog/pprof for some info on how to use Go profiling tools.
 
 ## Output
 
 AMD A4-3305M 1.9 GHz, Windows 7 64 bit
 ```
-ssovest-go-u32-B;8138;5.000469686;1;algorithm=base,faithful=yes,bits=1
-ssovest-go-u32-blocks-B;6916;5.001404427;1;algorithm=base,faithful=yes,bits=1
-ssovest-go-u8-B;2053;5.003531582;1;algorithm=base,faithful=yes,bits=1
-ssovest-go-other-B;13586;5.000640339;1;algorithm=other,faithful=yes,bits=1
-ssovest-go-other-blocks-B;10723;5.000676751;1;algorithm=other,faithful=yes,bits=1
-ssovest-go-other-segmented-B;8315;5.000506643;1;algorithm=other,faithful=yes,bits=1
-ssovest-go-ptr-B;2360;5.000475421;1;algorithm=base,faithful=yes,bits=1
+ssovest-go-other-u64;16367;5.0028852;1;algorithm=other,bits=1,faithful=yes
+ssovest-go-other-u32-seg-16k;12225;5.0142868;1;algorithm=other,bits=1,faithful=yes
+ssovest-go-other-u32-block-16k;11817;5.0012861;1;algorithm=other,bits=1,faithful=yes
+ssovest-go-other-u32-rblock-16k;11486;5.0022861;1;algorithm=other,bits=1,faithful=yes
+ssovest-go-stride-u32;9644;5.0022861;1;algorithm=base,bits=1,faithful=yes
+ssovest-go-stride-u32-block-16k;8194;5.0022861;1;algorithm=base,bits=1,faithful=yes
+ssovest-go-stride-u32-rblock-16k;8259;5.0022861;1;algorithm=base,bits=1,faithful=yes
+ssovest-go-simple-u32;3005;5.0018852;1;algorithm=base,bits=1,faithful=yes
 ```
