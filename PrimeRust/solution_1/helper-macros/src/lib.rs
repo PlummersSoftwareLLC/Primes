@@ -217,17 +217,55 @@ fn extreme_reset_word(
     word_idx: usize,
 ) -> proc_macro2::TokenStream {
     let masks = calculate_masks(skip, word_idx);
+
     let code = quote! {
-        // unsafe {
-        //     let word = #slice_expr.get_unchecked_mut(#word_idx);
-        //     *word = *word #(| #masks)*;
-        // }
         let mut word = unsafe { *#slice_expr.get_unchecked(#word_idx) };
         #(
             word |= #masks;
         )*
         unsafe { *#slice_expr.get_unchecked_mut(#word_idx) = word; }
     };
+
+
+
+    // // cheating
+    // let code = quote! {
+    //     unsafe {
+    //         let word = #slice_expr.get_unchecked_mut(#word_idx);
+    //         *word = *word #(| #masks)*;
+    //     }
+    // };
+
+    // // explicit
+    // let code = quote! {
+    //     unsafe {
+    //         let mut word = *#slice_expr.get_unchecked(#word_idx);
+    //         #(
+    //         word |= #masks;
+    //         )*
+    //         *#slice_expr.get_unchecked_mut(#word_idx) = word;
+    //     }
+    // };
+
+    // grab the word and run with it
+    // let code = quote! {
+    //     unsafe {
+    //         let word = #slice_expr.get_unchecked_mut(#word_idx);
+    //         #(
+    //         *word |= #masks;
+    //         )*
+    //     }
+    // };
+    
+    // // simple-minded approach
+    // let code = quote! {
+    //     unsafe { 
+    //     #(
+    //         *#slice_expr.get_unchecked_mut(#word_idx) |= #masks; 
+    //     )*
+    //     }
+    // };
+
     code
 }
 
