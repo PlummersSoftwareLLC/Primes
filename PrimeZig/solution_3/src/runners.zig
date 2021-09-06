@@ -97,6 +97,8 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
         const ThreadInfo = struct { self: *Self, index: usize };
         // the job stores relevant information about what to be run.
         const Job = struct { factor: usize };
+        pub const algo = Sieve.algo;
+        pub const bits = Sieve.bits;
 
         // struct state
         sieve_size: usize,

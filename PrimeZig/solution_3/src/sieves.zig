@@ -11,12 +11,13 @@ const IntSieveOpts = comptime struct {
 
 pub fn IntSieve(comptime opts_: anytype) type {
     const opts: IntSieveOpts = opts_;
-    const wheel_name = "";
 
     const Wheel: ?type = if (opts.wheel_primes > 0)
       wheel.Wheel(.{
           .num_primes = opts.wheel_primes,
           .PRIME = opts.PRIME}) else null;
+
+    const wheel_name = if (Wheel) |W| "-" ++ W.name else "";
 
     const PRIME = opts.PRIME;
     const COMPOSITE = if (@TypeOf(PRIME) == bool) !PRIME else 1 - PRIME;
@@ -27,7 +28,7 @@ pub fn IntSieve(comptime opts_: anytype) type {
 
         // informational content.
         pub const name = "sieve-" ++ @typeName(T) ++ wheel_name;
-        pub const algo = "base";
+        pub const algo = if (Wheel) |_| "wheel" else "base";
         pub const bits = if (T == bool) 8 else @bitSizeOf(T);
 
         // type helpers
@@ -119,14 +120,20 @@ pub fn BitSieve(comptime opts_: anytype) type {
           .PRIME = opts.PRIME,
           .bits = true}) else null;
 
+    const base_name = if (opts.unrolled) "bitSieve-unrolled" else "bitSieve";
+    const run_name = "-run-" ++ @typeName(opts.RunFactorChunk);
+    const find_name = "-find-" ++ @typeName(opts.FindFactorChunk);
+
+    const wheel_name = if (Wheel) |W| "-" ++ W.name else "";
+
     // static assertions that we are working with int types.
     _ = @typeInfo(opts.RunFactorChunk).Int.bits;
     _ = @typeInfo(opts.FindFactorChunk).Int.bits;
 
     return struct {
         // informational content.
-        pub const name = "bitSieve-";
-        pub const algo = "base";
+        pub const name = base_name ++ run_name ++ find_name ++ wheel_name;
+        pub const algo = if (Wheel) |_| "wheel" else "base";
         pub const bits = 1;
         pub const STARTING_FACTOR: usize = if (Wheel) |W| W.STARTING_FACTOR else 3;
 
