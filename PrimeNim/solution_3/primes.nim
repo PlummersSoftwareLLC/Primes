@@ -1,7 +1,3 @@
-# Extreme-Loop-Unrolled Odds-Only Bit-Packed Sieve of Eratosthenes Benchmark...
-# This was created for the "Software Drag Racing" GitHub repo as per:
-# https://github.com/PlummersSoftwareLLC/Primes...
- 
 import std/[ monotimes, tables, strformat ] # timing, verifying, displaying
 import std/macros
 from std/math import sqrt
@@ -24,7 +20,7 @@ const DICT = {
 }.toTable()
 const RESULT = DICT[LIMIT]
 
-const DENSETHRESHOLD = 63
+const DENSETHRESHOLD = 129
 
 const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
 
@@ -99,70 +95,58 @@ macro unrollLoops(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
 # a given 64-bit word...
 macro denseSetBits(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
   let endalmtid = "endalmt".newIdentNode
-  let strt0id = "strt0".newIdentNode
-  let mod0id = "mod0".newIdentNode
   let advid = "adv".newIdentNode
   let setaid = "seta".newIdentNode
-  let ndxlmtid = "ndxlmt".newIdentNode
   let cptrid = "cptr".newIdentNode
   result = quote do:
-    let `ndxlmtid` = `ndx0` or 63
-    while `ndx0` <= ndxlmt:
+    while (`ndx0` and 63) > 0: # <= ndxlmt:
       let `cptrid` = cast[ptr byte](`bitbufa` +  (`ndx0` shr 3))
       `cptrid`[] = `cptrid`[] or BITMASK[`ndx0` and 7]
       `ndx0` += `step`
-    let `strt0id` = `ndx0` shr 3
-    let `mod0id` = `ndx0` and 63
     let `advid` = `step` shl 3 # eight byte per step
     let `endalmtid` = `bitbufa` + `bytelen` - (`advid` - 8) - 1
-    var `setaid` = `bitbufa` + (`strt0id` and (-8))
+    var `setaid` = `bitbufa` + ((`ndx0` shr 3) and (-8))
+    `ndx0` = `ndx0` and 63
   let csstmnt = quote do:
     case `step`.uint8
     of 0'u8: discard
   csstmnt.del 1 # delete last dummy "of"
   for stpv in countup(3, DENSETHRESHOLD, 2):
-    let swi = (stpv * stpv - 3) shr 1
-    let r = ((((swi + 64) shr 3) and (-8)) * 8 - swi) mod stpv
-    var bi = (if r == 0: 0 else: stpv - r); var wi = 0
+    var bi = 0; var wi = -1 # ensure first bit!
     let vid = "v".newIdentNode
-    let msk0id = newLit((1 shl (bi and 63)).uint64)
     let loopstmnts = nnkStmtList.newTree()
-    if (bi + stpv) shr 6 > 0:
+    if stpv < 64:
       loopstmnts.add quote do:
-        let `cptrid` = cast[ptr UncheckedArray[uint64]](`setaid`)
         var `vid`: uint64
-        `cptrid`[0] = `cptrid`[0] or `msk0id`
-    else:
-      loopstmnts.add quote do:
-        let `cptrid` = cast[ptr UncheckedArray[uint64]](`setaid`)
-        var `vid` = `cptrid`[0] or `msk0id`
-    bi += stpv
-    while wi < stpv:
-      let mskid = newLit((1 shl (bi and 63)).uint64)
-      if bi shr 6 > wi:
-        wi += 1
-        let wrdid = newLit(wi.int)
-        if (bi + stpv) shr 6 > wi:
+    loopstmnts.add quote do:
+      let `cptrid` = cast[ptr UncheckedArray[uint64]](`setaid`)
+    for _ in 0 .. 63: # the moduloa pattern is word bits in length...
+      let mskid = newLit(1'u64 shl (bi and 63))
+      if bi shr 6 > wi: # first bit of word
+        wi = bi shr 6; bi += stpv
+        let wrdid = newLit(wi)
+        if bi shr 6 > wi: # only only one marking in word
           loopstmnts.add quote do:
             `cptrid`[`wrdid`] = `cptrid`[`wrdid`] or `mskid`
-          bi += stpv; continue
-        else:
+        else: # first of many markings in word
           loopstmnts.add quote do:
             `vid` = `cptrid`[`wrdid`] or `mskid`
-      bi += stpv
-      if bi shr 6 > wi:
-        let wrdid = newLit(wi.int)
-        loopstmnts.add quote do:
-          `cptrid`[`wrdid`] = `vid` or `mskid`
-      else:
-        loopstmnts.add quote do:
-          `vid` = `vid` or `mskid`
+        continue
+      else: # multple or last marking in word
+        bi += stpv
+        if bi shr 6 > wi: # last marking bit in word
+          let wrdid = newLit(wi)
+          loopstmnts.add quote do:
+            `cptrid`[`wrdid`] = `vid` or `mskid`
+        else: # next of many markings in word
+          loopstmnts.add quote do:
+            `vid` = `vid` or `mskid`
     loopstmnts.add quote do:
       `setaid` += `advid`
     let ofbrstmnts = quote do:
       while `setaid` <= `endalmtid`:
         `loopstmnts`
-      `ndx0` = ((`setaid` - `bitbufa`) shl 3) or `mod0id`.int
+      `ndx0` += ((`setaid` - `bitbufa`) shl 3)
     csstmnt.add nnkOfBranch.newTree(
       newLit(stpv.uint8),
       ofbrstmnts

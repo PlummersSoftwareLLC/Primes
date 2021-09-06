@@ -24,7 +24,7 @@ docker build -t primes .
 docker run --rm primes
 ```
 
-The Dockerfile builds a Nim compiler in a Fedora container from source on whatever architecture it is run.
+The Dockerfile uses the custom built `primeimages/nim:1.4.8` so it can run on both arm64 and amd64.
 
 ## Benchmarks
 
@@ -34,7 +34,7 @@ This version runs about the same speed run either on the Docker image or locally
 
 The following is as run on an Intel SkyLake i5-6500 at 3.6 GHz (single-threaded):
 ```
-GordonBGood_extreme_hybrid;41183;5.000098727;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme_hybrid;44473;5.000062845;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Benchmarks
@@ -42,21 +42,22 @@ GordonBGood_extreme_hybrid;41183;5.000098727;1;algorithm=base,faithful=yes,bits=
 Running locally on my Intel SkyLake i5-6500 at 3.6 GHz when single threaded, I get some astounding numbers:
 
 ```
-Passes: 41183, Time: 5.000098727, Avg: 0.0001214117166549304, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 41197, Time: 5.000114014, Avg: 0.0001213708283127412, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 41103, Time: 5.000067782, Avg: 0.0001216472710507749, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 41681, Time: 5.000082284, Avg: 0.0001199607083323337, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-Passes: 41709, Time: 5.0000606, Avg: 0.0001198796566688245, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 44319, Time: 5.000079148, Avg: 0.0001128202158893477, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 43944, Time: 5.000009589, Avg: 0.000113781394251775, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 44504, Time: 5.000041183, Avg: 0.0001123503771121697, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 44456, Time: 5.000045385, Avg: 0.00011247177850009, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 43888, Time: 5.000057349, Avg: 0.0001139276647147284, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 ```
 Which matches the results when run with Docker on the same machine as follows:
 
-                                                                Single-threaded                                                                
-┌───────┬────────────────┬──────────┬─────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
-│ Index │ Implementation │ Solution │ Label                       │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
-├───────┼────────────────┼──────────┼─────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-│   1   │ nim            │ 3        │ GordonBGood_extreme_hybrid │ 41322  │ 5.00004  │    1    │   base    │   yes    │ 1    │  8264.33563   │
-└───────┴────────────────┴──────────┴─────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
-
+```
+                                                               Single-threaded                                                                
+┌───────┬────────────────┬──────────┬────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                      │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ nim            │ 3        │ GordonBGood_extreme_hybrid │ 44189  │ 5.00004  │    1    │   base    │   yes    │ 1    │  8837.73123   │
+└───────┴────────────────┴──────────┴────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+```
 
 ## Notes
 
@@ -72,9 +73,9 @@ This benchmark is written to be true to the "faithful to base algorithm" specifi
 
 There are minor tweaks, but one reason that this implementation is so much faster than others, is "Extreme Loop Unrolling" using a Nim macro to generate the thousands of lines of code based on modulo patterns that result from stepping within a (even bits) byte array.  This technique is similar to the "striping" technique used by the fastest "faithful to base algorithm" Rust implementation which culls by eight simpler-than-"bit-twiddling"-per-bit constant mask value loops per base prime, but this implementation instead combines those eight "striping" loops into a single loop with eight culling operations per loop, with the macro calculating the necessary variations as to the immediate bit mask to be used for each cull in each of the patterns.  Thus, it is similar to the techniques that have already been accepted, just refined to the utmost.
 
-The other even more important reason this implementation is so fast is that it uses the same dense culling for small base prime values as in the fastest Chapel version, where when there are multiple bits per 64-bit word to be culled, the entire word is read into a variable `v`, the individual bits to be culled are marked by a modulo pattern mask each, and when all bits to be culled in the given word have been marked, the value `v` is committed back to the original location in the deliverable sieve buffer; this sequence is then repeated for the number of words in the repeating modulo pattern.  This is so fast for two reasons:  first, it reduces the average operation time to as little a one third of a CPU clock cycle per operations, and second, it improves cache associativity by cache lines as it advances linearly across the entire sieving buffer, just as the above extreme loop unrolling does, but now the extreme loop unrolling also advances by at least eight bytes at a time.  This dense marking technique is likely even more important than the extreme loop unrolling technique as many more of the operations ar dense than not.  The dense threshold has been set at base primes below 64, which seems to be about optimum, and again helps speed as compared to the Chapel version for which the dense base prime threshold is 19.  One can see the generated code at compile time for the base prime/step value of three by uncommenting line 178.
+The other even more important reason this implementation is so fast is that it uses the same dense culling for small base prime values as in the fastest Chapel version, where when there are multiple bits per 64-bit word to be culled, the entire word is read into a variable `v`, the individual bits to be culled are marked by a modulo pattern mask each, and when all bits to be culled in the given word have been marked, the value `v` is committed back to the original location in the deliverable sieve buffer; this sequence is then repeated for the number of words in the repeating modulo pattern.  This is so fast for two reasons:  first, it reduces the average operation time to as little a one third of a CPU clock cycle per operations, and second, it improves cache associativity by cache lines as it advances linearly across the entire sieving buffer, just as the above extreme loop unrolling does, but now the extreme loop unrolling also advances by at least eight bytes at a time.  This dense marking technique is likely even more important than the extreme loop unrolling technique as many more of the operations ar dense than not.  The dense threshold has been set at base primes values up to 129, and again helps speed as compared to the Chapel version for which the dense base prime threshold is 19.  One can see the generated code at compile time for the base prime/step value of three by uncommenting line 162 and compiling.
 
-In order to make it obvious that this implementation is "faithful to base", the `bitSeq  bit array has been implemented as a custom type with all memory access operations done through custom functions/methods/operators; in particular the `setRange` function implements a marking starting at an index, to an index, stepping by an index which is a built-in ability in many languages.
+In order to make it obvious that this implementation is "faithful to base", the `bitSeq`  bit array has been implemented as a custom type with all memory access operations done through custom functions/methods/operators; in particular the `setRange` function implements a marking starting at an index, to an index, stepping by an index which is a built-in ability in many languages.
 
 This technique allows culling/marking operations to take an average of about 0.5 CPU clock cycles per marking operation with a modern high-efficiency CPU.
 
