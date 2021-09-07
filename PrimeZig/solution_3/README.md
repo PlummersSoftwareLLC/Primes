@@ -1,4 +1,4 @@
-# Zig solution by ManDeJan and ityonemo
+# Zig solution by ManDeJan and ityonemo and SpexGuy
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
@@ -32,8 +32,9 @@ Run (all permutations)
 Uses highly composable Zig datastructures.
 Features combinations of the following optimizations:
 
-- datatypes: `bool`, `u1`, `u8`, `u16`...`u64`
+- int datatypes: `bool`, `u8`
 - usage of bitmapping, sizes `u8`, `u16`, `u32`, `u64`
+- manually unrolling the hot loops and making LUT functions.
 - multithreading:
   - Amdahl scaling: each thread works on a distinct 'job' which is running the sieve on a given factor.
     all threads coordinate towards a single solution.
@@ -41,11 +42,13 @@ Features combinations of the following optimizations:
 - `wheel`:  Precalculate (at compile time) a series of initial primes and during the "reset" phase, project
      these primes onto the field.  Then proceed as normal with the remaining primes.
 
+and more!
+
 Architecture:
 
-- `src/alloc.zig` an allocator that prioritizes use of scratch space set aside in .bss
+- `src/alloc.zig` various allocators to be swapped out.
 - `src/main.zig` entrypoint for the program; builds the drag race layout
-- `src/wheel.zig` uses the sieve program to generate wheel LUTs at compile-time
+- `src/wheel.zig` uses the sieve program to generate wheel memory LUTs at compile-time
 - `src/runners.zig` generic "runner" framework.  Impls:
   - `SingleThreadedRunner`
   - `AmdahlRunner`
@@ -53,5 +56,6 @@ Architecture:
 - `src/sieves.zig` generic sieves.  Impls:
   - `IntSieve` sieve stored as a (1/2) array of integers of comptime-defined sizes.
   - `BitSieve` sieve stored as a (1/2) array of bits, backed by comptime-defined unsigned integer types.
+- `src/unrolled.zig` implements compile-time unrolled functions.
 - `src/tests.zig` test cases.  Execute by running `zig test src/tests.zig`.  May not work correctly
   (tested on zig 0.7.2)
