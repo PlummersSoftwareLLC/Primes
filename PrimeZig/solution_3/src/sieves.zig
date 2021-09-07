@@ -132,7 +132,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
     var vectornamebuf: [20]u8 = undefined; // 20 ought to be enough!
     var buf = if (opts.max_vector) |mv|
-        std.fmt.bufPrint(vectornamebuf[0..], "v{}", .{mv}) catch {@panic("can't make the vector name");}
+        std.fmt.bufPrint(vectornamebuf[0..], "v{}{s}", .{mv, if (opts.half_extent) "h" else ""}) catch {@panic("can't make the vector name");}
     else vectornamebuf[0..];
 
     const wheel_name = if (Wheel) |W| "-" ++ W.name else "";
@@ -288,6 +288,8 @@ pub fn BitSieve(comptime opts_: anytype) type {
             }
         }
 
+        // some of these could get really big so let's try to make sure they don't cross
+        // page boundaries
         pub fn runFactor(self: *Self, factor: usize) void {
             const T = opts.RunFactorChunk;
             if (opts.unrolled) {

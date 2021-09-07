@@ -23,6 +23,9 @@ const SIZE = 1_000_000;
 
 var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
 
+const ARCH_64 = std.builtin.target.cpu.arch.ptrBitWidth() == 64;
+const ARCH_32 = std.builtin.target.cpu.arch.ptrBitWidth() == 32;
+
 pub fn main() anyerror!void {
     const run_for = 5; // Seconds
 
@@ -37,27 +40,42 @@ pub fn main() anyerror!void {
         .{ SingleThreadedRunner, .{}, IntSieve, .{}, true},
         .{ SingleThreadedRunner, .{}, IntSieve, .{.wheel_primes = 6}, true},
         .{ SingleThreadedRunner, .{}, BitSieve, .{.RunFactorChunk = u64}, false},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.RunFactorChunk = u64, .FindFactorChunk = u32}, true}, // equivalent to C
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.RunFactorChunk = u32, .FindFactorChunk = u32}, ARCH_32}, // equivalent to C
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.RunFactorChunk = u64, .FindFactorChunk = u32}, ARCH_64}, // equivalent to C
         // best singlethreaded base runner
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, true},
-        // pessimizations on singlethreadedness (base)
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32}, false}, // different RunFactorChunks
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32}, false}, // different RunFactorChunks
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 2}, false}, // vectorizations on u64
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 4}, false}, // vectorizations on u64
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 8}, false}, // vectorizations on u64
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 4}, false}, // vectorizations on u32
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 8}, false}, // vectorizations on u32
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 16}, false}, // vectorizations on u32
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 8}, false}, // vectorizations on u8
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 16}, false}, // vectorizations on u8
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 64}, false}, // vectorizations on u8
-        // best singlethreaded wheel runner:
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, true},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32}, ARCH_32},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, ARCH_64},
+        // ----   pessimizations on singlethreadedness (base)
+        // RunFactorChunk matters
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32}, false},
+        // vectorization
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 2}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 2, .half_extent = true}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 4}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 4, .half_extent = true}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 8}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .max_vector = 8, .half_extent = true}, ARCH_64}, // sometimes this could be competitive
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 4}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 4, .half_extent = true}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 8}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 8, .half_extent = true}, ARCH_32},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 16}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .max_vector = 16, .half_extent = true}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 8}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 8, .half_extent = true}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 16}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 16, .half_extent = true}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 64}, false},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u8, .FindFactorChunk = u32, .max_vector = 64, .half_extent = true}, false},
+        // best singlethreaded wheel runner (can be environment dependent):
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_32},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_64},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, ARCH_32},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, ARCH_64},
         // pessimizations on singlethreadedeness (wheel)
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .note = "-calloc"}, false},  // using calloc
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .note = "-calloc"}, false},  // using calloc matters
         .{ SingleThreadedRunner, .{}, BitSieve, .{.PRIME = 1, .unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing}, false}, // inverted
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.PRIME = 1, .unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u8, .find_factor = .advanced, .wheel_primes = 5, .allocator = NonClearing}, false}, // trying to use find_factor algo
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u8, .find_factor = .advanced, .wheel_primes = 5, .allocator = NonClearing}, false},
         // experimental vector sieve (typically less performant than unrolled bitsieve)
         .{ SingleThreadedRunner, .{}, VecSieve, .{.PRIME = 1, .allocator = SAlloc(c_std_lib, .{})}, true},
@@ -65,13 +83,21 @@ pub fn main() anyerror!void {
         .{ ParallelAmdahlRunner, .{}, IntSieve, .{}, true},
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{}, true},
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{.wheel_primes = 6}, true},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, true},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32}, ARCH_32},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, ARCH_64},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, ARCH_32},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, ARCH_64},
+        .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32}, false},
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, false},
         // in testing we find that the best performing of the following four is architecture-dependent
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 2, .allocator = NonClearing}, true},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, true},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, true},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, true},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 2, .allocator = NonClearing}, ARCH_32},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, ARCH_32},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, ARCH_32},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_32},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 2, .allocator = NonClearing}, ARCH_64},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, ARCH_64},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, ARCH_64},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_64},
     };
 
     inline for (specs) |spec| {
@@ -98,7 +124,7 @@ fn runSieveTest(
     comptime Runner: type,
     run_for: comptime_int,
     sieve_size: usize,
-) anyerror!void {
+) align(std.mem.page_size) anyerror!void {
     @setAlignStack(256);
     const timer = try std.time.Timer.start();
     var passes: u64 = 0;
