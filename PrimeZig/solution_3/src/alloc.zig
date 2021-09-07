@@ -50,8 +50,13 @@ pub fn CAlloc(c: anytype) type {
     };
 }
 
-/// shims c standard library's "malloc" function, followed by a memset operation.
-pub fn SAlloc(c: anytype) type {
+const SAllocOpts = struct {
+    should_clear: bool = true,
+};
+
+/// shims c standard library's "malloc" function, followed by an (optional) memset operation.
+pub fn SAlloc(c: anytype, _opts: anytype) type {
+    const opts: SAllocOpts = _opts;
     return struct {
         pub fn calloc_pages(comptime init: anytype, count: usize) ![*]u8 {
             // calculate how many pages we'll need.
@@ -66,8 +71,10 @@ pub fn SAlloc(c: anytype) type {
             var aligned_ptr = unaligned_ptr + (aligned_addr - unaligned_addr);
 
             // memset, but only memset the bytes we ask for!
-            const init_val = if (@TypeOf(init) == bool) @boolToInt(init) else init;
-            @memset(aligned_ptr, init_val, count);
+            if (opts.should_clear) {
+                const init_val = if (@TypeOf(init) == bool) @boolToInt(init) else init;
+                @memset(aligned_ptr, init_val, count);
+            }
 
             // assert that we have the desired alignment.
             std.debug.assert(aligned_addr % page_size == 0);
@@ -238,49 +245,49 @@ test "CAlloc doesn't leak on multi-page allocations" {
 
 // tests on SAlloc
 test "SAlloc produces an aligned memory slot that is filled with zeros." {
-    const a = SAlloc(c_std_lib);
+    const a = SAlloc(c_std_lib, .{});
     defer a.allocator_deinit();
     try basic_test(a, 10, 0);
 }
 
 test "SAlloc produces an aligned memory slot that is filled with false." {
-    const a = SAlloc(c_std_lib);
+    const a = SAlloc(c_std_lib, .{});
     defer a.allocator_deinit();
     try basic_test(a, 10, false);
 }
 
 test "SAlloc produces an aligned memory slot that is filled with true." {
-    const a = SAlloc(c_std_lib);
+    const a = SAlloc(c_std_lib, .{});
     defer a.allocator_deinit();
     try basic_test(a, 10, true);
 }
 
 test "SAlloc produces an aligned memory slot that is filled with arbitrary values." {
-    const a = SAlloc(c_std_lib);
+    const a = SAlloc(c_std_lib, .{});
     defer a.allocator_deinit();
     try basic_test(a, 10, 0xFF);
 }
 
 test "SAlloc can produce multi-page allocations" {
-    const a = SAlloc(c_std_lib);
+    const a = SAlloc(c_std_lib, .{});
     defer a.allocator_deinit();
     try basic_test(a, TWOPAGES, 0);
 }
 
 test "SAlloc can produce multi-page allocations with arbitrary values" {
-    const a = SAlloc(c_std_lib);
+    const a = SAlloc(c_std_lib, .{});
     defer a.allocator_deinit();
     try basic_test(a, TWOPAGES, 0xFF);
 }
 
 test "SAlloc doesn't leak on small allocations" {
-    const a = SAlloc(MockedLibC);
+    const a = SAlloc(MockedLibC, .{});
     defer a.allocator_deinit();
     try basic_test(a, 10, 0);
 }
 
 test "SAlloc doesn't leak on multi-page allocations" {
-    const a = SAlloc(MockedLibC);
+    const a = SAlloc(MockedLibC, .{});
     defer a.allocator_deinit();
     try basic_test(a, TWOPAGES, 0);
 }

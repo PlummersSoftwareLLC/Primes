@@ -13,9 +13,9 @@ pub fn IntSieve(comptime opts_: anytype) type {
     const opts: IntSieveOpts = opts_;
 
     const Wheel: ?type = if (opts.wheel_primes > 0)
-      wheel.Wheel(.{
-          .num_primes = opts.wheel_primes,
-          .PRIME = opts.PRIME}) else null;
+        wheel.Wheel(.{ .num_primes = opts.wheel_primes, .PRIME = opts.PRIME })
+    else
+        null;
 
     const wheel_name = if (Wheel) |W| "-" ++ W.name else "";
 
@@ -65,7 +65,9 @@ pub fn IntSieve(comptime opts_: anytype) type {
             var idx: usize = 0;
 
             for (self.field[0..self.field_count]) |value| {
-                if (value == PRIME) { count += 1; }
+                if (value == PRIME) {
+                    count += 1;
+                }
             }
 
             return count;
@@ -97,47 +99,55 @@ pub fn IntSieve(comptime opts_: anytype) type {
     };
 }
 
+const FindFactorMode = enum { naive, advanced };
+
 const BitSieveOpts = comptime struct {
     PRIME: anytype = @as(u8, 0),
     allocator: type = default_allocator,
     wheel_primes: u8 = 0,
-
     RunFactorChunk: type = u32,
     cached_masks: bool = false, // used cached mask lookup instead?
     FindFactorChunk: type = u8,
     unrolled: bool = false,
     max_vector: ?u32 = null,
-    half_extent: bool = false
+    half_extent: bool = false,
+    find_factor: FindFactorMode = .naive,
+    note: anytype = "",
 };
 
 pub fn BitSieve(comptime opts_: anytype) type {
     const opts: BitSieveOpts = opts_;
     const PRIME = opts.PRIME;
+    const RunFactorChunk = opts.RunFactorChunk;
+    const FindFactorChunk = opts.FindFactorChunk;
 
     const Wheel: ?type = if (opts.wheel_primes > 0)
-      wheel.Wheel(.{
-          .num_primes = opts.wheel_primes,
-          .PRIME = opts.PRIME,
-          .bits = true}) else null;
+        wheel.Wheel(.{ .num_primes = opts.wheel_primes, .PRIME = opts.PRIME, .bits = true })
+    else
+        null;
 
-    const base_name = if (opts.unrolled) "bitSieve-unrolled" else "bitSieve";
-    const run_name = "-run-" ++ @typeName(opts.RunFactorChunk);
-    const find_name = "-find-" ++ @typeName(opts.FindFactorChunk);
+    const base_name = (if (PRIME == 1) "inverted-" else "") ++ "bitSieve" ++ if (opts.unrolled) "-unrolled" else "";
+    const run_name = "-run-" ++ @typeName(RunFactorChunk);
+    const find_name = "-find-" ++ @typeName(FindFactorChunk) ++ if (opts.find_factor == .advanced) "-advanced" else "";
+
+    var vectornamebuf: [20]u8 = undefined; // 20 ought to be enough!
+    var buf = if (opts.max_vector) |mv|
+        std.fmt.bufPrint(vectornamebuf[0..], "v{}", .{mv}) catch {@panic("can't make the vector name");}
+    else vectornamebuf[0..];
 
     const wheel_name = if (Wheel) |W| "-" ++ W.name else "";
 
     // static assertions that we are working with int types.
-    _ = @typeInfo(opts.RunFactorChunk).Int.bits;
-    _ = @typeInfo(opts.FindFactorChunk).Int.bits;
+    _ = @typeInfo(RunFactorChunk).Int.bits;
+    _ = @typeInfo(FindFactorChunk).Int.bits;
 
     return struct {
         // informational content.
-        pub const name = base_name ++ run_name ++ find_name ++ wheel_name;
+        const vector_name = if (opts.max_vector) |_| vectornamebuf[0..buf.len] else "";
+        pub const name = base_name ++ run_name ++ vector_name ++ find_name ++ wheel_name ++ opts.note;
         pub const algo = if (Wheel) |_| "wheel" else "base";
         pub const bits = 1;
         pub const STARTING_FACTOR: usize = if (Wheel) |W| W.STARTING_FACTOR else 3;
-
-        pub fn foo() [*]const u8 { return "base"; }
 
         // type helpers
         const Self = @This();
@@ -150,6 +160,8 @@ pub fn BitSieve(comptime opts_: anytype) type {
         field_bytes: usize = undefined,
 
         const init_fill_unit: u8 = if (PRIME == 0) 0 else @as(u8, 0) -% @as(u8, 1);
+
+        const trailing_masks = make_trailing_masks(u8, PRIME);
 
         pub fn init(sieve_size: usize) !Self {
             // allocates an array of data.  We only need half as many slots because
@@ -169,8 +181,6 @@ pub fn BitSieve(comptime opts_: anytype) type {
             if (Wheel) |W| {
                 W.roll(field, field_bytes);
             }
-
-            comptime const trailing_masks = make_trailing_masks(u8, PRIME);
 
             // mask out the last bits of the field if they are needed.
             if (field_count % 8 != 0) {
@@ -192,7 +202,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
         fn extraPadding(sieve_size: usize) usize {
             const biggest_possible_factor = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
-            return biggest_possible_factor * @bitSizeOf(opts.RunFactorChunk);
+            return biggest_possible_factor * @bitSizeOf(RunFactorChunk);
         }
 
         pub fn deinit(self: *Self) void {
@@ -211,23 +221,71 @@ pub fn BitSieve(comptime opts_: anytype) type {
         }
 
         pub fn findNextFactor(self: *Self, factor: usize) usize {
+            if (opts.find_factor == .naive) {
+                return findNextFactorNaive(self, factor);
+            } else {
+                return findNextFactorAdvanced(self, factor);
+            }
+        }
+
+        inline fn findNextFactorNaive(self: *Self, factor: usize) usize {
             // naive implementation
-            const T = opts.FindFactorChunk;
+            const T = FindFactorChunk;
             const shift_t = ShiftTypeFor(T);
             const max_index = self.field_count;
             const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
             // start on the next odd number after the supplied factor.
             var search_index = factor / 2 + 1;
-            while (search_index < max_index) : (search_index +=  1) {
+            while (search_index < max_index) : (search_index += 1) {
                 const mask = @as(T, 1) << (@intCast(shift_t, search_index % @bitSizeOf(T)));
                 const bit: T = (field[search_index / @bitSizeOf(T)] & mask);
                 if (PRIME == 0) {
-                    if (bit == 0) { break; }
+                    if (bit == 0) {
+                        break;
+                    }
                 } else {
-                    if (bit != 0) { break; }
+                    if (bit != 0) {
+                        break;
+                    }
                 }
             }
             return search_index * 2 + 1;
+        }
+
+        inline fn findNextFactorAdvanced(self: *Self, factor: usize) usize {
+            // advanced implementation
+            const T = opts.FindFactorChunk;
+            const max_word_index = self.field_count / @bitSizeOf(T);
+            const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field))[0..max_word_index + 1];
+
+            var search_index = factor / 2 + 1;
+            var word_index = search_index / @bitSizeOf(T);
+            if (PRIME == 1) {
+                var slot = field[word_index] & trailing_masks[search_index % @bitSizeOf(T)];
+                if (slot == 0) {
+                    for (field[word_index + 1 ..]) |s| {
+                        word_index += 1;
+                        slot = s;
+                        if (s != 0) {
+                            break;
+                        }
+                    }
+                }
+                return (((word_index * @bitSizeOf(T)) + @ctz(T, slot)) << 1) + 1;
+            } else {
+                const max_T: T = @as(T, 0) -% 1;
+                var slot = field[word_index] | trailing_masks[search_index % @bitSizeOf(T)];
+                if (slot == max_T) {
+                    for (field[word_index + 1 ..]) |s| {
+                        word_index += 1;
+                        slot = s;
+                        if (s != max_T) {
+                            break;
+                        }
+                    }
+                }
+                return (((word_index * @bitSizeOf(T)) + @ctz(T, ~slot)) << 1) + 1;
+            }
         }
 
         pub fn runFactor(self: *Self, factor: usize) void {
@@ -253,10 +311,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
         fn runFactorUnrolled(self: *Self, factor: usize) void {
             const T = opts.RunFactorChunk;
-            comptime const unrolled_opts = .{
-                .primeval = opts.PRIME,
-                .max_vector = opts.max_vector,
-                .half_extent = opts.half_extent};
+            comptime const unrolled_opts = .{ .primeval = opts.PRIME, .max_vector = opts.max_vector, .half_extent = opts.half_extent };
 
             const unrolledDense = comptime unrolled.makeDenseLUT(T, unrolled_opts);
             const unrolledSparse = comptime unrolled.makeSparseLUT(T, unrolled_opts);
@@ -306,144 +361,211 @@ pub fn BitSieve(comptime opts_: anytype) type {
     };
 }
 
-pub const FastSieve = struct {
-    // values
-    const Self = @This();
+const VecSieveOpts = struct {
+    allocator: type = default_allocator,
+    PRIME: u1 = 0x0,
+};
 
-    // storage
-    field: []align(8) u8,
-    field_count: usize,
-    allocator: *Allocator,
+pub fn VecSieve(comptime opts_: anytype) type {
+    const opts: VecSieveOpts = opts_;
 
-    const PatternChunk = std.meta.Vector(64, u8);
-    const small_factor_max = @sizeOf(PatternChunk) * 8;
-    const bit_masks = blk: {
-        var masks: [8]u8 = undefined;
-        for (masks) |*value, index| {
-            value.* = ~(@as(u8, 1) << index);
+    return struct {
+        // values
+        const Self = @This();
+        const PRIME = opts.PRIME;
+
+        // storage
+        field: []align(8) u8,
+        field_count: usize,
+
+        usingnamespace opts.allocator;
+
+        const PatternChunk = std.meta.Vector(64, u8);
+        const small_factor_max = @sizeOf(PatternChunk) * 8;
+
+        const bit_masks = blk: {
+            var masks: [8]u8 = undefined;
+            for (masks) |*value, index| {
+                const bit = @as(u8, 1) << index;
+                value.* = if (PRIME == 1) ~bit else bit;
+            }
+            break :blk masks;
+        };
+
+        const trailing_masks = blk: {
+            var masks: [8]u8 = undefined;
+            for (masks) |*value, index| {
+                const bit = @as(u8, 1) << index;
+                value.* = if (PRIME == 1) (0 -% bit) else bit - 1;
+            }
+            break :blk masks;
+        };
+
+        // member functions
+        pub fn init(field_count: usize) !Self {
+            const bit_size = field_count / 2;  // REUSE ME?
+            const field_count_bytes = (bit_size + @bitSizeOf(u8) - 1) / @bitSizeOf(u8);
+
+            // allocates an array of data.
+            // Heisenberg compensator:  Overallocate so we can do unchecked writes at the end.
+            const compensated_length = field_count_bytes + @sizeOf(PatternChunk) - 1;
+            const field_raw = @alignCast(8, try calloc_pages(PRIME, compensated_length));
+            const field = field_raw[0..compensated_length];
+
+            if (PRIME == 1) {
+                @memset(field.ptr, 0xFF, field.len);
+            }
+
+            const num_bits = field_count / 2;
+            const final_index = num_bits / 8;
+            const final_bits = num_bits % 8;
+
+            // there might be some stray bits at the end.
+            // we need to mask those bits off.
+            const final_mask = (@as(u8, 1) << @intCast(u3, final_bits)) - 1;
+
+            if (PRIME == 1) {
+                field[final_index] &= final_mask;
+            } else {
+                field[final_index] |= ~final_mask;
+            }
+
+            for (field[final_index + 1 ..]) |*v| v.* = if (PRIME == 1) 0x00 else 0xFF;
+
+            return Self{ .field = field, .field_count = field_count };
         }
-        break :blk masks;
-    };
 
-    const trailing_masks = blk: {
-        var masks: [8]u8 = undefined;
-        for (masks) |*value, index| {
-            value.* = -%(@as(u8, 1) << index);
-        }
-        break :blk masks;
-    };
-
-    // member functions
-    pub fn init(field_count: usize) !Self {
-        const bit_size = field_count / 2;
-        const field_count_bytes = (bit_size + @bitSizeOf(u8) - 1) / @bitSizeOf(u8);
-
-        // allocates an array of data.
-        // Overallocate so we can do unchecked writes at the end.
-        const field = try a.alignedAlloc(u8, 8, field_count_bytes + @sizeOf(PatternChunk) - 1);
-        return Self{ .field = field, .allocator = allocator, .field_count = field_count };
-    }
-
-    pub fn deinit(self: *Self) void {
-        a.free(self.field);
-    }
-
-    pub fn reset(self: *Self) usize {
-        const field = self.field;
-        @memset(field.ptr, 0xFF, field.len);
-        const num_bits = self.field_count >> 1;
-        const final_index = num_bits / 8;
-        const final_bits = num_bits % 8;
-
-        // there might be some stray bits at the end.
-        // we need to mask those bits off.
-        const final_mask = (@as(u8, 1) << @intCast(u3, final_bits)) - 1;
-        field[final_index] &= final_mask;
-        for (field[final_index+1..]) |*v| v.* = 0;
-        return 3;
-    }
-
-    pub fn primeCount(self: *Self) usize {
-        var count: usize = 0;
-        var idx: usize = 0;
-
-        for (self.field) |value| {
-            count += @popCount(u8, value);
+        pub fn deinit(self: *Self) void {
+            free(@ptrCast([*]u8, self.field.ptr));
         }
 
-        return count;
-    }
+        pub fn primeCount(self: *Self) usize {
+            var count: usize = 0;
+            var idx: usize = 0;
 
-    pub inline fn findNextFactor(self: *Self, factor: usize) usize {
-        const field = self.field;
-        const num = (factor + 2) >> 1;
-        var index = num / 8;
-        var slot = field[index] & trailing_masks[num % 8];
-        if (slot == 0) {
-            for (field[index + 1 ..]) |s| {
-                index += 1;
-                slot = s;
-                if (s != 0) {
-                    break;
+            for (self.field) |value| {
+                count += if (PRIME == 1) @popCount(u8, value) else 8 - @popCount(u8, value);
+            }
+
+            return count;
+        }
+
+        pub inline fn findNextFactor(self: *Self, factor: usize) usize {
+            const field = self.field;
+            const num = (factor + 2) / 2;
+            var index = num / 8;
+            if (PRIME == 1) {
+                var slot = field[index] & trailing_masks[num % 8];
+                if (slot == 0) {
+                    for (field[index + 1 ..]) |s| {
+                        index += 1;
+                        slot = s;
+                        if (s != 0) {
+                            break;
+                        }
+                    }
+                }
+                return (((index * 8) + @ctz(u8, slot)) << 1) + 1;
+            } else {
+                var slot = field[index] | trailing_masks[num % 8];
+                if (slot == 0xFF) {
+                    for (field[index + 1 ..]) |s| {
+                        index += 1;
+                        slot = s;
+                        if (s != 0xFF) {
+                            break;
+                        }
+                    }
+                }
+                return (((index * 8) + @ctz(u8, ~slot)) << 1) + 1;
+            }
+        }
+
+        pub fn runFactor(self: *Self, factor: usize) void {
+            if (factor < small_factor_max) {
+                runSmallFactor(self, @intCast(u32, factor));
+            } else {
+                runSparseFactor(self, factor);
+            }
+        }
+
+        pub inline fn runSparseFactor(self: *Self, factor: usize) void {
+            const field = self.field;
+            const limit = self.field_count / 2;
+            var num = (factor * factor) / 2;
+            while (num < limit) : (num += factor) {
+                if (PRIME == 1) {
+                    field[num / 8] &= bit_masks[num % 8];
+                } else {
+                    field[num / 8] |= bit_masks[num % 8];
                 }
             }
         }
-        return (((index * 8) + @ctz(u8, slot)) << 1) + 1;
-    }
 
-    pub fn runFactor(self: *Self, factor: usize) void {
-        if (factor < small_factor_max) {
-            runSmallFactor(self, @intCast(u32, factor));
-        } else {
-            runSparseFactor(self, factor);
+        pub inline fn runSmallFactor(self: *Self, factor: u32) void {
+            std.debug.assert(factor < small_factor_max);
+            const field = self.field;
+            const limit = self.field_count >> 1;
+
+            // Fill in a pattern buffer
+            var pattern_raw: [small_factor_max + @sizeOf(PatternChunk) - 1]u8 = undefined;
+            const pattern = pattern_raw[0 .. factor + @sizeOf(PatternChunk) - 1];
+
+            @memset(pattern.ptr, (if (PRIME == 1) 0xFF else 0x00), pattern.len);
+
+            var num: u32 = 0;
+            while (num < pattern.len * @bitSizeOf(u8)) : (num += factor) {
+                if (PRIME == 1) {
+                    pattern[num / 8] &= bit_masks[num % 8];
+                } else {
+                    pattern[num / 8] &= bit_masks[num % 8];
+                }
+            }
+
+            // Fill normally until we start a byte
+            // This loop will execute at most 7 times
+            num = (factor * factor) >> 1;
+            while (num % @bitSizeOf(u8) != 0) : (num += factor) {
+                if (PRIME == 1) {
+                    field[num / 8] &= bit_masks[num % 8];
+                } else {
+                    field[num / 8] |= bit_masks[num % 8];
+                }
+            }
+
+            // Apply pattern across the field
+            const byte_index = num / @bitSizeOf(u8);
+            const bulk_ptr = @ptrCast([*]align(1) PatternChunk, field.ptr + byte_index);
+            const bulk_len = (field.len - byte_index) / @sizeOf(PatternChunk);
+            const fetch_increment = @sizeOf(PatternChunk) % factor;
+            var fetch_index: usize = 0;
+
+            for (bulk_ptr[0..bulk_len]) |*item, i| {
+                // phase transition:  we insist that the PatternChunk vector pointer has
+                // bytewise alignment which will cause it to engage the correct unaligned
+                // SSE operations.
+                if (PRIME == 1) {
+                    item.* &= @ptrCast(*align(1) PatternChunk, &pattern[fetch_index]).*;
+                } else {
+                    item.* |= @ptrCast(*align(1) PatternChunk, &pattern[fetch_index]).*;
+                }
+
+                fetch_index += fetch_increment;
+                if (fetch_index >= factor) fetch_index -= factor;
+            }
         }
-    }
 
-    pub inline fn runSparseFactor(self: *Self, factor: usize) void {
-        const field = self.field;
-        const limit = self.field_count >> 1;
-        var num = (factor * factor) >> 1;
-        while (num < limit) : (num += factor) {
-            field[num / 8] &= bit_masks[num % 8];
+        pub const name = "vecSieve";
+        pub const STARTING_FACTOR: usize = 3;
+        pub const algo = "base";
+        pub const bits = 1;
+
+        // testing convenience
+        pub fn dump(self: *Self) void {
+            std.debug.print("\n{b:0>8}\n", .{self.field});
         }
-    }
-
-    pub inline fn runSmallFactor(self: *Self, factor: u32) void {
-        std.debug.assert(factor < small_factor_max);
-        const field = self.field;
-        const limit = self.field_count >> 1;
-
-        // Fill in a pattern buffer
-        var pattern_raw: [small_factor_max + @sizeOf(PatternChunk)-1]u8 = undefined;
-        const pattern = pattern_raw[0..factor + @sizeOf(PatternChunk)-1];
-        @memset(pattern.ptr, 0xFF, pattern.len);
-        var num: u32 = 0;
-        while (num < pattern.len * @bitSizeOf(u8)) : (num += factor) {
-            pattern[num / 8] &= bit_masks[num % 8];
-        }
-
-        // Fill normally until we start a byte
-        // This loop will execute at most 7 times
-        num = (factor * factor) >> 1;
-        while (num % @bitSizeOf(u8) != 0) : (num += factor) {
-            field[num / 8] &= bit_masks[num % 8];
-        }
-
-        // Apply pattern in bulk
-        const byte_index = num / @bitSizeOf(u8);
-        const bulk_ptr = @ptrCast([*]align(1) PatternChunk, field.ptr + byte_index);
-        const bulk_len = (field.len - byte_index) / @sizeOf(PatternChunk);
-        const fetch_increment = @sizeOf(PatternChunk) % factor;
-        var fetch_index: usize = 0;
-        for (bulk_ptr[0..bulk_len]) |*item, i| {
-            item.* &= @ptrCast(*align(1) PatternChunk, &pattern[fetch_index]).*;
-            fetch_index += fetch_increment;
-            if (fetch_index >= factor) fetch_index -= factor;
-        }
-    }
-
-    pub const name = "fastSieve";
-};
+    };
+}
 
 // common tools
 fn divRoundUp(number: anytype, divisor: anytype) @TypeOf(number) {
@@ -460,14 +582,7 @@ test "divRoundUp" {
 
 fn ShiftTypeFor(comptime T: type) type {
     const t_size = @bitSizeOf(T);
-    return @Type(
-        std.builtin.TypeInfo{
-            .Int = .{
-                .signedness = .unsigned,
-                .bits = std.math.log2(t_size)
-            }
-        }
-    );
+    return @Type(std.builtin.TypeInfo{ .Int = .{ .signedness = .unsigned, .bits = std.math.log2(t_size) } });
 }
 
 test "ShiftType analysis" {
@@ -485,29 +600,21 @@ fn make_trailing_masks(comptime T: type, prime: u1) comptime [@bitSizeOf(T)]T {
     var masks = std.mem.zeroes([t_size]T);
     for (masks) |*value, index| {
         value.* = @as(T, 0) -% (@as(T, 1) << @intCast(shift_t, index));
-        if (prime == 0) {value.* = ~value.*; }
+        if (prime == 0) {
+            value.* = ~value.*;
+        }
     }
     return masks;
 }
 
 test "trailing mask generation" {
-    try std.testing.expectEqual(
-        make_trailing_masks(u8, 0),
-        [_]u8{0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F});
+    try std.testing.expectEqual(make_trailing_masks(u8, 0), [_]u8{ 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F });
 
-    try std.testing.expectEqual(
-        make_trailing_masks(u8, 1),
-        [_]u8{0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80});
+    try std.testing.expectEqual(make_trailing_masks(u8, 1), [_]u8{ 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80 });
 
-    try std.testing.expectEqual(
-        make_trailing_masks(u16, 0),
-        [_]u16{0x0000, 0x0001, 0x0003, 0x0007, 0x000F, 0x001F, 0x003F, 0x007F,
-               0x00FF, 0x01FF, 0x03FF, 0x07FF, 0x0FFF, 0x1FFF, 0x3FFF, 0x7FFF});
+    try std.testing.expectEqual(make_trailing_masks(u16, 0), [_]u16{ 0x0000, 0x0001, 0x0003, 0x0007, 0x000F, 0x001F, 0x003F, 0x007F, 0x00FF, 0x01FF, 0x03FF, 0x07FF, 0x0FFF, 0x1FFF, 0x3FFF, 0x7FFF });
 
-    try std.testing.expectEqual(
-        make_trailing_masks(u16, 1),
-        [_]u16{0xFFFF, 0xFFFE, 0xFFFC, 0xFFF8, 0xFFF0, 0xFFE0, 0xFFC0, 0xFF80,
-               0xFF00, 0xFE00, 0xFC00, 0xF800, 0xF000, 0xE000, 0xC000, 0x8000});
+    try std.testing.expectEqual(make_trailing_masks(u16, 1), [_]u16{ 0xFFFF, 0xFFFE, 0xFFFC, 0xFFF8, 0xFFF0, 0xFFE0, 0xFFC0, 0xFF80, 0xFF00, 0xFE00, 0xFC00, 0xF800, 0xF000, 0xE000, 0xC000, 0x8000 });
 }
 
 // creates a compile-time lookup table for bit masks for each
@@ -526,21 +633,11 @@ fn make_bit_masks(comptime T: type, prime: u1) comptime [@bitSizeOf(T)]T {
 }
 
 test "bit mask generation" {
-    try std.testing.expectEqual(
-        make_bit_masks(u8, 0),
-        [_]u8{0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80});
+    try std.testing.expectEqual(make_bit_masks(u8, 0), [_]u8{ 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 });
 
-    try std.testing.expectEqual(
-        make_bit_masks(u8, 1),
-        [_]u8{0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F});
+    try std.testing.expectEqual(make_bit_masks(u8, 1), [_]u8{ 0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F });
 
-    try std.testing.expectEqual(
-        make_bit_masks(u16, 0),
-        [_]u16{0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080,
-               0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000});
+    try std.testing.expectEqual(make_bit_masks(u16, 0), [_]u16{ 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100, 0x0200, 0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000 });
 
-    try std.testing.expectEqual(
-        make_bit_masks(u16, 1),
-        [_]u16{0xFFFE, 0xFFFD, 0xFFFB, 0xFFF7, 0xFFEF, 0xFFDF, 0xFFBF, 0xFF7F,
-               0xFEFF, 0xFDFF, 0xFBFF, 0xF7FF, 0xEFFF, 0xDFFF, 0xBFFF, 0x7FFF});
+    try std.testing.expectEqual(make_bit_masks(u16, 1), [_]u16{ 0xFFFE, 0xFFFD, 0xFFFB, 0xFFF7, 0xFFEF, 0xFFDF, 0xFFBF, 0xFF7F, 0xFEFF, 0xFDFF, 0xFBFF, 0xF7FF, 0xEFFF, 0xDFFF, 0xBFFF, 0x7FFF });
 }
