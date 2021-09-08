@@ -132,9 +132,6 @@ fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) typ
             if (max_dimension) |max_dim| {
                 std.debug.assert(std.math.isPowerOfTwo(max_dim));
                 return if (max_dim < ints_left) std.meta.Vector(max_dim, T) else T;
-                //var try_dim = max_dim;
-                //while (try_dim > ints_left) : (try_dim /= 2) {}
-                //return if (try_dim == 1) T else std.meta.Vector(try_dim, T);
             } else {
                 return T;
             }
