@@ -11,22 +11,24 @@
 ![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
 ![Bit count](https://img.shields.io/badge/Bits-64-yellowgreen)
 
-Build:
+Build (curated conditions):
 
 ```
 zig build -Drelease-fast
 ```
 
-Run (selected conditions):
+Build (broader set of conditions):
+
+```
+zig build -Drelease-fast -Dall
+```
+
+Note that this will consume a lot of memory.
+
+Run:
 
 ```
 ./zig-out/bin/PrimeZig
-```
-
-Run (all permutations)
-
-```
-./zig-out/bin/PrimeZig --all
 ```
 
 Uses highly composable Zig datastructures.

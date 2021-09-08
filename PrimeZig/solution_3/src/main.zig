@@ -29,9 +29,8 @@ const ARCH_32 = std.builtin.target.cpu.arch.ptrBitWidth() == 32;
 pub fn main() anyerror!void {
     const run_for = 5; // Seconds
 
-    // check for the --all flag.
-    const args = try std.process.argsAlloc(std.heap.page_allocator);
-    const all = (args.len == 2) and (std.mem.eql(u8, args[1], "--all"));
+    // did we set -Dall?
+    const all = @import("build_options").all;
 
     const NonClearing = SAlloc(c_std_lib, .{.should_clear = false});
 
@@ -110,12 +109,8 @@ pub fn main() anyerror!void {
         comptime const Runner = RunnerFn(Sieve, runner_opts);
         comptime const should_run = spec[4];
 
-        if (should_run) {
+        if (all or should_run) {
             try runSieveTest(Runner, run_for, SIZE);
-        } else {
-            if (all) {
-                try runSieveTest(Runner, run_for, SIZE);
-            }
         }
     }
 }
