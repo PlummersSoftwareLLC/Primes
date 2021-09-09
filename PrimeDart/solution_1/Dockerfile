@@ -1,4 +1,4 @@
-FROM google/dart:2.13.4 AS build
+FROM google/dart:2.14.0 AS build
 WORKDIR /app
 COPY pubspec.* /app/
 RUN pub get
