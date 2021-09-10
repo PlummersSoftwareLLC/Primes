@@ -8,7 +8,6 @@ WORKDIR /src
 COPY ["PrimeCSharp.csproj", "."]
 RUN dotnet restore "./PrimeCSharp.csproj"
 COPY . .
-WORKDIR "/src/."
 RUN dotnet build "PrimeCSharp.csproj" -c Release -o /app/build
 
 FROM build AS publish
