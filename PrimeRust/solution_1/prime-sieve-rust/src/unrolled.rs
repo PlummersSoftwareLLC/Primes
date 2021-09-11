@@ -132,31 +132,62 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// ```
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
-        // dense resets for all odd numbers in {3, 5, ... =129}
+        if skip > 129 {
+            let equivalent_skip = pattern_equivalent_skip(skip, 8);
+            generic_dispatch!(
+                equivalent_skip,
+                3,
+                2,
+                17,
+                ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+                debug_assert!(
+                    false,
+                    "this case should not occur skip {} equivalent {}",
+                    skip, equivalent_skip
+                )
+            );
+            return;
+        }
+
         generic_dispatch!(
             skip,
             3,
             2,
             129, // 64 unique sets
             ResetterDenseU64::<N>::reset_dense(&mut self.words),
-            {
-                // fallback to sparse resetter, and dispatch to the correct one
-                // given the equivalent skip
-                let equivalent_skip = pattern_equivalent_skip(skip, 8);
-                generic_dispatch!(
-                    equivalent_skip,
-                    3,
-                    2,
-                    17,
-                    ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
-                    debug_assert!(
-                        false,
-                        "this case should not occur skip {} equivalent {}",
-                        skip, equivalent_skip
-                    )
-                );
-            }
+            debug_assert!(
+                false,
+                "this case should not occur skip {}",
+                skip
+            )
         );
+        
+        
+        // // dense resets for all odd numbers in {3, 5, ... =129}
+        // generic_dispatch!(
+        //     skip,
+        //     3,
+        //     2,
+        //     129, // 64 unique sets
+        //     ResetterDenseU64::<N>::reset_dense(&mut self.words),
+        //     {
+        //         // fallback to sparse resetter, and dispatch to the correct one
+        //         // given the equivalent skip
+        //         let equivalent_skip = pattern_equivalent_skip(skip, 8);
+        //         generic_dispatch!(
+        //             equivalent_skip,
+        //             3,
+        //             2,
+        //             17,
+        //             ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+        //             debug_assert!(
+        //                 false,
+        //                 "this case should not occur skip {} equivalent {}",
+        //                 skip, equivalent_skip
+        //             )
+        //         );
+        //     }
+        // );
     }
 
     #[inline(always)]
@@ -242,7 +273,8 @@ pub struct ResetterSparseU8<const EQUIVALENT_SKIP: usize>();
 impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     const SINGLE_BIT_MASK_SET: [u8; 8] = mask_pattern_set_u8(EQUIVALENT_SKIP);
 
-    #[inline(never)]
+    //#[inline(never)]
+    #[inline(always)]
     fn reset_sparse(words: &mut [u64], skip: usize) {
         // calculate relative indices for the words we need to reset
         // TODO: check this is faster
@@ -270,7 +302,14 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             "square_start should be within the bounds of our array; check caller"
         );
         let start_chunk_offset = square_start / 8 / skip * skip;
+        debug_assert!(
+            start_chunk_offset > skip / 2 /8,
+            "sparse resets are for larger skip factors; this starts too early: {}",
+            start_chunk_offset
+        );
         let slice = &mut bytes[start_chunk_offset..];
+
+
 
         slice.chunks_exact_mut(skip).for_each(|chunk| {
             #[allow(clippy::needless_range_loop)]
@@ -284,18 +323,18 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
         });
 
         let remainder = slice.chunks_exact_mut(skip).into_remainder();
-        // #[allow(clippy::needless_range_loop)]
-        // for i in 0..8 {
-        //     let word_idx = relative_indices[i];
-        //     if word_idx < remainder.len() {
-        //         // Safety: check above breaks the loop before we exceed remainder.len()
-        //         unsafe {
-        //             *remainder.get_unchecked_mut(word_idx) |= Self::SINGLE_BIT_MASK_SET[i];
-        //         }
-        //     } else {
-        //         break;
-        //     }
-        // }
+        #[allow(clippy::needless_range_loop)]
+        for i in 0..8 {
+            let word_idx = relative_indices[i];
+            if word_idx < remainder.len() {
+                // Safety: check above breaks the loop before we exceed remainder.len()
+                unsafe {
+                    *remainder.get_unchecked_mut(word_idx) |= Self::SINGLE_BIT_MASK_SET[i];
+                }
+            } else {
+                break;
+            }
+        }
         // let remainder_len = remainder.len();
         // relative_indices
         //     .iter()
@@ -304,22 +343,15 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
         //     .for_each(|(&word_idx, mask)| unsafe {
         //         *remainder.get_unchecked_mut(word_idx) |= mask;
         //     });
-        relative_indices
-            .iter()
-            .zip(Self::SINGLE_BIT_MASK_SET)
-            .for_each(|(&word_idx, mask)| {
-                if let Some(word) = remainder.get_mut(word_idx) {
-                    *word |= mask;
-                }
-            });
+        // relative_indices
+        //     .iter()
+        //     .zip(Self::SINGLE_BIT_MASK_SET)
+        //     .for_each(|(&word_idx, mask)| {
+        //         if let Some(word) = remainder.get_mut(word_idx) {
+        //             *word |= mask;
+        //         }
+        //     });
 
-        // restore original factor bit -- we *may* have clobbered it, and it is the prime
-        let factor_index = skip / 2;
-        let factor_word = factor_index / 8;
-        let factor_bit = factor_index % 8;
-        if let Some(w) = bytes.get_mut(factor_word) {
-            *w &= !(1 << factor_bit);
-        }
     }
 }
 
