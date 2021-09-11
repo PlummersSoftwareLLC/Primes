@@ -20,7 +20,7 @@ const DICT = {
 }.toTable()
 const RESULT = DICT[LIMIT]
 
-const DENSETHRESHOLD = 129
+const DENSETHRESHOLD = 63
 
 const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
 
