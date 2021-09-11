@@ -1,7 +1,7 @@
 FROM ubuntu:21.04 AS build
 
 RUN apt-get update -qq \
-    && apt-get install -y clang
+    && apt-get install --no-install-recommends -y clang=1:12.0-52~exp1
 
 COPY *.cpp *.h *.sh /opt/app/
 WORKDIR /opt/app
