@@ -4,7 +4,8 @@ RUN apk add --no-cache build-base=0.5-r2
 
 WORKDIR /opt/app
 
-COPY *.s* ./
+COPY *.sh ./
+COPY *.s ./
 
 RUN ./build.sh
 
