@@ -277,19 +277,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     #[inline(always)]
     fn reset_sparse(words: &mut [u64], skip: usize) {
         // calculate relative indices for the words we need to reset
-        // TODO: check this is faster
         let relative_indices = index_pattern::<8>(skip);
-        // let st = skip / 2;
-        // let relative_indices = [
-        //     (st + 0 * skip) / 8,
-        //     (st + 1 * skip) / 8,
-        //     (st + 2 * skip) / 8,
-        //     (st + 3 * skip) / 8,
-        //     (st + 4 * skip) / 8,
-        //     (st + 5 * skip) / 8,
-        //     (st + 6 * skip) / 8,
-        //     (st + 7 * skip) / 8,
-        // ];
 
         // cast our wide word vector to bytes
         let bytes: &mut [u8] = reinterpret_slice_mut_u64_u8(words);
