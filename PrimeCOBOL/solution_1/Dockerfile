@@ -7,7 +7,7 @@ ARG COBOL_BASENAME=gnucobol-3.1-rc1
 WORKDIR /opt
 
 # get and install gnucobol
-RUN wget https://sourceforge.net/projects/gnucobol/files/gnucobol/3.1/"${COBOL_BASENAME}".tar.gz/download -O "${COBOL_BASENAME}".tar.gz && \
+RUN wget --progress=dot:giga https://sourceforge.net/projects/gnucobol/files/gnucobol/3.1/"${COBOL_BASENAME}".tar.gz/download -O "${COBOL_BASENAME}".tar.gz && \
     tar xvfz "${COBOL_BASENAME}".tar.gz 
     
 WORKDIR /opt/"${COBOL_BASENAME}"
