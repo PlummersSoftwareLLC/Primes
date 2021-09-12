@@ -1,6 +1,6 @@
 FROM alpine:3.13 AS build
 
-RUN apk update && apk add --no-cache build-base bash git
+RUN apk update && apk add --no-cache build-base=0.5-r2 bash=5.1.0-r0 git=2.30.2-r0
 
 WORKDIR /opt/vlang
 RUN git clone https://github.com/vlang/v /opt/vlang && git checkout 0.2.4 && make
