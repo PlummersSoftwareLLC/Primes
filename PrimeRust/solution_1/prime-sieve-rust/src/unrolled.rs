@@ -291,22 +291,6 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
                 break;
             }
         }
-        // let remainder_len = remainder.len();
-        // relative_indices
-        //     .iter()
-        //     .zip(Self::SINGLE_BIT_MASK_SET)
-        //     .take_while(|(&word_idx, _)| word_idx < remainder_len)
-        //     .for_each(|(&word_idx, mask)| unsafe {
-        //         *remainder.get_unchecked_mut(word_idx) |= mask;
-        //     });
-        // relative_indices
-        //     .iter()
-        //     .zip(Self::SINGLE_BIT_MASK_SET)
-        //     .for_each(|(&word_idx, mask)| {
-        //         if let Some(word) = remainder.get_mut(word_idx) {
-        //             *word |= mask;
-        //         }
-        //     });
     }
 }
 
