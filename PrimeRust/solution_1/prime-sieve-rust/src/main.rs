@@ -80,13 +80,13 @@ pub mod primes {
     }
 
     /// Recommended start for resetting bits -- at the square of the factor
-    pub fn square_start(skip_factor: usize) -> usize {
+    pub const fn square_start(skip_factor: usize) -> usize {
         skip_factor * skip_factor / 2
     }
 
     /// Minimum start for resetting bits -- this is the earliest reset
     /// we can apply without clobbering the factor itself
-    pub fn minimum_start(skip_factor: usize) -> usize {
+    pub const fn minimum_start(skip_factor: usize) -> usize {
         skip_factor / 2 + skip_factor
     }
 

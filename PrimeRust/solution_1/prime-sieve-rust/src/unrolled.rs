@@ -112,26 +112,39 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// have a periodicity of 8 (odd) numbers, with 3 == 19, etc.
     ///
     /// We have a nice procedural macro to create the big case statement that dispatches
-    /// to the correct specific function, [`generic_dispatch`]. In summary, we create
-    /// a match statement of the form:
+    /// to the correct specific function, [`generic_dispatch`], where the macro specifies
+    /// the specific constant for the generic type, by substituting type parameter N.
+    /// In summary, we create a match statement of the form:
     /// ```ignore
+    /// // dense reset
     /// match skip {
     ///     3 => ResetterDenseU64::<3>::reset_dense(&mut self.words),
     ///     5 => ResetterDenseU64::<5>::reset_dense(&mut self.words),
     ///     //... etc
-    ///     63 => ResetterDenseU64::<63>::reset_dense(&mut self.words),
-    ///     65 => ResetterDenseU64::<65>::reset_dense(&mut self.words),
-    ///     //... etc
-    ///     skip_sparse => match pattern_equivalent_skip(skip_sparse, 8) {
-    ///         3 => ResetterSparseU8::<3>::reset_sparse(&mut self.words, skip),
-    ///         //...
-    ///         17 => ResetterSparseU8::<17>::reset_sparse(&mut self.words, skip)
-    ///         _ => debug_assert!(false, "this case should not occur"),
-    ///     },
-    /// }
+    ///     129 => ResetterDenseU64::<129>::reset_dense(&mut self.words),
+    ///     _ => debug_assert!(false, "this case should not occur"),
+    ///  },
     /// ```
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
+        // sparse resets for skip factors larger than those covered by dense resets
+        if skip > 129 {
+            let equivalent_skip = pattern_equivalent_skip(skip, 8);
+            generic_dispatch!(
+                equivalent_skip,
+                3,
+                2,
+                17,
+                ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+                debug_assert!(
+                    false,
+                    "this case should not occur skip {} equivalent {}",
+                    skip, equivalent_skip
+                )
+            );
+            return;
+        }
+
         // dense resets for all odd numbers in {3, 5, ... =129}
         generic_dispatch!(
             skip,
@@ -139,23 +152,11 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
             2,
             129, // 64 unique sets
             ResetterDenseU64::<N>::reset_dense(&mut self.words),
-            {
-                // fallback to sparse resetter, and dispatch to the correct one
-                // given the equivalent skip
-                let equivalent_skip = pattern_equivalent_skip(skip, 8);
-                generic_dispatch!(
-                    equivalent_skip,
-                    3,
-                    2,
-                    17,
-                    ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
-                    debug_assert!(
-                        false,
-                        "this case should not occur skip {} equivalent {}",
-                        skip, equivalent_skip
-                    )
-                );
-            }
+            debug_assert!(
+                false,
+                "dense reset function should not be called for skip {}",
+                skip
+            )
         );
     }
 
@@ -183,7 +184,17 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
 
     #[inline(never)]
     pub fn reset_dense(words: &mut [u64]) {
-        words.chunks_exact_mut(SKIP).for_each(|chunk| {
+        // determine the offset of the first skip-size chunk we need
+        // to touch, and proceed from there.
+        let square_start = square_start(SKIP);
+        debug_assert!(
+            square_start < words.len() * 64,
+            "square_start should be within the bounds of our array; check caller"
+        );
+        let start_chunk_offset = square_start / 64 / SKIP * SKIP;
+        let slice = &mut words[start_chunk_offset..];
+
+        slice.chunks_exact_mut(SKIP).for_each(|chunk| {
             const CHUNK_SIZE: usize = 16; // 8, 16, or 32 seems to work
             Self::RELATIVE_INDICES
                 .chunks_exact(CHUNK_SIZE)
@@ -199,7 +210,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
                 });
         });
 
-        let remainder = words.chunks_exact_mut(SKIP).into_remainder();
+        let remainder = slice.chunks_exact_mut(SKIP).into_remainder();
         for i in 0..Self::BITS {
             let word_idx = Self::RELATIVE_INDICES[i];
             if word_idx < remainder.len() {
@@ -232,7 +243,7 @@ pub struct ResetterSparseU8<const EQUIVALENT_SKIP: usize>();
 impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     const SINGLE_BIT_MASK_SET: [u8; 8] = mask_pattern_set_u8(EQUIVALENT_SKIP);
 
-    #[inline(never)]
+    #[inline(always)]
     fn reset_sparse(words: &mut [u64], skip: usize) {
         // calculate relative indices for the words we need to reset
         let relative_indices = index_pattern::<8>(skip);
@@ -248,6 +259,11 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             "square_start should be within the bounds of our array; check caller"
         );
         let start_chunk_offset = square_start / 8 / skip * skip;
+        debug_assert!(
+            start_chunk_offset > skip / 2 / 8,
+            "sparse resets are for larger skip factors; this starts too early: {}",
+            start_chunk_offset
+        );
         let slice = &mut bytes[start_chunk_offset..];
 
         slice.chunks_exact_mut(skip).for_each(|chunk| {
@@ -273,14 +289,6 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             } else {
                 break;
             }
-        }
-
-        // restore original factor bit -- we *may* have clobbered it, and it is the prime
-        let factor_index = skip / 2;
-        let factor_word = factor_index / 8;
-        let factor_bit = factor_index % 8;
-        if let Some(w) = bytes.get_mut(factor_word) {
-            *w &= !(1 << factor_bit);
         }
     }
 }
