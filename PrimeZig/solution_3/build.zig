@@ -12,8 +12,13 @@ pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
 
     const exe = b.addExecutable("PrimeZig", "src/main.zig");
+    exe.linkLibC();
     exe.setTarget(target);
     exe.setBuildMode(mode);
+
+    const all = b.option(bool, "all", "should run uncurated examples") orelse false;
+    exe.addBuildOption(bool, "all", all);
+
     exe.install();
 
     const run_cmd = exe.run();
