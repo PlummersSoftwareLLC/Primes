@@ -31,24 +31,34 @@ impl FlagStorage for FlagStorageExtremeHybrid {
 
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
-        let words = &mut self.words[..];
-        extreme_reset!(skip, {
-            // fallback to sparse resetter, and dispatch to the correct one
-            // given the equivalent skip
+        // sparse resets for skip factors larger than those covered by dense resets
+        if skip > 129 {
             let equivalent_skip = pattern_equivalent_skip(skip, 8);
             generic_dispatch!(
                 equivalent_skip,
                 3,
                 2,
                 17,
-                ResetterSparseU8::<N>::reset_sparse(words, skip),
+                ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
                 debug_assert!(
                     false,
                     "this case should not occur skip {} equivalent {}",
                     skip, equivalent_skip
                 )
             );
-        });
+            return;
+        }
+
+        // dense resets for all odd numbers in {3, 5, ... =129}
+        let words = &mut self.words[..];
+        extreme_reset!(
+            skip,
+            debug_assert!(
+                false,
+                "dense reset function should not be called for skip {}",
+                skip
+            )
+        );
     }
 
     #[inline(always)]
