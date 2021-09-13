@@ -559,7 +559,7 @@ pub fn VecSieve(comptime opts_: anytype) type {
 
         pub const name = "vecSieve";
         pub const STARTING_FACTOR: usize = 3;
-        pub const algo = "base";
+        pub const algo = "other";
         pub const bits = 1;
 
         // testing convenience
