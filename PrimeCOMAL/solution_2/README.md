@@ -13,6 +13,8 @@ Changes made to the original solution are the following:
 - Output is being redirected to a file, so it is accessible outside of the OpenCOMAL runtime environment.
 - All output (`PRINT` commands) have been removed, except for the final output lines.
 
+While putting the Dockerfile and support scripts together, I found that OpenCOMAL doesn't respond well to the absence of a TTY. The `build.sh` and `run.sh` scripts include some `socat` trickery and input/output redirection to work around this.
+
 ## Run instructions
 
 ### Docker
