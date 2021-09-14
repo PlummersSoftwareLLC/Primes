@@ -94,11 +94,11 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 2, .allocator = NonClearing}, ARCH_32 and NOT_ARM},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, ARCH_32 and NOT_ARM},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, ARCH_32 and NOT_ARM},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_32},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_32 and NOT_ARM},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 2, .allocator = NonClearing}, ARCH_64 and NOT_ARM},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, ARCH_64 and NOT_ARM},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, ARCH_64 and NOT_ARM},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_64},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, ARCH_64 and NOT_ARM},
     };
 
     inline for (specs) |spec| {
