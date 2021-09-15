@@ -6,11 +6,8 @@
 
 
 #+(and :sbcl :x86-64)
-(progn
-  (when (equalp "2.0.0" (lisp-implementation-version))
-    (load "bitvector-set-2.0.0-2.1.8-snap.lisp")) ; teach sbcl 2.0.0 the new bitvector-set from sbcl 2.1.8
-  (when (equalp "2.1.7" (lisp-implementation-version))
-    (load "bitvector-set-2.1.7-2.1.8-snap.lisp")))  ; teach sbcl 2.1.7 the new bitvector-set from sbcl 2.1.8
+(when (equalp "2.0.0" (lisp-implementation-version))
+  (load "bitvector-set-2.0.0-2.1.8-snap.lisp")) ; teach sbcl 2.0.0 the new bitvector-set from sbcl 2.1.8
 
 
 (declaim
@@ -36,9 +33,14 @@
    to be found under some limit, such as 168 primes under 1000")
 
 
+(deftype number-t ()
+  `(integer 0 ,most-positive-fixnum))
+  ;`(unsigned-byte 64))
+
+
 (defclass sieve-state ()
   ((maxints :initarg :maxints
-            :type fixnum
+            :type number-t
             :accessor sieve-state-maxints)
 
    (a       :initarg :a
@@ -47,7 +49,7 @@
 
 
 (defun create-sieve (maxints)
-  (declare (fixnum maxints))
+  (declare (type number-t maxints))
   (make-instance 'sieve-state
     :maxints maxints
     :a (make-array (ceiling maxints 2)
@@ -58,39 +60,40 @@
 (defun run-sieve (sieve-state)
   (declare (type sieve-state sieve-state))
 
-  (let* ((rawbits (sieve-state-a sieve-state))
-         (sieve-size (sieve-state-maxints sieve-state))
-         (end (ceiling sieve-size 2))
-         (q (floor (sqrt sieve-size)))
-         (factor 3))
-    (declare (fixnum sieve-size end q factor) (type simple-bit-vector rawbits))
-    (loop while (<= factor q) do
+  (loop with rawbits    of-type simple-bit-vector  = (sieve-state-a sieve-state)
+        with sieve-size of-type number-t = (sieve-state-maxints sieve-state)
+        with q          of-type number-t = (the number-t (isqrt sieve-size))
+        with end        of-type number-t = (floor (the number-t (1+ sieve-size)) 2) ; ceiling with (unsigned-byte 64) gives slow code
+        with factor     of-type number-t = 3
 
-      ; (position 0 bitvector :start pos) finds the index of the first
-      ; 0-bit starting at pos
-      (setq factor (1+ (* 2 (position 0 rawbits :start (floor factor 2)))))
+        while (<= factor q)
 
-      ; use an unrolled loop to set every factor-th bit to 1
-      (let* ((i  (floor (the fixnum (* factor factor)) 2))
-             (factor-times-2 (+ factor factor))
-             (factor-times-3 (+ factor-times-2 factor))
-             (factor-times-4 (+ factor-times-3 factor))
-             (end1 (- end factor-times-3)))
-        (declare (fixnum i factor-times-2 factor-times-3 factor-times-4 end1))
+        do ; (position 0 bitvector :start pos) finds the index of the first
+           ; 0-bit starting at pos
+           (setq factor (1+ (* 2 (position 0 rawbits :start (floor factor 2)))))
 
-        (loop while (< i end1)
-              do (setf (sbit rawbits i) 1)
-                 (setf (sbit rawbits (+ i factor)) 1)
-                 (setf (sbit rawbits (+ i factor-times-2)) 1)
-                 (setf (sbit rawbits (+ i factor-times-3)) 1)
-                 (incf i factor-times-4))
+           (let* ((i              (floor (the number-t (* factor factor)) 2))
+                  (factor-times-2 (+ factor factor))
+                  (factor-times-3 (+ factor-times-2 factor))
+                  (factor-times-4 (+ factor-times-3 factor)))
+             (declare (type number-t i factor-times-2 factor-times-3 factor-times-4))
 
-        (loop while (< i end)
-              do (setf (sbit rawbits i) 1)
-                 (incf i factor)))
+             ; use an unrolled loop to set every factor-th bit to 1
+             (when (> end (the number-t (+ i factor-times-4)))
+               (loop with end1 of-type number-t = (- end factor-times-4)
+                     while (< i end1)
+                     do (setf (sbit rawbits i) 1)
+                        (setf (sbit rawbits (+ i factor)) 1)
+                        (setf (sbit rawbits (+ i factor-times-2)) 1)
+                        (setf (sbit rawbits (+ i factor-times-3)) 1)
+                        (incf i factor-times-4)))
 
-      (incf factor 2))
-    sieve-state))
+             (loop while (< i end)
+                   do (setf (sbit rawbits i) 1)
+                      (incf i factor)))
+
+           (incf factor 2))
+  sieve-state)
 
 
 (defun count-primes (sieve-state)
@@ -133,7 +136,7 @@ according to the historical data in +results+."
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
-  (declare (fixnum passes))
+  (declare (number-t passes))
 
   (loop while (<= (get-internal-real-time) end)
         do (setq result (run-sieve (create-sieve 1000000)))
@@ -154,7 +157,7 @@ according to the historical data in +results+."
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
-  (declare (fixnum passes))
+  (declare (number-t passes))
 
   (loop while (<= (get-internal-real-time) end)
         do (setq result #. (run-sieve (create-sieve 1000000)))

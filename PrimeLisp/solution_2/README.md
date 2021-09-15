@@ -9,7 +9,8 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 `PrimeSieve.lisp` is based on the solution by mikehw,
-with lots of type declarations to allow sbcl's optimizer do it's thing.
+with lots of type declarations to allow sbcl's optimizer do it's thing,
+as well as manual loop unrolling by 4.
 Algorithm is base with 0 for primes.
 
 Uses a bit-vector (one-dimensional arrays are called vector in Lisp)
@@ -46,45 +47,60 @@ and the result of this evaluation will replace the original form.
 So, to summarize: `mayerrobert-cl-hashdot` does not use compile-time evaluation,
 the evaluation happens *before* compile-time.
 
+---
 
 `PrimeSievebitops.lisp` doesn't use a bit vector but a machine word array and some bit operations to get and set bits.
 Algorithm is base with 0 for primes.
 
+It uses dense bit setting loops based on the ideas in https://github.com/PlummersSoftwareLLC/Primes/pull/680 .
+The generated cond form that contains the dense bit-setting-loops for low factors
+will be printed to the screen after uncommenting the last line.
+
+`PrimeSievebitops.lisp` also amends sbcl's peephole optimizer with a pattern that combines successive `OR` instructions
+with the same target register and immediate source operands of size signed-byte-32 or smaller.
+
 For Common Lisp bit ops see https://lispcookbook.github.io/cl-cookbook/numbers.html#bit-wise-operation
 
+---
 
-`PrimeSievewordops.lisp` sets multiple bits at a time by copying bitpatterns (that are shifted and masked appropriately)
-into the word-array.
+`PrimeSieveModulo.lisp` (I think) uses the extreme loop unrolling method
+as explained in https://github.com/PlummersSoftwareLLC/Primes/pull/641 .
+The macro `generate-ecase` expands into an ecase form that contains specialized bit-setting-loops
+for all combinations of start%8 and skip%8.
+The generated ecase form will be printed to the screen after uncommenting the last line.
 
 
-`PrimeSieveWheel.lisp` is a Common Lisp port of sieve_5760of30030_only_write_read_bits.c
+`PrimeSieveModuloFuncs.lisp` is similar to `PrimeSieveModulo.lisp` except instead of an ecase form
+with unrolled loops a vector of functions is used where each function contains the unrolled loop.
+These functions are generated and assigned to the vector by the function `generate-functions`.
+The generated functions and assignments to the vector will be printed to the screen after uncommenting the last line.
+
+Unfortunately sbcl misses some optimization opportunities
+of `PrimeSieveModulo.lisp` and `PrimeSieveModuloFuncs.lisp` so that the performance is not as good as I was hoping.
+
+---
+
+`PrimeSieveWheelOpt.lisp` is a Common Lisp port of sieve_5760of30030_only_write_read_bits.c
 by Daniel Spangberg.
 
 Algorithm is _wheel_, see PrimeC/solution_2/README.md for a better explanation than I would be able to give.
 
-PrimeSieveWheel.lisp stores bits in an array of `(unsigned-byte 64)`,
+`PrimeSieveWheelOpt.lisp` stores bits in an array of `(unsigned-byte 64)`,
 much like Daniel's code uses an array of `uint64_t` when compiled with `-DCOMPILE_64_BIT`.
 
 
-`PrimeSieveWheelOpt.lisp` contains further performance improvements.
-I think the biggest improvement is using FLOOR vs AND+SHIFT
-because FLOOR does both in one step.
-
-
 `PrimeSieveWheelBitvector.lisp` is pretty much the same as `PrimeSieveWheelOpt.lisp`
-expect it uses a builtin bitvector instead on manual bit-fiddling
-because as of the upcoming SBCL 2.1.8 builtin bitvector operations are faster by a lot.
+expect it uses a builtin bitvector instead on manual bit-fiddling.
 
+---
 
-`PrimeSieve.lisp` and `PrimeSieveWheelBitvector.lisp` load code that patches SBCL on the fly
-to get the faster bitvector-set operations from the not-yet-released SBCL 2.1.8, see `bitvector-set-*.lisp`.
+`PrimeSievewordops.lisp` sets multiple bits at a time by copying bitpatterns (that are shifted and masked appropriately)
+into the word-array.
 
+---
 
 All: The state of the sieve is stored in a Lisp class.
 
-
-Re: optimizations; (compile-file "PrimeSieveWheel.lisp") will show lots of info during the compilation
-regarding inefficient code that can't be optimized.
 
 ## Run instructions
 
@@ -92,8 +108,8 @@ First install "Steel Bank Common Lisp", see http://www.sbcl.org/platform-table.h
 
 Windows users may instead want to go to https://github.com/sbcl/sbcl -> Actions -> Windows
 and enter e.g. `branch:sbcl-2.1.7` into the "Filter workflow runs" textfield.
-This will lead you to https://github.com/sbcl/sbcl/actions/runs/1082323609.
-From there you can download a Windows installer for SBCL 2.1.7.
+This will lead you to https://github.com/sbcl/sbcl/actions/runs/1182434888.
+From there you can download a Windows installer for SBCL 2.1.8.
 
 Other Common Lisps should work as well ("Armed Bear Common Lisp" was lightly tested).
 
@@ -116,47 +132,52 @@ If you can't or won't install sbcl then use `docker` or `podman` to build and ru
 Using sbcl 2.0.0 on Windows 7, Pentium(R) Dual Core T4300 @ 2.10GHz I get
 
     D:\robert\projects\Primes\PrimeLisp\solution_2>run.cmd 2>nul
-    mayerrobert-cl;3324;5.008;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-hashdot;160542746;5.007;1;algorithm=base,faithful=no,bits=1
-    mayerrobert-clb;2412;5.008;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-wheel;5485;5.008;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-bitvector;6882;5.007;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-opt;6020;5.008;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-words;4022;5.007;1;algorithm=base,faithful=no,bits=1
+    mayerrobert-cl;3337;5.008;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-hashdot;162685090;5.008;1;algorithm=base,faithful=no,bits=1
+    mayerrobert-cl-dense;5694;5.007;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo;2985;5.008;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo-functions;3296;5.008;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-wheel-bitvector;6880;5.007;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-wheel-opt;6036;5.007;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-words;4131;5.008;1;algorithm=other,faithful=yes,bits=1
 
 
 Using the provided dockerfile with podman on Fedora33, Pentium(R) Dual Core T4300 @ 2.10GHz I get
 
     $ podman build -t lisp2 .
     $ podman run --rm lisp2 2> /dev/null
-    mayerrobert-cl;3388;5.000176;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-hashdot;174503774;5.000176;1;algorithm=base,faithful=no,bits=1
-    mayerrobert-cl-wheel;5716;5.000177;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-bitvector;7171;5.000176;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-opt;6213;5.000177;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-clb;2373;5.001176;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-words;4236;5.000176;1;algorithm=base,faithful=no,bits=1
+    mayerrobert-cl;3399;5.000176;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-hashdot;176592210;5.000176;1;algorithm=base,faithful=no,bits=1
+    mayerrobert-cl-dense;5662;5.000177;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo;2884;5.001176;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo-functions;3204;5.000177;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-wheel-bitvector;7173;5.000176;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-wheel-opt;6217;5.000177;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-words;4779;5.000183;1;algorithm=other,faithful=yes,bits=1
+
+---
+
+Using sbcl 2.1.8 on Windows 10, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (max turbo frequency 4.2 GHz) I get
+
+    X:\projects\Primes\PrimeLisp\solution_2>run.cmd 2>nul
+    mayerrobert-cl;9374;5.000022;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-hashdot;274647921;5.000001;1;algorithm=base,faithful=no,bits=1
+    mayerrobert-cl-dense;18231;5.000097;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo;4424;5.001007;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo-functions;9184;5.000517;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-wheel-bitvector;24604;5.000063;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-wheel-opt;14935;5.000027;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-words;12952;5.000072;1;algorithm=other,faithful=yes,bits=1
 
 
-Using sbcl 2.1.7 on Windows 10, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (max turbo frequency 4.2 GHz) I get
+Using sbcl 2.1.8 on Windows 10/ WSL2/ debian 10.9, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (max turbo frequency 4.2 GHz) I get
 
-    mayerrobert-cl;9320;5.000174;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-hashdot;274020057;5.000001;1;algorithm=base,faithful=no,bits=1
-    mayerrobert-clb;6130;5.000712;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-wheel;17894;5.000222;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-bitvector;24388;5.000181;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-opt;19478;5.000096;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-words;10882;5.000439;1;algorithm=base,faithful=no,bits=1
-
-
-Using sbcl 2.1.7 on Windows 10/ WSL2/ debian 10.9, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (max turbo frequency 4.2 GHz) I get
-
-    $ ./run.sh 2>/dev/null
-    mayerrobert-cl;9504;5.01;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-hashdot;509110305;5.01;1;algorithm=base,faithful=no,bits=1
-    mayerrobert-cl-wheel;15479;5.0;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-bitvector;19903;5.01;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-cl-wheel-opt;16653;5.01;1;algorithm=wheel,faithful=yes,bits=1
-    mayerrobert-clb;6365;5.01;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-words;11552;5.01;1;algorithm=base,faithful=no,bits=1
-
+    $ sh run.sh 2> /dev/null
+    mayerrobert-cl;9490;5.01;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-hashdot;553299588;5.01;1;algorithm=base,faithful=no,bits=1
+    mayerrobert-cl-dense;18750;5.01;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo;4477;5.01;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo-functions;9460;5.01;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-wheel-bitvector;17870;5.01;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-wheel-opt;16053;5.01;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-words;14025;5.01;1;algorithm=other,faithful=yes,bits=1

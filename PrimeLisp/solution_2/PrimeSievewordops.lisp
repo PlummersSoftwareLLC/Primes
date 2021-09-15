@@ -8,7 +8,6 @@
 (declaim
   (optimize (speed 3) (safety 0) (debug 0) (space 0))
 
-  (inline shl)
   (inline nth-bit-set-p)
   (inline set-nth-bit)
   (inline set-bits))
@@ -65,11 +64,8 @@
          :initial-element 0)))
 
 
-(defun shl (x bits)
-  "Compute bitwise left shift of x by 'bits' bits, represented on 'width' bits"
-  (declare (type sieve-element-type x) (type sieve-bitpos-type bits))
-  (logand (ash x bits)
-          (1- (ash 1 +bits-per-word+))))
+(defmacro shl (x bits)
+  `(ldb (byte 64 0) (ash ,x (the sieve-bitpos-type ,bits))))
 
 
 (defun nth-bit-set-p (a n)
@@ -90,15 +86,18 @@
          (logior #1# (expt 2 r)))) 0)
 
 
+(eval-when (:load-toplevel :compile-toplevel :execute)
+
 (defun patterns ()
   "Create a vector of bit-patterns."
   (labels ((pattern (n)
              "Return a bit pattern where every n-th bit is 1, starting from least significant bit."
              (let ((result 0))
+               (declare (sieve-element-type result))
                (loop for b fixnum from (1- +bits-per-word+) downto 0 do
                  (if (zerop (mod b n))
-                       (setq result (logior (shl result 1) 1))
-                   (setq result (shl result 1))))
+                       (setq result (logior (ash result 1) 1))
+                   (setq result (ash result 1))))
                result)))
 
     (let ((res (make-array 33 :element-type 'sieve-element-type :initial-element 0)))
@@ -107,6 +106,8 @@
             to 32
             do (setf (aref res x) (pattern x)))
       res)))
+
+) ; end eval-when
 
 
 (defconstant +patterns+ (coerce (patterns) '(simple-array sieve-element-type 1))
@@ -120,50 +121,45 @@ E.g. (aref +patterns+ 7) is a bitpattern with every 7th bit set.")
            (type sieve-array-type bits))
   (if (<= every-nth 32)
 
-        (let* ((pattern (aref +patterns+ every-nth)) (tmp 0) (shift 0) (total 0))
-          (declare (type sieve-element-type pattern) (fixnum tmp shift total))
+        (let ((pattern (aref +patterns+ every-nth)) (shift 0) (total 0))
+          (declare (type sieve-element-type pattern) (fixnum shift total))
 
-          ; set first word and prepare pattern
+          ; set first word and prepare shift amounts
           (multiple-value-bind (q r) (floor first-incl +bits-per-word+)
             (when (< last-excl +bits-per-word+)
               (setf (aref bits q) (logior (aref bits q)
                                           (logand (shl pattern r)
-                                                  (1- (shl 1 last-excl)))))
+                                                  (1- (ash 1 (the sieve-bitpos-type last-excl))))))
               (return-from set-bits nil))
 
             (setf (aref bits q) (logior (aref bits q) (shl pattern r)))
             (setq total (mod r every-nth))
-            (setq pattern (shl pattern total))
             (setq shift (- every-nth (mod +bits-per-word+ every-nth))))
 
           ; set remaining words
-          (loop for num of-type fixnum
+          (loop with tmp of-type fixnum
+                for num of-type fixnum
                 from (1+ (floor first-incl +bits-per-word+))
-                to (1- (floor last-excl +bits-per-word+))
+                below (floor last-excl +bits-per-word+)
                 do
-                  (if (>= (setq total (+ total shift)) every-nth)
-                        (progn
-                          (setq pattern (logior (shl pattern shift) (shl 1 (- total every-nth))))
-                          (setq total (- total every-nth)))
-                    (setq pattern (shl pattern shift)))
+                  (when (>= (setq total (+ total shift)) every-nth)
+                    (setq total (- total every-nth)))
 
-                  (setf (aref bits num) (logior (aref bits num) pattern))
+                  (setf (aref bits num) (logior (aref bits num) (shl pattern total)))
 
                 finally ; set last word
                   (setq tmp (- last-excl (* num +bits-per-word+)))
                   (when (> tmp 0)
-                    (if (>= (setq total (+ total shift)) every-nth)
-                          (setq pattern (logior (shl pattern shift) (shl 1 (- total every-nth))))
-                      (setq pattern (shl pattern shift)))
+                    (when (>= (setq total (+ total shift)) every-nth)
+                      (setq total (- total every-nth)))
 
-                    ; adjust pattern so that only up to last-excl bits will be changed
-                    (setq pattern (logand pattern (1- (shl 1 tmp))))
-
-                    (setf (aref bits num) (logior (aref bits num) pattern)))))
+                    (setf (aref bits num) (logior (aref bits num)
+                                                  (logand (shl pattern total)
+                                                          (1- (ash 1 (the sieve-bitpos-type tmp)))))))))
 
     (loop for num of-type fixnum
           from first-incl
-          to (1- last-excl)
+          below last-excl
           by every-nth
           do
       (set-nth-bit bits num))))
@@ -177,7 +173,7 @@ E.g. (aref +patterns+ 7) is a bitpattern with every 7th bit set.")
          (sieve-sizeh (ceiling sieve-size 2))
          (factor 0)
          (factorh 1)
-         (qh (ceiling (floor (sqrt sieve-size)) 2)))
+         (qh (ceiling (isqrt sieve-size) 2)))
     (declare (fixnum sieve-size sieve-sizeh factor factorh qh) (type sieve-array-type rawbits))
     (loop do
 
@@ -191,8 +187,7 @@ E.g. (aref +patterns+ 7) is a bitpattern with every 7th bit set.")
       (when (> factorh qh)
         (return-from run-sieve sieve-state))
 
-      (set-bits rawbits (floor (the fixnum (* factor factor)) 2) sieve-sizeh factor))
-    sieve-state))
+      (set-bits rawbits (floor (the fixnum (* factor factor)) 2) sieve-sizeh factor))))
 
 
 (defun count-primes (sieve-state)
