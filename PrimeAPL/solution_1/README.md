@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-This is a basic implementation of a prime sieve using the algorithm initially conceived Roger Hui and later refined by Jay Foad as documented here:
+This is a basic implementation of a prime sieve using the algorithm initially conceived by Roger Hui and later refined by Jay Foad as documented here:
 
 https://www.jsoftware.com/papers/50/
 
