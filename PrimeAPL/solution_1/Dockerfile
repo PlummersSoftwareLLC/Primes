@@ -1,8 +1,8 @@
 FROM dyalog/dyalog:18.0
 
-WORKDIR /opt/app
+WORKDIR /app
 
 COPY PrimeSieveAPL.apln .
-COPY bench.sh .
 
-ENTRYPOINT ["./bench.sh"]
+ENV LOAD=/app/PrimeSieveAPL.apln
+ENTRYPOINT ["dyalog", "-b", "-s", "2>/dev/null"]

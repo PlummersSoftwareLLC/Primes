@@ -28,7 +28,7 @@
 		shy←passes
 	}
 
-	run←{warmup⍬: ⋄ i t←runOne⍬ ⋄ print i t 1}
+	Run←{warmup⍬: ⋄ i t←runOne⍬ ⋄ print i t 1}
 
 	runPar←{
 		warmup⍬:
