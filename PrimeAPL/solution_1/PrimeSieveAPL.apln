@@ -4,7 +4,6 @@
 
 	sieveSize←1e6
 	expected←78498
-	threads←1111⌶⍬
 
 	sieve←{
 		4≥⍵:⍵⍴0 0 1 1
@@ -30,6 +29,11 @@
 	}
 
 	run←{warmup⍬: ⋄ i t←runOne⍬ ⋄ print i t 1}
-	runPar←{warmup⍬: ⋄ i t←↓⍉↑runOne IÏ ⍳threads ⋄ print(+⌿i)(⌈/t)threads}
+
+	runPar←{
+		warmup⍬:
+		i t←↓⍉↑{⍵.runOne⍬}#.IÏ ⎕THIS⍴⍨threads←1111⌶⍬
+		print(+⌿i)(⌈/t)threads
+	}
 
 :EndNamespace

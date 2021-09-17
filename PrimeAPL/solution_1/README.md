@@ -11,9 +11,8 @@ https://www.jsoftware.com/papers/50/
 
 ## Run Instructions
 
-After installing a recent version of Dyalog APL (http://www.dyalog.com), open the bench.dws workspace. It will run the benchmark and produce the output.
+You must have a working version of Dyalog APL installed. On Linux/UNIX, run the bench.sh script. On Windows open the .dyapp file.
 
 ## Output
 
-	arcfideSingle;6261;5.001;1;algorithm=wheel,faithful=yes,bits=1
-
+	arcfideSingle;6532;5.001;1;algorithm=wheel,faithful=yes,bits=1

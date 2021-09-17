@@ -11,6 +11,7 @@ RUN zypper install --allow-unsigned-rpm -y /tmp/dyalog.rpm
 
 WORKDIR /opt/app
 
-COPY bench.dws .
+COPY PrimeSieveAPL.apln .
+COPY bench.sh .
 
-ENTRYPOINT ["dyalog", "-b", "-s", "bench.dws"]
+ENTRYPOINT ["./bench.sh"]
