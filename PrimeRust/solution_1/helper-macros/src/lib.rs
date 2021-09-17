@@ -218,6 +218,7 @@ fn extreme_reset_word(
 ) -> proc_macro2::TokenStream {
     let masks = calculate_masks(skip, word_idx);
 
+    // by value - load, apply, apply, ..., store.
     let code = quote! {
         let mut word = unsafe { *#slice_expr.get_unchecked(#word_idx) };
         #(
@@ -226,17 +227,7 @@ fn extreme_reset_word(
         unsafe { *#slice_expr.get_unchecked_mut(#word_idx) = word; }
     };
 
-
-
-    // // cheating
-    // let code = quote! {
-    //     unsafe {
-    //         let word = #slice_expr.get_unchecked_mut(#word_idx);
-    //         *word = *word #(| #masks)*;
-    //     }
-    // };
-
-    // // explicit
+    // // everything in an unchecked block
     // let code = quote! {
     //     unsafe {
     //         let mut word = *#slice_expr.get_unchecked(#word_idx);
@@ -247,7 +238,7 @@ fn extreme_reset_word(
     //     }
     // };
 
-    // grab the word and run with it
+    // // grab the word reference and run with it
     // let code = quote! {
     //     unsafe {
     //         let word = #slice_expr.get_unchecked_mut(#word_idx);
@@ -257,7 +248,7 @@ fn extreme_reset_word(
     //     }
     // };
     
-    // // simple-minded approach
+    // // direct approach
     // let code = quote! {
     //     unsafe { 
     //     #(
