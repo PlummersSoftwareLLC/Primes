@@ -179,16 +179,27 @@ fn extreme_reset_for_skip(skip: usize) -> proc_macro2::TokenStream {
         .map(|idx| extreme_reset_word(quote! {remainder}, skip, idx))
         .collect();
 
+    // determine the offset of the first skip-size chunk we need
+    // to touch, and proceed from there.
+    let square_start = skip * skip / 2;
+    let start_chunk_offset = square_start / 64 / skip * skip;
+
     let code = quote! {
+        debug_assert!(
+            #square_start < words.len() * 64,
+            "square_start should be within the bounds of our array; check caller"
+        );
+        let slice = &mut words[#start_chunk_offset..];        
+        
         // whole chunks
-        words.chunks_exact_mut(#skip).for_each(|chunk| {
+        slice.chunks_exact_mut(#skip).for_each(|chunk| {
             #(
                 #word_resets_chunk
             )*
         });
 
         // remainder
-        let remainder = words.chunks_exact_mut(#skip).into_remainder();
+        let remainder = slice.chunks_exact_mut(#skip).into_remainder();
         // ??? how to dispatch lots of ifs ???
         #(
             if #index_range < remainder.len() {
