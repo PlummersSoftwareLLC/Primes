@@ -11,7 +11,7 @@ https://www.jsoftware.com/papers/50/
 
 ## Run Instructions
 
-You must have a working version of Dyalog APL installed. On Linux/UNIX, run the bench.sh script. On Windows open the .dyapp file.
+You must have a working version of Dyalog APL installed. On Linux/UNIX, run `LOAD=PrimeSieveAPL.apln dyalog`. On Windows open the .dyapp file.
 
 ## Output
 

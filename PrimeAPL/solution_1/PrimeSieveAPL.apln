@@ -11,29 +11,28 @@
 		p←2 3 5 7 11 13 17 19 23 29 31 37 41 43
 		⍝ p←(1+(n≤×⍀p)⍳1)↑p ⍝ Only for small sieve sizes
 		b← 0@1 ⊃ {(m⍴⍵)>m⍴⍺↑1 ⊣ m←n⌊⍺×≢⍵}⌿ ⊖1,p
-		{r<q←b⍳1:b⊣b[⍵]←1 ⋄ b[q,q×⍸b↑⍨⌈n÷q]←0 ⋄ ∇ ⍵,q}p
-	}
+		{r<q←b⍳1:b⊣b[⍵]←1 ⋄ b[q,q×⍸b↑⍨⌈n÷q]←0 ⋄ ∇ ⍵,q}p}
 
 	warmup←{expected≠+⌿sieve sieveSize:'BAD SIEVE'⎕SIGNAL 99 ⋄ 0}
 
 	runOne←{
 		passes←0 ⋄ dur←0 ⋄ start←⎕AI[2]
 		msk←{z←sieve sieveSize ⋄ passes+←1 ⋄ z}⍣{5000<dur∘←⎕AI[2]-start}⍬
-		passes dur
-	}
+		passes dur}
 
-	print←{passes dur threads←⍵ ⋄ tag←'arcfide','Single' 'Multi'⊃⍨threads>1
+	print←{
+		passes dur threads←⍵ ⋄ tag←'arcfide','Single' 'Multi'⊃⍨threads>1
 		flags←'algorithm=wheel,faithful=yes,bits=1'
 		⎕←⊃{⍺,';',⍵}⌿⍕¨tag passes (dur÷1000) threads flags
-		shy←passes
-	}
+		shy←passes} ⍝ Need the shy result
 
 	run←{warmup⍬: ⋄ i t←runOne⍬ ⋄ print i t 1}
 
 	runPar←{
 		warmup⍬:
 		i t←↓⍉↑{⍵.runOne⍬}#.IÏ ⎕THIS⍴⍨threads←1111⌶⍬
-		print(+⌿i)(⌈/t)threads
-	}
+		print(+⌿i)(⌈/t)threads}
+
+	Run←{_←run⍬ ⋄ ⎕OFF}
 
 :EndNamespace
