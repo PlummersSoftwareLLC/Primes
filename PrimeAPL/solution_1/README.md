@@ -9,6 +9,8 @@ This is a basic implementation of a prime sieve using the algorithm initially co
 
 https://www.jsoftware.com/papers/50/
 
+*Note: the build has been disabled at the request of the repository maintainers for the moment to avoid the inadvertent execution of the Dyalog APL interpreter, which is free for non-commercial use such as these demonstrations and benchmarks, but which is not Free Software.* 
+
 ## Run Instructions
 
 You must have a working version of Dyalog APL installed. On Linux/UNIX, run `LOAD=PrimeSieveAPL.apln dyalog`. On Windows open the .dyapp file.
