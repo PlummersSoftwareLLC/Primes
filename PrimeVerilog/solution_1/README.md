@@ -12,7 +12,7 @@ This solution uses two files:
 prime_number_core.v This is the synthesizeable Verilog "core", which could be dropped into any digital circuit design and treated as a dedicated "chip" that just does prime number stuff.
 prime_number_core_tb.cpp  This is the C++ "Test Bench". Some Verilog test environments use SystemVerilog files to describe the simulation test scenario, but Verilator uses C++ for this purpose.
 
-I have run this simulation on a PC with an i7-10700 @2.9Ghz, and got about 308 iterations, but I also synthesized the same prime_number_core.v in Vivado, and loaded it on a Xilinx Atrix-7, clocked at 100Mhz, along with a MicroBlaze soft CPU, and a similar C sieve implementation for comparisson, and was able to get 382 iterations from the prime number core, vs only 12 iterations from the C implementation running on the soft CPU, both running side by side inside the Atrix-7, at 100Mhz. 
+I have run this simulation on a PC with an i7-10700 @2.9Ghz, and got about 216 iterations, but I also synthesized the same prime_number_core.v in Vivado, and loaded it on a Xilinx Atrix-7, clocked at 100Mhz, along with a MicroBlaze soft CPU, and a similar C sieve implementation for comparisson, and was able to get 382 iterations from the prime number core, vs only 12 iterations from the C implementation running on the soft CPU, both running side by side inside the Atrix-7, at 100Mhz. 
 
 Verilog isn't really meant to be a general purpose PC language, and the performance isn't stellar on a PC, but clock cycle for clock cycle, it blows C out of the water on hardware. Note the 100Mhz FPGA even outran the 2.9Ghz PC CPU in this scenario.
 
@@ -23,4 +23,4 @@ docker run -t verilog
 
 ## Output
 
-alwayslinux2-verilog;308;5.0;1;algorithm=base,faithful=yes,bits=1
+alwayslinux2-verilog;216;5.0;1;algorithm=base,faithful=yes,bits=1
