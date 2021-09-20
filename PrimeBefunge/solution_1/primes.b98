@@ -1,48 +1,44 @@
-];aaa**:*                         v                   >;#(4"HRTI"(4"BOOL"(4"FIXP"
-1  SIEVE SIZE ABOVE            SET UP COUNT
-:    v p0\0 :<  /*28+f:     < M\0 < AND TIMER
-0    > 1 -  :|  RESET SIEVE ^          <
-1 STORE SIEVE SIZE
-p     v p11:$<
-2     > :Q21p    3  v                              v   <  COUNT UP & CHECK TIME
-*#        $< FACTOR                                v   w *5*:**aaa:T \+1\
-:         vw   g12: <   +2       <     ^         $     <  TIMER IS IN MICROSECONDS
-0      >$;  CHECK BIT           ;^                 \
-2         >>::2/8/1+0g\2/8%1+0\gA|                 $
-p              BIT IS ZERO
-2            MARK MULTIPLES BELOW
-*        v g11: <   p13 *2\*:::  <                                           v#'<
-:               ^ +g13  p0+1/8/2\ <                                          > v>0'#v
-0      ^ w :::2/8/1+0g\2/8%1+0\gO ^                            v/**::d':,;'    s s  <
-3      ^ <                                         #                  >'0+>:#,_$^ v
-p                                       >0";89fb-lojt">:#,_$\  > 0\>:aw>:a%'0v '
-2      v                                           <               ^ ;>^;/a\+< .
-*                               >,v                            ^      %*:**aaa,<
-:                               |:<     $#";1;algorithm=base;faithful=no;bits=1"a0<
-0                               @   > :v  :<  "valid"a0   <   VALIDATE PRIME COUNT BELOW
-4                                   ^ ,_^  ^"invalid"a0  _^#-  <      <          <         <   **<
+];aaa**:*                   v                         >;#(^#4"HRTI"(^#4"BOOL"(^#4"FIXP"
+1  SIEVE SIZE ABOVE
+2    v p0\0 :<  /*2 '+?':   <
+1    > 1 -  :|  RESET SIEVE ^          <
+p STORE SIEVE SIZE --- FIRST RUN:
+1     v p22:$>    $'<d5p 0\M^
+v     > :Q21p    3  v  SET TIMER                   v   <  COUNT UP & CHECK TIME
+v   ;     $< FACTOR                                v   w *5*:**aaa:T \+1\ ;
+#         vw   g12: <   +2         <   ^         $     <  TIMER IS IN MICROSECONDS
+;      >$;  CHECK BIT             ;^               \
+2         >>::2/' /1+0g\2/' %1+1\gA|               $
+*              BIT IS ZERO
+:            MARK MULTIPLES BELOW
+1        v g22: <   p13 *2\*:::    <                                         v#'<
+2               ^ +g13  p0+1/ '/2\ <                                         > v>0'#v
+1      ^ w:::2/' /1+0g\2/' %1+1\gO ^                           v/**::d':,;'    s s  <
+g      ^ < SPACE ' ' IS 32                         #                  >'0+>:#,_$^ v
+1                                       >0";89fb-lojt">:#,_$\  > 0\>:aw>:a%'0v '
++      v                                           <               ^ ;>^;/a\+< .
+:                               >,v                            ^      %*:**aaa,<
+2                               |:<     $#";1;algorithm=base;faithful=no;bits=1"a0<
+1                               @   > :v  :<  "valid"a0   <   VALIDATE PRIME COUNT BELOW
+p                                   ^ ,_^  ^"invalid"a0  _^#-  <      <          <         <   **<
 p                                   ^ "unclear"a0 <    <      <      <        <        <<        :
-2       >" :semirp">:#,_$                    11g:aw$  4                                          *
-*       ^0.:$<<     COUNT PRIMES                  >:aa*w$  55* ^                                 3
-:            ^w          g11:   +2    <    <           >:aaa**w$ ec*  ^                          7
-0      >    13> ::2/8/1+0g  \2/8%1+0\g   A |                  >:aa*:*w$aac**ef ++^               *
-5                                     ^\+1\<                         >:aa*:*a*w$aa*9+8b  **^     2
-p            @<     PRINT PRIMES                                              >:aaa**:*w $  9a*1-^
-2            ^w          g11:   +2    <  <                                             >^
-*>>>>>>    2.3> ::2/8/1+0g  \2/8%1+0\g  A|
-:                                     ^.:<
-0
-6   THE CODE ON THE LEFT EDGE                    TO PRINT PRIMES INSTEAD OF RUNNING
-p   IS SETTING UP A LOOKUP TABLE                 THE BENCHMARK, REPLACE THE # IN
-2   FOR THE EIGHT BIT MASKS                      LINE 8, COL 2 WITH v
-*
-:   TO CHANGE THE SIEVE SIZE, EDIT THE NUMBER
-0   IN THE FIRST LINE (a = 10, aa* = 100,
-7   aaa** = 1000, aaa**:* = 1000000, etc)
-p   MAKE SURE THE v ON LINE 1 STAYS IN THE
-2   RIGHT PLACE
-*
-:
-0
-8
-p
+'       >" :semirp">:#,_$                    22g:aw$  4                                          *
+!       ^0.:$<<     COUNT PRIMES                  >:aa*w$  55* ^                                 3
+2            ^w          g22:   +2    <    <           >:aaa**w$ ec*  ^                          7
+1      >    13> ::2/' /1+0g\2/' %1+1\g   A |                  >:aa*:*w$aac**ef ++^               *
+g                                     ^\+1\<                         >:aa*:*a*w$aa*9+8b  **^     2
+`            @<     PRINT PRIMES                                              >:aaa**:*w $  9a*1-^
+#            ^w          g22:   +2    <  <                                             >^
+;   >>     2.3> ::2/' /1+0g\2/' %1+1\g  A|
+|                                     ^.:<
+1
+1   THE CODE ON THE LEFT EDGE                    TO PRINT PRIMES INSTEAD OF RUNNING
+1   IS SETTING UP A LOOKUP TABLE                 THE BENCHMARK, REPLACE THE ; IN
+p   FOR THE THIRTY-TWO BIT MASKS                 LINE 8, COL 6 WITH v
+
+    TO CHANGE THE SIEVE SIZE, EDIT THE NUMBER
+    NUMBER IN THE FIRST LINE (a = 10, aa* = 100,
+    aaa** = 1000, aaa**:* = 1000000, etc)
+    MAKE SURE THE v ON LINE 1 STAYS IN     >v"BOOL, FIXP and HRTI fingerprints are required."a0<
+    THE RIGHT PLACE!                       ,:             >         >         >                ^
+                                           ^_1q
