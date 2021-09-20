@@ -12,6 +12,6 @@ RUN apt-get update && \
 
 COPY . /opt/
 
-RUN hbmk2 ./test.prg
+RUN hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sieve.prg 
 
-CMD [ "./test" ]
+CMD [ "./sieve" ]
