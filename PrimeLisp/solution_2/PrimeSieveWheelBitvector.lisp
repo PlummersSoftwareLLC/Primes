@@ -6,11 +6,8 @@
 
 
 #+(and :sbcl :x86-64)
-(progn
-  (when (equalp "2.0.0" (lisp-implementation-version))
-    (load "bitvector-set-2.0.0-2.1.8-snap.lisp")) ; teach sbcl 2.0.0 the new bitvector-set from sbcl 2.1.8
-  (when (equalp "2.1.7" (lisp-implementation-version))
-    (load "bitvector-set-2.1.7-2.1.8-snap.lisp")))  ; teach sbcl 2.1.7 the new bitvector-set from sbcl 2.1.8
+(when (equalp "2.0.0" (lisp-implementation-version))
+  (load "bitvector-set-2.0.0-2.1.8-snap.lisp")) ; teach sbcl 2.0.0 the new bitvector-set from sbcl 2.1.8
 
 
 (declaim
