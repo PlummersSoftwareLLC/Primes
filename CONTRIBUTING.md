@@ -142,7 +142,7 @@ The base algorithm is defined as follows:
 
 * Starting the clearing loop at factor * factor (instead of 3 * factor, as done in the original implementation) is permissible.
 
-If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
+If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/38c826678a52a37b8a864465410562d330002091/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
 
 #### Tag
 
