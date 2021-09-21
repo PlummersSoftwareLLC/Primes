@@ -56,9 +56,9 @@ const UnrolledOpts = struct {
 /// returns a function wrapped in an struct; this is the simplest variadic way
 /// of assigning  a function "identifier" in zig to an integer value which
 /// preserves the integer semantics of the funciton.
-fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) type {
+pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) type {
     return struct{
-        fn fill(field: [*]T, field_count: usize) void {
+        pub fn fill(field: [*]T, field_count: usize) align(256) void {
             @setAlignStack(256);
             fillOneChunk(field, true);
             var offset : usize = num;
@@ -302,9 +302,9 @@ var my_factor: usize = undefined;
 var my_index: usize = undefined;
 var my_field: usize = undefined;
 
-fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: UnrolledOpts) type {
+pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: UnrolledOpts) type {
     return struct{
-        fn fill(field: [*]T, field_ints: usize, factor: usize) void {
+        pub fn fill(field: [*]T, field_ints: usize, factor: usize) align(256) void {
             @setAlignStack(256);
             const square_offset = (factor * factor) / (2 * @bitSizeOf(T));
             const stride = factor / @bitSizeOf(T) - 1;
@@ -314,11 +314,7 @@ fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: Un
             var index: usize = 0;
             var chunk = field + square_offset;
 
-            my_factor = factor;
-            my_field = @ptrToInt(field);
-
             while (index < chunk_count) : (index += 1) {
-                my_index = index;
                 fillOneChunk(chunk, stride);
                 chunk = chunk + factor;  // move the chunk pointer over.
             }

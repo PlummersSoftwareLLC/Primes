@@ -315,17 +315,35 @@ pub fn BitSieve(comptime opts_: anytype) type {
             const T = opts.RunFactorChunk;
             comptime const unrolled_opts = .{ .primeval = opts.PRIME, .max_vector = opts.max_vector, .half_extent = opts.half_extent };
 
-            const unrolledDense = comptime unrolled.makeDenseLUT(T, unrolled_opts);
-            const unrolledSparse = comptime unrolled.makeSparseLUT(T, unrolled_opts);
-
             const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
 
             if (unrolled.isDense(T, opts.half_extent, factor)) {
                 const fun_index = factor / 2;
-                unrolledDense[fun_index](field, self.field_bytes / @sizeOf(T));
+                // select the function to use, using a compile-time unrolled loop over odd modulo values.
+                // it turns out that Docker really doesn't like function lookup tables, so this is the
+                // only option.
+                comptime var fun_number = 0;
+                comptime const fun_count = @bitSizeOf(T) / (if (opts.half_extent) 2 else 1);
+                inline while (fun_number < fun_count) : (fun_number += 1) {
+                    if (fun_index == fun_number) {
+                        const DenseType = unrolled.DenseFnFactory(T, 2 * fun_number + 1, unrolled_opts);
+                        DenseType.fill(field, self.field_bytes / @sizeOf(T));
+                        return;
+                    }
+                }
             } else {
                 const fun_index = (factor % @bitSizeOf(T)) / 2;
-                unrolledSparse[fun_index](field, self.field_bytes / @sizeOf(T), factor);
+                // select the function to use, using a compile-time unrolled loop over odd modulo values.
+                // it turns out that Docker really doesn't like function lookup tables, so this is the
+                // only option.
+                comptime var fun_number = 0;
+                inline while (fun_number < @bitSizeOf(T)) : (fun_number += 1) {
+                    if (fun_index == fun_number) {
+                        const SparseType = unrolled.SparseFnFactory(T, 2 * fun_number + 1, unrolled_opts);
+                        SparseType.fill(field, self.field_bytes / @sizeOf(T), factor);
+                        return;
+                    }
+                }
             }
         }
 

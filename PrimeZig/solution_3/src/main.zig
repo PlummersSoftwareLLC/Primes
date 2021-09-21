@@ -43,7 +43,7 @@ pub fn main() anyerror!void {
         .{ SingleThreadedRunner, .{}, BitSieve, .{.RunFactorChunk = u64}, false},
         .{ SingleThreadedRunner, .{}, BitSieve, .{.RunFactorChunk = u32, .FindFactorChunk = u32}, ARCH_32 and NOT_ARM}, // equivalent to C
         .{ SingleThreadedRunner, .{}, BitSieve, .{.RunFactorChunk = u64, .FindFactorChunk = u32}, ARCH_64 and NOT_ARM}, // equivalent to C
-        // best singlethreaded base runner
+        // best singlethreaded base runners
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32}, ARCH_32},
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, ARCH_64},
         // ----   pessimizations on singlethreadedness (base)
@@ -88,6 +88,7 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, ARCH_64 and NOT_ARM},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, ARCH_32},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, ARCH_64},
+        // multi-threaded regressions
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = true, .RunFactorChunk = u32, .FindFactorChunk = u32}, false},
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = true, .RunFactorChunk = u64, .FindFactorChunk = u32}, false},
         // in testing we find that the best performing of the following four is architecture-dependent
