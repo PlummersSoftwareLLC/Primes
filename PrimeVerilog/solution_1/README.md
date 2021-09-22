@@ -2,6 +2,8 @@
 
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 
 Verilog is a hardware description language (HDL), used to describe a digital circuit that does something. 
 Usually Verilog designs are synthesized into a bitfile and loaded into an FPGA or sent to a silicon foundry and converted into an ASIC. 
