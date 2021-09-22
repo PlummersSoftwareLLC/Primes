@@ -116,7 +116,7 @@ PROCEDURE Main()
    OutputString = OutputString + ";" + ALLTRIM("algorithm=base")
    OutputString = OutputString + "," + ALLTRIM("faithful=yes")
    OutputString = OutputString + "," + ALLTRIM("parallel=no")
-   OutputString = OutputString + "," + ALLTRIM("storage=112")
+   OutputString = OutputString + "," + ALLTRIM("bits=112")
 
    ? OutputString
 
