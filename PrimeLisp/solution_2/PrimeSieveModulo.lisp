@@ -1,50 +1,21 @@
-;;;; loosely based on sieve_1of2.c by  by Daniel Spangberg
-;;;
-;;; set-bits-dense based on https://github.com/PlummersSoftwareLLC/Primes/pull/680
+;;;; based on https://github.com/PlummersSoftwareLLC/Primes/pull/641
 ;;;
 ;;; run as:
-;;;     sbcl --script PrimeSievebitops.lisp
+;;;     sbcl --script PrimeSieveModulo.lisp
 ;;;
-
-
-(in-package "SB-X86-64-ASM")
-
-#+(and :sbcl :x86-64)
-(eval-when (:load-toplevel :compile-toplevel :execute)
-(when (member (lisp-implementation-version) '("2.0.0" "2.1.8") :test #'equalp)
-  ;;; "OR r, imm1" + "OR r, imm2" -> "OR r, (imm1 | imm2)"
-  (defpattern "or + or -> or" ((or) (or)) (stmt next)
-    (binding* (((size1 dst1 src1) (parse-2-operands stmt))
-               ((size2 dst2 src2) (parse-2-operands next)))
-      (labels ((larger-of (size1 size2)
-                 (if (or (eq size1 :qword) (eq size2 :qword)) :qword :dword)))
-        (when (and (gpr-tn-p dst1)
-                   (location= dst2 dst1)
-                   (member size1 '(:qword :dword))
-                   (typep src1 '(signed-byte 32))
-                   (member size2 '(:dword :qword))
-                   (typep src2 '(signed-byte 32)))
-          (setf (stmt-operands next)
-                (if (equalp "2.0.0" (lisp-implementation-version))
-                      `(,(larger-of size1 size2) ,dst2 ,(logior src1 src2))  ; 2.0.0
-                  `(,(encode-size-prefix (larger-of size1 size2)) ,dst2 ,(logior src1 src2))))  ; 2.1.8
-          (add-stmt-labels next (stmt-labels stmt))
-          (delete-stmt stmt)
-          next)))))
-)
-
-(in-package "CL-USER")
 
 
 (declaim
   (optimize (speed 3) (safety 0) (debug 0) (space 0))
 
+  (inline or-word)
   (inline nth-bit-set-p)
   (inline set-nth-bit)
 
+  (inline make-index)
   (inline set-bits-simple)
-  ;(inline set-bits-unrolled)  ; don't inline this dozens of times or set-bits-dense will get too big
-  (inline set-bits-dense))
+  (inline set-bits-unrolled)
+  (inline set-bits))
 
 
 (defparameter *list-to* 100
@@ -66,12 +37,11 @@
    to be found under some limit, such as 168 primes under 1000")
 
 
-#+64-bit (defconstant +bits-per-word+ 64)
-#-64-bit (defconstant +bits-per-word+ 32)
+(defconstant +bits-per-word+ 8)
 
 (deftype nonneg-fixnum ()
   `(integer 0 ,most-positive-fixnum))
-  ;`(unsigned-byte ,+bits-per-word+))
+  ;`(unsigned-byte 64))
 
 (deftype sieve-element-type ()
   `(unsigned-byte ,+bits-per-word+))
@@ -82,7 +52,7 @@
 
 (defclass sieve-state ()
   ((maxints :initarg :maxints
-            :type nonneg-fixnum
+            :type fixnum
             :accessor sieve-state-maxints)
 
    (a       :initarg :a
@@ -91,7 +61,7 @@
 
 
 (defun create-sieve (maxints)
-  (declare (nonneg-fixnum maxints))
+  (declare (fixnum maxints))
   (make-instance 'sieve-state
     :maxints maxints
     :a (make-array (ceiling (ceiling maxints +bits-per-word+) 2)
@@ -108,19 +78,24 @@
     (logbitp r (aref a q))))
 
 
+(defun or-word (a idx pattern)
+  (declare (type sieve-array-type a)
+           (type nonneg-fixnum idx)
+           (type sieve-element-type pattern))
+  (setf #1=(aref a idx) (logior #1# pattern)))
+
+
 (defun set-nth-bit (a n)
   "Set n-th bit in array a to 1."
   (declare (type sieve-array-type a)
            (type nonneg-fixnum n))
   (multiple-value-bind (q r) (floor n +bits-per-word+)
     (declare (nonneg-fixnum q r))
-    (setf #1=(aref a q)
-             (logior #1# (ash 1 r))))
+    (or-word a q (expt 2 r)))
   0)
 
 
 (defun set-bits-simple (bits first-incl last-excl every-nth)
-  "Set every every-nth bit in array bits between first-incl and last-excl."
   (declare (type nonneg-fixnum first-incl last-excl every-nth)
            (type sieve-array-type bits))
   (loop while (< first-incl last-excl)
@@ -129,11 +104,9 @@
 
 
 (defun set-bits-unrolled (bits first-incl last-excl every-nth)
-  "Set every every-nth bit in array bits between first-incl and last-excl."
+  "Use an unrolled loop to set every every-th bit to 1"
   (declare (type nonneg-fixnum first-incl last-excl every-nth)
            (type sieve-array-type bits))
-
-  ; use an unrolled loop to set every every-th bit to 1
   (let* ((i first-incl)
          (every-nth-times-2 (+ every-nth every-nth))
          (every-nth-times-3 (+ every-nth-times-2 every-nth))
@@ -154,71 +127,61 @@
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
 
-(defun generate-set-bits-modulo (startbit n)
-  "Generate statements to set every nth bit in n words, starting at startbit.
-The generated code contains references to the variable 'startword'."
-  (loop for word
-        from 0
-        below n
-        append (multiple-value-bind (wordoffset bitoffset) (floor startbit +bits-per-word+)
-                 (if (>= (+ bitoffset n) +bits-per-word+)
-
-                       ; only 1 bit to set in the current word - don't use tmp variable
-                       (prog1 `((setf #1=(aref bits (+ startword ,(+ word wordoffset)))
-                                      (logior #1# #2=,(ash 1 bitoffset))))
-                              (incf startbit n)
-                              (decf startbit +bits-per-word+))
-
-                   ; more than 1 bit to set - use tmp variable
-                   `((let ((tmp (logior #1# #2#)))
-                       (declare (type sieve-element-type tmp))
-
-                       ,@(loop for j from (+ startbit n) by n
-                               for i from (+ bitoffset n) by n
-                               while (< (+ i n) +bits-per-word+)
-                               collect `(setq tmp (logior tmp #3=,(ash 1 i))) into ret
-                               finally (setq startbit j)
-                                       (incf startbit n)
-                                       (decf startbit +bits-per-word+)
-                                       (return (append ret `((setf #1# (logior tmp #3#))))))))))))
+(defun sym (s1 s2)
+  (intern (format nil "~A~A" s1 s2)))
 
 
-(defun generate-dense-loop (first n)
-  "Generate a loop statement to set every nth bit, starting at first.
-The generated code contains references to the variable 'last-excl'."
-  (let ((bits-per-step (* n +bits-per-word+)))
-    `((let ((startword 0))
-        ,@(generate-set-bits-modulo first n))
+(defun generate-x-y-loop (startmod skipmod)
+  `(loop ,@(loop for n from 0 below +bits-per-word+
+                 append `(,(if (zerop n) 'with 'and) ,(sym "C" n) of-type nonneg-fixnum = (floor (the nonneg-fixnum (+ ,startmod (the nonneg-fixnum (* ,n every-nth)))) +bits-per-word+)))
+         for word of-type nonneg-fixnum
+         from bulkstartword
+         below bulkendword
+         by every-nth
+         do (progn ,@(loop for n from 0 below +bits-per-word+
+                    collect `(or-word bits (+ word ,(sym "C" n)) ,(ash 1 (mod (+ startmod (* n skipmod)) +bits-per-word+)))))
+         finally (setq first-incl (+ ,startmod (the nonneg-fixnum (* word +bits-per-word+))))))
 
-      (loop for bit of-type nonneg-fixnum
-            from ,bits-per-step
-            below (- last-excl ,bits-per-step)
-            by ,bits-per-step
-            do (let ((startword (floor bit +bits-per-word+)))
-                 ,@(generate-set-bits-modulo (mod (+ first bits-per-step) n) n))
-            finally (set-bits-unrolled bits (+ bit ,(mod (+ first bits-per-step) n)) last-excl ,n)))))
+
+(defun make-index (startmod skipmod)
+  (declare (type nonneg-fixnum startmod skipmod))
+  (the nonneg-fixnum (+ (floor startmod 2) (ash (floor skipmod 2) 2))))
+
+
+(defmacro generate-ecase ()
+  ; first-incl is even, every-nth is odd, see comment in run-sieve below.
+  ; therefore only a few combinations can happen: startmod [0 2 4 6] and skipmod [1 3 5 7]
+  ; if the ecase keys are small (and maybe dense?) fixnums then SBCL will compile the ecase into a jump table
+  `(ecase (the nonneg-fixnum (make-index startmod skipmod))
+     ,@(loop for y from 1 below +bits-per-word+ by 2
+             append (loop for x from 0 below +bits-per-word+ by 4
+                          collect `(,(make-index x y)
+                                    ,(generate-x-y-loop x y)
+                                    (set-bits-simple bits first-incl last-excl every-nth))))))
 
 ) ; end eval-when
 
 
-(defmacro generate-cond-stmt ()
-  "Expand into a cond stmt whose branches all set every 'every-nth' bit in the array 'bits'.
-The generated code contains references to the variables 'bits', 'first-incl', 'last-excl' and 'every-nth'.
-Branches for low values of 'every-nth' (up to 53) will set bits using unrolled dense loops,
-fallback for higher values is calling 'set-bits-unrolled'."
-  `(cond ,@(loop for x from 3 to 53 by 2
-                 collect `((= every-nth ,x)
-                           ,@(generate-dense-loop (floor (expt x 2) 2) x)))
-         (t (set-bits-unrolled bits first-incl last-excl every-nth))))
-
-
-(defun set-bits-dense (bits first-incl last-excl every-nth)
+(defun set-bits (bits first-incl last-excl every-nth)
   "Set every every-nth bit in array bits between first-incl and last-excl."
   (declare (type nonneg-fixnum first-incl last-excl every-nth)
            (type sieve-array-type bits))
-  (if (< every-nth (floor last-excl +bits-per-word+))
-        (generate-cond-stmt)
-    (set-bits-unrolled bits first-incl last-excl every-nth)))
+
+  (let* ((bulkstartword (floor first-incl +bits-per-word+))
+         (bulkstart     (* bulkstartword +bits-per-word+)))
+    (declare (nonneg-fixnum bulkstartword bulkstart))
+
+    (if (and (> last-excl (the nonneg-fixnum (* +bits-per-word+ every-nth)))
+             (< bulkstart last-excl))
+
+          (let ((startmod (mod first-incl +bits-per-word+))
+                (skipmod (mod every-nth +bits-per-word+))
+                (bulkendword (floor (the nonneg-fixnum (- last-excl (the nonneg-fixnum (* +bits-per-word+ every-nth)))) +bits-per-word+)))
+            (declare (nonneg-fixnum startmod skipmod bulkendword))
+
+            (generate-ecase))
+
+      (set-bits-unrolled bits first-incl last-excl every-nth))))
 
 
 (defun run-sieve (sieve-state)
@@ -229,7 +192,7 @@ fallback for higher values is calling 'set-bits-unrolled'."
          (sieve-sizeh (ceiling sieve-size 2))
          (factor 0)
          (factorh 1)
-         (qh (ceiling (isqrt sieve-size) 2)))
+         (qh (floor (the nonneg-fixnum (1+ (isqrt sieve-size))) 2)))
     (declare (nonneg-fixnum sieve-size sieve-sizeh factor factorh qh) (type sieve-array-type rawbits))
     (loop do
 
@@ -243,7 +206,9 @@ fallback for higher values is calling 'set-bits-unrolled'."
       (when (> factorh qh)
         (return-from run-sieve sieve-state))
 
-      (set-bits-dense rawbits (floor (the nonneg-fixnum (* factor factor)) 2) sieve-sizeh factor))))
+      ; factor is an odd number >= 3
+      ; (floor (the fixnum (* factor factor)) 2) evals to a multiple of 4
+      (set-bits rawbits (floor (the nonneg-fixnum (* factor factor)) 2) sieve-sizeh factor))))
 
 
 (defun count-primes (sieve-state)
@@ -251,8 +216,8 @@ fallback for higher values is calling 'set-bits-unrolled'."
   (let ((max (sieve-state-maxints sieve-state))
         (bits (sieve-state-a sieve-state))
         (result 0))
-    (declare (nonneg-fixnum result))
-    (loop for i of-type nonneg-fixnum
+    (declare (fixnum result))
+    (loop for i fixnum
           from 1
           to max
           by 2
@@ -298,7 +263,7 @@ according to the historical data in +results+."
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
-  (declare (nonneg-fixnum passes))
+  (declare (fixnum passes))
 
   (loop while (<= (get-internal-real-time) end)
         do (setq result (run-sieve (create-sieve 1000000)))
@@ -307,15 +272,15 @@ according to the historical data in +results+."
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
     (when *list-to* (list-primes result))
-    (format *error-output* "Algorithm: base w/ dense bitops  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
+    (format *error-output* "Algorithm: base w/ modulo  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
             passes duration (* 1000 avg) (count-primes result) (validate result))
 
-    (format t "mayerrobert-cl-dense;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration)))
+    (format t "mayerrobert-cl-modulo;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration)))
 
 
 ; uncomment the following line to display the generated loop stmt for setting every 3rd bit starting at 4
-;(format *error-output* "The bit-setting loop for startmod=84 and skipmod=13:~%~A~%" (generate-dense-loop 84 13))
+;(format *error-output* "The bit-setting loop for startmod=4 and skipmod=3:~%~A~%" (generate-x-y-loop 4 3))
 
 
-; uncomment the following line to display the generated cond stmt containing dense bit-setting loops for the first few distances
-;(format *error-output* "Expansion of macro generate-cond-stmt:~%~A~%" (macroexpand-1 '(generate-cond-stmt)))
+; uncomment the following line to display the generated ecase stmt containing all bit-setting loops
+;(format *error-output* "Expansion of macro generate-ecase:~%~A~%" (macroexpand-1 '(generate-ecase)))
