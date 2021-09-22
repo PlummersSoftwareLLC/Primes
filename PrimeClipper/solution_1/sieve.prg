@@ -1,350 +1,259 @@
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*   Procedure SIEVE.PRG
+*
+*      Dave's Garage Prime Sieve Speed Test Algorithm For Different
+*      Computer Languages
+*
+*      Development Languge : Computer Associate's Clipper Version 5.2e
+*
+*      Authors : Andy Radford, Bradley Chatha
+*
+*      Date    : 20/9/2021   (DD/MM/CCYY)
+*
+*    
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*
+*
+*   Notes:
+*      1. Clipper version 5.2e
+*
+*      2. No Additional Libraries have been used eg. (CA-Tools)
+*
+*      3. If runtime exceeds 1 day, the duration will be eroneous
+*
+*      4. Clipper 5.2e supports a maximum array size of 4096 in any
+*         dimension, therefore a multi-deminsion array has been used
+*
+*      5. In order to speed up the algorithm the .T./.F. state of the
+*         array is inverted.  There is no quick way to set the starting
+*         state of the array to .T. for each element other than by
+*         iterating through the each element in the array and setting the
+*         value.  Therefore it is loaded in its default (.F. or NILL) and
+*         set to .T. if number isn't prime.  Thus there is an inverted logic
+*         comparted to other implementations of the sieve algorithm
+*
+*      6. The sieve size is determined by the SieveSize variable (currently
+*         set to 1000000
+*
+*      7. Clipper's array element size is 14 bytes
+*
+*      8. Due to the limition of 4096 elements in an array, it is not expected
+*         that any value in excess of 1,000,000 be passed in.  Values in
+*         excess of this are likely to result in an Out or Memory or Memory
+*         Overflow error
+*
+*
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*
+*   FUNCTIONS AND PROCEDURES
+*
+*      PROCEDURE Main()
+*      FUNCTION ReferenceN()
+*      FUNCTION RunSieve()
+*      FUNCTION InitArray()
+*      PROCEDURE SetElement()
+*      FUNCTION GetElement()      
+*
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 
 
-DO Main
+Main()
 
 
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Procedure Main()
+*    PROCEDURE Main()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
 PROCEDURE Main()
-
-
-    Local rawbits := .F.
-    //Local sieveSize := 0
-
-
-
-    Local sieveSize := 1000000  // This needs to be passed in
-    Local passCount := 0
-
-    //Dim sieve As PrimeSieve = Nothing
-    Local sieve := 0
-
-
-
-    //Dim startTime = DateTime.UtcNow
-    Local OkToStart := .F.
-    LOCAL StartTime := Seconds()
-    Local StartTicks := GetTicks()
+    LOCAL SieveSize := 1000000
+    LOCAL PassCount := 0
+    LOCAL StartTime := SECONDS()
+    LOCAL FinishTime := 0
     LOCAL Duration := 0
     LOCAL NumberFound := 0
     LOCAL Now := Seconds()
-    LOCAL NowTicks := GetTicks()
+    LOCAL OutpuString := ""
 
+    DO WHILE Now - StartTime <= 5
+     
+       NumberFound = RunSieve(SieveSize)
+       PassCount = Passcount + 1
+       Now = SECONDS()
 
-    IF MidnightCheck() = .F. // Check to make sure we are not too close to midnight
-   
+   ENDDO
 
-       // While (DateTime.UtcNow - startTime).TotalSeconds <= 5.0
+   //CA Clipper 5.2e SECOND() Function returns number of seconds since midnight
+   //0-86399  
+   //
+   //So rather than end up with a negative duration (which would be unfair on
+   //the competitors and time travel is not yet possible, I will add 86399
+   //(seconds in a day) to the finish time if the duration works out as
+   //negative
+   //
+   //Limition : This does not consider the possibility of it running multiple
+   //Days
 
+   FinishTime = SECONDS()
+   Duration = FinishTime - StartTime
 
-       DO WHILE Now - StartTime <= 5 .AND. NumberFound < 1
-       
-          // sieve = New PrimeSieve(sieveSize)
-          // sieve.RunSieve()
-          NumberFound = RunSieve(sieveSize)
+   IF Duration < 0
 
+      FinishTime = FinishTime + 86399
+      Duration = FinishTime - StartTime
 
-          // passCount += 1
-          PassCount = Passcount + 1
-          Now = Seconds()
+   ENDIF
 
+   IF NumberFound <> ReferenceN(SieveSize)
 
-           // End While
-       ENDDO
+      ? "WARNING: result is incorrect!"
 
+   ENDIF
 
+   OutputString = "AndyRadford,Clipper_5.2e"
+   OutputString = OutputString + ";" + ALLTRIM(STR(PassCount))
+   OutputString = OutputString + ";" + ALLTRIM(STR(Duration))
+   OutputString = OutputString + ";" + ALLTRIM(STR(1))
+   OutputString = OutputString + ";" + ALLTRIM("algorithm=base")
+   OutputString = OutputString + "," + ALLTRIM("faithful=yes")
+   OutputString = OutputString + "," + ALLTRIM("parallel=no")
+   OutputString = OutputString + "," + ALLTRIM("storage=112")
 
-
-       // Dim duration = (DateTime.UtcNow - startTime).TotalSeconds
-       Duration = Seconds() - StartTime
-       DurationTicks = GetTicks() - StartTicks
-
-
-        // If sieve.CountPrimes <> referenceResults(sieveSize) Then
-
-       IF NumberFound <> ReferenceN()
-
-          // Console.WriteLine(@WARNING: result is incorrect!@)
-          ?  "WARNING: result is incorrect!"
-
-       ENDIF
-
-       // End If
-
-       // Console.WriteLine(@rbergen_vb;{0};{1};1;algorithm=base,faithful=yes,bits=1@, passCount, duration)
-
-       ? "algorithm=base, faithful=yes, bits<>nibbles, Pass Count : " + ALLTRIM(STR(passCount)) + ",Duration : " + ALLTRIM(STR(duration))
-
-       ? "Seconds : " + ALLTRIM(STR(Duration))
-
-       ? "Ticks : " + ALLTRIM(STR(DurationTicks))
-
-
-    ENDIF
+   ? OutputString
 
 RETURN
 
 
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function MidnightCheck()
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*
-FUNCTION MidnightCheck()
-
-
-   LOCAL lNoWhereNearMidnight := .F.
-   LOCAL StartTime := Seconds()
-
-   //CA Clipper 5.2e Second Function returns number of seconds since midnight
-   //0-86399  If we are too close to midnight we will hang around a bit till just gone midnight
-   //to ensure that we don't get a negative duration (which would be unfair on some of the other programming languages :)
-
-   IF StartTime > 86300    // 99 Seconds should be enough.....
-
-
-      // To be implemented
-
-      ? "Too close to midnight please wait until tomorrow and try again....."
-      lNoWhereNeedMidnight = .T.
-
-   ENDIF
-
-   lNoWhereNearMidnight = .F.
-
-RETURN lNoWhereNearMidnight
-
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function GETTICKS()
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*
-STATIC FUNCTION GETTICKS()
-
-   LOCAL nTicks := 0
-   //nTicks := FT_PEEK( 0, 1132 )  // &H46C - timer ticks..
-
-RETURN (nTicks)
-
-
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function ReferenceN()
+*    FUNCTION ReferenceN()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
 FUNCTION ReferenceN(SieveSize)
 
+   LOCAL Primecounts := {{10,4},{100,25},{1000,168},{10000,1229},{100000,9592},{1000000,78498},{10000000,664579},{100000000,5761455}}
    LOCAL ReferenceCount := 0
-LOCAL PrimeCounts := {{10,4},{100,25},{1000,168},{10000,1229},{100000,9592},{1000000,78498},{10000000,664579},{100000000,5761455}}
 
+   FOR Looop = 1 TO LEN(PrimeCounts)
 
-   FOR looop = 1 to LEN(PrimeCounts)
        IF PrimeCounts[looop,1] = SieveSize
            ReferenceCount = PrimeCounts[Looop,2]
            EXIT
        ENDIF
-   NEXT
 
+   NEXT
 
 RETURN (ReferenceCount)
 
 
-
-
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function RunSieve()
+*    FUNCTION RunSieve()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
-//Public Function RunSieve() As BitArray
-FUNCTION RunSieve (sieveSize)
-
-
-
-   //  Dim sieveSqrt As Integer = Math.Sqrt(sieveSize)
-   //  Dim number As Integer
+FUNCTION RunSieve (SieveSize)
 
    LOCAL ResultCount := 0
-   LOCAL SieveSqrt := SQRT(sieveSize)
-   LOCAL number := 0
-   LOCAL factor := 0
-   //LOCAL PrimesArray := Array((SieveSize+1)/2)
-   LOCAL PrimesArrayCl := {}
+   LOCAL SieveSqrt := SQRT(SieveSize)
+   LOCAL Number := 0
+   LOCAL Factor := 0
+   LOCAL PArray := (SieveSize+1)/2
+   LOCAL PrimesArrayCL := {}
 
-   //IF we use a multi dimension array (eeek) and int(/1000) this would be the
-   //seed value which can then be used to determine which dimension to use???
+   PrimesArrayCL := InitArray(PArray,.F.)
 
+   FOR Factor = 3 TO SieveSqrt Step 2
 
-//   ALTD()
+      FOR Number = Factor TO SieveSqrt STEP 2
 
-
-   PrimesArrayCL := initArray(SieveSize,.F.)
-
-
-
-
-   //AFILL(PrimesArray,.T.)
-
- 
-
-
-   // For factor = 3 To sieveSqrt STEP 2
-
-   FOR factor = 3 TO SieveSqrt Step 2
-
-      // For number = factor To sieveSqrt Step 2
-      FOR number = factor TO SieveSqrt STEP 2
-
-
-//ALTD()
-
-         // If primesArray(number \ 2) Then
-         IF GetElement(PrimesArrayCL,INT(number / 2)) = .F.
-
-            // factor = number
-            factor = number
-
-
-            // Exit For
+         IF GetElement(PrimesArrayCL,INT(Number / 2)) = .F.
+            Factor = Number
             EXIT
-
-         // End If
          ENDIF
 
-      //Next
-      NEXT number
+      NEXT Number
 
-
-      // If number > sieveSqrt Then Exit For
-      IF number > sieveSqrt
+      IF Number > SieveSqrt
          EXIT
       ENDIF
 
-      //For number = factor * 3 To sieveSize Step factor * 2
-      FOR number = factor * 3 TO sieveSize Step factor * 2
-
-
-         //primesArray(number \ 2) = False
-         //primesArray[number / 2] = .F.
-
-         SetElement(PrimesArrayCL,number / 2,.F.)
-
-
-      //Next
+      FOR Number = Factor * 3 TO SieveSize STEP Factor * 2
+         SetElement(PrimesArrayCL,INT(Number / 2),.T.)
       NEXT
 
-   //Next
    NEXT
 
-//RETURN PrimesArray
+   //Count the number of Primes (inverted logic warning)
+
+   FOR Counter = 1 TO PArray
+
+      IF GetElement(PrimesArrayCL,Counter) = .F.
+         ResultCount = ResultCount + 1
+      ENDIF
+
+   NEXT
 
 RETURN (ResultCount)
 
 
-
-
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function initArray()
+*    FUNCTION InitArray()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
-FUNCTION initArray(ElementCount,initvalue)
+FUNCTION InitArray(ElementCount,initvalue)
 
-   // Replacement for Array() Function to support > 4096 Elements
+   // Replacement for Clipper AARRAY() function to support > 4096 elements
 
-   LOCAL array := Array(4096)
-   LOCAL arraysNeeded := Int(ElementCount / 4096) + 1
-   LOCAL subarray
+   LOCAL Array := ARRAY(4096)
+   LOCAL ArraysNeeded := INT(ElementCount / 4096) + 1
+   LOCAL Subarray
+   LOCAL I:=0
+   LOCAL J:=0
 
+   FOR I = 1 TO ArraysNeeded
 
-
-   FOR i = 1 TO ArraysNeeded
-      array[i] = Array(4096)
-      FOR j = 1 TO 4096
-         subarray := array[i]
-         subarray[j] = initvalue
+      Array[I] = ARRAY(4096)
+      FOR J = 1 TO 4096
+         Subarray := ARRAY[I]
+         Subarray[J] = InitValue
       NEXT
+
    NEXT
 
-RETURN array
+RETURN (array)
 
 
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *    PROCEDURE SetElement()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
-PROCEDURE SetElement(Array, index, value)
+PROCEDURE SetElement(Array, Index, Value)
 
-  LOCAL whichArray := (INT(index / 4096)) + 1
-  LOCAL whichElement := (index % 4096) + 1
+  // Support of setting array element when the array size > 4096 elements
+ 
+  LOCAL WhichArray := (INT(Index / 4096)) + 1
+  LOCAL WhichElement := (Index % 4096) + 1
 
-  array[whichArray][whichElement] := value
+  Array[WhichArray][WhichElement] := Value
 
 RETURN
 
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function getElement()
+*    FUNCTION GetElement()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
-FUNCTION getElement(array, index)
+FUNCTION GetElement(Array, Index)
 
-  LOCAL WhichArray := (INT(index / 4096)) + 1
-  LOCAL WhichElement := (index  % 4096) + 1
+  // Retrieve element for array > 4096 elements
 
-//  ALTD()
+  LOCAL WhichArray := (INT(Index / 4096)) + 1
+  LOCAL WhichElement := (Index  % 4096) + 1
 
-RETURN array[whichArray][whichElement]
+RETURN (Array[WhichArray][WhichElement])
 
-
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function aElement()
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+***
+* VERSION HISTORY :
+*   1.0 : Initial Release (20/09/2021 ACR)
+*         Credit Jovan Bulajic, Yogoslavia :
+*         Solution to Clippers 4096 single array limit
+*         Concept of Multi-Dimensional Array
+*   1.1 : Correct output (22/09/2021 ACR)
 *
-FUNCTION aElement(aArray,nElement)
-   // Returns Required Element
-RETURN aArray[INT(nElement/4096),nElement%4096]
-
-
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    Function aAAdd()
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*
-Function aAAdd(aArray, uElement)
-    // Replacement for AADD
-    IF LEN(aTail(aArray)) = 4096
-       AADD(aArray,{})
-    ENDIF
-
-RETURN AAdd(aTail(aArray),uElement)
-
-// Credit Jovan Bulajic, Yogoslavia
-
-
-
-
-// Old Stuff
-
-//        LOCAL aArray
-//        LOCAL nLen
-//
-//        aArray := {}
-//
-//        ASIZE(aArray,0)
-//
-//        nLen := INT(nElements/4096)
-//
-//        FOR i := 1 to nLen
-//           AADD(aArray,Array(4096))
-//        NEXT
-//
-//        nLen := (nElements % 4096)
-
-//        ALTD()
-
-
-//        ASIZE(aArray,nLen)
-
-//        FOR i := 1 to nLen
-           //AADD(ATAIL(aArray),NIL)
-//           AADD(aArray,ATAIL(aArray))
-//
-//        NEXT
-
-//RETURN aArray
+* EoF: SIEVE.PRG

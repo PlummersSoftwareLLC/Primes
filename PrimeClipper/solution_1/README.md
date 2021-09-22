@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-112-yellowgreen)
 
 Clipper is a rather ancient derivitive of the even more ancient dbase/xbase languages. It's kind of like NCurses and SQL put into one language i.e. it's *very* business oriented.
 
@@ -22,9 +22,7 @@ Special thanks to the maintainers of this repository for spending some of their 
 
 ## Implementation note
 
-The original Clipper has a unique limitation in that, arrays have unlimited dimensions however each dimension can only hold 4096 values.
-
-Thus, we need to spread out the sieve state across multiple 4096-sized dimensions.
+The original Clipper has some quite *unique* flaws, so there are some implementation notes at the top of the file detailing our workarounds.
 
 ## Running with Docker
 
@@ -43,4 +41,7 @@ hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sieve.prg
 ```
 
 ## Example output
-TODO
+
+```
+AndyRadford,Clipper_5.2e;2;35;1;algorithm=base,faithful=yes,parallel=no,storage=112
+```
