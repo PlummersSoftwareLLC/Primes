@@ -30,7 +30,7 @@
 *         iterating through the each element in the array and setting the
 *         value.  Therefore it is loaded in its default (.F. or NILL) and
 *         set to .T. if number isn't prime.  Thus there is an inverted logic
-*         comparted to other implementations of the sieve algorithm
+*         compared to other implementations of the sieve algorithm
 *
 *      6. The sieve size is determined by the SieveSize variable (currently
 *         set to 1000000
@@ -72,7 +72,7 @@ PROCEDURE Main()
     LOCAL Duration := 0
     LOCAL NumberFound := 0
     LOCAL Now := Seconds()
-    LOCAL OutpuString := ""
+    LOCAL OutputString := ""
 
     DO WHILE Now - StartTime <= 5
      
