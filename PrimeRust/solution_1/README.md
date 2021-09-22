@@ -10,6 +10,7 @@
 Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber -- original author
 - Kai Rese @Kulasko https://github.com/Kulasko -- numerous idiomatic improvements and detailed code review
+- @GordonBGood -- for algorithmic collaboration on the `unrolled-hybrid` solution
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
@@ -50,6 +51,14 @@ Part of the inspiration for this hybrid algorithm comes from the work of two peo
 
 - @ItalyToast for the novel approach to resetting bits in a dense way in the traditional linear sieve in `PrimeCSharp/solution_4`. It got me thinking about how I could potentially apply a similar technique to the `striped-blocks`, although it required a bit of thinking.
 - @GordonBGood for his really interesting `PrimeNim/solution_3` implementation. I definitely had a good think about how I could apply a similar code-gen approach in Rust, and there's some interesting stuff I could potentially do with procedural macros. Before trying that, I decided to see what I could do with const generics and calculating masks, and that path led me to the hybrid algorithm.
+
+## Unrolled hybrid storage
+
+This was designed in a very fun collaboration with @GordonBGood. It has standard linear bit storage, unlike the transposed `striped` case. But it uses something similar to the dense resetting in the `striped`, `hybrid` solution. And it also uses the specialised sparse reset functions with repeating patterns and addresses from @GordonBGood's solutions. 
+
+However, rather than generate all the code directly, I am able to use Rust's const generics to specialise the reset functions. This perhaps a little harder to understand in Rust, since you need to understand how the generics are used to compile down to constants: each new type created with a given generic value, e.g. N=2, results in specific code corresponding to that type. This allows the compiler to treat N as a constant in that context, and perform optimisations. Specifically, we are able to generate a pattern of *single bit* masks that repeat. The compiler is able to then generate `OR` mask instructions with immediate (literal) values, rather than needing to obtain the mask from a register or memory location. Have a look at Gordon's Chapel solution: he used a code-generator to render similar functions, and it's quite easy to see the algorithm there, as he used a code generator to write the dense reset functions. Rust is doing something similar, but in the background via generics.
+
+Now, in order to dispatch to one of these specific functions (remember `N` is a literal constant at compile time), we either need to write a big `match` statement, or we need to generate it. Doing it by hand is feasible -- there are only 32 dense resetters, and 8 sparse ones. But it's no fun doing it by hand. Although it's way more code, Rust's procedural macros are interesting, so I decided to take that approach: essentially, we tell the macro what the range of numbers is, and which functions to call, and it writes the `match` statement for us. I do some substitution of the identifier `N` to a literal value in the `TokenStream` processing. It's a nice way for Rust to write Rust at compile time. It's a gratuitously large hammer for a small nail, purely here to pique people's interest.
 
 ## Run instructions
 

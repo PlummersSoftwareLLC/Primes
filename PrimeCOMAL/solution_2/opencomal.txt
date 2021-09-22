@@ -1,0 +1,77 @@
+0010 // opencomal.txt : a prime sieve implementation in COMAL
+0020 // using a string as a pseudo-bit array for flags
+0030 // by Matthew Kott (kottm), 2021-08-12
+0040 // inspired by Dave's Garage Prime Sieve
+0050 // modified for OpenCOMAL by Rutger van Bergen
+0070 
+0080 // Historical data for validating our results - the number of primes
+0090 // to be found under some limit, such as 168 primes under 1000
+0100 // value is for 10^index, for example:
+0110 //      knownprimes#(2) = 25 (number of primes under 10^2 or 100)
+0120 DIM knownprimes#(10)
+0130 FOR i:=1 TO 10 DO
+0140   READ knownprimes#(i)
+0150 ENDFOR i
+0160 DATA 4,25,168,1229,9592,78498,664579,5761455,50847534,455052511
+0170 
+0180 size#:=1000000
+0190 checkindex#:=LOG10(size#)  // for checking aginst knownprimes#
+0200 bitarr_size#:=(size# DIV 8)+(size# MOD 8<>0)
+0210 DIM sieve$ OF bitarr_size#   // create a string pseudo-bit array for flags
+0220 passes#:=0
+0240 
+0250 SELECT OUTPUT "output.txt"
+0260
+0280 start#:=SYS(now)
+0310 
+0320 WHILE (SYS(now)-start#)<5 DO      // do as many iterations as possible in 5 seconds
+0330   sieve$:=CHR$(0)*bitarr_size# // initialze bit array each pass
+0340   runsieve
+0350   passes#:+1
+0360 ENDWHILE
+0380
+0390 elapsed#:=SYS(now)-start#
+0400
+0410 PRINT "Passes: ",passes#,", Time: ",elapsed#,", Avg: ",elapsed#/passes#,
+0420 PRINT ", Count1: ",count#,", Count2: ",knownprimes#(checkindex#),
+0430 PRINT ", Valid: ",valid
+0450 PRINT
+0460 PRINT "kottm;",passes#,";",elapsed#,";1;algorithm=base,faithful=no,bits=1"
+0470 
+0480 END
+0490 
+0500 // end of main program; procudures and functions follow
+0510 
+0520 PROC bitcalc(pos#)     // calculate which bit in the string
+0530   byte#:=(pos# DIV 8)+1
+0540   bit#:=(pos#-1) MOD 8
+0550   byte$:=sieve$(byte#:byte#)
+0560 ENDPROC bitcalc
+0570 
+0580 FUNC checkbit(pos#)     // check the value of a specific bit
+0590   bitcalc(pos#)
+0600   RETURN (ORD(byte$) BITAND 2^bit#)/(2^bit#)
+0610 ENDFUNC checkbit
+0620 
+0630 PROC setbit(pos#,val#)    // set a bit to a specific value
+0640   IF checkbit(pos#)<>val# THEN
+0650     sieve$(byte#:byte#):=CHR$(ORD(byte$) BITOR 2^bit#)
+0660   ENDIF
+0670 ENDPROC setbit
+0680 
+0690 PROC runsieve      // main procedure for Sieve of Eratosthenes 
+0700   count#:=0
+0710   FOR i#:=2 TO size#-1 DO
+0720     IF checkbit(i#)=0 THEN
+0730       prime#:=i#+i#
+0740       FOR k#:=prime# TO size#-1 STEP i# DO
+0750         setbit(k#,1)
+0760       ENDFOR k#
+0770       count#:+1
+0780     ENDIF
+0790   ENDFOR i#
+0800 ENDPROC runsieve
+0810 
+0820 FUNC valid       // check sieve's output against value in knownprimes#
+0830   RETURN knownprimes#(checkindex#)=count#
+0840 ENDFUNC valid

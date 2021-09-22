@@ -155,7 +155,7 @@ sys	0m0.428s
 N = 999,999,999
 ===============
 
-$ time luatex \\def\\Range{999999999}\\input wheel_primestofile
+$ time luatex "\def\Range{999999999}\input wheel_primestofile"
 This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
  restricted system commands enabled.
 (./wheel_primestofile.tex (./wheel_sieve.tex (./shared_batteries.tex))

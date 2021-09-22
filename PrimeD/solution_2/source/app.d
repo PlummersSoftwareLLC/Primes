@@ -461,6 +461,38 @@ final class SieveRTBX(alias BitT)
     }
 }
 
+final class SieveCT_MegaUnroll(size_t SieveSize)
+{
+    mixin CommonSieveFunctions!8;
+
+    private ubyte[alignTo!8(SieveSize) / 8] _bits;
+
+    bool validateResults() inout
+    {
+        return true;
+    }
+
+    void runSieve()
+    {
+        import std.algorithm : each;
+        import std.math      : sqrt, round;
+        import std.range     : iota;
+
+        const q = cast(size_t)((cast(double)SieveSize).sqrt);
+
+        static foreach(factor; iota(3, q, 2))
+        {
+            if(!this.getBit(factor))
+            {
+                static foreach(i; iota(factor * factor, SieveSize, factor * 2))
+                {
+                    this.setBit(i);
+                }
+            }
+        }
+    }
+}
+
 // What if we could... say... generate a string at compile time and then use that string as code?
 string generateSieveRT(alias BitType)()
 {
@@ -532,7 +564,12 @@ string generateSieveRTRunner(string Alias, alias BitType, bool UseLeaderboardVer
     }
 }
 
-enum PRIME_COUNT = 1_000_000;
+version(Prime_100_000)
+    enum PRIME_COUNT = 100_000;
+else
+    enum PRIME_COUNT = 1_000_000;
+
+
 enum MAX_SECONDS = 5;
 
 import std.typecons : Flag, Yes, No;
@@ -592,6 +629,12 @@ void main(string[] args)
             // This one is here just to have a "non-bool yet used as a bool" version there.
             alias s9 = SieveRTBX!ulong;
             runSingleThreaded!s9(IsFaithful.yes, "base", 64);
+
+            version(CompileUnrolled)
+            {
+                alias s10 = SieveCT_MegaUnroll!PRIME_COUNT;
+                runSingleThreaded!s10(IsFaithful.no);
+            }
             break;
 
         case all:
@@ -697,7 +740,7 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = 
     // A very brief attempt of explaining it is:
     //   "is SieveType a SieveCT with one template parameter Param1 where Param1 is a size_t?"
     //   (this also extracts the template parameter as `Param1` so you can evaluate it and use it for more shenanigans)
-    static if(is(SieveType == SieveCT!Param1, size_t Param1))
+    static if(is(SieveType == SieveCT!Param1, size_t Param1) || is(SieveType == SieveCT_MegaUnroll!Param1, size_t Param1))
         auto s = new SieveType();
     else
         auto s = new SieveType(PRIME_COUNT);

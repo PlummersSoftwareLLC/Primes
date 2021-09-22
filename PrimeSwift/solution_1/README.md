@@ -9,8 +9,8 @@
 This is a collection of implementations in Swift, of which:
 
 1. one is a "naive" implementation that maintains the array of primes in an underlying array of 8-bit booleans
-2. one is a "naive" implementation that maintains the array of primes in an underlying array of bit-mapped 64-bit unsigned integers
-3. one is a "naive" implementation that maintains the array of primes in an underlying array of bit-mapped 32-bit unsigned integers
+2. one is a "naive" implementation that maintains the array of primes in an underlying array of bit-mapped 8-bit unsigned integers
+3. one is a "striped" implementation that maintains the array of primes in an underlying array of bit-mapped 8-bit unsigned integers
 
 Credits:
 

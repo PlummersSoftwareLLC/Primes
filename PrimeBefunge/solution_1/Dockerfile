@@ -12,7 +12,7 @@ RUN git clone -n ${CFUNGE_GIT} ${CFUNGE_DIRECTORY}
 WORKDIR /tmp/${CFUNGE_DIRECTORY}
 RUN git checkout ${CFUNGE_COMMIT} 
 WORKDIR /tmp/${CFUNGE_DIRECTORY}/build
-RUN cmake .. -DUSE_NCURSES=OFF && \
+RUN cmake .. -DUSE_NCURSES=OFF -DUSE_64BIT=OFF && \
     make && make install
 
 WORKDIR /opt/primebefunge
