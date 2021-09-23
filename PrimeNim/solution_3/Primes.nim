@@ -1,26 +1,37 @@
+# Extreme-Loop-Unrolled Odds-Only Bit-Packed Sieve of Eratosthenes Benchmark...
+# This was created for the "Software Drag Racing" GitHub repo as per:
+# https://github.com/PlummersSoftwareLLC/Primes...
+ 
 import std/[ monotimes, tables, strformat ] # timing, verifying, displaying
 import std/macros
-from std/math import sqrt
 from bitops import popCount
+from os import sleep
  
-type Prime = uint64
+type
+  Prime = uint64
+  Techniques = enum
+    bittwiddle, stride8, stride8block, extreme, extremehybrid  
  
-const LIMIT = 1_000_000.Prime
+const RANGE = 1_000_000.Prime
 const DICT = {
-    10.Prime : 4,
-    100.Prime : 25,
-    1000.Prime : 168,
-    10000.Prime : 1229,
-    100000.Prime : 9592,
-    1000000.Prime : 78498,
-    10000000.Prime : 664579,
-    100000000.Prime : 5761455,
-    1000000000.Prime : 50847534,
-    10000000000.Prime : 455052511,
+  10.Prime : 4,
+  100.Prime : 25,
+  1000.Prime : 168,
+  10000.Prime : 1229,
+  100000.Prime : 9592,
+  1000000.Prime : 78498,
+  10000000.Prime : 664579,
+  100000000.Prime : 5761455,
+  1000000000.Prime : 50847534,
+  10000000000.Prime : 455052511,
 }.toTable()
-const RESULT = DICT[LIMIT]
+const EXPECTED = DICT[RANGE]
 
-const DENSETHRESHOLD = 63
+const CPUL1CACHE = 16384 # 16 Kilobytes
+
+const FORTO = 5_000_000_000 # nanoseconds to test = five secondsS
+
+const DENSETHRESHOLD = 129
 
 const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
 
@@ -87,7 +98,7 @@ macro unrollLoops(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
     var `setaid` = `bitbufa` + `strt0id`
     `csstmnt`
 #  echo csstmnt[10].astGenRepr # see AST for a given case (plus one - 1 .. 32)
-#  echo csstmnt[50].toStrLit # see code for a given case (plus one - 1 .. 32)
+#  echo csstmnt[2].toStrLit # see code for a given case (plus one - 1 .. 32)
 #  echo result.toStrLit # see entire produced code at compile time
 
 # This macro adds special treatment for base prime values which
@@ -162,10 +173,10 @@ macro denseSetBits(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
 #  echo csstmnt[1].toStrLit # see code for a given case (this is for step 3)
 #  echo result.toStrLit # see entire produced code at compile time
 
-type # encloses all bit sequence operations used...
-  BitSeq = ref object
-    size: Natural
-    buffer: seq[byte]
+# encloses all bit sequence operations used...
+type BitSeq = ref object
+  size: Natural
+  buffer: seq[byte]
 
 func newBitSeq(size: int): BitSeq = # round up to even 64-bit size
   BitSeq(size: size, buffer: newSeq[byte](((size - 1 + 64) shr 3) and (-8)))
@@ -182,24 +193,25 @@ func `[]`(bitseq: BitSeq; startstop: HSlice[int, int];
       yield (bitseq.buffer[i shr 3] and BITMASK[i and 7]) != 0
 
 # sets a range of the BitSeq by step size to true and returns the next index...
-func setRange(bitseq: BitSeq; start, stop: int; step: int = 1) =
+func setRange(bitseq: BitSeq; start, stop: int; step: int = 1,
+              hybrid: bool = false) =
   assert step <= 0 or stop < start or stop > bitseq.size,
          "Error:  illegal slice limits or step size!!!"
   let bitbufa = cast[int](bitseq.buffer[0].addr)
   var ndx = start
   let sz = min(bitseq.buffer.len, (stop + 8) shr 3) # round up
   if start <= sz * 8 - 16 * step: # enough loops to be worth the setup
-    if step <= DENSETHRESHOLD: denseSetBits(bitbufa, sz, ndx, step)
+    if hybrid and step <= DENSETHRESHOLD: denseSetBits(bitbufa, sz, ndx, step)
     else: unrollLoops(bitbufa, sz, ndx, step)
   while ndx <= stop:
     let cp = cast[ptr byte](bitbufa + (ndx shr 3))
     cp[] = cp[] or BITMASK[ndx and 7] # BITMASK[result and 7]
     ndx += step
 
-func countTrues(bitseq: BitSeq): int =
+func countTruesTo(bitseq: BitSeq; index: int): int =
   let bsp = cast[ptr UncheckedArray[uint64]](bitseq.buffer[0].addr)
-  let lstwrd = (bitseq.size - 1) shr 6
-  let mask = not ((0'u64 - 2'u64) shl ((bitseq.size - 1) and 63))
+  let lstwrd = index shr 6
+  let mask = not ((0'u64 - 2'u64) shl (index and 63))
   result = 0
   for i in 0 ..< lstwrd: result += bsp[i].popCount
   result += (bsp[lstwrd] and mask).popCount
@@ -209,20 +221,65 @@ type
     limit: Prime
     sieveBuffer: BitSeq
 
-func newPrimeSieve(lmt: Prime): PrimeSieve = # seq size rounded up to uint64
+func newPrimeSieve(lmt: Prime; tec: Techniques): PrimeSieve =
   doAssert (lmt <= 1.Prime shl 34), "Specified limit is too large!!!"
   if lmt < 3: return PrimeSieve(limit: if lmt < 2: 0 else: 2,
                                 sieveBuffer: newBitSeq(0))
-  let bitlmt = ((lmt - 3.Prime) shr 1).int # ; let bufsz = (bitlmt + 8) shr 3
-  result = PrimeSieve(limit: lmt, sievebuffer: newBitSeq(bitlmt + 1))
+  let bitlmt = ((lmt - 3.Prime) shr 1).int 
+  result = PrimeSieve(limit: lmt, # BitSeq size rounded up to nearest uint64...
+                      sievebuffer: newBitSeq((bitlmt + 64) and (-63)))
 
-  # include the sieving of the sieveBuffer in the initialization of PrimeSieve
-  let sqrtndx = (lmt.float64.sqrt.int - 3) div 2
-
-  for i in 0 .. sqrtndx:
-    if not result.sieveBuffer[i]: # for base prime
-      let basePrime = i + i + 3; let cullIndex = (basePrime * basePrime - 3) shr 1
-      result.sieveBuffer.setRange(cullIndex, bitlmt, step = basePrime)
+  let cmpstsBytesp =
+        cast[ptr UncheckedArray[byte]](result.sievebuffer.buffer[0].addr)
+  let starts = newSeq[int](8)
+  let startsp = cast[ptr UncheckedArray[int]](starts[0].unsafeAddr)
+  
+  for i in 0 .. bitlmt:
+    if result.sieveBuffer[i]: continue
+    var cullIndex = (i + i) * (i + 3) + 3 # from ((i + i + 3)^2 - 3) / 2
+    if cullIndex > bitlmt: break
+    let basePrime = i + i + 3
+ 
+    case tec:
+      of bittwiddle:
+        let cmpstsBytesp =
+              cast[ptr UncheckedArray[byte]](result.sievebuffer.buffer[0].addr)
+        while cullIndex <= bitlmt:
+          let byteIndex = cullIndex shr 3
+          cmpstsBytesp[byteIndex] =
+            cmpstsBytesp[byteIndex] or BITMASK[cullIndex and 7]
+          cullIndex += basePrime
+      
+      of stride8:
+        let slmt = min(bitlmt, cullIndex + (basePrime shl 3) - 1)
+        let byteLimit = bitlmt shr 3
+        while cullIndex <= slmt:
+          let mask = BITMASK[cullIndex and 7]; var byteIndex = cullIndex shr 3
+          while byteIndex <= byteLimit:
+            let cp = cast[ptr byte](cmpstsBytesp[byteIndex].unsafeAddr)
+            cp[] = cp[] or mask; byteIndex += basePrime
+          cullIndex += basePrime
+      
+      of stride8block:
+        let startIndex = cullIndex shr 3; let bytelimit = bitlmt shr 3
+        for _ in 0 .. 7:
+          startsp[cullIndex and 7] = cullIndex shr 3; cullIndex += basePrime
+        for pageIndex in countup(startIndex and (-CPUL1CACHE),
+                                    byteLimit, CPUL1CACHE):
+          let pageLimit = min(byteLimit, pageIndex + CPUL1CACHE - 1)
+          for si in 0 .. 7:
+            let mask = BITMASK[si]; var byteIndex = startsp[si]
+            while byteIndex <= pageLimit:
+              let cp = cast[ptr byte](cmpstsBytesp[byteIndex].unsafeAddr)
+              cp[] = cp[] or mask; byteIndex += basePrime
+            startsp[si] = byteIndex
+      
+      of extreme:
+        result.sieveBuffer.setRange(cullIndex, bitlmt, step = basePrime)
+      
+      of extremehybrid:
+        result.sieveBuffer.setRange(cullIndex, bitlmt, step = basePrime,
+                                    hybrid = true)
 
 method primes(this: PrimeSieve): iterator: Prime {.closure.} {.base.} =
   return iterator: Prime {.closure.} =
@@ -240,28 +297,43 @@ method countPrimes(this: PrimeSieve): int64 {.base.} =
     if this.limit < 2: return 0'i64 else: return 1'i64
   let lstndx = ((this.limit - 3.Prime) shr 1).int64
   let lstwrd = (lstndx shr 6); let lstmod = lstndx and 63
-  2 + lstmod + lstwrd * 64 - this.sieveBuffer.countTrues.int64
+  2 + lstmod + lstwrd * 64 - this.sieveBuffer.countTruesTo(lstndx.int).int64
 
 # verifying, producing, showing results...
+proc bench(tec: Techniques) =
+  var rslts = ""; let ps0 = 100.newPrimeSieve(tec).primes
+  for p in ps0(): rslts &= $p & " "
+  var isValid = rslts == "2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 "
 
-var rslts = ""; let ps0 = 100.newPrimeSieve.primes
-for p in ps0(): rslts &= $p & " "
-var isValid = rslts == "2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 "
+  var count = 0; let ps1 = RANGE.newPrimeSieve(tec).primes
+  for p in ps1(): count.inc
+  isValid = isValid and count == EXPECTED # two checks
 
-var count = 0; let ps1 = LIMIT.newPrimeSieve.primes
-for p in ps1(): count.inc
-isValid = isValid and count == RESULT # two checks
+  sleep 1000 # sleep 1000 milliseconds = one second to let CPU cool down!
+  let start = getMonoTime().ticks; var duration = 0'i64
+  var passes = 0; var rslt: PrimeSieve
+  while duration < FORTO:
+    rslt = RANGE.newPrimeSieve(tec)
+    duration = getMonoTime().ticks - start; passes += 1
 
-let start = getMonoTime().ticks; var duration = 0'i64
-var passes = 0; var rslt: PrimeSieve
-while duration < 5_000_000_000:
-  rslt = LIMIT.newPrimeSieve
-  duration = getMonoTime().ticks - start; passes += 1
+  let elapsed = duration.float64 / 1e9 # in float64 seconds
+  let primeCount = rslt.countPrimes
+  isValid = isValid and primeCount == EXPECTED # a third check
 
-let elapsed = duration.float64 / 1e9
-let primeCount = rslt.countPrimes
-isValid = isValid and primeCount == RESULT # a thrid check
+  let label = "GordonBGood_" & (
+                case tec:
+                    of bittwiddle: "bittwiddle"
+                    of stride8: "stride8"
+                    of stride8block: "stride8block-16K"
+                    of extreme: "extreme"
+                    of extremehybrid: "extreme-hybrid" )
+  
+  stderr.write(&"Passes: {passes}, Time: {elapsed}, ")
+  stderr.write(&"Avg: {(elapsed / passes.float64)}, Limit: {RANGE}, ")
+  stderr.writeLine(&"Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
 
-stderr.writeLine(&"Passes: {passes}, Time: {elapsed}, Avg: {(elapsed / passes.float64)}, Limit: {LIMIT}, Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
-echo &"GordonBGood_extreme_hybrid;{passes};{elapsed};1;algorithm=base,faithful=yes,bits=1"
+  stdout.write(&"{label};{passes};{elapsed}")
+  echo ";1;algorithm=base,faithful=yes,bits=1"
+
+for t in Techniques.bittwiddle .. Techniques.extremehybrid: bench t
 
