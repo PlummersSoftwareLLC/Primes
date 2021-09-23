@@ -1,7 +1,7 @@
 # Clipper Solution by Andy Radford
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-112-yellowgreen)
 
@@ -43,5 +43,5 @@ hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sieve.prg
 ## Example output
 
 ```
-AndyRadford,Clipper_5.2e;2;35;1;algorithm=base,faithful=yes,parallel=no,storage=112
+AndyRadford,Clipper_5.2e;2;35;1;algorithm=base,faithful=no,parallel=no,storage=112
 ```
