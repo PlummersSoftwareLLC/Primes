@@ -109,7 +109,7 @@ const BitSieveOpts = comptime struct {
     cached_masks: bool = false, // used cached mask lookup instead?
     FindFactorChunk: type = u8,
     unrolled: bool = false,
-    max_vector: ?u32 = null,
+    max_vector: u32 = 1,
     half_extent: bool = false,
     find_factor: FindFactorMode = .naive,
     note: anytype = "",
@@ -131,9 +131,11 @@ pub fn BitSieve(comptime opts_: anytype) type {
     const find_name = "-find-" ++ @typeName(FindFactorChunk) ++ if (opts.find_factor == .advanced) "-advanced" else "";
 
     var vectornamebuf: [20]u8 = undefined; // 20 ought to be enough!
-    var buf = if (opts.max_vector) |mv|
-        std.fmt.bufPrint(vectornamebuf[0..], "v{}{s}", .{mv, if (opts.half_extent) "h" else ""}) catch {@panic("can't make the vector name");}
-    else vectornamebuf[0..];
+    var buf = if (opts.max_vector > 1) buf: {
+        const half_extent_suffix = if (opts.half_extent) "h" else "";
+        break :buf std.fmt.bufPrint(vectornamebuf[0..], "v{}{s}", .{opts.max_vector, half_extent_suffix})
+          catch @panic("can't make the vector name");
+    } else vectornamebuf[0..];
 
     const wheel_name = if (Wheel) |W| "-" ++ W.name else "";
 
@@ -143,7 +145,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
     return struct {
         // informational content.
-        const vector_name = if (opts.max_vector) |_| vectornamebuf[0..buf.len] else "";
+        const vector_name = if (opts.max_vector > 1) vectornamebuf[0..buf.len] else "";
         pub const name = base_name ++ run_name ++ vector_name ++ find_name ++ wheel_name ++ opts.note;
         pub const algo = if (Wheel) |_| "wheel" else "base";
         pub const bits = 1;

@@ -49,7 +49,7 @@ fn DenseFn(comptime T: type) type {
 
 const UnrolledOpts = struct {
     primeval: u1 = 0,          // are 1s or 0's prime?
-    max_vector: ?u32 = null,   // should we use vectors?  what's the biggest vector size?
+    max_vector: u32 = 1,       // should we use vectors?  what's the biggest vector size?
     half_extent: bool = false, // how many lookup entries?
 };
 
@@ -58,8 +58,7 @@ const UnrolledOpts = struct {
 /// preserves the integer semantics of the funciton.
 pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) type {
     return struct{
-        pub fn fill(field: [*]T, field_count: usize) align(256) void {
-            @setAlignStack(256);
+        pub fn fill(field: [*]T, field_count: usize) void {
             fillOneChunk(field, true);
             var offset : usize = num;
             while (offset < field_count) : (offset += num) {
@@ -70,31 +69,49 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
 
         /// a function that is expected to fill *num* ints with bits flagged starting
         /// from index num/2, spaced out by *num* bits.
-        inline fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) void {
-            comptime var int_offset: usize = 0;
+        fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) void {
+            comptime const total_vecs = if (opts.max_vector == 1) num else num / opts.max_vector + 1;
+            comptime const total_ints = num;
+
+            comptime var current_vec: usize = 0;
+            comptime var current_int: usize = 0;
+            comptime var current_bit: usize = num / 2;
+
             comptime var count: usize = 0; // for sanity checking purposes only.
-            comptime var bit_location: usize = num / 2;
-            comptime var next_boundary: usize = 0;
-            inline while (int_offset < num) {
-                comptime const V = BestVectorFor(num - int_offset, opts.max_vector);
-                comptime const ua_ptr_t = Unalign(V);
-                var mem: ua_ptr_t = @ptrCast(ua_ptr_t, chunk + int_offset);
-                next_boundary += comptime intsConsumed(V) * @bitSizeOf(T);
 
-                // runtime
-                var cache: V = mem.*;
-                inline while (bit_location < next_boundary) : (bit_location += num) {
+            var cache_int: T = undefined; // this is register cache, size of one integer.
 
-                    if ((!start_at_square) or ((2 * bit_location + 1) >= num * num)) {
-                        setBit(V, &cache, bit_location - int_offset * @bitSizeOf(T));
+            inline while (current_vec < total_vecs) {
+                const V = VectorFor(total_ints, current_vec, opts.max_vector);
+                const Up = UnalignPtr(V);
+
+                // assign the vector location in memory.
+                var vector_ptr: Up = @ptrCast(Up, chunk + current_int);
+                // pull the memory down into a vector register.
+                var cache_vec: V = vector_ptr.*;
+
+                vec_loop: inline while (true) {
+                    // pull from the vector register to the int register
+                    getCache(cache_vec, &cache_int, current_int);
+                    inline while (current_bit / @bitSizeOf(T) <= current_int) : (current_bit += num) {
+
+                        if ((!start_at_square) or ((2 * current_bit + 1) >= num * num)) {
+                            setBit(&cache_int, current_bit);
+                        }
+
+                        count += 1;
                     }
+                    // send the int register to the vector register
+                    setCache(&cache_vec, cache_int, current_int);
 
-                    count += 1;
+                    current_int += 1;
+                    comptime const index_int = current_int % opts.max_vector;
+                    if ((index_int == 0) or (current_int == total_ints)) break :vec_loop;
                 }
-                mem.* = cache;
-                // end runtime
+                // send the vector register back up to memory.
+                vector_ptr.* = cache_vec;
 
-                int_offset += comptime intsConsumed(V);
+                current_vec += 1;
             }
 
             // this should be true due to theoretical algebra, but let's add this
@@ -102,55 +119,46 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
             std.debug.assert(count == @bitSizeOf(T));
         }
 
-        inline fn setBit(comptime V: type, cache: *V, comptime bit_index: usize) void {
+        inline fn getCache(cache_vec: anytype, cache_int: *T, comptime current_int: usize) void {
+            if (@TypeOf(cache_vec) == T) {
+                cache_int.* = cache_vec;
+            } else {
+                cache_int.* = cache_vec[current_int % opts.max_vector];
+            }
+        }
+
+        inline fn setCache(cache_vec: anytype, cache_int: T, comptime current_int: usize) void {
+            if (@TypeOf(cache_vec) == *T) {
+                cache_vec.* = cache_int;
+            } else {
+                cache_vec.*[current_int % opts.max_vector] = cache_int;
+            }
+        }
+
+        inline fn setBit(cache_int: *T, comptime current_bit: usize) void {
             const shift_t = ShiftTypeFor(T);
-            comptime const shift = @intCast(shift_t, bit_index % @bitSizeOf(T));
-            switch (V) {
-                T =>
-                    if (opts.primeval == 0) {
-                        comptime const mask = @as(T, 1) << shift;
-                        cache.* |= mask;
-                    } else {
-                        comptime const mask = ~(@as(T, 1) << shift);
-                        cache.* &= mask;
-                    },
-                else => |Vector| {
-                    comptime const int_index = bit_index / @bitSizeOf(T);
-                    if (opts.primeval == 0) {
-                        comptime const mask = @as(T, 1) << shift;
-                        cache.*[int_index] |= mask;
-                    } else {
-                        comptime const mask = ~(@as(T, 1) << shift);
-                        cache.*[int_index] &= mask;
-                    }
-                }
+            comptime const shift = @intCast(shift_t, current_bit % @bitSizeOf(T));
+            if (opts.primeval == 0) {
+                comptime const mask = @as(T, 1) << shift;
+                cache_int.* |= mask;
+            } else {
+                comptime const mask = ~(@as(T, 1) << shift);
+                cache_int.* &= mask;
             }
         }
 
         // VECTOR/INT UTILITY FUNCTIONS
-        fn BestVectorFor(comptime ints_left: usize, comptime max_dimension: ?u32) type {
-            if (max_dimension) |max_dim| {
-                std.debug.assert(std.math.isPowerOfTwo(max_dim));
-                return if (max_dim < ints_left) std.meta.Vector(max_dim, T) else T;
+        fn VectorFor(comptime total_ints: usize, comptime current_vec: usize, comptime max_vector: u32) type {
+            if (current_vec == total_ints / max_vector) {
+                const last_size = total_ints % max_vector;
+                return if (last_size == 1) T else std.meta.Vector(last_size, T);
             } else {
-                return T;
+                return std.meta.Vector(max_vector, T);
             }
         }
 
-        fn Unalign(comptime V: type) type {
-            switch(@typeInfo(V)) {
-                .Int => return *V,
-                .Vector => return * align(@alignOf(T)) V,
-                else => @compileError("unreachable")
-            }
-        }
-
-        fn intsConsumed(comptime V: type) usize {
-            return switch (@typeInfo(V)) {
-                .Int => 1,
-                .Vector => |vec| vec.len,
-                else => @compileError("unreachable")
-            };
+        fn UnalignPtr(comptime V: type) type {
+            return if (V == T) *T else *align(@alignOf(T))V;
         }
     };
 }
@@ -305,7 +313,6 @@ var my_field: usize = undefined;
 pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: UnrolledOpts) type {
     return struct{
         pub fn fill(field: [*]T, field_ints: usize, factor: usize) align(256) void {
-            @setAlignStack(256);
             const square_offset = (factor * factor) / (2 * @bitSizeOf(T));
             const stride = factor / @bitSizeOf(T) - 1;
             // one-time, expensive division.
