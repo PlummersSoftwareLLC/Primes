@@ -1,6 +1,6 @@
 FROM alpine:3.13
 
-RUN apk add --no-cache build-base=0.5-r2 cmake=3.18.4-r1 git=2.30.2-r0
+RUN apk add --no-cache build-base cmake git
 # The latest release (0.9.0) does not work for whatever reason, but the current
 # git HEAD, mercifully, does.
 ARG CFUNGE_GIT=https://github.com/VorpalBlade/cfunge.git
