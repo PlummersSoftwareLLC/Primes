@@ -19,6 +19,9 @@ pub fn build(b: *Builder) void {
     const all = b.option(bool, "all", "should run uncurated examples") orelse false;
     exe.addBuildOption(bool, "all", all);
 
+    const arm_is_rpi = b.option(bool, "arm-is-rpi") orelse false;
+    exe.addBuildOption(bool, "arm_is_rpi", arm_is_rpi);
+
     exe.install();
 
     const run_cmd = exe.run();

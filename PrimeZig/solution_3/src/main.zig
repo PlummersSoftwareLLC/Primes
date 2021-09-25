@@ -78,7 +78,7 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{}, true},
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{.wheel_primes = 6}, true},
         // multi-threaded int regressions
-        .{ ParallelGustafsonRunner, .{.no_ht = true}, IntSieve, .{.wheel_primes = 6}, only_when_all},
+        .{ ParallelGustafsonRunner, .{.no_ht = true}, IntSieve, .{.wheel_primes = 6, .note = "no-ht"}, only_when_all},
         // multi-threaded, base
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, true},
         // multi-threaded, wheel (which one is best may depend on the time of day)
@@ -86,7 +86,7 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, true},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, true},
         // multi-threaded base regressions
-        .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = 8}}, only_when_all},
+        .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = 8}, .note = "no-ht"}, only_when_all},
     };
 
     inline for (specs) |spec| {

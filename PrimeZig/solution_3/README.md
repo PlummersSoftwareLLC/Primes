@@ -31,7 +31,11 @@ Run:
 ./zig-out/bin/PrimeZig
 ```
 
-Uses highly composable Zig datastructures.
+There is a special flag `-Darm-is-rpi` which adds extra filtering
+on the units compiled (as detected by it being an arm architecture) that
+allows you to compile on the memory-constrained rpi architecture.
+
+Uses highly composable "Enterprise Zig" datastructures.
 Features combinations of the following optimizations:
 
 - int datatypes: `bool`, `u8`
