@@ -2,6 +2,7 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
@@ -17,4 +18,6 @@ You must have a working version of Dyalog APL installed. On Linux/UNIX, run `LOA
 
 ## Output
 
-	arcfideSingle;6532;5.001;1;algorithm=wheel,faithful=yes,bits=1
+	arcfideDfn;6135;5.001;1;algorithm=wheel,faithful=no,bits=1
+	arcfideDfnFaithful;6187;5.001;1;algorithm=wheel,faithful=yes,bits=1
+	arcfideClassFaithful;1423;5.002;1;algorithm=wheel,faithful=yes,bits=1
