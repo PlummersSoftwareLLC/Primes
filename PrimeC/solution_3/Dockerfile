@@ -1,13 +1,17 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get --no-install-recommends -y install build-essential=12.4ubuntu1 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get -y install build-essential
 
 WORKDIR /opt/app
 
-COPY compile.sh run.sh *.c ./
+COPY compile.sh .
+COPY run.sh .
+COPY *.c ./
+
+RUN chmod +x compile.sh run.sh
 
 RUN ./compile.sh
 
 ENTRYPOINT [ "./run.sh" ]
+
+

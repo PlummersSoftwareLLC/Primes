@@ -10,8 +10,8 @@ FROM rust:1.54 AS build
 
 WORKDIR /app
 COPY . .
-RUN cargo test \
-    && cargo build --release
+RUN cargo test
+RUN cargo build --release
 
 # 2. runtime stage
 #   - start from clean container

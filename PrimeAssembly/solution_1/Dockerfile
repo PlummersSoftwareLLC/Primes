@@ -1,11 +1,15 @@
 FROM alpine:3.13
 
-RUN apk add --no-cache build-base=0.5-r2 nasm=2.15.05-r0
+RUN apk add --no-cache build-base nasm
 
 WORKDIR /opt/app
 
-COPY *.sh *.asm ./
+COPY *.sh ./
+COPY *.asm ./
 
-RUN ./build.sh
+RUN chmod a+x ./*.sh && \
+    ./build.sh
 
 ENTRYPOINT [ "./run.sh" ]
+
+

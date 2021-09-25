@@ -1,6 +1,6 @@
 FROM alpine:3.13 AS build
 
-RUN apk add --no-cache gcc-gnat=10.2.1_pre1-r3 libc-dev=0.7.2-r3
+RUN apk add --no-cache gcc-gnat libc-dev
 
 WORKDIR /opt/app
 

@@ -1,10 +1,8 @@
 FROM adoptopenjdk/openjdk11:jdk-11.0.11_9-alpine-slim
 WORKDIR /home/netrexx
-RUN apk add --no-cache curl=7.78.0-r0 unzip=6.0-r9 \
+RUN apk add curl unzip \
 	&& curl -G http://netrexx.org/files/NetRexx-4.01-GA.zip -o ./NetRexx4.zip \
-	&& unzip ./NetRexx4.zip -d . \
-	&& rm NetRexx4.zip
-
+	&& unzip ./NetRexx4.zip -d .
 COPY ./PrimeNetRexx.nrx .
 
 RUN java -jar lib/NetRexxF.jar -compile PrimeNetRexx

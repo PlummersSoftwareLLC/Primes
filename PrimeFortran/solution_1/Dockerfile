@@ -1,9 +1,7 @@
 FROM ubuntu:18.04
 
 RUN apt-get update -qq \
-    && apt-get install --no-install-recommends -y gfortran=4:7.4.0-1ubuntu2.3 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y gfortran
 
 WORKDIR /opt/app
 COPY PrimesFortran.f08 .

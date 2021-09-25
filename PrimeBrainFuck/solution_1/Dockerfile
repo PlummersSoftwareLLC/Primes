@@ -3,10 +3,10 @@ FROM ubuntu:18.04 AS build
 
 # install tools
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y gpg-agent=2.2.4-1ubuntu1.4 lsb-release=9.20170808ubuntu1 wget=1.19.4-1ubuntu2.2 software-properties-common=0.96.24.32.14 git=1:2.17.1-1ubuntu0.8
+    && apt-get install -y lsb-release wget software-properties-common git
 
 # install clang-12 for C++ standard 17
-RUN wget --progress=dot:giga https://apt.llvm.org/llvm.sh \
+RUN wget https://apt.llvm.org/llvm.sh \
     && chmod +x llvm.sh \
     && ./llvm.sh 12
 
@@ -15,11 +15,10 @@ ENV CC=/usr/bin/clang-12
 ENV CXX=/usr/bin/clang++-12
 
 # install latest version of cmake
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN wget --progress=dot:giga -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
     && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' \
     && apt-get update \
-    && apt-get install --no-install-recommends -y cmake=3.21.1-0kitware1ubuntu18.04.1
+    && apt-get install -y cmake
 
 # clone custom language interpreter
 RUN git clone https://github.com/ThatAquarel/BrainF-ck-Interpreter \

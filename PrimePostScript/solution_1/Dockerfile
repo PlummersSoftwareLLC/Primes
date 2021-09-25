@@ -2,8 +2,9 @@ FROM alpine:3.14
 
 WORKDIR /opt/app
 
-RUN apk add --no-cache ghostscript=9.54.0-r0
+RUN apk add --no-cache ghostscript
 
-COPY *.ps *.sh ./
+COPY *.ps ./
+COPY *.sh ./
 
 ENTRYPOINT [ "sh", "run.sh" ]

@@ -1,9 +1,9 @@
 FROM alpine:3.13
 
-RUN apk add --no-cache --update tcl=8.6.10-r1
+RUN apk add --update tcl
 
 WORKDIR /opt/app
 
 COPY primes.tcl .
 
-ENTRYPOINT [ "tclsh","primes.tcl" ]
+ENTRYPOINT ["tclsh","primes.tcl" ]

@@ -8,8 +8,6 @@ WORKDIR /opt/app
 
 COPY prime_race.tex prime_functions.tex run.sh ./
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install --no-install-recommends -y texlive-latex-base=2020.20210202-3 texlive-latex-recommended=2020.20210202-3 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* 
+RUN apt-get update && apt-get install -y texlive-latex-base texlive-latex-recommended
 
 ENTRYPOINT [ "bash", "run.sh" ]

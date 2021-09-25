@@ -4,7 +4,7 @@ WORKDIR /opt/app
 COPY primes.chpl .
 RUN chpl --fast primes.chpl
 
-ENTRYPOINT [ "./primes" ]
+ENTRYPOINT [ "/opt/app/primes" ]
 
 # To run with Docker commands...
 # docker build -t primes .

@@ -1,9 +1,10 @@
 FROM alpine:3.13
 
-RUN apk add --no-cache --update tcl=8.6.10-r1
+RUN apk add --update tcl
 
 WORKDIR /opt/app
 
-COPY *.tcl run.sh ./
+COPY *.tcl ./
+COPY run.sh ./
 
-ENTRYPOINT [ "./run.sh" ]
+ENTRYPOINT ["./run.sh" ]

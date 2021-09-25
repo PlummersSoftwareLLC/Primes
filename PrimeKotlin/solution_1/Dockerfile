@@ -3,10 +3,10 @@ ARG JDK_VERSION=16
 
 FROM gradle:${GRADLE_VERSION}-jdk-hotspot as BUILD
 
-RUN apt-get update && apt-get --no-install-recommends -y install libncurses5=6.2-0ubuntu2
+RUN apt-get update && apt-get -y install libncurses5
 
 WORKDIR /src
-COPY . .
+COPY . /src
 RUN ./compile.sh
 
 FROM adoptopenjdk:${JDK_VERSION}-jdk-hotspot
@@ -28,13 +28,13 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     *) echo "unsupported architecture"; exit 1 ;; \
   esac \
   && mkdir /bin/node \
-  && apt-get update && apt-get --no-install-recommends -y install xz-utils=5.2.4-1ubuntu1  \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
+  && apt-get update && apt-get -y install xz-utils \
   && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \
   && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /bin/node --strip-components=1
 
 COPY ./run.sh ./
-COPY --from=BUILD /src/build/libs/PrimeSieve-1.0-all.jar /src/build/compileSync/main/productionExecutable/kotlin/PrimeSieve.js /src/build/bin/native/releaseExecutable/PrimeSieve.kexe ./
+COPY --from=BUILD /src/build/libs/PrimeSieve-1.0-all.jar ./
+COPY --from=BUILD /src/build/compileSync/main/productionExecutable/kotlin/PrimeSieve.js ./
+COPY --from=BUILD /src/build/bin/native/releaseExecutable/PrimeSieve.kexe ./
 
 ENTRYPOINT ["./run.sh"]

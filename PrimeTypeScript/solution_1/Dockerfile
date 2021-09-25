@@ -2,10 +2,13 @@ FROM node:14-alpine AS build
 
 WORKDIR /opt/app
 
-COPY . .
-RUN npm ci \
-    && npm run build \
-    && npm ci --production
+COPY package*.json ./
+RUN npm ci
+
+COPY tsconfig.json .
+COPY src ./src
+RUN npm run build
+RUN npm ci --production
 
 FROM node:14-alpine
 

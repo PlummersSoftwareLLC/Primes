@@ -4,9 +4,7 @@ WORKDIR /opt/app
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install --no-install-recommends -y texlive-base=2019.20200218-1 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y texlive-base
 
 COPY shared_batteries.tex *_sieve.tex *_benchmark.tex runpdftex.sh texmf.cnf ./
 
