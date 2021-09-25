@@ -19,8 +19,8 @@ pub fn build(b: *Builder) void {
     const all = b.option(bool, "all", "should run uncurated examples") orelse false;
     exe.addBuildOption(bool, "all", all);
 
-    const arm_is_rpi = b.option(bool, "arm-is-rpi") orelse false;
-    exe.addBuildOption(bool, "arm_is_rpi", arm_is_rpi);
+    const arm_is_rpi = b.option(bool, "arm-is-rpi4", "treat arm architecture as 8GB rpi4") orelse false;
+    exe.addBuildOption(bool, "arm_is_rpi4", arm_is_rpi);
 
     exe.install();
 

@@ -6,7 +6,8 @@ const wheel = @import("wheel.zig");
 const IntSieveOpts = comptime struct {
     PRIME: anytype = @as(u8, 0),
     allocator: type = default_allocator,
-    wheel_primes: u8 = 0
+    wheel_primes: u8 = 0,
+    note: anytype = "",
 };
 
 pub fn IntSieve(comptime opts_: anytype) type {
@@ -27,7 +28,7 @@ pub fn IntSieve(comptime opts_: anytype) type {
         pub const STARTING_FACTOR: usize = if (Wheel) |W| W.STARTING_FACTOR else 3;
 
         // informational content.
-        pub const name = "sieve-" ++ @typeName(T) ++ wheel_name;
+        pub const name = "sieve-" ++ @typeName(T) ++ wheel_name ++ opts.note;
         pub const algo = if (Wheel) |_| "wheel" else "base";
         pub const bits = if (T == bool) 8 else @bitSizeOf(T);
 

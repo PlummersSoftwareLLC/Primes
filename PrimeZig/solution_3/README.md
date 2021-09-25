@@ -7,9 +7,6 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-16-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-64-yellowgreen)
 
 Build (curated conditions):
 
