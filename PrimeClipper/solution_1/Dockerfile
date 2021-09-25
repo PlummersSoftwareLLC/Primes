@@ -8,10 +8,12 @@ RUN apt-get update && \
     apt-get install -y wget build-essential && \
     wget "https://sourceforge.net/projects/harbour-project/files/binaries-linux-ubuntu/nightly/${HARBOUR_PKG}/download" -O ${HARBOUR_PKG} && \
     apt-get install -y "./${HARBOUR_PKG}" && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
     rm "${HARBOUR_PKG}" 
 
 COPY . /opt/
 
-RUN hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sieve.prg 
+RUN hbmk2 -gtstd -optim -cflag=-O3 ./sieve.prg 
 
 CMD [ "./sieve" ]
