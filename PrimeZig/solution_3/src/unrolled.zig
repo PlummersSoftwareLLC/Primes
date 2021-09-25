@@ -34,6 +34,13 @@ fn lutCount(comptime T: type, comptime half_extent: bool) usize {
     }
 }
 
+// general options for the unrolled
+pub const UnrolledOpts = struct {
+    PRIME: u1 = 0,          // are 1s or 0's prime?
+    max_vector: u32 = 1,       // should we use vectors?  (no == 1) what's the biggest vector size?
+    half_extent: bool = true,  // how many lookup entries for the dense phase.
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // DENSE FUNCTIONS
 // these functions have more than one bit flip per datatype and thus they cache
@@ -46,12 +53,6 @@ fn lutCount(comptime T: type, comptime half_extent: bool) usize {
 fn DenseFn(comptime T: type) type {
     return fn([*]T, usize) void;
 }
-
-const UnrolledOpts = struct {
-    primeval: u1 = 0,          // are 1s or 0's prime?
-    max_vector: u32 = 1,       // should we use vectors?  what's the biggest vector size?
-    half_extent: bool = false, // how many lookup entries?
-};
 
 /// returns a function wrapped in an struct; this is the simplest variadic way
 /// of assigning  a function "identifier" in zig to an integer value which
@@ -138,7 +139,7 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
         inline fn setBit(cache_int: *T, comptime current_bit: usize) void {
             const shift_t = ShiftTypeFor(T);
             comptime const shift = @intCast(shift_t, current_bit % @bitSizeOf(T));
-            if (opts.primeval == 0) {
+            if (opts.PRIME == 0) {
                 comptime const mask = @as(T, 1) << shift;
                 cache_int.* |= mask;
             } else {
@@ -351,7 +352,7 @@ pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts
             comptime const unstrided_index = chunk_bit_index / @bitSizeOf(T);
             const strided_index = unstrided_index + iteration * stride;
 
-            if (opts.primeval == 0) { // NB this if is evaluated at comptime.
+            if (opts.PRIME == 0) { // NB this if is evaluated at comptime.
                 comptime const mask = @as(T, 1) << shift;
                 chunk[strided_index] |= mask;
             } else {
