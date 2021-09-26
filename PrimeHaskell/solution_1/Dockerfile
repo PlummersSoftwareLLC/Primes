@@ -12,7 +12,8 @@ COPY stack.yaml package.yaml ./
 
 RUN stack build --only-dependencies
 
-COPY src/ app/ ./
+COPY src/ src/
+COPY app/ app/
 
 RUN PATH=/usr/lib/llvm-9/bin:$PATH stack build --ghc-options='-fllvm'
 
