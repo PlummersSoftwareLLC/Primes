@@ -4,7 +4,7 @@ WORKDIR /source
 # copy csproj and restore as distinct layers
 COPY PrimeSieveFsharp_Recursion.fsproj /source
 RUN dotnet restore
-RUN ls -l
+
 # copy and publish app and libraries
 COPY *.fs /source
 RUN dotnet publish -c release -o /app --no-restore
