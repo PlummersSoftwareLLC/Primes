@@ -322,7 +322,7 @@ pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts
             const square_offset = (factor * factor) / (2 * @bitSizeOf(T));
             const stride = factor / @bitSizeOf(T) - 1;
             // one-time, expensive division.
-            const chunk_count = (field_ints - square_offset) / factor;
+            const chunk_count = (field_ints - square_offset) / factor + 1;
 
             var index: usize = 0;
             var chunk = field + square_offset;
