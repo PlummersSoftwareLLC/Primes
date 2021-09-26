@@ -6,7 +6,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y gpg-agent lsb-release wget software-properties-common git
 
 # install clang-12 for C++ standard 17
-RUN wget --progress=dot:giga https://apt.llvm.org/llvm.sh \
+RUN wget https://apt.llvm.org/llvm.sh \
     && chmod +x llvm.sh \
     && ./llvm.sh 12
 
@@ -16,7 +16,7 @@ ENV CC=/usr/bin/clang-12 \
 
 # install latest version of cmake
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN wget --progress=dot:giga -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
     && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' \
     && apt-get update \
     && apt-get install --no-install-recommends -y cmake
