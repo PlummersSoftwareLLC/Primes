@@ -3,22 +3,23 @@ FROM ubuntu:18.04 AS build
 
 # install tools
 RUN apt-get update \
-    && apt-get install -y lsb-release wget software-properties-common git
+    && apt-get install --no-install-recommends -y gpg-agent lsb-release wget software-properties-common git
 
 # install clang-12 for C++ standard 17
-RUN wget https://apt.llvm.org/llvm.sh \
+RUN wget --progress=dot:giga https://apt.llvm.org/llvm.sh \
     && chmod +x llvm.sh \
     && ./llvm.sh 12
 
 # set clang as default compiler for C and C++
-ENV CC=/usr/bin/clang-12
-ENV CXX=/usr/bin/clang++-12
+ENV CC=/usr/bin/clang-12 \
+    CXX=/usr/bin/clang++-12
 
 # install latest version of cmake
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN wget --progress=dot:giga -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
     && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' \
     && apt-get update \
-    && apt-get install -y cmake
+    && apt-get install --no-install-recommends -y cmake
 
 # clone custom language interpreter
 RUN git clone https://github.com/ThatAquarel/BrainF-ck-Interpreter \
@@ -31,9 +32,8 @@ RUN cmake -DCMAKE_BUILD_TYPE=Release .. \
     && cp BrainF_ck_Interpreter brainfuck
 
 # build prime sieve caller
-COPY *.cpp /opt/app/
-COPY *.b /opt/app/
 WORKDIR /opt/app/
+COPY *.cpp *.b ./
 RUN clang++-12 -Ofast -std=c++17 PrimeBrainFuck.cpp -oPrimeBrainFuck
 
 # container for running built binaries
