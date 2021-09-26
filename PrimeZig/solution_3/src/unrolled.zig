@@ -61,8 +61,7 @@ fn DenseFn(comptime T: type) type {
 /// preserves the integer semantics of the funciton.
 pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) type {
     return struct{
-        pub inline fn fill(field: [*]T, field_count: usize) void {
-            //@setAlignStack(256);
+        pub fn fill(field: [*]T, field_count: usize) void {
             fillOneChunk(field, true);
             var offset : usize = num;
             while (offset < field_count) : (offset += num) {

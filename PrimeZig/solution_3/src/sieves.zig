@@ -235,7 +235,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
             return count;
         }
 
-        pub fn findNextFactor(self: *Self, factor: usize) usize {
+        pub inline fn findNextFactor(self: *Self, factor: usize) usize {
             if (opts.find_factor == .naive) {
                 return findNextFactorNaive(self, factor);
             } else {
@@ -303,8 +303,6 @@ pub fn BitSieve(comptime opts_: anytype) type {
             }
         }
 
-        // some of these could get really big so let's try to make sure they don't cross
-        // page boundaries
         pub fn runFactor(self: *Self, factor: usize) void {
             const T = opts.RunFactorChunk;
             if (opts.unrolled) |_| {
@@ -314,7 +312,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
             }
         }
 
-        pub fn runFactorConventional(self: *Self, factor: usize) void {
+        fn runFactorConventional(self: *Self, factor: usize) void {
             const T = opts.RunFactorChunk;
             const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
             // naive factoring algorithm.  calculate mask each time.
@@ -331,7 +329,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
             }
         }
 
-        fn runFactorUnrolled(self: *Self, factor: usize) void {
+        inline fn runFactorUnrolled(self: *Self, factor: usize) void {
             const D = opts.RunFactorChunk; // Type for dense values
             comptime var unrolled_opts = opts.unrolled.?;
             unrolled_opts.PRIME = opts.PRIME;  // NB: COMPTIME.
@@ -497,7 +495,7 @@ pub fn VecSieve(comptime opts_: anytype) type {
             return count;
         }
 
-        pub inline fn findNextFactor(self: *Self, factor: usize) usize {
+        pub fn findNextFactor(self: *Self, factor: usize) usize {
             const field = self.field;
             const num = (factor + 2) / 2;
             var index = num / 8;
@@ -528,7 +526,7 @@ pub fn VecSieve(comptime opts_: anytype) type {
             }
         }
 
-        pub fn runFactor(self: *Self, factor: usize) void {
+        pub inline fn runFactor(self: *Self, factor: usize) void {
             if (factor < small_factor_max) {
                 runSmallFactor(self, @intCast(u32, factor));
             } else {
@@ -536,7 +534,7 @@ pub fn VecSieve(comptime opts_: anytype) type {
             }
         }
 
-        pub inline fn runSparseFactor(self: *Self, factor: usize) void {
+        inline fn runSparseFactor(self: *Self, factor: usize) void {
             const field = self.field;
             const limit = self.field_count / 2;
             var num = (factor * factor) / 2;
@@ -549,7 +547,7 @@ pub fn VecSieve(comptime opts_: anytype) type {
             }
         }
 
-        pub inline fn runSmallFactor(self: *Self, factor: u32) void {
+        inline fn runSmallFactor(self: *Self, factor: u32) void {
             std.debug.assert(factor < small_factor_max);
             const field = self.field;
             const limit = self.field_count >> 1;
