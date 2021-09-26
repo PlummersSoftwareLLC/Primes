@@ -2,7 +2,7 @@ FROM ubuntu:20.04 AS build
 
 # hadolint ignore=DL3008,DL3015
 RUN apt-get update -qq \
-    && apt-get install -y curl rsync libncurses5 build-essential
+    && apt-get install -y curl rsync libncurses5 build-essential 
 
 WORKDIR /opt/emojicode
 
