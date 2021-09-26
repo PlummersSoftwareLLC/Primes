@@ -6,8 +6,8 @@ FROM primeimages/rust:1.52.1 AS build
 
 WORKDIR /app
 COPY . .
-RUN cargo test
-RUN cargo build --release
+RUN cargo test \
+    && cargo build --release
 
 # 2. runtime stage
 #   - start from clean container
