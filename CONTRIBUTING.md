@@ -79,6 +79,15 @@ If it is not possible to include your solution in the CI workflow and/or automat
 - Your solution has to be included in the automated benchmark runs, if it is possible to do so. For one, lack of familiarity with Docker is _not_ a valid reason to exclude it.
 - Automated builds should _only_ be disabled after the repository maintainers have specifically indicated that you need to do so. 
 
+#### Hadolint
+During the review of any PR, a CI workflow is triggered that includes a linting of Dockerfiles using [hadolint](https://github.com/hadolint/hadolint). Any issues that are found in a solution's Dockerfile will need to be fixed before the respective PR is merged.
+
+If you want to run hadolint locally before submitting your Dockerfile, you can do so using the configuration in [config/hadolint.yml](config/hadolint.yml).
+Instructions for installing hadolint can be found in the tool's documentation. Using a Docker container is a "non-intrusive" way of running hadolint once Docker is installed. In a Unix-like shell, this can be done by running the following command from the root directory of the Primes repository (replace `<language>` and `<number>` with the applicable values for your solution):
+```
+docker run --rm -i -v `pwd`/config:/.config hadolint/hadolint < Prime<language>/solution_<number>/Dockerfile
+```  
+
 ### Pull request
 Finally, submit a pull request **targeting the branch `drag-race`**, and place at least the name of the language in the title. Make sure to verify and check the contributing requirements that are summarized in the pull request template.
 
@@ -142,7 +151,7 @@ The base algorithm is defined as follows:
 
 * Starting the clearing loop at factor * factor (instead of 3 * factor, as done in the original implementation) is permissible.
 
-If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
+If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/38c826678a52a37b8a864465410562d330002091/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
 
 #### Tag
 
