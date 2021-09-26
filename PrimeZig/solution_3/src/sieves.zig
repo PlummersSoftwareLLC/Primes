@@ -186,10 +186,10 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
             // if we use loop-unrolling we will need extra padding because our prime
             // number function will overrun the end.  It's worth the speed!
-            const extra_padding = if (opts.unrolled) | _ | extraPadding() else 0;
+            //const extra_padding = if (opts.unrolled) | _ |  else 0;
 
             // allocates the field slice.  Note that this will *always* allocate at least a page.
-            var field = try calloc_pages(init_fill_unit, field_bytes + extra_padding);
+            var field = try calloc_pages(init_fill_unit, field_bytes + extraPadding(sieve_size));
 
             // roll out the wheel, if used.
             if (Wheel) |W| {
@@ -214,9 +214,10 @@ pub fn BitSieve(comptime opts_: anytype) type {
             };
         }
 
-        fn extraPadding() usize {
-            const multiplier = if (opts.unrolled.?.half_extent) 1 else 2;
-            return @bitSizeOf(RunFactorChunk) * @bitSizeOf(RunFactorChunk) * multiplier;
+        fn extraPadding(sieve_size: usize) usize {
+            const ChunkType = if (opts.unrolled) | u | u.SparseType else return 0;
+            const biggest_possible_factor = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+            return biggest_possible_factor * @bitSizeOf(ChunkType);
         }
 
         pub fn deinit(self: *Self) void {

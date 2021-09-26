@@ -27,7 +27,7 @@ const ARCH_BITS = std.builtin.target.cpu.arch.ptrBitWidth();
 const ARCH_64 = ARCH_BITS == 64;
 const ARCH_32 = ARCH_BITS == 32;
 
-const SELECTED = true; // making this false lets us compile just one in debug.
+const SELECTED = true; // making this false lets us compile just one in debug without commenting out
 const build_options = @import("build_options");
 const IS_RPI4 = std.builtin.target.cpu.arch.isARM() and build_options.arm_is_rpi4;
 
@@ -71,13 +71,13 @@ pub fn main() anyerror!void {
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 1}}, ONLY_WHEN_ALL},
         // best wheel runner
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .wheel_primes = 5, .allocator = NonClearing}, SELECTED},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, true},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, SELECTED},
         // ----   pessimizations on singlethreaded (wheel)
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .wheel_primes = 4, .allocator = NonClearing}, ONLY_WHEN_ALL},
         // experimental vector sieve (typically less performant than unrolled bitsieve)
-        .{ SingleThreadedRunner, .{}, VecSieve, .{.PRIME = 1, .allocator = SAlloc(c_std_lib, .{})}, !IS_RPI4},
+        .{ SingleThreadedRunner, .{}, VecSieve, .{.PRIME = 1, .allocator = SAlloc(c_std_lib, .{})}, SELECTED and !IS_RPI4},
         // multi-threaded, amdahl
-        .{ ParallelAmdahlRunner, .{}, IntSieve, .{}, !IS_RPI4},
+        .{ ParallelAmdahlRunner, .{}, IntSieve, .{}, SELECTED and !IS_RPI4},
         // multi-threaded int runner
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{}, SELECTED},
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{.wheel_primes = 6}, SELECTED},
@@ -87,8 +87,8 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, SELECTED},
         // multi-threaded, wheel (which one is best may depend on the time of day)
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, ONLY_WHEN_ALL},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, true},
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, true},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, SELECTED},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, SELECTED},
         // multi-threaded base regressions
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = 8}, .note = "no-ht"}, ONLY_WHEN_ALL},
     };
@@ -120,7 +120,7 @@ fn runSieveTest(
     comptime Runner: type,
     run_for: comptime_int,
     sieve_size: usize,
-) align(std.mem.page_size) anyerror!void {
+) anyerror!void {
     @setAlignStack(256);
 
     try printName(Runner);

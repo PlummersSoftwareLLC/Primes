@@ -40,7 +40,7 @@ pub const UnrolledOpts = struct {
     max_vector: u32 = 1,         // should we use vectors?  (no == 1) what's the biggest vector size?
     half_extent: bool = true,    // how many lookup entries for the dense phase.
     unroll_sparse: bool = true,  // should we unroll sparse factors?
-    SparseType: type = u8        // what type should sparse unroll using?
+    SparseType: type = u8,       // what type should sparse unroll using?
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,8 @@ fn DenseFn(comptime T: type) type {
 /// preserves the integer semantics of the funciton.
 pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) type {
     return struct{
-        pub fn fill(field: [*]T, field_count: usize) void {
+        pub inline fn fill(field: [*]T, field_count: usize) void {
+            //@setAlignStack(256);
             fillOneChunk(field, true);
             var offset : usize = num;
             while (offset < field_count) : (offset += num) {
@@ -72,7 +73,7 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
 
         /// a function that is expected to fill *num* ints with bits flagged starting
         /// from index num/2, spaced out by *num* bits.
-        fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) align(std.mem.page_size) void {
+        inline fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) align(std.mem.page_size) void {
             comptime const total_vecs = if (opts.max_vector == 1) num else num / opts.max_vector + 1;
             comptime const total_ints = num;
 
@@ -317,11 +318,11 @@ threadlocal var aaa: u64 = 0;
 
 pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: UnrolledOpts) type {
     return struct{
-        pub fn fill(field: [*]T, field_ints: usize, factor: usize) void {
+        pub inline fn fill(field: [*]T, field_ints: usize, factor: usize) void {
             const square_offset = (factor * factor) / (2 * @bitSizeOf(T));
             const stride = factor / @bitSizeOf(T) - 1;
             // one-time, expensive division.
-            const chunk_count = (field_ints - square_offset) / factor + 1;
+            const chunk_count = (field_ints - square_offset) / factor;
 
             var index: usize = 0;
             var chunk = field + square_offset;
