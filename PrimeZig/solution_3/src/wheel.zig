@@ -1,166 +1,208 @@
-//! implementation of the ability to pregenerate primes at compile-time
-//! and use them. should generate into the compiled artifact exactly the
-//! memory layout to be copied in as a "wheel" for the first (n) primes
+//! implementation of the ability to pregenerate composites at compile-time
+//! and use them. should generate into the compiled artifact, which is a
+//! span of memory
 
 const std = @import("std");
-const OEIS_PRIMES = [_]comptime_int{ 3, 5, 7, 11, 13, 17, 19 };
+const comptimeAlloc = @import("alloc.zig").comptimeAlloc;
 const IntSieve = @import("sieves.zig").IntSieve;
-const Unit = enum { byte, bit };
+const BitSieve = @import("sieves.zig").BitSieve;
 
-pub fn Wheel(comptime count: usize, comptime gsize: Unit) type {
-    var prods = std.mem.zeroes([OEIS_PRIMES.len]comptime usize);
-    var source_primes = std.mem.zeroes([count]comptime_int);
+const Oeis = struct {
+    const primes = [_]usize{ 3, 5, 7, 11, 13, 17, 19 };
+    const prime_products = [_]usize{ 3, 15, 105, 1155, 15015, 255255};
+};
 
-    var prod: comptime_int = 1;
+const WheelOpts = struct {
+    num_primes: u8,
+    PRIME: u8 = 0,
+    bits: bool = false
+};
 
-    // fail if we are trying too hard.
-    if (count > 5) unreachable;
+const skip_counts = .{"", "", "8of15", "48of105", "480of1155", "5760of15015", "92160of255255"};
 
-    for (OEIS_PRIMES) |prime, index| {
-        prod *= prime;
-        prods[index] = prod;
-        if (index < count) {
-            source_primes[index] = prime;
-        }
-    }
-    const max_prime = prods[count - 1];
-    var field: [max_prime]u8 = undefined;
+pub fn Wheel(comptime opts: WheelOpts) type {
+    // exists so that we don't run out of compiler credits.  Zig compiler is stingier than AWS.
+    @setEvalBranchQuota(100000);
 
-    // fill out key values to make the generator usable.  Note we are not using
-    // an allocator here (because you don't get one at comptime), so instead od using
-    // the init function, we must set the field directly.
-    var generator = IntSieve(comptime u8, .{}){
-        .field = field[0..],
-        .allocator = std.heap.page_allocator, //just as a placeholder.  won't be used.
-    };
+    const T = @TypeOf(opts.PRIME);
+    const src_bytes = Oeis.prime_products[opts.num_primes - 1];
+    const COMPOSITE: T = if (T == bool) !opts.PRIME else 1 - opts.PRIME;
 
-    // this takes a bunch of computational power:  Let it happen.
-    @setEvalBranchQuota(1000000);
-
-    _ = generator.reset();
-
-    // elucidate the pattern for each of the primes.
-    for (OEIS_PRIMES) |prime, index| {
-        if (index < count) {
-            generator.runFactor(prime);
-            generator.field[prime >> 1] = 0;
-        }
-    }
-
-    var bigenoughbuf: [20]u8 = undefined;
-    var buf = try std.fmt.bufPrint(bigenoughbuf[0..], "{}of{}", .{ generator.primeCount(), max_prime * 2 });
-    const buf_len = buf.len;
-
-    if (gsize == .bit) {
-        compress(generator.field[0..]);
-    }
+    std.debug.assert(opts.num_primes >= 2);
 
     return struct {
-        pub const primes = source_primes;
-        pub const template: *[max_prime]u8 = generator.field[0..max_prime];
-        pub const first_prime = OEIS_PRIMES[count];
-        pub const name = bigenoughbuf[0..buf_len];
+        pub const STARTING_FACTOR: usize = Oeis.primes[opts.num_primes];
+        pub const template: [src_bytes]T align(std.mem.page_size) = makeTemplate();
+        pub const bytes = src_bytes;
+        pub const name = skip_counts[opts.num_primes];
+
+        /// rolls the wheel out onto the field.
+        pub fn roll(field: [*]T, field_bytes: usize) void {
+            var segment_end = src_bytes;
+            var chunk = field;
+            while (segment_end < field_bytes) : (segment_end += src_bytes) {
+                @memcpy(chunk, @ptrCast([*]const T, &template), src_bytes);
+                chunk += src_bytes;
+            } else {
+                @memcpy(chunk, @ptrCast([*]const T, &template), src_bytes - (segment_end - field_bytes));
+            }
+            // when you're done, put the primes back.
+            inline for (Oeis.primes[0..opts.num_primes]) |prime| {
+                put(field, prime, opts.PRIME, opts.bits);
+            }
+        }
+
+        fn makeTemplate() [src_bytes]T {
+            @setEvalBranchQuota(1_000_000);
+
+            var template_buffer: [src_bytes] T align(std.mem.page_size) = undefined;
+
+            // initialize everything to be prime
+            for (template_buffer) |*item| { item.* = opts.PRIME; }
+
+            // set up a bog-standard sieve.
+            var sieve: IntSieve(.{.PRIME = opts.PRIME}) =
+              .{.field = &template_buffer, .field_count = src_bytes};
+
+            inline for (Oeis.primes[0..opts.num_primes]) | prime | {
+                sieve.runFactor(prime);
+                put(@ptrCast([*]T, &template_buffer), prime, COMPOSITE, false);
+            }
+
+            if (opts.bits) {
+                compressCopy(template_buffer[0..]);
+            }
+
+            return template_buffer;
+        }
+
+        inline fn put(template_buffer: [*]T, comptime index: usize, comptime value: anytype, comptime use_bits: bool) void {
+            if (use_bits) {
+                const position = index / 2;
+                const byte_index = position / 8;
+                const mask = @as(u8, 1) << @intCast(u3, position % 8);
+                if (value == 0) {
+                    template_buffer[byte_index] &= ~mask;
+                } else {
+                    template_buffer[byte_index] |= mask;
+                }
+            } else {
+                template_buffer[index / 2] = value;
+            }
+        }
     };
-}
-
-// COMPRESSION UTILITIES:  turns a jagged (non-multiple of 8) list of bytes, repeats it 8 times,
-// and results in bytes of bitmaps.
-
-fn compress(slice: []u8) void {
-    const length = slice.len;
-    // encode the first slice.
-    for (slice) |value, index| {
-        encode(slice, value, index);
-    }
-    // encode further slices
-    var this_index = length;
-    while (this_index < length * 8) : (this_index += 1) {
-        encode_copy(slice, this_index, this_index % length);
-    }
-}
-
-fn encode(slice: []u8, value: u8, index: usize) void {
-    const byte_index = index >> 3;
-    const bit_index = @truncate(u3, index & 0b111);
-    if (bit_index == 0) {
-        slice[byte_index] = value;
-    } else {
-        slice[byte_index] = slice[byte_index] | (value << bit_index);
-    }
-}
-
-fn encode_copy(slice: []u8, dest: usize, source: usize) void {
-    const source_byte = source >> 3;
-    const source_bit = @truncate(u3, source & 0b111);
-
-    const dest_byte = dest >> 3;
-    const dest_bit = @truncate(u3, dest & 0b111);
-
-    const bit: u8 = if ((slice[source_byte] & (@as(u8, 1) << source_bit)) == 0) 0 else 1;
-
-    if (dest_bit == 0) {
-        slice[dest_byte] = bit;
-    } else {
-        slice[dest_byte] = slice[dest_byte] | (bit << dest_bit);
-    }
 }
 
 // TESTS
-
-const seeds = [_]comptime_int{ 2, 3, 4, 5 };
-
-fn relatively_prime(a: usize, b: usize) bool {
-    return ((b % a) != 0);
-}
+const wheel_sizes = [_]usize{ 2, 3, 4, 5, 6 };
 
 test "the generation of a byte table is correct" {
-    inline for (seeds) |seed| {
-        const T = Wheel(seed, .byte);
-        for (T.template) |v, index| {
-            var this = 2 * index + 1;
-            var maybe_prime = true;
+    inline for (wheel_sizes) |num_primes| {
+        var template = Wheel(.{.num_primes = num_primes}).makeTemplate();
+
+        for (template) | byte, index | {
+            const this = 2 * index + 1;
 
             // note that our table should NOT show the primes themselves to be flagged
             // because in "higher generations" of the recurring sequence we want them
             // to not be set.  The prime numbers in the wheel themselves should be set
-            // manually during initialization.
-            inline for (T.primes) |prime| {
-                maybe_prime = maybe_prime and relatively_prime(prime, this);
+            // as prime manually during initialization.
+            var composite = false;
+            for (Oeis.primes[0..num_primes]) |prime| {
+                composite = composite or (this % prime == 0);
             }
+            try std.testing.expectEqual(composite, byte == 1);
+        }
+    }
+}
 
-            if (v == 1) {
-                std.debug.assert(maybe_prime);
-            } else {
-                std.debug.assert(!maybe_prime);
+test "the generation of an inverted byte table is correct" {
+    inline for (wheel_sizes) |num_primes| {
+        var template = Wheel(.{.num_primes = num_primes, .PRIME = 1}).makeTemplate();
+
+        for (template) | byte, index | {
+            const this = 2 * index + 1;
+
+            // note that our table should NOT show the primes themselves to be flagged
+            // because in "higher generations" of the recurring sequence we want them
+            // to not be set.  The prime numbers in the wheel themselves should be set
+            // as prime manually during initialization.
+            var composite = false;
+            for (Oeis.primes[0..num_primes]) |prime| {
+                composite = composite or (this % prime == 0);
             }
+            try std.testing.expectEqual(composite, byte == 0);
         }
     }
 }
 
 test "the generation of a bit table is correct" {
-    inline for (seeds) |seed| {
-        const T = Wheel(seed, .bit);
-        for (T.template) |v, index| {
-            var subindex: usize = 0;
-            while (subindex < 8) : (subindex += 1) {
-                var this = 2 * ((index << 3) + subindex) + 1;
-                var maybe_prime = true;
-                inline for (T.primes) |prime| {
-                    maybe_prime = maybe_prime and relatively_prime(prime, this);
+    inline for (wheel_sizes) |num_primes| {
+        var template = Wheel(.{.num_primes = num_primes, .bits = true}).makeTemplate();
+
+        for (template) | byte, byte_index | {
+            var bit_index: usize = 0;
+            while (bit_index < 8) : (bit_index += 1) {
+                const index = byte_index * 8 + bit_index;
+                const this = 2 * index + 1;
+                const bit = (byte >> @intCast(u3, bit_index)) & 0x01;
+
+                var composite = false;
+                for (Oeis.primes[0..num_primes]) |prime| {
+                    composite = composite or (this % prime == 0);
                 }
-                if ((v & (@as(u8, 1) << @truncate(u3, subindex))) != 0) {
-                    std.debug.assert(maybe_prime);
-                } else {
-                    std.debug.assert(!maybe_prime);
+
+                if (composite != (bit == 1)) {
+                    std.debug.print("\n{} should be: {} found: {}, ({})\n", .{this, composite, bit, num_primes});
                 }
+
+                try std.testing.expectEqual(composite, bit == 1);
             }
         }
     }
 }
 
-test "compression function works" {
+// COMPRESSION UTILITIES:  turns a jagged (non-multiple of 8) list of bytes, repeats it 8 times,
+// and results in bytes of bitmaps.
+
+fn compressCopy(slice: []u8) void {
+    @setEvalBranchQuota(10_000_000);
+
+    compress(slice);
+
+    var index: usize = 1;
+    while (index < 8) : (index += 1) {
+        copyBits(slice, index);
+    }
+}
+
+fn compress(slice: []u8) void {
+    for (slice) |src, index| {
+        const dst_byte = index / 8;
+        const dst_bit = @intCast(u3, index % 8);
+        const mask = ~(@as(u8, 1) << dst_bit);
+        slice[dst_byte] = (slice[dst_byte] & mask) | (src << dst_bit);
+    }
+}
+
+fn copyBits(slice: []u8, shift: usize) void {
+    const bits = slice.len;
+    var src_index: usize = 0;
+    while (src_index < bits) : (src_index += 1) {
+        const src_byte = src_index / 8;
+        const src_bit = @intCast(u3, src_index % 8);
+        const dst_index = src_index + shift * bits;
+        const dst_byte = dst_index / 8;
+        const dst_bit = @intCast(u3, dst_index % 8);
+        const mask = ~(@as(u8, 1) << dst_bit);
+        const src = (slice[src_byte] >> src_bit) & 0x01;
+        slice[dst_byte] = (slice[dst_byte] & mask) | (src << dst_bit);
+    }
+}
+
+test "compression function works in the small" {
     var uncompressed: [3]u8 = .{ 1, 0, 1 };
     var compressed: [3]u8 = .{ 0b01_101_101, 0b1_101_101_1, 0b101_101_10 };
-    compress(uncompressed[0..]);
+    compressCopy(uncompressed[0..]);
     try std.testing.expectEqual(compressed, uncompressed);
 }

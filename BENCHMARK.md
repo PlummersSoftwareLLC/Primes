@@ -10,6 +10,9 @@ This document describes how to built and run all benchmarks (solutions) for diff
 4. [macOS](#macos)
 5. [Example output](#example-output)
 6. [Running a single benchmark](#running-a-single-benchmark)
+7. [Running a benchmark of all solutions for a particular language](#running-a-benchmark-of-all-solutions-for-a-particular-language)
+8. [Running in unconfined mode](#running-in-unconfined-mode)
+9. [Output formats](#output-formats)
 
 ## What operating system to use?
 

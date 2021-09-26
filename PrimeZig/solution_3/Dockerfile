@@ -1,16 +1,14 @@
-FROM alpine:3.13 as builder
+FROM debian:buster-slim as builder
 
-RUN apk update && \
-    apk --no-cache add \
-        curl \
-        xz
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y curl xz-utils
 
 WORKDIR /deps
 RUN curl https://ziglang.org/download/0.8.0/zig-linux-"$(uname -m)"-0.8.0.tar.xz  -O && \
     tar xf zig-linux-"$(uname -m)"-0.8.0.tar.xz && \
     mv zig-linux-"$(uname -m)"-0.8.0 local/
 
-FROM alpine:3.13
+FROM debian:buster-slim
 COPY --from=builder /deps/local/ /deps/local/
 RUN ln -s /deps/local/zig /usr/bin/zig
 
