@@ -17,7 +17,7 @@ RUN mkdir -p /opt/app
 WORKDIR /opt/app
 COPY . .
 
-RUN zig build -Drelease-fast -Darm-is-rpi4 -Dcontainerized
+RUN zig build -Drelease-fast -Darm-is-rpi4
 
 ENTRYPOINT [ "./zig-out/bin/PrimeZig" ]
 

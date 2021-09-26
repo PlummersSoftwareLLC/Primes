@@ -27,6 +27,7 @@ const ARCH_BITS = std.builtin.target.cpu.arch.ptrBitWidth();
 const ARCH_64 = ARCH_BITS == 64;
 const ARCH_32 = ARCH_BITS == 32;
 
+const SELECTED = true; // making this false lets us compile just one in debug.
 const build_options = @import("build_options");
 const IS_RPI4 = std.builtin.target.cpu.arch.isARM() and build_options.arm_is_rpi4;
 
@@ -34,64 +35,62 @@ pub fn main() anyerror!void {
     const run_for = 5; // Seconds
 
     // did we set -Dall?
-    const only_when_all = build_options.all;
+    const ONLY_WHEN_ALL = build_options.all;
 
     const NonClearing = SAlloc(c_std_lib, .{.should_clear = false});
 
     comptime const specs = .{
         // single-threaded int runners
-        .{ SingleThreadedRunner, .{}, IntSieve, .{}, true},
-        .{ SingleThreadedRunner, .{}, IntSieve, .{.wheel_primes = 6}, true},
+        .{ SingleThreadedRunner, .{}, IntSieve, .{}, SELECTED},
+        .{ SingleThreadedRunner, .{}, IntSieve, .{.wheel_primes = 6}, SELECTED},
         // comparison against C runner.
-        .{ SingleThreadedRunner, .{}, BitSieve, .{}, true}, // equivalent to C
-        // best singlethreaded base runne
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, true},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{}, SELECTED}, // equivalent to C
+        // best singlethreaded base runner
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, SELECTED},
         // ----   pessimizations on singlethreaded (base)
-        // unrolling sparse gives 10% when not containerized.
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8, .unroll_sparse = build_options.containerized}}, only_when_all},
         // RunFactorChunk matters
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 16}, .RunFactorChunk = u32}, only_when_all and ARCH_64},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .RunFactorChunk = u32}, only_when_all and ARCH_64},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 16}, .RunFactorChunk = u8}, only_when_all},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 16}, .RunFactorChunk = u32}, ONLY_WHEN_ALL and ARCH_64},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .RunFactorChunk = u32}, ONLY_WHEN_ALL and ARCH_64},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 16}, .RunFactorChunk = u8}, ONLY_WHEN_ALL},
         // FindFactorChunk matters
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u8}, only_when_all},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u64}, only_when_all},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u8}, ONLY_WHEN_ALL},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u64}, ONLY_WHEN_ALL},
         // Allocator matters
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .allocator = SAlloc(c_std_lib, .{}), .note = "malloc"}, only_when_all},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .allocator = VAlloc(.{}), .note = "custom-allocator"}, only_when_all},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .allocator = SAlloc(c_std_lib, .{}), .note = "malloc"}, ONLY_WHEN_ALL},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .allocator = VAlloc(.{}), .note = "custom-allocator"}, ONLY_WHEN_ALL},
         // Inverted is not generally better
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .allocator = SAlloc(c_std_lib, .{}), .PRIME = 1}, only_when_all},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .allocator = SAlloc(c_std_lib, .{}), .PRIME = 1}, ONLY_WHEN_ALL},
         // "Advanced FindFactor doesn't help"
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .find_factor = .advanced}, only_when_all},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .find_factor = .advanced, .FindFactorChunk = u32}, only_when_all and ARCH_64},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .find_factor = .advanced, .FindFactorChunk = u8}, only_when_all},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .find_factor = .advanced}, ONLY_WHEN_ALL},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .find_factor = .advanced, .FindFactorChunk = u32}, ONLY_WHEN_ALL and ARCH_64},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .find_factor = .advanced, .FindFactorChunk = u8}, ONLY_WHEN_ALL},
         // vectorization
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8, .half_extent = false}}, only_when_all},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 4}}, only_when_all},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 2}}, only_when_all},
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 1}}, only_when_all},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8, .half_extent = false}}, ONLY_WHEN_ALL},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 4}}, ONLY_WHEN_ALL},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 2}}, ONLY_WHEN_ALL},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 1}}, ONLY_WHEN_ALL},
         // best wheel runner
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .wheel_primes = 5, .allocator = NonClearing}, true},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .wheel_primes = 5, .allocator = NonClearing}, SELECTED},
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .PRIME = 1, .find_factor = .advanced}, true},
         // ----   pessimizations on singlethreaded (wheel)
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .wheel_primes = 4, .allocator = NonClearing}, only_when_all},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .wheel_primes = 4, .allocator = NonClearing}, ONLY_WHEN_ALL},
         // experimental vector sieve (typically less performant than unrolled bitsieve)
         .{ SingleThreadedRunner, .{}, VecSieve, .{.PRIME = 1, .allocator = SAlloc(c_std_lib, .{})}, !IS_RPI4},
         // multi-threaded, amdahl
         .{ ParallelAmdahlRunner, .{}, IntSieve, .{}, !IS_RPI4},
         // multi-threaded int runner
-        .{ ParallelGustafsonRunner, .{}, IntSieve, .{}, true},
-        .{ ParallelGustafsonRunner, .{}, IntSieve, .{.wheel_primes = 6}, true},
+        .{ ParallelGustafsonRunner, .{}, IntSieve, .{}, SELECTED},
+        .{ ParallelGustafsonRunner, .{}, IntSieve, .{.wheel_primes = 6}, SELECTED},
         // multi-threaded int regressions
-        .{ ParallelGustafsonRunner, .{.no_ht = true}, IntSieve, .{.wheel_primes = 6, .note = "no-ht"}, only_when_all},
+        .{ ParallelGustafsonRunner, .{.no_ht = true}, IntSieve, .{.wheel_primes = 6, .note = "no-ht"}, ONLY_WHEN_ALL},
         // multi-threaded, base
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, true},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, SELECTED},
         // multi-threaded, wheel (which one is best may depend on the time of day)
-        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, only_when_all},
+        .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 3, .allocator = NonClearing}, ONLY_WHEN_ALL},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 4, .allocator = NonClearing}, true},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .FindFactorChunk = u32, .wheel_primes = 5, .allocator = NonClearing}, true},
         // multi-threaded base regressions
-        .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = 8}, .note = "no-ht"}, only_when_all},
+        .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = 8}, .note = "no-ht"}, ONLY_WHEN_ALL},
     };
 
     const args = try std.process.argsAlloc(std.heap.page_allocator);
@@ -123,6 +122,9 @@ fn runSieveTest(
     sieve_size: usize,
 ) align(std.mem.page_size) anyerror!void {
     @setAlignStack(256);
+
+    try printName(Runner);
+
     const timer = try std.time.Timer.start();
     var passes: u64 = 0;
 
@@ -140,7 +142,6 @@ fn runSieveTest(
     var threads = try Runner.threads();
 
     try printResults(
-        "ManDeJan&ityonemo&SpexGuy-zig-" ++ Runner.name,
         passes,
         elapsed,
         threads,
@@ -148,9 +149,14 @@ fn runSieveTest(
         Runner.bits);
 }
 
-fn printResults(backing: []const u8, passes: usize, elapsed_ns: u64, threads: usize, algo: []const u8, bits: usize) !void {
+fn printName(comptime Runner: type) !void {
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("ManDeJan&ityonemo&SpexGuy-zig-{s}", .{Runner.name});
+}
+
+fn printResults(passes: usize, elapsed_ns: u64, threads: usize, algo: []const u8, bits: usize) !void {
     const elapsed = @intToFloat(f32, elapsed_ns) / @intToFloat(f32, std.time.ns_per_s);
     const stdout = std.io.getStdOut().writer();
 
-    try stdout.print("{s};{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{ backing, passes, elapsed, threads, algo, bits });
+    try stdout.print(";{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{ passes, elapsed, threads, algo, bits });
 }

@@ -39,7 +39,8 @@ pub const UnrolledOpts = struct {
     PRIME: u1 = 0,               // are 1s or 0's prime?
     max_vector: u32 = 1,         // should we use vectors?  (no == 1) what's the biggest vector size?
     half_extent: bool = true,    // how many lookup entries for the dense phase.
-    unroll_sparse: bool = !@import("build_options").containerized, // should we unroll sparse factors?
+    unroll_sparse: bool = true,  // should we unroll sparse factors?
+    SparseType: type = u8        // what type should sparse unroll using?
 };
 
 ///////////////////////////////////////////////////////////////////////////////

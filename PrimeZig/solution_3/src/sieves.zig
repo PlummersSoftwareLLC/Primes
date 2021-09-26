@@ -119,6 +119,7 @@ const BitSieveOpts = comptime struct {
     unrolled: ?UnrolledOpts = null,
     find_factor: FindFactorMode = .naive,
     note: anytype = "",
+    foo_bar: bool = true,
 };
 
 pub fn BitSieve(comptime opts_: anytype) type {
@@ -185,7 +186,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
             // if we use loop-unrolling we will need extra padding because our prime
             // number function will overrun the end.  It's worth the speed!
-            const extra_padding = if (opts.unrolled) | _ | extraPadding(sieve_size) else 0;
+            const extra_padding = if (opts.unrolled) | _ | extraPadding() else 0;
 
             // allocates the field slice.  Note that this will *always* allocate at least a page.
             var field = try calloc_pages(init_fill_unit, field_bytes + extra_padding);
@@ -213,9 +214,9 @@ pub fn BitSieve(comptime opts_: anytype) type {
             };
         }
 
-        fn extraPadding(sieve_size: usize) usize {
-            const biggest_possible_factor = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
-            return biggest_possible_factor * @bitSizeOf(RunFactorChunk);
+        fn extraPadding() usize {
+            const multiplier = if (opts.unrolled.?.half_extent) 1 else 2;
+            return @bitSizeOf(RunFactorChunk) * @bitSizeOf(RunFactorChunk) * multiplier;
         }
 
         pub fn deinit(self: *Self) void {
@@ -330,38 +331,39 @@ pub fn BitSieve(comptime opts_: anytype) type {
         }
 
         fn runFactorUnrolled(self: *Self, factor: usize) void {
-            const T = opts.RunFactorChunk;
+            const D = opts.RunFactorChunk; // Type for dense values
             comptime var unrolled_opts = opts.unrolled.?;
             unrolled_opts.PRIME = opts.PRIME;  // NB: COMPTIME.
 
-            const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
-
-            if (unrolled.isDense(T, unrolled_opts.half_extent, factor)) {
+            if (unrolled.isDense(D, unrolled_opts.half_extent, factor)) {
+                const field = @ptrCast([*]D, @alignCast(@alignOf(D), self.field));
                 const fun_index = factor / 2;
                 // select the function to use, using a compile-time unrolled loop over odd modulo values.
                 // it turns out that Docker really doesn't like function lookup tables, so this is the
                 // only option.
                 comptime var fun_number = 0;
-                comptime const fun_count = @bitSizeOf(T) / (if (unrolled_opts.half_extent) 2 else 1);
+                comptime const fun_count = @bitSizeOf(D) / (if (unrolled_opts.half_extent) 2 else 1);
                 inline while (fun_number < fun_count) : (fun_number += 1) {
                     if (fun_index == fun_number) {
-                        const DenseType = unrolled.DenseFnFactory(T, 2 * fun_number + 1, unrolled_opts);
-                        DenseType.fill(field, self.field_bytes / @sizeOf(T));
+                        const DenseType = unrolled.DenseFnFactory(D, 2 * fun_number + 1, unrolled_opts);
+                        DenseType.fill(field, self.field_bytes / @sizeOf(D));
                         return;
                     }
                 }
             } else {
+                const S = unrolled_opts.SparseType; // Type for sparse values
+                const field = @ptrCast([*]S, @alignCast(@alignOf(S), self.field));
                 // naive factoring algorithm.  calculate mask each time.
                 if (unrolled_opts.unroll_sparse) {
-                    const fun_index = (factor % @bitSizeOf(T)) / 2;
+                    const fun_index = (factor % @bitSizeOf(S)) / 2;
                     // select the function to use, using a compile-time unrolled loop over odd modulo values.
                     // it turns out that Docker really doesn't like function lookup tables, so this is the
                     // only option.
                     comptime var fun_number = 0;
-                    inline while (fun_number < @bitSizeOf(T)) : (fun_number += 1) {
+                    inline while (fun_number < @bitSizeOf(S)) : (fun_number += 1) {
                         if (fun_index == fun_number) {
-                            const SparseType = unrolled.SparseFnFactory(T, 2 * fun_number + 1, unrolled_opts);
-                            SparseType.fill(field, self.field_bytes / @sizeOf(T), factor);
+                            const SparseType = unrolled.SparseFnFactory(S, 2 * fun_number + 1, unrolled_opts);
+                            SparseType.fill(field, self.field_bytes / @sizeOf(S), factor);
                             return;
                         }
                     }
