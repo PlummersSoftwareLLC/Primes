@@ -2,7 +2,7 @@ FROM alpine:3.13 AS build
 
 ENV V_VER="0.2.4"
 
-RUN apk add --no-cache build-base bash git
+RUN apk update && apk add --no-cache build-base bash git
 
 WORKDIR /opt/vlang
 RUN git clone https://github.com/vlang/v /opt/vlang && git checkout "${V_VER}" && make
