@@ -308,18 +308,23 @@ pub fn BitSieve(comptime opts_: anytype) type {
             if (opts.unrolled) |_| {
                 runFactorUnrolled(self, factor);
             } else {
-                const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
-                // naive factoring algorithm.  calculate mask each time.
-                const max_index = self.field_count;
-                var multiple_index = (factor * factor) / 2;
-                while (multiple_index < max_index) : (multiple_index += factor) {
-                    if (PRIME == 1) {
-                        const mask = mask_for(T, multiple_index);
-                        field[multiple_index / @bitSizeOf(T)] &= mask;
-                    } else {
-                        const mask = mask_for(T, multiple_index);
-                        field[multiple_index / @bitSizeOf(T)] |= mask;
-                    }
+                runFactorConventional(self, factor);
+            }
+        }
+
+        pub fn runFactorConventional(self: *Self, factor: usize) void {
+            const T = opts.RunFactorChunk;
+            const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field));
+            // naive factoring algorithm.  calculate mask each time.
+            const max_index = self.field_count;
+            var multiple_index = (factor * factor) / 2;
+            while (multiple_index < max_index) : (multiple_index += factor) {
+                if (PRIME == 1) {
+                    const mask = mask_for(T, multiple_index);
+                    field[multiple_index / @bitSizeOf(T)] &= mask;
+                } else {
+                    const mask = mask_for(T, multiple_index);
+                    field[multiple_index / @bitSizeOf(T)] |= mask;
                 }
             }
         }
@@ -346,17 +351,22 @@ pub fn BitSieve(comptime opts_: anytype) type {
                     }
                 }
             } else {
-                const fun_index = (factor % @bitSizeOf(T)) / 2;
-                // select the function to use, using a compile-time unrolled loop over odd modulo values.
-                // it turns out that Docker really doesn't like function lookup tables, so this is the
-                // only option.
-                comptime var fun_number = 0;
-                inline while (fun_number < @bitSizeOf(T)) : (fun_number += 1) {
-                    if (fun_index == fun_number) {
-                        const SparseType = unrolled.SparseFnFactory(T, 2 * fun_number + 1, unrolled_opts);
-                        SparseType.fill(field, self.field_bytes / @sizeOf(T), factor);
-                        return;
+                // naive factoring algorithm.  calculate mask each time.
+                if (unrolled_opts.unroll_sparse) {
+                    const fun_index = (factor % @bitSizeOf(T)) / 2;
+                    // select the function to use, using a compile-time unrolled loop over odd modulo values.
+                    // it turns out that Docker really doesn't like function lookup tables, so this is the
+                    // only option.
+                    comptime var fun_number = 0;
+                    inline while (fun_number < @bitSizeOf(T)) : (fun_number += 1) {
+                        if (fun_index == fun_number) {
+                            const SparseType = unrolled.SparseFnFactory(T, 2 * fun_number + 1, unrolled_opts);
+                            SparseType.fill(field, self.field_bytes / @sizeOf(T), factor);
+                            return;
+                        }
                     }
+                } else {
+                    runFactorConventional(self, factor);
                 }
             }
         }

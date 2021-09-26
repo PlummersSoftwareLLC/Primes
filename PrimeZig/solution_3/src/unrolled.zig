@@ -36,9 +36,10 @@ fn lutCount(comptime T: type, comptime half_extent: bool) usize {
 
 // general options for the unrolled
 pub const UnrolledOpts = struct {
-    PRIME: u1 = 0,          // are 1s or 0's prime?
-    max_vector: u32 = 1,       // should we use vectors?  (no == 1) what's the biggest vector size?
-    half_extent: bool = true,  // how many lookup entries for the dense phase.
+    PRIME: u1 = 0,               // are 1s or 0's prime?
+    max_vector: u32 = 1,         // should we use vectors?  (no == 1) what's the biggest vector size?
+    half_extent: bool = true,    // how many lookup entries for the dense phase.
+    unroll_sparse: bool = !@import("build_options").containerized, // should we unroll sparse factors?
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,7 +71,7 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
 
         /// a function that is expected to fill *num* ints with bits flagged starting
         /// from index num/2, spaced out by *num* bits.
-        fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) void {
+        fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) align(std.mem.page_size) void {
             comptime const total_vecs = if (opts.max_vector == 1) num else num / opts.max_vector + 1;
             comptime const total_ints = num;
 
@@ -311,9 +312,11 @@ var my_factor: usize = undefined;
 var my_index: usize = undefined;
 var my_field: usize = undefined;
 
+threadlocal var aaa: u64 = 0;
+
 pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: UnrolledOpts) type {
     return struct{
-        pub fn fill(field: [*]T, field_ints: usize, factor: usize) align(256) void {
+        pub fn fill(field: [*]T, field_ints: usize, factor: usize) void {
             const square_offset = (factor * factor) / (2 * @bitSizeOf(T));
             const stride = factor / @bitSizeOf(T) - 1;
             // one-time, expensive division.

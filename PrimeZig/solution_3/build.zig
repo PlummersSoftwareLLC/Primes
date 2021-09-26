@@ -19,8 +19,11 @@ pub fn build(b: *Builder) void {
     const all = b.option(bool, "all", "should run uncurated examples") orelse false;
     exe.addBuildOption(bool, "all", all);
 
-    const arm_is_rpi = b.option(bool, "arm-is-rpi4", "treat arm architecture as 8GB rpi4") orelse false;
-    exe.addBuildOption(bool, "arm_is_rpi4", arm_is_rpi);
+    const arm_is_rpi4 = b.option(bool, "arm-is-rpi4", "treat arm architecture as 8GB rpi4") orelse false;
+    exe.addBuildOption(bool, "arm_is_rpi4", arm_is_rpi4);
+
+    const containerized = b.option(bool, "containerized", "don't activate sparse unrolling (10% regression)") orelse false;
+    exe.addBuildOption(bool, "containerized", containerized);
 
     exe.install();
 

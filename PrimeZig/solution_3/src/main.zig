@@ -27,11 +27,14 @@ const ARCH_BITS = std.builtin.target.cpu.arch.ptrBitWidth();
 const ARCH_64 = ARCH_BITS == 64;
 const ARCH_32 = ARCH_BITS == 32;
 
+const build_options = @import("build_options");
+const IS_RPI4 = std.builtin.target.cpu.arch.isARM() and build_options.arm_is_rpi4;
+
 pub fn main() anyerror!void {
     const run_for = 5; // Seconds
 
     // did we set -Dall?
-    const only_when_all = @import("build_options").all;
+    const only_when_all = build_options.all;
 
     const NonClearing = SAlloc(c_std_lib, .{.should_clear = false});
 
@@ -41,9 +44,11 @@ pub fn main() anyerror!void {
         .{ SingleThreadedRunner, .{}, IntSieve, .{.wheel_primes = 6}, true},
         // comparison against C runner.
         .{ SingleThreadedRunner, .{}, BitSieve, .{}, true}, // equivalent to C
-        // best singlethreaded base runner
+        // best singlethreaded base runne
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, true},
         // ----   pessimizations on singlethreaded (base)
+        // unrolling sparse gives 10% when not containerized.
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8, .unroll_sparse = build_options.containerized}}, only_when_all},
         // RunFactorChunk matters
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 16}, .RunFactorChunk = u32}, only_when_all and ARCH_64},
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .RunFactorChunk = u32}, only_when_all and ARCH_64},
@@ -71,9 +76,9 @@ pub fn main() anyerror!void {
         // ----   pessimizations on singlethreaded (wheel)
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}, .wheel_primes = 4, .allocator = NonClearing}, only_when_all},
         // experimental vector sieve (typically less performant than unrolled bitsieve)
-        .{ SingleThreadedRunner, .{}, VecSieve, .{.PRIME = 1, .allocator = SAlloc(c_std_lib, .{})}, true},
+        .{ SingleThreadedRunner, .{}, VecSieve, .{.PRIME = 1, .allocator = SAlloc(c_std_lib, .{})}, !IS_RPI4},
         // multi-threaded, amdahl
-        .{ ParallelAmdahlRunner, .{}, IntSieve, .{}, true},
+        .{ ParallelAmdahlRunner, .{}, IntSieve, .{}, !IS_RPI4},
         // multi-threaded int runner
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{}, true},
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{.wheel_primes = 6}, true},
@@ -89,6 +94,12 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = 8}, .note = "no-ht"}, only_when_all},
     };
 
+    const args = try std.process.argsAlloc(std.heap.page_allocator);
+    const count = if ((args.len == 3) and (std.mem.eql(u8, args[1], "-n"))) (std.fmt.parseInt(usize, args[2], 10) catch @panic("badarg")) else 1;
+
+    var so_far: usize = 0;
+    while (so_far < count) : (so_far += 1) {
+
     inline for (specs) |spec| {
         comptime const RunnerFn = spec[0];
         comptime const runner_opts = spec[1];
@@ -102,6 +113,7 @@ pub fn main() anyerror!void {
         if (should_run) {
             try runSieveTest(Runner, run_for, SIZE);
         }
+    }
     }
 }
 
