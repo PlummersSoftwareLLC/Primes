@@ -1,22 +1,17 @@
-FROM haskell:8.10
+FROM debian:11 as build
 
+# install ghc and llvm
+RUN apt-get -y update && apt-get install -y ghc llvm 
+
+# build the app
 WORKDIR /opt/sieve
+COPY Primes*.hs ./
+# RUN ghc Primes.hs # for 64-bit registers
+# RUN ghc Primes.hs -DAVX # for-128 bit registers
+RUN ghc Primes.hs -DABX2 # for-256 bit registers
 
-RUN cabal update
-
-RUN apt-get update
-RUN apt-get install --yes lsb-release wget software-properties-common
-
-RUN wget https://apt.llvm.org/llvm.sh
-RUN chmod +x llvm.sh
-RUN ./llvm.sh 9
-
-COPY ./dragrace-haskell2.cabal /opt/sieve/dragrace-haskell2.cabal
-
-RUN cabal update && cabal build --only-dependencies -j4
-
-COPY . /opt/sieve
-
-RUN PATH=/usr/lib/llvm-9/bin:$PATH cabal build dragrace-haskell2  	 	
-
-CMD [ "cabal","run","dragrace-haskell2" ]
+# runtime container
+FROM debian:11 AS runtime
+WORKDIR /opt/sieve
+COPY --from=build /opt/sieve/Primes Primes
+ENTRYPOINT [ "/opt/sieve/Primes" ]
