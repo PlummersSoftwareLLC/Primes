@@ -33,7 +33,7 @@ To use one of the alternate register widths, compile with "ghc Primes -DAVX" for
 
 ### Docker
 
-You can also choose the easy option of running the application inside a Docker container although the Dockerfile will need to be changed to test higher register widths.
+You can also choose the easy option of running the application inside a Docker container and the Dockerfile will use the "build.sh" script file to determin whenther the hase CPU is ARM64 in which case it will compile to run with 64-bit registers, else it assumes that it is AMD64 and if it finds that it supports AVX2 then runs with 256-bit registers and if not then with 128-bit registers; other combinations are not considered as these cases fit the machines used for the leader board.
 
 ```
 docker build -t primes .
@@ -44,7 +44,7 @@ docker run --rm primes
 
 ## Output
 
-- Intel SkyLake i5-6500, no LLVM
+- Intel SkyLake i5-6500, GHC Haskell version 8.10.7, no LLVM
 
   ```
   GordonBGood_bittwiddle;6382;5.000415116;1;algorithm=base,faithful=yes,bits=1
@@ -54,17 +54,17 @@ docker run --rm primes
   GordonBGood_extreme-hybrid;29615;5.000131431;1;algorithm=base,faithful=yes,bits=1
   ```
 
-- Intel SkyLake i5-6500, with LLVM (version 12) and 64-bit registers
+- Intel SkyLake i5-6500, GHC Haskell version 8.10.7, with LLVM (version 12) and 64-bit registers
 
   ```
-  GordonBGood_bittwiddle;7244;5.000307695;1;algorithm=base,faithful=yes,bits=1
-  GordonBGood_stride8;11338;5.000358354;1;algorithm=base,faithful=yes,bits=1
-  GordonBGood_stride8-block16K;12427;5.000176074;1;algorithm=base,faithful=yes,bits=1
-  GordonBGood_extreme;18019;5.000030072;1;algorithm=base,faithful=yes,bits=1
-  GordonBGood_extreme-hybrid;34467;5.000165596;1;algorithm=base,faithful=yes,bits=1
+  GordonBGood_bittwiddle;8537;5.000525663;1;algorithm=base,faithful=yes,bits=1
+  GordonBGood_stride8;10195;5.000411525;1;algorithm=base,faithful=yes,bits=1
+  GordonBGood_stride8-block16K;13218;5.000196942;1;algorithm=base,faithful=yes,bits=1
+  GordonBGood_extreme;18154;5.000159066;1;algorithm=base,faithful=yes,bits=1
+  GordonBGood_extreme-hybrid;34420;5.000062043;1;algorithm=base,faithful=yes,bits=1
   ```
 
-Intel SkyLake i5-6500, with LLVM (version 12) and 128-bit registers
+Intel SkyLake i5-6500, GHC Haskell version 8.10.7, with LLVM (version 12) and 128-bit registers
 
   ```
   GordonBGood_bittwiddle;8612;5.000198442;1;algorithm=base,faithful=yes,bits=1
@@ -74,7 +74,7 @@ Intel SkyLake i5-6500, with LLVM (version 12) and 128-bit registers
   GordonBGood_extreme-hybrid;37912;5.000036433;1;algorithm=base,faithful=yes,bits=1
   ```
 
-Intel SkyLake i5-6500, with LLVM (version 12) and 256-bit registers
+Intel SkyLake i5-6500, GHC Haskell version 8.10.7, with LLVM (version 12) and 256-bit registers
 
   ```
   GordonBGood_bittwiddle;8594;5.000311669;1;algorithm=base,faithful=yes,bits=1
@@ -84,18 +84,18 @@ Intel SkyLake i5-6500, with LLVM (version 12) and 256-bit registers
   GordonBGood_extreme-hybrid;39752;5.000006059;1;algorithm=base,faithful=yes,bits=1
   ```
 
-- Intel SkyLake i5-6500, docker, with LLVM (version 11, which is likely a little slower), 64-bit registers
+- Intel SkyLake i5-6500, docker, GHC Haskell version 8.8.4, with LLVM (version 11, which is likely a little slower), 256-bit registers
 
   ```
                                                                   Single-threaded                                                                 
   ┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
   │ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
   ├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-  │   1   │ haskell        │ 2        │ GordonBGood_extreme-hybrid   │ 34665  │ 5.00011  │    1    │   base    │   yes    │ 1    │  6932.84911   │
-  │   2   │ haskell        │ 2        │ GordonBGood_extreme          │ 17840  │ 5.00007  │    1    │   base    │   yes    │ 1    │  3567.94651   │
-  │   3   │ haskell        │ 2        │ GordonBGood_stride8-block16K │ 12466  │ 5.00002  │    1    │   base    │   yes    │ 1    │  2493.18825   │
-  │   4   │ haskell        │ 2        │ GordonBGood_stride8          │ 11087  │ 5.00037  │    1    │   base    │   yes    │ 1    │  2217.23694   │
-  │   5   │ haskell        │ 2        │ GordonBGood_bittwiddle       │  7214  │ 5.00056  │    1    │   base    │   yes    │ 1    │  1442.63884   │
+  │   1   │ haskell        │ 2        │ GordonBGood_extreme-hybrid   │ 39659  │ 5.00000  │    1    │   base    │   yes    │ 1    │  7931.79792   │
+  │   2   │ haskell        │ 2        │ GordonBGood_extreme          │ 18140  │ 5.00015  │    1    │   base    │   yes    │ 1    │  3627.89364   │
+  │   3   │ haskell        │ 2        │ GordonBGood_stride8-block16K │ 12276  │ 5.00021  │    1    │   base    │   yes    │ 1    │  2455.09589   │
+  │   4   │ haskell        │ 2        │ GordonBGood_stride8          │ 11040  │ 5.00034  │    1    │   base    │   yes    │ 1    │  2207.85061   │
+  │   5   │ haskell        │ 2        │ GordonBGood_bittwiddle       │  7237  │ 5.00014  │    1    │   base    │   yes    │ 1    │  1447.36032   │
   └───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
   ```
 
