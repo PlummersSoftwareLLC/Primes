@@ -8,7 +8,7 @@ WORKDIR /opt/sieve
 COPY Primes*.hs ./
 # RUN ghc Primes.hs # for 64-bit registers
 # RUN ghc Primes.hs -DAVX # for-128 bit registers
-RUN ghc Primes.hs -DABX2 # for-256 bit registers
+RUN ghc Primes.hs -DAVX2 # for-256 bit registers
 
 # runtime container
 FROM debian:11 AS runtime
