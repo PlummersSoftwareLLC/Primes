@@ -2,7 +2,7 @@
 
 FROM ubuntu:21.04 AS build
 
-RUN apt-get update -qq && apt-get install --no-install-recommends -y g++-11 clang-12 make
+RUN apt-get update -qq && apt-get install -y g++-11 clang-12 make
 
 WORKDIR /opt/app
 
@@ -17,7 +17,7 @@ RUN make -j bench
 
 FROM ubuntu:21.04
 
-RUN apt-get update -qq && apt-get install --no-install-recommends -y make \
+RUN apt-get update -qq && apt-get install -y make \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

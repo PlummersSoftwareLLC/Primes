@@ -3,7 +3,7 @@ FROM ubuntu:18.04 AS build
 
 # install tools
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y gpg-agent lsb-release wget software-properties-common git
+    && apt-get install -y gpg-agent lsb-release wget software-properties-common git
 
 # install clang-12 for C++ standard 17
 RUN wget https://apt.llvm.org/llvm.sh \
@@ -19,7 +19,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
     && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' \
     && apt-get update \
-    && apt-get install --no-install-recommends -y cmake
+    && apt-get install -y cmake
 
 # clone custom language interpreter
 RUN git clone https://github.com/ThatAquarel/BrainF-ck-Interpreter \

@@ -3,7 +3,7 @@ ARG JDK_VERSION=16
 
 FROM gradle:${GRADLE_VERSION}-jdk-hotspot as BUILD
 
-RUN apt-get update && apt-get --no-install-recommends -y install libncurses5
+RUN apt-get update && apt-get -y install libncurses5
 
 WORKDIR /src
 COPY . .
@@ -28,7 +28,7 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     *) echo "unsupported architecture"; exit 1 ;; \
   esac \
   && mkdir /bin/node \
-  && apt-get update && apt-get --no-install-recommends -y install xz-utils  \
+  && apt-get update && apt-get -y install xz-utils  \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \

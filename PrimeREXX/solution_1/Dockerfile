@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 RUN apt-get update \
-	&& apt-get install --no-install-recommends -y regina-rexx \
+	&& apt-get install -y regina-rexx \
  	&& apt-get clean \
  	&& rm -rf /var/lib/apt/lists/*
 WORKDIR /home/rexx

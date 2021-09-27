@@ -1,7 +1,7 @@
 FROM debian:buster-slim as builder
 
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y curl xz-utils ca-certificates
+    apt-get install -y curl xz-utils ca-certificates
 
 WORKDIR /deps
 RUN curl https://ziglang.org/download/0.8.0/zig-linux-"$(uname -m)"-0.8.0.tar.xz  -O && \

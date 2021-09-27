@@ -8,7 +8,7 @@ WORKDIR /opt/app
 
 COPY prime_race.tex prime_functions.tex run.sh ./
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install --no-install-recommends -y texlive-latex-base texlive-latex-recommended \
+RUN apt-get update && apt-get install -y texlive-latex-base texlive-latex-recommended \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
 

@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get --no-install-recommends -y install make gfortran \
+RUN apt-get update && apt-get -y install make gfortran \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

@@ -3,7 +3,7 @@ FROM haskell:8.10
 WORKDIR /opt/sieve
 
 RUN cabal update \
-    && apt-get update && apt-get install --no-install-recommends -y lsb-release wget software-properties-common \
+    && apt-get update && apt-get install -y lsb-release wget software-properties-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh \
