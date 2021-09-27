@@ -3,7 +3,7 @@ FROM ubuntu:18.04 AS build
 
 # install tools
 RUN apt-get update \
-    && apt-get install -y gpg-agent lsb-release wget software-properties-common git
+    && apt-get install -y lsb-release wget software-properties-common git
 
 # install clang-12 for C++ standard 17
 RUN wget https://apt.llvm.org/llvm.sh \
