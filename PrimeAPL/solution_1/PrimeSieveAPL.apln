@@ -1,0 +1,101 @@
+:Namespace PrimeSieveAPL
+
+	⎕IO←0
+
+	sieveSize←1e6
+	expected←78498
+
+⍝ Various implementations of the sieve code
+
+⍝   Original implementation, cf. Roger Hui
+	sieveRoger←{
+		4≥⍵:⍵⍴0 0 1 1
+		r←⌊0.5*⍨n←⍵
+		p←2 3 5 7 11 13 17 19 23 29 31 37 41 43
+		p←(1+(n≤×⍀p)⍳1)↑p
+		b← 0@1 ⊃ {(m⍴⍵)>m⍴⍺↑1 ⊣ m←n⌊⍺×≢⍵}⌿ ⊖1,p
+		{r<q←b⍳1:b⊣b[⍵]←1 ⋄ b[q,q×⍸b↑⍨⌈n÷q]←0 ⋄ ∇ ⍵,q}p}
+
+⍝   Tweaks for performance on this benchmark
+	sieveDfn←{
+		r←⌊0.5*⍨n←⍵
+		p←2 3 5 7 11 13 17 19 23 29 31 37 41 43
+		b← 0@1 ⊃ {(m⍴⍵)>m⍴⍺↑1 ⊣ m←n⌊⍺×≢⍵}⌿ ⊖1,p
+		{r<q←b⍳1:b⊣b[⍵]←1 ⋄ b[q,q×⍸b↑⍨⌈n÷q]←0 ⋄ ∇ ⍵,q}p}
+
+⍝   Faithful dfns implementation using an explicit reified state object
+	makeSieve←{
+		r←⌊0.5*⍨n←⍵
+		p←2 3 5 7 11 13 17 19 23 29 31 37 41 43
+		b← 0@1 ⊃ {(m⍴⍵)>m⍴⍺↑1 ⊣ m←n⌊⍺×≢⍵}⌿ ⊖1,p
+		r n p b}
+
+	compSieve←{r n p b←⍵ ⋄ {r<q←b⍳1:b⊣b[⍵]←1 ⋄ b[q,q×⍸b↑⍨⌈n÷q]←0 ⋄ ∇ ⍵,q}p}
+
+	sieveDfnFaithful←{
+		state←makeSieve ⍵
+		(⊃⌽state)←compSieve state}
+
+⍝   Version using the :Class system in Dyalog
+	:Class Sieve
+		:Field r
+		:Field Public n
+		:Field p
+		:Field Public b
+		∇ make size
+		  :Access Public
+		  :Implements Constructor
+		  r←⌊0.5*⍨n←size
+		  p←2 3 5 7 11 13 17 19 23 29 31 37 41 43
+		  b← 0@1 ⊃ {(m⍴⍵)>m⍴⍺↑1 ⊣ m←n⌊⍺×≢⍵}⌿ ⊖1,p
+		∇
+
+		∇ {Z}←doSieve
+		  :Access Public
+		  Z←b←{r<q←b⍳1:b⊣b[⍵]←1 ⋄ b[q,q×⍸b↑⍨⌈n÷q]←0 ⋄ ∇ ⍵,q}p
+		∇
+	:EndClass
+
+	sieveClassFaithful←{
+		state←⎕NEW Sieve ⍵
+		state.doSieve}
+
+⍝ Driver code to run the various benchmarks
+
+	warmup←{ex size←⍵ ⋄ ex≠+⌿⍺⍺ size:'BAD SIEVE'⎕SIGNAL 99 ⋄ 0}
+
+	runOnce←{
+		sieve←⍺⍺ ⋄ size←⍵ ⋄ passes←0 ⋄ dur←0 ⋄ start←⎕AI[2]
+		msk←{z←sieve size ⋄ passes+←1 ⋄ z}⍣{5000<dur∘←⎕AI[2]-start}⍬
+		passes dur}
+
+	print←{
+		passes dur threads faith←⍵ ⋄ tag←'arcfide',⍺
+		flags←'algorithm=wheel,faithful=',faith,',bits=1'
+		⎕←⊃{⍺,';',⍵}⌿⍕¨tag passes (dur÷1000) threads flags
+		shy←passes} ⍝ Need the shy result
+
+	runDfn←{
+		sieveDfn warmup expected sieveSize:
+		i t←sieveDfn runOnce sieveSize
+		'Dfn' print i t 1 'no'}
+
+	runDfnPar←{
+		sieveDfn warmup expected sieveSize:
+		_←#.⎕CY'isolate'
+		i t←↓⍉↑{⍵.(sieveDfn runOnce sieveSize)}#.IÏ ⎕THIS⍴⍨threads←1111⌶⍬
+		'DfnPar' print(+⌿i)(⌈/t)threads 'no'}
+
+	runDfnFaithful←{
+		sieveDfnFaithful warmup expected sieveSize:
+		i t←sieveDfnFaithful runOnce sieveSize
+		'DfnFaithful' print i t 1 'yes'}
+
+	runClassFaithful←{
+		sieveClassFaithful warmup expected sieveSize:
+		i t←sieveClassFaithful runOnce sieveSize
+		'ClassFaithful' print i t 1 'yes'}
+	
+	Run←{_←runDfn⍬ ⋄ _←runDfnFaithful⍬ ⋄ _←runClassFaithful⍬ ⋄ ⎕OFF}
+
+:EndNamespace
