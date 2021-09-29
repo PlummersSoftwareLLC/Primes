@@ -12,6 +12,8 @@ RUN apt-get update && \
 
 COPY . /opt/
 
-RUN hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sieve.prg 
+RUN hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sieve.prg
+RUN hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sievedb.prg
+RUN hbmk2 -gtstd -optim -cflag=-O3 -cflag=-mtune=native ./sieve_xharbour.prg
 
-CMD [ "./sieve" ]
+CMD [ "bash", "./run.sh" ]
