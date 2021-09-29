@@ -24,7 +24,6 @@ Special thanks to the maintainers of this repository for spending some of their 
 
 The original Clipper has some quite *unique* flaws, so there are some implementation notes at the top of the file detailing our workarounds.
 
-<<<<<<< HEAD
 ## Versions
 
 ### Sieve.prg
@@ -40,8 +39,6 @@ A Clipper 5.2e compatible faithful implementation of the base algorithm, which u
 An XHarbour faithful implementation that uses a single flat array. Not compatible with Clipper 5.2e due to its limitation of arrays
 having a maximum of 4096 elements.
 
-=======
->>>>>>> 2ecca0170fcafd373f6150fc0510ecb46c67ac9c
 ## Running with Docker
 
 ```
