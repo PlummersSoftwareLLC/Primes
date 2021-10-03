@@ -109,13 +109,12 @@ PROCEDURE Main()
 
    ENDIF
 
-   OutputString = "AndyRadford,Clipper_5.2e"
+   OutputString = "AndyRadford,Clip5.2e"
    OutputString = OutputString + ";" + ALLTRIM(STR(PassCount))
    OutputString = OutputString + ";" + ALLTRIM(STR(Duration))
    OutputString = OutputString + ";" + ALLTRIM(STR(1))
    OutputString = OutputString + ";" + ALLTRIM("algorithm=base")
    OutputString = OutputString + "," + ALLTRIM("faithful=no")
-   OutputString = OutputString + "," + ALLTRIM("parallel=no")
    OutputString = OutputString + "," + ALLTRIM("bits=112")
 
    ? OutputString
