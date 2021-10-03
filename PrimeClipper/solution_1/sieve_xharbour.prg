@@ -186,7 +186,7 @@ FUNCTION InitArray(ElementCount,initvalue)
     LOCAL array := ARRAY(ElementCount)
 
     FOR I = 1 TO ElementCount
-        array[I] := .F.
+        array[I] := initvalue
     NEXT
 
 RETURN (array)
