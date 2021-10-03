@@ -1,6 +1,6 @@
 FROM alpine:3.13 AS build
 
-ENV V_VER="weekly.2021.38"
+ENV V_VER="weekly.2021.39.1"
 
 RUN apk add --no-cache build-base bash git
 
