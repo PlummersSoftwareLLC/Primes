@@ -1,6 +1,7 @@
 # Clipper Solution by Andy Radford
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-112-yellowgreen)
@@ -28,7 +29,7 @@ The original Clipper has some quite *unique* flaws, so there are some implementa
 
 ### Sieve.prg
 
-A Clipper 5.2e compatible faithful implementation of the base algorithm.
+A Clipper 5.2e compatible unfaithful implementation of the base algorithm.
 
 ### Sievedb.prg
 
@@ -36,7 +37,7 @@ A Clipper 5.2e compatible faithful implementation of the base algorithm, which u
 
 ### Sieve_xharbour.prg
 
-An XHarbour faithful implementation that uses a single flat array. Not compatible with Clipper 5.2e due to its limitation of arrays
+An XHarbour unfaithful implementation that uses a single flat array. Not compatible with Clipper 5.2e due to its limitation of arrays
 having a maximum of 4096 elements.
 
 ## Running with Docker
