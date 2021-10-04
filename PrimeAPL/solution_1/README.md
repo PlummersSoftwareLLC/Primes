@@ -1,6 +1,7 @@
 # APL solution by arcfide
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
