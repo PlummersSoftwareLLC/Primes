@@ -7,9 +7,6 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-16-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-64-yellowgreen)
 
 Build (curated conditions):
 
@@ -31,7 +28,11 @@ Run:
 ./zig-out/bin/PrimeZig
 ```
 
-Uses highly composable Zig datastructures.
+There is a special flag `-Darm-is-rpi` which adds extra filtering
+on the units compiled (as detected by it being an arm architecture) that
+allows you to compile on the memory-constrained rpi architecture.
+
+Uses highly composable "Enterprise Zig" datastructures.
 Features combinations of the following optimizations:
 
 - int datatypes: `bool`, `u8`
