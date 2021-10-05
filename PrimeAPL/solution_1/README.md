@@ -21,4 +21,5 @@ You must have a working version of Dyalog APL installed. On Linux/UNIX, run `LOA
 
 	arcfideDfn;6135;5.001;1;algorithm=wheel,faithful=no,bits=1
 	arcfideDfnFaithful;6187;5.001;1;algorithm=wheel,faithful=yes,bits=1
+	arcfideDfnBaseFaithful;2187;5.002;1;algorithm=base,faithful=yes,bits=1
 	arcfideClassFaithful;1423;5.002;1;algorithm=wheel,faithful=yes,bits=1
