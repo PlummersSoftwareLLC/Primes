@@ -1,10 +1,13 @@
+
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*   Procedure SIEVE.PRG
+*   Procedure SIEVEDB.PRG
 *
 *      Dave's Garage Prime Sieve Speed Test Algorithm For Different
 *      Computer Languages
 *
 *      Development Languge : Computer Associate's Clipper Version 5.2e
+*
+*      Version : Table Version
 *
 *      Authors : Andy Radford, Bradley Chatha
 *
@@ -22,7 +25,9 @@
 *      3. If runtime exceeds 1 day, the duration will be eroneous
 *
 *      4. Clipper 5.2e supports a maximum array size of 4096 in any
-*         dimension, therefore a multi-deminsion array has been used
+*         dimension, therefore this version can be used as a comparison of
+*         multi dimension array verses creation of a temporary table and
+*         populating the table with the required values
 *
 *      5. In order to speed up the algorithm the .T./.F. state of the
 *         array is inverted.  There is no quick way to set the starting
@@ -30,29 +35,52 @@
 *         iterating through the each element in the array and setting the
 *         value.  Therefore it is loaded in its default (.F. or NILL) and
 *         set to .T. if number isn't prime.  Thus there is an inverted logic
-*         compared to other implementations of the sieve algorithm
+*         compared to other implementations of the sieve algorithm.  Although
+*         the table version explicitly sets the values at creation, therefore
+*         the logic could revert back standard with no effect on the speed,
+*         I have left it the same as the array verion rather than introduce
+*         a discrepency between the two
 *
 *      6. The sieve size is determined by the SieveSize variable (currently
 *         set to 1000000
 *
-*      7. Clipper's array element size is 14 bytes
+*      7. Clipper's array element size is 14 bytes (but this is irrelevant as
+*         this version uses tables to hold the values
 *
-*      8. Due to the limition of 4096 elements in an array, it is not expected
-*         that any value in excess of 1,000,000 be passed in.  Values in
-*         excess of this are likely to result in an Out or Memory or Memory
-*         Overflow error
+*      8. There is a limitiation of Clipper's maximum table size
+*
+*      9. The table version will take considerable time to initialise the
+*         table by creating it, however the processing time is relatively
+*         short
+*
+*     10. The table version will create a table of approx 8,500,098 bytes for
+*         a 1,000,000 sieve size
+*
+*     11. The table version will also create an index file of approx
+*         26,948,608 bytes for a sieve size of 1,000,000
+*
+*     12. Bits Value : I have used the disk space for each record (17 bytes)
+*         However, this can be reduced as the field width has been set to
+*         10^14 which is significantly more than is required for 1,000,000
+*         I have also not included Clippers Database header overhead in the
+*         17 bytes calculation.  Included in the overall is the
+*         index for the table.  This works out at about 19 bytes per record.
+*         This gives a total size per record of 36 bytes per record.
+*        
 *
 *
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*
+*                                        
 *   FUNCTIONS AND PROCEDURES
 *
 *      PROCEDURE Main()
 *      FUNCTION ReferenceN()
 *      FUNCTION RunSieve()
-*      FUNCTION InitArray()
-*      PROCEDURE SetElement()
-*      FUNCTION GetElement()      
+*      FUNCTION InitTables()
+*      PROCEDURE SetTElement()
+*      FUNCTION GetTElement()      
+*      FUNCTION ADDFIELD()
+*      PROCEDURE DInitTable()
 *
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 
@@ -65,6 +93,7 @@ Main()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
 PROCEDURE Main()
+
     LOCAL SieveSize := 1000000
     LOCAL PassCount := 0
     LOCAL StartTime := SECONDS()
@@ -74,11 +103,15 @@ PROCEDURE Main()
     LOCAL Now := Seconds()
     LOCAL OutputString := ""
 
+
     DO WHILE Now - StartTime <= 5
-     
+
+
        NumberFound = RunSieve(SieveSize)
        PassCount = Passcount + 1
        Now = SECONDS()
+
+       ALTD()
 
    ENDDO
 
@@ -109,13 +142,13 @@ PROCEDURE Main()
 
    ENDIF
 
-   OutputString = "AndyRadford,Clip5.2e"
+   OutputString = "AndyRadford,Clip5.2e,Db"
    OutputString = OutputString + ";" + ALLTRIM(STR(PassCount))
    OutputString = OutputString + ";" + ALLTRIM(STR(Duration))
    OutputString = OutputString + ";" + ALLTRIM(STR(1))
    OutputString = OutputString + ";" + ALLTRIM("algorithm=base")
-   OutputString = OutputString + "," + ALLTRIM("faithful=no")
-   OutputString = OutputString + "," + ALLTRIM("bits=112")
+   OutputString = OutputString + "," + ALLTRIM("faithful=yes")
+   OutputString = OutputString + "," + ALLTRIM("bits=288")
 
    ? OutputString
 
@@ -127,6 +160,7 @@ RETURN
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
 FUNCTION ReferenceN(SieveSize)
+
 
    LOCAL Primecounts := {{10,4},{100,25},{1000,168},{10000,1229},{100000,9592},{1000000,78498},{10000000,664579},{100000000,5761455}}
    LOCAL ReferenceCount := 0
@@ -156,13 +190,13 @@ FUNCTION RunSieve (SieveSize)
    LOCAL PArray := (SieveSize+1)/2
    LOCAL PrimesArrayCL := {}
 
-   PrimesArrayCL := InitArray(PArray,.F.)
+   InitTables(PArray)
 
    FOR Factor = 3 TO SieveSqrt Step 2
 
       FOR Number = Factor TO SieveSqrt STEP 2
 
-         IF GetElement(PrimesArrayCL,INT(Number / 2)) = .F.
+         IF GetTElement(INT(Number/2)) = .F.
             Factor = Number
             EXIT
          ENDIF
@@ -174,7 +208,7 @@ FUNCTION RunSieve (SieveSize)
       ENDIF
 
       FOR Number = Factor * 3 TO SieveSize STEP Factor * 2
-         SetElement(PrimesArrayCL,INT(Number / 2),.T.)
+         SetTElement(INT(Number / 2),.T.)
       NEXT
 
    NEXT
@@ -183,76 +217,159 @@ FUNCTION RunSieve (SieveSize)
 
    FOR Counter = 1 TO PArray
 
-      IF GetElement(PrimesArrayCL,Counter) = .F.
+      IF GetTelement(Counter) = .F.
          ResultCount = ResultCount + 1
       ENDIF
 
    NEXT
 
+   DInitTable()
+
+
 RETURN (ResultCount)
 
 
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    FUNCTION InitArray()
+*    FUNCTION InitTables()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
-FUNCTION InitArray(ElementCount,initvalue)
+FUNCTION InitTables(ElementCount)
 
-   // Replacement for Clipper AARRAY() function to support > 4096 elements
+   LOCAL Looop := 0
 
-   LOCAL Array := ARRAY(4096)
-   LOCAL ArraysNeeded := INT(ElementCount / 4096) + 1
-   LOCAL Subarray
-   LOCAL I:=0
-   LOCAL J:=0
+   IF FILE("SIEVEDB.DBF")
+      DELETE FILE("SIEVEDB.DBF")
+   ENDIF
 
-   FOR I = 1 TO ArraysNeeded
+   IF FILE("TEMPSTRU.DBF")
+      DELETE FILE("TEMPSTRU.DBF")
+   ENDIF
 
-      Array[I] = ARRAY(4096)
-      FOR J = 1 TO 4096
-         Subarray := ARRAY[I]
-         Subarray[J] = InitValue
-      NEXT
 
+   IF FILE("SIEVE.NTX")
+      DELETE FILE("SIEVEDB.NTX")
+   ENDIF
+
+   CREATE ("TEMPSTRU.DBF")
+   ADDFIELD("NUMBER","N",15,0)
+   ADDFIELD("VALUE","L",1,0)
+   CLOSE TEMPSTRU
+
+   CREATE SIEVEDB.DBF FROM TEMPSTRU.DBF NEW
+
+   USE ("SIEVEDB.DBF") EXCLUSIVE NEW
+
+   SELECT SIEVEDB
+
+   INDEX ON NUMBER TO ("SIEVEDB.NTX")
+
+   SET INDEX TO ("SIEVEDB.NTX")
+
+   FOR Looop = 1 TO ElementCount
+      APPEND BLANK
+      REPLACE NUMBER WITH Looop
+      REPLACE VALUE WITH .F.
    NEXT
-
-RETURN (array)
-
-
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    PROCEDURE SetElement()
-*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*
-PROCEDURE SetElement(Array, Index, Value)
-
-  // Support of setting array element when the array size > 4096 elements
- 
-  LOCAL WhichArray := (INT(Index / 4096)) + 1
-  LOCAL WhichElement := (Index % 4096) + 1
-
-  Array[WhichArray][WhichElement] := Value
 
 RETURN
 
+
+
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*    FUNCTION GetElement()
+*    PROCEDURE DInitTable()
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
-FUNCTION GetElement(Array, Index)
+PROCEDURE DInitTable()
 
-  // Retrieve element for array > 4096 elements
+   //Clean up tables and indexes after use
 
-  LOCAL WhichArray := (INT(Index / 4096)) + 1
-  LOCAL WhichElement := (Index  % 4096) + 1
+   IF SELECT("SIEVEDB") > 0
+      CLOSE SIEVEDB
+   ENDIF
 
-RETURN (Array[WhichArray][WhichElement])
+   IF FILE("SIEVEDB.DBF")
+      DELETE FILE("SIEVEDB.DBF")
+   ENDIF
+
+   IF FILE("TEMPSTRU.DBF")
+      DELETE FILE("TEMPSTRU.DBF")
+   ENDIF
+
+   IF FILE("SIEVE.NTX")
+      DELETE FILE("SIEVEDB.NTX")
+   ENDIF
+
+RETURN
+
+
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*    PROCEDURE SetTElement()
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*
+PROCEDURE SetTElement(Index, NewValue)
+
+  // set the appropriate record to the required value
+
+  SELECT 1
+  GO TOP
+  SEEK (Index)
+  REPLACE VALUE WITH NewValue
+
+RETURN
+
+
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*    FUNCTION GetTElement()
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*
+FUNCTION GetTElement(Index)
+
+  // return the value from the appropriate record
+
+  LOCAL lValue := .F.
+
+  SELECT 1
+  GO TOP
+  SEEK(Index)
+  lValue = SIEVEDB->Value
+
+
+RETURN (lValue)
+
+
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*    Function ADDFIELD()
+*±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*
+* Add the given field to the database structure
+*
+FUNCTION ADDFIELD ( FName , FType , FLen , FDec )
+
+   LOCAL Result := .F.
+
+   LOCATE FOR FIELD_NAME = FName
+   IF FOUND()
+      REPLACE FIELD_TYPE WITH FType
+      REPLACE FIELD_LEN WITH FLen
+      REPLACE FIELD_DEC WITH FDec
+      Result := .F.
+   ELSE
+      APPEND BLANK
+      REPLACE FIELD_NAME WITH FName
+      REPLACE FIELD_TYPE WITH FType
+      REPLACE FIELD_LEN WITH FLen
+      REPLACE FIELD_DEC WITH FDec
+      Result := .T.
+   ENDIF
+
+RETURN (Result)
+
+
 
 ***
 * VERSION HISTORY :
-*   1.0 : Initial Release (20/09/2021 ACR)
-*         Credit Jovan Bulajic, Yogoslavia :
-*         Solution to Clippers 4096 single array limit
-*         Concept of Multi-Dimensional Array
-*   1.1 : Correct output (22/09/2021 ACR)
+*   1.0 : Initial Release (22/09/2021 ACR)
+*   1.1 : Fix : Support for ADDFIELD() (22/09/2021 ACR)
+*   1.2 : Fix : Remove Table/Indexes after calculations (22/09/2021 ACR)
 *
-* EoF: SIEVE.PRG
+* EoF: SIEVEDB.PRG

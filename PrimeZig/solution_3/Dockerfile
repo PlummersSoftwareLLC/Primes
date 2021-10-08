@@ -14,6 +14,8 @@ RUN ln -s /deps/local/zig /usr/bin/zig
 
 WORKDIR /opt/app
 COPY . .
-RUN zig build -Drelease-fast
+
+RUN zig build -Drelease-fast -Darm-is-rpi4
 
 ENTRYPOINT [ "./zig-out/bin/PrimeZig" ]
+

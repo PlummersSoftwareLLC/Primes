@@ -1,20 +1,12 @@
-FROM haskell:8.10
+FROM primeimages/haskell:8.8.4 AS build
 
+# build the application...
 WORKDIR /opt/sieve
+COPY Primes*.* ./
+RUN sh Primes.sh
 
-RUN cabal update \
-    && apt-get update && apt-get install -y lsb-release wget software-properties-common \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh \
-    && ./llvm.sh 9
-
-COPY ./dragrace-haskell2.cabal ./dragrace-haskell2.cabal
-
-RUN cabal update && cabal build --only-dependencies -j4
-
-COPY . .
-
-RUN PATH=/usr/lib/llvm-9/bin:$PATH cabal build dragrace-haskell2  	 	
-
-CMD ["cabal","run","dragrace-haskell2"]
+# runtime container
+FROM fedora:34 AS runtime
+WORKDIR /opt/sieve
+COPY --from=build /opt/sieve/Primes Primes
+ENTRYPOINT [ "/opt/sieve/Primes" ]

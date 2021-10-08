@@ -36,7 +36,6 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         }
 
         pub fn run(self: *Self) void {
-            @setAlignStack(256);
             const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, self.sieve_size)));
             var factor = self.factor;
 

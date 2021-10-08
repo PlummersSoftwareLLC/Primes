@@ -1,10 +1,10 @@
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-*   Procedure SIEVE.PRG
+*   Procedure SIEVE_XHARBOUR.PRG
 *
 *      Dave's Garage Prime Sieve Speed Test Algorithm For Different
 *      Computer Languages
 *
-*      Development Languge : Computer Associate's Clipper Version 5.2e
+*      Development Languge : XHarbour
 *
 *      Authors : Andy Radford, Bradley Chatha
 *
@@ -15,32 +15,16 @@
 *
 *
 *   Notes:
-*      1. Clipper version 5.2e
+*      1. XHarbour only version due to it bypassing the 4096 array element limit
 *
 *      2. No Additional Libraries have been used eg. (CA-Tools)
 *
 *      3. If runtime exceeds 1 day, the duration will be eroneous
 *
-*      4. Clipper 5.2e supports a maximum array size of 4096 in any
-*         dimension, therefore a multi-deminsion array has been used
-*
-*      5. In order to speed up the algorithm the .T./.F. state of the
-*         array is inverted.  There is no quick way to set the starting
-*         state of the array to .T. for each element other than by
-*         iterating through the each element in the array and setting the
-*         value.  Therefore it is loaded in its default (.F. or NILL) and
-*         set to .T. if number isn't prime.  Thus there is an inverted logic
-*         compared to other implementations of the sieve algorithm
-*
-*      6. The sieve size is determined by the SieveSize variable (currently
+*      4. The sieve size is determined by the SieveSize variable (currently
 *         set to 1000000
 *
-*      7. Clipper's array element size is 14 bytes
-*
-*      8. Due to the limition of 4096 elements in an array, it is not expected
-*         that any value in excess of 1,000,000 be passed in.  Values in
-*         excess of this are likely to result in an Out or Memory or Memory
-*         Overflow error
+*      5. Clipper's array element size is 14 bytes
 *
 *
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -109,7 +93,7 @@ PROCEDURE Main()
 
    ENDIF
 
-   OutputString = "AndyRadford,Clip5.2e"
+   OutputString = "AndyRadford,BradleyChatha,XH"
    OutputString = OutputString + ";" + ALLTRIM(STR(PassCount))
    OutputString = OutputString + ";" + ALLTRIM(STR(Duration))
    OutputString = OutputString + ";" + ALLTRIM(STR(1))
@@ -198,23 +182,11 @@ RETURN (ResultCount)
 *
 FUNCTION InitArray(ElementCount,initvalue)
 
-   // Replacement for Clipper AARRAY() function to support > 4096 elements
+    LOCAL array := ARRAY(ElementCount)
 
-   LOCAL Array := ARRAY(4096)
-   LOCAL ArraysNeeded := INT(ElementCount / 4096) + 1
-   LOCAL Subarray
-   LOCAL I:=0
-   LOCAL J:=0
-
-   FOR I = 1 TO ArraysNeeded
-
-      Array[I] = ARRAY(4096)
-      FOR J = 1 TO 4096
-         Subarray := ARRAY[I]
-         Subarray[J] = InitValue
-      NEXT
-
-   NEXT
+    FOR I = 1 TO ElementCount
+        array[I] := initvalue
+    NEXT
 
 RETURN (array)
 
@@ -226,11 +198,8 @@ RETURN (array)
 PROCEDURE SetElement(Array, Index, Value)
 
   // Support of setting array element when the array size > 4096 elements
- 
-  LOCAL WhichArray := (INT(Index / 4096)) + 1
-  LOCAL WhichElement := (Index % 4096) + 1
 
-  Array[WhichArray][WhichElement] := Value
+  Array[Index] := Value
 
 RETURN
 
@@ -239,13 +208,7 @@ RETURN
 *±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 *
 FUNCTION GetElement(Array, Index)
-
-  // Retrieve element for array > 4096 elements
-
-  LOCAL WhichArray := (INT(Index / 4096)) + 1
-  LOCAL WhichElement := (Index  % 4096) + 1
-
-RETURN (Array[WhichArray][WhichElement])
+RETURN (Array[Index])
 
 ***
 * VERSION HISTORY :
@@ -254,5 +217,6 @@ RETURN (Array[WhichArray][WhichElement])
 *         Solution to Clippers 4096 single array limit
 *         Concept of Multi-Dimensional Array
 *   1.1 : Correct output (22/09/2021 ACR)
+*   1.2 : Refactored into XHarbour version (22/09/2021 BPAC)
 *
-* EoF: SIEVE.PRG
+* EoF: SIEVE_XHARBOUR.PRG
