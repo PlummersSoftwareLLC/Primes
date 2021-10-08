@@ -1,4 +1,4 @@
-FROM haskell:8.10
+FROM haskell:8.10.4
 
 WORKDIR /opt/sieve
 
