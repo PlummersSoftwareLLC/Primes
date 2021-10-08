@@ -193,18 +193,18 @@ fn extreme_reset_for_skip(skip: usize, function_name: Ident) -> proc_macro2::Tok
                 #square_start < words.len() * 64,
                 "square_start should be within the bounds of our array; check caller"
             );
-            let slice = &mut words[#start_chunk_offset..];
 
             // whole chunks
-            slice.chunks_exact_mut(#skip).for_each(|chunk| {
+            let mut chunks = words[#start_chunk_offset..].chunks_exact_mut(#skip);
+            (&mut chunks).for_each(|chunk| {
                 #(
                     #word_resets_chunk
                 )*
             });
 
-            // remainder
-            let remainder = slice.chunks_exact_mut(#skip).into_remainder();
-            // ??? how to dispatch lots of ifs ???
+            // remainder; this seems inefficient, but appears to 
+            // work well enough
+            let remainder = chunks.into_remainder();
             #(
                 if #index_range < remainder.len() {
                     #word_resets_remainder

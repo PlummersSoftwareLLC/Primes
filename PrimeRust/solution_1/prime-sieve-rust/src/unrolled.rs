@@ -192,9 +192,9 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
             "square_start should be within the bounds of our array; check caller"
         );
         let start_chunk_offset = square_start / 64 / SKIP * SKIP;
-        let slice = &mut words[start_chunk_offset..];
 
-        slice.chunks_exact_mut(SKIP).for_each(|chunk| {
+        let mut chunks = words[start_chunk_offset..].chunks_exact_mut(SKIP);
+        (&mut chunks).for_each(|chunk| {
             const CHUNK_SIZE: usize = 16; // 8, 16, or 32 seems to work
             Self::RELATIVE_INDICES
                 .chunks_exact(CHUNK_SIZE)
@@ -210,7 +210,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
                 });
         });
 
-        let remainder = slice.chunks_exact_mut(SKIP).into_remainder();
+        let remainder = chunks.into_remainder();
         for i in 0..Self::BITS {
             let word_idx = Self::RELATIVE_INDICES[i];
             if word_idx < remainder.len() {
@@ -264,9 +264,9 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             "sparse resets are for larger skip factors; this starts too early: {}",
             start_chunk_offset
         );
-        let slice = &mut bytes[start_chunk_offset..];
 
-        slice.chunks_exact_mut(skip).for_each(|chunk| {
+        let mut chunks = bytes[start_chunk_offset..].chunks_exact_mut(skip);
+        (&mut chunks).for_each(|chunk| {
             #[allow(clippy::needless_range_loop)]
             for i in 0..8 {
                 let word_idx = relative_indices[i];
@@ -277,7 +277,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             }
         });
 
-        let remainder = slice.chunks_exact_mut(skip).into_remainder();
+        let remainder = chunks.into_remainder();
         #[allow(clippy::needless_range_loop)]
         for i in 0..8 {
             let word_idx = relative_indices[i];
