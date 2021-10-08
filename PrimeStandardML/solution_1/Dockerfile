@@ -13,8 +13,6 @@ RUN apt-get update -y && \
     chmod a+x "/mlton-20210117-1.amd64-linux-glibc2.31/bin/mlton" && \
     rm -rf "/mlton-20210117-1.amd64-linux-glibc2.31/bin/mlton.bak"
 WORKDIR /app
-COPY sml_primes.sml sml_primes.sml
-COPY primes.mlb primes.mlb
-COPY run.sml run.sml
+COPY sml_primes.sml primes.mlb run.sml ./
 RUN /mlton-20210117-1.amd64-linux-glibc2.31/bin/mlton -link-opt '-static' -codegen llvm primes.mlb
 CMD ["./primes"]
