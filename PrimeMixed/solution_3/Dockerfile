@@ -9,8 +9,8 @@ RUN python -m venv venv \
 
 USER michaelgrn
 
-ENV HOME=/home/michaelgrn
-ENV PATH=$HOME/.local/bin:$PATH
+ENV HOME=/home/michaelgrn \
+    PATH=$HOME/.local/bin:$PATH
 
 COPY --chown=michaelgrn setup.py .
 COPY --chown=michaelgrn src/ ./src/
