@@ -4,7 +4,7 @@ use std::iter::FromIterator;
 
 use proc_macro::TokenStream;
 use proc_macro2::{Group, Literal, TokenTree};
-use quote::{ToTokens, format_ident, quote};
+use quote::{format_ident, quote, ToTokens};
 use syn::{
     self,
     parse::{Parse, ParseStream, Result},
@@ -193,8 +193,8 @@ fn extreme_reset_for_skip(skip: usize, function_name: Ident) -> proc_macro2::Tok
                 #square_start < words.len() * 64,
                 "square_start should be within the bounds of our array; check caller"
             );
-            let slice = &mut words[#start_chunk_offset..];        
-            
+            let slice = &mut words[#start_chunk_offset..];
+
             // whole chunks
             slice.chunks_exact_mut(#skip).for_each(|chunk| {
                 #(
@@ -225,8 +225,8 @@ fn extreme_reset_for_skip(skip: usize, function_name: Ident) -> proc_macro2::Tok
     code
 }
 
-/// Retrieves single word, then applies each mask in turn. When all masks
-/// have been applied, write the word back to the slice.
+/// Retrieves single word, then applies each single-bit mask in turn.
+/// When all masks have been applied, write the word back to the slice.
 fn extreme_reset_word(
     slice_expr: proc_macro2::TokenStream,
     skip: usize,
@@ -234,63 +234,33 @@ fn extreme_reset_word(
 ) -> proc_macro2::TokenStream {
     let masks = calculate_masks(skip, word_idx);
 
+    // nothing for unaffected words
+    if masks.is_empty() {
+        TokenStream::default();
+    }
+
     // by value - load, apply, apply, ..., store.
     let code = quote! {
-        let mut word = unsafe { *#slice_expr.get_unchecked(#word_idx) };
-        #(
+        unsafe {
+            let mut word = *#slice_expr.get_unchecked(#word_idx);
+            #(
             word |= #masks;
-        )*
-        unsafe { *#slice_expr.get_unchecked_mut(#word_idx) = word; }
+            )*
+            *#slice_expr.get_unchecked_mut(#word_idx) = word;
+        }
     };
-
-    // // everything in an unchecked block
-    // let code = quote! {
-    //     unsafe {
-    //         let mut word = *#slice_expr.get_unchecked(#word_idx);
-    //         #(
-    //         word |= #masks;
-    //         )*
-    //         *#slice_expr.get_unchecked_mut(#word_idx) = word;
-    //     }
-    // };
-
-    // // grab the word reference and run with it
-    // let code = quote! {
-    //     unsafe {
-    //         let word = #slice_expr.get_unchecked_mut(#word_idx);
-    //         #(
-    //         *word |= #masks;
-    //         )*
-    //     }
-    // };
-    
-    // // direct approach
-    // let code = quote! {
-    //     unsafe { 
-    //     #(
-    //         *#slice_expr.get_unchecked_mut(#word_idx) |= #masks; 
-    //     )*
-    //     }
-    // };
 
     code
 }
 
 struct ExtremeResetParmams {
     match_var: Ident,
-    fallback: Expr,
 }
 
 impl Parse for ExtremeResetParmams {
     fn parse(input: ParseStream) -> Result<Self> {
         let match_var: Ident = input.parse()?;
-        input.parse::<Token![,]>()?;
-
-        let fallback: Expr = input.parse()?;
-        Ok(Self {
-            match_var,
-            fallback,
-        })
+        Ok(Self { match_var })
     }
 }
 
@@ -307,31 +277,27 @@ pub fn extreme_reset(input: TokenStream) -> TokenStream {
         .iter()
         .map(|&skip| format_ident!("extreme_reset_{:03}", skip))
         .collect();
-    
+
     // code for extreme resets
     let extreme_reset_codes: Vec<_> = extreme_reset_vals
         .iter()
-        .zip(function_names)
+        .zip(function_names.iter().cloned())
         .map(|(&skip, function_name)| extreme_reset_for_skip(skip, function_name))
         .collect();
 
     let match_var = params.match_var;
-    let fallback = params.fallback;
     let code = quote! {
         // functions
+        #(
         #extreme_reset_codes
+        )*
 
         // dispatcher
-        if #match_var > #last {
-            #fallback
-        } else {
-            match #match_var {
-                #(
-                    #extreme_reset_vals => #function_names(words),
-                )*
-                //3 => {#reset3},
-                _ => panic!("unexpected value")
-            }
+        match #match_var {
+            #(
+            #extreme_reset_vals => #function_names(words),
+            )*
+            _ => panic!("unexpected value")
         }
     };
     //println!("Code: {}", code.to_string());
