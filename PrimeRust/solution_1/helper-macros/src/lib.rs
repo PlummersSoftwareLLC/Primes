@@ -1,8 +1,10 @@
 extern crate proc_macro;
 
+use std::iter::FromIterator;
+
 use proc_macro::TokenStream;
 use proc_macro2::{Group, Literal, TokenTree};
-use quote::{quote, ToTokens};
+use quote::{ToTokens, format_ident, quote};
 use syn::{
     self,
     parse::{Parse, ParseStream, Result},
@@ -165,7 +167,7 @@ fn calculate_masks(skip: usize, word_idx: usize) -> Vec<u64> {
     res
 }
 
-fn extreme_reset_for_skip(skip: usize) -> proc_macro2::TokenStream {
+fn extreme_reset_for_skip(skip: usize, function_name: Ident) -> proc_macro2::TokenStream {
     let index_range = 0..skip;
 
     // word reset statements
@@ -185,34 +187,37 @@ fn extreme_reset_for_skip(skip: usize) -> proc_macro2::TokenStream {
     let start_chunk_offset = square_start / 64 / skip * skip;
 
     let code = quote! {
-        debug_assert!(
-            #square_start < words.len() * 64,
-            "square_start should be within the bounds of our array; check caller"
-        );
-        let slice = &mut words[#start_chunk_offset..];        
-        
-        // whole chunks
-        slice.chunks_exact_mut(#skip).for_each(|chunk| {
+        #[inline(never)]
+        fn #function_name(words: &mut [u64]) {
+            debug_assert!(
+                #square_start < words.len() * 64,
+                "square_start should be within the bounds of our array; check caller"
+            );
+            let slice = &mut words[#start_chunk_offset..];        
+            
+            // whole chunks
+            slice.chunks_exact_mut(#skip).for_each(|chunk| {
+                #(
+                    #word_resets_chunk
+                )*
+            });
+
+            // remainder
+            let remainder = slice.chunks_exact_mut(#skip).into_remainder();
+            // ??? how to dispatch lots of ifs ???
             #(
-                #word_resets_chunk
+                if #index_range < remainder.len() {
+                    #word_resets_remainder
+                }
             )*
-        });
 
-        // remainder
-        let remainder = slice.chunks_exact_mut(#skip).into_remainder();
-        // ??? how to dispatch lots of ifs ???
-        #(
-            if #index_range < remainder.len() {
-                #word_resets_remainder
+            // restore original factor bit -- we have clobbered it, and it is the prime
+            let factor_index = #skip / 2;
+            let factor_word = factor_index / 64;
+            let factor_bit = factor_index % 64;
+            if let Some(w) = words.get_mut(factor_word) {
+                *w &= !(1 << factor_bit);
             }
-        )*
-
-        // restore original factor bit -- we have clobbered it, and it is the prime
-        let factor_index = #skip / 2;
-        let factor_word = factor_index / 64;
-        let factor_bit = factor_index % 64;
-        if let Some(w) = words.get_mut(factor_word) {
-            *w &= !(1 << factor_bit);
         }
     };
 
@@ -297,21 +302,32 @@ pub fn extreme_reset(input: TokenStream) -> TokenStream {
     let last = 129_usize;
     let extreme_reset_vals: Vec<_> = (3..=last).filter(|skip| skip % 2 != 0).collect();
 
+    // names for extreme reset functions
+    let function_names: Vec<_> = extreme_reset_vals
+        .iter()
+        .map(|&skip| format_ident!("extreme_reset_{:03}", skip))
+        .collect();
+    
     // code for extreme resets
     let extreme_reset_codes: Vec<_> = extreme_reset_vals
         .iter()
-        .map(|&skip| extreme_reset_for_skip(skip))
+        .zip(function_names)
+        .map(|(&skip, function_name)| extreme_reset_for_skip(skip, function_name))
         .collect();
 
     let match_var = params.match_var;
     let fallback = params.fallback;
     let code = quote! {
+        // functions
+        #extreme_reset_codes
+
+        // dispatcher
         if #match_var > #last {
             #fallback
         } else {
             match #match_var {
                 #(
-                    #extreme_reset_vals => { #extreme_reset_codes },
+                    #extreme_reset_vals => #function_names(words),
                 )*
                 //3 => {#reset3},
                 _ => panic!("unexpected value")
@@ -319,5 +335,6 @@ pub fn extreme_reset(input: TokenStream) -> TokenStream {
         }
     };
     //println!("Code: {}", code.to_string());
-    TokenStream::from(code)
+    let ts = proc_macro2::TokenStream::from_iter(code.into_iter());
+    TokenStream::from(ts)
 }
