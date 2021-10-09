@@ -965,6 +965,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 
 /// Single-threaded runner: simpler than spinning up a single thread
 /// to do the work.
+#[inline(never)]
 fn run_implementation_st<T: 'static + FlagStorage + Send>(
     label: &str,
     bits_per_prime: usize,
@@ -1006,6 +1007,7 @@ fn run_implementation_st<T: 'static + FlagStorage + Send>(
 }
 
 /// Multithreaded runner
+#[inline(never)]
 fn run_implementation_mt<T: 'static + FlagStorage + Send>(
     label: &str,
     bits_per_prime: usize,
