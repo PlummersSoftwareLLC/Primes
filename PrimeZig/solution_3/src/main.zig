@@ -46,7 +46,8 @@ pub fn main() anyerror!void {
         // comparison against C runner.
         .{ SingleThreadedRunner, .{}, BitSieve, .{}, SELECTED}, // equivalent to C
         // best singlethreaded base runner
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, SELECTED},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 8}}, SELECTED and !IS_RPI4},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 2}}, SELECTED and IS_RPI4},
         // ----   pessimizations on singlethreaded (base)
         // RunFactorChunk matters
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 16}, .RunFactorChunk = u32}, ONLY_WHEN_ALL and ARCH_64},
@@ -159,4 +160,11 @@ fn printResults(passes: usize, elapsed_ns: u64, threads: usize, algo: []const u8
     const stdout = std.io.getStdOut().writer();
 
     try stdout.print(";{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{ passes, elapsed, threads, algo, bits });
+}
+
+// stupid C++ shenanigans for linux
+// TODO: put this behind a tracy build flag
+extern fn  @"__cxa_thread_atexit_impl@GLIBC_2.18"(fun: fn () callconv(.C) void, obj: *c_void, dso_symbol: *c_void) c_int;
+export fn  __cxa_thread_atexit_impl(fun: fn () callconv(.C) void, obj: *c_void, dso_symbol: *c_void) c_int {
+    return @"__cxa_thread_atexit_impl@GLIBC_2.18"(fun, obj, dso_symbol);
 }

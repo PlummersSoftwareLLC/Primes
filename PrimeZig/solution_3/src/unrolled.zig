@@ -62,12 +62,13 @@ fn DenseFn(comptime T: type) type {
 pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) type {
     return struct{
         pub fn fill(field: [*]T, field_count: usize) void {
-            fillOneChunk(field, true);
-            var offset : usize = num;
-            while (offset < field_count) : (offset += num) {
-                fillOneChunk(field + offset, false);
+            const last_chunk = field + field_count + num;
+            var chunk = field;
+            fillOneChunk(chunk, true);
+            chunk += num;
+            while (@ptrToInt(chunk) < @ptrToInt(last_chunk)) : (chunk += num) {
+                fillOneChunk(chunk, false);
             }
-            fillOneChunk(field + offset, false);
         }
 
         /// a function that is expected to fill *num* ints with bits flagged starting
@@ -313,22 +314,16 @@ var my_factor: usize = undefined;
 var my_index: usize = undefined;
 var my_field: usize = undefined;
 
-threadlocal var aaa: u64 = 0;
-
 pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: UnrolledOpts) type {
     return struct{
         pub inline fn fill(field: [*]T, field_ints: usize, factor: usize) void {
             const square_offset = (factor * factor) / (2 * @bitSizeOf(T));
             const stride = factor / @bitSizeOf(T) - 1;
-            // one-time, expensive division.
-            const chunk_count = (field_ints - square_offset) / factor + 1;
-
-            var index: usize = 0;
+            const field_end = field + field_ints;
             var chunk = field + square_offset;
 
-            while (index < chunk_count) : (index += 1) {
-                fillOneChunk(chunk, stride);
-                chunk = chunk + factor;  // move the chunk pointer over.
+            while (@ptrToInt(chunk) < @ptrToInt(field_end)) : (chunk += factor) {
+                fillOneChunk(chunk, stride); // move the chunk pointer over.
             }
         }
 
