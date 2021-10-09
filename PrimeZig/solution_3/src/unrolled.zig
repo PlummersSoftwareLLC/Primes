@@ -41,6 +41,8 @@ pub const UnrolledOpts = struct {
     half_extent: bool = true,    // how many lookup entries for the dense phase.
     unroll_sparse: bool = true,  // should we unroll sparse factors?
     SparseType: type = u8,       // what type should sparse unroll using?
+    use_sparse_LUT: bool = false,
+    use_dense_LUT: bool = false,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -299,11 +301,11 @@ test "it is possible to fill a u8 vector segment with factors of 5 that starts a
 // specify the field_size and it will run the loop automatically.
 
 fn SparseFn(comptime T: type) type {
-    return fn([*]T, usize, usize) void;
+    return fn([*]T, usize, usize) callconv(.Inline) void;
 }
 
-pub fn makeSparseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T, opts.half_extent)]SparseFn(T) {
-    var myFuns: [lutCount(T, opts.half_extent)]SparseFn(T) = undefined;
+pub fn makeSparseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T, true)]SparseFn(T) {
+    var myFuns: [lutCount(T, true)]SparseFn(T) = undefined;
     for (myFuns) | *f, index | {
         f.* = SparseFnFactory(T, 2 * index + 1, opts).fill;
     }

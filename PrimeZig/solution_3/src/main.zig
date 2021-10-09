@@ -27,7 +27,7 @@ const ARCH_BITS = std.builtin.target.cpu.arch.ptrBitWidth();
 const ARCH_64 = ARCH_BITS == 64;
 const ARCH_32 = ARCH_BITS == 32;
 
-const SELECTED = true; // making this false lets us compile just one in debug without commenting out
+const SELECTED = false; // making this false lets us compile just one in debug without commenting out
 const build_options = @import("build_options");
 const IS_RPI4 = std.builtin.target.cpu.arch.isARM() and build_options.arm_is_rpi4;
 const U64_LANES = if (IS_RPI4) 2 else 8;  // how many U64-lanes are available for SIMD?
@@ -47,7 +47,8 @@ pub fn main() anyerror!void {
         // comparison against C runner.
         .{ SingleThreadedRunner, .{}, BitSieve, .{}, SELECTED}, // equivalent to C
         // best singlethreaded base runner
-        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}}, SELECTED},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}}, true},
+        .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES, .use_sparse_LUT = true}}, true},
         // ----   pessimizations on singlethreaded (base)
         // RunFactorChunk matters
         .{ SingleThreadedRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = 16}, .RunFactorChunk = u32}, ONLY_WHEN_ALL and ARCH_64},

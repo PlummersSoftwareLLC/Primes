@@ -356,21 +356,11 @@ pub fn BitSieve(comptime opts_: anytype) type {
                     }
                 }
             } else {
-                const S = unrolled_opts.SparseType; // Type for sparse values
-                const field = @ptrCast([*]S, @alignCast(@alignOf(S), self.field));
-                // naive factoring algorithm.  calculate mask each time.
                 if (unrolled_opts.unroll_sparse) {
-                    const fun_index = (factor % @bitSizeOf(S)) / 2;
-                    // select the function to use, using a compile-time unrolled loop over odd modulo values.
-                    // it turns out that Docker really doesn't like function lookup tables, so this is the
-                    // only option.
-                    comptime var fun_number = 0;
-                    inline while (fun_number < @bitSizeOf(S)) : (fun_number += 1) {
-                        if (fun_index == fun_number) {
-                            const SparseType = unrolled.SparseFnFactory(S, 2 * fun_number + 1, unrolled_opts);
-                            SparseType.fill(field, self.field_bytes / @sizeOf(S), factor);
-                            return;
-                        }
+                    if (unrolled_opts.use_sparse_LUT) {
+                        runFactorSparseUnrolledLUT(self, factor);
+                    } else {
+                        runFactorSparseUnrolled(self, factor);
                     }
                 } else {
                     runFactorConventional(self, factor);
@@ -378,7 +368,34 @@ pub fn BitSieve(comptime opts_: anytype) type {
             }
         }
 
-        fn mask_for(comptime T: type, index: usize) T {
+        inline fn runFactorSparseUnrolled(self: *Self, factor: usize) void {
+            const unrolled_opts = opts.unrolled.?;
+            const S = unrolled_opts.SparseType; // Type for sparse values
+            const field = @ptrCast([*]S, @alignCast(@alignOf(S), self.field));
+
+            const fun_index = (factor % @bitSizeOf(S)) / 2;
+            // select the function to use, using a compile-time unrolled loop over odd modulo values.
+            // it turns out that Docker really doesn't like function lookup tables, so this is the
+            // only option.
+            comptime var fun_number = 0;
+            inline while (fun_number < @bitSizeOf(S)) : (fun_number += 1) {
+                if (fun_index == fun_number) {
+                    const SparseType = unrolled.SparseFnFactory(S, 2 * fun_number + 1, unrolled_opts);
+                    SparseType.fill(field, self.field_bytes / @sizeOf(S), factor);
+                    return;
+                }
+            }
+        }
+
+        fn runFactorSparseUnrolledLUT(self: *Self, factor: usize) void {
+            comptime const unrolled_opts = opts.unrolled.?;
+            const S = unrolled_opts.SparseType; // Type for sparse values
+            const runfactorFns = comptime unrolled.makeSparseLUT(S, unrolled_opts);
+            const fn_index = (factor % @bitSizeOf(S)) / 2;
+            runfactorFns[fn_index](self.field, self.field_bytes / @sizeOf(S), factor);
+        }
+
+        inline fn mask_for(comptime T: type, index: usize) T {
             if (opts.cached_masks) {
                 // reduces the number of cycles per dispatch to 2 but whether it's worth it may be
                 // architecture-dependent.
