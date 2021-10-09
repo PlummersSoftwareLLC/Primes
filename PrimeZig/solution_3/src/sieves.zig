@@ -120,6 +120,7 @@ const BitSieveOpts = comptime struct {
     find_factor: FindFactorMode = .naive,
     note: anytype = "",
     foo_bar: bool = true,
+    wheel_copy_vector: usize = 0,
 };
 
 pub fn BitSieve(comptime opts_: anytype) type {
@@ -129,7 +130,12 @@ pub fn BitSieve(comptime opts_: anytype) type {
     const FindFactorChunk = opts.FindFactorChunk;
 
     const Wheel: ?type = if (opts.wheel_primes > 0)
-        wheel.Wheel(.{ .num_primes = opts.wheel_primes, .PRIME = opts.PRIME, .bits = true })
+        wheel.Wheel(.{
+            .num_primes = opts.wheel_primes,
+            .PRIME = opts.PRIME,
+            .bits = true,
+            .copy_vector = opts.wheel_copy_vector,
+        })
     else
         null;
 
