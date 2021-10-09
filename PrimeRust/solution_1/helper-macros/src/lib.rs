@@ -202,7 +202,7 @@ fn extreme_reset_for_skip(skip: usize, function_name: Ident) -> proc_macro2::Tok
                 )*
             });
 
-            // remainder; this seems inefficient, but appears to 
+            // remainder; this seems inefficient, but appears to
             // work well enough
             let remainder = chunks.into_remainder();
             #(
@@ -257,9 +257,7 @@ struct ExtremeResetParmams {
 impl Parse for ExtremeResetParmams {
     fn parse(input: ParseStream) -> Result<Self> {
         let match_var: Ident = input.parse()?;
-        Ok(Self {
-            match_var,
-        })
+        Ok(Self { match_var })
     }
 }
 
