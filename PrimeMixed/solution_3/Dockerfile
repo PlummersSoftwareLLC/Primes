@@ -1,20 +1,23 @@
 FROM python:3-alpine
 
-RUN apk add build-base --no-cache && \
-    /usr/sbin/adduser -u 1001 -D michaelgrn
+RUN apk add build-base --no-cache \
+    && /usr/sbin/adduser -u 1001 -D michaelgrn
 
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+WORKDIR /home/michaelgrn
+
+RUN python -m venv venv \
+    && chown -R michaelgrn /home/michaelgrn
+
+USER michaelgrn
+
+ENV HOME=/home/michaelgrn \
+    PATH=$HOME/.local/bin:$PATH
 
 COPY --chown=michaelgrn setup.py .
 COPY --chown=michaelgrn src/ ./src/
 
-RUN python -m pip install --upgrade pip && \
-    pip install -e . --no-cache-dir
-
-USER michaelgrn
-
-WORKDIR /home/michaelgrn
+#hadolint ignore=SC1091
+RUN . venv/bin/activate
+RUN python -m pip install -e . --user --no-cache-dir
 
 CMD ["python", "-m", "pysieve"]
