@@ -4,12 +4,8 @@ RUN apk add --no-cache build-base nasm
 
 WORKDIR /opt/app
 
-COPY *.sh ./
-COPY *.asm ./
+COPY *.sh *.asm ./
 
-RUN chmod a+x ./*.sh && \
-    ./build.sh
+RUN ./build.sh
 
 ENTRYPOINT [ "./run.sh" ]
-
-

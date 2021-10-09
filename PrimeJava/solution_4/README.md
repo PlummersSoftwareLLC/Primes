@@ -17,7 +17,8 @@ This is a collection of prime sieve algorithms implemented in Java. All solution
 * I64: Using 64 bit integers to store primes, 1 bit per prime
 * I64C: Using 64 bit integers to store primes, 1 bit per prime, precache masks
 * I64PatternCalc: Using 64 bit integers to store primes, 1 bit per prime, using masks to mark multiple values per array write, making it an "other" algorithm
-* W appended means a warmup was done
+* I32CUnroll: Using 32 bit integers to store primes, 1 bit per prime, unrolling the loop by 4.
+* Strided32Blocks: Using 32 bit integers to store primes, 1 bit per prime, unrolled, and using the repeating pattern of bitmasks (for `factor`, the mask will be repeat every `factor` bits in the dataSet) to go over the dataSet 32 times with 32 different bit patterns. This avoids calculating the mask per bit cleared. To alleviate the cache trashing that comes with this, the clearing is done in blocks of data that fit in most L1 caches. The mask always has a single bit set. We get better performance then I64PatternCalc, while now also being faithful base.
 
 ## Building and running
 
@@ -37,40 +38,24 @@ Results:
 
 i7-8750H
 ```
-chrvanorleI32W;6160;5.007000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32CW;7380;5.006000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64W;6041;5.005000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64CW;7171;5.013000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64PatternCalcW;9286;5.012000;1;algorithm=other,faithful=yes,bits=1
-chrvanorleI8W;5367;5.012000;1;algorithm=base,faithful=yes,bits=1
-```
-
-e5-2670 (v1)
-```
-chrvanorleI32W;3735;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32CW;4358;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64W;3665;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64CW;4157;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64PatternCalcW;4999;5.005000;1;algorithm=other,faithful=yes,bits=1
-chrvanorleI8W;3444;5.000000;1;algorithm=base,faithful=yes,bits=1
-```
-
-i5-3570k
-```
-chrvanorleI32W;5005;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32CW;5013;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64W;4855;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64CW;4771;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64PatternCalcW;7408;5.000000;1;algorithm=other,faithful=yes,bits=1
-chrvanorleI8W;4123;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32;6088;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32C;7252;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32CUnroll;8295;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64;5958;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64C;7077;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64PatternCalc;9227;5.000000;1;algorithm=other,faithful=yes,bits=1
+chrvanorleI8;4926;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleStrided32Blocks16k;11505;5.000000;1;algorithm=base,faithful=yes,bits=1
 ```
 
 r7-3700x (debian)
 ```
-chrvanorleI32W;8428;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI32CW;9269;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64W;8040;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64CW;7869;5.000000;1;algorithm=base,faithful=yes,bits=1
-chrvanorleI64PatternCalcW;11819;5.000000;1;algorithm=other,faithful=yes,bits=1
-chrvanorleI8W;3985;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32;4361;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32C;4468;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI32CUnroll;10224;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64;4398;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64C;4379;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleI64PatternCalc;6571;5.000000;1;algorithm=other,faithful=yes,bits=1
+chrvanorleI8;4420;5.000000;1;algorithm=base,faithful=yes,bits=1
+chrvanorleStrided32Blocks16k;16466;5.000000;1;algorithm=base,faithful=yes,bits=1
 ```

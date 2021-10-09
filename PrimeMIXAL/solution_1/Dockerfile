@@ -1,13 +1,13 @@
 FROM ubuntu:18.04
 
 RUN apt-get update -qq \
-    && apt-get install -y mdk time
+    && apt-get install -y mdk time \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/app
-COPY *.mixal .
-COPY runprime.sh .
+COPY *.mixal runprime.sh ./
 
 RUN mixasm prime
-RUN chmod a+x runprime.sh
 
 ENTRYPOINT [ "/opt/app/runprime.sh" ]

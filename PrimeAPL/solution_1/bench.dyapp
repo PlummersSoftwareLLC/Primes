@@ -1,0 +1,6 @@
+Target #
+Load PrimeSieveAPL.apln
+Run PrimeSieveAPL.runDfn⍬
+Run PrimeSieveAPL.runDfnFaithful⍬
+Run PrimeSieveAPL.runDfnBaseFaithful⍬
+Run PrimeSieveAPL.runClassFaithful⍬
