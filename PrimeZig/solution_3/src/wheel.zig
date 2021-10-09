@@ -33,7 +33,7 @@ pub fn Wheel(comptime opts: WheelOpts) type {
 
     return struct {
         pub const STARTING_FACTOR: usize = Oeis.primes[opts.num_primes];
-        pub const template: [wheel_bytes]T align(std.mem.page_size) = makeTemplate();
+        pub const template: [wheel_bytes]T align(256) = makeTemplate();
         pub const bytes = wheel_bytes;
         pub const name = skip_counts[opts.num_primes] ++ if (opts.copy_vector > 0) "v" else "";
 
