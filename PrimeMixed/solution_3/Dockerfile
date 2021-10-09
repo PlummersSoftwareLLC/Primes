@@ -17,7 +17,7 @@ COPY --chown=michaelgrn setup.py .
 COPY --chown=michaelgrn src/ ./src/
 
 #hadolint ignore=SC1091
-RUN . venv/bin/activate
-RUN python -m pip install -e . --user --no-cache-dir
+RUN . venv/bin/activate \
+    && python -m pip install -e . --user --no-cache-dir
 
 CMD ["python", "-m", "pysieve"]
