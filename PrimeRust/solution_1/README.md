@@ -62,9 +62,9 @@ Now, in order to dispatch to one of these specific functions (remember `N` is a 
 
 ## Extreme hybrid storage
 
-This is functionally-equivalent to the unrolled hybrid storage explained above, but the code is written using a different technique: we use a procedural macro to write the reset functions _explicitly_. There appears to be a very slight performance gain, at least on AMD hardware, perhaps due to giving LLVM less work to do than in the above case. It's included mostly for completeness as it conceptually identical to @GordonBGood's extreme implementations, and it's easier to see the relationship our various solutions with a common approach.
+This is functionally-equivalent to the unrolled hybrid storage explained above, but the code is written using a different technique: we use a procedural macro to write the reset functions _explicitly_. There appears to be a very slight performance gain, at least on AMD hardware, perhaps due to giving LLVM less work to do than in the above case. It's included mostly for completeness as it is conceptually identical to @GordonBGood's extreme implementations, and it's easier to see the relationship between our various solutions with a common approach employed.
 
-The `extreme_reset` macro generates specific functions to reset each skip factor. Each 64-bit word is loaded from memory, then all the single bit masks are applied to it, and the resulting value is then written back to memory. Part of produced code for the first `skip` factor of 3 is reproduced below. Pardon the formatting: the procedural macro does not bother formatting code in a particularly pretty way.
+The `extreme_reset` macro generates specific functions to reset each skip factor. Each 64-bit word is loaded from memory, then all the single bit masks are applied to it one by one, and finally the resulting value is written back to memory. Part of produced code for the first `skip` factor of 3 is reproduced below. Pardon the formatting: the procedural macro does not bother formatting code in a particularly pretty way.
 
 ```rust
 fn extreme_reset_003(words : & mut [u64])
