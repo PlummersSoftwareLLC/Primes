@@ -28,6 +28,12 @@ Run:
 ./zig-out/bin/PrimeZig
 ```
 
+Run just ONE (see `main.zig` for line numbers):
+
+```
+./zig-out/bin/PrimeZig -l <line number>
+```
+
 There is a special flag `-Darm-is-rpi` which adds extra filtering
 on the units compiled (as detected by it being an arm architecture) that
 allows you to compile on the memory-constrained rpi architecture.

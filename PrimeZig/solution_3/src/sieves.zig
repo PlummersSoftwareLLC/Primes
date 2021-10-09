@@ -189,14 +189,13 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
         const init_fill_unit: u8 = if (PRIME == 0) 0 else @as(u8, 0) -% @as(u8, 1);
 
-        const trailing_masks = make_trailing_masks(u8, PRIME);
-
         pub fn init(sieve_size: usize) !Self {
             // allocates an array of data.  We only need half as many slots because
             // we are only going to operate on odd values.  Moreover, the total number
             // of slots is divided by the number of bits in the value.
             const field_count = sieve_size / 2;
             const field_bytes = divRoundUp(field_count, 8);
+            const trailing_masks = make_trailing_masks(u8, PRIME);
 
             // if we use loop-unrolling we will need extra padding because our prime
             // number function will overrun the end.  It's worth the speed!
@@ -286,6 +285,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
             const T = opts.FindFactorChunk;
             const max_word_index = self.field_count / @bitSizeOf(T);
             const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field))[0..max_word_index + 1];
+            const trailing_masks = make_trailing_masks(T, PRIME);
 
             var search_index = factor / 2 + 1;
             var word_index = search_index / @bitSizeOf(T);
