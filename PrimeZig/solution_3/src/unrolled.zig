@@ -41,8 +41,8 @@ pub const UnrolledOpts = struct {
     half_extent: bool = true,    // how many lookup entries for the dense phase.
     unroll_sparse: bool = true,  // should we unroll sparse factors?
     SparseType: type = u8,       // what type should sparse unroll using?
-    use_sparse_LUT: bool = false,
-    use_dense_LUT: bool = false,
+    use_sparse_LUT: bool = true,
+    use_dense_LUT: bool = true,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
