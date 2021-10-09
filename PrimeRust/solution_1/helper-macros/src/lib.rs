@@ -220,37 +220,34 @@ fn extreme_reset_for_skip(skip: usize, function_name: Ident) -> proc_macro2::Tok
             }
         }
     };
-
     //println!("Extreme reset: {}", code.to_string());
     code
 }
 
-/// Retrieves single word, then applies each single-bit mask in turn.
-/// When all masks have been applied, write the word back to the slice.
+/// Retrieves single word, then applies each single-bit mask in turn. When all masks
+/// have been applied, write the word back to the slice.
 fn extreme_reset_word(
     slice_expr: proc_macro2::TokenStream,
     skip: usize,
     word_idx: usize,
 ) -> proc_macro2::TokenStream {
-    let masks = calculate_masks(skip, word_idx);
+    let single_bit_masks = calculate_masks(skip, word_idx);
 
-    // nothing for unaffected words
-    if masks.is_empty() {
+    // emit no code when the given word has no masks applied to it
+    if single_bit_masks.is_empty() {
         TokenStream::default();
     }
 
     // by value - load, apply, apply, ..., store.
-    let code = quote! {
+    quote! {
         unsafe {
             let mut word = *#slice_expr.get_unchecked(#word_idx);
             #(
-            word |= #masks;
+                word |= #single_bit_masks;
             )*
             *#slice_expr.get_unchecked_mut(#word_idx) = word;
         }
-    };
-
-    code
+    }
 }
 
 struct ExtremeResetParmams {
@@ -260,7 +257,9 @@ struct ExtremeResetParmams {
 impl Parse for ExtremeResetParmams {
     fn parse(input: ParseStream) -> Result<Self> {
         let match_var: Ident = input.parse()?;
-        Ok(Self { match_var })
+        Ok(Self {
+            match_var,
+        })
     }
 }
 
@@ -272,13 +271,13 @@ pub fn extreme_reset(input: TokenStream) -> TokenStream {
     let last = 129_usize;
     let extreme_reset_vals: Vec<_> = (3..=last).filter(|skip| skip % 2 != 0).collect();
 
-    // names for extreme reset functions
+    // names for extreme reset functions: `extreme_reset_003`, `extreme_reset_005`, etc.
     let function_names: Vec<_> = extreme_reset_vals
         .iter()
         .map(|&skip| format_ident!("extreme_reset_{:03}", skip))
         .collect();
 
-    // code for extreme resets
+    // code for extreme reset functions
     let extreme_reset_codes: Vec<_> = extreme_reset_vals
         .iter()
         .zip(function_names.iter().cloned())
@@ -287,15 +286,15 @@ pub fn extreme_reset(input: TokenStream) -> TokenStream {
 
     let match_var = params.match_var;
     let code = quote! {
-        // functions
+        // code for functions
         #(
-        #extreme_reset_codes
+            #extreme_reset_codes
         )*
 
-        // dispatcher
+        // dispatcher to call specific function based on skip value
         match #match_var {
             #(
-            #extreme_reset_vals => #function_names(words),
+                #extreme_reset_vals => #function_names(words),
             )*
             _ => panic!("unexpected value")
         }
