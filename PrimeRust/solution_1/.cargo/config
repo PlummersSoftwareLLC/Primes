@@ -4,7 +4,7 @@
 # issue on newer Skylake Xeons that support it.
 
 [target.x86_64-pc-windows-msvc]
-rustflags = [ "-C", "target-cpu=native", "-C", "target-feature=-avx512f"  ]
+rustflags = [ "-C", "target-cpu=native", "-C", "target-feature=-avx512f" ]
 
 [target.x86_64-unknown-linux-gnu]
 rustflags = [ "-C", "target-cpu=native", "-C", "target-feature=-avx512f" ]

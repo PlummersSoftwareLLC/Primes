@@ -8,7 +8,7 @@ use crate::{
 /// Storage structure implementing standard linear bit storage, but with a hybrid bit setting strategy:
 /// - dense resetting for small skip factors
 /// - sparse resetting for larger skip factors
-/// This algorithm is conceptually similar to [`crate::unrolled::FlagStorageUnrolledHybrid`], but we use a procedural
+/// This algorithm is functionally equivalent to [`crate::unrolled::FlagStorageUnrolledHybrid`], but we use a procedural
 /// macro to write the dense reset functions instead of relying on the compiler to do so implicitly via const-generics.
 /// Performance, as a result, is very similar. This method has a slight edge over the const-generics, and is
 /// primarily included to demonstrate how this approach can be used in Rust.
@@ -28,7 +28,7 @@ impl FlagStorage for FlagStorageExtremeHybrid {
 
     /// As with [`crate::unrolled::FlagStorageUnrolledHybrid`], this method dispatches
     /// to a dense "extreme" resetter for skip factors below <= 129, and otherwise calls the same
-    /// sparse resetter for higher skip factors. The only difference is that we use 
+    /// sparse resetter for higher skip factors. The only difference is that we use
     /// the "extreme" dense resetter: [`helper_macros::extreme_reset`]
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {

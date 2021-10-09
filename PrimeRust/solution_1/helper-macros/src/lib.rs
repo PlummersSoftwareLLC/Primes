@@ -1,7 +1,5 @@
 extern crate proc_macro;
 
-use std::iter::FromIterator;
-
 use proc_macro::TokenStream;
 use proc_macro2::{Group, Literal, TokenTree};
 use quote::{format_ident, quote, ToTokens};
@@ -153,6 +151,8 @@ fn substitute_placeholder(
         .collect()
 }
 
+/// This produces a set of 64 single-bit masks for a given u64 word
+/// and skip factor.
 fn calculate_masks(skip: usize, word_idx: usize) -> Vec<u64> {
     let start = skip / 2;
     let first_idx = word_idx * u64::BITS as usize;
@@ -167,6 +167,8 @@ fn calculate_masks(skip: usize, word_idx: usize) -> Vec<u64> {
     res
 }
 
+/// Create an extreme reset function for a given `skip` factor, and name it according
+/// to the supplied identifier, e.g. `extreme_reset_003(words: &mut [u64])`
 fn extreme_reset_for_skip(skip: usize, function_name: Ident) -> proc_macro2::TokenStream {
     let index_range = 0..skip;
 
@@ -250,20 +252,23 @@ fn extreme_reset_word(
     }
 }
 
-struct ExtremeResetParmams {
+struct ExtremeResetParams {
     match_var: Ident,
 }
 
-impl Parse for ExtremeResetParmams {
+impl Parse for ExtremeResetParams {
     fn parse(input: ParseStream) -> Result<Self> {
         let match_var: Ident = input.parse()?;
         Ok(Self { match_var })
     }
 }
 
+/// This procedural macro writes the extreme reset functions and dispatcher.
+/// The functions contain the code for each specific `skip` factor in [3,5,...129]
+/// and are individually called based on the supplied `skip` factor.
 #[proc_macro]
 pub fn extreme_reset(input: TokenStream) -> TokenStream {
-    let params = parse_macro_input!(input as ExtremeResetParmams);
+    let params = parse_macro_input!(input as ExtremeResetParams);
 
     // all odd numbers in [3,129]
     let last = 129_usize;
@@ -297,7 +302,6 @@ pub fn extreme_reset(input: TokenStream) -> TokenStream {
             _ => panic!("unexpected value")
         }
     };
-    //println!("Code: {}", code.to_string());
-    let ts = proc_macro2::TokenStream::from_iter(code.into_iter());
+    let ts: proc_macro2::TokenStream = code.into_iter().collect();
     TokenStream::from(ts)
 }

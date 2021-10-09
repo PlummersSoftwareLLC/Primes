@@ -60,6 +60,42 @@ However, rather than generate all the code directly, I am able to use Rust's con
 
 Now, in order to dispatch to one of these specific functions (remember `N` is a literal constant at compile time), we either need to write a big `match` statement, or we need to generate it. Doing it by hand is feasible -- there are only 32 dense resetters, and 8 sparse ones. But it's no fun doing it by hand. Although it's way more code, Rust's procedural macros are interesting, so I decided to take that approach: essentially, we tell the macro what the range of numbers is, and which functions to call, and it writes the `match` statement for us. I do some substitution of the identifier `N` to a literal value in the `TokenStream` processing. It's a nice way for Rust to write Rust at compile time. It's a gratuitously large hammer for a small nail, purely here to pique people's interest.
 
+## Extreme hybrid storage
+
+This is functionally-equivalent to the unrolled hybrid storage explained above, but the code is written using a different technique: we use a procedural macro to write the reset functions _explicitly_. There appears to be a very slight performance gain, at least on AMD hardware, perhaps due to giving LLVM less work to do than in the above case. It's included mostly for completeness as it conceptually identical to @GordonBGood's extreme implementations, and it's easier to see the relationship our various solutions with a common approach.
+
+The `extreme_reset` macro generates specific functions to reset each skip factor. Each 64-bit word is loaded from memory, then all the single bit masks are applied to it, and the resulting value is then written back to memory. Part of produced code for the first `skip` factor of 3 is reproduced below. Pardon the formatting: the procedural macro does not bother formatting code in a particularly pretty way.
+
+```rust
+fn extreme_reset_003(words : & mut [u64])
+{
+    debug_assert!
+    (4usize < words.len() * 64,
+     "square_start should be within the bounds of our array; check caller") ;
+    let mut chunks = words [0usize ..].chunks_exact_mut(3usize) ;
+    (& mut
+     chunks).for_each(| chunk |
+                      {
+                          unsafe
+                          {
+                              let mut word = * chunk.get_unchecked(0usize) ;
+                              word |= 2u64 ; word |= 16u64 ; word |= 128u64 ;
+                              word |= 1024u64 ; word |= 8192u64 ; word |=
+                              65536u64 ; word |= 524288u64 ; word |=
+                              4194304u64 ; word |= 33554432u64 ; word |=
+                              268435456u64 ; word |= 2147483648u64 ; word |=
+                              17179869184u64 ; word |= 137438953472u64 ; word
+                              |= 1099511627776u64 ; word |= 8796093022208u64 ;
+                              word |= 70368744177664u64 ; word |=
+                              562949953421312u64 ; word |= 4503599627370496u64
+                              ; word |= 36028797018963968u64 ; word |=
+                              288230376151711744u64 ; word |=
+                              2305843009213693952u64 ; *
+                              chunk.get_unchecked_mut(0usize) = word ;
+                          }
+                          // etc for each word in the chunk.
+```
+
 ## Run instructions
 
 - using Docker is the easiest way to get started without installing Rust:

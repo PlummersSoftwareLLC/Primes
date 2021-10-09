@@ -1063,7 +1063,10 @@ fn run_implementation_mt<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{primes::{minimum_start, square_start, PrimeValidator}, unrolled_extreme::FlagStorageExtremeHybrid};
+    use crate::{
+        primes::{minimum_start, square_start, PrimeValidator},
+        unrolled_extreme::FlagStorageExtremeHybrid,
+    };
 
     #[test]
     fn sieve_known_correct_bits() {
