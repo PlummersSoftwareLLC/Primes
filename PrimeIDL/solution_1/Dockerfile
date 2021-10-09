@@ -1,10 +1,7 @@
-FROM primeimages/gdl:1.0.0-rc3 AS build
+FROM primeimages/gdl:1.0.0-rc3
 
 WORKDIR /opt/app
 
-COPY *.pro ./
-COPY run.sh .
-
-RUN chmod a+x run.sh
+COPY *.pro run.sh ./
 
 ENTRYPOINT [ "./run.sh" ]

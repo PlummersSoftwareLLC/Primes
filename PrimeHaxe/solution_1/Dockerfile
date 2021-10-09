@@ -6,8 +6,6 @@ RUN apk update && apk add --no-cache g++ python3 musl-locales bash && \
 WORKDIR /opt/app
 COPY . .
 
-COPY *.sh ./
-RUN chmod a+x ./*.sh && \
-    ./compile.sh
+RUN ./compile.sh
 
 ENTRYPOINT [ "./run.sh" ]

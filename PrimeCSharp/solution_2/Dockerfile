@@ -2,15 +2,15 @@ FROM mcr.microsoft.com/dotnet/sdk:3.1-focal AS build
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
-COPY *.csproj /source
+COPY *.csproj ./
 RUN dotnet restore
 
 # copy and publish app and libraries
-COPY *.cs /source
+COPY *.cs ./
 RUN dotnet publish -c release -o /app --no-restore
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/runtime:3.1-focal
 WORKDIR /app
 COPY --from=build /app .
-ENTRYPOINT ["/app/PrimeSieveCS"]
+ENTRYPOINT ["PrimeSieveCS"]

@@ -1,6 +1,6 @@
 FROM alpine:3.13
 
-RUN apk add tar libaio libnsl libc6-compat autoconf make g++ gmp-dev db-dev libxml2-dev
+RUN apk add --no-cache tar libaio libnsl libc6-compat autoconf make g++ gmp-dev db-dev libxml2-dev
 
 ARG COBOL_BASENAME=gnucobol-3.1-rc1
 

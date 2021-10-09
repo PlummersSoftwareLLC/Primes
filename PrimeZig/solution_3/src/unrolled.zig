@@ -323,7 +323,7 @@ pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts
             const stride = factor / @bitSizeOf(T) - 1;
             const field_end = field + field_ints;
             var chunk = field + square_offset;
-
+            
             while (@ptrToInt(chunk) < @ptrToInt(field_end)) : (chunk += factor) {
                 fillOneChunk(chunk, stride); // move the chunk pointer over.
             }

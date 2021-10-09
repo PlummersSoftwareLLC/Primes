@@ -1,15 +1,24 @@
-# Benchmarks
+# Benchmarks <!-- omit in toc -->
 
 This document describes how to built and run all benchmarks (solutions) for different operating systems.
 
-## Table of contents
-
-1. [General working mechanism](#general-working-mechanism)
-2. [Linux](#linux)
-3. [Windows](#windows)
-4. [macOS](#macos)
-5. [Example output](#example-output)
-6. [Running a single benchmark](#running-a-single-benchmark)
+## Table of contents <!-- omit in toc -->
+- [What operating system to use?](#what-operating-system-to-use)
+- [General working mechanism](#general-working-mechanism)
+- [Linux](#linux)
+  - [Linux run instructions](#linux-run-instructions)
+  - [Linux installation and prerequisites](#linux-installation-and-prerequisites)
+- [Windows](#windows)
+  - [Windows run instructions](#windows-run-instructions)
+  - [Windows installation and prerequisites](#windows-installation-and-prerequisites)
+- [macOS](#macos)
+  - [macOS run instructions](#macos-run-instructions)
+  - [macOS installation and prerequisites](#macos-installation-and-prerequisites)
+- [Example output](#example-output)
+- [Running a single benchmark](#running-a-single-benchmark)
+- [Running a benchmark of all solutions for a particular language](#running-a-benchmark-of-all-solutions-for-a-particular-language)
+- [Running in unconfined mode](#running-in-unconfined-mode)
+- [Output formats](#output-formats)
 
 ## What operating system to use?
 

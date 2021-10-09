@@ -4,7 +4,6 @@ WORKDIR /opt/app
 
 RUN apk add --no-cache ghostscript
 
-COPY *.ps ./
-COPY *.sh ./
+COPY *.ps *.sh ./
 
 ENTRYPOINT [ "sh", "run.sh" ]

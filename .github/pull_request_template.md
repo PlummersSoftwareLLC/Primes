@@ -1,6 +1,6 @@
 ## Description
 <!--
-Add your description yere.
+Add your description here.
 -->
 
 ## Contributing requirements

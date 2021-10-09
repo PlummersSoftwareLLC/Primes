@@ -1,7 +1,6 @@
 FROM alpine:3.13
 
-RUN apk add --no-cache build-base perl perl-dev 
-
+RUN apk add --no-cache build-base perl perl-dev
 WORKDIR /opt/app
 COPY *.pl .
 
