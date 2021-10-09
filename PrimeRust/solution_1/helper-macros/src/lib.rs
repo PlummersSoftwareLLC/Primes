@@ -189,8 +189,8 @@ fn extreme_reset_for_skip(skip: usize) -> proc_macro2::TokenStream {
             #square_start < words.len() * 64,
             "square_start should be within the bounds of our array; check caller"
         );
-        let slice = &mut words[#start_chunk_offset..];        
-        
+        let slice = &mut words[#start_chunk_offset..];
+
         // whole chunks
         slice.chunks_exact_mut(#skip).for_each(|chunk| {
             #(
@@ -198,9 +198,9 @@ fn extreme_reset_for_skip(skip: usize) -> proc_macro2::TokenStream {
             )*
         });
 
-        // remainder
+        // remainder -- this is probably not the most efficient way to
+        // do this, but it works well enough
         let remainder = slice.chunks_exact_mut(#skip).into_remainder();
-        // ??? how to dispatch lots of ifs ???
         #(
             if #index_range < remainder.len() {
                 #word_resets_remainder
@@ -215,76 +215,40 @@ fn extreme_reset_for_skip(skip: usize) -> proc_macro2::TokenStream {
             *w &= !(1 << factor_bit);
         }
     };
-
     //println!("Extreme reset: {}", code.to_string());
     code
 }
 
-/// Retrieves single word, then applies each mask in turn. When all masks
+/// Retrieves single word, then applies each single-bit mask in turn. When all masks
 /// have been applied, write the word back to the slice.
 fn extreme_reset_word(
     slice_expr: proc_macro2::TokenStream,
     skip: usize,
     word_idx: usize,
 ) -> proc_macro2::TokenStream {
-    let masks = calculate_masks(skip, word_idx);
+    let single_bit_masks = calculate_masks(skip, word_idx);
 
     // by value - load, apply, apply, ..., store.
-    let code = quote! {
-        let mut word = unsafe { *#slice_expr.get_unchecked(#word_idx) };
-        #(
-            word |= #masks;
-        )*
-        unsafe { *#slice_expr.get_unchecked_mut(#word_idx) = word; }
-    };
-
-    // // everything in an unchecked block
-    // let code = quote! {
-    //     unsafe {
-    //         let mut word = *#slice_expr.get_unchecked(#word_idx);
-    //         #(
-    //         word |= #masks;
-    //         )*
-    //         *#slice_expr.get_unchecked_mut(#word_idx) = word;
-    //     }
-    // };
-
-    // // grab the word reference and run with it
-    // let code = quote! {
-    //     unsafe {
-    //         let word = #slice_expr.get_unchecked_mut(#word_idx);
-    //         #(
-    //         *word |= #masks;
-    //         )*
-    //     }
-    // };
-    
-    // // direct approach
-    // let code = quote! {
-    //     unsafe { 
-    //     #(
-    //         *#slice_expr.get_unchecked_mut(#word_idx) |= #masks; 
-    //     )*
-    //     }
-    // };
-
-    code
+    quote! {
+        unsafe {
+            let mut word = *#slice_expr.get_unchecked(#word_idx);
+            #(
+                word |= #single_bit_masks;
+            )*
+            *#slice_expr.get_unchecked_mut(#word_idx) = word;
+        }
+    }
 }
 
 struct ExtremeResetParmams {
     match_var: Ident,
-    fallback: Expr,
 }
 
 impl Parse for ExtremeResetParmams {
     fn parse(input: ParseStream) -> Result<Self> {
         let match_var: Ident = input.parse()?;
-        input.parse::<Token![,]>()?;
-
-        let fallback: Expr = input.parse()?;
         Ok(Self {
             match_var,
-            fallback,
         })
     }
 }
@@ -304,18 +268,16 @@ pub fn extreme_reset(input: TokenStream) -> TokenStream {
         .collect();
 
     let match_var = params.match_var;
-    let fallback = params.fallback;
     let code = quote! {
-        if #match_var > #last {
-            #fallback
-        } else {
-            match #match_var {
-                #(
-                    #extreme_reset_vals => { #extreme_reset_codes },
-                )*
-                //3 => {#reset3},
-                _ => panic!("unexpected value")
-            }
+        match #match_var {
+            #(
+                #extreme_reset_vals => { #extreme_reset_codes },
+            )*
+            _ => debug_assert!(
+                    false, 
+                    "unexpected skip value outside dense reset range: {}", 
+                    skip
+                )
         }
     };
     //println!("Code: {}", code.to_string());

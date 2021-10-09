@@ -5,16 +5,13 @@ use crate::{
     unrolled::{patterns::pattern_equivalent_skip, ResetterSparseU8},
 };
 
-// pub fn test() {
-//     let skip = 123_usize;
-//     let mut storage = vec![0u64; 10000];
-//     let words = &mut storage[..];
-
-//     extreme_reset!(skip, {
-//         println!("Fallback");
-//     })
-// }
-
+/// Storage structure implementing standard linear bit storage, but with a hybrid bit setting strategy:
+/// - dense resetting for small skip factors
+/// - sparse resetting for larger skip factors
+/// This algorithm is conceptually similar to [`crate::unrolled::FlagStorageUnrolledHybrid`], but we use a procedural
+/// macro to write the dense reset functions instead of relying on the compiler to do so implicitly via const-generics.
+/// Performance, as a result, is very similar. This method has a slight edge over the const-generics, and is
+/// primarily included to demonstrate how this approach can be used in Rust.
 pub struct FlagStorageExtremeHybrid {
     words: Vec<u64>,
     length_bits: usize,
@@ -29,6 +26,10 @@ impl FlagStorage for FlagStorageExtremeHybrid {
         }
     }
 
+    /// As with [`crate::unrolled::FlagStorageUnrolledHybrid`], this method dispatches
+    /// to a dense "extreme" resetter for skip factors below <= 129, and otherwise calls the same
+    /// sparse resetter for higher skip factors. The only difference is that we use 
+    /// the "extreme" dense resetter: [`helper_macros::extreme_reset`]
     #[inline(always)]
     fn reset_flags(&mut self, skip: usize) {
         // sparse resets for skip factors larger than those covered by dense resets
@@ -51,14 +52,7 @@ impl FlagStorage for FlagStorageExtremeHybrid {
 
         // dense resets for all odd numbers in {3, 5, ... =129}
         let words = &mut self.words[..];
-        extreme_reset!(
-            skip,
-            debug_assert!(
-                false,
-                "dense reset function should not be called for skip {}",
-                skip
-            )
-        );
+        extreme_reset!(skip);
     }
 
     #[inline(always)]
