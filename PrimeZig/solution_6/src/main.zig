@@ -27,7 +27,6 @@ const ARCH_BITS = std.builtin.target.cpu.arch.ptrBitWidth();
 const ARCH_64 = ARCH_BITS == 64;
 const ARCH_32 = ARCH_BITS == 32;
 
-
 const build_options = @import("build_options");
 const SELECTED = build_options.selected;     // false if -Ddebug
 const ONLY_WHEN_ALL = build_options.all;     // did we set -Dall?
@@ -43,7 +42,6 @@ pub fn main() anyerror!void {
 
     comptime const specs = .{
         // single-threaded int runners
-
         .{ SingleThreadedRunner, .{}, IntSieve, .{}, SELECTED, @src().line},
         .{ SingleThreadedRunner, .{}, IntSieve, .{.wheel_primes = 6}, SELECTED, @src().line},
         // comparison against C runner.
@@ -89,6 +87,7 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{}, IntSieve, .{.wheel_primes = 6}, SELECTED, @src().line},
         .{ ParallelGustafsonRunner, .{.no_ht = true}, IntSieve, .{.wheel_primes = 6, .note = "-no-ht"}, SELECTED and !IS_RPI4, @src().line},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}}, SELECTED, @src().line},
+        .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = 8}, .note = "-no-ht"}, SELECTED and !IS_RPI4, @src().line},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 4, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced}, SELECTED, @src().line},
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 4, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced, .note = "-no-ht"}, SELECTED and !IS_RPI4, @src().line},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced}, SELECTED, @src().line},
@@ -99,7 +98,7 @@ pub fn main() anyerror!void {
     // runs, at least on linux.  It seems the only way to prevent this is by running a
     const args = try std.process.argsAlloc(std.heap.page_allocator);
     const selected_run: ?usize = if ((args.len == 3) and (std.mem.eql(u8, args[1], "-l"))) (std.fmt.parseInt(usize, args[2], 10) catch @panic("badarg")) else null;
-=
+
     inline for (specs) |spec| {
         comptime const RunnerFn = spec[0];
         comptime const runner_opts = spec[1];
@@ -116,7 +115,6 @@ pub fn main() anyerror!void {
                 try runSieveTest(Runner, run_for, SIZE, line);
             }
         }
-    }
     }
 }
 
