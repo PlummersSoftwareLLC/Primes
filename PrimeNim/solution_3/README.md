@@ -53,10 +53,10 @@ Running locally on my Intel SkyLake i5-6500 at 3.6 GHz when single threaded, I g
 ```
 Passes: 8549, Time: 5.00003205, Avg: 0.0005848674757281553, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 GordonBGood_bittwiddle;8549;5.00003205;1;algorithm=base,faithful=yes,bits=1
-Passes: 10963, Time: 5.000370107, Avg: 0.0004561132999179057, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-GordonBGood_stride8;10963;5.000370107;1;algorithm=base,faithful=yes,bits=1
-Passes: 11630, Time: 5.00007037, Avg: 0.0004299286646603612, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-GordonBGood_stride8block-16K;11630;5.00007037;1;algorithm=base,faithful=yes,bits=1
+Passes: 12179, Time: 5.000142803, Avg: 0.0004105544628458823, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+GordonBGood_stride8;12179;5.000142803;1;algorithm=base,faithful=yes,bits=1
+Passes: 15481, Time: 5.000130019, Avg: 0.0003229849505199923, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+GordonBGood_stride8block-16K;15481;5.000130019;1;algorithm=base,faithful=yes,bits=1
 Passes: 18332, Time: 5.000006381, Avg: 0.0002727474569605062, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 GordonBGood_extreme;18332;5.000006381;1;algorithm=base,faithful=yes,bits=1
 Passes: 44094, Time: 5.000062015, Avg: 0.0001133955190048533, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
@@ -70,10 +70,10 @@ Which matches the results when run with Docker on the same machine as follows:
 │ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
 │   1   │ nim            │ 3        │ GordonBGood_extreme-hybrid   │ 43730  │ 5.00014  │    1    │   base    │   yes    │ 1    │  8745.75303   │
-│   2   │ nim            │ 3        │ GordonBGood_extreme          │ 18327  │ 5.00002  │    1    │   base    │   yes    │ 1    │  3665.38708   │
-│   3   │ nim            │ 3        │ GordonBGood_stride8block-16K │ 11571  │ 5.00013  │    1    │   base    │   yes    │ 1    │  2314.13979   │
-│   4   │ nim            │ 3        │ GordonBGood_stride8          │ 11010  │ 5.00045  │    1    │   base    │   yes    │ 1    │  2201.80349   │
-│   5   │ nim            │ 3        │ GordonBGood_bittwiddle       │  8641  │ 5.00048  │    1    │   base    │   yes    │ 1    │  1728.03354   │
+│   2   │ nim            │ 3        │ GordonBGood_extreme          │ 18115  │ 5.00016  │    1    │   base    │   yes    │ 1    │  3622.88491   │
+│   3   │ nim            │ 3        │ GordonBGood_stride8block-16K │ 15389  │ 5.00014  │    1    │   base    │   yes    │ 1    │  3077.71376   │
+│   4   │ nim            │ 3        │ GordonBGood_stride8          │ 12196  │ 5.00025  │    1    │   base    │   yes    │ 1    │  2439.07929   │
+│   5   │ nim            │ 3        │ GordonBGood_bittwiddle       │  8480  │ 5.00022  │    1    │   base    │   yes    │ 1    │  1695.92701   │
 └───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
 
