@@ -17,7 +17,7 @@ COPY --chown=michaelgrn setup.py .
 COPY --chown=michaelgrn src/ ./src/
 
 # The following is ignored, due to way venv is used. If you're a Python developer with knowledge of Docker. venv and user installs consider giving your insight here: https://github.com/PlummersSoftwareLLC/Primes/pull/744
-# hadolint ignore=SC1091,DL3059
+# hadolint ignore=DL3059,SC1091
 RUN . venv/bin/activate
 RUN python -m pip install -e . --user --no-cache-dir
 
