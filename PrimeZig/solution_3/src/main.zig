@@ -99,7 +99,7 @@ pub fn main() anyerror!void {
     // runs, at least on linux.  It seems the only way to prevent this is by running a
     const args = try std.process.argsAlloc(std.heap.page_allocator);
     const selected_run: ?usize = if ((args.len == 3) and (std.mem.eql(u8, args[1], "-l"))) (std.fmt.parseInt(usize, args[2], 10) catch @panic("badarg")) else null;
-=
+
     inline for (specs) |spec| {
         comptime const RunnerFn = spec[0];
         comptime const runner_opts = spec[1];
