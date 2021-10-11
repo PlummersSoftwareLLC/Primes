@@ -777,7 +777,7 @@ fn main() {
         None => vec![1, num_cpus::get()],
     };
 
-    // run all implementations if no options are specified (default)
+    // run default implementations if no options are specified
     let run_all = [
         opt.bits,
         opt.bits_rotate,
@@ -794,7 +794,8 @@ fn main() {
     for threads in thread_options {
         print_header(threads, limit, run_duration);
 
-        if opt.bytes || run_all {
+        // not run by default
+        if opt.bytes {
             run_implementation::<FlagStorageByteVector>(
                 "byte",
                 8,
@@ -806,7 +807,8 @@ fn main() {
             );
         }
 
-        if opt.bits || run_all {
+        // not run by default
+        if opt.bits {
             run_implementation::<FlagStorageBitVector>(
                 "bit",
                 1,
@@ -830,7 +832,8 @@ fn main() {
             );
         }
 
-        if opt.bits_striped || run_all {
+        // not run by default
+        if opt.bits_striped {
             run_implementation::<FlagStorageBitVectorStriped>(
                 "bit-striped",
                 1,
