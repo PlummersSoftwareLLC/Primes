@@ -10,6 +10,7 @@ RUN python3 -m venv $VIRTUAL_ENV
 # Add the Python from the venv location to the PATH so we can use it
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+WORKDIR /home/michaelgrn
 COPY --chown=michaelgrn setup.py .
 COPY --chown=michaelgrn src/ ./src/
 
