@@ -946,7 +946,8 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
     repetitions: usize,
 ) {
     for _ in 0..repetitions {
-        thread::sleep(Duration::from_secs(1));
+        // delay prior to start to allow processor to cool down
+        thread::sleep(Duration::from_secs(5));
         match num_threads {
             1 => {
                 run_implementation_st::<T>(label, bits_per_prime, run_duration, limit, print_primes)
@@ -978,6 +979,7 @@ fn run_implementation_st<T: 'static + FlagStorage + Send>(
     let mut local_passes = 0;
     let mut last_sieve = None;
     while (Instant::now() - start_time) < run_duration {
+        last_sieve.take(); // drop prior sieve before creating new one
         let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
         sieve.run_sieve();
         last_sieve.replace(sieve);
@@ -1026,6 +1028,7 @@ fn run_implementation_mt<T: 'static + FlagStorage + Send>(
                 let mut local_passes = 0;
                 let mut last_sieve = None;
                 while (Instant::now() - start_time) < run_duration {
+                    last_sieve.take(); // drop prior sieve before creating new one
                     let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
                     sieve.run_sieve();
                     last_sieve.replace(sieve);
