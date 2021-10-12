@@ -10,7 +10,7 @@
 Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber -- original author
 - Kai Rese @Kulasko https://github.com/Kulasko -- numerous idiomatic improvements and detailed code review
-- @GordonBGood -- for algorithmic collaboration on the `unrolled-hybrid` solution
+- @GordonBGood -- for plenty of collaboration on the `unrolled-hybrid` and `extreme-hybrid` solutions; check out his solutions, including Nim, Chapel, Haskell and Julia.
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
@@ -20,6 +20,8 @@ This is a somewhat Rust-idiomatic version that has the storage of prime flags ab
 - it runs both single-thread and multi-thread tests.
 
 Note that C++'s `vector<bool>` is a controversial specialisation of `vector` that `*may*` use more efficient storage than using a whole byte for 1 or 0. It's up to the compiler vendor, and is not standardised. Typically it's using individual bits for storage, within bytes or words. So the `bit storage` I have implemented closely resembles this. Rust has no such thing built in, although there are several crates available. For clarity, it's implemented manually in this solution.
+
+Several variants of the `bit storage` approach exist, and they differ in layout (striped vs linear) or in the algorithm we use to traverse through the storage and reset the bits. The variants are explained below.
 
 ## Striped storage
 
@@ -50,7 +52,7 @@ This variation calculates the masks that will need to be applied: 8 of them, one
 Part of the inspiration for this hybrid algorithm comes from the work of two people, whom I gratefully acknowledge here: 
 
 - @ItalyToast for the novel approach to resetting bits in a dense way in the traditional linear sieve in `PrimeCSharp/solution_4`. It got me thinking about how I could potentially apply a similar technique to the `striped-blocks`, although it required a bit of thinking.
-- @GordonBGood for his really interesting `PrimeNim/solution_3` implementation. I definitely had a good think about how I could apply a similar code-gen approach in Rust, and there's some interesting stuff I could potentially do with procedural macros. Before trying that, I decided to see what I could do with const generics and calculating masks, and that path led me to the hybrid algorithm.
+- @GordonBGood for his really interesting `PrimeNim/solution_3` implementation. I definitely had a good think about how I could apply a similar code-gen approach in Rust, and there's some interesting stuff I could potentially do with procedural macros. Before trying that, I decided to see what I could do with const generics and calculating masks, and that path led me to the hybrid algorithm. I've also implemented the extreme algorithm that is a lot more similar to Gordon's Nim solution.
 
 ## Unrolled hybrid storage
 
