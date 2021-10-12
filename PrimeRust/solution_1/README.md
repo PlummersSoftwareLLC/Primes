@@ -10,7 +10,7 @@
 Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber -- original author
 - Kai Rese @Kulasko https://github.com/Kulasko -- numerous idiomatic improvements and detailed code review
-- @GordonBGood -- for algorithmic collaboration on the `unrolled-hybrid` solution
+- @GordonBGood -- for plenty of collaboration on the `unrolled-hybrid` and `extreme-hybrid` solutions; check out his solutions, including Nim, Chapel, Haskell and Julia.
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
@@ -20,6 +20,8 @@ This is a somewhat Rust-idiomatic version that has the storage of prime flags ab
 - it runs both single-thread and multi-thread tests.
 
 Note that C++'s `vector<bool>` is a controversial specialisation of `vector` that `*may*` use more efficient storage than using a whole byte for 1 or 0. It's up to the compiler vendor, and is not standardised. Typically it's using individual bits for storage, within bytes or words. So the `bit storage` I have implemented closely resembles this. Rust has no such thing built in, although there are several crates available. For clarity, it's implemented manually in this solution.
+
+Several variants of the `bit storage` approach exist, and they differ in layout (striped vs linear) or in the algorithm we use to traverse through the storage and reset the bits. The variants are explained below.
 
 ## Striped storage
 
@@ -50,7 +52,7 @@ This variation calculates the masks that will need to be applied: 8 of them, one
 Part of the inspiration for this hybrid algorithm comes from the work of two people, whom I gratefully acknowledge here: 
 
 - @ItalyToast for the novel approach to resetting bits in a dense way in the traditional linear sieve in `PrimeCSharp/solution_4`. It got me thinking about how I could potentially apply a similar technique to the `striped-blocks`, although it required a bit of thinking.
-- @GordonBGood for his really interesting `PrimeNim/solution_3` implementation. I definitely had a good think about how I could apply a similar code-gen approach in Rust, and there's some interesting stuff I could potentially do with procedural macros. Before trying that, I decided to see what I could do with const generics and calculating masks, and that path led me to the hybrid algorithm.
+- @GordonBGood for his really interesting `PrimeNim/solution_3` implementation. I definitely had a good think about how I could apply a similar code-gen approach in Rust, and there's some interesting stuff I could potentially do with procedural macros. Before trying that, I decided to see what I could do with const generics and calculating masks, and that path led me to the hybrid algorithm. I've also implemented the extreme algorithm that is a lot more similar to Gordon's Nim solution.
 
 ## Unrolled hybrid storage
 
@@ -59,6 +61,42 @@ This was designed in a very fun collaboration with @GordonBGood. It has standard
 However, rather than generate all the code directly, I am able to use Rust's const generics to specialise the reset functions. This perhaps a little harder to understand in Rust, since you need to understand how the generics are used to compile down to constants: each new type created with a given generic value, e.g. N=2, results in specific code corresponding to that type. This allows the compiler to treat N as a constant in that context, and perform optimisations. Specifically, we are able to generate a pattern of *single bit* masks that repeat. The compiler is able to then generate `OR` mask instructions with immediate (literal) values, rather than needing to obtain the mask from a register or memory location. Have a look at Gordon's Chapel solution: he used a code-generator to render similar functions, and it's quite easy to see the algorithm there, as he used a code generator to write the dense reset functions. Rust is doing something similar, but in the background via generics.
 
 Now, in order to dispatch to one of these specific functions (remember `N` is a literal constant at compile time), we either need to write a big `match` statement, or we need to generate it. Doing it by hand is feasible -- there are only 32 dense resetters, and 8 sparse ones. But it's no fun doing it by hand. Although it's way more code, Rust's procedural macros are interesting, so I decided to take that approach: essentially, we tell the macro what the range of numbers is, and which functions to call, and it writes the `match` statement for us. I do some substitution of the identifier `N` to a literal value in the `TokenStream` processing. It's a nice way for Rust to write Rust at compile time. It's a gratuitously large hammer for a small nail, purely here to pique people's interest.
+
+## Extreme hybrid storage
+
+This is functionally-equivalent to the unrolled hybrid storage explained above, but the code is written using a different technique: we use a procedural macro to write the reset functions _explicitly_. There appears to be a very slight performance gain, at least on AMD hardware, perhaps due to giving LLVM less work to do than in the above case. It's included mostly for completeness as it is conceptually identical to @GordonBGood's extreme implementations, and it's easier to see the relationship between our various solutions with a common approach employed.
+
+The `extreme_reset` macro generates specific functions to reset each skip factor. Each 64-bit word is loaded from memory, then all the single bit masks are applied to it one by one, and finally the resulting value is written back to memory. Part of produced code for the first `skip` factor of 3 is reproduced below. Pardon the formatting: the procedural macro does not bother formatting code in a particularly pretty way.
+
+```rust
+fn extreme_reset_003(words : & mut [u64])
+{
+    debug_assert!
+    (4usize < words.len() * 64,
+     "square_start should be within the bounds of our array; check caller") ;
+    let mut chunks = words [0usize ..].chunks_exact_mut(3usize) ;
+    (& mut
+     chunks).for_each(| chunk |
+                      {
+                          unsafe
+                          {
+                              let mut word = * chunk.get_unchecked(0usize) ;
+                              word |= 2u64 ; word |= 16u64 ; word |= 128u64 ;
+                              word |= 1024u64 ; word |= 8192u64 ; word |=
+                              65536u64 ; word |= 524288u64 ; word |=
+                              4194304u64 ; word |= 33554432u64 ; word |=
+                              268435456u64 ; word |= 2147483648u64 ; word |=
+                              17179869184u64 ; word |= 137438953472u64 ; word
+                              |= 1099511627776u64 ; word |= 8796093022208u64 ;
+                              word |= 70368744177664u64 ; word |=
+                              562949953421312u64 ; word |= 4503599627370496u64
+                              ; word |= 36028797018963968u64 ; word |=
+                              288230376151711744u64 ; word |=
+                              2305843009213693952u64 ; *
+                              chunk.get_unchecked_mut(0usize) = word ;
+                          }
+                          // etc for each word in the chunk.
+```
 
 ## Run instructions
 
