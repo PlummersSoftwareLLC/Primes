@@ -11,8 +11,8 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 WORKDIR /home/michaelgrn
-COPY --chown=michaelgrn setup.py .
-COPY --chown=michaelgrn src/ ./src/
+COPY setup.py .
+COPY src/ ./src/
 
 RUN pip install --upgrade pip -e . --no-cache-dir
 
