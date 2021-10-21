@@ -4,4 +4,5 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
-![abdellatif dev](https://img.shields.io/github/followers/abdellatif-dev?style=flat-square)
+![abdellatif dev](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+
