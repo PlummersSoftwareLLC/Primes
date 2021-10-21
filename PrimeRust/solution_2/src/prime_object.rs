@@ -52,7 +52,8 @@ impl PrimeSieve {
                 break;
             }
         }
-        return count;
+
+        count
     }
 
     fn validate_results(&self) -> bool {
@@ -75,7 +76,7 @@ impl PrimeSieve {
         if historical_data.contains_key(&self.sieve_size) {
             return historical_data.get(&self.sieve_size) == Some(&self.count_primes());
         }
-        return false;
+        false
     }
 
     pub fn print_results(self, show_results: bool, duration: Duration, passes: u32) {
@@ -100,17 +101,9 @@ impl PrimeSieve {
             }
         }
 
-        println!("");
-        print!("Passes: {}, ", passes);
-        print!("Time: {:?}, ", duration);
-        print!("Avg: {:?}, ", duration / passes);
-        print!("Limit: {}, ", self.sieve_size);
-        print!("Count1: {}, ", count);
-        print!("Count2: {}, ", self.count_primes());
-        println!("Valid: {}", self.validate_results());
+        println!("\nPasses: {}, Time: {:?}, Avg: {:?}, Limit: {}, Count1: {}, Count2: {}, Valid: {}", passes, duration, duration / passes, self.sieve_size, count, self.count_primes(), self.validate_results());
 
         // Following 2 lines added by rbergen to conform to drag race output format
-        println!("");
-        println!("Azgrom;{};{:?};1;algorithm=base,faithful=yes", passes, duration.as_secs_f32());
+        println!("\nAzgrom;{};{:?};1;algorithm=base,faithful=yes", passes, duration.as_secs_f32());
     }
 }

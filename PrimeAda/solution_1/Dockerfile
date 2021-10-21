@@ -20,3 +20,5 @@ FROM alpine:3.13
 COPY --from=build /opt/app/main /main
 
 ENTRYPOINT ["/main"]
+
+RUN sh

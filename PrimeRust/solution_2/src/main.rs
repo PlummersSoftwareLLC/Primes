@@ -13,8 +13,7 @@ fn main() {
         passes += 1;
 
         if (Instant::now() - time_start) >= Duration::new(processing_time, 0) {
-            let td = Instant::now() - time_start;
-            prime.print_results(false, td, passes);
+            prime.print_results(false, Instant::now() - time_start, passes);
             break;
         }
     }
