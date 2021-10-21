@@ -60,7 +60,7 @@ Now make sure to add a `README.md` that contains at least the following:
 ```
 
 With the introduction of [tags](#tags) in the [output format](#output), badges are now optional in the `README.md`, _provided that tags are indeed used in the solution output_. If you do choose to add badges to your `README.md`, then:
-* They need to comply with what is described in [the characteristics section](#characteristics). 
+* They need to comply with what is described in [the characteristics section](#characteristics).
 * If your solution includes multiple implementations that have different characteristics, then add all appropriate badges, once.
 * If your solution deviates from the basic [rules](#rules), add an additional badge, using the following template:
   ```
@@ -70,7 +70,7 @@ With the introduction of [tags](#tags) in the [output format](#output), badges a
 
 ### Folder/directory
 In the  `drag-race` branch, see what the highest numbered solution is for the language you chose, and place your solution in the following folder:
-`Prime<Language>/solution_<highest+1>/` where "highest" is the number of the highest numbered solution you found. 
+`Prime<Language>/solution_<highest+1>/` where "highest" is the number of the highest numbered solution you found.
 
 If no solution yet exists for the language you're submitting, put yours in `Prime<Language>/solution_1/`
 
@@ -92,12 +92,12 @@ We encourage solutions and therefore Docker images to support both amd64/x86_64 
 
 If your solution fundamentally supports only one architecture, you can use a "flag file" to indicate what architecture that is. Currently, examples of architecture-specific builds are the assembly builds for amd64 and arm64.
 
-A flag file is an empty file in the solution directory that tells the CI and benchmark implementations to build and run the solution only for/on the architecture indicated. The flag file for arm64 builds is `arch-arm64`, for amd64 builds it is `arch-amd64`. 
+A flag file is an empty file in the solution directory that tells the CI and benchmark implementations to build and run the solution only for/on the architecture indicated. The flag file for arm64 builds is `arch-arm64`, for amd64 builds it is `arch-amd64`.
 
 #### Disabling build and benchmark
 If it is not possible to include your solution in the CI workflow and/or automated benchmark runs, a `build-no` flag file has to be added to the solution directory. Note that:
 - Your solution has to be included in the automated benchmark runs, if it is possible to do so. For one, lack of familiarity with Docker is _not_ a valid reason to exclude it.
-- Automated builds should _only_ be disabled after the repository maintainers have specifically indicated that you need to do so. 
+- Automated builds should _only_ be disabled after the repository maintainers have specifically indicated that you need to do so.
 
 #### Hadolint
 During the review of any PR, a CI workflow is triggered that includes a linting of Dockerfiles using [hadolint](https://github.com/hadolint/hadolint). Any issues that are found in a solution's Dockerfile will need to be fixed before the respective PR is merged.
@@ -106,7 +106,7 @@ If you want to run hadolint locally before submitting your Dockerfile, you can d
 Instructions for installing hadolint can be found in the tool's documentation. Using a Docker container is a "non-intrusive" way of running hadolint once Docker is installed. In a Unix-like shell, this can be done by running the following command from the root directory of the Primes repository (replace `<language>` and `<number>` with the applicable values for your solution):
 ```
 docker run --rm -i -v `pwd`/config:/.config hadolint/hadolint < Prime<language>/solution_<number>/Dockerfile
-```  
+```
 
 ### Pull request
 Finally, submit a pull request **targeting the branch `drag-race`**, and place at least the name of the language in the title. Make sure to verify and check the contributing requirements that are summarized in the pull request template.
@@ -114,8 +114,8 @@ Finally, submit a pull request **targeting the branch `drag-race`**, and place a
 **Please note:** pull requests that are opened on another branch than `drag-race` will not be merged, by definition.
 
 ### Help/support
-If you need assistance with conforming to any of the guidelines mentioned above, then please clearly indicate this in your pull request and be specific in what you need help with. 
-Note that we cannot guarantee that we can help make your solution mergeable if it doesn't conform to the guidelines, but we will do our best to help where we can. 
+If you need assistance with conforming to any of the guidelines mentioned above, then please clearly indicate this in your pull request and be specific in what you need help with.
+Note that we cannot guarantee that we can help make your solution mergeable if it doesn't conform to the guidelines, but we will do our best to help where we can.
 
 ## Rules
 
@@ -139,7 +139,7 @@ These characteristics are discussed in more detail in the following sections.
 
 ### Algorithm
 
-This defines the algorithm(s) used by your implementation(s). 
+This defines the algorithm(s) used by your implementation(s).
 
 #### Known algorithms
 
@@ -156,9 +156,9 @@ We currently consider the following algorithms to be "known" algorithms:
 
 The base algorithm is defined as follows:
 * The algorithm uses an outer loop, in which two operations are performed:
-  1. searching for the next prime in the sieve, and 
-  2. clearing this prime's multiples in the sieve. 
-  
+  1. searching for the next prime in the sieve, and
+  2. clearing this prime's multiples in the sieve.
+
   In order to allow for idiomatic code, it is permissible to perform these steps in either order, provided the results are correct.
 
 * When seeking factors (the first operation), the algorithm sequentially checks all odd numbers, starting at 3.
@@ -179,7 +179,7 @@ The [output tag](#output) for the algorithm is `algorithm`. Recognized values ar
 
 #### Badge
 
-If you choose to include badges in your `README.md`, then: 
+If you choose to include badges in your `README.md`, then:
 * if the base algorithm is used, the badge to use is:
 
   ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
@@ -209,7 +209,7 @@ At a technical level, an implementation is considered faithful if it complies wi
 * The sieve size and corresponding prime candidate memory buffer (or language equivalent) are set/allocated dynamically at runtime. The size of the memory buffer must correspond to the size of the sieve.
 * It conforms to the base [rules](#Rules).
 
-All other implementations are considered unfaithful. Note that they still need to conform to the base [rules](#Rules). 
+All other implementations are considered unfaithful. Note that they still need to conform to the base [rules](#Rules).
 
 If the faithfulness of an implementation is not specified, it is assumed to be unfaithful.
 
@@ -219,7 +219,7 @@ The [output tag](#output) to express faithfulness is `faithful`. Recognized valu
 
 #### Badge
 
-If you choose to include badges in your `README.md`, then: 
+If you choose to include badges in your `README.md`, then:
 * if the implementation is faithful, the badge to use is:
 
   ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
@@ -230,7 +230,7 @@ If you choose to include badges in your `README.md`, then:
   ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
   ```
 
-* if the implementation is unfaithful, the badge to use is: 
+* if the implementation is unfaithful, the badge to use is:
 
   ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 
@@ -250,7 +250,7 @@ As the [output](#output) of implementations specifies how many threads are used,
 
 #### Badge
 
-If you choose to include badges in your `README.md`, then: 
+If you choose to include badges in your `README.md`, then:
 * if the implementation is single-threaded, the badge to use is:
 
   ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
@@ -273,15 +273,15 @@ If you choose to include badges in your `README.md`, then:
 
 ### Flag storage
 
-This characteristic specifies how many bits the implementation uses to store the indication (flag) if a number in the sieve is a prime number, or not.  
+This characteristic specifies how many bits the implementation uses to store the indication (flag) if a number in the sieve is a prime number, or not.
 
 Common bit counts are:
 | Number | Used when |
 |-|-|
 | 1 | Each prime number flag occupies one bit. Common implementations of this type use a bit array or bit masking on wider data types to get and set individual flags. |
-| 8 | Common implementations that occupy 8 bits per flag store the flags in a "byte" variable. | 
-| 32 | Common implementations that occupy 32 bits per flag store the flags in a "regular" integer variable. | 
-| 64 | Common implementations that occupy 64 bits per flag store the flags in a "long" integer variable. | 
+| 8 | Common implementations that occupy 8 bits per flag store the flags in a "byte" variable. |
+| 32 | Common implementations that occupy 32 bits per flag store the flags in a "regular" integer variable. |
+| 64 | Common implementations that occupy 64 bits per flag store the flags in a "long" integer variable. |
 
 It's possible that the number of bits per flag is unknown. For example, this can be the case if an implementation uses a "boolean" basic type provided by the language, and the language does not define how booleans are logically stored in memory.
 
@@ -291,7 +291,7 @@ The [output tag](#output) for the flag size is `bits`. The value should reflect 
 
 #### Badge
 
-If you choose to include badges in your `README.md`, then: 
+If you choose to include badges in your `README.md`, then:
 * if the implementation's flag size is known to be 1 bit, the badge to use is:
 
   ![Bit count](https://img.shields.io/badge/Bits-1-green)
@@ -312,7 +312,7 @@ If you choose to include badges in your `README.md`, then:
   ![Bit count](https://img.shields.io/badge/Bits-<count>-yellowgreen)
   ```
 
-* if the implementation's flag size is unknown, the badge to use is: 
+* if the implementation's flag size is unknown, the badge to use is:
 
   ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
@@ -335,18 +335,18 @@ where:
 * `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations` (so 1 for a single-threaded solution).
 * `tags` is an optional collection of name/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). They are discussed in more detail, [below](#tags).
 
-Any other output should be directed to standard error, if possible. 
+Any other output should be directed to standard error, if possible.
 
 ### Tags
 
 If you choose to include tags, then:
-* They must conform to what's indicated in the [characteristics](#characteristics) section. 
+* They must conform to what's indicated in the [characteristics](#characteristics) section.
 * Specificy each tag as `<name>=<value>`
 * Make sure that `<name>` and `<value>` each don't exceed 32 characters in length
 * If multiple tags are included in your output, separate them with commas (`,`)
 * Don't use spaces anywhere in or between names, values, or name/value pairs
 
-If you don't output tags, then the semicolon (`;`) between `num_threads` and `tags` should also not be written. 
+If you don't output tags, then the semicolon (`;`) between `num_threads` and `tags` should also not be written.
 
 Do note that default values are used for all tags that are not included, as mentioned under [characteristics](#characteristics).
 
