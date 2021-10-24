@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SLEEP=7
+SLEEP=5
 
 run() {
     ./zig-out/bin/PrimeZig -l "$1"

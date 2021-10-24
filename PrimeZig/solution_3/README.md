@@ -1,5 +1,15 @@
 # Zig solution by ManDeJan and ityonemo and SpexGuy
 
+## WARNING
+The runners of the Primes program have instituted an limitation to the
+competition rules, which requires that no more than an arbitrarily-decided 5s 
+pause is permitted between runs.  On our test system we measured that a 5s pause
+is suboptimal.  This puts the zig implementation at a disadvantage because it 
+is modular and only costs one docker container per architecture, versus other 
+language implementations which spread out different test conditions over multiple
+containers (we have also measured that a docker build between runs is effective
+at "cooling down" throttling).
+
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
