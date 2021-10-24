@@ -117,7 +117,6 @@ pub fn main() anyerror!void {
             }
         }
     }
-    }
 }
 
 fn runSieveTest(
