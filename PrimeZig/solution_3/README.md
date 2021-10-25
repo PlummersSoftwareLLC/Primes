@@ -1,7 +1,7 @@
 # Zig solution by ManDeJan and ityonemo and SpexGuy
 
 ## WARNING
-The runners of the Primes program have instituted an limitation to the
+The maintainers of the Primes program have instituted an limitation to the
 competition rules, which requires that no more than an arbitrarily-decided 5s 
 pause is permitted between runs.  On our test system we measured that a 5s pause
 is suboptimal.  This puts the zig implementation at a disadvantage because it 
