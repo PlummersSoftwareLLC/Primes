@@ -8,8 +8,8 @@
 #include <string.h>
 #include <errno.h>
 
-#define PIPE_READ 0
-#define PIPE_WRITE 1
+#define PIPE_READ   0
+#define PIPE_WRITE  1
 
 int hascmdparam(const char *str);
 char *getcmdparam(char *str);
@@ -117,7 +117,7 @@ void runscript(int childStdinFD, int childStdoutFD) {
 
         switch(stdinLine[0]) {
 
-            // print timestamp (μs since epoch)
+            // output timestamp (μs since epoch)
             case 't': {
                 struct timespec tms;
 
@@ -128,7 +128,9 @@ void runscript(int childStdinFD, int childStdoutFD) {
                     if (tms.tv_nsec % 1000 >= 500)
                         ++micros;
 
-                    printf("%"PRId64"\n", micros);
+                    const char *param = hascmdparam(stdinLine) ? getcmdparam(stdinLine) : "";
+
+                    printf("%s%"PRId64"\n", param, micros);
                 }
             }
             break;
@@ -145,8 +147,8 @@ void runscript(int childStdinFD, int childStdoutFD) {
             }
             break;
 
-            // print string or last line read from child stdout
-            case 'p': {
+            // output string or last line read from child stdout
+            case 'o': {
                 if (hascmdparam(stdinLine)) {
                     printf("%s\n", getcmdparam(stdinLine));
                     break;
@@ -156,6 +158,21 @@ void runscript(int childStdinFD, int childStdoutFD) {
                     break;
 
                 printf("%s\n", clipnewline(childLine));
+            }
+            break;
+
+            // pause for a specified number of seconds; fractional numbers are supported
+            case 'p': {
+                if (!hascmdparam(stdinLine))
+                    return;
+
+                double duration = atof(getcmdparam(stdinLine));
+                struct timespec tms = {
+                    .tv_sec = (time_t)duration,
+                    .tv_nsec = (long)((duration - (long)duration) * 1000000000)
+                };
+
+                nanosleep(&tms, NULL);
             }
             break;
 

@@ -11,7 +11,21 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
 
 ## Run Instructions
 
-Without owning the game:
+### Using the provided scripts on a UN*X system
+- Make sure OpenJDK 17, build tools for C, grep, awk and wget are installed. On a fresh Debian-based Linux distribution, this can be arranged by issuing the following commands:
+  ```
+  sudo apt-get update
+  sudo apt-get install -y gawk grep build-essential openjdk-17-jdk wget
+  ```
+- While in the solution directory, issue the following commands:
+  ```
+  ./build.sh
+  ./run.sh
+  ```
+
+  For subsequent runs, running `./build.sh` can be skipped; only `./run.sh` has to be executed.
+
+### Without owning the game
  - Download the minecraft server jar from [the Minecraft website](https://www.minecraft.net/en-us/download/server) (game versions 1.17 and 1.17.1 are known to work, however newer versions will likely work as well).
  - Move the server jar, `eula.txt`, `server.properties`, and `start.bat` to a new directory. By doing so, you agree to [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula)
  - Run the server as a java program; a command is provided in start.bat which allocates 1 gigabyte of memory. 
@@ -24,7 +38,7 @@ Without owning the game:
  - To close the server, enter `stop` in the console
  - To do another calculation, run the command `function sieve:reset`, which should finish very quickly and will delete existing data so `function sieve:full` can be run again.
 
-Instructions to run with a singleplayer game client:
+### Instructions to run with a singleplayer game client:
  - Installation instructions for the Minecraft game itself are not included
  - Enable the output log through the minecraft launcher (if not already enabled) at "Settings" => "Open output log when Minecraft: Java Edition starts"
  - Run an instance of Java Minecraft 1.17.1
@@ -40,9 +54,8 @@ Instructions to run with a singleplayer game client:
  - To do another calculation, run the command `/function sieve:reset` in the chat, which should finish very quickly and will delete existing data so `/function sieve:full` can be run again.
 
 ## Performance
-
 Performance varies, but one calculation of all primes up to 1,000,000 will likely by over 1 minute, but may take multiple given the hardware performance. Start and stop times (measured to the second) can be seen in the timestamps of the start and stop log messages.
 
 ## Additional Notes
-
-Very rarely, a Minecraft error incorrectly ignores some 'array manipulations'. If the algorithm returns that there are an incorrect number of primes or incorrect values, try reinstalling/rerunning the server.
+- Very rarely, a Minecraft error incorrectly ignores some 'array manipulations'. If the algorithm returns that there are an incorrect number of primes or incorrect values, try reinstalling/rerunning the server.
+- The build and run scripts use a small tool (playio) to control the interaction with the Minecraft server console. The playio tool was written specifically for this solution, but can be used for other purposes as well. A repo for playio will be created shortly, that will include documentation on its use.
