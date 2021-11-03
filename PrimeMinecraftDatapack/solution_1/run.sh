@@ -3,7 +3,13 @@
 # This script assumes that OpenJDK 17 (or newer), grep and awk are already installed
 # somewhere in $PATH, and the build.sh script has been executed.
 
-cd env
+[ -d env ] && cd env
+
+if [ ! -x playio ]; then
+    echo "ERROR: playio not present. Maybe run build.sh?"
+    exit 1
+fi
+
 ./playio java -Xmx1024M -Xms1024M -jar server.jar nogui < runioscript.txt > output.txt
 
 if [ -f output.txt ]; then

@@ -1,7 +1,5 @@
 # Minecraft Datapack solution by RCoder01
 
-**Note** This branch ([github.com/rbergen/Primes:minecraft](https://github.com/rbergen/Primes/tree/minecraft)) is very much a WIP.
-
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-unknown-yellowgreen)
@@ -10,6 +8,17 @@
 This sieve uses blocks in Minecraft as array values, and uses Minecraft commands to traverse and modify the array
 
 ## Run Instructions
+
+### Docker
+**Note:** by using the Dockerfile (specifically executing `docker build`), you accept [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula).
+- Make sure Docker is installed.
+  
+- While in the solution directory, issue the following commands:
+  ```
+  docker build -t minecraft1 .
+  docker run minecraft1
+  ```
+  For subsequent runs, the `docker build` can be skipped; only the `docker run` has to be executed.
 
 ### Using the provided scripts on a UN*X system
 **Note:** by running the scripts (`build.sh` in particular), you accept [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula).
@@ -66,4 +75,4 @@ Performance varies, but one calculation of all primes up to 1,000,000 will likel
 
 ## Additional Notes
 - Very rarely, a Minecraft error incorrectly ignores some 'array manipulations'. If the algorithm returns that there are an incorrect number of primes or incorrect values, try reinstalling/rerunning the server.
-- The build and run scripts use a small tool (playio) to control the interaction with the Minecraft server console. The playio tool was written specifically for this solution, but can be used for other purposes as well. A repo for playio will be created shortly, that will include documentation on its use.
+- The build and run scripts use a small tool (playio) to control the interaction with the Minecraft server console. The playio tool was written specifically for this solution, but can be used for other purposes as well. Documentation on playio's use can be found in [the tool's GitHub repo](https://github.com/rbergen/PlayIO).
