@@ -24,6 +24,12 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
   ```
 
   For subsequent runs, running `./build.sh` can be skipped; only `./run.sh` has to be executed.
+- If a reinitialisation of the execution environment is desired then:
+  - Remove the `env` directory in the solution directory (`rm -r env` should do the trick)
+  - Run `./build.sh` again to reinitialise.
+  
+  <br/>
+  After that, the solution can be run again by issuing `./run.sh`.
 
 ### Without owning the game
  - Download the minecraft server jar from [the Minecraft website](https://www.minecraft.net/en-us/download/server) (game versions 1.17 and 1.17.1 are known to work, however newer versions will likely work as well).
