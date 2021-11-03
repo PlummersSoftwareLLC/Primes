@@ -12,12 +12,13 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
 ## Run Instructions
 
 ### Using the provided scripts on a UN*X system
+**Note:** by running the scripts (`build.sh` in particular), you accept [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula).
 - Make sure OpenJDK 17, build tools for C, grep, awk and wget are installed. On a fresh Debian-based Linux distribution, this can be arranged by issuing the following commands:
   ```
   sudo apt-get update
   sudo apt-get install -y gawk grep build-essential openjdk-17-jdk wget
   ```
-  
+
 - While in the solution directory, issue the following commands:
   ```
   ./build.sh
