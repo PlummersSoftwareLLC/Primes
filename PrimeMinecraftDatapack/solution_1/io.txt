@@ -1,0 +1,9 @@
+f [Server] loaded
+t
+w function sieve:full
+t
+f from function 'sieve:full'
+w data get storage primes amount
+f
+p
+w stop
