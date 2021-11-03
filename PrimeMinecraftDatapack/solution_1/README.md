@@ -31,7 +31,7 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
   - Run `./build.sh` again to reinitialise.
   
   <br/>
-  After that, the solution can be run again by issuing `./run.sh`.
+  After that, the solution can be run again by issuing `./run.sh`
 
 ### Without owning the game
  - Download the minecraft server jar from [the Minecraft website](https://www.minecraft.net/en-us/download/server) (game versions 1.17 and 1.17.1 are known to work, however newer versions will likely work as well).
