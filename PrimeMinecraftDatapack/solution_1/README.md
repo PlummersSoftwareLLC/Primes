@@ -17,13 +17,14 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
   sudo apt-get update
   sudo apt-get install -y gawk grep build-essential openjdk-17-jdk wget
   ```
+  
 - While in the solution directory, issue the following commands:
   ```
   ./build.sh
   ./run.sh
   ```
-
   For subsequent runs, running `./build.sh` can be skipped; only `./run.sh` has to be executed.
+
 - If a reinitialisation of the execution environment is desired then:
   - Remove the `env` directory in the solution directory (`rm -r env` should do the trick)
   - Run `./build.sh` again to reinitialise.
