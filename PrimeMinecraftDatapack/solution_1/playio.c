@@ -7,9 +7,15 @@
 #include <time.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define PIPE_READ   0
 #define PIPE_WRITE  1
+
+#define VERSION_MAJOR   1
+#define VERSION_MINOR   1
+#define VERSION_PATCH   0
 
 int hascmdparam(const char *str);
 char *getcmdparam(char *str);
@@ -19,10 +25,22 @@ void runscript(int childStdinFD, int childStdoutFD);
 const char newline = '\n';
 
 int main(int argc, const char* argv[]) {
+    if (argc < 2) {
+        printf("Usage:\n"); 
+        printf("%s <program> [program options]\n", argv[0]);
+        printf("%s -V\n", argv[0]);
+        return 1;
+    }
+
+    if (!strcmp(argv[1],"-V")) {
+        printf("PlayIO version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+        return 0;
+    }
+
     int stdinPipe[2];
     if (pipe(stdinPipe) < 0) {
         perror("allocating pipe for child input redirect");
-        return errno;
+        return 1;
     }
 
     int stdoutPipe[2];
@@ -30,29 +48,29 @@ int main(int argc, const char* argv[]) {
         close(stdinPipe[PIPE_READ]);
         close(stdinPipe[PIPE_WRITE]);
         perror("allocating pipe for child output redirect");
-        return errno;
+        return 1;
     }
 
-    int childPid = fork();
+    pid_t childPid = fork();
     if (childPid == 0) {
         // child continues here
 
         // redirect stdin
         if (dup2(stdinPipe[PIPE_READ], STDIN_FILENO) == -1) {
             perror("redirecting child stdin");
-            return errno;
+            return 1;
         }
 
         // redirect stdout
         if (dup2(stdoutPipe[PIPE_WRITE], STDOUT_FILENO) == -1) {
             perror("redirecting child stdout");
-            return errno;
+            return 1;
         }
 
         // redirect stderr
         if (dup2(stdoutPipe[PIPE_WRITE], STDERR_FILENO) == -1) {
             perror("redirecting child stderr");
-            return errno;
+            return 1;
         }
 
         // all these are for use by parent only
@@ -74,10 +92,13 @@ int main(int argc, const char* argv[]) {
 
         childArgs[argc - 1] = NULL;
 
-        return execvp(argv[1], childArgs);
+        execvp(argv[1], childArgs);
+        
+        return 127;
     }
     else if (childPid > 0) {
         // parent continues here
+        signal(SIGPIPE, SIG_IGN);
 
         // close unused file descriptors, these are for child only
         close(stdinPipe[PIPE_READ]);
@@ -87,6 +108,11 @@ int main(int argc, const char* argv[]) {
 
         close(stdinPipe[PIPE_WRITE]);
         close(stdoutPipe[PIPE_READ]);
+
+        int status;
+        return waitpid(childPid, &status, 0) != -1 
+            ? (WIFEXITED(status) ? WEXITSTATUS(status) : 1)
+            : 1;
     }
     else {
         // failed to create child
@@ -94,7 +120,9 @@ int main(int argc, const char* argv[]) {
         close(stdinPipe[PIPE_WRITE]);
         close(stdoutPipe[PIPE_READ]);
         close(stdoutPipe[PIPE_WRITE]);
-        return errno;
+        perror("creating child process");
+
+        return 1;
     }
 
     return 0;
@@ -164,7 +192,7 @@ void runscript(int childStdinFD, int childStdoutFD) {
             // pause for a specified number of seconds; fractional numbers are supported
             case 'p': {
                 if (!hascmdparam(stdinLine))
-                    return;
+                    continue;
 
                 double duration = atof(getcmdparam(stdinLine));
                 struct timespec tms = {
