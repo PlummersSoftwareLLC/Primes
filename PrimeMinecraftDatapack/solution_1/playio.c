@@ -15,7 +15,7 @@
 
 #define VERSION_MAJOR   1
 #define VERSION_MINOR   1
-#define VERSION_PATCH   0
+#define VERSION_PATCH   1
 
 int hascmdparam(const char *str);
 char *getcmdparam(char *str);
@@ -219,9 +219,6 @@ void runscript(int childStdinFD, int childStdoutFD) {
             break;
         }
     } // end of while
-
-    // read and discard any remaining output from child
-    while(getline(&childLine, &childBufLen, childStdout) != -1);
 
     free(stdinLine);
     free(childLine);
