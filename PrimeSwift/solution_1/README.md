@@ -9,7 +9,8 @@
 This is a collection of implementations in Swift, of which:
 
 1. one is a "naive" implementation that maintains the array of primes in an underlying array of 8-bit booleans
-2. one is a "naive" implementation that maintains the array of primes in an underlying array of bit-mapped 64-bit unsigned integers
+2. one is a "naive" implementation that maintains the array of primes in an underlying array of bit-mapped 8-bit unsigned integers
+3. one is a "striped" implementation that maintains the array of primes in an underlying array of bit-mapped 8-bit unsigned integers
 
 Credits:
 
@@ -22,15 +23,18 @@ Shell script `./run.sh` runs both solutions sequentially.
 
 ## Output
 
-__$ ./run.sh
-[0/0] Build complete!
-
-Passes: 3864, Time: 5.000285983085632, Avg: 0.001294069871398973, Limit: 1000000, Count: 78498, Valid: true
-
-yellowcub_bit64;3864;5.000285983085632;1;algorithm=base,faithful=yes,bits=1
-
-[2/2] Build complete!
-
-Passes: 6984, Time: 5.000074982643127, Avg: 0.0007159328440210663, Limit: 1000000, Count: 78498, Valid: true
-
-j-f1_ycub_bool;6984;5.000074982643127;1;algorithm=base,faithful=yes,bits=8
+  CC(target) Release/obj.target/uname/uname.o
+  SOLINK_MODULE(target) Release/uname.node
+added 231 packages in 5.407s
+info: Unconfined mode: false
+info: Detected architecture: amd64
+info: [PrimeSwift][solution_1] Building...
+info: [PrimeSwift][solution_1] Running...
+                                                            Single-threaded
+┌───────┬────────────────┬──────────┬─────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label               │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼─────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ swift          │ 1        │ yellowcub_bit32     │  7338  │ 5.00008  │    1    │   base    │   yes    │ 1    │  1467.57505   │
+│   2   │ swift          │ 1        │ yellowcub_bit64     │  6918  │ 5.00010  │    1    │   base    │   yes    │ 1    │  1383.57150   │
+│   3   │ swift          │ 1        │ j-f1_yellowcub_bool │  6881  │ 5.00071  │    1    │   base    │   yes    │ 8    │  1376.00408   │
+└───────┴────────────────┴──────────┴─────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘

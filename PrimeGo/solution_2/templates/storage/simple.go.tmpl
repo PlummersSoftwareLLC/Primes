@@ -1,0 +1,30 @@
+{{- $storage := . }}
+{{- range .Options }}
+{{- $w := .Width }}
+{{- $name := ($storage.NameFor $w) }}
+
+type {{ $name }} struct {
+	BaseStorage{{ $w }}
+}
+
+func New{{ $name }}(length uint64) Storage {
+	return {{ $name }}{
+		BaseStorage{{ $w }}{
+			make(bitarray{{ $w }}, (length+{{ (Sub $w 1) }})/{{ $w }}),
+			length,
+		},
+	}
+}
+
+{{- /* After inlining, Go 1.17 "optimizes" this function in a way it works 
+almost 15% slower. The problem seems to be with the "stop" value - if i change 
+it somehow, the slowdown is gone. But "noinline" is way more clear. */}}
+
+//go:noinline
+func (b {{ $name }}) SetRange(start, stop, step uint64) {
+	for ; start < stop; start += step {
+		b.bitarray{{ $w }}[start/{{ $w }}] |= bits.RotateLeft{{ $w }}(1, int(start))
+	}
+}
+
+{{- end}}

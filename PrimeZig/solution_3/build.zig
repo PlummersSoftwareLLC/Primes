@@ -12,8 +12,16 @@ pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
 
     const exe = b.addExecutable("PrimeZig", "src/main.zig");
+    exe.linkLibC();
     exe.setTarget(target);
     exe.setBuildMode(mode);
+
+    const all = b.option(bool, "all", "should run uncurated examples") orelse false;
+    exe.addBuildOption(bool, "all", all);
+
+    const arm_is_rpi4 = b.option(bool, "arm-is-rpi4", "treat arm architecture as 8GB rpi4") orelse false;
+    exe.addBuildOption(bool, "arm_is_rpi4", arm_is_rpi4);
+
     exe.install();
 
     const run_cmd = exe.run();

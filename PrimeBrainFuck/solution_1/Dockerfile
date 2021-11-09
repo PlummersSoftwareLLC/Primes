@@ -11,10 +11,11 @@ RUN wget https://apt.llvm.org/llvm.sh \
     && ./llvm.sh 12
 
 # set clang as default compiler for C and C++
-ENV CC=/usr/bin/clang-12
-ENV CXX=/usr/bin/clang++-12
+ENV CC=/usr/bin/clang-12 \
+    CXX=/usr/bin/clang++-12
 
 # install latest version of cmake
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - \
     && apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' \
     && apt-get update \
@@ -31,9 +32,8 @@ RUN cmake -DCMAKE_BUILD_TYPE=Release .. \
     && cp BrainF_ck_Interpreter brainfuck
 
 # build prime sieve caller
-COPY *.cpp /opt/app/
-COPY *.b /opt/app/
 WORKDIR /opt/app/
+COPY *.cpp *.b ./
 RUN clang++-12 -Ofast -std=c++17 PrimeBrainFuck.cpp -oPrimeBrainFuck
 
 # container for running built binaries

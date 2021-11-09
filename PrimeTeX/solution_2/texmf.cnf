@@ -16,3 +16,7 @@
 % luatex has dynamic memory allocation and does not need this.
 %
 font_mem_size = 147483647
+% the following is not needed for benchmark, but is sufficient to allow
+% sieving with pdftex up to the maximum authorized by max font_mem_size
+% i.e. a bit less than 295,000,000 sieving range.
+% extra_mem_top = 10000000

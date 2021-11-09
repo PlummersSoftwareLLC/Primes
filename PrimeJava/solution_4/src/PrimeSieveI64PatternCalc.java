@@ -20,25 +20,6 @@ public class PrimeSieveI64PatternCalc extends PrimeSieveBase{
 	public boolean getBit(int index) {
 		return (dataSet[index >> SHIFT_SIZE_ADD] & (1l << (index >> 1))) == 0;
 	}
-
-	public void clearBit(int index) {
-		throw new AssertionError();
-	}
-	
-	public void runSieve() {
-		int factor = 3;
-		int q = (int) Math.sqrt(sieveSize);
-		while (factor <= q) {
-			for (int num = factor; num <= sieveSize; num += 2) {
-				if (getBit(num)) {
-					factor = num;
-					break;
-				}
-			}
-			clearBits(factor);
-			factor += 2;
-		}
-	}
 	
 	public void clearBits(int factor) {
 		if(factor < PATTERN_SIZE) {

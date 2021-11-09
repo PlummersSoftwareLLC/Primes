@@ -4,13 +4,12 @@ FROM alpine:3.14
 ENV GODOT_VERSION "3.3.2"
 
 # Updates and installs
-RUN apk update
-RUN apk add --no-cache bash
-RUN apk add --no-cache wget
+RUN apk update \
+    && apk add --no-cache bash wget
 
 # Allow this to run Godot
-RUN wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.31-r0/glibc-2.31-r0.apk
-RUN apk add --allow-untrusted glibc-2.31-r0.apk
+RUN wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.31-r0/glibc-2.31-r0.apk \
+    && apk add --allow-untrusted --no-cache glibc-2.31-r0.apk
 
 # Download Godot, version is set from variables
 RUN wget https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip \

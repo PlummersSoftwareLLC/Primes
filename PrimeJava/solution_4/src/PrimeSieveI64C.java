@@ -1,4 +1,4 @@
-public class PrimeSieveI64C extends PrimeSieveBase{
+public class PrimeSieveI64C extends PrimeSieveBaseBit{
 	private static final int SHIFT_SIZE = 6;
 	private static final int SHIFT_SIZE_ADD = SHIFT_SIZE + 1;// one more because we don't store even numbers
 	private static final int SIZE = 1 << SHIFT_SIZE;

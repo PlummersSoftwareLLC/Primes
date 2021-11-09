@@ -68,6 +68,13 @@ export const command = new Command('benchmark')
         .slice(-2);
       const imageName = `${implementation}_${solution}`.toLocaleLowerCase();
 
+      if (fs.existsSync(path.join(solutionDirectory, 'build-no'))) {
+        logger.warn(
+          `[${implementation}][${solution}] Skipping due to disabled build!`
+        );
+        return;
+      }
+
       // NOTE: If any arch-* files are present then check if the current architecture
       // is present among the files, if not we skip this build...
       const archFiles = glob.sync(path.join(solutionDirectory, 'arch-*'));

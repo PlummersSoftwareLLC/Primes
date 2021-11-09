@@ -17,13 +17,21 @@ jobs:
       - name: "Find Dockerfiles"
         id: "solutions"
         run: |
-          SOLUTIONS=$(find Prime* -type f -name Dockerfile -exec dirname {} \; | sort | sed -e 's|^./||' | jq -R '[.]' | jq -s -c -M 'add')
+          RESULTS=()
+          for DIR in $(find Prime* -type f -name Dockerfile ! -exec dirname {} \; | sort | sed -e 's|^./||'); do
+          [ -f "${DIR}/build-no" ] && continue
+          RESULTS+=( "${DIR}" )
+          done
+          SOLUTIONS=$(printf '%s\n' "${RESULTS[@]}" | jq -R . | jq -sc .)
           echo "::set-output name=solutions::${SOLUTIONS}"
 
     outputs:
       solutions: ${{ steps.solutions.outputs.solutions }}
 
   build:
+    env: 
+      ENABLE_DOCKER_PUSH: ${{ github.repository_owner == 'PlummersSoftwareLLC' && github.ref == 'refs/heads/drag-race' }}
+
     runs-on: "ubuntu-20.04"
 
     needs: ["collect-solutions"]
@@ -36,13 +44,27 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v2
-      
+
       - name: "Normalize solution name"
         id: solution-name
         run: |
-          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//_/g' | tr '[:upper:]' '[:lower:]')
+          NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]' | sed -r 's/(prime|solution_)//g')
           echo "::set-output name=normalized::${NAME}"
-      
+
+      - name: Select arm64 build for solutions with arm64 flag file
+        id: arch-arm64
+        run: |
+          if [[ -f "${{ matrix.solution }}/arch-arm64" ]]; then
+          echo "::set-output name=build::true"
+          fi
+
+      - name: Select amd64 build for solutions with amd64 or no flag file
+        id: arch-amd64
+        run: |
+          if [[ -f "${{ matrix.solution }}/arch-amd64" || ! -f "${{ matrix.solution }}/arch-arm64" ]]; then
+          echo "::set-output name=build::true"
+          fi
+
       - name: Lint Dockerfile
         uses: jbergstroem/hadolint-gh-action@v1
         with:
@@ -57,43 +79,31 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Select arm64 build for solutions with arm64 flag file
-        id: arch-arm64
-        run: |
-          if [[ -f "${{ matrix.solution }}/arch-arm64" ]]; then 
-          echo "::set-output name=build::true"
-          fi
-
-      - name: Select amd64 build for solutions with amd64 or no flag file
-        id: arch-amd64
-        run: |
-          if [[ -f "${{ matrix.solution }}/arch-amd64" || ! -f "${{ matrix.solution }}/arch-arm64" ]]; then 
-          echo "::set-output name=build::true"
-          fi
-
-      - name: Build arm64
-        if: steps.arch-arm64.outputs.build
-        uses: docker/build-push-action@v2
+      - name: Login to DockerHub
+        if: ${{ env.ENABLE_DOCKER_PUSH == 'true' }}
+        uses: docker/login-action@v1
         with:
-          tags: ${{ steps.solution-name.outputs.normalized }}
-          context: ${{ matrix.solution }}
-          platforms: linux/arm64
-          push: false
-          load: true
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build amd64
         if: steps.arch-amd64.outputs.build
         uses: docker/build-push-action@v2
         with:
-          tags: ${{ steps.solution-name.outputs.normalized }}
+          tags: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
           context: ${{ matrix.solution }}
           platforms: linux/amd64
-          push: false
-          load: true
+          push: ${{ env.ENABLE_DOCKER_PUSH }}
+          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          cache-to: type=inline
       
-      - name: Scan image
-        uses: anchore/scan-action@v2
+      - name: Build arm64
+        if: steps.arch-arm64.outputs.build
+        uses: docker/build-push-action@v2
         with:
-          image: ${{ steps.solution-name.outputs.normalized }}
-          severity-cutoff: critical
-          
+          tags: primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          context: ${{ matrix.solution }}
+          platforms: linux/arm64
+          push: ${{ env.ENABLE_DOCKER_PUSH }}
+          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          cache-to: type=inline

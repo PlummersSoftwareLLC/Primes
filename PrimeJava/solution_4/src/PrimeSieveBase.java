@@ -24,7 +24,7 @@ public abstract class PrimeSieveBase {
 	
 	protected int bits = 1;
 	protected String type = "base";
-	protected int sieveSize = 0;
+	protected final int sieveSize;
 
 	public PrimeSieveBase(int size) {
 		sieveSize = size;
@@ -48,33 +48,28 @@ public abstract class PrimeSieveBase {
 	}
 	
 	public abstract boolean getBit(int index);
-	public abstract void clearBit(int index);
+	public abstract void clearBits(int factor);
 	
 	public void runSieve() {
 		int q = (int) Math.sqrt(sieveSize);
 		for (int factor = 3; factor <= q; factor += 2) {
-			for (int num = factor; num <= sieveSize; num += 2) {
-				if (getBit(num)) {
-					factor = num;
-					break;
-				}
-			}
-			for (int num = factor * factor; num <= sieveSize; num += factor * 2) {
-				clearBit(num);
+			if (getBit(factor)) {
+				clearBits(factor);
 			}
 		}
 	}
-
+	
 	public void printResults(double duration, int passes, SieveArgs args) {
 		if(!args.isWarmup) {
 			validateResults();
-			System.out.printf("chrvanorle%s%s%s;%d;%f;%d;algorithm=%s,faithful=yes,bits=%d\n", toString(), args.warmup ? "W" : "", args.postfix,passes, duration, args.getThreads(), type, bits);
+			System.out.printf("chrvanorle%s%s;%d;%f;%d;algorithm=%s,faithful=yes,bits=%d\n", toString(), args.postfix,passes, duration, args.getThreads(), type, bits);
 		}
 	}
 	
 	public String toString() {
 		return getClass().getSimpleName().replace("PrimeSieve", "");
 	}
+	
 	static class SieveArgs{
 		public String postfix = "";
 		public boolean parallel = false;

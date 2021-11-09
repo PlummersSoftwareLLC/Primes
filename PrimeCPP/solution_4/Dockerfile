@@ -6,12 +6,10 @@ RUN apt-get update -qq && apt-get install -y g++-11 clang-12 make
 
 WORKDIR /opt/app
 
-COPY Makefile ./
-COPY *.cpp ./
-COPY *.hpp ./
+COPY Makefile *.cpp *.hpp ./
 
-ENV CXX_CLANG=clang++-12
-ENV CXX_GCC=g++-11
+ENV CXX_CLANG=clang++-12 \
+    CXX_GCC=g++-11
 
 RUN make -j bench
 
@@ -19,7 +17,9 @@ RUN make -j bench
 
 FROM ubuntu:21.04
 
-RUN apt-get update -qq && apt-get install -y make
+RUN apt-get update -qq && apt-get install -y make \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/app
 

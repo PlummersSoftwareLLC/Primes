@@ -1,0 +1,61 @@
+package main
+
+import (
+	{{- range $module := .Imports }}
+	"{{ $module }}"
+	{{- end }}
+)
+
+var storageTypes map[string]StorageFunc = map[string]StorageFunc {
+	{{- range $st := .Storage }}
+		{{- range $t := .Options }}
+	"{{ ($st.NameFor $t.Width) }}": New{{ ($st.NameFor $t.Width) }},
+		{{- end }}
+	{{- end }}
+}
+
+{{- range $w := .Widths }}
+
+const MaxUint{{ $w }} uint{{ $w }} = ^uint{{ $w }}(0)
+
+type bitarray{{ $w }} []uint{{ $w }}
+
+func (b bitarray{{ $w }}) At(index uint64) bool {
+	return b[index/{{ $w }}]&bits.RotateLeft{{$w}}(1, int(index)) != 0
+}
+
+func (b bitarray{{ $w }}) Set(index uint64, val bool) {
+	if val {
+		b[index/{{ $w }}] |= bits.RotateLeft{{ $w }}(1, int(index))
+	} else {
+		b[index/{{ $w }}] &= bits.RotateLeft{{ $w }}(MaxUint{{ $w }} - 1, int(index))
+	}
+}
+
+func (b bitarray{{ $w }}) Find(val bool, start, stop uint64) uint64 {
+	for start < stop && val != (b[start/{{ $w }}]&bits.RotateLeft{{ $w }}(1, int(start)) != 0) {
+		start++
+	}
+	return start
+}
+
+func (b bitarray{{ $w }}) Count(val bool, start, stop uint64) uint64 {
+	var count uint64
+	for ; start < stop; start++ {
+		if val == (b[start/{{ $w }}]&bits.RotateLeft{{ $w }}(1, int(start)) != 0) {
+			count++
+		}
+	}
+	return count
+}
+
+type BaseStorage{{ $w }} struct {
+	bitarray{{ $w }}
+	length uint64
+}
+
+func (b BaseStorage{{ $w }}) Length() uint64 {
+	return b.length
+}
+
+{{- end }}

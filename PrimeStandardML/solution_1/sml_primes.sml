@@ -1,6 +1,7 @@
 datatype 'a stream = Empty | Cons of 'a * (unit -> 'a stream)
 
 fun count start = Cons (start, fn () => count (start+1))
+fun count_word (start: word) = Cons (start, fn () => count_word (start+0wx1))
 
 fun map _ Empty = Empty
   | map f (Cons (h, t)) = Cons (f h, fn () => map f (t ()))
@@ -31,31 +32,32 @@ fun app _ Empty = ()
     let val _ = f h in app f (t ()) end
 
 fun create_sieve limit =
-    let val bit_array_size = (limit + 1) div 2
-        val bit_array =  BitArray.bits (bit_array_size, [])
-        fun get_bit index = not (BitArray.sub (bit_array, (index div 2)))
-        fun clear_bit index = BitArray.setBit (bit_array, (index div 2))
-        fun count_primes () = bit_array_size - (BitArray.foldl (fn (x,y) => if x then 1 + y else y) 0 bit_array)
-        fun get_found_primes () = Cons(2, fn () => filter get_bit (until (fn x => x >= limit) (map (fn x => x*2+3) (count 0))))
+    let val word_limit = Word.fromInt limit
+        val bit_array_size = Word.>> (word_limit + 0wx1, 0wx1)
+        val bit_array =  BitArray.bits (Word.toInt bit_array_size, [])
+        fun get_bit index = not (BitArray.sub (bit_array, Word.toInt (Word.>> (index, 0wx1))))
+        fun clear_bit index = BitArray.setBit (bit_array, Word.toInt (Word.>> (index, 0wx1)))
+        fun count_primes () = Word.toInt (bit_array_size - Word.fromInt (BitArray.foldl (fn (x,y) => if x then 1 + y else y) 0 bit_array))
+        fun get_found_primes () = Cons(0wx2, fn () => filter get_bit (until (fn x => x >= word_limit) (map (fn x => x*0wx2+0wx3) (count_word 0wx0))))
         fun run_sieve () = 
-            let val starting_factor = 3
-                val q = Real.floor (Math.sqrt (real limit))
+            let val starting_factor = 0wx3
+                val q = Word.fromInt (Real.floor (Math.sqrt (real limit)))
                 fun run factor =
                     if factor <= q then
                         let 
                             (* Find next prime *)
-                            val numbers = until (fn x => x > q) (map (fn x => x * 2 + factor) (count 0))
+                            val numbers = until (fn x => x > q) (map (fn x => x * 0wx2 + factor) (count_word 0wx0))
                             val number = find get_bit numbers
                             val new_factor = case number of
                                               SOME value => value
                                             | NONE => factor
                             (* Clear prime's multiples *)
                             val clear_start = new_factor * new_factor
-                            val increment = new_factor * 2
-                            val clear_indices = until (fn x => x > limit) (map (fn x => x * increment + clear_start) (count 0))
-                            val _ = app clear_bit clear_indices
+                            val increment = new_factor * 0wx2
+                            val clear_indices = Vector.tabulate (Word.toInt ((word_limit - clear_start) div increment + 0wx1), fn x => (Word.fromInt x)*increment+clear_start)
+                            val _ = Vector.app clear_bit clear_indices
                         in
-                            run (new_factor + 2)
+                            run (new_factor + 0wx2)
                         end
                     else
                         ()
@@ -84,14 +86,14 @@ fun create_sieve limit =
                 optional_count = valid_prime_count    
             end
         fun print_results show_results duration passes =
-            let 
-                val () = if show_results 
-                then 
-                    app (fn x => print ((Int.toString x) ^ " ")) (get_found_primes ())
-                else 
+            let
+                val () = if show_results
+                then
+                    app (fn x => print (((Int.toString o Word.toInt)  x) ^ " ")) (get_found_primes ())
+                else
                     ()
             in
-                print ("NotMatthewGriffin_SMLofNJ;" ^ (Int.toString passes) ^ ";" ^ (Time.toString duration) ^ ";1;algorithm=base,faithful=yes,bits=1")
+                print ("NotMatthewGriffin_SML;" ^ (Int.toString passes) ^ ";" ^ (Time.toString duration) ^ ";1;algorithm=base,faithful=yes,bits=1")
             end
     in
         {
@@ -117,11 +119,11 @@ fun count_executions f seconds =
                     (count, elapsed_time, last_result)
                 else
                     let val f_result = f () in
-                        loop (count + 1) (SOME f_result)
+                        loop (count + 0wx1) (SOME f_result)
                     end
             end
     in
-        loop 0 NONE
+        loop 0wx0 NONE
     end
 
 
@@ -135,7 +137,7 @@ fun main (arg0: string,  args: string list) =
                 sieve
             end
         val (passes, duration, SOME sieve) = count_executions benchmark 5 
-        val () = (# print_results sieve) false duration passes
+        val () = (# print_results sieve) false duration (Word.toInt passes)
     in
         OS.Process.success
     end
