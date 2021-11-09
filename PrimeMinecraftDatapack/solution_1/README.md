@@ -42,7 +42,7 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
   <br/>
   After that, the solution can be run again by issuing ./run.sh 
 
-### Without owning the game
+### Manually, without owning the game
  - Download the minecraft server jar from [the Minecraft website](https://www.minecraft.net/en-us/download/server) (game versions 1.17 and 1.17.1 are known to work, however newer versions will likely work as well).
  - Move the server jar, `eula.txt`, `server.properties`, and `start.bat` to a new directory. **Note:** by doing so, you agree to [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula)
  - Run the server as a java program; a command is provided in start.bat which allocates 1 gigabyte of memory. 
@@ -55,7 +55,7 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
  - To close the server, enter `stop` in the console
  - To do another calculation, run the command `function sieve:reset`, which should finish very quickly and will delete existing data so `function sieve:full` can be run again.
 
-### Instructions to run with a singleplayer game client:
+### Manually, with a singleplayer game client
  - Installation instructions for the Minecraft game itself are not included
  - Enable the output log through the minecraft launcher (if not already enabled) at "Settings" => "Open output log when Minecraft: Java Edition starts"
  - Run an instance of Java Minecraft 1.17.1
