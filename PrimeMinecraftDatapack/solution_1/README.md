@@ -9,9 +9,42 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
 
 ## Run Instructions
 
-Without owning the game:
+### Docker
+**Note:** by using the Dockerfile (specifically executing `docker build`), you accept [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula).
+- Make sure Docker is installed.
+  
+- While in the solution directory, issue the following commands:
+  ```
+  docker build -t minecraft1 .
+  docker run minecraft1
+  ```
+  For subsequent runs, the `docker build` can be skipped; only the `docker run` has to be executed.
+
+### Using the provided scripts on a UN*X system
+**Note:** by running the scripts (`build.sh` in particular), you accept [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula).
+- Make sure OpenJDK 17, build tools for C, grep, awk and wget are installed. On a fresh Debian-based Linux distribution, this can be arranged by issuing the following commands:
+  ```
+  sudo apt-get update
+  sudo apt-get install -y gawk grep build-essential openjdk-17-jdk wget
+  ```
+
+- While in the solution directory, issue the following commands:
+  ```
+  ./build.sh
+  ./run.sh
+  ```
+  For subsequent runs, running `./build.sh` can be skipped; only `./run.sh` has to be executed.
+
+- If a reinitialisation of the execution environment is desired then:
+  - Remove the `env` directory in the solution directory (`rm -r env` should do the trick)
+  - Run `./build.sh` again to reinitialise.
+  
+  <br/>
+  After that, the solution can be run again by issuing ./run.sh 
+
+### Without owning the game
  - Download the minecraft server jar from [the Minecraft website](https://www.minecraft.net/en-us/download/server) (game versions 1.17 and 1.17.1 are known to work, however newer versions will likely work as well).
- - Move the server jar, `eula.txt`, `server.properties`, and `start.bat` to a new directory. By doing so, you agree to [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula)
+ - Move the server jar, `eula.txt`, `server.properties`, and `start.bat` to a new directory. **Note:** by doing so, you agree to [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula)
  - Run the server as a java program; a command is provided in start.bat which allocates 1 gigabyte of memory. 
  - Once the server has started, copy the entirety of the `Pack` folder into `/world/datapacks/`. The path of the `pack.mcmeta` file should be `/world/datapacks/Pack/pack.mcmeta`.
  - In the server console text box, enter `reload` and press enter
@@ -22,7 +55,7 @@ Without owning the game:
  - To close the server, enter `stop` in the console
  - To do another calculation, run the command `function sieve:reset`, which should finish very quickly and will delete existing data so `function sieve:full` can be run again.
 
-Instructions to run with a singleplayer game client:
+### Instructions to run with a singleplayer game client:
  - Installation instructions for the Minecraft game itself are not included
  - Enable the output log through the minecraft launcher (if not already enabled) at "Settings" => "Open output log when Minecraft: Java Edition starts"
  - Run an instance of Java Minecraft 1.17.1
@@ -38,9 +71,9 @@ Instructions to run with a singleplayer game client:
  - To do another calculation, run the command `/function sieve:reset` in the chat, which should finish very quickly and will delete existing data so `/function sieve:full` can be run again.
 
 ## Performance
-
-Performance varies, but one calculation of all primes up to 1,000,000 will likely by over 1 minute, but may take multiple given the hardware performance. Start and stop times (measured to the second) can be seen in the timestamps of the start and stop log messages.
+Performance varies, but one calculation of all primes up to 1,000,000 will likely be over 1 minute, but may take multiple given the hardware performance. Start and stop times (measured to the second) can be seen in the timestamps of the start and stop log messages.
 
 ## Additional Notes
-
-Very rarely, a Minecraft error incorrectly ignores some 'array manipulations'. If the algorithm returns that there are an incorrect number of primes or incorrect values, try reinstalling/rerunning the server.
+- Very rarely, a Minecraft error incorrectly ignores some 'array manipulations'. If the algorithm returns that there are an incorrect number of primes or incorrect values, try reinstalling/rerunning the server.
+- The Dockerfile, build and run scripts and supporting tooling have been written by [@rbergen](https://github.com/rbergen). If any issues are found in them, or any changes are proposed to them, please tag him in the related issue, PR or discussion.
+- The build and run scripts use a small tool (playio) to control the interaction with the Minecraft server console. The playio tool was written specifically for this solution, but can be used for other purposes as well. Documentation on playio's use can be found in [the tool's GitHub repo](https://github.com/rbergen/PlayIO).
