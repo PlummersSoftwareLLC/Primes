@@ -1,0 +1,3 @@
+function sieve:count_num_primes
+execute if score num_primes sieve matches ..100 run tellraw @a [{"text": "There are "}, {"nbt":"amount","storage":"primes"}, {"text": " prime numbers less than "}, {"score": {"name": "max_val", "objective": "sieve"}}, {"text": ": "}, {"nbt":"list","storage":"primes"}]
+execute unless score num_primes sieve matches ..100 run tellraw @a [{"text": "There are "}, {"nbt":"amount","storage":"primes"}, {"text": " prime numbers less than "}, {"score": {"name": "max_val", "objective": "sieve"}}]
