@@ -29,42 +29,33 @@ end;
 
 function PrimeSieve.RunSieve(): PackedBoolArray;
 var
-    Factor: Integer;
+    Factor: Integer = 3;
     Number: Integer;
     SieveSqrt: Integer;
-
+    Iterations: Integer;
+    Step: Integer;
+    I: Integer;
 begin
     SieveSqrt := Trunc(Sqrt(SieveSize));
-
-    Factor := 3;
-
     while Factor <= SieveSqrt do
     begin
-        Number := Factor;
-        while Number <= SieveSqrt do
-        begin
-            if not NotPrimeArray[Number div 2] then
+        Iterations := (SieveSqrt - Factor) div 2;
+        for I := 0 to Iterations do
+            if not NotPrimeArray[(Factor + (I * 2)) div 2] then
             begin
-                Factor := Number;
+                Factor := Factor + (I * 2);
                 break;
             end;
 
-            Number := Number + 2;
-        end;
-
-        if Number > SieveSqrt then
-            break;
-
         Number := Factor * Factor;
 
-        while Number <= SieveSize do
-        begin
-            NotPrimeArray[Number div 2] := True;
-            Number := Number + (Factor * 2);
-        end;
+        Step := Factor * 2;
+        Iterations := (SieveSize - Number) div Step;
+        for I := 0 to Iterations do
+            NotPrimeArray[(Number + (I * Step)) div 2] := True;
 
         Factor := Factor + 2;
-    end;
+    end; 
 
     RunSieve := NotPrimeArray;
 end;
