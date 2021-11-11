@@ -120,6 +120,7 @@ const BitSieveOpts = comptime struct {
     find_factor: FindFactorMode = .naive,
     note: anytype = "",
     foo_bar: bool = true,
+    wheel_copy_vector: usize = 0,
 };
 
 pub fn BitSieve(comptime opts_: anytype) type {
@@ -128,8 +129,19 @@ pub fn BitSieve(comptime opts_: anytype) type {
     const RunFactorChunk = opts.RunFactorChunk;
     const FindFactorChunk = opts.FindFactorChunk;
 
+    const unrolled_opts : ?UnrolledOpts = if (opts.unrolled) |unrolled_tmp| uo: {
+        comptime var adjusted_opts = unrolled_tmp;
+        adjusted_opts.PRIME = PRIME;
+        break :uo adjusted_opts;
+    } else null;
+
     const Wheel: ?type = if (opts.wheel_primes > 0)
-        wheel.Wheel(.{ .num_primes = opts.wheel_primes, .PRIME = opts.PRIME, .bits = true })
+        wheel.Wheel(.{
+            .num_primes = opts.wheel_primes,
+            .PRIME = opts.PRIME,
+            .bits = true,
+            .copy_vector = opts.wheel_copy_vector,
+        })
     else
         null;
 
@@ -138,10 +150,12 @@ pub fn BitSieve(comptime opts_: anytype) type {
     const find_name = "-find-" ++ @typeName(FindFactorChunk) ++ if (opts.find_factor == .advanced) "-advanced" else "";
 
     var vectornamebuf: [20]u8 = undefined; // 20 ought to be enough!
-    var buf = if (opts.unrolled) |unrolled_opts| buf: {
-        if (unrolled_opts.max_vector > 1) {
-            const half_extent_suffix = if (unrolled_opts.half_extent) "h" else "";
-            break :buf std.fmt.bufPrint(vectornamebuf[0..], "v{}{s}", .{unrolled_opts.max_vector, half_extent_suffix})
+    var buf = if (unrolled_opts) |uo| buf: {
+        if (uo.max_vector > 1) {
+            const half_extent_suffix = if (uo.half_extent) "h" else "";
+            const splut_suffix = if (uo.use_sparse_LUT) "-spLUT" else "";
+            const delut_suffix = if (uo.use_dense_LUT) "-deLUT" else "";
+            break :buf std.fmt.bufPrint(vectornamebuf[0..], "v{}{s}{s}{s}", .{uo.max_vector, half_extent_suffix, delut_suffix, splut_suffix})
                 catch @compileError("can't make the vector name");
         }
     } else vectornamebuf[0..];
@@ -154,8 +168,8 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
     return struct {
         // informational content.
-        const vector_name = if (opts.unrolled) | unrolled_opts | (
-            if (unrolled_opts.max_vector > 1) vectornamebuf[0..buf.len] else ""
+        const vector_name = if (unrolled_opts) | uo | (
+            if (uo.max_vector > 1) vectornamebuf[0..buf.len] else ""
         ) else "";
 
         pub const name = base_name ++ run_name ++ vector_name ++ find_name ++ wheel_name ++ opts.note;
@@ -175,14 +189,13 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
         const init_fill_unit: u8 = if (PRIME == 0) 0 else @as(u8, 0) -% @as(u8, 1);
 
-        const trailing_masks = make_trailing_masks(u8, PRIME);
-
         pub fn init(sieve_size: usize) !Self {
             // allocates an array of data.  We only need half as many slots because
             // we are only going to operate on odd values.  Moreover, the total number
             // of slots is divided by the number of bits in the value.
             const field_count = sieve_size / 2;
             const field_bytes = divRoundUp(field_count, 8);
+            const trailing_masks = make_trailing_masks(u8, PRIME);
 
             // if we use loop-unrolling we will need extra padding because our prime
             // number function will overrun the end.  It's worth the speed!
@@ -272,6 +285,7 @@ pub fn BitSieve(comptime opts_: anytype) type {
             const T = opts.FindFactorChunk;
             const max_word_index = self.field_count / @bitSizeOf(T);
             const field = @ptrCast([*]T, @alignCast(@alignOf(T), self.field))[0..max_word_index + 1];
+            const trailing_masks = make_trailing_masks(T, PRIME);
 
             var search_index = factor / 2 + 1;
             var word_index = search_index / @bitSizeOf(T);
@@ -331,40 +345,18 @@ pub fn BitSieve(comptime opts_: anytype) type {
 
         inline fn runFactorUnrolled(self: *Self, factor: usize) void {
             const D = opts.RunFactorChunk; // Type for dense values
-            comptime var unrolled_opts = opts.unrolled.?;
-            unrolled_opts.PRIME = opts.PRIME;  // NB: COMPTIME.
-
-            if (unrolled.isDense(D, unrolled_opts.half_extent, factor)) {
-                const field = @ptrCast([*]D, @alignCast(@alignOf(D), self.field));
-                const fun_index = factor / 2;
-                // select the function to use, using a compile-time unrolled loop over odd modulo values.
-                // it turns out that Docker really doesn't like function lookup tables, so this is the
-                // only option.
-                comptime var fun_number = 0;
-                comptime const fun_count = @bitSizeOf(D) / (if (unrolled_opts.half_extent) 2 else 1);
-                inline while (fun_number < fun_count) : (fun_number += 1) {
-                    if (fun_index == fun_number) {
-                        const DenseType = unrolled.DenseFnFactory(D, 2 * fun_number + 1, unrolled_opts);
-                        DenseType.fill(field, self.field_bytes / @sizeOf(D));
-                        return;
-                    }
+            if (unrolled.isDense(D, unrolled_opts.?.half_extent, factor)) {
+                if (unrolled_opts.?.use_dense_LUT) {
+                    runFactorDenseUnrolledLUT(D, self, factor);
+                } else {
+                    runFactorDenseUnrolled(D, self, factor);
                 }
             } else {
-                const S = unrolled_opts.SparseType; // Type for sparse values
-                const field = @ptrCast([*]S, @alignCast(@alignOf(S), self.field));
-                // naive factoring algorithm.  calculate mask each time.
-                if (unrolled_opts.unroll_sparse) {
-                    const fun_index = (factor % @bitSizeOf(S)) / 2;
-                    // select the function to use, using a compile-time unrolled loop over odd modulo values.
-                    // it turns out that Docker really doesn't like function lookup tables, so this is the
-                    // only option.
-                    comptime var fun_number = 0;
-                    inline while (fun_number < @bitSizeOf(S)) : (fun_number += 1) {
-                        if (fun_index == fun_number) {
-                            const SparseType = unrolled.SparseFnFactory(S, 2 * fun_number + 1, unrolled_opts);
-                            SparseType.fill(field, self.field_bytes / @sizeOf(S), factor);
-                            return;
-                        }
+                if (unrolled_opts.?.unroll_sparse) {
+                    if (unrolled_opts.?.use_sparse_LUT) {
+                        runFactorSparseUnrolledLUT(self, factor);
+                    } else {
+                        runFactorSparseUnrolled(self, factor);
                     }
                 } else {
                     runFactorConventional(self, factor);
@@ -372,7 +364,53 @@ pub fn BitSieve(comptime opts_: anytype) type {
             }
         }
 
-        fn mask_for(comptime T: type, index: usize) T {
+        inline fn runFactorDenseUnrolled(comptime D: type, self: *Self, factor: usize) void {
+            const field = @ptrCast([*]D, @alignCast(@alignOf(D), self.field));
+            const fun_index = factor / 2;
+            // select the function to use, using a compile-time unrolled loop over odd modulo values.
+            comptime var fun_number = 0;
+            comptime const fun_count = @bitSizeOf(D) / (if (unrolled_opts.?.half_extent) 2 else 1);
+            inline while (fun_number < fun_count) : (fun_number += 1) {
+                if (fun_index == fun_number) {
+                    const DenseType = unrolled.DenseFnFactory(D, 2 * fun_number + 1, unrolled_opts.?);
+                    DenseType.fill(field, self.field_bytes / @sizeOf(D));
+                    return;
+                }
+            }
+        }
+
+        inline fn runFactorDenseUnrolledLUT(comptime D: type, self: *Self, factor: usize) void {
+            const runfactorFns = comptime unrolled.makeDenseLUT(D, unrolled_opts.?);
+            const fn_index = if (unrolled_opts.?.half_extent) (factor % @bitSizeOf(D)) / 2 else (factor / 2) % @bitSizeOf(D);
+            const field = @ptrCast([*]D, @alignCast(@alignOf(D), self.field));
+            runfactorFns[fn_index](field, self.field_bytes / @sizeOf(D));
+        }
+
+        inline fn runFactorSparseUnrolled(self: *Self, factor: usize) void {
+            const S = unrolled_opts.?.SparseType; // Type for sparse values
+            const field = @ptrCast([*]S, @alignCast(@alignOf(S), self.field));
+
+            const fun_index = (factor % @bitSizeOf(S)) / 2;
+            // select the function to use, using a compile-time unrolled loop over odd modulo values.
+            comptime var fun_number = 0;
+            inline while (fun_number < @bitSizeOf(S)) : (fun_number += 1) {
+                if (fun_index == fun_number) {
+                    const SparseType = unrolled.SparseFnFactory(S, 2 * fun_number + 1, unrolled_opts.?);
+                    SparseType.fill(field, self.field_bytes / @sizeOf(S), factor);
+                    return;
+                }
+            }
+        }
+
+        fn runFactorSparseUnrolledLUT(self: *Self, factor: usize) void {
+            const S = unrolled_opts.?.SparseType; // Type for sparse values
+            const runfactorFns = comptime unrolled.makeSparseLUT(S, unrolled_opts.?);
+            const fn_index = (factor % @bitSizeOf(S)) / 2;
+            const field = @ptrCast([*]S, @alignCast(@alignOf(S), self.field));
+            runfactorFns[fn_index](field, self.field_bytes / @sizeOf(S), factor);
+        }
+
+        inline fn mask_for(comptime T: type, index: usize) T {
             if (opts.cached_masks) {
                 // reduces the number of cycles per dispatch to 2 but whether it's worth it may be
                 // architecture-dependent.
