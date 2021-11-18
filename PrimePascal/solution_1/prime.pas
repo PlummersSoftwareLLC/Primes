@@ -16,7 +16,7 @@ type
 
     public
         constructor Create(Size: Integer);
-        function RunSieve(): PackedBoolArray;
+        procedure RunSieve;
         function CountPrimes(): Integer;
         function ValidateResults(var ReferenceResults: CheckMap): Boolean;
 end;
@@ -27,7 +27,7 @@ begin
     SetLength(NotPrimeArray, (Size + 1) Div 2);
 end;
 
-function PrimeSieve.RunSieve(): PackedBoolArray;
+procedure PrimeSieve.RunSieve;
 var
     Factor: Integer = 3;
     Number: Integer;
@@ -56,8 +56,6 @@ begin
 
         Factor := Factor + 2;
     end; 
-
-    RunSieve := NotPrimeArray;
 end;
 
 function PrimeSieve.CountPrimes(): Integer;
