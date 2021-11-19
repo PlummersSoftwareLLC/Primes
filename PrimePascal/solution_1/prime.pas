@@ -6,35 +6,43 @@ uses
     fgl, sysutils;
 
 type
-    CheckMap = specialize TFPGMap<Integer, Integer>;
+    CheckMap = specialize TFPGMap<NativeUInt, NativeUInt>;
     PackedBoolArray = packed array of Boolean;
 
-    PrimeSieve = class
+    TArrayFor10 = packed array [0..4] of Boolean;
+    TArrayFor100 = packed array [0..49] of Boolean;
+    TArrayFor1000 = packed array [0..499] of Boolean;
+    TArrayFor10000 = packed array [0..4999] of Boolean;
+    TArrayFor100000 = packed array [0..49999] of Boolean;
+    TArrayFor1000000 = packed array [0..499999] of Boolean;
+    TArrayFor10000000 = packed array [0..4999999] of Boolean;
+    TArrayFor100000000 = packed array [0..49999999] of Boolean;
+
+    generic PrimeSieve<_T> = class
     private
-        SieveSize: Integer;
-        NotPrimeArray: PackedBoolArray;
+        SieveSize: NativeUInt;
+        NotPrimeArray: _T;
 
     public
-        constructor Create(Size: Integer);
+        constructor Create(Size: NativeUInt);
         procedure RunSieve;
-        function CountPrimes(): Integer;
+        function CountPrimes(): NativeUInt;
         function ValidateResults(var ReferenceResults: CheckMap): Boolean;
 end;
 
-constructor PrimeSieve.Create(Size: Integer);
+constructor PrimeSieve.Create(Size: NativeUInt);
 begin
     SieveSize := Size;
-    SetLength(NotPrimeArray, (Size + 1) Div 2);
 end;
 
 procedure PrimeSieve.RunSieve;
 var
-    Factor: Integer = 3;
-    Number: Integer;
-    SieveSqrt: Integer;
-    Iterations: Integer;
-    Step: Integer;
-    I: Integer;
+    Factor: NativeUInt = 3;
+    Number: NativeUInt;
+    SieveSqrt: NativeUInt;
+    Iterations: NativeUInt;
+    Step: NativeUInt;
+    I: NativeUInt;
 begin
     SieveSqrt := Trunc(Sqrt(SieveSize));
     while Factor <= SieveSqrt do
@@ -58,10 +66,10 @@ begin
     end; 
 end;
 
-function PrimeSieve.CountPrimes(): Integer;
+function PrimeSieve.CountPrimes(): NativeUInt;
 var
-    Count: Integer;
-    I: Integer;
+    Count: NativeUInt;
+    I: NativeUInt;
 begin
     Count := 0;
     for I := Low(NotPrimeArray) to High(NotPrimeArray) do
@@ -75,7 +83,7 @@ end;
 
 function PrimeSieve.ValidateResults(var ReferenceResults: CheckMap): Boolean;
 var
-    ReferenceValue: Integer;
+    ReferenceValue: NativeUInt;
 
 begin
     ReferenceValue := 0;
@@ -89,8 +97,8 @@ end;
 var
     ReferenceResults: CheckMap;
     StartTickCount, DurationTickCount: QWord;
-    PassCount: Integer;
-    Sieve: PrimeSieve;
+    PassCount: NativeUInt;
+    Sieve: specialize PrimeSieve<TArrayFor1000000>;
 
 begin
     ReferenceResults := CheckMap.Create();
@@ -112,7 +120,7 @@ begin
         if Sieve <> nil then 
             Sieve.Free;
         
-        Sieve := PrimeSieve.Create(1000000);
+        Sieve := specialize PrimeSieve<TArrayFor1000000>.Create(1000000);
         Sieve.RunSieve();
         PassCount := PassCount + 1;
     end;
