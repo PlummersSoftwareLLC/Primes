@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PrimeCSharp.Config;
 using PrimeCSharp.Sieves;
 
 namespace PrimeCSharp

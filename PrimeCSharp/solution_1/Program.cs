@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using CommandLine;
 using PrimeCSharp.Benchmarks;
+using PrimeCSharp.Config;
 
 namespace PrimeCSharp
 {

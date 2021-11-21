@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 
-namespace PrimeCSharp
+namespace PrimeCSharp.Config
 {
     public class RunSettings
     {
