@@ -1,5 +1,5 @@
 #/bin/bash
-c1541 primes.d64 -read output,s output.txt > /dev/null
+c1541 ./primes.d64 -read output,s ./output.txt > /dev/null
 
 if [ ! -f output.txt ]; then
     echo "ERROR: no output found"
