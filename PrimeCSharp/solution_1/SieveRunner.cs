@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using PrimeCSharp.Sieves;
 
@@ -202,7 +203,9 @@ namespace PrimeCSharp
                     firstSieve ??= sieve;
                     sieve.Run();
                     if (watch.ElapsedMilliseconds < durationLimit)
-                        passes++;
+                    {
+                        Interlocked.Increment(ref passes);
+                    }
                 });
             }
 

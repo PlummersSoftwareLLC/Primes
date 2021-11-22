@@ -36,7 +36,7 @@ namespace PrimeCSharp.Sieves
             _ = GetRawBits(rawbits, 0);
 
             int count = 1;
-            for (uint i = 3; i < SieveSize; i++)
+            for (uint i = 3; i < SieveSize; i += 2)
                 if (GetBit(rawbits, i))
                     count++;
             return count;
