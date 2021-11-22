@@ -79,6 +79,12 @@ start:
     ora #%00000110
     sta MMURCR
 
+    ; set clock to 0
+    lda #0
+    tax 
+    tay
+    jsr SETTIM
+
     lda #"-"
     jsr BSOUT
 
@@ -97,12 +103,6 @@ start:
     ; select RAM 0
     lda #RAM_0
     sta MMUCR
-
-    ; set clock to 0
-    lda #0
-    tax 
-    tay
-    jsr SETTIM
 
     ;
     ; main logic
