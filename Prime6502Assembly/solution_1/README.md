@@ -57,7 +57,7 @@ Instructions for installing these applications aren't provided here; the applica
   ```
 
 ## Results
-On my system the following is shown when the last command is executed:
+On my system, on Windows 10, the following is shown when the parse command is executed:
 ```
-rbergen;1;180.350;1;algorithm=base,faithful=no,bits=1
+rbergen;1;182.55;1;algorithm=base,faithful=no,bits=1
 ```
