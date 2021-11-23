@@ -11,12 +11,14 @@ namespace PrimeCSharp.SieveDetails
         public const SieveProperty Bit30 = SieveProperty.BitarrayStorage | SieveProperty.Alg8of30;
 
         public const SieveProperty Bool2 = SieveProperty.BoolArrayStorage | SieveProperty.Alg1of2;
+        public const SieveProperty Bool2While = SieveProperty.BoolArrayStorage | SieveProperty.Alg1of2 | SieveProperty.While;
         public const SieveProperty Bool6 = SieveProperty.BoolArrayStorage | SieveProperty.Alg2of6;
         public const SieveProperty Bool30 = SieveProperty.BoolArrayStorage | SieveProperty.Alg8of30;
 
-        public const SieveProperty BoolI2 = SieveProperty.BoolArrayStorage | SieveProperty.Alg1of2 | SieveProperty.InvertStorageValues;
-        public const SieveProperty BoolI6 = SieveProperty.BoolArrayStorage | SieveProperty.Alg2of6 | SieveProperty.InvertStorageValues;
-        public const SieveProperty BoolI30 = SieveProperty.BoolArrayStorage | SieveProperty.Alg8of30 | SieveProperty.InvertStorageValues;
+        public const SieveProperty IBool2 = SieveProperty.BoolArrayStorage | SieveProperty.Alg1of2 | SieveProperty.InvertStorageValues;
+        public const SieveProperty IBool2While = SieveProperty.BoolArrayStorage | SieveProperty.Alg1of2 | SieveProperty.InvertStorageValues | SieveProperty.While;
+        public const SieveProperty IBool6 = SieveProperty.BoolArrayStorage | SieveProperty.Alg2of6 | SieveProperty.InvertStorageValues;
+        public const SieveProperty IBool30 = SieveProperty.BoolArrayStorage | SieveProperty.Alg8of30 | SieveProperty.InvertStorageValues;
 
         public const SieveProperty PoolB2 = SieveProperty.PoolStorage | SieveProperty.DataByte | SieveProperty.Alg1of2;
         public const SieveProperty PoolB6 = SieveProperty.PoolStorage | SieveProperty.DataByte | SieveProperty.Alg2of6;
@@ -48,11 +50,13 @@ namespace PrimeCSharp.SieveDetails
             Bit6,
             Bit30,
             Bool2,
+            Bool2While,
             Bool6,
             Bool30,
-            BoolI2,
-            BoolI6,
-            BoolI30,
+            IBool2,
+            IBool2While,
+            IBool6,
+            IBool30,
             PoolB2,
             PoolB6,
             PoolB30,
