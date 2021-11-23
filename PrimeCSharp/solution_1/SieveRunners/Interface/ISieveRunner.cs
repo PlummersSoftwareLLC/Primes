@@ -12,7 +12,8 @@ namespace PrimeCSharp.SieveRunners
 
         // Runner details (default values)
         bool IsParallel => false;
-        bool IsBaseAlgorithm => false;
+        bool IsBaseAlgorithm => true;
+        bool IsFaithful => true;
         int BitsPerPrime => 1;
 
         // Runtime details
