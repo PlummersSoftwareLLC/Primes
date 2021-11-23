@@ -9,11 +9,11 @@ using PrimeCSharp.V1Sieves;
 
 namespace PrimeCSharp
 {
-    class SieveRunner
+    class SieveRunnerV1
     {
         const long MillisecondsPerSecond = 1000;
 
-        public static void RunSieve(RunSettings runSettings)
+        public static void RunSieve(SettingsV1 runSettings)
         {
             Console.WriteLine($"@Kinematics: Starting ({GetVersionMessage(runSettings)})...");
 
@@ -39,9 +39,9 @@ namespace PrimeCSharp
                 Console.WriteLine("Invalid state after run.");
         }
 
-        public static void RunAllSieves(RunSettings options)
+        public static void RunAllSieves(SettingsV1 options)
         {
-            RunSettings tmpOptions = options.CopyOptions();
+            SettingsV1 tmpOptions = options.CopyOptions();
 
             tmpOptions.Original = true;
             RunSieve(tmpOptions);
@@ -117,7 +117,7 @@ namespace PrimeCSharp
             RunSieve(tmpOptions);
         }
 
-        private static string GetVersionMessage(RunSettings runSettings)
+        private static string GetVersionMessage(SettingsV1 runSettings)
         {
             string versionMessage = runSettings switch
             {
@@ -145,7 +145,7 @@ namespace PrimeCSharp
             return versionMessage;
         }
 
-        private static Func<ISieve> GetSieveCreator(RunSettings runSettings)
+        private static Func<ISieve> GetSieveCreator(SettingsV1 runSettings)
         {
             return runSettings switch
             {
@@ -214,7 +214,7 @@ namespace PrimeCSharp
         }
 
 
-        private static void PrintResults(ISieve sieve, int passes, Stopwatch watch, RunSettings runSettings)
+        private static void PrintResults(ISieve sieve, int passes, Stopwatch watch, SettingsV1 runSettings)
         {
             if (runSettings.ShowResults)
             {
@@ -270,7 +270,7 @@ namespace PrimeCSharp
         }
 
         #region Code for running struct versions.
-        private static bool RunStructs(RunSettings runSettings)
+        private static bool RunStructs(SettingsV1 runSettings)
         {
             if (runSettings.ArrayPoolRef == false)
                 return false;

@@ -17,7 +17,7 @@ namespace PrimeCSharp
             {
                 var v1args = args[1..];
 
-                var result = Parser.Default.ParseArguments<RunSettings>(v1args)
+                var result = Parser.Default.ParseArguments<SettingsV1>(v1args)
                     .WithParsed(options => Run(options))
                     .WithNotParsed(errors => HandleErrors(errors)); // errors is a sequence of type IEnumerable<Error>
 
@@ -30,7 +30,7 @@ namespace PrimeCSharp
 
         }
 
-        private static void Run(RunSettings options)
+        private static void Run(SettingsV1 options)
         {
             if (options.Benchmark)
             {
@@ -38,11 +38,11 @@ namespace PrimeCSharp
             }
             else if (options.RunAllSieves)
             {
-                SieveRunner.RunAllSieves(options);
+                SieveRunnerV1.RunAllSieves(options);
             }
             else
             {
-                SieveRunner.RunSieve(options);
+                SieveRunnerV1.RunSieve(options);
             }
         }
 

@@ -2,7 +2,7 @@
 
 namespace PrimeCSharp.Config
 {
-    public class RunSettings
+    public class SettingsV1
     {
         [Option('s', "size",
             Default = 1_000_000, HelpText = "The size of the sieve to run.")]
@@ -108,9 +108,9 @@ namespace PrimeCSharp.Config
         public string? Bench { get; set; }
 
 
-        public RunSettings Copy()
+        public SettingsV1 Copy()
         {
-            return new RunSettings()
+            return new SettingsV1()
             {
                 ArrayPool = this.ArrayPool,
                 ArrayPool2Of6 = this.ArrayPool2Of6,
@@ -140,9 +140,9 @@ namespace PrimeCSharp.Config
             };
         }
 
-        public RunSettings CopyOptions()
+        public SettingsV1 CopyOptions()
         {
-            return new RunSettings()
+            return new SettingsV1()
             {
                 MultiThreaded = this.MultiThreaded,
                 PThreadCount = this.PThreadCount,
