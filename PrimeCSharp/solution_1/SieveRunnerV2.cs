@@ -157,7 +157,7 @@ namespace PrimeCSharp
             {
                 results.Add($"Parallel Thread Count: {pthreads}");
             }
-            results.Add($"Primes Found: {sieve.CountPrimes()}");
+            results.Add($"Primes: {sieve.CountPrimes()}");
             results.Add($"Valid: {PrimeData.IsCountCorrect(sieve.SieveSize, sieve.CountPrimes())?.ToString() ?? "Unable to determine"}");
             if (sieve.ClearCount > 0)
             {
@@ -174,7 +174,7 @@ namespace PrimeCSharp
             sb.Append($"kinematics_{sieve.Name};");
             sb.Append($"{passes};");
             sb.AppendFormat("{0:G6};", watch.Elapsed.TotalSeconds);
-            sb.Append($"threads={threads * pthreads};");
+            sb.Append($"{threads * pthreads};");
             sb.Append($"algorithm={(sieve.IsBaseAlgorithm ? "base" : "wheel")};");
             sb.Append($"faithful={(sieve.IsBaseAlgorithm ? "yes" : "no")};");
             sb.Append($"bits={sieve.BitsPerPrime}");
