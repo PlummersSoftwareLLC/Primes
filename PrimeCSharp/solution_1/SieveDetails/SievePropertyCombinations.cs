@@ -118,6 +118,9 @@ namespace PrimeCSharp.SieveDetails
         /// <returns>Returns a list of composed sieve properties that represent a sieve runner.</returns>
         public static List<SieveProperty> GetSieves(IEnumerable<SieveProperty> properties)
         {
+            if (!properties.Any())
+                    return new List<SieveProperty>();
+
             IEnumerable<SieveProperty> requestedStorage = StorageProperties.Intersect(properties);
             IEnumerable<SieveProperty> requestedData = DataProperties.Intersect(properties);
             IEnumerable<SieveProperty> requestedAlgorithms = AlgorithmProperties.Intersect(properties);
