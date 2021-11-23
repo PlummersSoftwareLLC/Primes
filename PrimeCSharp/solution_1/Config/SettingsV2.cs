@@ -231,12 +231,16 @@ namespace PrimeCSharp.Config
             Default = false, HelpText = "Run all sieves that use a bitmask wheel")]
         public bool Bitmask { get; set; }
 
+        [Option("while",
+            Default = false, HelpText = "Use while loop instead of for loop")]
+        public bool While { get; set; }
+
         [Option("parallel",
             Default = false, HelpText = "Run all sieves that use parallelized algorithms")]
         public bool Parallel { get; set; }
 
         [Option("composed",
-            Default = false, HelpText = "")]
+            Default = false, HelpText = "Class uses composed structures")]
         public bool Composed { get; set; }
 
 
@@ -246,79 +250,79 @@ namespace PrimeCSharp.Config
 
             if (All)
             {
-                sieves.AddRange(SieveDetails.SieveRunners.SieveSets);
+                sieves.AddRange(SievePropertyCombinations.SieveSets);
                 return sieves;
             }
 
             if (Bit2)
-                sieves.Add(SieveDetails.SieveRunners.Bit2);
+                sieves.Add(SievePropertyCombinations.Bit2);
             if (Bit2While)
-                sieves.Add(SieveDetails.SieveRunners.Bit2While);
+                sieves.Add(SievePropertyCombinations.Bit2While);
             if (Bit6)
-                sieves.Add(SieveDetails.SieveRunners.Bit6);
+                sieves.Add(SievePropertyCombinations.Bit6);
             if (Bit30)
-                sieves.Add(SieveDetails.SieveRunners.Bit30);
+                sieves.Add(SievePropertyCombinations.Bit30);
             if (Bool2)
-                sieves.Add(SieveDetails.SieveRunners.Bool2);
+                sieves.Add(SievePropertyCombinations.Bool2);
             if (Bool2While)
-                sieves.Add(SieveDetails.SieveRunners.Bool2While);
+                sieves.Add(SievePropertyCombinations.Bool2While);
             if (Bool6)
-                sieves.Add(SieveDetails.SieveRunners.Bool6);
+                sieves.Add(SievePropertyCombinations.Bool6);
             if (Bool30)
-                sieves.Add(SieveDetails.SieveRunners.Bool30);
+                sieves.Add(SievePropertyCombinations.Bool30);
             if (iBool2)
-                sieves.Add(SieveDetails.SieveRunners.IBool2);
+                sieves.Add(SievePropertyCombinations.IBool2);
             if (iBool2While)
-                sieves.Add(SieveDetails.SieveRunners.IBool2While);
+                sieves.Add(SievePropertyCombinations.IBool2While);
             if (iBool6)
-                sieves.Add(SieveDetails.SieveRunners.IBool6);
+                sieves.Add(SievePropertyCombinations.IBool6);
             if (iBool30)
-                sieves.Add(SieveDetails.SieveRunners.IBool30);
+                sieves.Add(SievePropertyCombinations.IBool30);
             if (PoolB2)
-                sieves.Add(SieveDetails.SieveRunners.PoolB2);
+                sieves.Add(SievePropertyCombinations.PoolB2);
             if (PoolB6)
-                sieves.Add(SieveDetails.SieveRunners.PoolB6);
+                sieves.Add(SievePropertyCombinations.PoolB6);
             if (PoolB30)
-                sieves.Add(SieveDetails.SieveRunners.PoolB30);
+                sieves.Add(SievePropertyCombinations.PoolB30);
             if (PoolD2)
-                sieves.Add(SieveDetails.SieveRunners.PoolD2);
+                sieves.Add(SievePropertyCombinations.PoolD2);
             if (PoolD6)
-                sieves.Add(SieveDetails.SieveRunners.PoolD6);
+                sieves.Add(SievePropertyCombinations.PoolD6);
             if (PoolD30)
-                sieves.Add(SieveDetails.SieveRunners.PoolD30);
+                sieves.Add(SievePropertyCombinations.PoolD30);
             if (PoolQ2)
-                sieves.Add(SieveDetails.SieveRunners.PoolQ2);
+                sieves.Add(SievePropertyCombinations.PoolQ2);
             if (PoolQ6)
-                sieves.Add(SieveDetails.SieveRunners.PoolQ6);
+                sieves.Add(SievePropertyCombinations.PoolQ6);
             if (PoolQ30)
-                sieves.Add(SieveDetails.SieveRunners.PoolQ30);
+                sieves.Add(SievePropertyCombinations.PoolQ30);
             if (PoolQ30M)
-                sieves.Add(SieveDetails.SieveRunners.PoolQ30M);
+                sieves.Add(SievePropertyCombinations.PoolQ30M);
             if (RawB2)
-                sieves.Add(SieveDetails.SieveRunners.RawB2);
+                sieves.Add(SievePropertyCombinations.RawB2);
             if (RawB6)
-                sieves.Add(SieveDetails.SieveRunners.RawB6);
+                sieves.Add(SievePropertyCombinations.RawB6);
             if (RawB30)
-                sieves.Add(SieveDetails.SieveRunners.RawB30);
+                sieves.Add(SievePropertyCombinations.RawB30);
             if (RawD2)
-                sieves.Add(SieveDetails.SieveRunners.RawD2);
+                sieves.Add(SievePropertyCombinations.RawD2);
             if (RawD6)
-                sieves.Add(SieveDetails.SieveRunners.RawD6);
+                sieves.Add(SievePropertyCombinations.RawD6);
             if (RawD30)
-                sieves.Add(SieveDetails.SieveRunners.RawD30);
+                sieves.Add(SievePropertyCombinations.RawD30);
             if (RawQ2)
-                sieves.Add(SieveDetails.SieveRunners.RawQ2);
+                sieves.Add(SievePropertyCombinations.RawQ2);
             if (RawQ6)
-                sieves.Add(SieveDetails.SieveRunners.RawQ6);
+                sieves.Add(SievePropertyCombinations.RawQ6);
             if (RawQ30)
-                sieves.Add(SieveDetails.SieveRunners.RawQ30);
+                sieves.Add(SievePropertyCombinations.RawQ30);
             if (RawQ30M)
-                sieves.Add(SieveDetails.SieveRunners.RawQ30M);
+                sieves.Add(SievePropertyCombinations.RawQ30M);
 
 
             var sieveProperties = GetSieveProperties();
 
-            foreach (var sieve in SieveDetails.SieveRunners.GetSieves(sieveProperties))
+            foreach (var sieve in SievePropertyCombinations.GetSieves(sieveProperties))
             {
                 if (!sieves.Contains(sieve))
                     sieves.Add(sieve);
@@ -365,6 +369,8 @@ namespace PrimeCSharp.Config
 
             if (Bitmask)
                 properties.Add(SieveProperty.Bitmasking);
+            if (While)
+                properties.Add(SieveProperty.While);
             if (Parallel)
                 properties.Add(SieveProperty.Parallel);
             if (Composed)

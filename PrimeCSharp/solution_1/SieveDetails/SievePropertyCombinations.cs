@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace PrimeCSharp.SieveDetails
 {
-    public static class SieveRunners
+    public static class SievePropertyCombinations
     {
         public const SieveProperty Bit2 = SieveProperty.BitarrayStorage | SieveProperty.Alg1of2;
         public const SieveProperty Bit2While = SieveProperty.BitarrayStorage | SieveProperty.Alg1of2 | SieveProperty.While;
@@ -79,6 +80,37 @@ namespace PrimeCSharp.SieveDetails
             RawQ30M,
         };
 
+        private static readonly List<SieveProperty> StorageProperties = new()
+        {
+            SieveProperty.BitarrayStorage,
+            SieveProperty.BoolArrayStorage,
+            SieveProperty.InvertStorageValues,
+            SieveProperty.PoolStorage,
+            SieveProperty.RawStorage
+        };
+
+        private static readonly List<SieveProperty> DataProperties = new()
+        {
+            SieveProperty.DataByte,
+            SieveProperty.DataDword,
+            SieveProperty.DataQword
+        };
+
+        private static readonly List<SieveProperty> AlgorithmProperties = new()
+        {
+            SieveProperty.Alg1of2,
+            SieveProperty.Alg2of6,
+            SieveProperty.Alg8of30,
+            SieveProperty.Bitmasking,
+            SieveProperty.While
+        };
+
+        private static readonly List<SieveProperty> OtherProperties = new()
+        {
+            SieveProperty.Composed,
+            SieveProperty.Parallel
+        };
+
         /// <summary>
         /// Get a list of the sieve runners that have any of the provided sieve properties.
         /// </summary>
@@ -86,21 +118,19 @@ namespace PrimeCSharp.SieveDetails
         /// <returns>Returns a list of composed sieve properties that represent a sieve runner.</returns>
         public static List<SieveProperty> GetSieves(IEnumerable<SieveProperty> properties)
         {
-            List<SieveProperty> sieves = new();
+            IEnumerable<SieveProperty> requestedStorage = StorageProperties.Intersect(properties);
+            IEnumerable<SieveProperty> requestedData = DataProperties.Intersect(properties);
+            IEnumerable<SieveProperty> requestedAlgorithms = AlgorithmProperties.Intersect(properties);
+            IEnumerable<SieveProperty> requestedOther = OtherProperties.Intersect(properties);
 
-            foreach (SieveProperty sieve in SieveSets)
-            {
-                foreach (SieveProperty sieveProperty in properties)
-                {
-                    if (sieve.HasFlag(sieveProperty))
-                    {
-                        sieves.Add(sieve);
-                        break;
-                    }
-                }
-            }
+            IEnumerable<SieveProperty> s = SieveSets;
 
-            return sieves;
+            s = s.Where(p => !requestedStorage.Any() || (requestedStorage.Any(a => p.HasFlag(a))));
+            s = s.Where(p => !requestedData.Any() || (requestedData.Any(a => p.HasFlag(a))));
+            s = s.Where(p => !requestedAlgorithms.Any() || (requestedAlgorithms.Any(a => p.HasFlag(a))));
+            s = s.Where(p => !requestedOther.Any() || (requestedOther.Any(a => p.HasFlag(a))));
+
+            return s.ToList();
         }
     }
 }
