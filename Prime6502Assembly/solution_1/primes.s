@@ -2,7 +2,7 @@
 ;
 ; Peculiarities:
 ; * The sieve size needs to be divisable by 32
-; * The square root of the sieve size needs to be rounded up to the nearest multiple of 8
+; * The square root of the sieve size needs to be divisible by 8, or else rounded up to the nearest multiple of 8
 
 SIEVE_SIZE=1000000
 SIEVE_SQRT=1000
