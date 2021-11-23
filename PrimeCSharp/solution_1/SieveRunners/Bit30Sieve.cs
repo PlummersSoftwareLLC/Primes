@@ -10,13 +10,14 @@ namespace PrimeCSharp.SieveRunners
         public string Description => "Bitarray, 8 of 30";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
+        public bool IsBaseAlgorithm => false;
 
         private readonly BitArray bitArray;
 
         public Bit30Sieve(int sieveSize)
         {
             SieveSize = sieveSize;
-            bitArray = new((sieveSize + 1) / 2, true);
+            bitArray = new((sieveSize + 1) >> 1, true);
         }
 
 
@@ -32,7 +33,6 @@ namespace PrimeCSharp.SieveRunners
 
         public void Run()
         {
-            int start = 7;
             int q = (int)Math.Sqrt(SieveSize);
 
             // We can skip 2, 3, and 5, and start our checks with 7.
@@ -40,24 +40,19 @@ namespace PrimeCSharp.SieveRunners
 
             int step = 1;
 
-            for (int factor = start, inc = steps[step];
+            for (int factor = 7, inc = steps[step];
                 factor <= q;
-                factor += inc, step = (step + 1) % 8, inc = steps[step])
+                factor += inc, step = (step + 1) & 7, inc = steps[step]
+                )
             {
                 if (GetBit(factor))
                 {
                     for (int num = factor * factor, iStep = step, nInc = steps[iStep];
-                        num <= SieveSize;)
+                        num <= SieveSize;
+                        num += factor * nInc, iStep = (iStep + 1) & 7, nInc = steps[iStep]
+                        )
                     {
                         ClearBit(num);
-                        
-                        num += factor * nInc;
-
-                        // This is 50% faster overall than using the %8 logic:
-                        if (++iStep == 8)
-                            iStep = 0;
-
-                        nInc = steps[iStep];
                     }
                 }
             }
@@ -71,7 +66,7 @@ namespace PrimeCSharp.SieveRunners
 
             for (int num = 7, step = 1, inc = steps[step];
                  num <= SieveSize;
-                 num += inc, step = (step + 1) % 8, inc = steps[step])
+                 num += inc, step = (step + 1) & 7, inc = steps[step])
             {
                 if (GetBit(num))
                 {
@@ -85,14 +80,14 @@ namespace PrimeCSharp.SieveRunners
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            return bitArray[index / 2];
+            return bitArray[index >> 1];
         }
 
         private void ClearBit(int index)
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            bitArray[index / 2] = false;
+            bitArray[index >> 1] = false;
         }
     }
 }

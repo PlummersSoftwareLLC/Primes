@@ -6,8 +6,8 @@ namespace PrimeCSharp.SieveRunners
 {
     public class Bit2WhileSieve : ISieveRunner
     {
-        public string Name => "Bit2";
-        public string Description => "Bitarray, 1 of 2";
+        public string Name => "Bit2While";
+        public string Description => "Bitarray, 1 of 2, while";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
 
@@ -16,7 +16,7 @@ namespace PrimeCSharp.SieveRunners
         public Bit2WhileSieve(int sieveSize)
         {
             SieveSize = sieveSize;
-            bitArray = new((sieveSize + 1) / 2, true);
+            bitArray = new((sieveSize + 1) >> 1, true);
         }
 
         public void Run()
@@ -35,9 +35,7 @@ namespace PrimeCSharp.SieveRunners
                     }
                 }
 
-                int increment = factor * 2;
-
-                for (int num = factor * factor; num <= SieveSize; num += increment)
+                for (int num = factor * factor; num <= SieveSize; num += factor + factor)
                 {
                     ClearBit(num);
                 }
@@ -52,7 +50,7 @@ namespace PrimeCSharp.SieveRunners
 
             for (int num = 3; num <= SieveSize; num += 2)
             {
-                if (bitArray[num / 2])
+                if (GetBit(num))
                 {
                     yield return num;
                 }
@@ -64,14 +62,14 @@ namespace PrimeCSharp.SieveRunners
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            return bitArray[index / 2];
+            return bitArray[index >> 1];
         }
 
         private void ClearBit(int index)
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            bitArray[index / 2] = false;
+            bitArray[index >> 1] = false;
         }
     }
 }

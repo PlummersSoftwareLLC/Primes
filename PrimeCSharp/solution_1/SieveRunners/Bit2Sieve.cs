@@ -16,21 +16,18 @@ namespace PrimeCSharp.SieveRunners
         public Bit2Sieve(int sieveSize)
         {
             SieveSize = sieveSize;
-            bitArray = new((sieveSize + 1) / 2, true);
+            bitArray = new((sieveSize + 1) >> 1, true);
         }
 
         public void Run()
         {
-            int factor = 3;
             int q = (int)Math.Sqrt(SieveSize);
 
-            for (int f = factor; f <= q; f += 2)
+            for (int factor = 3; factor <= q; factor += 2)
             {
-                if (GetBit(f))
+                if (GetBit(factor))
                 {
-                    int increment = f * 2;
-
-                    for (int num = f * f; num <= SieveSize; num += increment)
+                    for (int num = factor * factor; num <= SieveSize; num += factor + factor)
                     {
                         ClearBit(num);
                     }
@@ -44,7 +41,7 @@ namespace PrimeCSharp.SieveRunners
 
             for (int num = 3; num <= SieveSize; num += 2)
             {
-                if (bitArray[num / 2])
+                if (GetBit(num))
                 {
                     yield return num;
                 }
@@ -56,14 +53,14 @@ namespace PrimeCSharp.SieveRunners
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            return bitArray[index / 2];
+            return bitArray[index >> 1];
         }
 
         private void ClearBit(int index)
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            bitArray[index / 2] = false;
+            bitArray[index >> 1] = false;
         }
     }
 }
