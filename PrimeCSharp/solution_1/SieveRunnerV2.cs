@@ -88,10 +88,10 @@ namespace PrimeCSharp
             ISieveRunner? firstSieve = null;
             int passes = 0;
             int threadCount = settings.ThreadCount;
-            Warmup(createSieve);
-
             if (threadCount <= 0)
                 threadCount = Environment.ProcessorCount;
+
+            Warmup(createSieve);
 
             watch.Start();
 
