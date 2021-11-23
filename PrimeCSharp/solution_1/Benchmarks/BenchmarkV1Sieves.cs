@@ -6,7 +6,7 @@ using PrimeCSharp.Sieves;
 namespace PrimeCSharp.Benchmarks
 {
     [MemoryDiagnoser]
-    public class BenchmarkSieves
+    public class BenchmarkV1Sieves
     {
         [Params(1000000)]
         public int SieveSize { get; set; }

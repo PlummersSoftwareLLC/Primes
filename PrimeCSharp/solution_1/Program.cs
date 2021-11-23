@@ -34,7 +34,7 @@ namespace PrimeCSharp
         {
             if (options.Benchmark)
             {
-                Benchmarker.RunBenchmark(options.Bench);
+                Benchmarker.RunBenchmark("v1", options.Bench);
             }
             else if (options.RunAllSieves)
             {
@@ -49,7 +49,7 @@ namespace PrimeCSharp
         private static void Run(SettingsV2 options)
         {
             if (options.Benchmark)
-                Benchmarker.RunBenchmark(options.Bench);
+                Benchmarker.RunBenchmark("v2", options.Bench);
             else
                 SieveRunnerV2.Run(options);
         }
