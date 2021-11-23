@@ -5,7 +5,7 @@ namespace PrimeCSharp.SieveRunners
 {
     public class Bool2Sieve : ISieveRunner
     {
-        public string Name => "Bool2";
+        public string Name => "bool2";
         public string Description => "Bool array, 1 of 2";
         public int SieveSize { get; }
         public int ClearCount { get; set; }

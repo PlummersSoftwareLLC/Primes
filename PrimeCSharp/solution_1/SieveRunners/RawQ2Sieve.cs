@@ -9,7 +9,7 @@ namespace PrimeCSharp.SieveRunners
 {
     public class RawQ2Sieve : ISieveRunner
     {
-        public string Name => "RawQ2";
+        public string Name => "rawq2";
         public string Description => "Raw data, qword, 1 of 2";
         public int SieveSize { get; }
         public int ClearCount { get; set; }

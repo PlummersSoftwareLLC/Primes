@@ -8,7 +8,7 @@ namespace PrimeCSharp.SieveRunners
 {
     public class PoolB30Sieve : ISieveRunner
     {
-        public string Name => "PoolB30";
+        public string Name => "poolb30";
         public string Description => "Array pool, bytes, 8 of 30";
         public int SieveSize { get; }
         public int ClearCount { get; set; }

@@ -6,7 +6,7 @@ namespace PrimeCSharp.SieveRunners
 {
     public class IBool2WhileSieve : ISieveRunner
     {
-        public string Name => "IBool2While";
+        public string Name => "ibool2while";
         public string Description => "Bool array, 1 of 2, invert array, while";
         public int SieveSize { get; }
         public int ClearCount { get; set; }

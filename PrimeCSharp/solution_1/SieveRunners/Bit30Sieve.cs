@@ -6,7 +6,7 @@ namespace PrimeCSharp.SieveRunners
 {
     public class Bit30Sieve : ISieveRunner
     {
-        public string Name => "Bit30";
+        public string Name => "bit30";
         public string Description => "Bitarray, 8 of 30";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
