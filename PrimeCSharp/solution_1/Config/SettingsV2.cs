@@ -187,6 +187,10 @@ namespace PrimeCSharp.Config
             Default = false, HelpText = "Run all sieves that use a bool array")]
         public bool Boolarray { get; set; }
 
+        [Option("ibool",
+            Default = false, HelpText = "Run all sieves that use a bool array")]
+        public bool IBoolarray { get; set; }
+
         [Option("pool",
             Default = false, HelpText = "Run all sieves that use an array pool")]
         public bool Arraypool { get; set; }
@@ -332,10 +336,14 @@ namespace PrimeCSharp.Config
             if (Boolarray)
             {
                 properties.Add(SieveProperty.BoolArrayStorage);
-
-                if (Invert)
-                    properties.Add(SieveProperty.InvertStorageValues);
             }
+            if (IBoolarray)
+            {
+                properties.Add(SieveProperty.BoolArrayStorage);
+                properties.Add(SieveProperty.InvertStorageValues);
+            }
+            if (Invert)
+                properties.Add(SieveProperty.InvertStorageValues);
             if (Arraypool)
                 properties.Add(SieveProperty.PoolStorage);
             if (RawArray)
