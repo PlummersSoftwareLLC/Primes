@@ -15,7 +15,7 @@ The following applies to the implementation embedded in this solution:
 - While the implementation is running, the BASIC ROMs are swapped out of the address space, to make room for the RAM banks. Amongst others, this means that screen and file output is taken care of using kernal routines.
 - The implementation uses a pointer consisting of a 16-bit (low byte/high byte) memory address pointer, and a bit index. The current factor is kept in a byte value and a bit number. The actual factor can thus be calculated using 8 * &lt;byte value&gt; + &lt;bit number&gt;. 
 
-The first two points come with the consequence that two specific peculiarities apply:
+The first two points come with the consequence that some specific peculiarities apply:
 - The sieve size (as specified using the `SIEVE_SIZE` symbol) needs to be divisable by 32.
 - The square root of the sieve size (as specifed using the `SIEVE_SQRT` symbol) needs to be divisible by 8, or else rounded up to the nearest multiple of 8.
 - The total memory available for the sieve buffer is 40,960 bytes per RAM bank (0x2000 to 0xC000), which adds up to 655,360 bits. That means the largest supported sieve size is 1,310,720.
