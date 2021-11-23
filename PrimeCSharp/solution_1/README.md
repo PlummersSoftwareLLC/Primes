@@ -18,15 +18,13 @@ Visual Studio: You can build this using Visual Studio 2022 (17.0) or later.
 
 Commandline: `dotnet build -c release` from within the solution directory.  The output will be placed in `.\bin\x64\Release\net6.0\`.
 
-Docker: Run the Docker build process from within Visual Studio, or use the `docker build` command from the commandline.
+Docker: From the commandline, in the `PrimeCSharp\solution_1` directory, run `docker build -t PrimeCSharp_1 .`
 
 ## Run instructions
 
-If you run from Visual Studio, you can put commandline arguments in the debug tab of the project properties. Right-click on the project, select `Properties`, and under `Debug` you can enter the commandline arguments in the debug launch profiles.
+If you run from Visual Studio, you can put commandline arguments in the debug tab of the project properties. You can run it without the debugger attaching to the process by hitting Ctrl-F5.
 
-You can run it without the debugger attaching to the process by hitting Ctrl-F5.
-
-To run the Docker container, use the command `docker run -rm primecsharps1 [options]`, using the options provided below.
+To run the Docker container, use the command `docker run -rm PrimeCSharp_1 [options]`, using the options provided below.
 
 ## Options
 
@@ -37,18 +35,14 @@ Options you can set from the commandline:
 * -v, --verbose: Display the primes that were found once the run is complete. Defaults to off.
 * -m, --multi: Run multithreaded, with each thread running its own instance of the sieve. Defaults to off.
 * --threads: How many threads to use when running multithreaded. Defaults to the number of processors on the system.
-* --pthreads: How many threads to use when running parallel implementations. No effect on non-parallel versions.
+* --pthreads: How many threads to use when running parallel implementations. No effect on non-parallel sieves.
 
-You can also run BenchmarkDotNet benchmarks.  Options for that:
 
-* --benchmark: Run benchmarks.  Add a -b value for a specific small benchmark.
-* -b, --bench: Select a subgroup of benchmarks to run. Current sets are:
-    * mod: Compare code that uses different operations for determining if a value is even or odd.
-    * ref: Compare a ref struct implementation with its class version.
-    * ofN: Compare a mod 2 algorithm with a mod 6 algorithm.
-    * par: Compare a linear algorithm with its parallel alternate.
+### V1 options
 
-And finally, you can choose which implementation to run:
+To use legacy (V1) sieves, the first commandline argument must be `v1`.
+
+V1 sieves that can be run:
 
 * --original — The original code, with only bugfixes applied.
 * --standard — Cleaned up variant of the original.
@@ -66,153 +60,174 @@ And finally, you can choose which implementation to run:
 * --rawp — The rawbits version, parallelized.
 * --pool30 — Uses an array pool, and calculations using mod 30 filters.
 
-If no version is specified, it runs the 'Standard' implementation.
+Only one of the above can be chosen at a time.  Alternatively, you can use `--all` to run all sieves.
+
+
+### V2 options
+
+V2 sieves that can be run:
+
+* --bit2 — Uses a bitarray for storage, and the 1 of 2 algorithm.
+* --bit2while — Uses a bitarray for storage, and the 1 of 2 algorithm. Uses a while loop instead of a for loop.
+* --bit6 — Uses a bitarray for storage, and the 2 of 6 algorithm.
+* --bit30 — Uses a bitarray for storage, and the 8 of 30 algorithm.
+* --bool2 — Uses a bool array for storage, and the 1 of 2 algorithm.
+* --bool2while — Uses a bool array for storage, and the 1 of 2 algorithm. Uses a while loop instead of a for loop.
+* --bool6 — Uses a bool array for storage, and the 2 of 6 algorithm.
+* --bool30 — Uses a bool array for storage, and the 8 of 30 algorithm.
+* --ibool2 — Uses a bool array for storage, and the 1 of 2 algorithm. Uses inverted boolean logic.
+* --ibool2while — Uses a bool array for storage, and the 1 of 2 algorithm. Uses inverted boolean logic. Uses a while loop instead of a for loop.
+* --ibool6 — Uses a bool array for storage, and the 2 of 6 algorithm. Uses inverted boolean logic.
+* --ibool30 — Uses a bool array for storage, and the 8 of 30 algorithm. Uses inverted boolean logic.
+* --poolb2 — Uses a byte array from the array pool for storage, and the 1 of 2 algorithm.
+* --poolb6 — Uses a byte array from the array pool for storage, and the 2 of 6 algorithm.
+* --poolb30 — Uses a byte array from the array pool for storage, and the 8 of 30 algorithm.
+* --poold2 — Uses a 32 bit array from the array pool for storage, and the 1 of 2 algorithm.
+* --poold6 — Uses a 32 bit array from the array pool for storage, and the 2 of 6 algorithm.
+* --poold30 — Uses a 32 bit array from the array pool for storage, and the 8 of 30 algorithm.
+* --poolq2 — Uses a 64 bit array from the array pool for storage, and the 1 of 2 algorithm.
+* --poolq6 — Uses a 64 bit array from the array pool for storage, and the 2 of 6 algorithm.
+* --poolq30 — Uses a 64 bit array from the array pool for storage, and the 8 of 30 algorithm.
+* --poolq30m — Uses a 64 bit array from the array pool for storage, and the 8 of 30 bitmasking algorithm.
+* --rawb2 — Uses a directly allocated byte array for storage, and the 1 of 2 algorithm.
+* --rawb6 — Uses a directly allocated byte array for storage, and the 2 of 6 algorithm.
+* --rawb30 — Uses a directly allocated byte array for storage, and the 8 of 30 algorithm.
+* --rawd2 — Uses a directly allocated 32 bit array for storage, and the 1 of 2 algorithm.
+* --rawd6 — Uses a directly allocated 32 bit array for storage, and the 2 of 6 algorithm.
+* --rawd30 — Uses a directly allocated 32 bit array for storage, and the 8 of 30 algorithm.
+* --rawq2 — Uses  directly allocateda 64 bit array for storage, and the 1 of 2 algorithm.
+* --rawq6 — Uses a directly allocated 64 bit array for storage, and the 2 of 6 algorithm.
+* --rawq30 — Uses a directly allocated 64 bit array for storage, and the 8 of 30 algorithm.
+* --rawq30m — Uses a directly allocated 64 bit array for storage, and the 8 of 30 bitmasking algorithm.
+
+
+Any number of individual sieves can be specified.  In addition, you can specify a particular sieve property, and all sieves that have that property will be run.
+
+* --bitarray — Sieves that use a bitarray for storage.
+* --bool — Sieves that use a bool array for storage.
+* --ibool — Sieves that use a bool array for storage, and invert the boolean logic.
+* --pool — Sieves that use the array pool for storage.
+* --raw — Sieves that manually allocate storage.
+* --bytes — Sieves that allocate byte storage.
+* --32bit — Sieves that allocate 32-bit storage.
+* --64bit — Sieves that allocate 64-bit storage.
+* --1of2 — Sieves that use the 1 of 2 algorithm.
+* --2of6 — Sieves that use the 2 of 6 algorithm.
+* --8of30 — Sieves that use the 8 of 30 algorithm.
+* --bitmask — Sieves that use the bitmasking wheel algorithm.
+* --parallel — Sieves that use a parallel algorithm. (None currently implemented)
+
+
+And of course you can use `--all` to run all sieves.
+
+### BenchmarkDotNet
+
+You can also run BenchmarkDotNet benchmarks.  Options for that:
+
+* --benchmark: Run benchmarks.  Add a -b value for a specific small benchmark.
+* -b, --bench: Select a subgroup of benchmarks to run. Current sets are:
+    * mod: Compare code that uses different operations for determining if a value is even or odd.
+    * ref: Compare a ref struct implementation with its class version.
+    * ofN: Compare a mod 2 algorithm with a mod 6 algorithm.
+    * par: Compare a linear algorithm with its parallel alternate.
+
+The sieves that are benchmarked depend on whether the commandline is set for V1 or V2 sieves.
 
 
 ## Results (Native)
 
-Results that I get, running these on a Ryzen 3700X.
+Summary results for V1 sieves using .NET 5 vs V1 sieves using .NET 6 vs V2 sieves using .NET 6:
 
-```
-@Kinematics: Starting (original)...
-Passes: 3545, Time: 5.00124 s, Per Loop: 1.410719 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_original;3545;5.00124;1;algorithm=base,faithful=yes,bits=1
+Change from .NET 5 to .NET 6:
 
-@Kinematics: Starting (standard)...
-Passes: 3687, Time: 5.00099 s, Per Loop: 1.356116 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_standard;3687;5.00099;1;algorithm=base,faithful=yes,bits=1
+|Name       | NET5 Loops |  NET6 Loops |     Diff   |
+|-----------|------------|-------------|-----------:|
+|original   |       3529 |        3545 |      0.5%  |
+|standard   |       3667 |        3687 |      0.5%  |
+|bool       |       5652 |        6285 |     11.2%  |
+|ibool      |       7107 |        8926 |     25.6%  |
+|dbool      |       7110 |        8928 |     25.6%  |
+|raw        |       6321 |        6449 |      2.0%  |
+|raw32      |       6599 |        6616 |      0.3%  |
+|rawd       |       6375 |        6454 |      1.2%  |
+|raw6       |       6107 |        6125 |      0.3%  |
+|rawp       |       4248 |        4366 |      2.8%  |
+|pool       |       6034 |        6658 |     10.3%  |
+|pool2of6   |       9528 |        9468 |     -0.6%  |
+|pool6p     |       5474 |        5531 |      1.0%  |
+|pool30     |      12265 |       12821 |      4.5%  |
+|pool30m    |      15817 |       17308 |      9.4%  |
 
-@Kinematics: Starting (bool array)...
-Passes: 6285, Time: 5.00022 s, Per Loop: 0.795545 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_bool;6285;5.00022;1;algorithm=base,faithful=yes,bits=8
+Overall: +6.9%
 
-@Kinematics: Starting (inverted bool array)...
-Passes: 8926, Time: 5.00009 s, Per Loop: 0.560161 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_ibool;8926;5.00009;1;algorithm=base,faithful=yes,bits=8
+V2 Performance:
 
-@Kinematics: Starting (direct access inverted bool array)...
-Passes: 8928, Time: 5.00052 s, Per Loop: 0.560036 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_dbool;8928;5.00052;1;algorithm=base,faithful=yes,bits=8
-
-@Kinematics: Starting (raw bits)...
-Passes: 6449, Time: 5.00052 s, Per Loop: 0.775314 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw;6449;5.00052;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits uint)...
-Passes: 6616, Time: 5.00009 s, Per Loop: 0.755744 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw32;6616;5.00009;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits direct)...
-Passes: 6454, Time: 5.00025 s, Per Loop: 0.774713 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_rawd;6454;5.00025;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits [2 of 6])...
-Passes: 6125, Time: 5.00021 s, Per Loop: 0.816327 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw6;6125;5.00021;1;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits parallel version)...
-Passes: 4366, Time: 5.00071 s, Per Loop: 1.145213 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
-kinematics_rawp;4366;5.00071;16;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool)...
-Passes: 6658, Time: 5.00036 s, Per Loop: 0.750976 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool;6658;5.00036;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool [2 of 6])...
-Passes: 9468, Time: 5.00034 s, Per Loop: 0.528095 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool2of6;9468;5.00034;1;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (parallel array pool [2 of 6])...
-Passes: 5531, Time: 5.0002 s, Per Loop: 0.903996 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
-kinematics_pool6p;5531;5.0002;16;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool [8 of 30])...
-Passes: 12821, Time: 5.0002 s, Per Loop: 0.389985 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool30;12821;5.0002;1;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool [8 of 30] with bitmasking)...
-Passes: 17308, Time: 5.00002 s, Per Loop: 0.288884 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool30m;17308;5.00002;1;algorithm=wheel,faithful=yes,bits=1
-```
-
-NB: Parallel versions don't start outperforming linear versions until 10,000,000 sieve size.
+|Name          |  Loops |
+|--------------|--------|
+|Bit2          |   3728 |
+|Bit2While     |   3732 |
+|Bit6          |   6973 |
+|Bit30         |  10046 |
+|Bool2         |   9150 |
+|Bool2While    |  10356 |
+|Bool6         |  10978 |
+|Bool30        |  13135 |
+|IBool2        |   9440 |
+|IBool2While   |   9348 |
+|IBool6        |  10759 |
+|IBool30       |  13777 |
+|PoolB2        |   5799 |
+|PoolB6        |   9377 |
+|PoolB30       |  11912 |
+|PoolD2        |   7328 |
+|PoolD6        |   9907 |
+|PoolD30       |  13628 |
+|PoolQ2        |   6511 |
+|PoolQ6        |   9855 |
+|PoolQ30       |  13498 |
+|PoolQ30M      |  17665 |
+|RawB2         |   6129 |
+|RawB6         |   9040 |
+|RawB30        |  10855 |
+|RawD2         |   6150 |
+|RawD6         |  10104 |
+|RawD30        |  12019 |
+|RawQ2         |   5800 |
+|RawQ6         |   9700 |
+|RawQ30        |  12045 |
+|PoolQ30M      |  16204 |
 
 
-## Results (Docker)
+V1 vs V2 performance (.NET 6):
 
-Docker results are a bit different from native results.  Bitarrays are slower, at about 2/3 of the speed of their native counterparts.
+|V1 Name    | V2 Name      |  V1 Loops |  V2 Loops  |    Diff  |
+|-----------|--------------|-----------|------------|---------:|
+|original   | Bit2While    |      3545 |      3732  |    5.3%  |
+|standard   | Bit2While    |      3687 |      3732  |    1.2%  |
+|bool       | Bool2        |      6285 |      9150  |   45.6%  |
+|bool       | Bool2While   |      6285 |     10356  |   64.8%  |
+|ibool      | IBool2       |      8926 |      9440  |    5.8%  |
+|ibool      | IBool2While  |      8926 |      9348  |    4.7%  |
+|dbool      | ---          |           |            |    0.0%  |
+|raw        | RawB2        |      6449 |      6129  |   -5.0%  |
+|raw32      | RawD2        |      6616 |      6150  |   -7.0%  |
+|raw6       | RawB6        |      6125 |      9040  |   47.6%  |
+|rawp       | ---          |           |            |    0.0%  |
+|pool       | PoolQ2       |      6658 |      6511  |   -2.2%  |
+|pool2of6   | PoolQ6       |      9468 |      9855  |    4.1%  |
+|pool6p     | ---          |           |            |    0.0%  |
+|pool30     | PoolQ30      |     12821 |     13498  |    5.3%  |
+|pool30m    | PoolQ30M     |     17308 |     17665  |    2.1%  |
 
-Bool arrays and raw allocations are about the same between Docker and native runs.  These would be the best to use for comparisons.
-
-Parallel algorithms tank when run in Docker, only getting about 10% of their native counterparts (which weren't very good to start with).
-
-And the 8 of 30 algorithms (including the bitmasking version) are significantly below native results (1/3 to 1/2 native speed).
+Overall: +11.2%
 
 
-@Kinematics: Starting (original)...
-Passes: 2293, Time: 5.00169 s, Per Loop: 2.180986 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_original;2293;5.00169;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (standard)...
-Passes: 2470, Time: 5.00116 s, Per Loop: 2.024696 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_standard;2470;5.00116;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (bool array)...
-Passes: 6134, Time: 5.00074 s, Per Loop: 0.815129 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_bool;6134;5.00074;1;algorithm=base,faithful=yes,bits=8
-
-@Kinematics: Starting (inverted bool array)...
-Passes: 8937, Time: 5.00061 s, Per Loop: 0.559472 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_ibool;8937;5.00061;1;algorithm=base,faithful=yes,bits=8
-
-@Kinematics: Starting (direct access inverted bool array)...
-Passes: 8834, Time: 5.00039 s, Per Loop: 0.565995 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_dbool;8834;5.00039;1;algorithm=base,faithful=yes,bits=8
-
-@Kinematics: Starting (raw bits)...
-Passes: 6052, Time: 5.0007 s, Per Loop: 0.826173 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw;6052;5.0007;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits uint)...
-Passes: 6316, Time: 5.00079 s, Per Loop: 0.791640 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw32;6316;5.00079;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits direct)...
-Passes: 6063, Time: 5.00034 s, Per Loop: 0.824674 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_rawd;6063;5.00034;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits [2 of 6])...
-Passes: 5983, Time: 5.00047 s, Per Loop: 0.835701 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_raw6;5983;5.00047;1;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (raw bits parallel version)...
-Passes: 596, Time: 5.00006 s, Per Loop: 8.389262 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
-kinematics_rawp;596;5.00006;16;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool)...
-Passes: 6451, Time: 5.00041 s, Per Loop: 0.775074 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool;6451;5.00041;1;algorithm=base,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool [2 of 6])...
-Passes: 8972, Time: 5.00019 s, Per Loop: 0.557289 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool2of6;8972;5.00019;1;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (parallel array pool [2 of 6])...
-Passes: 595, Time: 5.00746 s, Per Loop: 8.415126 ms, Sieve Size: 1000000, Thread Count: 1, Parallel Thread Count: 16, Primes Found: 78498, Valid: True
-kinematics_pool6p;595;5.00746;16;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool [8 of 30])...
-Passes: 6618, Time: 5.00011 s, Per Loop: 0.755515 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool30;6618;5.00011;1;algorithm=wheel,faithful=yes,bits=1
-
-@Kinematics: Starting (array pool [8 of 30] with bitmasking)...
-Passes: 6160, Time: 5.00068 s, Per Loop: 0.811688 ms, Sieve Size: 1000000, Thread Count: 1, Primes Found: 78498, Valid: True
-kinematics_pool30m;6160;5.00068;1;algorithm=wheel,faithful=yes,bits=1
+Docker runs will generate different results, depending on the type of sieve run.
 
 
 ## Results (BenchmarkDotNet)
 
-And results of running --benchmark
+### V1 Benchmark
 
 ```
 BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19042.1348 (20H2/October2020Update)
@@ -220,6 +235,7 @@ AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
 .NET SDK=6.0.100
   [Host]     : .NET 6.0.0 (6.0.21.52210), X64 RyuJIT
   DefaultJob : .NET 6.0.0 (6.0.21.52210), X64 RyuJIT
+```
 
 
 |             Method | SieveSize |       Mean |   Error |  StdDev | Ratio |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |
@@ -234,6 +250,49 @@ AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
 |      ArrayPool2Of6 |   1000000 |   529.4 us | 3.19 us | 2.99 us |  0.39 |        - |        - |        - |      33 B |
 |      ArrayPool6Par |   1000000 |   676.1 us | 2.48 us | 2.32 us |  0.50 |  36.1328 |        - |        - | 301,306 B |
 |     ArrayPool8of30 |   1000000 |   387.2 us | 1.98 us | 1.75 us |  0.29 |        - |        - |        - |      96 B |
-|    ArrayPool8of30M |   1000000 |   288.2 us | 1.30 us | 1.22 us |  0.21 |        - |        - |        - |     912 B |```
+|    ArrayPool8of30M |   1000000 |   288.2 us | 1.30 us | 1.22 us |  0.21 |        - |        - |        - |     912 B |
 
+### V2 Benchmark
+
+```
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19042.1348 (20H2/October2020Update)
+AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
+.NET SDK=6.0.100
+  [Host]     : .NET 6.0.0 (6.0.21.52210), X64 RyuJIT
+  DefaultJob : .NET 6.0.0 (6.0.21.52210), X64 RyuJIT
+```
+
+
+|    Method | SieveSize |       Mean |   Error |  StdDev | Ratio |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |
+|---------- |---------- |-----------:|--------:|--------:|------:|---------:|---------:|---------:|----------:|
+|      Bit2 |   1000000 | 1,345.1 us | 0.27 us | 0.24 us |  1.00 |   5.8594 |        - |        - |     61 KB |
+| Bit2While |   1000000 | 1,351.1 us | 0.44 us | 0.41 us |  1.00 |   5.8594 |        - |        - |     61 KB |
+|      Bit6 |   1000000 |   715.6 us | 0.39 us | 0.30 us |  0.53 |   6.8359 |   0.9766 |        - |     61 KB |
+|     Bit30 |   1000000 |   496.1 us | 2.79 us | 2.61 us |  0.37 |   6.8359 |   0.9766 |        - |     61 KB |
+|     Bool2 |   1000000 |   550.2 us | 5.07 us | 4.75 us |  0.41 | 142.5781 | 142.5781 | 142.5781 |    488 KB |
+|     Bool6 |   1000000 |   455.6 us | 2.84 us | 2.52 us |  0.34 | 142.5781 | 142.5781 | 142.5781 |    488 KB |
+|    Bool30 |   1000000 |   461.2 us | 2.89 us | 2.71 us |  0.34 | 142.5781 | 142.5781 | 142.5781 |    488 KB |
+|    IBool2 |   1000000 |   537.5 us | 7.91 us | 7.40 us |  0.40 | 142.5781 | 142.5781 | 142.5781 |    488 KB |
+|    IBool6 |   1000000 |   520.9 us | 5.46 us | 5.11 us |  0.39 | 142.5781 | 142.5781 | 142.5781 |    488 KB |
+|   IBool30 |   1000000 |   453.7 us | 1.26 us | 1.18 us |  0.34 | 142.5781 | 142.5781 | 142.5781 |    488 KB |
+|    PoolB2 |   1000000 |   860.8 us | 1.72 us | 1.44 us |  0.64 |   6.8359 |        - |        - |     64 KB |
+|    PoolB6 |   1000000 |   531.9 us | 2.29 us | 1.91 us |  0.40 |   6.8359 |        - |        - |     64 KB |
+|   PoolB30 |   1000000 |   418.5 us | 2.02 us | 1.79 us |  0.31 |   7.3242 |        - |        - |     64 KB |
+|    PoolD2 |   1000000 |   729.2 us | 4.23 us | 3.96 us |  0.54 |   6.8359 |        - |        - |     64 KB |
+|    PoolD6 |   1000000 |   503.2 us | 2.76 us | 2.58 us |  0.37 |   6.8359 |        - |        - |     64 KB |
+|   PoolD30 |   1000000 |   367.2 us | 0.25 us | 0.21 us |  0.27 |   7.3242 |        - |        - |     64 KB |
+|    PoolQ2 |   1000000 |   730.3 us | 1.20 us | 1.12 us |  0.54 |   6.8359 |        - |        - |     64 KB |
+|    PoolQ6 |   1000000 |   508.6 us | 2.77 us | 2.59 us |  0.38 |   6.8359 |        - |        - |     64 KB |
+|   PoolQ30 |   1000000 |   367.8 us | 1.61 us | 1.51 us |  0.27 |   7.3242 |        - |        - |     64 KB |
+|  PoolQ30M |   1000000 |   292.0 us | 0.73 us | 0.64 us |  0.22 |   7.8125 |   1.4648 |        - |     65 KB |
+|     RawB2 |   1000000 |   818.7 us | 2.84 us | 2.65 us |  0.61 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|     RawB6 |   1000000 |   567.7 us | 3.35 us | 3.14 us |  0.42 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|    RawB30 |   1000000 |   461.5 us | 2.28 us | 2.13 us |  0.34 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|     RawD2 |   1000000 |   825.3 us | 6.69 us | 6.26 us |  0.61 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|     RawD6 |   1000000 |   511.8 us | 3.69 us | 3.45 us |  0.38 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|    RawD30 |   1000000 |   419.4 us | 2.55 us | 2.26 us |  0.31 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|     RawQ2 |   1000000 |   877.7 us | 4.17 us | 3.90 us |  0.65 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|     RawQ6 |   1000000 |   525.3 us | 0.81 us | 0.72 us |  0.39 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|    RawQ30 |   1000000 |   429.0 us | 3.36 us | 3.15 us |  0.32 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
+|   RawQ30M |   1000000 |   308.2 us | 2.88 us | 2.70 us |  0.23 |  19.5313 |  19.5313 |  19.5313 |     62 KB |
 
