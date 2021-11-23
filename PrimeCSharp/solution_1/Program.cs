@@ -13,20 +13,21 @@ namespace PrimeCSharp
         {
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
-            if (args[0] == "v2")
+            if (args[0] == "v1")
             {
-                var v2args = args[1..];
+                var v1args = args[1..];
 
-                var result2 = Parser.Default.ParseArguments<SettingsV2>(v2args)
+                var result = Parser.Default.ParseArguments<RunSettings>(v1args)
                     .WithParsed(options => Run(options))
                     .WithNotParsed(errors => HandleErrors(errors)); // errors is a sequence of type IEnumerable<Error>
 
                 return;
             }
 
-            var result = Parser.Default.ParseArguments<RunSettings>(args)
+            var result2 = Parser.Default.ParseArguments<SettingsV2>(args)
                 .WithParsed(options => Run(options))
                 .WithNotParsed(errors => HandleErrors(errors)); // errors is a sequence of type IEnumerable<Error>
+
         }
 
         private static void Run(RunSettings options)
