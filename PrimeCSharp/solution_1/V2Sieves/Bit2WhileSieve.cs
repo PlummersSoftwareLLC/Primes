@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace PrimeCSharp.SieveRunners
+namespace PrimeCSharp.V2Sieves
 {
     public class Bit2WhileSieve : ISieveRunner
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PrimeCSharp.SieveRunners
+namespace PrimeCSharp.V2Sieves
 {
     public interface ISieveRunner
     {

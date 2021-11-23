@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace PrimeCSharp.SieveRunners
+namespace PrimeCSharp.V2Sieves
 {
     public class RawB2Sieve : ISieveRunner
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using PrimeCSharp.Sieves;
+using PrimeCSharp.V1Sieves;
 
 namespace PrimeCSharp.Benchmarks
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace PrimeCSharp.Sieves
+namespace PrimeCSharp.V1Sieves
 {
     class PrimeSieveRawBits : ISieve
     {

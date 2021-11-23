@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace PrimeCSharp.Sieves
+namespace PrimeCSharp.V1Sieves
 {
     class PrimeSieveRawBitsInter : ISieve
     {

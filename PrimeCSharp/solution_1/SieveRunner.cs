@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PrimeCSharp.Config;
-using PrimeCSharp.Sieves;
+using PrimeCSharp.V1Sieves;
 
 namespace PrimeCSharp
 {

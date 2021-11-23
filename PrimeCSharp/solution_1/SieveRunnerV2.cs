@@ -1,6 +1,6 @@
 ﻿using PrimeCSharp.Config;
 using PrimeCSharp.SieveDetails;
-using PrimeCSharp.SieveRunners;
+using PrimeCSharp.V2Sieves;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

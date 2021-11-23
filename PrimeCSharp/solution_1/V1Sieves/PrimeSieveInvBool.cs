@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PrimeCSharp.Sieves
+namespace PrimeCSharp.V1Sieves
 {
     class PrimeSieveInvBool : ISieve
     {

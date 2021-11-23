@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace PrimeCSharp.Sieves
+namespace PrimeCSharp.V1Sieves
 {
     class PrimeSieveArrayPool6Par : ISieve
     {

@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace PrimeCSharp.Sieves
+namespace PrimeCSharp.V1Sieves
 {
     class PrimeSieveOriginal : ISieve
     {

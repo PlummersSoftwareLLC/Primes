@@ -1,5 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
-using PrimeCSharp.SieveRunners;
+using PrimeCSharp.V2Sieves;
 
 namespace PrimeCSharp.Benchmarks
 {

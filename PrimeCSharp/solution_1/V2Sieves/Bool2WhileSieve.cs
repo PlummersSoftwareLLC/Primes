@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PrimeCSharp.SieveRunners
+namespace PrimeCSharp.V2Sieves
 {
     public class Bool2WhileSieve : ISieveRunner
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace PrimeCSharp.SieveRunners
+namespace PrimeCSharp.V2Sieves
 {
     public class IBool2Sieve : ISieveRunner
     {

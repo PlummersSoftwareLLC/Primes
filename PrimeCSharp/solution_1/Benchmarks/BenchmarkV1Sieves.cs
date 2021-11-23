@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using PrimeCSharp.Sieves;
+using PrimeCSharp.V1Sieves;
 
 namespace PrimeCSharp.Benchmarks
 {

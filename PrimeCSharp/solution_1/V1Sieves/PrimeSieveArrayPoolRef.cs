@@ -2,7 +2,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace PrimeCSharp.Sieves
+namespace PrimeCSharp.V1Sieves
 {
     readonly ref struct PrimeSieveArrayPoolRef
     {
