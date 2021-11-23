@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace PrimeCSharp.SieveRunners
 {
@@ -18,21 +18,20 @@ namespace PrimeCSharp.SieveRunners
         {
             SieveSize = sieveSize;
             
-            boolArray = new bool[(sieveSize + 1) / 2];
+            boolArray = new bool[(sieveSize + 1) >> 1];
         }
 
         public void Run()
         {
-            int factor = 3;
             int q = (int)Math.Sqrt(SieveSize);
 
-            for (int f = factor; f <= q; f += 2)
+            for (int factor = 3; factor <= q; factor += 2)
             {
-                if (GetBit(f) == false)
+                if (GetBit(factor) == false)
                 {
-                    int increment = f * 2;
+                    int increment = factor + factor;
 
-                    for (int num = f * f; num <= SieveSize; num += increment)
+                    for (int num = factor * factor; num <= SieveSize; num += increment)
                     {
                         SetBit(num);
                     }
@@ -54,25 +53,28 @@ namespace PrimeCSharp.SieveRunners
         }
 
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool GetBit(int index)
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            return boolArray[index / 2];
+            return boolArray[index >> 1];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetBit(int index)
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            boolArray[index / 2] = true;
+            boolArray[index >> 1] = true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ClearBit(int index)
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-            boolArray[index / 2] = false;
+            boolArray[index >> 1] = false;
         }
     }
 }

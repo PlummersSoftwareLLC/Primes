@@ -51,12 +51,13 @@ namespace PrimeCSharp.SieveRunners
 
             for (int factor = start, inc = steps[step];
                 factor <= q;
-                factor += inc, step = (step + 1) % 8, inc = steps[step])
+                factor += inc, step = (step + 1) & 7, inc = steps[step])
             {
                 if (GetBit(factor))
                 {
                     for (int num = factor * factor, iStep = step, nInc = steps[iStep];
-                        num <= SieveSize;)
+                        num <= SieveSize;
+                        )
                     {
                         ClearBit(num);
 

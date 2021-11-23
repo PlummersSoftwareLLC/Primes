@@ -27,7 +27,7 @@ namespace PrimeCSharp.SieveRunners
             {
                 if (GetBit(factor))
                 {
-                    for (int num = factor * factor; num <= SieveSize; num += factor + factor)
+                    for (int num = factor * factor; num <= SieveSize; num += factor << 1)
                     {
                         ClearBit(num);
                     }

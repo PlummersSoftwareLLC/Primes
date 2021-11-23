@@ -28,16 +28,15 @@ namespace PrimeCSharp.SieveRunners
 
         public void Run()
         {
-            int factor = 3;
             int q = (int)Math.Sqrt(SieveSize);
 
-            for (int f = factor; f <= q; f += 2)
+            for (int factor = 3; factor <= q; factor += 2)
             {
-                if (GetBit(f))
+                if (GetBit(factor))
                 {
-                    int increment = f * 2;
+                    int increment = factor << 1;
 
-                    for (int num = f * f; num <= SieveSize; num += increment)
+                    for (int num = factor * factor; num <= SieveSize; num += increment)
                     {
                         ClearBit(num);
                     }

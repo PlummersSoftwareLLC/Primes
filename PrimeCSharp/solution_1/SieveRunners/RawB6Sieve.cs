@@ -29,10 +29,9 @@ namespace PrimeCSharp.SieveRunners
 
         public void Run()
         {
-            int start = 5;
             int q = (int)Math.Sqrt(SieveSize);
 
-            for (int factor = start, inc = 2; factor <= q; factor += inc, inc = 6 - inc)
+            for (int factor = 5, inc = 2; factor <= q; factor += inc, inc = 6 - inc)
             {
                 if (GetBit(factor))
                 {

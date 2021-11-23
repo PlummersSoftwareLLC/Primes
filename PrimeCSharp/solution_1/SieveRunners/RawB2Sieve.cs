@@ -27,16 +27,15 @@ namespace PrimeCSharp.SieveRunners
 
         public void Run()
         {
-            int factor = 3;
             int q = (int)Math.Sqrt(SieveSize);
 
-            for (int f = factor; f <= q; f += 2)
+            for (int factor = 3; factor <= q; factor += 2)
             {
-                if (GetBit(f))
+                if (GetBit(factor))
                 {
-                    int increment = f * 2;
+                    int increment = factor << 1;
 
-                    for (int num = f * f; num <= SieveSize; num += increment)
+                    for (int num = factor * factor; num <= SieveSize; num += increment)
                     {
                         ClearBit(num);
                     }
@@ -78,7 +77,7 @@ namespace PrimeCSharp.SieveRunners
 
             //return (data[number >> (dataBitsShift + 1)] & (byte)(1 << ((number >> 1) & dataBitsMask))) != 0;
 
-            return (GetRawBits(number >> (dataBitsShift + 1)) & (byte)(1 << ((number >> 1) & dataBitsMask))) != 0;
+            return (GetRawBits(number >> (dataBitsShift + 1)) & (1u << ((number >> 1) & dataBitsMask))) != 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,7 +93,7 @@ namespace PrimeCSharp.SieveRunners
 
             //data[number >> (dataBitsShift + 1)] &= (byte)~(1 << ((number >> 1) & dataBitsMask));
             
-            GetRawBits(number >> (dataBitsShift + 1)) &= (byte)~(1 << ((number >> 1) & dataBitsMask));
+            GetRawBits(number >> (dataBitsShift + 1)) &= (byte)~(1u << ((number >> 1) & dataBitsMask));
         }
     }
 }

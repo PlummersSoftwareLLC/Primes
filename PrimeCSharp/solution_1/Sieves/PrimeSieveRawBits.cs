@@ -77,7 +77,6 @@ namespace PrimeCSharp.Sieves
                 for (uint num = factor * factor; num <= SieveSize; num += increment)
                 {
                     ClearBit(rawbits, num);
-                    //ClearCount++;
                 }
 
                 factor += 2;
@@ -109,6 +108,7 @@ namespace PrimeCSharp.Sieves
         private void ClearBit(byte[] bits, uint index)
         {
             System.Diagnostics.Debug.Assert(index % 2 == 1);
+            //ClearCount++;
 
             index /= 2;
 

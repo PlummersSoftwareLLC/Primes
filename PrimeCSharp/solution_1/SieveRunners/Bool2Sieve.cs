@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace PrimeCSharp.SieveRunners
@@ -30,9 +29,9 @@ namespace PrimeCSharp.SieveRunners
             {
                 if (GetBit(factor))
                 {
-                    int increment = factor * 2;
+                    int increment = factor + factor;
 
-                    for (int num = factor * factor; num <= SieveSize; num += factor + factor)
+                    for (int num = factor * factor; num <= SieveSize; num += increment)
                     {
                         ClearBit(num);
                     }

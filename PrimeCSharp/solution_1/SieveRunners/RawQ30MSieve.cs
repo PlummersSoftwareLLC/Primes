@@ -58,7 +58,7 @@ namespace PrimeCSharp.SieveRunners
             // Look for next prime
             for (int factor = 7, step = 1, inc = steps[step];
                 factor <= q;
-                factor += inc, step = (step + 1) % 8, inc = steps[step])
+                factor += inc, step = (step + 1) & 7, inc = steps[step])
             {
                 // A set bit means it's composite - keep searching.
                 if (GetBit(factor))
@@ -131,9 +131,6 @@ namespace PrimeCSharp.SieveRunners
 
                 ClearBit(factor);
             }
-
-            //ArrayPool<ulong>.Shared.Return(data);
-
         }
 
         public IEnumerable<int> GetFoundPrimes()
