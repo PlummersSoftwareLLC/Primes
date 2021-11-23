@@ -13,7 +13,7 @@ namespace PrimeCSharp
         {
             CultureInfo.CurrentCulture = new CultureInfo("en-US", false);
 
-            if (args[0] == "v1")
+            if (args.Length > 0 && args[0] == "v1")
             {
                 var v1args = args[1..];
 
