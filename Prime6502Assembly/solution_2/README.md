@@ -11,7 +11,7 @@ This is a solution written in 6502 assembly, targeting the Commodore PET compute
 ## Description
 ### Characteristics
 The following applies to the implementation embedded in this solution:
-- It runs a sieve of size 400,000 instead of 1,0000,000. The reason is that the PET doesn't have enough RAM to hold more prime number candidates.
+- It runs a sieve of size 400,000 instead of 1,000,000. The reason is that the PET doesn't have enough RAM to hold more prime number candidates.
 - It uses a bitmap to keep track of prime number candidates. The bitmap only contains entries for odd numbers. This means that the total sieve buffer is 400,000/2/8 = 25,000 bytes in size.
 - The implementation uses a pointer consisting of a 16-bit (low byte/high byte) memory address pointer, and a bit index. The current factor is kept in a byte value and a bit number. The actual factor can thus be calculated using 8 * &lt;byte value&gt; + &lt;bit number&gt;. 
 
