@@ -1,6 +1,7 @@
 ; Sieve of Eratosthenes implementation for the Commodore PET
 ;
 ; Peculiarities:
+; * The sieve size is set to 400,000: there's not enough memory in the PET for 1,000,000
 ; * The sieve size needs to be divisable by 16
 ; * The square root of the sieve size needs to be divisible by 8, or else rounded up to the nearest multiple of 8
 
@@ -130,7 +131,7 @@ unset_fctrs:
     lda #'.'
     jsr BSOUT
 
-    ; clear multiples in first half of buffer
+    ; clear multiples in buffer
     jsr unset_buf
 
     ; we're done clearing multiples of our current factor, so increase it
@@ -156,14 +157,14 @@ next_fctr:
 ; we're done!
 validate:
 
-    ; read and save clock with interrupts disabled
+    ; read and save the jiffy clock with interrupts disabled; oddly enough it's stored big-endian
     sei
     lda JIFFY
-    sta clock
+    sta clock+2
     lda JIFFY+1
     sta clock+1
     lda JIFFY+2
-    sty clock+2
+    sta clock
     cli
 
     ; set counter to 1 (2 is also prime but not in the bitmap)
@@ -325,8 +326,7 @@ inc_fctr:
 
     lda fctr_bitcnt
     cmp #8
-    bmi ld_fctrroot
-    sec
+    bcc ld_fctrroot
     sbc #8
     sta fctr_bitcnt
 
@@ -364,11 +364,11 @@ fctr_chkend:
     ; see if we've reached the end of our buffer
     lda CURPTR+1
     cmp #>BUF_END
-    bmi unset_curbit
+    bcc unset_curbit
     bne unset_buf_end
     lda CURPTR
     cmp #<BUF_END
-    bmi unset_curbit
+    bcc unset_curbit
     bne unset_buf_end
 
 ; clear bit under pointer

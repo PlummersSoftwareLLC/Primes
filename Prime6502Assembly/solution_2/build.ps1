@@ -1,1 +1,1 @@
-retroassembler.exe -x -O=PRG .\primes.s .\primes.prg
+retroassembler.exe -O=PRG .\primes.s .\primes.prg
