@@ -132,11 +132,9 @@ cnd_loop:
     jsr inc_fctr            ; this also loads the factor byte number into X
 
     ; we can stop if we've reached the square root of the sieve size
-    cpx SQRT_BYTES
-    beq validate            ; we can't let this label get too far away from us
-
-    ; keep looking
-    jmp cnd_loop
+    cpx #SQRT_BYTES
+    bmi cnd_loop
+    jmp validate            ; we can't let this label get too far away from us
 
 ; we found a factor, let's clear multiples!
 unset_fctrs:
@@ -194,7 +192,10 @@ sub_savelow:
 
     ; we can stop if we've reached the square root of the sieve size
     cpx #SQRT_BYTES  
-    beq validate
+    bmi next_fctr
+    jmp validate
+
+next_fctr:    
 
     ; restore pointer and find next factor
     lda cndptr
