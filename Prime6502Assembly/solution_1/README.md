@@ -97,5 +97,5 @@ Note that the program writes a file to the disk in device 8, which thus has to b
 ## Results
 On my system, on Windows 10, the following is shown when the parse command is executed:
 ```
-rbergen;1;182.533333333333;1;algorithm=base,faithful=no,bits=1
+rbergen;1;172.466666666667;1;algorithm=base,faithful=no,bits=1
 ```
