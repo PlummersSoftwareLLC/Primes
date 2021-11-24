@@ -89,7 +89,7 @@ After assembly, the program can be loaded in any C128 emulator (or an actual C12
 Assuming the program is itself the only program stored on a disk in device 8, it can be loaded and started using the following commands:
 ```
 LOAD"*",8,1
-SYS 4864
+RUN
 ```
 
 Note that the program writes a file to the disk in device 8, which thus has to be present. The contents of this file are described under [Output](#output).

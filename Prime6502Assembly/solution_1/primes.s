@@ -37,15 +37,19 @@ SETTIM=$ffdb
 RDTIM=$ffde
 
 EOL=13
+SYS=$9e
 
-BASIC_START=$0801
+BASIC_START=$1c01
 PROGRAM_START=$1300     ; 4864
 BUF_START=$2000
 BUF_END=BUF_START+HALF_BUF_END
 
-;    ; load BASIC program to start: 10 SYS 4864
-;    .org BASIC_START
-;    .byte $0c,$08,$0a,$00,$9e,$20,"4864",$00,$00,$00
+    ; load BASIC program to start
+    .org BASIC_START
+    .word basic_end             ; address of next BASIC line
+    .byte 10,0,SYS," 4864",0    ; 10 SYS 4864
+basic_end:
+    .word $00                   ; end of program
 
     .org PROGRAM_START
     jmp start
