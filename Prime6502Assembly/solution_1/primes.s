@@ -15,7 +15,7 @@ CNT_HIGH=$01
 BUF_BITS=SIEVE_SIZE/2
 BUF_BYTES=BUF_BITS/8
 HALF_BUF_SIZE=BUF_BYTES/2
-HALF_BUF_END=HALF_BUF_SIZE-1
+HALF_BUF_LAST=HALF_BUF_SIZE-1
 SQRT_BYTES=SIEVE_SQRT/8
 
 CURPTR=$fa
@@ -42,7 +42,7 @@ SYS=$9e
 BASIC_START=$1c01
 PROGRAM_START=$1300     ; 4864
 BUF_START=$2000
-BUF_END=BUF_START+HALF_BUF_END
+BUF_END=BUF_START+HALF_BUF_LAST
 
     ; load BASIC program to start
     .org BASIC_START
@@ -348,9 +348,9 @@ init_halfbuf:
     lda #>BUF_START
     sta CURPTR+1
 
-    lda #<HALF_BUF_END
+    lda #<HALF_BUF_LAST
     sta counter
-    lda #>HALF_BUF_END
+    lda #>HALF_BUF_LAST
     sta counter+1
 
     ; setup registers
