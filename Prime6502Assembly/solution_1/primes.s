@@ -65,7 +65,6 @@ fname: .byte "OUTPUT,S,W"
 fname_end: 
 time_label: .byte "TIME 0X",0
 valid_label: .byte "VALID ",0
-done_label: .byte EOL,"DONE",EOL,0
 ram_config: .word 0
 hex_chars: .byte "0123456789ABCDEF"
 
