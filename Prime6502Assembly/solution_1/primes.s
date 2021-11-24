@@ -15,7 +15,7 @@ CNT_HIGH=$01
 BUF_BITS=SIEVE_SIZE/2
 BUF_BYTES=BUF_BITS/8
 HALF_BUF_SIZE=BUF_BYTES/2
-HALF_BUF_END=HALF_BUF_SIZE-1
+HALF_BUF_LAST=HALF_BUF_SIZE-1
 SQRT_BYTES=SIEVE_SQRT/8
 
 CURPTR=$fa
@@ -37,15 +37,19 @@ SETTIM=$ffdb
 RDTIM=$ffde
 
 EOL=13
+SYS=$9e
 
-BASIC_START=$0801
+BASIC_START=$1c01
 PROGRAM_START=$1300     ; 4864
 BUF_START=$2000
-BUF_END=BUF_START+HALF_BUF_END
+BUF_END=BUF_START+HALF_BUF_LAST
 
-;    ; load BASIC program to start: 10 SYS 4864
-;    .org BASIC_START
-;    .byte $0c,$08,$0a,$00,$9e,$20,"4864",$00,$00,$00
+    ; load BASIC program to start
+    .org BASIC_START
+    .word basic_end             ; address of next BASIC line
+    .byte 10,0,SYS," 4864",0    ; 10 SYS 4864
+basic_end:
+    .word $00                   ; end of program
 
     .org PROGRAM_START
     jmp start
@@ -61,7 +65,6 @@ fname: .byte "OUTPUT,S,W"
 fname_end: 
 time_label: .byte "TIME 0X",0
 valid_label: .byte "VALID ",0
-done_label: .byte EOL,"DONE",EOL,0
 ram_config: .word 0
 hex_chars: .byte "0123456789ABCDEF"
 
@@ -129,11 +132,9 @@ cnd_loop:
     jsr inc_fctr            ; this also loads the factor byte number into X
 
     ; we can stop if we've reached the square root of the sieve size
-    cpx SQRT_BYTES
-    beq validate            ; we can't let this label get too far away from us
-
-    ; keep looking
-    jmp cnd_loop
+    cpx #SQRT_BYTES
+    bcc cnd_loop
+    jmp validate            ; we can't let this label get too far away from us
 
 ; we found a factor, let's clear multiples!
 unset_fctrs:
@@ -190,8 +191,11 @@ sub_savelow:
     jsr inc_fctr            ; this also loads the factor byte number into X
 
     ; we can stop if we've reached the square root of the sieve size
-    cpx SQRT_BYTES  
-    beq validate
+    cpx #SQRT_BYTES  
+    bcc next_fctr
+    jmp validate
+
+next_fctr:    
 
     ; restore pointer and find next factor
     lda cndptr
@@ -345,9 +349,9 @@ init_halfbuf:
     lda #>BUF_START
     sta CURPTR+1
 
-    lda #<HALF_BUF_END
+    lda #<HALF_BUF_LAST
     sta counter
-    lda #>HALF_BUF_END
+    lda #>HALF_BUF_LAST
     sta counter+1
 
     ; setup registers
@@ -407,8 +411,7 @@ inc_fctr:
 
     lda fctr_bitcnt
     cmp #8
-    bmi ld_fctrroot
-    sec
+    bcc ld_fctrroot
     sbc #8
     sta fctr_bitcnt
 
@@ -446,11 +449,11 @@ fctr_chkend:
     ; see if we've reached the end of our buffer
     lda CURPTR+1
     cmp #>BUF_END
-    bmi unset_curbit
+    bcc unset_curbit
     bne unset_halfbuf_end
     lda CURPTR
     cmp #<BUF_END
-    bmi unset_curbit
+    bcc unset_curbit
     bne unset_halfbuf_end
 
 ; clear bit under pointer

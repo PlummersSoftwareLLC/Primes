@@ -9,4 +9,4 @@ Get-Content output.txt | ForEach-Object {
         "rbergen;1;$([Convert]::ToInt64($fields[1], 16)/60);1;algorithm=base,faithful=no,bits=1"
     }
 }
-rm output.txt
+Remove-Item output.txt

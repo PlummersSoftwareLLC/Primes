@@ -1,4 +1,4 @@
-# 6502 assembly solution by rbergen
+# 6502 assembly solution by rbergen for Commodore 128
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
@@ -47,7 +47,7 @@ Instructions for installing these applications aren't provided here; the applica
   ```
   Note that `build.ps1` does not need to be executed in subsequent runs; executing `run.ps1` will then suffice.
 - When the execution of the prime sieve completes, BASIC will show a READY prompt. The VICE window will look like this:
-  ![VICE window](https://i.ibb.co/7G9fk2N/c128primes.png)
+  ![VICE window](https://i.ibb.co/f9F5bJv/c128primes.png)
 
   VICE can now be closed.
 - Execute the following command to parse and display the result:
@@ -89,7 +89,7 @@ After assembly, the program can be loaded in any C128 emulator (or an actual C12
 Assuming the program is itself the only program stored on a disk in device 8, it can be loaded and started using the following commands:
 ```
 LOAD"*",8,1
-SYS 4864
+RUN
 ```
 
 Note that the program writes a file to the disk in device 8, which thus has to be present. The contents of this file are described under [Output](#output).
@@ -97,5 +97,5 @@ Note that the program writes a file to the disk in device 8, which thus has to b
 ## Results
 On my system, on Windows 10, the following is shown when the parse command is executed:
 ```
-rbergen;1;182.55;1;algorithm=base,faithful=no,bits=1
+rbergen-c128;1;172.45;1;algorithm=base,faithful=no,bits=1
 ```
