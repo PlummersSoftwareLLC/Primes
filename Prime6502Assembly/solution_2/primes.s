@@ -114,7 +114,7 @@ cnd_loop:
 
     ; we can stop if we've reached the square root of the sieve size
     cpx #SQRT_BYTES
-    bmi cnd_loop
+    bcc cnd_loop
     jmp validate            ; we can't let this label get too far away from us
 
 ; we found a factor, let's clear multiples!
@@ -139,7 +139,7 @@ unset_fctrs:
 
     ; we can stop if we've reached the square root of the sieve size
     cpx #SQRT_BYTES  
-    bmi next_fctr
+    bcc next_fctr
     jmp validate
 
 next_fctr:
