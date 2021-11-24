@@ -1,4 +1,4 @@
-# 6502 assembly solution by rbergen
+# 6502 assembly solution by rbergen for Commodore 128
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
@@ -97,5 +97,5 @@ Note that the program writes a file to the disk in device 8, which thus has to b
 ## Results
 On my system, on Windows 10, the following is shown when the parse command is executed:
 ```
-rbergen;1;172.45;1;algorithm=base,faithful=no,bits=1
+rbergen-c128;1;172.45;1;algorithm=base,faithful=no,bits=1
 ```
