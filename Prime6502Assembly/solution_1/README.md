@@ -47,7 +47,7 @@ Instructions for installing these applications aren't provided here; the applica
   ```
   Note that `build.ps1` does not need to be executed in subsequent runs; executing `run.ps1` will then suffice.
 - When the execution of the prime sieve completes, BASIC will show a READY prompt. The VICE window will look like this:
-  ![VICE window](https://i.ibb.co/7G9fk2N/c128primes.png)
+  ![VICE window](https://i.ibb.co/f9F5bJv/c128primes.png)
 
   VICE can now be closed.
 - Execute the following command to parse and display the result:
@@ -97,5 +97,5 @@ Note that the program writes a file to the disk in device 8, which thus has to b
 ## Results
 On my system, on Windows 10, the following is shown when the parse command is executed:
 ```
-rbergen;1;172.466666666667;1;algorithm=base,faithful=no,bits=1
+rbergen;1;172.45;1;algorithm=base,faithful=no,bits=1
 ```

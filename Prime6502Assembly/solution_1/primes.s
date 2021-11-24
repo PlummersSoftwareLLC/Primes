@@ -411,8 +411,7 @@ inc_fctr:
 
     lda fctr_bitcnt
     cmp #8
-    bmi ld_fctrroot
-    sec
+    bcc ld_fctrroot
     sbc #8
     sta fctr_bitcnt
 
@@ -450,11 +449,11 @@ fctr_chkend:
     ; see if we've reached the end of our buffer
     lda CURPTR+1
     cmp #>BUF_END
-    bmi unset_curbit
+    bcc unset_curbit
     bne unset_halfbuf_end
     lda CURPTR
     cmp #<BUF_END
-    bmi unset_curbit
+    bcc unset_curbit
     bne unset_halfbuf_end
 
 ; clear bit under pointer
