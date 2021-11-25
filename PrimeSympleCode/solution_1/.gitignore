@@ -1,1 +1,7 @@
-sandbox/
+runtimes/
+*.exe
+*.dll
+*.o
+SympleCode.deps.json
+SympleCode.runtimeconfig.json
+dbgout.txt
