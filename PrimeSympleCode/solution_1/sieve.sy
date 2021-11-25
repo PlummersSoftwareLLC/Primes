@@ -16,7 +16,7 @@ public void run {
 	int passes = 0;
 	Sieve test;
 	
-	puts('running sieve for 5s...');
+	puts('Running sieve for 5s...');
 	
 	while ((clock() - start) < 5000) {
 		test = sieve(1000000);
