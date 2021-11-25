@@ -1,0 +1,95 @@
+decl byte* malloc(int sz);
+decl void free(byte* ptr);
+decl void memset(byte* ptr, byte val, int sz);
+decl void printf(char* fmt, ...);
+decl void puts(char* str);
+decl void putchar(char);
+
+decl long clock();
+
+public void main ->
+	run();
+
+public void run {
+	long start = clock();
+	
+	int passes = 0;
+	Sieve test;
+	
+	puts('running sieve for 5s...');
+	
+	while ((clock() - start) < 5000) {
+		test = sieve(1000000);
+		passes += 1;
+		free(test.prime);
+	}
+	
+	long end = clock();
+	
+	// run one last time since we free it in while loop
+	test = sieve(1000000);
+	printSieve(false, test, (double) (end - start) / 1000, passes);
+	free(test.prime);
+}
+
+struct Sieve {
+	int n,
+	bool* prime,
+}
+
+char* bool2str(bool b) {
+	if (b)
+		ret 'true';
+	ret 'false';
+}
+
+bool validate(Sieve test, int count) {
+	if (test.n == 10)
+		ret count == 1;
+	if (test.n == 100)
+		ret count == 25;
+	if (test.n == 1000)
+		ret count == 168;
+	if (test.n == 10000)
+		ret count == 1229;
+	if (test.n == 100000)
+		ret count == 9592;
+	if (test.n == 1000000)
+		ret count == 78498;
+	if (test.n == 10000000)
+		ret count == 664579;
+	if (test.n == 100000000)
+		ret count == 5761455;
+	ret false;
+}
+
+void printSieve(bool showResults, Sieve test, double duration, int passes) {
+	int count = 0;
+	if (showResults)
+		printf('[ ');
+	for (int p = 2; p <= test.n; p += 1)
+		if (test.prime[p]) {
+			if (showResults)
+				printf('%i, ', p);
+			count += 1;
+		}
+	if (showResults)
+		puts(' ]');
+	
+	printf('Passes: %i, Time: %g, Avg: %g, Limit: %i, Count: %i, Valid: %s\n', passes, duration, duration / (double) passes, test.n, count, bool2str(validate(test, count)));
+}
+
+Sieve sieve(int n) {
+	bool* prime = malloc(n + 1);
+	memset(prime, true to byte, n + 1);
+	
+	for (int p = 2; p * p <= n; p += 1) {
+		if (prime[p]) {
+			for (int i = p * p; i <= n; i += p) {
+				prime[i] = false;
+			}
+		}
+	}
+
+	ret Sieve { n, prime };
+}
