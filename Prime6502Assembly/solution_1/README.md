@@ -64,9 +64,9 @@ Instructions for installing these applications aren't provided here; the applica
   sudo apt-get update
   sudo apt-get install -y apt-transport-https && \
   sudo apt-get update && \
-  sudo apt-get install -y aspnetcore-runtime-6.0 gawk dos2unix grep
+  sudo apt-get install -y aspnetcore-runtime-5.0 gawk dos2unix grep
   ```
-- Make sure that Retro Assembler (the contents of the program's ZIP file, including retroassembler.dll) is located in the solution directory.
+- Make sure that the contents of the Retro Assembler ZIP file (`retroassembler.zip`) have been extracted into the `retroassembler` subdirectory in the solution directory (`mkdir retroassembler && unzip retroassembler.zip -d retroassembler` should do it).
 - Make sure the VICE binaries are in your PATH.
 - cd into the solution directory.
 - Execute the following commands:
