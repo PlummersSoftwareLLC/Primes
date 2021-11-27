@@ -91,7 +91,7 @@ docker run -ti --rm 6502assembly1
   ```
 
 ### Other systems/emulators/actual hardware
-The core program (`primes.s`) can in principle be assembled using any assembler that a) accepts the "old style" 6502 assembly format and b) is able to produce a Commodore `PRG` output file. It's possible that the source file needs minor modifications for whatever assembler you use; please consult to the documentation for your assembler to see if this is the case.
+The core program (`primes.s`) can in principle be assembled using any assembler that a) accepts the "old style" 6502 assembly format and b) is able to produce a Commodore `PRG` output file. It's possible that the source file needs minor modifications for whatever assembler you use; please consult the documentation for your assembler to see if this is the case.
 After assembly, the program can be loaded in any C128 emulator (or an actual C128) using either (a) tape or disk (image). 
 
 Assuming the program is itself the only program stored on a disk in device 8, it can be loaded and started using the following commands:
