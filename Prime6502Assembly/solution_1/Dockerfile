@@ -20,6 +20,3 @@ COPY build.sh dockerrun.sh parse.sh primes.s ./
 RUN ./build.sh
 
 ENTRYPOINT ["./dockerrun.sh"]
-
-
-
