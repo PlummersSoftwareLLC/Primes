@@ -34,9 +34,17 @@ The results of the sieve run are written to a sequential file called OUTPUT on t
 The parse script provided in the solution checks the prime count validity and, if valid, converts the software clock tick count to a number of seconds.
 
 ## Run Instructions
-The instructions below use [Retro Assembler](https://enginedesigns.net/retroassembler) to assemble the source code and [VICE 3.5](https://vice-emu.sourceforge.io/) to run the assembled program. Note that VICE will also require certain support files to run, specifically the C128 system ROMs.
+The instructions other than those for Docker rely on [Retro Assembler](https://enginedesigns.net/retroassembler) being available on your computer for assembling the source code, as well as [VICE 3.5](https://vice-emu.sourceforge.io/) for running the assembled program. Note that VICE will also require certain support files to run, specifically the C128 system ROMs.
 Instructions for installing these applications aren't provided here; the applications' websites provide clear documentation on how to do this.
 
+### Docker
+**Note:** the Dockerfile in this solution pulls in a base image that includes VICE 3.5, with the ROM images for a range of Commodore systems. Although general consensus seems to be that Commodore approved the use of the ROM images for emulation purposes, it is your own decision to do so or not. By executing `docker build` you pull them in, by executing `docker run` you use them.
+
+Run the following commands while in the solution directory:
+```
+docker build -t 6502assembly1 .
+docker run -ti --rm 6502assembly1
+```
 ### Windows 10
 - Make sure Retro Assembler and the VICE binaries are in your PATH.
 - Open a PowerShell window and cd into the solution directory.

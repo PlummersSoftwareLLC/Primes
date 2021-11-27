@@ -1,4 +1,4 @@
-FROM vice3.5
+FROM primeimages/vice:3.5
 
 WORKDIR /opt
 
@@ -8,7 +8,7 @@ RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-p
     apt-get update && \
     apt-get install -y apt-transport-https && \
     apt-get update && \
-    apt-get install -y aspnetcore-runtime-5.0 gawk grep unzip bash && \
+    apt-get install -y aspnetcore-runtime-5.0 gawk grep unzip bash socat && \
     rm -rf /var/lib/apt/lists/* && \
     wget https://enginedesigns.net/download/retroassembler.zip && \
     mkdir retroassembler && \
