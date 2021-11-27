@@ -13,4 +13,4 @@ done
 
 kill %1
 
-./parse.sh
+. ./parse.sh
