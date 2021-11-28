@@ -34,9 +34,17 @@ The results of the sieve run are written to a sequential file called OUTPUT on t
 The parse script provided in the solution checks the prime count validity and, if valid, converts the software clock tick count to a number of seconds.
 
 ## Run Instructions
-The instructions below use [Retro Assembler](https://enginedesigns.net/retroassembler) to assemble the source code and [VICE 3.5](https://vice-emu.sourceforge.io/) to run the assembled program. Note that VICE will also require certain support files to run, specifically the C128 system ROMs.
+The instructions other than those for Docker rely on [Retro Assembler](https://enginedesigns.net/retroassembler) being available on your computer for assembling the source code, as well as [VICE 3.5](https://vice-emu.sourceforge.io/) for running the assembled program. Note that VICE will also require certain support files to run, specifically the C128 system ROMs.
 Instructions for installing these applications aren't provided here; the applications' websites provide clear documentation on how to do this.
 
+### Docker
+**Note:** the Dockerfile in this solution pulls in a base image that includes VICE 3.5, with the ROM images for a range of Commodore systems. Although general consensus seems to be that Commodore approved the use of the ROM images for emulation purposes, it is your own decision to do so or not. By executing `docker build` you pull them in, by executing `docker run` you use them.
+
+Run the following commands while in the solution directory:
+```
+docker build -t 6502assembly1 .
+docker run -ti --rm 6502assembly1
+```
 ### Windows 10
 - Make sure Retro Assembler and the VICE binaries are in your PATH.
 - Open a PowerShell window and cd into the solution directory.
@@ -64,9 +72,9 @@ Instructions for installing these applications aren't provided here; the applica
   sudo apt-get update
   sudo apt-get install -y apt-transport-https && \
   sudo apt-get update && \
-  sudo apt-get install -y aspnetcore-runtime-6.0 gawk dos2unix grep
+  sudo apt-get install -y aspnetcore-runtime-5.0 gawk dos2unix grep
   ```
-- Make sure that Retro Assembler (the contents of the program's ZIP file, including retroassembler.dll) is located in the solution directory.
+- Make sure that the contents of the Retro Assembler ZIP file (`retroassembler.zip`) have been extracted into the `retroassembler` subdirectory in the solution directory (`mkdir retroassembler && unzip retroassembler.zip -d retroassembler` should do it).
 - Make sure the VICE binaries are in your PATH.
 - cd into the solution directory.
 - Execute the following commands:
@@ -83,7 +91,7 @@ Instructions for installing these applications aren't provided here; the applica
   ```
 
 ### Other systems/emulators/actual hardware
-The core program (`primes.s`) can in principle be assembled using any assembler that a) accepts the "old style" 6502 assembly format and b) is able to produce a Commodore `PRG` output file. It's possible that the source file needs minor modifications for whatever assembler you use; please consult to the documentation for your assembler to see if this is the case.
+The core program (`primes.s`) can in principle be assembled using any assembler that a) accepts the "old style" 6502 assembly format and b) is able to produce a Commodore `PRG` output file. It's possible that the source file needs minor modifications for whatever assembler you use; please consult the documentation for your assembler to see if this is the case.
 After assembly, the program can be loaded in any C128 emulator (or an actual C128) using either (a) tape or disk (image). 
 
 Assuming the program is itself the only program stored on a disk in device 8, it can be loaded and started using the following commands:
