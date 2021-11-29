@@ -16,9 +16,9 @@ benchmarking the same prime number sieve in Python, C#, and C++.
 
 Community contributions, fixes and improvements are accepted on this branch. If you want to add your own solution, please read [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Running all benchmarks
+## Running the benchmarks
 
-All benchmarks (solutions) in this repository can be built and run with one Makefile. This is described in [BENCHMARK.md](BENCHMARK.md).
+The vast majority of benchmarks (solutions) in this repository can be built and run with one Makefile. This is described in [BENCHMARK.md](BENCHMARK.md).
 
 ## Viewing results
 
