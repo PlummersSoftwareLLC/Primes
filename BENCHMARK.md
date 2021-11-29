@@ -1,6 +1,8 @@
 # Benchmarks <!-- omit in toc -->
 
-This document describes how to built and run all benchmarks (solutions) for different operating systems.
+This document describes how to build and run all benchmarks (solutions) for different operating systems that can be automatically executed. 
+
+Some solutions are not included in the automated benchmark runs, either because no Dockerfile is included in the solution, or due to legal reasons. We do strive to include all solutions in the automated benchmark runs, if it is technically and legally possible to do so.
 
 ## Table of contents <!-- omit in toc -->
 - [What operating system to use?](#what-operating-system-to-use)
