@@ -18,5 +18,5 @@ COPY --from=build /app .
 
 # default entry point and command argument
 ENTRYPOINT ["./PrimeCSharp"]
-CMD ["--all"]
+CMD ["--demo"]
 

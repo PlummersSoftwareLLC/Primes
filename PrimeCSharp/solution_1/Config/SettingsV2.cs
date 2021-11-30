@@ -45,6 +45,10 @@ namespace PrimeCSharp.Config
             Default = false, HelpText = "Run all sieves")]
         public bool All { get; set; }
 
+        [Option("demo",
+            Default = false, HelpText = "Run a selected sampling of sieves")]
+        public bool Demo { get; set; }
+
 
         [Option("bit2",
             Default = false, HelpText = "Use bitarray storage with the 1 of 2 algorithm")]
@@ -251,6 +255,20 @@ namespace PrimeCSharp.Config
             if (All)
             {
                 sieves.AddRange(SievePropertyCombinations.SieveSets);
+                return sieves;
+            }
+
+            if (Demo)
+            {
+                sieves.Add(SievePropertyCombinations.Bit2While);
+                sieves.Add(SievePropertyCombinations.Bool2While);
+                sieves.Add(SievePropertyCombinations.PoolB6);
+                sieves.Add(SievePropertyCombinations.PoolD6);
+                sieves.Add(SievePropertyCombinations.PoolQ6);
+                sieves.Add(SievePropertyCombinations.RawD2);
+                sieves.Add(SievePropertyCombinations.RawD6);
+                sieves.Add(SievePropertyCombinations.RawD30);
+                sieves.Add(SievePropertyCombinations.PoolQ30M);
                 return sieves;
             }
 
