@@ -8,7 +8,7 @@ namespace PrimeCSharp.V1Sieves
     {
         public string QuickName => "standard";
         public string Name => "Standard";
-        public bool IsBaseAlgorithm => true;
+        public string AlgorithmType => "base";
         public int? BitsPerPrime => 1;
 
         public int SieveSize { get; }

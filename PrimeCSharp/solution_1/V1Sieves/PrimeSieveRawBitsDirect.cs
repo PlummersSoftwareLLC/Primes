@@ -8,7 +8,7 @@ namespace PrimeCSharp.V1Sieves
     {
         public string QuickName => "rawd";
         public string Name => "Raw Allocation, Direct";
-        public bool IsBaseAlgorithm => true;
+        public string AlgorithmType => "base";
         public int? BitsPerPrime => 1;
 
         public int SieveSize { get; }

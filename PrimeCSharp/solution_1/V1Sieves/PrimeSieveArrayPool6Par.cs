@@ -10,6 +10,7 @@ namespace PrimeCSharp.V1Sieves
     {
         public string QuickName => "pool6p";
         public string Name => "Array Pool, 2 of 6, parallel";
+        public string AlgorithmType => "other";
         public int? BitsPerPrime => 1;
 
         private readonly long[] data;

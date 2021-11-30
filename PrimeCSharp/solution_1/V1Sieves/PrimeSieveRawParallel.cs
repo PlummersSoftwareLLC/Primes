@@ -10,7 +10,7 @@ namespace PrimeCSharp.V1Sieves
     {
         public string QuickName => "rawp";
         public string Name => "Raw Allocation, Parallel";
-        public bool IsBaseAlgorithm => true;
+        public string AlgorithmType => "base";
         public int? BitsPerPrime => 1;
 
         public int SieveSize { get; }
