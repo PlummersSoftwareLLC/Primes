@@ -11,6 +11,7 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "rawd6";
         public string Description => "Raw data, dword, 2 of 6";
+        public string AlgorithmType => "other";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
 

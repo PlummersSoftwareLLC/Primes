@@ -8,6 +8,7 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "bit6";
         public string Description => "Bitarray, 2 of 6";
+        public string AlgorithmType => "other";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
 

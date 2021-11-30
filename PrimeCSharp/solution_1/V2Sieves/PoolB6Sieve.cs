@@ -10,6 +10,7 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "poolb6";
         public string Description => "Array pool, bytes, 2 of 6";
+        public string AlgorithmType => "other";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
 
