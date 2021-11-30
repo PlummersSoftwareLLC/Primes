@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 
 namespace PrimeCSharp.V2Sieves
 {
-    public class IBool2WhileSieve : ISieveRunner
+    public class InvBool2WhileSieve : ISieveRunner
     {
-        public string Name => "ibool2while";
+        public string Name => "invbool2while";
         public string Description => "Bool array, 1 of 2, invert array, while";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
@@ -14,7 +14,7 @@ namespace PrimeCSharp.V2Sieves
 
         private readonly bool[] boolArray;
 
-        public IBool2WhileSieve(int sieveSize)
+        public InvBool2WhileSieve(int sieveSize)
         {
             SieveSize = sieveSize;
             

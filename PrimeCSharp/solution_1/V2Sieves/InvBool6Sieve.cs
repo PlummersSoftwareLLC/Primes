@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace PrimeCSharp.V2Sieves
 {
-    public class IBool6Sieve : ISieveRunner
+    public class InvBool6Sieve : ISieveRunner
     {
-        public string Name => "ibool6";
+        public string Name => "invbool6";
         public string Description => "Bool array, 2 of 6, invert array";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
@@ -14,7 +14,7 @@ namespace PrimeCSharp.V2Sieves
 
         private readonly bool[] boolArray;
 
-        public IBool6Sieve(int sieveSize)
+        public InvBool6Sieve(int sieveSize)
         {
             SieveSize = sieveSize;
             

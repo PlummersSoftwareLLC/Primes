@@ -80,21 +80,21 @@ namespace PrimeCSharp.Config
         public bool Bool30 { get; set; }
 
 
-        [Option("ibool2",
+        [Option("invbool2",
             Default = false, HelpText = "Use inverted bool array storage with the 1 of 2 algorithm")]
-        public bool iBool2 { get; set; }
+        public bool InvBool2 { get; set; }
 
-        [Option("ibool2while",
+        [Option("invbool2while",
             Default = false, HelpText = "Use inverted bool array storage with the 1 of 2 algorithm and while loop")]
-        public bool iBool2While { get; set; }
+        public bool InvBool2While { get; set; }
 
-        [Option("ibool6",
+        [Option("invbool6",
             Default = false, HelpText = "Use inverted bool array storage with the 2 of 6 algorithm")]
-        public bool iBool6 { get; set; }
+        public bool InvBool6 { get; set; }
 
-        [Option("ibool30",
+        [Option("invbool30",
             Default = false, HelpText = "Use inverted bool array storage with the 8 of 30 algorithm")]
-        public bool iBool30 { get; set; }
+        public bool InvBool30 { get; set; }
 
 
         [Option("poolb2",
@@ -185,11 +185,11 @@ namespace PrimeCSharp.Config
 
         [Option("bool",
             Default = false, HelpText = "Run all sieves that use a bool array")]
-        public bool Boolarray { get; set; }
+        public bool BoolArray { get; set; }
 
-        [Option("ibool",
+        [Option("invbool",
             Default = false, HelpText = "Run all sieves that use a bool array")]
-        public bool IBoolarray { get; set; }
+        public bool InvBoolArray { get; set; }
 
         [Option("pool",
             Default = false, HelpText = "Run all sieves that use an array pool")]
@@ -270,14 +270,14 @@ namespace PrimeCSharp.Config
                 sieves.Add(SievePropertyCombinations.Bool6);
             if (Bool30)
                 sieves.Add(SievePropertyCombinations.Bool30);
-            if (iBool2)
-                sieves.Add(SievePropertyCombinations.IBool2);
-            if (iBool2While)
-                sieves.Add(SievePropertyCombinations.IBool2While);
-            if (iBool6)
-                sieves.Add(SievePropertyCombinations.IBool6);
-            if (iBool30)
-                sieves.Add(SievePropertyCombinations.IBool30);
+            if (InvBool2)
+                sieves.Add(SievePropertyCombinations.InvBool2);
+            if (InvBool2While)
+                sieves.Add(SievePropertyCombinations.InvBool2While);
+            if (InvBool6)
+                sieves.Add(SievePropertyCombinations.InvBool6);
+            if (InvBool30)
+                sieves.Add(SievePropertyCombinations.InvBool30);
             if (PoolB2)
                 sieves.Add(SievePropertyCombinations.PoolB2);
             if (PoolB6)
@@ -337,11 +337,11 @@ namespace PrimeCSharp.Config
 
             if (Bitarray)
                 properties.Add(SieveProperty.BitarrayStorage);
-            if (Boolarray)
+            if (BoolArray)
             {
                 properties.Add(SieveProperty.BoolArrayStorage);
             }
-            if (IBoolarray)
+            if (InvBoolArray)
             {
                 properties.Add(SieveProperty.BoolArrayStorage);
                 properties.Add(SieveProperty.InvertStorageValues);

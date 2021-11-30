@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 
 namespace PrimeCSharp.V2Sieves
 {
-    public class IBool2Sieve : ISieveRunner
+    public class InvBool2Sieve : ISieveRunner
     {
-        public string Name => "ibool2";
+        public string Name => "invbool2";
         public string Description => "Bool array, 1 of 2, invert array";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
@@ -14,7 +14,7 @@ namespace PrimeCSharp.V2Sieves
 
         private readonly bool[] boolArray;
 
-        public IBool2Sieve(int sieveSize)
+        public InvBool2Sieve(int sieveSize)
         {
             SieveSize = sieveSize;
             

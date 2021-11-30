@@ -55,19 +55,19 @@ namespace PrimeCSharp.Benchmarks
         [Benchmark]
         public void IBool2()
         {
-            new IBool2Sieve(SieveSize).Run();
+            new InvBool2Sieve(SieveSize).Run();
         }
 
         [Benchmark]
         public void IBool6()
         {
-            new IBool6Sieve(SieveSize).Run();
+            new InvBool6Sieve(SieveSize).Run();
         }
 
         [Benchmark]
         public void IBool30()
         {
-            new IBool30Sieve(SieveSize).Run();
+            new InvBool30Sieve(SieveSize).Run();
         }
 
         [Benchmark]
