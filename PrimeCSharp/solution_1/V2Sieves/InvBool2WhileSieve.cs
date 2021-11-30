@@ -8,6 +8,7 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "invbool2while";
         public string Description => "Bool array, 1 of 2, invert array, while";
+        public string AlgorithmType => "base";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
         public int BitsPerPrime => 8;
