@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CommandLine;
 using PrimeCSharp.SieveDetails;
 
@@ -260,16 +261,7 @@ namespace PrimeCSharp.Config
 
             if (Demo)
             {
-                sieves.Add(SievePropertyCombinations.Bit2While);
-                sieves.Add(SievePropertyCombinations.Bool2While);
-                sieves.Add(SievePropertyCombinations.PoolB6);
-                sieves.Add(SievePropertyCombinations.PoolD6);
-                sieves.Add(SievePropertyCombinations.PoolQ6);
-                sieves.Add(SievePropertyCombinations.RawD2);
-                sieves.Add(SievePropertyCombinations.RawD6);
-                sieves.Add(SievePropertyCombinations.RawD30);
-                sieves.Add(SievePropertyCombinations.PoolQ30M);
-                return sieves;
+                return GetDemoSieves(sieves);
             }
 
             if (Bit2)
@@ -346,6 +338,27 @@ namespace PrimeCSharp.Config
                     sieves.Add(sieve);
             }
 
+            // Default if no commandline option is chosen
+            if (!sieves.Any())
+            {
+                return GetDemoSieves(sieves);
+            }
+
+            return sieves;
+        }
+
+        private static List<SieveProperty> GetDemoSieves(List<SieveProperty> sieves)
+        {
+            sieves.Add(SievePropertyCombinations.Bit2While);
+            sieves.Add(SievePropertyCombinations.Bool2While);
+            sieves.Add(SievePropertyCombinations.PoolD2);
+            sieves.Add(SievePropertyCombinations.PoolB6);
+            sieves.Add(SievePropertyCombinations.PoolD6);
+            sieves.Add(SievePropertyCombinations.PoolQ6);
+            sieves.Add(SievePropertyCombinations.RawD2);
+            sieves.Add(SievePropertyCombinations.RawD6);
+            sieves.Add(SievePropertyCombinations.RawD30);
+            sieves.Add(SievePropertyCombinations.PoolQ30M);
             return sieves;
         }
 
