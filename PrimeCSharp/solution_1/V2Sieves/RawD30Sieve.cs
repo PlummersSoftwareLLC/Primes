@@ -11,9 +11,9 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "rawd30";
         public string Description => "Raw data, dword, 8 of 30";
+        public string AlgorithmType => "wheel";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
-        public bool IsBaseAlgorithm => false;
 
         private readonly uint[] data;
         private const int dataBits = 32;

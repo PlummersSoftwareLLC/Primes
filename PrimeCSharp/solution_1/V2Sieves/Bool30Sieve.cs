@@ -8,9 +8,9 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "bool30";
         public string Description => "Bool array, 8 of 30";
+        public string AlgorithmType => "wheel";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
-        public bool IsBaseAlgorithm => false;
         public int BitsPerPrime => 8;
 
         private readonly bool[] boolArray;

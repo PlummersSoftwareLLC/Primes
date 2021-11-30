@@ -10,9 +10,9 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "poolb30";
         public string Description => "Array pool, bytes, 8 of 30";
+        public string AlgorithmType => "wheel";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
-        public bool IsBaseAlgorithm => false;
 
         private readonly byte[] data;
         private const int dataBits = 8;

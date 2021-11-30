@@ -8,9 +8,9 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "bit30";
         public string Description => "Bitarray, 8 of 30";
+        public string AlgorithmType => "wheel";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
-        public bool IsBaseAlgorithm => false;
 
         private readonly BitArray bitArray;
 

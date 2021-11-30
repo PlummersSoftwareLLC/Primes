@@ -10,9 +10,9 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "poolq30";
         public string Description => "Array pool, qword, 8 of 30";
+        public string AlgorithmType => "wheel";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
-        public bool IsBaseAlgorithm => false;
 
         private readonly ulong[] data;
         private const int dataBits = 64;
