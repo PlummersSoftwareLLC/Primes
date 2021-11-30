@@ -175,8 +175,8 @@ namespace PrimeCSharp
             sb.Append($"{passes};");
             sb.AppendFormat("{0:G6};", watch.Elapsed.TotalSeconds);
             sb.Append($"{threads * pthreads};");
-            sb.Append($"algorithm={(sieve.IsBaseAlgorithm ? "base" : "wheel")};");
-            sb.Append($"faithful={(sieve.IsBaseAlgorithm ? "yes" : "no")};");
+            sb.Append($"algorithm={sieve.AlgorithmType};");
+            sb.Append($"faithful={(sieve.IsFaithful ? "yes" : "no")};");
             sb.Append($"bits={sieve.BitsPerPrime}");
             sb.AppendLine();
 

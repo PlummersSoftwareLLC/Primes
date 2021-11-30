@@ -12,7 +12,8 @@ namespace PrimeCSharp.V2Sieves
 
         // Runner details (default values)
         bool IsParallel => false;
-        bool IsBaseAlgorithm => true;
+        // Algorithm types: base, wheel, other
+        string AlgorithmType => "other";
         bool IsFaithful => true;
         int BitsPerPrime => 1;
 
