@@ -9,7 +9,7 @@ namespace PrimeCSharp.V2Sieves
     public class PoolQ2Sieve : ISieveRunner
     {
         public string Name => "poolq2";
-        public string Description => "Array pool, qword, 1 of 2";
+        public string Description => "Array pool, 64 bit, 1 of 2";
         public string AlgorithmType => "base";
         public int SieveSize { get; }
         public int ClearCount { get; set; }

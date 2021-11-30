@@ -10,7 +10,7 @@ namespace PrimeCSharp.V2Sieves
     public class RawB30Sieve : ISieveRunner
     {
         public string Name => "rawb30";
-        public string Description => "Raw data, bytes, 8 of 30";
+        public string Description => "Raw data, 8 bit, 8 of 30";
         public string AlgorithmType => "wheel";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
