@@ -11,9 +11,9 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "rawq30m";
         public string Description => "Raw data, qword, 8 of 30, bitmasking";
+        public string AlgorithmType => "wheel+other";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
-        public bool IsBaseAlgorithm => false;
         public bool IsFaithful => false;
 
         private readonly ulong[] data;
