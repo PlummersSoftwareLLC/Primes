@@ -16,6 +16,10 @@ namespace PrimeCSharp
         const long MillisecondsPerSecond = 1000;
         const int WarmupCount = 10;
 
+        /// <summary>
+        /// Run all requested sieves based on the provided settings.
+        /// </summary>
+        /// <param name="settings">Collection of options used to determine which sieves to run, and parameters thereof.</param>
         public static void Run(SettingsV2 settings)
         {
             List<SieveProperty> sievesToRun = settings.GetSieves();
@@ -33,6 +37,12 @@ namespace PrimeCSharp
             }
         }
 
+        /// <summary>
+        /// Run a specific sieve using the provided parameters.
+        /// </summary>
+        /// <param name="sieve">The sieve to run, as determined by a combination of properties.</param>
+        /// <param name="settings">The running parameters to use.</param>
+        /// <exception cref="ArgumentException">If no sieve class matching the requested sieve can be found, an exception will be thrown.</exception>
         private static void Run(SieveProperty sieve, SettingsV2 settings)
         {
             Func<ISieveRunner> createSieve = GetSieveCreator(sieve, settings)
@@ -61,6 +71,14 @@ namespace PrimeCSharp
             PrintResults(completedSieve, passes, watch, settings);
         }
 
+        /// <summary>
+        /// Run a provided sieve on a single thread, repeatedly, for as long as specified.
+        /// </summary>
+        /// <param name="createSieve">The function that creates a sieve.</param>
+        /// <param name="watch">The time tracking watch.</param>
+        /// <param name="millisecondsToRun">How long to run.</param>
+        /// <param name="settings">Settings that may affect how the sieves are run.</param>
+        /// <returns>Returns the last sieve, and how many times the sieve was run.</returns>
         private static (ISieveRunner?, int) RunSingleThread(
             Func<ISieveRunner> createSieve, Stopwatch watch, long millisecondsToRun, SettingsV2 settings)
         {
@@ -81,6 +99,14 @@ namespace PrimeCSharp
             return (sieve, passes);
         }
 
+        /// <summary>
+        /// Run a provided sieve on multiple threads, for as long as specified.
+        /// </summary>
+        /// <param name="createSieve">The function that creates a sieve.</param>
+        /// <param name="watch">The time tracking watch.</param>
+        /// <param name="millisecondsToRun">How long to run.</param>
+        /// <param name="settings">Settings that may affect how the sieves are run.</param>
+        /// <returns>Returns the first sieve, and how many times the sieve was run.</returns>
         private static (ISieveRunner?, int) RunMultiThread(
             Func<ISieveRunner> createSieve, Stopwatch watch, long millisecondsToRun, SettingsV2 settings)
         {
@@ -113,6 +139,10 @@ namespace PrimeCSharp
             return (firstSieve, passes);
         }
 
+        /// <summary>
+        /// A warmup function to allow a sieve to be run a few times to get the JIT familiar with the code.
+        /// </summary>
+        /// <param name="createSieve">The function to create the sieve we're running.</param>
         private static void Warmup(Func<ISieveRunner> createSieve)
         {
             for (int i = 0; i < WarmupCount; i++)
@@ -122,6 +152,13 @@ namespace PrimeCSharp
             }
         }
 
+        /// <summary>
+        /// Print the final output to the console.
+        /// </summary>
+        /// <param name="sieve">The sieve that was run.</param>
+        /// <param name="passes">How many times it was run.</param>
+        /// <param name="watch">The stopwatch used to time it.</param>
+        /// <param name="settings">The settings that were in effect.</param>
         private static void PrintResults(ISieveRunner sieve, int passes, Stopwatch watch, SettingsV2 settings)
         {
             if (settings.Verbose)
@@ -134,18 +171,41 @@ namespace PrimeCSharp
                 Console.WriteLine();
             }
 
+            (int threads, int pThreads) = GetThreadCount(sieve, settings);
+
+            Console.WriteLine(GetLongOutputDescription(sieve, passes, watch, threads, pThreads));
+
+            Console.WriteLine(GetCompactOutputDescription(sieve, passes, watch, threads, pThreads));
+        }
+
+        /// <summary>
+        /// Calculate the number of threads used when running a sieve.
+        /// </summary>
+        /// <param name="sieve">The sieve that was run.</param>
+        /// <param name="settings">The run settings.</param>
+        /// <returns>Returns a tuple of external threads used (each one running one sieve) and internal threads used (how many threads each sieve uses).</returns>
+        private static (int thraeds, int pThreads) GetThreadCount(ISieveRunner sieve, SettingsV2 settings)
+        {
             int threads = 1;
             if (settings.MultiThreaded)
             {
                 threads = settings.ThreadCount == 0 ? Environment.ProcessorCount : settings.ThreadCount;
             }
 
-            int pthreads = 1;
+            int pThreads = 1;
             if (sieve.IsParallel)
             {
-                pthreads = settings.PThreadCount == 0 ? Environment.ProcessorCount : settings.PThreadCount;
+                pThreads = settings.PThreadCount == 0 ? Environment.ProcessorCount : settings.PThreadCount;
             }
 
+            return (threads, pThreads);
+        }
+
+        /// <summary>
+        /// Get the long form output of the sieve run.
+        /// </summary>
+        private static string GetLongOutputDescription(ISieveRunner sieve, int passes, Stopwatch watch, int threads, int pThreads)
+        {
             List<string> results = new();
 
             results.Add($"Passes: {passes}");
@@ -155,7 +215,7 @@ namespace PrimeCSharp
             results.Add($"Thread Count: {threads}");
             if (sieve.IsParallel)
             {
-                results.Add($"Parallel Thread Count: {pthreads}");
+                results.Add($"Parallel Thread Count: {pThreads}");
             }
             results.Add($"Primes: {sieve.CountPrimes()}");
             results.Add($"Valid: {PrimeData.IsCountCorrect(sieve.SieveSize, sieve.CountPrimes())?.ToString() ?? "Unable to determine"}");
@@ -164,25 +224,40 @@ namespace PrimeCSharp
                 results.Add($"Clear Count: {sieve.ClearCount}");
             }
 
-            Console.WriteLine(results.Aggregate((a, b) => $"{a}, {b}"));
+            return results.Aggregate((a, b) => $"{a}, {b}");
+        }
 
+        /// <summary>
+        /// Get the compact output of the sieve run.
+        /// </summary>
+        private static string GetCompactOutputDescription(ISieveRunner sieve, int passes, Stopwatch watch, int threads, int pThreads)
+        {
             // official syntax:
-            // kinematics_<sieve_tag>;<pass_count>;<runtime>;<pthread_count>
+            // <label>;<pass_count>;<runtime>;<num_threads>;<tags (if any)>
 
             StringBuilder sb = new();
 
+            // Fields:
             sb.Append($"kinematics_{sieve.Name};");
             sb.Append($"{passes};");
             sb.AppendFormat("{0:G6};", watch.Elapsed.TotalSeconds);
-            sb.Append($"{threads * pthreads};");
-            sb.Append($"algorithm={sieve.AlgorithmType};");
-            sb.Append($"faithful={(sieve.IsFaithful ? "yes" : "no")};");
+            sb.Append($"{threads * pThreads};");
+
+            // Tags:
+            sb.Append($"algorithm={sieve.AlgorithmType},");
+            sb.Append($"faithful={(sieve.IsFaithful ? "yes" : "no")},");
             sb.Append($"bits={sieve.BitsPerPrime}");
             sb.AppendLine();
 
-            Console.WriteLine(sb.ToString());
+            return sb.ToString();
         }
 
+        /// <summary>
+        /// Function to translate sieve property presets into functions to create a sieve object.
+        /// </summary>
+        /// <param name="sieve">The sieve requested.</param>
+        /// <param name="settings">The settings to be used during the sieve's run.</param>
+        /// <returns>Returns a function to create an instance of the requested sieve.</returns>
         private static Func<ISieveRunner>? GetSieveCreator(SieveProperty sieve, SettingsV2 settings)
         {
             return sieve switch
