@@ -460,37 +460,7 @@ write_str_end:
     rts
 
 ;
-; routine: write hex value in A to screen or file
-;
-;write_hex:
-;    ; save A to Y
-;    tay
-;
-;    ; shift left four bits to the right
-;    clc
-;    lsr
-;    lsr
-;    lsr
-;    lsr
-;
-;    ; load character and print it
-;    tax
-;    lda hex_chars,X
-;    jsr BSOUT
-;
-;    ; isolate right four bits
-;    tya
-;    and #$0f
-;
-;    ; load character and print it
-;    tax
-;    lda hex_chars,X
-;    jsr BSOUT
-;
-;    rts
-
-;
-; The following two routines have been heavily inspired by, not to say shamelessly stolen from, Ben Eater's YouTube video
+; The following routine has been heavily inspired by, not to say shamelessly stolen from, Ben Eater's YouTube video
 ; that can be found at https://www.youtube.com/watch?v=v3-a-zqKfgA. While you're there, watch the whole series and check  
 ; out his project page: https://eater.net/6502.
 ;
@@ -566,7 +536,7 @@ push_loop:
     pla
     sta clock_string,Y
     iny
-    tax
+    txa
     pha
 
     bne push_loop
