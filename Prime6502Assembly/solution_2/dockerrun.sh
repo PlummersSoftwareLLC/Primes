@@ -7,10 +7,8 @@ while : ; do
     sleep 10 
     c1541 -attach ./primes.d64 -list | grep -q output && \
         c1541 -attach ./primes.d64 -read output,s output.txt > /dev/null && \
-        mac2unix output.txt > /dev/null 2>&1 && \
-        cat output.txt       
-#        [ $(wc -l < output.txt) = "3" ] && \
-#        break
+        [ $(tr -d -c '\r' < output.txt | wc -c) = "2" ] && \
+        break
 done
 
 kill %1

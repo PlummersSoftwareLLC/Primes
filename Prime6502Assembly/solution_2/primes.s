@@ -229,6 +229,7 @@ write_validflag:
 
     jsr write_str
 
+    ; convert clock value to decimal string
     jsr clock_to_string
 
     lda #<clock_string
@@ -236,6 +237,7 @@ write_validflag:
     lda #>clock_string
     sta CURPTR+1
 
+    ; write the clock tick count
     jsr write_str
 
     ; move on to next line
@@ -545,6 +547,7 @@ push_loop:
     pla
     sta clock_string,Y
 
+    ; are we done dividing?
     lda clock
     ora clock+1
     ora clock+2

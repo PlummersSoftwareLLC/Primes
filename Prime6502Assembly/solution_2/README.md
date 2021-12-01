@@ -20,6 +20,11 @@ The first two points come with the consequence that some specific peculiarities 
 - The square root of the sieve size (as specifed using the `SIEVE_SQRT` symbol) needs to be divisible by 8, or else rounded up to the nearest multiple of 8.
 - The total memory available for the sieve buffer is 30,720 bytes (0x800 to 0x8000), which adds up to 245,760 bits. That means the largest supported sieve size is 491,520.
 
+### Decimal conversion
+Aside from the actual sieve implementation, the source code includes a routine called `clock_to_string` to output the number of software clock ticks it took to run the sieve, in decimal format. This is not strictly necessary for the solution; a previous version printed the number of ticks in hex. The reason I included the conversion to decimal in the assembly code is that I think it's a wonderful demonstration of how non-trivial a "simple operation" like binary to decimal conversion is on a CPU like the 6502. The challenge largely lies in the fact that the 6502 does not include instructions to multiply or divide.
+
+The routine in question is heavily inspired by, not to say shamelessly stolen from, [a YouTube video created by Ben Eater](https://www.youtube.com/watch?v=v3-a-zqKfgA). While you're there, do take the time to watch the whole 6502 computer series and check out his [project website](https://eater.net/6502) as well.
+
 ### Output
 The implementation shows progress indicators on the screen, as follows:
 - Initialization of the buffer to ones is marked with `-` (minus)
@@ -29,7 +34,7 @@ The implementation shows progress indicators on the screen, as follows:
 
 The results of the sieve run are written to a sequential file called OUTPUT on the first disk (unit 8). It consists of two lines:
 - A line indicating if the prime count is valid: `VALID Y` or `VALID N`
-- A line reporting the runtime of the sieve, in the shape of a 6-digit hexadecimal count of software clock ticks (each 1/60th of a second): `TIME 0Xnnnnnn`
+- A line reporting the runtime of the sieve, in the shape of a count of software clock ticks (each 1/60th of a second): `TIME nnnn`
 
 The parse script provided in the solution checks the prime count validity and, if valid, converts the software clock tick count to a number of seconds.
 
