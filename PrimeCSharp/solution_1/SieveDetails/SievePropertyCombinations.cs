@@ -30,6 +30,7 @@ namespace PrimeCSharp.SieveDetails
         public const SieveProperty PoolQ2 = SieveProperty.PoolStorage | SieveProperty.DataQword | SieveProperty.Alg1of2;
         public const SieveProperty PoolQ6 = SieveProperty.PoolStorage | SieveProperty.DataQword | SieveProperty.Alg2of6;
         public const SieveProperty PoolQ30 = SieveProperty.PoolStorage | SieveProperty.DataQword | SieveProperty.Alg8of30;
+        public const SieveProperty PoolQ2M = SieveProperty.PoolStorage | SieveProperty.DataQword | SieveProperty.Alg1of2 | SieveProperty.Bitmasking;
         public const SieveProperty PoolQ30M = SieveProperty.PoolStorage | SieveProperty.DataQword | SieveProperty.Alg8of30 | SieveProperty.Bitmasking;
 
         public const SieveProperty RawB2 = SieveProperty.RawStorage | SieveProperty.DataByte | SieveProperty.Alg1of2;
@@ -67,6 +68,7 @@ namespace PrimeCSharp.SieveDetails
             PoolQ2,
             PoolQ6,
             PoolQ30,
+            PoolQ2M,
             PoolQ30M,
             RawB2,
             RawB6,

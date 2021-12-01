@@ -138,6 +138,10 @@ namespace PrimeCSharp.Config
             Default = false, HelpText = "Use array pool 64-bit storage with the 8 of 30 algorithm")]
         public bool PoolQ30 { get; set; }
 
+        [Option("poolq2m",
+            Default = false, HelpText = "Use array pool 64-bit storage with the 1 of 2 algorithm and bitmasking")]
+        public bool PoolQ2M { get; set; }
+
         [Option("poolq30m",
             Default = false, HelpText = "Use array pool 64-bit storage with the 8 of 30 algorithm and bitmasking")]
         public bool PoolQ30M { get; set; }
@@ -306,6 +310,8 @@ namespace PrimeCSharp.Config
                 sieves.Add(SievePropertyCombinations.PoolQ6);
             if (PoolQ30)
                 sieves.Add(SievePropertyCombinations.PoolQ30);
+            if (PoolQ2M)
+                sieves.Add(SievePropertyCombinations.PoolQ2M);
             if (PoolQ30M)
                 sieves.Add(SievePropertyCombinations.PoolQ30M);
             if (RawB2)

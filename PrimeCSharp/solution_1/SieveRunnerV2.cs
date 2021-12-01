@@ -284,6 +284,7 @@ namespace PrimeCSharp
                 SievePropertyCombinations.PoolD30 => () => new PoolD30Sieve(settings.SieveSize),
                 SievePropertyCombinations.PoolQ30 => () => new PoolQ30Sieve(settings.SieveSize),
                 SievePropertyCombinations.PoolQ30M => () => new PoolQ30MSieve(settings.SieveSize),
+                SievePropertyCombinations.PoolQ2M => () => new PoolQ2MSieve(settings.SieveSize),
                 SievePropertyCombinations.RawB2 => () => new RawB2Sieve(settings.SieveSize),
                 SievePropertyCombinations.RawD2 => () => new RawD2Sieve(settings.SieveSize),
                 SievePropertyCombinations.RawQ2 => () => new RawQ2Sieve(settings.SieveSize),
