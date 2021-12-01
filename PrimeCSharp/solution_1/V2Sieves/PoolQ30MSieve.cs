@@ -10,7 +10,7 @@ namespace PrimeCSharp.V2Sieves
     {
         public string Name => "poolq30m";
         public string Description => "Array pool, 64 bit, 8 of 30, bitmasking";
-        public string AlgorithmType => "wheel+other";
+        public string AlgorithmType => "other";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
         public bool IsFaithful => false;
