@@ -56,16 +56,18 @@ basic_end:
     .org PROGRAM_START
     jmp start
 
-counter: .byte 0,0 
+counter: .word 0 
 fctr_byte: .byte $00
 fctr_bitcnt: .byte $03
 curptr_bit: .byte $01
 cndptr: .word 0
 cndptr_bit: .byte 0
-clock: .byte 0,0,0
-time_label: .byte "TIME 0X",0
+clock: .storage 3
+time_label: .byte "TIME ",0
 valid_label: .byte "VALID ",0
-hex_chars: .byte "0123456789ABCDEF"
+clock_string: .byte 0
+    .storage 8
+remainder: .storage 3
 
 start:
     ; save temp pointer
@@ -227,12 +229,16 @@ write_validflag:
 
     jsr write_str
 
-    lda clock+2
-    jsr write_hex
-    lda clock+1
-    jsr write_hex
-    lda clock
-    jsr write_hex
+    ; convert clock value to decimal string
+    jsr clock_to_string
+
+    lda #<clock_string
+    sta CURPTR
+    lda #>clock_string
+    sta CURPTR+1
+
+    ; write the clock tick count
+    jsr write_str
 
     ; move on to next line
     lda #EOL
@@ -456,31 +462,96 @@ write_str_end:
     rts
 
 ;
-; routine: write hex value in A to screen or file
+; The following routine has been heavily inspired by, not to say shamelessly stolen from, Ben Eater's YouTube video
+; that can be found at https://www.youtube.com/watch?v=v3-a-zqKfgA. While you're there, watch the whole series and check  
+; out his project page: https://eater.net/6502.
 ;
-write_hex:
-    ; save A to Y
-    tay
 
-    ; shift left four bits to the right
+div_tmp: .word 0
+
+;
+; routine: convert 24-bit value at *clock to decimal string at *clock_string using binary long division
+; Note that the value at *clock to *clock+2 will be destroyed (set to 0) in the process
+;
+clock_to_string:
+    ; set remainder to 0
+    lda #0
+    sta remainder
+    sta remainder+1
+    sta remainder+2
     clc
-    lsr
-    lsr
-    lsr
-    lsr
 
-    ; load character and print it
+    ldx #24
+
+div_loop:
+    ; rotate clock and remainder left
+    rol clock
+    rol clock+1
+    rol clock+2
+    rol remainder
+    rol remainder+1
+    rol remainder+2
+
+    ; try to substract divisor
+    sec
+    lda remainder
+    sbc #10
+    sta div_tmp
+    lda remainder+1
+    sbc #0
+    sta div_tmp+1
+    lda remainder+2
+    sbc #0
+    
+    ; dividend < divisor
+    bcc ignore_result
+
+    ; store current state of remainder
+    sta remainder+2
+    lda div_tmp+1 
+    sta remainder+1
+    lda div_tmp 
+    sta remainder
+
+ignore_result:
+    ; continue if there are bits left to shift
+    dex
+    bne div_loop
+
+    ; rotate last bit into quotient
+    rol clock
+    rol clock+1
+    rol clock+2
+
+    ; current remainder is clock digit value
+    lda remainder
+    clc
+    adc #'0'
+
+    pha
+    ldy #0
+
+; add clock digit to beginning of clock string
+push_loop:
+    lda clock_string,Y
     tax
-    lda hex_chars,X
-    jsr BSOUT
+    pla
+    sta clock_string,Y
+    iny
+    txa
+    pha
 
-    ; isolate right four bits
-    tya
-    and #$0f
+    bne push_loop
 
-    ; load character and print it
-    tax
-    lda hex_chars,X
-    jsr BSOUT
+    ; don't forget the closing null
+    pla
+    sta clock_string,Y
+
+    ; are we done dividing?
+    lda clock
+    ora clock+1
+    ora clock+2
+
+    bne clock_to_string
 
     rts

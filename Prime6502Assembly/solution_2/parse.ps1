@@ -6,7 +6,7 @@ Get-Content output.txt | ForEach-Object {
         break
     }
     elseif ($fields[0] -eq "TIME") {
-        "rbergen-pet;1;$([Convert]::ToInt64($fields[1], 16)/60);1;algorithm=base,faithful=no,bits=1"
+        "rbergen-pet;1;$([Convert]::ToInt32($fields[1])/60);1;algorithm=base,faithful=no,bits=1"
     }
 }
 Remove-Item output.txt

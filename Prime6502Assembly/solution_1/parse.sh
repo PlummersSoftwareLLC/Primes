@@ -14,6 +14,6 @@ fi
 
 mac2unix output.txt > /dev/null 2>&1
 
-awk -n '/TIME/ {RUNTIME=$2} END {printf("rbergen-c128;1;%.3f;1;algorithm=base,faithful=no,bits=1\n", RUNTIME/60.0)}' output.txt
+awk '/TIME/ {RUNTIME=$2} END {printf("rbergen-c128;1;%.3f;1;algorithm=base,faithful=no,bits=1\n", RUNTIME/60.0)}' output.txt
 
 rm output.txt
