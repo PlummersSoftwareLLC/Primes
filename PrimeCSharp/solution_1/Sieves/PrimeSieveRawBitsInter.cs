@@ -9,6 +9,8 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "raw32";
         public string Name => "Raw Allocation, uint";
+        public bool IsBaseAlgorithm => true;
+        public int? BitsPerPrime => 1;
 
         public int SieveSize { get; }
         private readonly uint[] rawbits;
@@ -34,7 +36,7 @@ namespace PrimeCSharp.Sieves
             _ = GetRawBits(rawbits, 0);
 
             int count = 1;
-            for (uint i = 3; i < SieveSize; i++)
+            for (uint i = 3; i < SieveSize; i += 2)
                 if (GetBit(rawbits, i))
                     count++;
             return count;
@@ -88,8 +90,7 @@ namespace PrimeCSharp.Sieves
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool GetBit(uint[] bits, uint index)
         {
-            if (index % 2 == 0)
-                return false;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
             index /= 2;
 
@@ -103,23 +104,22 @@ namespace PrimeCSharp.Sieves
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ClearBit(uint[] bits, uint index)
         {
-            if (index % 2 == 1)
-            {
-                index /= 2;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-                uint mask = ~(1u << (int)(index % elementBits));
+            index /= 2;
 
-                GetRawBits(bits, index / elementBits) &= mask;
+            uint mask = ~(1u << (int)(index % elementBits));
 
-                // Test Interlocked.CompareExchange penalty
-                //uint raw = GetRawBits(bits, index / elementBits);
-                //uint nRaw = raw & mask;
+            GetRawBits(bits, index / elementBits) &= mask;
 
-                //while (Interlocked.CompareExchange(ref GetRawBits(bits, index / elementBits), nRaw, raw) != raw)
-                //{
-                //    raw = GetRawBits(bits, index / elementBits);
-                //}
-            }
+            // Test Interlocked.CompareExchange penalty
+            //uint raw = GetRawBits(bits, index / elementBits);
+            //uint nRaw = raw & mask;
+
+            //while (Interlocked.CompareExchange(ref GetRawBits(bits, index / elementBits), nRaw, raw) != raw)
+            //{
+            //    raw = GetRawBits(bits, index / elementBits);
+            //}
         }
     }
 }

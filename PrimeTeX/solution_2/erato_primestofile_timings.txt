@@ -1,0 +1,176 @@
+=============
+N = 1,000,000
+=============
+
+$ time tex erato_primestofile
+This is TeX, Version 3.141592653 (TeX Live 2021) (preloaded format=tex)
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 1000000...
+...done
+Sieving...
+...done
+Outputting to file listofprimes-1000000.txt...
+78498 primes were written to file listofprimes-1000000.txt
+...done
+ ) )
+No pages of output.
+Transcript written on erato_primestofile.log.
+
+real	0m0.698s
+user	0m0.644s
+sys	0m0.025s
+
+$ time pdftex erato_primestofile
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 1000000...
+...done (0.00308s)
+Sieving...
+...done (0.1964s)
+Outputting to file listofprimes-1000000.txt...
+78498 primes were written to file listofprimes-1000000.txt
+...done (0.32129s)
+ ) )
+No pages of output.
+Transcript written on erato_primestofile.log.
+
+real	0m0.715s
+user	0m0.688s
+sys	0m0.021s
+
+==============
+N = 10,000,000
+==============
+
+$ time tex "\def\Range{10000000}\input erato_primestofile"
+This is TeX, Version 3.141592653 (TeX Live 2021) (preloaded format=tex)
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done
+Sieving...
+...done
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done
+ ) )
+No pages of output.
+Transcript written on erato_primestofile.log.
+
+real	0m5.147s
+user	0m5.087s
+sys	0m0.050s
+
+$ time pdftex "\def\Range{10000000}\input erato_primestofile"
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done (0.02281s)
+Sieving...
+...done (2.12775s)
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done (3.1084s)
+ ) )
+No pages of output.
+Transcript written on erato_primestofile.log.
+
+real	0m5.445s
+user	0m5.396s
+sys	0m0.040s
+
+$ time luatex "\def\Range{10000000}\input erato_primestofile"
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done (0.38802s)
+Sieving...
+...done (2.26599s)
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done (3.73978s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on erato_primestofile.log.
+
+real	0m6.706s
+user	0m6.630s
+sys	0m0.066s
+
+===============
+N = 100,000,000 
+===============
+
+$ time pdftex -cnf-line font_mem_size=51000000 -cnf-line extra_mem_top=10000000 "\def\Range{100000000}\input erato_primestofile"
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 100000000...
+...done (0.228s)
+Sieving...
+...done (23.0767s)
+Outputting to file listofprimes-100000000.txt...
+5761455 primes were written to file listofprimes-100000000.txt
+...done (30.0577s)
+ ) )
+No pages of output.
+Transcript written on erato_primestofile.log.
+
+real	0m53.558s
+user	0m53.219s
+sys	0m0.253s
+
+$ time luatex "\def\Range{100000000}\input erato_primestofile"
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 100000000...
+...done (3.97836s)
+Sieving...
+...done (24.47266s)
+Outputting to file listofprimes-100000000.txt...
+5761455 primes were written to file listofprimes-100000000.txt
+...done (35.46765s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on erato_primestofile.log.
+
+real	1m4.359s
+user	1m3.823s
+sys	0m0.423s
+
+===============
+N = 999,999,999
+===============
+
+$ time luatex "\def\Range{999999999}\input erato_primestofile"
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./erato_primestofile.tex (./erato_sieve.tex (./shared_batteries.tex))
+(./shared_primestofile.tex
+Instantiate object for sieving up to 999999999...
+...done (38.58249s)
+Sieving...
+...done (268.19083s)
+Outputting to file listofprimes-999999999.txt...
+50847534 primes were written to file listofprimes-999999999.txt
+...done (342.9771s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on erato_primestofile.log.
+
+real	10m52.208s
+user	10m46.585s
+sys	0m3.640s

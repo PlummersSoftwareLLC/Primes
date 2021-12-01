@@ -4,7 +4,6 @@ WORKDIR /home/opam/primeocaml
 
 COPY *.ml ./
 
-RUN sudo chown -R opam:nogroup .
 RUN corebuild PrimeOCaml.native
 
 FROM alpine:3.13

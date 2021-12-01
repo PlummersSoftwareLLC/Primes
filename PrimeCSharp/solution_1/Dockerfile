@@ -1,20 +1,22 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/runtime:5.0 AS base
-WORKDIR /app
+FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
+WORKDIR /source
 
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
-WORKDIR /src
-COPY ["PrimeCSharp.csproj", "."]
-RUN dotnet restore "./PrimeCSharp.csproj"
+# copy csproj and restore dependencies
+COPY *.csproj ./
+RUN dotnet restore
+
+# copy and publish app and libraries
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "PrimeCSharp.csproj" -c Release -o /app/build
+RUN dotnet publish -c release -o /app --no-restore
 
-FROM build AS publish
-RUN dotnet publish "PrimeCSharp.csproj" -c Release -o /app/publish
-
-FROM base AS final
+# final stage/image
+FROM mcr.microsoft.com/dotnet/runtime:6.0-focal AS publish
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "PrimeCSharp.dll", "--all"]
+COPY --from=build /app .
+
+# default entry point and command argument
+ENTRYPOINT ["./PrimeCSharp"]
+CMD ["--all"]
+

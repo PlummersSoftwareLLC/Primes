@@ -1,0 +1,430 @@
+% Prime Sieve with TeX
+% author: jfbu
+% date:   2021/07/24--2021/08/06
+%
+% This file defines syntax for a  "Sieve object" in TeX lingua with its
+% associated methods: sieve, reset, settocount, outtofile.
+%
+% Usage:
+%
+% \NewSieve{<name>}{<range>}
+%
+% \Sieve <name>.sieve{} executes the sieve
+% \Sieve <name>.reset{} resets all array entries to 0
+%
+% after sieve method has been executed one has access to:
+%
+% \Sieve <name>.settocount{\macro} sets \macro to the number of primes
+% \Sieve <name>.outtofile{<filename>} ships out all found primes,
+%    one per line to file <filename>.
+%    It will also write to stdout the number of primes found
+% 
+% Algorithm:
+%
+% essentially this is the "Base Algorithm" as described in
+%
+% https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/CONTRIBUTING.md
+%
+% In particular:
+%
+% - inner loops start at factor*factor
+%
+% - increments in the inner loops go (morally) by step of 2*factor
+%
+% Some specifics:
+%
+% - primes are marked as 0, non-primes as 1. The array entries type is
+%   a TeX dimension, which pdftex represents (I think) as 32bits words.
+%   So more precisely primes are marked as 0sp and non-primes as 1sp.
+%   * update on August 5: use \dimen's \z@ and \onesp for significantly
+%     faster assignments; I knew this would bring some gain but I did not
+%     expect it as big as it turned out.
+%   * update on August 6: use = sign for all assignments. Faster. Also,
+%     I tested "by" for \advance but it is definitely slower adding it
+%   * putting the replicated bodies in "\action" macros is also definitely
+%     slower
+%   * the \romannumeral in \Replicate is a legacy from where this macro
+%     was taken (xintkernel.sty, which itself cloned it from latex3)
+%     and serves nothing
+%     Surprisingly tests with luatex 1.13 definitely show it is advantageous.
+%     But tests with the luatex 1.07.0 from the Docker container are less
+%     conclusive... perhaps because there are less files in the texmf trees,
+%     as unexpectedly this is sensitive to whether TEXMFCNF is set or not!
+%     Weird and we are entering areas where
+%     things are more or less pronounced depending on engine (pdftex,
+%     luatex, dev version of successor of luatex...)
+%   * using \ifcase rather than \ifdim\foo=\z@ is faster (thanks to HH)
+%   * I test the above with luatex as it is used for benchmark. I hope
+%     my luatex 2021 behaves as luatex 2018 from the Docker image...
+%
+% - index j stands for the number 2j+1 and starts at j=1. So the sieving
+%   array in memory represents only odd numbers, first one 3.
+%
+% - For a range N (at least 3) we thus instantiate an array of J "32bits
+%   words"
+%   with maximal J such that 2J+1<=N, i.e. J=(N-1)//2.
+%
+% Acknowledgements:
+%
+% - thanks to Kpym for helping me out with docker matters, and
+%   for drawing my attention to this "drag race" to start with
+%
+% TeXnicalities:
+%
+% - ////                                                   \\\\
+%   This library file uses only base Knuth's tex, i.e. it
+%   doesn't use the e-TeX extensions such as \numexpr but,
+%   only the TeX's syntax with \multiply, \divide, \advance.
+%   \\\\                                                   ////
+%
+% - TeX has no native array type so we use "font dimension arrays".
+%   There is no way that I know of to release the memory, only
+%   to re-use it (and the array size can not be modified as soon
+%   as some other font is defined).
+%
+% - The native font memory size available in pdftex is only
+%   of 8,000,000 words. To sieve up to about or more than
+%   about twice this, it is needed to tell pdftex to run
+%   with more (static) font memory. For this see file texmf.cnf
+%   and/or the README.md
+%
+% - luatex has dynamic memory allocation so is not constrained
+%   but maximal N is at 999,999,999 due to a limitation
+%   (which could be lifted) from a shared_batteries.tex
+%   auxiliary macro (square root)
+
+
+% activate @ as a letter for being more mysterious
+\catcode`@ 11
+% and use also _ as a letter to appear even more TeXnical
+\catcode`_ 11
+
+\input shared_batteries.tex
+
+% this will serve to mark composites
+\newdimen\onesp \onesp=1sp
+
+% additional count registers 
+\newcount\indexa
+\newcount\indexb 
+
+\newcount\cnta
+\newcount\cntb
+\newcount\cntc
+\newcount\cntd
+\newcount\cstA
+\newcount\cstB
+
+\newcount\instance
+
+% we need a write stream for the \Sieve <sieveobject>.outtofile{} method
+\newwrite\out
+
+% INSTANTIATION OF A SIEVING OBJECT
+% =================================
+
+\def\Sieve #1.{\csname _svobj.#1\endcsname}%
+
+\def\NewSieve#1{%
+  % #1 is the name given by user
+  % As it may need expansion, we do this expansion once immediately
+  \edef\tmp{{#1}}%
+  \expandafter\_NewSieve\tmp
+}%
+
+\def\_NewSieve#1#2{%
+  % This is the "init" method for a new Sieve instantiation
+  %
+  % #1 is the name given by user to the sieve object.
+  % #2 is its range (included in array if odd)
+  %
+  % Access to its methods or attributes is done either via this syntax:
+  %    \Sieve foo.<method>{}
+  % where the {} is mandatory,
+  %
+  % Or via this syntax (with CamelCase for the method name)
+  %     \Sieve<method>{foo}
+  % (some methods may use a second argument)
+  %
+  % attributes:
+  % - range
+  % - instance (used internally)
+  %
+  % methods:
+  % sieve: execute the sieving of the array
+  % reset: clear the array, cancelling all sieving work
+  % settocount: compute the number of primes in the given range
+  %             and assigns it to macro argument
+  %     (the sieve method must have been executed first)
+  % outtofile: outputs primes one per line to given filename
+  %     (the sieve method must have been executed first)
+  %
+  \expandafter\def\csname _svobj.#1\endcsname##1##{\csname _svobj.#1.##1\endcsname}%
+  % range A
+  \cstA=#2\relax
+  %  (the ##1 is only to gobble the {} from the method calling syntax)
+  \expandafter\edef\csname _svobj.#1.range\endcsname##1{\the\cstA}%
+  %
+  % array size 2J+1<= A 
+  \cnta=\cstA
+  \advance\cnta-\@ne
+  \divide\cnta\tw@
+  %
+  % object instance number (used internally to label class instantiations)
+  \advance\instance\@ne
+  \expandafter\edef\csname _svobj.#1.instance\endcsname##1{\the\instance}%
+  %
+  % an array of font dimensions (each a 32bits word)
+  \cntb=665
+  \advance\cntb\instance
+  % Initialize a font
+  \font\_svobjarray=cmr10 at \cntb sp % each class instantiation via own font
+                                % point size 666sp, 667sp, ....
+  % Create the array of its parameters 
+  \fontdimen\cnta\_svobjarray=\z@
+  %
+  % Save the name
+  \expandafter\let\csname _svobjarray.#1\endcsname\_svobjarray
+  %
+  % The array entries are set to 0, apart from the first few ones
+  % We must fix this here
+  \fontdimen1\_svobjarray=\z@ 
+  \fontdimen2\_svobjarray=\z@
+  \fontdimen3\_svobjarray=\z@
+  \fontdimen4\_svobjarray=\z@
+  \fontdimen5\_svobjarray=\z@
+  \fontdimen6\_svobjarray=\z@
+  \fontdimen7\_svobjarray=\z@
+  \fontdimen8\_svobjarray=\z@ % needed for usage with luatex
+  %
+  % sieve method (the ##1 gobbles the {} of the syntax)
+  %
+  \expandafter\def\csname _svobj.#1.sieve\endcsname##1{%
+      \SieveSieve{#1}%
+  }%
+  %
+  % reset method (the ##1 gobbles the {} of the syntax)
+  %
+  \expandafter\def\csname _svobj.#1.reset\endcsname##1{%
+      \SieveReset{#1}%
+  }%
+  %
+  % settocount method (assigns to the second argument the count of primes)
+  %
+  \expandafter\def\csname _svobj.#1.settocount\endcsname{%
+      \SieveSetToCount{#1}%
+  }%
+  %
+  % outtofile method (outputs to the filename given as second argument the list
+  % of primes, one per line)
+  %
+  \expandafter\def\csname _svobj.#1.outtofile\endcsname{%
+      \SieveOutToFile{#1}%
+  }%
+  % 
+}% end of \_NewSieve
+
+%
+% sieve method
+%
+\def\SieveSieve#1{%
+    % Set \_svobjarray to the font array
+    \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
+    % Set \cstB to its square root
+    \SetToSqrt\cstA\cstB
+    %
+    \indexa=\z@
+    %
+    % Start the actual sieving
+    % We need to check indices 1..J with 2J+1<=B, so increment J times
+    % by 1 the index, initially with value 0.
+    \cntb=\cstB
+    \advance\cntb-\@ne
+    \divide\cntb\tw@
+    \Replicate{\the\cntb}{%
+      \advance\indexa\@ne
+      % do we have a prime?
+      \ifcase\fontdimen\indexa\_svobjarray
+        % yes, so let's sieve out its multiples
+        % starting with factor*factor
+        \cntc=\indexa      % will hold the factor
+        \advance\cntc\cntc
+        \advance\cntc\@ne % \cntc = 2j+1 = odd factor
+        %
+        \cntb=\cntc
+        \multiply \cntb \cntb % factor*factor
+        %
+        \indexb=\cntb
+        \divide \indexb \tw@ % (odd number x) //2 gives j such that x=2j+1
+        \fontdimen\indexb\_svobjarray=\onesp % factor * factor now sieved out
+         %
+        \cnta=\cstA % Range
+        \advance\cnta-\cntb % Range - factor * factor
+        \divide \cnta\cntc  % how many odd numbers still to sieve out ?
+        \divide \cnta\tw@   % that many
+        %
+        % let's work with batches of 1000 at a time
+        \cntb=\cnta
+        \divide\cntb\@m % \@m is 1000
+        %
+        \Replicate{\the\cntb}{%
+          \ReplicateM{%
+            \advance\indexb\cntc % j steps by factor, thus 2*j+1 by 2*factor
+            \fontdimen\indexb\_svobjarray=\onesp % sieved out 
+           }%
+         }%
+        \multiply\cntb\@m
+        \advance\cnta-\cntb % this is what remains to be done
+        \Replicate{\the\cnta}{%
+          \advance\indexb\cntc
+          \fontdimen\indexb\_svobjarray=\onesp % sieved out 
+        }%
+      \fi % end of branch handling sieving out multiples of a prime factor <= sqrt(Range)
+    }%
+}% end of \SieveSieve
+
+%
+% reset method
+%
+\def\SieveReset#1{%
+    % Set \_svobjarray to the font array
+    \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
+    %
+    \cnta=\cstA
+    \advance\cnta-\@ne
+    \divide\cnta\tw@
+    %
+    \indexa=\z@
+    %
+        % let's work with batches of 1000 at a time
+        \cntb=\cnta
+        \divide\cntb\@m % \@m is 1000
+        %
+        \Replicate{\the\cntb}{%
+          \ReplicateM{%
+            \advance\indexa\@ne
+            \fontdimen\indexa\_svobjarray=\z@ %
+           }%
+         }%
+        \multiply\cntb\@m
+        \advance\cnta-\cntb % this is what remains to be done
+        \Replicate{\the\cnta}{%
+          \advance\indexa\@ne
+          \fontdimen\indexa\_svobjarray=\z@ %
+        }%
+}% end of \SieveReset
+
+%
+% settocount method
+%
+\def\SieveSetToCount#1#2{%
+    % Set \_svobjarray to the font array
+    \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
+    % Get the length of the fontdimen array: 2J+1<=N
+    \cnta=\cstA
+    \advance\cnta-\@ne
+    \divide\cnta\tw@
+    % index will get incremented by 1, initialize it at 0
+    \indexa=\z@
+    % \cntc will hold the count of primes, set it to 1 as 2 is prime
+    \cntc=\@ne
+    % Proceed by batches of 1000 at a time
+    \cntb=\cnta
+    \divide\cntb\@m
+    \Replicate{\the\cntb}{%
+        \ReplicateM{%
+          \advance\indexa\@ne
+          \ifcase\fontdimen\indexa\_svobjarray
+             \advance\cntc\@ne % we have a prime
+          \fi
+         }%
+       }%
+    % get how many remain to be checked
+    \multiply\cntb\@m
+    \advance\cnta-\cntb
+    % and do it
+    \Replicate{\the\cnta}{%
+          \advance\indexa\@ne
+          \ifcase\fontdimen\indexa\_svobjarray
+             \advance\cntc\@ne % we have a prime
+          \fi
+         }%
+    % At the end we have incremented \indexa (by 1) \cnta times
+    % initial value was 0, final value of index is the array size \cnta
+    % Store in macro #2 the result
+    \edef#2{\the\cntc}%
+}% end of \SieveSetToCount
+
+%
+% outtofile method. Writing out to a file is significantly
+% more time costly than doing the actual sieving. I tried
+% with no great success to group the primes into batches
+% before each \write.
+%
+\def\SieveOutToFile#1#2{%
+  % #1 is the sieve object name
+  % #2 is the file name
+  % The sieve method of the #1 object must have been executed first
+  \immediate\openout\out=#2\relax
+    % Set \_svobjarray to the font array
+    \expandafter\let\expandafter\_svobjarray\csname _svobjarray.#1\endcsname
+    % Set \cstA to be the sieve range. Attention that \_svobj.<foo>.range
+    % is defined to gobble a {}...
+    \cstA=\csname _svobj.#1.range\endcsname{}\relax
+    % Get the length of the fontdimen array: 2J+1<=N
+    \cnta=\cstA
+    \advance\cnta-\@ne
+    \divide\cnta\tw@
+    % index will get incremented by 1, initialize it at 0
+    \indexa \z@
+    % 2 is prime
+  \immediate\write\out{2}%
+  \cntd=\@ne
+    % Proceed by batches of 1000 at a time
+    \cntb=\cnta
+    \divide\cntb\@m
+    \Replicate{\the\cntb}{%
+        \ReplicateM{%
+          \advance\indexa\@ne
+          \ifcase\fontdimen\indexa\_svobjarray
+  % we have a prime
+  \cntc=\indexa
+  \advance\cntc\cntc
+  \advance\cntc\@ne
+  \immediate\write\out{\the\cntc}%
+  \advance\cntd\@ne
+          \fi
+         }%
+      }%
+    % get how many remain to be checked
+    \multiply\cntb\@m
+    \advance\cnta-\cntb
+    % and do it
+    \Replicate{\the\cnta}{%
+          \advance\indexa\@ne
+          \ifcase\fontdimen\indexa\_svobjarray
+  % we have a prime
+  \cntc=\indexa
+  \advance\cntc\cntc
+  \advance\cntc\@ne
+  \immediate\write\out{\the\cntc}%
+  \advance\cntd\@ne
+          \fi
+         }%
+    % At the end we have incremented \indexa (by 1) \cnta times
+    % initial value was 0, final value of index is the array size \cnta
+  \immediate\closeout\out
+  \immediate\write128{\the\cntd\space primes were written to file #2}%
+}% END OF \SieveOutToFile
+
+\endinput
+

@@ -1,0 +1,89 @@
+% Prime Sieve with TeX
+% author: jfbu
+% date:   2021/07/24-27, 2021/08/15
+%
+% activate @ as a letter for being more mysterious
+\catcode`@ 11
+% and use also _ as a letter to appear even more TeXnical
+\catcode`_ 11
+
+% Load Sieve code
+\input \ALGONAME _sieve.tex
+
+\def\BenchmarkRange{1000000}%
+\def\BenchmarkMinimalDuration{327680}% 5s (327680 = 5*65536)
+
+% Data for validation (will be used only if range is among listed values)
+\def\@namedef#1{\expandafter\def\csname #1\endcsname}%
+\@namedef{PrimeCount10}{4}%
+\@namedef{PrimeCount100}{25}%
+\@namedef{PrimeCount1000}{168}%
+\@namedef{PrimeCount10000}{1229}%
+\@namedef{PrimeCount100000}{9592}%
+\@namedef{PrimeCount1000000}{78498}%
+\@namedef{PrimeCount10000000}{664579}%
+\@namedef{PrimeCount100000000}{5761455}%
+\@namedef{PrimeCount999999999}{50847534}% even memory and time aside,
+                                % 999999999 is max due to simple-minded
+                                % square-root macro in shared_batteries.tex
+
+% luatex compatibility layer (it does not know \pdfresettimer)
+\ifdefined\directlua
+      % **too** complicated to get this to work with Docker (and I wasted
+      % enough time on this)
+      % \input pdftexcmds.sty
+      % \let\pdfresettimer\pdf@resettimer
+      % \let\pdfelapsedtime\pdf@elapsedtime
+% https://tex.stackexchange.com/a/32531
+\directlua{pdfelapsedtimer_basetime=0}%
+\def\pdfresettimer{\directlua{pdfelapsedtimer_basetime = os.clock()}}%
+\def\pdfelapsedtime{\numexpr\directlua{tex.print(math.floor((os.clock()-pdfelapsedtimer_basetime)*65536+0.5))}\relax}%
+\fi  
+
+% auxiliary for converting \pdfelapsedtime output into seconds
+{\catcode`P12\catcode`T12\lowercase{\gdef\strippt#1PT{#1}}}%
+\def\SetToElapsedTime#1%
+   {\edef#1{\expandafter\strippt\the\dimexpr\pdfelapsedtime sp}}%
+
+% counter for number of passes
+\newcount\nbofpasses
+
+% start timing
+\pdfresettimer
+
+% \xloop is a loop macro defined in imported shared_batteries.tex
+\xloop
+    \advance\nbofpasses\@ne
+%
+% instantiate an object
+    \NewSieve{foo\the\nbofpasses}{\BenchmarkRange}%
+%
+% execute the sieve
+    \Sieve foo\the\nbofpasses.sieve{}%
+%
+% check current duration
+\ifnum\pdfelapsedtime<\BenchmarkMinimalDuration\relax
+\repeat
+%
+% freeze elapsed time and convert it to a value in seconds
+\SetToElapsedTime\T
+%
+% compute how many prime numbers were found
+\Sieve foo1.settocount{\FooPrimeCount}%
+%
+% we can not prevent pdftex banner from stdout so write to a tmp file
+% which will be then cat by run.sh
+\newwrite\out
+\immediate\openout\out=\ALGONAME _benchmark-out.txt
+\immediate\write\out{jfbu-\ALGOID;\the\nbofpasses;\T;1;algorithm=\ALGOTYPE,faithful=no,bits=32}
+%
+% Validate
+\expandafter\ifx\csname PrimeCount\BenchmarkRange\endcsname\relax
+\else
+  \ifnum\csname PrimeCount\BenchmarkRange\endcsname=\FooPrimeCount\relax
+  \else
+   \immediate\write\out{ERROR IN PRIME COUNT: found \FooPrimeCount, expected
+                        \csname PrimeCount\BenchmarkRange\endcsname}%
+  \fi
+\fi
+\endinput

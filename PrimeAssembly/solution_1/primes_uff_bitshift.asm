@@ -5,6 +5,7 @@
 global main
 
 extern printf
+extern clock_gettime
 
 default rel
 
@@ -17,15 +18,13 @@ section .data
 
 SIEVE_SIZE      equ     1000000             ; sieve size
 RUNTIME         equ     5                   ; target run time in seconds
-BIT_SIZE        equ     (SIEVE_SIZE+1)/2    ; prime candidate bit count
-BLOCK_COUNT     equ     (BIT_SIZE/64)+1     ; 8-byte block size
-BYTE_SIZE       equ     BLOCK_COUNT*8       ; bytes needed
+BLOCK_COUNT     equ     (SIEVE_SIZE/128)+1  ; 16-byte block size
+BYTE_SIZE       equ     BLOCK_COUNT*16      ; bytes needed
 TRUE            equ     1                   ; true constant
 FALSE           equ     0                   ; false constant
 SEMICOLON       equ     59                  ; semicolon ascii
 INIT_BLOCK      equ     0ffffffffffffffffh  ; init block for prime array            
 
-CLOCK_GETTIME   equ     228                 ; syscall number for clock_gettime
 CLOCK_MONOTONIC equ     1                   ; CLOCK_MONOTONIC
 WRITE           equ     1                   ; syscall number for write
 STDOUT          equ     1                   ; file descriptor of stdout
@@ -55,6 +54,7 @@ section .bss
 
 startTime:      resb    time_size           ; start time of sieve run
 duration:       resb    time_size           ; duration
+align 16
 bPrimes:        resb    BYTE_SIZE           ; array with prime candidates
 
 section .text
@@ -75,22 +75,27 @@ main:
     cvttsd2si   r13d, xmm0                  ; sizeSqrt = xmm0 
     inc         r13d                        ; sizeSqrt++, for safety 
 
+    mov         rax, INIT_BLOCK             ; rax = INIT_BLOCK
+    push        rax                         ; push rax to stack (3 times needed to align to 16 byte)
+    push        rax
+    push        rax
+    movdqa      xmm0, [rsp]                 ; store init block in 128-bit xmm0 register (used in initLoop)
+    add         rsp, 24                     ; restore stack pointer
+
 ; get start time
-    mov         rax, CLOCK_GETTIME          ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [startTime]            ; * struct to store result in
-    syscall
+    call        clock_gettime wrt ..plt
 
 runLoop:
 
 ; initialize prime array   
-    mov         ecx, 0                      ; arrayIndex = 0                       
-    mov         rax, INIT_BLOCK
+    xor         ecx, ecx                    ; byteCounter = 0
 
 initLoop:
-    mov         [bPrimes+8*ecx], rax        ; bPrimes[arrayIndex*8][0..63] = true
-    inc         ecx                         ; arrayIndex++
-    cmp         ecx, BLOCK_COUNT            ; if arrayIndex < array size...
+    movdqa      [bPrimes+ecx], xmm0         ; bPrimes[byteCounter][0..127] = true
+    add         ecx, 16                     ; byteCounter += 16
+    cmp         ecx, BYTE_SIZE              ; if byteCounter < array size...
     jb          initLoop                    ; ...continue initialization
 
 ; run the sieve
@@ -98,75 +103,77 @@ initLoop:
 ; registers:
 ; * eax: number
 ; * ebx: factor
-; * rcx: clrBitNumber/clrCurWord
+; * rcx: clrBitNumber/getCurWord/clrRollBits
 ; * rdx: clrBitSelect
-; * r8: clrWordIndex
-; * r9: fctWordIndex
-; * r10: fctBitSelect
-; * r11: fctCurWord
+; * r9: clrSkipValue
+; * r10: clrCurWord
 ; * r12d: runCount
 ; * r13d: sizeSqrt
 
-    mov         rbx, 3                      ; factor = 3
-    mov         r9, 0                       ; fctWordIndex = 0
-    mov         r10, 2                      ; fctBitSelect = 0b00000010
+    mov         ebx, 3                      ; factor = 3
 
 sieveLoop:
-    mov         rax, rbx                    ; number = factor...
-    mul         ebx                         ; ... * factor
-    shr         eax, 1                      ; number /= 2
+    mov         eax, ebx                    ; number = factor...
 
-; clear multiples of factor
-unsetLoop:
-    mov         rcx, rax                    ; clrBitNumber = number
-    and         rcx, 63                     ; clrBitNumber &= 0b00111111
-    mov         rdx, 1                      ; clrBitSelect = 1
-    shl         rdx, cl                     ; clrBitSelect <<= clrBitNumber
-    mov         r8, rax                     ; clrWordIndex = number
-    shr         r8, 6                       ; clrWordIndex /= 64
-    mov         rcx, [bPrimes+8*r8]         ; clrCurWord = (long)bPrimes[clrWordIndex * 8]
-    not         rdx                         ; clrBitSelect = ~clrBitSelect
-    and         rcx, rdx                    ; clrCurWord &= clrBitSelect
-    mov         [bPrimes+8*r8], rcx         ; (long)bPrimes[clrWordIndex * 8] = clrCurWord
-    add         eax, ebx                    ; number += factor
-    cmp         eax, BIT_SIZE               ; if number < bit count...
-    jb          unsetLoop                   ; ...continue marking non-primes
+getBitLoop:
+    mov         cl, al
+    and         cl, 31                      ; clrBitNumber = number % 32
+    mov         edx, 1                      ; clrBitSelect = 1
+    shl         edx, cl                     ; clrBitSelect <<= clrBitNumber
 
-; if the factor <= sqrt 129 then we (re)load the first qword of bits, because it was changed by the marking of non-primes 
-    cmp         ebx, 11                     ; if factor > 11...
-    ja          factorLoop                  ; ...we can start looking for the next factor...
-    mov         r11, qword [bPrimes]        ; ...else fctCurWord = (long)bPrimes[0]
+    mov         ecx, eax
+    shr         ecx, 5                      ; getCurWord = number / 32
+    and         edx, [bPrimes + ecx * 4]    ; test if bit is set in seive
+    jnz         getBitEarlyEnd              ; if bit is set, factor = number and break
+                                            ; if bit not set...
+    add         eax, 2                      ; number += 2
+    cmp         eax, SIEVE_SIZE             ; if number < sieveSize...
+    jb          getBitLoop                  ; continue getting bits
+    jmp         clearBitInit                ; if no bits are set, do not update factor
 
-; find next factor
-factorLoop:
-    add         ebx, 2                      ; factor += 2
-    cmp         ebx, r13d                   ; if factor > sizeSqrt...
-    ja          endRun                      ; ...end this run
+getBitEarlyEnd:
+    mov         ebx, eax                    ; factor = number
 
-    shl         r10, 1                      ; fctBitSelect <<= 1
-    jnz         checkBit                    ; if fctBitSelect != 0 then check bit
+clearBitInit:
+    mov         eax, ebx
+    imul        eax, eax                    ; number = factor * factor
+    cmp         eax, SIEVE_SIZE             ; if number >= sieveSize...
+    jae         sieveLoopEnd                ; skip over clearBitLoop
 
-; we just shifted the select bit out of the register, so we need to move on the next word
-    inc         r9                          ; fctWordIndex++
-    mov         r10, 1                      ; fctBitSelect = 1
-    mov         r11, [bPrimes+8*r9]         ; fctCurWord = (long)bPrimes[8 * fctWordIndex]
+    mov         cl, al
+    and         cl, 31                      ; clrBitNumber = number % 32
+    mov         edx, 1                      ; clrBitSelect = 1
+    shl         edx, cl                     ; clrBitSelect <<= clrBitNumber
+    not         edx                         ; clrBitSelect ~= clrBitSelect
 
-checkBit:
-    test        r11, r10                    ; if fctCurWord & fctBitSelect != 0...
-    jnz         sieveLoop                   ; ...continue this run
-    jmp         factorLoop                  ; keep looking for next factor
+    mov         r9d, ebx
+    add         r9d, r9d                    ; clrSkipValue = factor + factor
 
-endRun:
+    mov         cl, r9b
+    and         cl, 31                      ; clrRollBits = clrSkipValue % 32
+
+clearBitLoop:
+    mov         r10d, eax
+    shr         r10d, 5                     ; clrCurWord = numer / 32
+    and         [bPrimes + r10d * 4], edx   ; clear the bit
+    rol         edx, cl                     ; rotate clrBitSelect left by clrRollBits
+    add         eax, r9d                    ; number += clrSkipValue
+    cmp         eax, SIEVE_SIZE             ; if number < sieveSize...
+    jb          clearBitLoop                ; ...continue clearing bits
+
+sieveLoopEnd:
+    add         ebx, 2
+    cmp         ebx, r13d                   ; if factor <= sizeSqrt...
+    jbe         sieveLoop                   ; ...continue this run
 
 ; registers: 
 ; * rax: numNanoseconds/numMilliseconds
 ; * rbx: numSeconds
 ; * r12d: runCount
 
-    mov         rax, CLOCK_GETTIME          ; syscall to make, parameters:
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [duration]             ; * struct to store result in
-    syscall
+    call        clock_gettime wrt ..plt
 
     mov         rbx, [duration+time.sec]    ; numSeconds = duration.seconds
     sub         rbx, [startTime+time.sec]   ; numSeconds -= startTime.seconds
@@ -202,7 +209,7 @@ checkTime:
 ; primes is not included in the timed part of the implementation and executed just once, I just didn't bother.
 
     mov         ebx, 1                      ; primeCount = 1 
-    mov         ecx, 1                      ; bitIndex = 1
+    mov         ecx, 3                      ; bitIndex = 1
     
 countLoop:    
     bt          [bPrimes], ecx              ; if !bPrimes[0][bitIndex]...
@@ -210,8 +217,8 @@ countLoop:
     inc         ebx                         ; ...else primeCount++
 
 nextItem:
-    inc         ecx                         ; bitIndex++
-    cmp         ecx, BIT_SIZE               ; if bitIndex <= bit count...
+    add         ecx, 2                      ; bitIndex += 2
+    cmp         ecx, SIEVE_SIZE             ; if bitIndex <= bit count...
     jb          countLoop                   ; ...continue counting
 
 ; we're done counting, let's check our result

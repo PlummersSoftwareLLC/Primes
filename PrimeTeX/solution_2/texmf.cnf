@@ -1,0 +1,22 @@
+% default TeXLive texmf.cnf font_mem_size is 8000000
+% we will set it to                        147483647
+% which is the maximal authorized value (without a change requiring
+% re-compiling the pdftex binary itself).
+%
+% For a range as in the benchmark of 1,000,000 each pass consumes
+% 500,000 words of memory (each 32bits) so this allows about
+% (147483647-20000)/500000 =294.9.. i.e. 294 passes, max.
+%
+% To activate this memory setting execute
+%    export TEXMFCNF="$(pwd):"
+% in working directory
+%
+% runpdftex.sh does this before launching pdftex
+%
+% luatex has dynamic memory allocation and does not need this.
+%
+font_mem_size = 147483647
+% the following is not needed for benchmark, but is sufficient to allow
+% sieving with pdftex up to the maximum authorized by max font_mem_size
+% i.e. a bit less than 295,000,000 sieving range.
+% extra_mem_top = 10000000

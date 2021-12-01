@@ -1,9 +1,39 @@
-# Contributing
+# Contributing <!-- omit in toc -->
+
+## Table of Contents <!-- omit in toc -->
+- [Introduction](#introduction)
+- [If (a) solution(s) already exists for your language...](#if-a-solutions-already-exists-for-your-language)
+- [Guide](#guide)
+  - [Determining the implementation characteristics](#determining-the-implementation-characteristics)
+  - [README.md](#readmemd)
+  - [Folder/directory](#folderdirectory)
+  - [Dockerfile](#dockerfile)
+  - [Pull request](#pull-request)
+  - [Help/support](#helpsupport)
+- [Rules](#rules)
+- [Characteristics](#characteristics)
+  - [Algorithm](#algorithm)
+  - [Faithfulness](#faithfulness)
+  - [Parallelism](#parallelism)
+  - [Flag storage](#flag-storage)
+- [Output](#output)
+  - [Tags](#tags)
+  - [Examples](#examples)
 
 ## Introduction
 Please follow the guidelines in this document if you want to submit a solution/implementation for inclusion in the drag race.
 
 These guidelines have been drafted to facilitate a "fair" comparison between solutions, and to allow results to be processed and reported on, automatically. **Submissions that do not conform to these guidelines will, in principle, not be accepted.**
+
+## If (a) solution(s) already exists for your language...
+
+...then please:
+
+1. First see if your ideas/approach can be used to improve one of the existing solutions. If the [key characteristics](#characteristics) of your approach match those of an existing solution then that is a strong indication that improving is the way to go. If that is the case, structure your [pull request](#pull-request) to improve the solution in question. Include only those changes that objectively improve the performance of the benchmarked/timed part of the code. We will not merge changes in style, idiomatic improvements, whitespace optimizations, etc. unless you arrange approval from the original author of the solution you're aiming to improve.
+
+2. Before opening your pull request, check if another one is already open that aims to modify the same solution that yours does. If one exists, please discuss in that PR how your improvements can be added to it.
+
+3. Only if you're convinced that adding a new solution is the only appropriate way forward, open a pull requests that aims to achieve that. In that case, a) explain clearly in your pull request description why you think a new solution is warranted, and b) please keep reading.
 
 ## Guide
 
@@ -50,7 +80,7 @@ Please add a `Dockerfile` that is configured to build and run your solution. It 
 When composing the Dockerfile, please use the following as a reference for selecting the base image:
 * If an official image exists on [Docker Hub](https://hub.docker.com/) for the language you chose, use that. If multiple images are available with different underlying Linux distributions, select the one to use in accordance with the next steps in this list.
 * Otherwise, if it is possible to get the solution to build and run on Alpine 3.13 using Alpine 3.13 packages, use that.
-* Otherwise, if it is possible to get the solution to build and run on Ubuntu 18.04, use that. Employ standard packages to the extent possible.
+* Otherwise, if it is possible to get the solution to build and run on a supported LTS release of Ubuntu (currently 18.04 or 20.04), use that. Employ standard packages to the extent possible.
 * Otherwise, choose another base image that you can get the solution to build and run in.
 
 Also:
@@ -63,6 +93,20 @@ We encourage solutions and therefore Docker images to support both amd64/x86_64 
 If your solution fundamentally supports only one architecture, you can use a "flag file" to indicate what architecture that is. Currently, examples of architecture-specific builds are the assembly builds for amd64 and arm64.
 
 A flag file is an empty file in the solution directory that tells the CI and benchmark implementations to build and run the solution only for/on the architecture indicated. The flag file for arm64 builds is `arch-arm64`, for amd64 builds it is `arch-amd64`. 
+
+#### Disabling build and benchmark
+If it is not possible to include your solution in the CI workflow and/or automated benchmark runs, a `build-no` flag file has to be added to the solution directory. Note that:
+- Your solution has to be included in the automated benchmark runs, if it is possible to do so. For one, lack of familiarity with Docker is _not_ a valid reason to exclude it.
+- Automated builds should _only_ be disabled after the repository maintainers have specifically indicated that you need to do so. 
+
+#### Hadolint
+During the review of any PR, a CI workflow is triggered that includes a linting of Dockerfiles using [hadolint](https://github.com/hadolint/hadolint). Any issues that are found in a solution's Dockerfile will need to be fixed before the respective PR is merged.
+
+If you want to run hadolint locally before submitting your Dockerfile, you can do so using the configuration in [config/hadolint.yml](config/hadolint.yml).
+Instructions for installing hadolint can be found in the tool's documentation. Using a Docker container is a "non-intrusive" way of running hadolint once Docker is installed. In a Unix-like shell, this can be done by running the following command from the root directory of the Primes repository (replace `<language>` and `<number>` with the applicable values for your solution):
+```
+docker run --rm -i -v `pwd`/config:/.config hadolint/hadolint < Prime<language>/solution_<number>/Dockerfile
+```  
 
 ### Pull request
 Finally, submit a pull request **targeting the branch `drag-race`**, and place at least the name of the language in the title. Make sure to verify and check the contributing requirements that are summarized in the pull request template.
@@ -87,7 +131,7 @@ The collection of solutions in this repository have come to use different approa
 | Name | Description |
 |-|-|
 | [algorithm](#algorithm) | The algorithm used to find the primes in the prime number sieve. |
-| [faithfulness](#faitfhulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
+| [faithfulness](#faithfulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
 | [parallelism](#parallelism) | If the implementation uses any type of multi-threaded processing/calculation. |
 | [storage](#flag-storage) | The number of bits used to indicate if a number in the sieve is a prime number, or not. |
 
@@ -127,7 +171,7 @@ The base algorithm is defined as follows:
 
 * Starting the clearing loop at factor * factor (instead of 3 * factor, as done in the original implementation) is permissible.
 
-If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
+If needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/38c826678a52a37b8a864465410562d330002091/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.
 
 #### Tag
 
@@ -161,7 +205,8 @@ If you choose to include badges in your `README.md`, then:
 At a technical level, an implementation is considered faithful if it complies with the following:
 
 * It uses no external dependencies to calculate the actual sieve.
-* It uses a class to encapsulate the sieve, or an equivalent feature in your language. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class.
+* It uses a class to encapsulate the sieve, or a (closest) equivalent feature in your language if a class construct is not available. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class from scratch.
+* The sieve size and corresponding prime candidate memory buffer (or language equivalent) are set/allocated dynamically at runtime. The size of the memory buffer must correspond to the size of the sieve.
 * It conforms to the base [rules](#Rules).
 
 All other implementations are considered unfaithful. Note that they still need to conform to the base [rules](#Rules). 

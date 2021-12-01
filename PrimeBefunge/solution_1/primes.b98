@@ -1,0 +1,44 @@
+];aaa**:*                   v                         >;#(^#4"HRTI"(^#4"BOOL"(^#4"FIXP"
+1  SIEVE SIZE ABOVE
+2    v p0\0 :<  /*2 '+?':   <
+1    > 1 -  :|  RESET SIEVE ^          <
+p STORE SIEVE SIZE --- FIRST RUN:
+1     v p22:$>    $'<d5p 0\M^
+v     > :Q21p    3  v  SET TIMER                   v   <  COUNT UP & CHECK TIME
+v   ;     $< FACTOR                                v   w *5*:**aaa:T \+1\ ;
+#         vw   g12: <   +2         <   ^         $     <  TIMER IS IN MICROSECONDS
+;      >$;  CHECK BIT             ;^               \
+2         >>::2/' /1+0g\2/' %1+1\gA|               $
+*              BIT IS ZERO
+:            MARK MULTIPLES BELOW
+1        v g22: <   p13 *2\*:::    <                                         v#'<
+2               ^ +g13  p0+1/ '/2\ <                                         > v>0'#v
+1      ^ w:::2/' /1+0g\2/' %1+1\gO ^                           v/**::d':,;'    s s  <
+g      ^ < SPACE ' ' IS 32                         #                  >'0+>:#,_$^ v
+1                                       >0";89fb-lojt">:#,_$\  > 0\>:aw>:a%'0v '
++      v                                           <               ^ ;>^;/a\+< .
+:                               >,v                            ^      %*:**aaa,<
+2                               |:<     $#";1;algorithm=base;faithful=no;bits=1"a0<
+1                               @   > :v  :<  "valid"a0   <   VALIDATE PRIME COUNT BELOW
+p                                   ^ ,_^  ^"invalid"a0  _^#-  <      <          <         <   **<
+p                                   ^ "unclear"a0 <    <      <      <        <        <<        :
+'       >" :semirp">:#,_$                    22g:aw$  4                                          *
+!       ^0.:$<<     COUNT PRIMES                  >:aa*w$  55* ^                                 3
+2            ^w          g22:   +2    <    <           >:aaa**w$ ec*  ^                          7
+1      >    13> ::2/' /1+0g\2/' %1+1\g   A |                  >:aa*:*w$aac**ef ++^               *
+g                                     ^\+1\<                         >:aa*:*a*w$aa*9+8b  **^     2
+`            @<     PRINT PRIMES                                              >:aaa**:*w $  9a*1-^
+#            ^w          g22:   +2    <  <                                             >^
+;   >>     2.3> ::2/' /1+0g\2/' %1+1\g  A|
+|                                     ^.:<
+1
+1   THE CODE ON THE LEFT EDGE                    TO PRINT PRIMES INSTEAD OF RUNNING
+1   IS SETTING UP A LOOKUP TABLE                 THE BENCHMARK, REPLACE THE ; IN
+p   FOR THE THIRTY-TWO BIT MASKS                 LINE 8, COL 6 WITH v
+
+    TO CHANGE THE SIEVE SIZE, EDIT THE NUMBER
+    NUMBER IN THE FIRST LINE (a = 10, aa* = 100,
+    aaa** = 1000, aaa**:* = 1000000, etc)
+    MAKE SURE THE v ON LINE 1 STAYS IN     >v"BOOL, FIXP and HRTI fingerprints are required."a0<
+    THE RIGHT PLACE!                       ,:             >         >         >                ^
+                                           ^_1q

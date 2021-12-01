@@ -1,0 +1,176 @@
+=============
+N = 1,000,000
+=============
+
+$ time tex wheel8of30_primestofile
+This is TeX, Version 3.141592653 (TeX Live 2021) (preloaded format=tex)
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 1000000...
+...done
+Sieving...
+...done
+Outputting to file listofprimes-1000000.txt...
+78498 primes were written to file listofprimes-1000000.txt
+...done
+ ) )
+No pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	0m0.441s
+user	0m0.413s
+sys	0m0.020s
+
+$ time pdftex wheel8of30_primestofile
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 1000000...
+...done (0.00247s)
+Sieving...
+...done (0.07492s)
+Outputting to file listofprimes-1000000.txt...
+78498 primes were written to file listofprimes-1000000.txt
+...done (0.19858s)
+ ) )
+No pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	0m0.462s
+user	0m0.436s
+sys	0m0.022s
+
+==============
+N = 10,000,000
+==============
+
+$ time tex "\def\Range{10000000}\input wheel8of30_primestofile"
+This is TeX, Version 3.141592653 (TeX Live 2021) (preloaded format=tex)
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done
+Sieving...
+...done
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done
+ ) )
+No pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	0m2.787s
+user	0m2.698s
+sys	0m0.051s
+
+$ time pdftex "\def\Range{10000000}\input wheel8of30_primestofile"
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done (0.02756s)
+Sieving...
+...done (0.76193s)
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done (1.92497s)
+ ) )
+No pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	0m2.908s
+user	0m2.859s
+sys	0m0.041s
+
+$ time luatex "\def\Range{10000000}\input wheel8of30_primestofile"
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 10000000...
+...done (0.40189s)
+Sieving...
+...done (0.82175s)
+Outputting to file listofprimes-10000000.txt...
+664579 primes were written to file listofprimes-10000000.txt
+...done (2.5397s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	0m4.077s
+user	0m4.006s
+sys	0m0.066s
+
+===============
+N = 100,000,000 
+===============
+
+$ time pdftex -cnf-line font_mem_size=51000000 -cnf-line extra_mem_top=10000000 "\def\Range{100000000}\input wheel8of30_primestofile"
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdftex)
+ restricted \write18 enabled.
+entering extended mode
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 100000000...
+...done (0.2214s)
+Sieving...
+...done (8.5427s)
+Outputting to file listofprimes-100000000.txt...
+5761455 primes were written to file listofprimes-100000000.txt
+...done (18.53345s)
+ ) )
+No pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	0m27.496s
+user	0m27.238s
+sys	0m0.236s
+
+$ time luatex "\def\Range{100000000}\input wheel8of30_primestofile"
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 100000000...
+...done (3.76602s)
+Sieving...
+...done (8.96695s)
+Outputting to file listofprimes-100000000.txt...
+5761455 primes were written to file listofprimes-100000000.txt
+...done (23.51447s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	0m36.588s
+user	0m36.216s
+sys	0m0.346s
+
+===============
+N = 999,999,999
+===============
+
+$ time luatex "\def\Range{999999999}\input wheel8of30_primestofile"
+This is LuaTeX, Version 1.13.0 (TeX Live 2021) 
+ restricted system commands enabled.
+(./wheel8of30_primestofile.tex (./wheel8of30_sieve.tex (./shared_batteries.tex)
+) (./shared_primestofile.tex
+Instantiate object for sieving up to 999999999...
+...done (37.71599s)
+Sieving...
+...done (98.18341s)
+Outputting to file listofprimes-999999999.txt...
+50847534 primes were written to file listofprimes-999999999.txt
+...done (228.98187s)
+))
+warning  (pdf backend): no pages of output.
+Transcript written on wheel8of30_primestofile.log.
+
+real	6m6.433s
+user	6m1.945s
+sys	0m3.405s

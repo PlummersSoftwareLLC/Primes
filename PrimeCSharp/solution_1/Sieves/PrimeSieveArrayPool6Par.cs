@@ -10,6 +10,7 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "pool6p";
         public string Name => "Array Pool, 2 of 6, parallel";
+        public int? BitsPerPrime => 1;
 
         private readonly long[] data;
         private readonly int threadCount;

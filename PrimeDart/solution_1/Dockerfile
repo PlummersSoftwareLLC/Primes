@@ -1,12 +1,17 @@
-FROM google/dart
+FROM google/dart:2.14.0 AS build
 WORKDIR /app
-ADD pubspec.* /app/
+COPY pubspec.* ./
 RUN pub get
-ADD . /app
-RUN pub get --offline
-RUN dart2native /app/bin/PrimeDart.dart -o /app/bin/PrimeDart
+COPY . .
+RUN pub get --offline \
+    && dart compile exe /app/bin/Runner.dart -o Runner \
+    && dart compile exe /app/bin/PrimeDart.dart -o PrimeDart \
+    && dart compile exe /app/bin/PrimeDartOneBit.dart -o PrimeDartOneBit \
+    && dart compile exe /app/bin/PrimeDartParallel.dart -o PrimeDartParallel \
+    && dart compile exe /app/bin/PrimeDartParallelOneBit.dart -o PrimeDartParallelOneBit
 
+FROM ubuntu:20.04 AS runtime
+WORKDIR /app
+COPY --from=build /app/Runner /app/PrimeDart* ./
 
-FROM subfuzion/dart-scratch
-COPY --from=0 /app/bin/PrimeDart /app/bin/PrimeDart
-ENTRYPOINT [ "/app/bin/PrimeDart" ]
+ENTRYPOINT [ "./Runner", "./PrimeDart", "./PrimeDartParallel", "./PrimeDartOneBit", "./PrimeDartParallelOneBit" ]

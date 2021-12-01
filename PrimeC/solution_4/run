@@ -1,0 +1,32 @@
+#!/bin/bash
+# Compilation and execution on Git-Bash (GNU C Compiler)
+set -e
+
+OFLAGS="-Ofast -march=native -mtune=native -funroll-loops"
+SIZE=1000000
+
+while [[ $1 != "" ]]; do
+    case $1 in
+    --debug)
+        DEBUG=--debug
+        ;;
+
+    *)
+        echo "Unknown flag: $1"
+        exit 1
+        ;;
+    esac
+
+    shift
+done
+
+gcc $OFLAGS sieve.c -o sieve
+
+if [[ $DEBUG ]]; then
+    for info in "model name" "cpu MHz" "cache size"
+    do
+        grep -m1 "$info" /proc/cpuinfo
+    done
+fi
+
+./sieve $DEBUG --size $SIZE

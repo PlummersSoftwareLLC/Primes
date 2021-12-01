@@ -1,0 +1,24 @@
+---
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: Cpp11
+ColumnLimit: 160
+IndentWidth: 4
+
+AlignEscapedNewlines: DontAlign
+AllowAllConstructorInitializersOnNextLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AlwaysBreakTemplateDeclarations: true
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Stroustrup
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+IndentPPDirectives: BeforeHash
+NamespaceIndentation: Inner
+PointerAlignment: Left
+SpaceAfterTemplateKeyword: false
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: false
+SpacesInContainerLiterals: false
+...

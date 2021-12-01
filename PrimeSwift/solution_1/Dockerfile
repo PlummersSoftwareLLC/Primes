@@ -1,7 +1,11 @@
-FROM swift:5.3.3-bionic
+FROM swift:5.4.2
 
 WORKDIR /opt/app
 
 COPY . .
 
-ENTRYPOINT [ "swift", "run", "--configuration", "release" ]
+RUN swift build --configuration release -Xswiftc -O --package-path PrimeSwift_1bit_u8 && \
+    swift build --configuration release -Xswiftc -O --package-path PrimeSwift_1bitStriped_u8 && \
+    swift build --configuration release -Xswiftc -O --package-path PrimeSwift_8bitBool
+
+ENTRYPOINT [ "./run.sh" ]

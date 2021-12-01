@@ -1,0 +1,115 @@
+class PrimeUmple {
+    depend java.util.BitSet;
+    depend java.util.Map;
+    depend java.lang.Math;
+
+    int sieveSize;
+    BitSet bits = new BitSet((sieveSize + 1) >> 1);
+    Map resultsDictionary = Map.of(
+        10, 4,
+        100, 25,
+        1000, 168,
+        10000, 1229,
+        100000, 9592,
+        1000000, 78498,
+        10000000, 664579,
+        100000000, 5761455,
+        1000000000, 50847534
+        // too large to fit in int
+        //10000000000, 455052511 
+    );
+
+    after constructor {
+        bits.flip(0, (sieveSize + 1) >> 1);
+    }
+
+    private boolean validateResults() {
+        return resultsDictionary.get(sieveSize).equals(countPrimes());
+    }
+
+    before getBit {
+        assert index % 2 != 0: "You are getting even bits, which is sub-optimal";
+    }
+
+    private boolean getBit(int index) {
+        return bits.get(index >> 1);
+    }
+
+    before clearBit {
+        assert index % 2 != 0: "You are setting even bits, which is sub-optimal";
+    }
+
+    private void clearBit(int index) {
+        bits.clear(index >> 1);
+    }
+
+    void runSieve() {
+        int factor = 3;
+        int q = (int) Math.sqrt((double) sieveSize);
+
+        while (factor <= q) {
+            for (var num = factor; num < sieveSize; num += 2) {
+                if (getBit(num)) {
+                    factor = num;
+                    break;
+                }
+            }
+
+            for (var num = factor * factor; num < sieveSize; num += factor * 2) {
+                clearBit(num);
+            }
+
+            factor += 2;
+        }
+    }
+
+    void printResults(boolean showResults, double duration, int passes) {
+        if (showResults) {
+            System.err.printf("2, ");
+        }
+
+        int count = (sieveSize >= 2) ? 1 : 0;
+
+        for (int num = 3; num <= sieveSize; num += 2) {
+            if (getBit(num)) {
+                if (showResults) {
+                    System.err.printf("%d, ", num);
+                }
+                count++;
+            }
+        }
+
+        if (showResults) {
+            System.err.printf("\n");
+            System.err.printf("Passes: %d, Time: %f, ", passes, duration);
+            System.err.printf("Avg: %f, Limit: %d, ", duration / passes, sieveSize);
+            System.err.printf("Count1: %d, Count2: %d, ", count, countPrimes());
+            System.err.printf("Valid: %s\n", validateResults() ? "True" : "False");
+            System.err.printf("\n");
+        }
+
+        System.out.printf("mmcdon20_umple;%d;%f;1;algorithm=base,faithful=yes,bits=1\n",
+            passes, duration);
+    }
+
+    int countPrimes() {
+        return this.bits.cardinality();
+    }
+
+    public static void main(String[] args) {
+        int passes = 0;
+        long start = System.currentTimeMillis(); 
+
+        while (true) {
+            PrimeUmple sieve = new PrimeUmple(1000000);
+            sieve.runSieve();
+            passes++;
+            long stop = System.currentTimeMillis();
+
+            if (stop - start >= 5000) {
+                sieve.printResults(false, (stop - start) / 1000.0, passes);
+                break;
+            }
+        }
+    }    
+}

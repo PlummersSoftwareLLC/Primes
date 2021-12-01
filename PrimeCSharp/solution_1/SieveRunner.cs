@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using PrimeCSharp.Sieves;
 
@@ -202,7 +203,9 @@ namespace PrimeCSharp
                     firstSieve ??= sieve;
                     sieve.Run();
                     if (watch.ElapsedMilliseconds < durationLimit)
-                        passes++;
+                    {
+                        Interlocked.Increment(ref passes);
+                    }
                 });
             }
 
@@ -259,8 +262,10 @@ namespace PrimeCSharp
             // kinematics_<sieve_tag>;<pass_count>;<runtime>;<pthread_count>
             
             int totalThreads = threads * pthreads;
+            string algorithm = sieve.IsBaseAlgorithm ? "base" : "wheel";
+            string bitsSuffix = sieve.BitsPerPrime.HasValue ? $",bits={sieve.BitsPerPrime}" : string.Empty;
 
-            Console.WriteLine($"kinematics_{sieve.QuickName};{passes};{watch.Elapsed.TotalSeconds:G6};{totalThreads}");
+            Console.WriteLine($"kinematics_{sieve.QuickName};{passes};{watch.Elapsed.TotalSeconds:G6};{totalThreads};algorithm={algorithm},faithful=yes{bitsSuffix}");
         }
 
         #region Code for running struct versions.

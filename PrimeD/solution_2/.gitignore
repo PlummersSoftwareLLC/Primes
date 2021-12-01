@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/solution_2
+solution_2.so
+solution_2.dylib
+solution_2.dll
+solution_2.a
+solution_2.lib
+solution_2-test-*
+*.exe
+*.o
+*.obj
+*.lst
+app_without_comments.d
+results.csv

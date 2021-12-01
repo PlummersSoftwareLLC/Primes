@@ -1,0 +1,33 @@
+\documentclass[a4paper]{article}
+\usepackage{multicol}
+\usepackage{expl3}
+
+% Run the sieve up to 100'000
+\ExplSyntaxOn
+\int_const:Nn \g_prime_sieve_size {100000}
+\ExplSyntaxOff
+\include{prime_functions.tex}
+
+\begin{document}
+
+\ExplSyntaxOn
+\prime_reset_sieve
+\prime_run_sieve
+\prime_count_primes
+\ExplSyntaxOff
+
+% Lay out the prime numbers on the page
+{\Large\bf
+    \ExplSyntaxOn{\int_use:N\g_prime_count}\ExplSyntaxOff\ 
+        prime numbers under
+    \ExplSyntaxOn{\int_use:N\g_prime_sieve_size}\ExplSyntaxOff
+}\\[1cm]
+
+\begin{multicols}{8}
+\footnotesize
+\noindent
+\ExplSyntaxOn
+\prime_print_primes:n{\\}
+\ExplSyntaxOff
+\end{multicols}
+\end{document}

@@ -1,0 +1,10 @@
+f [Server] loaded
+p 5
+t starttime 
+w function sieve:full
+f from function 'sieve:full'
+t endtime 
+w data get storage primes amount
+f has the following contents
+o
+w stop

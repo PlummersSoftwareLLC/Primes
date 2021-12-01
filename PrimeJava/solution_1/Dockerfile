@@ -1,8 +1,8 @@
-FROM adoptopenjdk:11-jdk-hotspot
+FROM adoptopenjdk:16-jdk-hotspot
 
 WORKDIR /opt/app
 
-COPY src/main/java/PrimeSieveJava.java .
+COPY PrimeSieveJava.java .
 RUN javac PrimeSieveJava.java
 
 ENTRYPOINT [ "java", "PrimeSieveJava" ]

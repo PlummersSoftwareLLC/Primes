@@ -4,6 +4,6 @@ FROM node:current-alpine3.13
 
 WORKDIR /opt/app
 
-COPY PrimeNode.js .
+COPY PrimeNode.js PrimeNode_cluster.js PrimeNode_memcopy.js run.sh ./
 
-ENTRYPOINT [ "node", "PrimeNode.js" ]
+ENTRYPOINT [ "./run.sh" ]

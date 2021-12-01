@@ -1,17 +1,14 @@
-FROM alpine:3.13
+FROM ubuntu:20.04
 
-RUN apk add --update build-base
+# Get GCC
+RUN apt-get update && apt-get install -y build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/app
+WORKDIR /home/primes
 
-COPY compile.sh .
-COPY run.sh .
-COPY *.c ./
-
-RUN chmod +x compile.sh run.sh
+COPY compile.sh run.sh *.c ./
 
 RUN ./compile.sh
 
 ENTRYPOINT [ "./run.sh" ]
-
-

@@ -1,0 +1,154 @@
+% Prime Sieve with TeX
+% author: jfbu
+% date:   2021/07/24
+%
+% Utilities for
+%
+% - nestable \xloop macro
+% - integer square root
+% - replicating tokens a given pre-defined number of times
+%
+% TeXnicalities:
+%
+%   ////                                                   \\\\
+%   This file only needs base Knuth's tex, i.e. we
+%   don't use \numexpr, \dimexpr, etc... for computations.
+%   \\\\                                                   ////
+%
+
+% activate @ as a letter for being more mysterious
+\catcode`@ 11
+% and use also _ as a letter to appear even more TeXnical
+\catcode`_ 11
+
+% scratch counts usable by any macro for purely temporary things
+% they are used by \SetToSqrt
+\newcount\tmpcnta
+\newcount\tmpcntb
+\newcount\tmpcntc
+
+% NESTABLE (and expandable) LOOP
+% ==============================
+
+% Plain TeX's \loop has some problems, e.g.
+% \def\macro{... do something with \loop...\repeat...}
+% then do some \loop...use \macro...\repeat will be broken
+% in general as external \loop defines a \body which will be
+% overwritten by inner \loop...
+% So let's borrow the \xintloop from xintkernel.sty renaming it into xloop
+\long\def\xloop #1#2\repeat {#1#2\xloop_again\fi\@gobble {#1#2}}%
+\long\def\xloop_again\fi\@gobble #1{\fi #1\xloop_again\fi\@gobble {#1}}%
+\long\def\@gobble#1{}%
+
+% INTEGER SQUARE ROOT
+% ===================
+% input must be non-negative and at most 999999999 
+%                  (TeX's max number is 2147483647)
+% auxiliary used for not too bad starting point of the algorithm
+% count how many tokens but input **must have at most 9 tokens**
+% usage: in completely expanding context
+\long\def\howmany#1{\expandafter\howmany_i#19876543210\jfbye}%
+\long\def\howmany_i#1{\howmany_ii}%
+\long\def\howmany_ii#1#2#3#4#5#6#7#8#9{#9\jfbye}%
+\long\def\jfbye#1\jfbye{}
+%
+\def\SetToSqrt#1#2{% #1 = input, #2 a count register for output
+    % #1 must be at most 10^9-1
+    \tmpcnta#1\relax
+    % start with some suitable upper bound
+    \tmpcntb
+     \ifcase\howmany{\the\tmpcnta}\relax
+     %   %       0 digit (never happens)
+     \or 3%      1 digit
+     \or 10%     2
+     \or 32%     3
+     \or 100%    4
+     \or 317%    5
+     \or 1000%   6
+     \or 3163%   7
+     \or 10000%  8
+     \else 31623%9
+     \fi\relax
+    % and apply *integer* babylonian square root
+    % ATTENTION: using Plain TeX's \loop here would make this macro not usable in a \loop...
+    \xloop
+     \tmpcntc=\tmpcnta
+     \divide\tmpcntc\tmpcntb  % TeX's \divide truncates (like Python's // for
+                              % positive)
+     \advance\tmpcntb\tmpcntc
+     \divide\tmpcntb\tw@
+    \ifnum\tmpcntb>\tmpcntc
+    \repeat
+    % do the final assignment
+    #2=\tmpcntb
+}%
+
+% REPLICATION
+% ===========
+% 1st arg must be non-negative
+% 1st arg must be an explicit number or "\the<count>"
+\def\Replicate#1{\romannumeral\expandafter\Rep_#1\endcsname}%
+\def\Rep_ #1{\csname Repf#1\Repa}%
+\def\Repa #1{\csname Rep#1\Repa}%
+\def\Rep\Repa{\endcsname}%
+\long\expandafter\def\csname Rep0\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}}%
+\long\expandafter\def\csname Rep1\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1}%
+\long\expandafter\def\csname Rep2\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1}%
+\long\expandafter\def\csname Rep3\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1#1}%
+\long\expandafter\def\csname Rep4\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1#1#1}%
+\long\expandafter\def\csname Rep5\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1#1#1#1}%
+\long\expandafter\def\csname Rep6\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1#1#1#1#1}%
+\long\expandafter\def\csname Rep7\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1#1#1#1#1#1}%
+\long\expandafter\def\csname Rep8\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1#1#1#1#1#1#1}%
+\long\expandafter\def\csname Rep9\endcsname #1%
+    {\endcsname{#1#1#1#1#1#1#1#1#1#1}#1#1#1#1#1#1#1#1#1}%
+\long\expandafter\def\csname Repf0\endcsname #1{\z@}%
+\long\expandafter\def\csname Repf1\endcsname #1{\z@ #1}%
+\long\expandafter\def\csname Repf2\endcsname #1{\z@ #1#1}%
+\long\expandafter\def\csname Repf3\endcsname #1{\z@ #1#1#1}%
+\long\expandafter\def\csname Repf4\endcsname #1{\z@ #1#1#1#1}%
+\long\expandafter\def\csname Repf5\endcsname #1{\z@ #1#1#1#1#1}%
+\long\expandafter\def\csname Repf6\endcsname #1{\z@ #1#1#1#1#1#1}%
+\long\expandafter\def\csname Repf7\endcsname #1{\z@ #1#1#1#1#1#1#1}%
+\long\expandafter\def\csname Repf8\endcsname #1{\z@ #1#1#1#1#1#1#1#1}%
+\long\expandafter\def\csname Repf9\endcsname #1{\z@ #1#1#1#1#1#1#1#1#1}%
+%
+% specialized variant optimized for replicating exactly 1000 times
+\long\def\ReplicateM#1{\ReplicateC{#1#1#1#1#1#1#1#1#1#1}}%
+\long\def\ReplicateC#1{\ReplicateX{#1#1#1#1#1#1#1#1#1#1}}%
+\long\def\ReplicateX#1{#1#1#1#1#1#1#1#1#1#1}%
+\long\def\ReplicateOneTwoFive#1{%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+%
+    #1#1#1#1#1%
+    #1#1#1#1#1%
+    #1#1#1#1#1%
+    #1#1#1#1#1%
+    #1#1#1#1#1%
+}%
+\long\def\ReplicateTwentyOne#1{%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1#1#1#1#1#1#1#1#1#1%
+    #1%
+}%
+\endinput
+

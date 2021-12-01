@@ -8,6 +8,8 @@ namespace PrimeCSharp.Sieves
     {
         public string QuickName => "raw";
         public string Name => "Raw Allocation";
+        public bool IsBaseAlgorithm => true;
+        public int? BitsPerPrime => 1;
 
         public int SieveSize { get; }
         private readonly byte[] rawbits;
@@ -33,7 +35,7 @@ namespace PrimeCSharp.Sieves
             _ = GetRawBits(rawbits, 0);
 
             int count = 1;
-            for (uint i = 3; i < SieveSize; i++)
+            for (uint i = 3; i < SieveSize; i += 2)
                 if (GetBit(rawbits, i))
                     count++;
             return count;
@@ -92,8 +94,7 @@ namespace PrimeCSharp.Sieves
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool GetBit(byte[] bits, uint index)
         {
-            if (index % 2 == 0)
-                return false;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
             index /= 2;
 
@@ -107,14 +108,13 @@ namespace PrimeCSharp.Sieves
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ClearBit(byte[] bits, uint index)
         {
-            if (index % 2 == 1)
-            {
-                index /= 2;
+            System.Diagnostics.Debug.Assert(index % 2 == 1);
 
-                byte mask = (byte)~(1u << (int)(index % elementBits));
+            index /= 2;
 
-                GetRawBits(bits, index / elementBits) &= mask;
-            }
+            byte mask = (byte)~(1u << (int)(index % elementBits));
+
+            GetRawBits(bits, index / elementBits) &= mask;
         }
     }
 }

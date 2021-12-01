@@ -1,0 +1,20 @@
+(primesieve.ps) run
+
+0
+realtime
+{
+    dup
+    realtime
+    exch sub
+    dup
+    5000 gt { exit } if
+    pop
+
+    1000000 //primesieve exec pop
+    exch 1 add exch
+} bind loop
+
+(epithet-ps;) print
+2 index 10 string cvs print (;) print
+10 string cvs dup 0 1 getinterval print (.) print 1 3 getinterval print (;) print
+(1;algorithm=base,faithful=no,bits=8\n) print

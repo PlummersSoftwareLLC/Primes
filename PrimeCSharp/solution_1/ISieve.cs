@@ -13,6 +13,8 @@ namespace PrimeCSharp
         IEnumerable<int> GetFoundPrimes();
 
         bool IsParallel => false;
+        bool IsBaseAlgorithm => false;
+        int? BitsPerPrime => null;
 
         public bool? IsCountValid()
         {

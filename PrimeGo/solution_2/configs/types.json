@@ -1,0 +1,62 @@
+{
+	"header": "types.go.tmpl",
+	"storage": [
+		{
+			"name": "SimpleStorage",
+			"imports" : ["math/bits"],
+			"template": "storage/simple.go.tmpl",
+			"options":  [
+					{
+						"width": 8
+					},
+					{
+						"width": 16
+					},
+					{
+						"width": 32
+					},
+					{
+						"width": 64
+					}
+				]
+		},
+		{
+			"name": "StrideStorage",
+			"imports" : ["math/bits"],
+			"template": "storage/stride.go.tmpl",
+			"options":  [
+				{
+					"width": 8
+				},
+				{
+					"width": 16
+				},
+				{
+					"width": 32
+				},
+				{
+					"width": 64
+				}
+			]
+		},
+		{
+			"name": "MultibitStorage",
+			"imports" : ["math/bits"],
+			"template": "storage/multibit.go.tmpl",
+			"options":  [
+				{
+					"width": 8
+				},
+				{
+					"width": 16
+				},
+				{
+					"width": 32
+				},
+				{
+					"width": 64
+				}
+			]
+		}
+	]
+}

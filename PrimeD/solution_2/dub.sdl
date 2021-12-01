@@ -1,0 +1,20 @@
+name "solution_2"
+authors "Bradley Chatha"
+
+sourceFiles "source/app.d"
+excludedSourceFiles "source/app_without_comments.d"
+
+dflags "--boundscheck=off" "--mcpu=native" "--ffast-math" platform="ldc"
+targetType "executable"
+
+configuration "default" {
+    versions "__dummy"
+}
+
+configuration "unrolled" {
+    versions "Prime_100_000" "CompileUnrolled"
+}
+
+configuration "good_luck" {
+    versions "CompileUnrolled"
+}

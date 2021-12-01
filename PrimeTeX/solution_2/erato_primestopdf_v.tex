@@ -1,0 +1,68 @@
+% Execute this file with pdflatex:
+%
+% pdflatex erato_primestopdf_v
+%
+%
+% to either compute from scratch via sieving
+% the prime
+% numbers up to 1,000,000 (by default)
+% or use the file listofprimes-<range>.txt
+% if it exists
+%
+% (i.e. use by default listofprimes-1000000.txt
+% if it exists)
+%
+% and then organize the primes by columns
+% - by default ten columns per page
+% - columns filled top to bottom
+%
+% To fill columns from left to right see
+% erato_primestopdf_h
+%
+% customize:
+\def\myclassoptions{a4paper}
+\def\NbOfColumns{10}%
+\def\FontCommand{\normalsize}%
+\ifx\Range\undefined
+\def\Range{1000000}% limited to somewhat less than 295000000 with pdflatex,
+                   % (read README.md first on texmf.cnf and TEXMFCNF matters)
+                   % and to 999999999 if running with lualatex
+\fi
+%
+% (the run will also (re)-create file listofprimes-<range>.txt
+%  and honestly this file looks to me more useful than
+%  the pdf output...)
+%
+% 
+\typeout{}
+\IfFileExists{listofprimes-\Range.txt}
+     {\typeout{%
+******** File listofprimes-\Range.txt exists, skipping sieving. ********%
+}}
+     {\typeout{%
+******** File listofprimes-\Range.txt does not exist, creating. ********%
+}%
+      \let\bye\endinput
+      \input erato_primestofile.tex\relax}
+
+\catcode`@ 11
+
+\typeout{%
+******** Now producing the pdf file with LaTeX...\@spaces\@spaces\@spaces\@spaces ********%
+}
+\typeout{}
+
+\edef\x{\noexpand\documentclass[\myclassoptions]{article}}\x
+\usepackage{geometry}
+\usepackage{multicol}
+\begin{document}
+\hbadness\maxdimen
+\hfuzz\maxdimen
+\FontCommand
+
+\begin{multicols}{\NbOfColumns}
+\obeylines
+  \input listofprimes-\Range.txt %
+  \raggedcolumns%
+\end{multicols}
+\end{document}
