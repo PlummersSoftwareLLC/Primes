@@ -52,7 +52,7 @@ sub print_results {
 	$passes, $duration, 1;
     say "Passes: $passes, Time: $duration, Per pass: ", $duration/$passes,
 	" Limit: ", $self->{sieve_size}, " Count: ", $self->count_primes,
-	" Valid: ", $self->validate_results;
+	" Valid: ", $self->validate_results if $show_stats;
 }
 
 sub deal_with_even {
