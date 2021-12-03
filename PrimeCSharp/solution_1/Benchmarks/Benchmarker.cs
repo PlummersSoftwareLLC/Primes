@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Running;
 
 namespace PrimeCSharp.Benchmarks
 {
     class Benchmarker
     {
-        public static void RunBenchmark(string? option)
+        public static void RunBenchmark(string version, string? option)
         {
             _ = option?.ToLower() switch
             {
@@ -17,7 +12,11 @@ namespace PrimeCSharp.Benchmarks
                 "ref" => BenchmarkRunner.Run<BenchmarkRef>(),
                 "ofn" => BenchmarkRunner.Run<BenchmarkOfN>(),
                 "par" => BenchmarkRunner.Run<BenchmarkPar>(),
-                _ => BenchmarkRunner.Run<BenchmarkSieves>()
+                _ => version switch
+                {
+                    "v1" => BenchmarkRunner.Run<BenchmarkV1Sieves>(),
+                    _ => BenchmarkRunner.Run<BenchmarkV2Sieves>()
+                }
             };
         }
     }
