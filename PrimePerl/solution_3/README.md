@@ -34,7 +34,17 @@ docker build -t primes .
 docker run --rm primes
 ```
 
-## Benchmarks
+## Output
+
+```
+Luis Mochán (wlmb) Perl/PDL;440;5.002161;1;algorithm=base,faithful=yes
+Luis Mochán (wlmb) Perl/PDL;459;5.006921;1;algorithm=base,faithful=yes
+Luis Mochán (wlmb) Perl/PDL;461;5.009201;1;algorithm=base,faithful=yes
+Luis Mochán (wlmb) Perl/PDL;456;5.007696;1;algorithm=base,faithful=yes
+Luis Mochán (wlmb) Perl/PDL;463;5.000091;1;algorithm=base,faithful=yes
+```
+
+### Benchmarks
 
 In my laptop it's about an order of magnitude faster than Perl's
 solution 1. I did use external modules, but they are general purpose
