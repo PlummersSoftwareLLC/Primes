@@ -22,7 +22,7 @@ my %primes_lower_than = (
 sub new {
     my ( $class, $sieve_size ) = @_;
     # die "Expect a positive power of ten" unless (0+$sieve_size) =~ /^10+$/;
-    my $bits=zeroes($sieve_size+1);
+    my $bits=zeroes(byte, $sieve_size+1);
     my $q=sqrt($sieve_size);
     $bits(0:1).=1; # 0 and 1 are not prime
     return bless {
@@ -39,8 +39,9 @@ sub run_sieve {
     return if $self->{ran};
     my $q      = $self->{q};
     my $bits   = $self->{bits};
+    my $one=pdl(byte, 1);
     for(my $factor=3; $factor<=$q; $factor+=2) {
-	$bits($factor*$factor:-1:2*$factor).=1 unless $bits(($factor));
+	$bits($factor*$factor:-1:2*$factor).=$one unless $bits(($factor));
     }
     $self->{ran}=1;
 }
@@ -48,7 +49,7 @@ sub run_sieve {
 sub print_results {
     my ( $self, $show_primes, $show_stats, $duration, $passes ) = @_;
     say $self->get_primes if $show_primes;
-    printf "Luis_Mochán_(wlmb)_Perl/PDL;%d;%f;%d;algorithm=base,faithful=yes\n",
+    printf "Luis_Mochán_(wlmb)_Perl/PDL;%d;%f;%d;algorithm=base,faithful=yes,bits=8\n",
 	$passes, $duration, 1;
     say "Passes: $passes, Time: $duration, Per pass: ", $duration/$passes,
 	" Limit: ", $self->{sieve_size}, " Count: ", $self->count_primes,
@@ -95,6 +96,6 @@ while ($duration<5) {
     $passes++;
     $duration = time - $start_time;
 }
-$sieve->print_results( 0, 0, $duration, $passes );
+$sieve->print_results( 0, 1, $duration, $passes );
 
 __END__
