@@ -14,7 +14,6 @@ namespace PrimeCSharp.V2Sieves
         public string AlgorithmType => "other";
         public int SieveSize { get; }
         public int ClearCount { get; set; }
-        public bool IsFaithful => false;
 
         private readonly ulong[] data;
         private const int dataBits = 64;
