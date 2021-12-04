@@ -67,7 +67,7 @@ sub get_primes {
     my $self = shift;
     $self->deal_with_even;
     my $bits=$self->{bits};
-    $bits->xvals->where(!$bits);
+    $bits->long->xvals->where(!$bits);
 }
 
 sub count_primes {
