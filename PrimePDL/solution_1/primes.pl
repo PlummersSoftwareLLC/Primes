@@ -96,6 +96,6 @@ while ($duration<5) {
     $passes++;
     $duration = time - $start_time;
 }
-$sieve->print_results( 0, 1, $duration, $passes );
+$sieve->print_results( 0, 0, $duration, $passes );
 
 __END__
