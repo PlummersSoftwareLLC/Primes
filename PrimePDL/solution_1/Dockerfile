@@ -1,4 +1,4 @@
-FROM wlmb/perldatalanguage:v7
+FROM wlmb/perldatalanguage:v8
 
 WORKDIR /opt/app
 COPY *.pl .
