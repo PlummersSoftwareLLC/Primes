@@ -50,9 +50,10 @@ sub print_results {
     say $self->get_primes if $show_primes;
     printf "Luis_Mochán_(wlmb)_Perl/PDL;%d;%f;%d;algorithm=base,faithful=yes,bits=8\n",
 	$passes, $duration, 1;
-    say "Passes: $passes, Time: $duration, Per pass: ", $duration/$passes,
-	" Limit: ", $self->{sieve_size}, " Count: ", $self->count_primes,
-	" Valid: ", $self->validate_results if $show_stats;
+    say sprintf "Passes: %d, Time: %.4f, Per pass: %.3e Limit: %d, Count: %d, Valid: %d",
+	$passes, $duration,  $duration/$passes, $self->{sieve_size}, $self->count_primes,
+	$self->validate_results
+	if $show_stats;
 }
 
 sub deal_with_even {
@@ -81,28 +82,27 @@ sub validate_results {
     return ( $primes_lower_than{ $self->{sieve_size} } == $self->count_primes() );
 }
 
-BEGIN {
-    no PDL::NiceSlice;
-    use Inline Pdlpp => <<'EOPP';
+no PDL::NiceSlice;
+use Inline Pdlpp => <<'EOPP';
     pp_def('run_sieve_aux',
-	   Pars=>'[io]bits(n);factors(q);',
-	   Code=>q{
-	       int f, i, f2, ff, sn;
-	       loop(q) %{
-	           f=$factors();
-		   if($bits(n=>f)==0){
-		       f2=2*f;
-		       ff=f*f;
-		       sn=$SIZE(n);
-		       for(i=ff; i < sn; i+=f2){
-			   $bits(n=>i)=1;
-		       }
-		   }
-	       %}
-	   },
-	);
+        Pars=>'[io]bits(n);factors(q);',
+        Code=>q{
+            int f, i, f2, ff, sn;
+	    loop(q) %{
+	        f=$factors();
+	        if($bits(n=>f)==0){
+		    f2=2*f;
+		    ff=f*f;
+		    sn=$SIZE(n);
+		    for(i=ff; i < sn; i+=f2){
+		        $bits(n=>i)=1;
+		    }
+	        }
+	    %}
+        },
+    );
 EOPP
-}
+
 
 package main;
 use Time::HiRes qw(time);
@@ -117,6 +117,6 @@ while ($duration<5) {
     $passes++;
     $duration = time - $start_time;
 }
-$sieve->print_results( 0, 1, $duration, $passes );
+$sieve->print_results( 0, 0, $duration, $passes );
 
 __END__
