@@ -37,11 +37,11 @@ docker run --rm primes
 ## Output
 
 ```
-Luis_Mochán_(wlmb)_Perl/PDL;650;5.006607;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;657;5.000837;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;652;5.003785;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;650;5.001952;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;653;5.001199;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;726;5.001482;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;723;5.002705;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;721;5.003962;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;731;5.004047;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;714;5.005479;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Benchmarks
@@ -53,11 +53,11 @@ language extensions, not targeted to this problem.
 On my Dell Latitude E7450, I get the following numbers:
 
 ```
-Passes: 659, Time: 5.00056004524231, Per pass: 0.00758810325529941 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 632, Time: 5.00728106498718, Per pass: 0.00792291307751137 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 662, Time: 5.00472187995911, Per pass: 0.00756000283981738 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 652, Time: 5.00252103805542, Per pass: 0.0076725782792261 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 645, Time: 5.00771999359131, Per pass: 0.00776390696680823 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 726, Time: 5.0014820098877, Per pass: 0.00688909367753126 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 723, Time: 5.00270485877991, Per pass: 0.00691937048240651 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 721, Time: 5.00396203994751, Per pass: 0.00694030796109225 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 731, Time: 5.00404691696167, Per pass: 0.00684548141855222 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 714, Time: 5.00547909736633, Per pass: 0.00701047492628338 Limit: 1000000 Count: 78498 Valid: 1
 ```
 
 ## Author
