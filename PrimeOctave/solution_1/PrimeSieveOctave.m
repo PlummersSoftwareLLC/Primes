@@ -37,7 +37,7 @@ endwhile
 final_time = time()-start_time;
 
 % Average runtime per pass
-avg = final_time/count;
+avg = final_time/passes;
 
 % Validate if a known limit was used
 % rbergen: ended line with semicolon to suppress output line 
