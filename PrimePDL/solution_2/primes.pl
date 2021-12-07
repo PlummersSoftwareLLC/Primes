@@ -48,7 +48,7 @@ sub run_sieve {
 sub print_results {
     my ( $self, $show_primes, $show_stats, $duration, $passes ) = @_;
     say $self->get_primes if $show_primes;
-    printf "Luis_Mochán_(wlmb)_Perl/PDL;%d;%f;%d;algorithm=base,faithful=yes,bits=8\n",
+    printf "Luis_Mochán_(wlmb)_Perl/PDL-PP;%d;%f;%d;algorithm=base,faithful=yes,bits=8\n",
 	$passes, $duration, 1;
     say sprintf "Passes: %d, Time: %.4f, Per pass: %.3e Limit: %d, Count: %d, Valid: %d",
 	$passes, $duration,  $duration/$passes, $self->{sieve_size}, $self->count_primes,
