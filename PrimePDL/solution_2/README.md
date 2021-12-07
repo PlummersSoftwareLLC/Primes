@@ -39,11 +39,11 @@ docker run --rm primes
 ## Output
 
 ```
-Luis_Mochán_(wlmb)_Perl/PDL;1091;5.003844;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;1063;5.004238;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;1067;5.003807;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;1065;5.000665;1;algorithm=base,faithful=yes,bits=8
-Luis_Mochán_(wlmb)_Perl/PDL;1043;5.001787;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL-PP;1091;5.003844;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL-PP;1063;5.004238;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL-PP;1067;5.003807;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL-PP;1065;5.000665;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL-PP;1043;5.001787;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Benchmarks
