@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 My implementation uses the Perl Data Language (PDL) to mark all multiples of
 a prime with a single instruction. PDL is a package that extends Perl,
@@ -37,27 +37,27 @@ docker run --rm primes
 ## Output
 
 ```
-Luis_Mochán_(wlmb)_Perl/PDL;440;5.002161;1;algorithm=base,faithful=yes
-Luis_Mochán_(wlmb)_Perl/PDL;459;5.006921;1;algorithm=base,faithful=yes
-Luis_Mochán_(wlmb)_Perl/PDL;461;5.009201;1;algorithm=base,faithful=yes
-Luis_Mochán_(wlmb)_Perl/PDL;456;5.007696;1;algorithm=base,faithful=yes
-Luis_Mochán_(wlmb)_Perl/PDL;463;5.000091;1;algorithm=base,faithful=yes
+Luis_Mochán_(wlmb)_Perl/PDL;726;5.001482;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;723;5.002705;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;721;5.003962;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;731;5.004047;1;algorithm=base,faithful=yes,bits=8
+Luis_Mochán_(wlmb)_Perl/PDL;714;5.005479;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Benchmarks
 
-In my laptop it's about an order of magnitude faster than Perl's
+In my laptop it's about twenty times faster than Perl's
 solution 1. I did use external modules, but they are general purpose
 language extensions, not targeted to this problem.
 
 On my Dell Latitude E7450, I get the following numbers:
 
 ```
-Passes: 459, Time: 5.00613212585449, Per pass: 0.0109066059386808 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 442, Time: 5.00916695594788, Per pass: 0.0113329569139092 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 441, Time: 5.00524806976318, Per pass: 0.0113497688656762 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 456, Time: 5.00585103034973, Per pass: 0.0109777434876091 Limit: 1000000 Count: 78498 Valid: 1
-Passes: 448, Time: 5.00958800315857, Per pass: 0.0111821160784789 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 726, Time: 5.0014820098877, Per pass: 0.00688909367753126 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 723, Time: 5.00270485877991, Per pass: 0.00691937048240651 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 721, Time: 5.00396203994751, Per pass: 0.00694030796109225 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 731, Time: 5.00404691696167, Per pass: 0.00684548141855222 Limit: 1000000 Count: 78498 Valid: 1
+Passes: 714, Time: 5.00547909736633, Per pass: 0.00701047492628338 Limit: 1000000 Count: 78498 Valid: 1
 ```
 
 ## Author

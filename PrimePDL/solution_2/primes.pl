@@ -5,7 +5,8 @@ use strict;
 use warnings;
 use PDL;
 use PDL::NiceSlice;
-
+set_autopthread_targ(1);
+my $DEBUG=0;
 my %primes_lower_than = (
     10          => 4,
     100         => 25,
@@ -39,21 +40,20 @@ sub run_sieve {
     return if $self->{ran};
     my $q      = $self->{q};
     my $bits   = $self->{bits};
-    my $one=pdl(byte, 1);
-    for(my $factor=3; $factor<=$q; $factor+=2) {
-	$bits($factor*$factor:-1:2*$factor).=$one unless $bits(($factor));
-    }
-    $self->{ran}=1;
+    my $factors=zeroes(long,$q+1-3)->xvals*2+3;
+    say $factors if $DEBUG;
+    $bits->run_sieve_aux($factors);
 }
 
 sub print_results {
     my ( $self, $show_primes, $show_stats, $duration, $passes ) = @_;
     say $self->get_primes if $show_primes;
-    printf "Luis_Mochán_(wlmb)_Perl/PDL;%d;%f;%d;algorithm=base,faithful=yes,bits=8\n",
+    printf "Luis_Mochán_(wlmb)_Perl/PDL-PP;%d;%f;%d;algorithm=base,faithful=yes,bits=8\n",
 	$passes, $duration, 1;
-    say "Passes: $passes, Time: $duration, Per pass: ", $duration/$passes,
-	" Limit: ", $self->{sieve_size}, " Count: ", $self->count_primes,
-	" Valid: ", $self->validate_results if $show_stats;
+    say sprintf "Passes: %d, Time: %.4f, Per pass: %.3e Limit: %d, Count: %d, Valid: %d",
+	$passes, $duration,  $duration/$passes, $self->{sieve_size}, $self->count_primes,
+	$self->validate_results
+	if $show_stats;
 }
 
 sub deal_with_even {
@@ -81,6 +81,27 @@ sub validate_results {
     my $self = shift;
     return ( $primes_lower_than{ $self->{sieve_size} } == $self->count_primes() );
 }
+
+no PDL::NiceSlice;
+use Inline Pdlpp => <<'EOPP';
+    pp_def('run_sieve_aux',
+        Pars=>'[io]bits(n);factors(q);',
+        Code=>q{
+            int f, i, f2, ff, sn;
+	    loop(q) %{
+	        f=$factors();
+	        if($bits(n=>f)==0){
+		    f2=2*f;
+		    ff=f*f;
+		    sn=$SIZE(n);
+		    for(i=ff; i < sn; i+=f2){
+		        $bits(n=>i)=1;
+		    }
+	        }
+	    %}
+        },
+    );
+EOPP
 
 
 package main;
