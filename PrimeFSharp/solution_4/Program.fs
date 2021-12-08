@@ -72,7 +72,7 @@ let printResults showResults duration passes sieveSize numPrimes =
           passes duration (duration / (float passes)) sieveSize numPrimes isValid
 
   if isValid then
-    printfn "GordonBGood_unpeeled;%d;%f;1;algorithm=base;faithful=yes;bits=1" passes duration
+    printfn "GordonBGood_unpeeled;%d;%f;1;algorithm=base,faithful=yes,bits=1" passes duration
   else
     printfn "ERROR: invalid results"
 
