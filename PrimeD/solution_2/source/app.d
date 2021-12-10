@@ -747,7 +747,7 @@ void runSingleThreaded(alias SieveType)(IsFaithful faithful, string algorithm = 
 
     s.runSieve();
     s.printResults(
-        "BradleyChatha-Single-"~SieveClassName, 
+        "BradleyChatha-Single-%s-%sbit".format(SieveClassName, bits), 
         "algorithm=%s,bits=%s,faithful=%s".format(algorithm, bits, faithful), // Flag.to!string -> "yes" or "no". 
         1, 
         false, 
