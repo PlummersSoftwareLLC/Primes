@@ -67,7 +67,7 @@ time_label: .byte "TIME ",0
 valid_label: .byte "VALID ",0
 clock_string: .byte 0
     .storage 8
-remainder: .storage 3
+remainder: .storage 1
 ram_config: .word 0
 
 start:
@@ -553,10 +553,6 @@ write_str_end:
 ; that can be found at https://www.youtube.com/watch?v=v3-a-zqKfgA. While you're there, watch the whole series and check  
 ; out his project page: https://eater.net/6502.
 ;
-
-div_tmp: .word 0
-
-;
 ; routine: convert 24-bit value at *clock to decimal string at *clock_string using binary long division
 ; Note that the value at *clock to *clock+2 will be destroyed (set to 0) in the process
 ;
@@ -564,8 +560,6 @@ clock_to_string:
     ; set remainder to 0
     lda #0
     sta remainder
-    sta remainder+1
-    sta remainder+2
     clc
 
     ldx #24
@@ -576,28 +570,16 @@ div_loop:
     rol clock+1
     rol clock+2
     rol remainder
-    rol remainder+1
-    rol remainder+2
 
     ; try to substract divisor
     sec
     lda remainder
     sbc #10
-    sta div_tmp
-    lda remainder+1
-    sbc #0
-    sta div_tmp+1
-    lda remainder+2
-    sbc #0
     
     ; dividend < divisor
     bcc ignore_result
 
-    ; store current state of remainder
-    sta remainder+2
-    lda div_tmp+1 
-    sta remainder+1
-    lda div_tmp 
+    ; store current remainder
     sta remainder
 
 ignore_result:
@@ -611,7 +593,6 @@ ignore_result:
     rol clock+2
 
     ; current remainder is clock digit value
-    lda remainder
     clc
     adc #'0'
 
