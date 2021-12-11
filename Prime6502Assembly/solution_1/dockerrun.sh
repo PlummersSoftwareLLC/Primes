@@ -1,7 +1,7 @@
 #!/bin/bash
 
 c1541 -format primes,c1 d64 ./primes.d64 -write ./primes.prg > /dev/null
-x128 -console -autostart ./primes.d64 +sound > /dev/null &
+x128 -console -autostart ./primes.d64 +sound -warp > /dev/null &
 
 while : ; do
     sleep 10 

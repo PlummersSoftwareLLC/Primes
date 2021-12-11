@@ -59,7 +59,9 @@ docker run -ti --rm 6502assembly1
   .\build.ps1
   .\run.ps1
   ```
-  Note that `build.ps1` does not need to be executed in subsequent runs; executing `run.ps1` will then suffice.
+  Note that:
+  - `build.ps1` does not need to be executed in subsequent runs; executing `run.ps1` will then suffice.
+  - any arguments passed to `run.ps1` will be passed on to the emulator.
 - When the execution of the prime sieve completes, BASIC will show a READY prompt. The VICE window will look like this:
   ![VICE window](https://i.ibb.co/f9F5bJv/c128primes.png)
 
@@ -88,7 +90,9 @@ docker run -ti --rm 6502assembly1
   ./build.sh
   ./run.sh
   ```
-  Note that `build.sh` does not need to be executed in subsequent runs; executing `run.sh` will then suffice.
+  Note that:
+  - `build.sh` does not need to be executed in subsequent runs; executing `run.sh` will then suffice.
+  - any arguments passed to `run.sh` will be passed on to the emulator.
 - When the execution of the prime sieve completes, BASIC will show a READY prompt. The VICE window will look like shown above. <br/>
   VICE can now be closed.
 - Execute the following command to parse and display the result:
