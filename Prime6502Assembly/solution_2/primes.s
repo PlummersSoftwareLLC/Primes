@@ -506,6 +506,7 @@ ignore_result:
     rol clock+2
 
     ; current remainder is clock digit value
+    lda remainder
     clc
     adc #'0'
 
