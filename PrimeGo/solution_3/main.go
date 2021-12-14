@@ -107,5 +107,5 @@ loop:
 			passes++
 		}
 	}
-	fmt.Printf("zanicar-go;%v;%v;%v;algorithm=base,faithful=yes,bits=1\n", passes, time.Since(t0), routines)
+	fmt.Printf("zanicar-go;%v;%f;%v;algorithm=base,faithful=yes,bits=1\n", passes, time.Since(t0).Seconds(), routines)
 }
