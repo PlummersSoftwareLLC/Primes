@@ -27,12 +27,11 @@ class PrimeSieve
             break if number > sieve_sqrt
 
             factor = number
-            factor_times_2 = factor
             number = number * number / 2
 
             while number < sieve_size_by_2
                 @prime_array[number] = false
-		number += factor_times_2
+                number += factor
             end
 
             factor += 2
