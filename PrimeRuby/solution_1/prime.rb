@@ -16,18 +16,17 @@ class PrimeSieve
         sqrt_by_2_plus_one = sieve_sqrt / 2 + 1
         sieve_size_by_2 = @sieve_size / 2
 
-        while factor < sieve_sqrt
+        while factor <= sieve_sqrt
             number = factor
             div_2 = number / 2
 
             div_2 += 1 until @prime_array[div_2] || div_2 > sqrt_by_2_plus_one
 
-            # number = div_2 << 1 | 1
             number = div_2 * 2 + 1
             break if number > sieve_sqrt
 
             factor = number
-            number = number * number / 2
+            number = factor * factor / 2
 
             while number < sieve_size_by_2
                 @prime_array[number] = false
@@ -57,11 +56,11 @@ pass_count = 0
 start_time = Time.now.to_f
 sieve = nil
 
-until (Time.now.to_f - start_time) > 5.0
+begin
     sieve = PrimeSieve.new(sieve_size)
     sieve.run_sieve
     pass_count += 1
-end
+end until (Time.now.to_f - start_time) > 5.0
 
 duration = (Time.now.to_f - start_time).round(3)
 
