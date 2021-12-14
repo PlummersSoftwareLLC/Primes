@@ -58,7 +58,7 @@ pass_count = 0
 start_time = Time.now.to_f
 sieve = nil
 
-until (Time.now.to_f - start_time) > 1.0
+until (Time.now.to_f - start_time) > 5.0
     sieve = PrimeSieve.new(sieve_size)
     sieve.run_sieve
     pass_count += 1
