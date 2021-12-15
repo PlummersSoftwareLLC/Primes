@@ -123,7 +123,7 @@
          "Count: " (count primes) ", "
          "Valid: " (if valid? "True" "False")
          "\n"
-         "pez-clj;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
+         "pez-clj;" passes ";" timef ";8;algorithm=base,faithful=yes,bits=8")))
 
 
 (defn run [{:keys [warm-up?]
