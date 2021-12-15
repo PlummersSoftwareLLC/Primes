@@ -27,7 +27,7 @@ The warm-up makes the runner start with a silent run, before running one that is
 You can also run this via Docker:
 
 ```sh
-$ docker pull clojure
+$ docker pull clojure:openjdk-18-tools-deps-1.10.3.1040
 $ docker build -t primes-clojure .
 $ docker run --rm -it primes-clojure
 ```
