@@ -95,7 +95,7 @@ function print_results(show_results, passes, duration)
 
     print "Passes: " passes ", Time: " duration ", Average: " duration / passes ", Count: " count ", Valid: " validate_results();
 
-    print "DaviNakamuraCardoso;" passes ";" duration ";algorithm=base,faithful=no";
+    print "DaviNakamuraCardoso;" passes ";" duration ";1;algorithm=base,faithful=no";
     return;
 }
 
