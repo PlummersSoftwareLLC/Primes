@@ -23,7 +23,7 @@ class PrimeSieve
             div_2 += 1 until @prime_array[div_2] || div_2 > sqrt_by_2_plus_one
 
             number = div_2 * 2 + 1
-            break if number > sieve_sqrt
+            break unless number <= sieve_sqrt
 
             factor = number
             number = factor * factor / 2
