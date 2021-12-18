@@ -13,11 +13,17 @@
 (set! *unchecked-math* :warn-on-boxed)
 
 
-(defn sieve [^long n]
-  (let [primes (boolean-array (inc n) true)
-        sqrt-n (int (Math/ceil (Math/sqrt n)))]
-    (if (< n 2)
-      '()
+(defn sieve 
+  "We gain some time by skipping every other number while iterating.
+   Then lose some time when filtering away the even numbers that we missed.
+   The second step can be parallalized for some little speed gain.
+   It all starts to make sense for larger sieves,
+     at 1 million the gains are there, but small."
+  [^long n]
+  (if (< n 2)
+    '()
+    (let [primes (boolean-array (inc n) true)
+          sqrt-n (int (Math/ceil (Math/sqrt n)))]
       (loop [p 3]
         (if (< sqrt-n p)
           (let [num-slices 8 ; I'm not sure what is a good default
@@ -63,11 +69,11 @@
 
   ;; `doall` is not strictly necessary for this sieve, because it is not lazy,
   ;; but for good measure =)
-  (with-progress-reporting (quick-bench (doall (sieve 1000000))))
-  (quick-bench (doall (sieve 1000000)))
+  (with-progress-reporting (quick-bench (sieve 1000000)))
+  (quick-bench (sieve 1000000))
 
   ;; This one takes a lot of time, you have been warned
-  (with-progress-reporting (bench (doall (sieve 1000000))))
+  (with-progress-reporting (bench (sieve 1000000)))
   )
 
 (def prev-results
@@ -93,7 +99,6 @@
         end-by      (+ (.toEpochMilli start-time) 5000)]
     (loop [pass 1]
       (let [primes   (sieve limit)
-            n        (count primes)
             cur-time (System/currentTimeMillis)]
         (if (<= cur-time end-by)
           (recur (inc pass))
@@ -102,7 +107,7 @@
            :passes pass
            :limit  limit
            :time   (Duration/between start-time (Instant/now))
-           :valid? (= n
+           :valid? (= (count primes)
                       (prev-results limit))})))))
 
 
@@ -132,3 +137,8 @@
     ;; Warm-up reduces the variability of results.
     (format-results (benchmark)))
   (println (format-results (benchmark))))
+
+(comment
+  (run {:warm-up? false})
+  (run {:warm-up? true})
+  )
