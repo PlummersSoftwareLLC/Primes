@@ -43,7 +43,7 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
   After that, the solution can be run again by issuing ./run.sh 
 
 ### Manually, without owning the game
- - Download the minecraft server jar from [the Minecraft website](https://www.minecraft.net/en-us/download/server) (game versions 1.17 and 1.17.1 are known to work, however newer versions will likely work as well).
+ - Download the minecraft server jar from [the Minecraft website](https://www.minecraft.net/en-us/download/server) (game versions 1.17, 1.17.1 and 1.18.1 are known to work, however newer versions will likely work as well). **Note:** versions lower than 1.18.1 are vulnerable to the [critical Log4j vulnerability described in CVE-2021-44228](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-44228).
  - Move the server jar, `eula.txt`, `server.properties`, and `start.bat` to a new directory. **Note:** by doing so, you agree to [the Minecraft EULA](https://account.mojang.com/documents/minecraft_eula)
  - Run the server as a java program; a command is provided in start.bat which allocates 1 gigabyte of memory. 
  - Once the server has started, copy the entirety of the `Pack` folder into `/world/datapacks/`. The path of the `pack.mcmeta` file should be `/world/datapacks/Pack/pack.mcmeta`.
@@ -58,7 +58,7 @@ This sieve uses blocks in Minecraft as array values, and uses Minecraft commands
 ### Manually, with a singleplayer game client
  - Installation instructions for the Minecraft game itself are not included
  - Enable the output log through the minecraft launcher (if not already enabled) at "Settings" => "Open output log when Minecraft: Java Edition starts"
- - Run an instance of Java Minecraft 1.17.1
+ - Run an instance of Java Minecraft 1.18.1
  - Create a new world and import settings using `worldgen_settings_export.json` ("Singleplayer" => "Create New World" => "More World Options..." => "Import Settings"). Ensure "Allow Cheats" is enabled.
  - Leave the world and go back to the main menu
  - Select the newly created world, select edit (the bottom-left most button), and select Open World Folder.

@@ -8,7 +8,7 @@ WORKDIR /app
 
 COPY eula.txt server.properties buildioscript.txt runioscript.txt playio.c run.sh ./
 
-RUN wget https://launcher.mojang.com/v1/objects/a16d67e5807f57fc4e550299cf20226194497dc2/server.jar && \
+RUN wget https://launcher.mojang.com/v1/objects/125e5adf40c659fd3bce3e66e67a16bb49ecc1b9/server.jar && \
     gcc playio.c -o playio && \
     ./playio java -Xmx1024M -Xms1024M -jar server.jar nogui < buildioscript.txt && \
     mkdir world/datapacks/Pack
