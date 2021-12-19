@@ -3,40 +3,45 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-yellowgreen)
 
-A faithful [Clojure](https://clojure.org/) implementation of
+Some faithful [Clojure](https://clojure.org/) implementations of
 the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
 algorithm.
 
-The solution uses Clojure [transients](https://clojure.org/reference/transients) to make it run faster than it would do with the regular immutable datastructure, gaining about 2X in speed this way.
-
-It also uses [futures](https://clojure.org/about/concurrent_programming) to try gain some extra speed, (hence the **Parallelism = yes** tag). This actually does not gain us all that much, but it's notable enough so I have kept it. Also, I think that when you start to sieve much more than the first one million primes, you will start to see gains from the parallelism. (But I'm not an expert, so don't take my word for it.)
+* `pez-clj-boolean-array` – a boolean array is first initialized so that all indexes, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
+* `pez-clj-boolean-array-futures` – a boolean array is first initialized so that all indexes, are marked as primes, then the sieve works on removing odd non-primes, then 0, 1 and all even numbers > 2 are removed. The last step uses [transients](https://clojure.org/reference/transients) and is also parallelized using [futures](https://clojure.org/about/concurrent_programming) for some (small) speed gain. This solution starts to be the fastest of the three at limits of about 10 million. (Depending on which machine is used)
+* `pez-clj-bitset` – a BitSet is first initialized so that all bits, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
 
 ## Run instructions
 
-The runner infrastructure is copied from Alex Vaer's [Clojure Solution 2](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeClojure/solution_2).
-
+The runner infrastructure is built from Alex Vaer's [Clojure Solution 2](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeClojure/solution_2).
 
 1. Install a JDK.
 2. Install the [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
 3. Run with `clojure -X sieve/run :warm-up? true`
 
-The warm-up makes the runner start with a silent run, before running one that is reported, giving slightly more consistent results. (But, really, you should use Criterium for benchmarking while developing, see below.)
+The warm-up makes the runner start with a silent run, before running one that is reported, giving slightly more consistent results. (But, really, you should use [Criterium](https://github.com/hugoduncan/criterium) for benchmarking while developing, see below.)
 
-You can also run this via Docker:
+Running all three solutions via Docker:
 
 ```sh
 $ docker pull clojure:openjdk-18-tools-deps-1.10.3.1040
-$ docker build -t primes-clojure .
-$ docker run --rm -it primes-clojure
+$ docker build -t pez-primes-clojure .
+$ docker run --rm -it pez-primes-clojure
 ```
 
-## Output
+## Sample output
 
 ```
-Passes: 2546, Time: 5.000879000, Avg: 0.00196421, Limit: 1000000, Count: 78498, Valid: True
-pez-clj;2546;5.000879000;1;algorithm=base,faithful=yes,bits=8
+Passes: 2564, Time: 5.000985000, Avg: 0.0019504621, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array;2564;5.000985000;1;algorithm=base,faithful=yes,bits=8
+Passes: 908, Time: 5.001991000, Avg: 0.0055088005, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-bitset;908;5.001991000;1;algorithm=base,faithful=yes,bits=1
+Passes: 2155, Time: 5.002808000, Avg: 0.0023214887, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-futures;2155;5.002808000;8;algorithm=base,faithful=yes,bits=8
 ```
 
 (On an Apple M1 Max with 8 performance cores and 32GB of RAM.)
@@ -52,26 +57,25 @@ If not, I suggest using [Calva](https://calva.io):
 1. Issue the command **Calva: Starta Clojure REPL in your Project and Connect (aka Jack-in)**
 1. When the REPL has started, issue **Calva: Load current file and its dependencies**
 
-Then find this Rich Comment block in the file:
+Then find one of the Rich Comment blocks in the file, one looks like so:
 
 ```clojure
 (comment
-  (sieve 1)
-  ;; => ()
+  (sieve-ba-post-even-filter 1)
+  ;; => []
 
-  (sieve 10)
+  (sieve-ba-post-even-filter 10)
   ;; => [2 3 5 7]
 
-  (sieve 100)
+  (sieve-ba-post-even-filter 100)
   ;; You try it!
-  
-  ;; `doall` is not strictly necessary for this sieve, because it is not lazy,
-  ;; but for good measure =)
-  (with-progress-reporting (quick-bench (doall (sieve 1000000))))
-  (quick-bench (doall (sieve 1000000)))
+
+  (with-progress-reporting (quick-bench (sieve-ba-post-even-filter 1000000)))
+  (quick-bench (sieve-ba-post-even-filter 1000000))
+  ;; Execution time mean : 2.703046 ms
 
   ;; This one takes a lot of time, you have been warned
-  (with-progress-reporting (bench (doall (sieve 1000000))))
+  (with-progress-reporting (bench (sieve-ba-post-even-filter 1000000)))
   )
 ```
 
