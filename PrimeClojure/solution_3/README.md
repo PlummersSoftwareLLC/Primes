@@ -5,7 +5,7 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-1-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 Some faithful [Clojure](https://clojure.org/) implementations of
 the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
