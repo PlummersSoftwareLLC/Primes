@@ -11,9 +11,12 @@ Some faithful [Clojure](https://clojure.org/) implementations of
 the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
 algorithm.
 
-* `pez-clj-boolean-array` – a boolean array is first initialized so that all indexes, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
-* `pez-clj-boolean-array-futures` – a boolean array is first initialized so that all indexes, are marked as primes, then the sieve works on removing odd non-primes, then 0, 1 and all even numbers > 2 are removed. The last step uses [transients](https://clojure.org/reference/transients) and is also parallelized using [futures](https://clojure.org/about/concurrent_programming) for some (small) speed gain. This solution starts to be the fastest of the three at limits of about 10 million. (Depending on which machine is used)
-* `pez-clj-bitset` – a BitSet is first initialized so that all bits, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
+* `pez-clj-bitset` – a BitSet is sieved, all bits visited in one pass
+* `pez-clj-bitset-pre` – a BitSet is first initialized so that all bits, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
+* `pez-clj-boolean-array` – a boolean array is sieved, all indexes visited in one pass
+* `pez-clj-boolean-array-pre` – a boolean array is first initialized so that all indexes, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
+* `pez-clj-boolean-array-futures-pre` – same as `boolean-array-pre`, except the evens are cleared in a parallelized manner using [futures](https://clojure.org/about/concurrent_programming)
+* `pez-clj-boolean-array-to-vector-futures` – a boolean array is first initialized so that all indexes, are marked as primes, then the sieve works on removing odd non-primes, then 0, 1 and all even numbers > 2 are removed. The last step uses [transients](https://clojure.org/reference/transients) and is also parallelized using `futures`.
 
 ## Run instructions
 
@@ -36,12 +39,18 @@ $ docker run --rm -it pez-primes-clojure
 ## Sample output
 
 ```
-Passes: 2564, Time: 5.000985000, Avg: 0.0019504621, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-boolean-array;2564;5.000985000;1;algorithm=base,faithful=yes,bits=8
-Passes: 908, Time: 5.001991000, Avg: 0.0055088005, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-bitset;908;5.001991000;1;algorithm=base,faithful=yes,bits=1
-Passes: 2155, Time: 5.002808000, Avg: 0.0023214887, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-boolean-array-futures;2155;5.002808000;8;algorithm=base,faithful=yes,bits=8
+Passes: 496, Time: 5.002424000, Avg: 0.010085532, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-bitset;496;5.002424000;1;algorithm=base,faithful=yes,bits=1
+Passes: 1472, Time: 5.000757000, Avg: 0.0033972533, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-bitset-pre;1472;5.000757000;1;algorithm=base,faithful=yes,bits=1
+Passes: 1246, Time: 5.004753000, Avg: 0.0040166555, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array;1246;5.004753000;1;algorithm=base,faithful=yes,bits=8
+Passes: 2560, Time: 5.000806000, Avg: 0.0019534398, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-pre;2560;5.000806000;1;algorithm=base,faithful=yes,bits=8
+Passes: 3419, Time: 5.001685000, Avg: 0.0014629087, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-pre-futures;3419;5.001685000;8;algorithm=base,faithful=yes,bits=8
+Passes: 2529, Time: 5.000828000, Avg: 0.0019773934, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-to-vector-futures;2529;5.000828000;8;algorithm=base,faithful=yes,bits=8
 ```
 
 (On an Apple M1 Max with 8 performance cores and 32GB of RAM.)
@@ -61,25 +70,25 @@ Then find one of the Rich Comment blocks in the file, one looks like so:
 
 ```clojure
 (comment
-  (sieve-ba-post-even-filter 1)
+  (sieve-ba-to-vector-even-filter-futures 1)
   ;; => []
 
-  (sieve-ba-post-even-filter 10)
+  (sieve-ba-to-vector-even-filter-futures 10)
   ;; => [2 3 5 7]
 
-  (sieve-ba-post-even-filter 100)
+  (sieve-ba-to-vector-even-filter-futures 100)
   ;; You try it!
 
-  (with-progress-reporting (quick-bench (sieve-ba-post-even-filter 1000000)))
-  (quick-bench (sieve-ba-post-even-filter 1000000))
+  (with-progress-reporting (quick-bench (sieve-ba-to-vector-even-filter-futures 1000000)))
+  (quick-bench (sieve-ba-to-vector-even-filter-futures 1000000))
   ;; Execution time mean : 2.703046 ms
 
   ;; This one takes a lot of time, you have been warned
-  (with-progress-reporting (bench (sieve-ba-post-even-filter 1000000)))
+  (with-progress-reporting (bench (sieve-ba-to-vector-even-filter-futures 1000000)))
   )
 ```
 
-Place the cursor in one of the forms (say `(sieve-ba-post-even-filter 1)`) and issue the command **Calva: Evaluate top level form** (default key binding `alt+enter`). Try `alt+enter` in some of the other forms too.
+Place the cursor in one of the forms (say `(sieve-ba-to-vector-even-filter-futures 1)`) and issue the command **Calva: Evaluate top level form** (default key binding `alt+enter`). Try `alt+enter` in some of the other forms too.
 
 The project is equipped with the excellent [Criterium](https://github.com/hugoduncan/criterium) library, which is very nice (and sort-of de-facto) for benchmarking Clojure code.
 
