@@ -63,7 +63,7 @@ If not, I suggest using [Calva](https://calva.io):
 
 1. Open the project root in in VS Code.
 1. Open `sieve.clj`
-1. Issue the command **Calva: Starta Clojure REPL in your Project and Connect (aka Jack-in)**
+1. Issue the command **Calva: Start a Clojure REPL in your Project and Connect (aka Jack-in)**
 1. When the REPL has started, issue **Calva: Load current file and its dependencies**
 
 Then find one of the Rich Comment blocks in the file, one looks like so:
