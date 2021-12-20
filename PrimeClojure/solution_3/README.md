@@ -79,7 +79,7 @@ Then find one of the Rich Comment blocks in the file, one looks like so:
   )
 ```
 
-Place the cursor in one of the forms (say `(sieve 1)`) and issue the command **Calva: Evaluate top level form** (default key binding `alt+enter`). Try `alt+enter` in some of the other forms too.
+Place the cursor in one of the forms (say `(sieve-ba-post-even-filter 1)`) and issue the command **Calva: Evaluate top level form** (default key binding `alt+enter`). Try `alt+enter` in some of the other forms too.
 
 The project is equipped with the excellent [Criterium](https://github.com/hugoduncan/criterium) library, which is very nice (and sort-of de-facto) for benchmarking Clojure code.
 
