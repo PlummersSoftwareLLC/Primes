@@ -14,9 +14,12 @@ algorithm.
 * `pez-clj-bitset` – a BitSet is sieved, all bits visited in one pass
 * `pez-clj-bitset-pre` – a BitSet is first initialized so that all bits, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
 * `pez-clj-boolean-array` – a boolean array is sieved, all indexes visited in one pass
+* `pez-clj-boolean-skip-evens` – a boolean array representing all odd numbers is sieved
 * `pez-clj-boolean-array-pre` – a boolean array is first initialized so that all indexes, but 0, 1 and a all even numbers > 2 are marked as primes, and then the sieve works on removing non-primes
 * `pez-clj-boolean-array-futures-pre` – same as `boolean-array-pre`, except the evens are cleared in a parallelized manner using [futures](https://clojure.org/about/concurrent_programming)
 * `pez-clj-boolean-array-to-vector-futures` – a boolean array is first initialized so that all indexes, are marked as primes, then the sieve works on removing odd non-primes, then 0, 1 and all even numbers > 2 are removed. The last step uses [transients](https://clojure.org/reference/transients) and is also parallelized using `futures`.
+
+In summary: There are two storages represented, BitSet and boolean array. For both we either visit all indexes or every other. When visiting every other, all but one variant sieve away the even numbers in a separate step. In two solutions we try parallelizing that step. For boolean arrays we have one variant returning the primes, and one returning the primes array of half the size, where the indexes represent the odd numbers (except index 0, representing 2).
 
 ## Run instructions
 
@@ -39,18 +42,20 @@ $ docker run --rm -it pez-primes-clojure
 ## Sample output
 
 ```
-Passes: 496, Time: 5.002424000, Avg: 0.010085532, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-bitset;496;5.002424000;1;algorithm=base,faithful=yes,bits=1
-Passes: 1472, Time: 5.000757000, Avg: 0.0033972533, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-bitset-pre;1472;5.000757000;1;algorithm=base,faithful=yes,bits=1
-Passes: 1246, Time: 5.004753000, Avg: 0.0040166555, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-boolean-array;1246;5.004753000;1;algorithm=base,faithful=yes,bits=8
-Passes: 2560, Time: 5.000806000, Avg: 0.0019534398, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-boolean-array-pre;2560;5.000806000;1;algorithm=base,faithful=yes,bits=8
-Passes: 3419, Time: 5.001685000, Avg: 0.0014629087, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-boolean-array-pre-futures;3419;5.001685000;8;algorithm=base,faithful=yes,bits=8
-Passes: 2529, Time: 5.000828000, Avg: 0.0019773934, Limit: 1000000, Count: 78498, Valid: True
-pez-clj-boolean-array-to-vector-futures;2529;5.000828000;8;algorithm=base,faithful=yes,bits=8
+Passes: 503, Time: 5.008766000, Avg: 0.009957786, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-bitset;503;5.008766000;1;algorithm=base,faithful=yes,bits=1
+Passes: 1479, Time: 5.003185000, Avg: 0.003382816, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-bitset-pre;1479;5.003185000;1;algorithm=base,faithful=yes,bits=1
+Passes: 1114, Time: 5.004537000, Avg: 0.004492403, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array;1114;5.004537000;1;algorithm=base,faithful=yes,bits=8
+Passes: 3801, Time: 5.002056000, Avg: 0.0013159842, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-skip-evens;3801;5.002056000;1;algorithm=base,faithful=yes,bits=8
+Passes: 2562, Time: 5.001005000, Avg: 0.0019519926, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-pre;2562;5.001005000;1;algorithm=base,faithful=yes,bits=8
+Passes: 3422, Time: 5.001372000, Avg: 0.0014615348, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-pre-futures;3422;5.001372000;8;algorithm=base,faithful=yes,bits=8
+Passes: 2574, Time: 5.001419000, Avg: 0.0019430532, Limit: 1000000, Count: 78498, Valid: True
+pez-clj-boolean-array-to-vector-futures;2574;5.001419000;8;algorithm=base,faithful=yes,bits=8
 ```
 
 (On an Apple M1 Max with 8 performance cores and 32GB of RAM.)

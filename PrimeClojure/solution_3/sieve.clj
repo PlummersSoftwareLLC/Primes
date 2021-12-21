@@ -100,13 +100,13 @@
    No parallelisation."
   [^long n]
   (if (< n 2)
-    (boolean-array (inc n))
-    (let [primes (boolean-array (inc n) true)
+    (boolean-array n)
+    (let [primes (boolean-array n true)
           sqrt-n (long (Math/ceil (Math/sqrt n)))]
       (aset primes 0 false)
       (aset primes 1 false)
       (loop [i 4]
-        (when (<= i n)
+        (when (< i n)
           (aset primes i false)
           (recur (+ i 2))))
       (loop [p 3]
@@ -114,7 +114,7 @@
           primes
           (do
             (loop [i (* p p)]
-              (when (<= i n)
+              (when (< i n)
                 (aset primes i false)
                 (recur (+ i p p))))
             (recur (+ p 2))))))))
@@ -273,6 +273,39 @@
   (with-progress-reporting (bench (sieve-bs 1000000)))
   )
 
+(defn sieve-ba-skip-even
+  "boolean-array storage
+   Returns the raw sieve with each index representing the odd numbers * 2
+   Skips even indexes.
+   No parallelisation."
+  [^long n]
+  (if (< n 2)
+    (boolean-array n)
+    (let [primes (boolean-array (bit-shift-right n 1) true)
+          sqrt-n (long (Math/ceil (Math/sqrt n)))]
+      (loop [p 3]
+        (if-not (< p sqrt-n)
+          primes
+          (do
+            (loop [i (* p p)]
+              (when (< i n)
+                (aset primes (bit-shift-right i 1) false)
+                (recur (+ i p p))))
+            (recur (+ p 2))))))))
+
+(comment
+  (defn loot [raw-sieve]
+    (keep-indexed (fn [i v]
+                    (when v (if (zero? i) 
+                              2
+                              (inc (* i 2)))))
+                  raw-sieve))
+  (loot (sieve-ba-skip-even 1))
+  (loot (sieve-ba-skip-even 10))
+  (loot (sieve-ba-skip-even 100))
+  (count (loot (sieve-ba-skip-even 1000000)))
+  (quick-bench (sieve-ba-skip-even 1000000)))
+
 (def prev-results
   "Previous results to check against sieve results."
   {1           0
@@ -290,7 +323,7 @@
 
 (defn benchmark
   "Benchmark Sieve of Eratosthenes algorithm."
-  [sieve count-f]
+  [sieve]
   (let [limit       1000000
         start-time  (Instant/now)
         end-by      (+ (.toEpochMilli start-time) 5000)]
@@ -303,9 +336,7 @@
           {:primes primes
            :passes pass
            :limit  limit
-           :time   (Duration/between start-time (Instant/now))
-           :valid? (= (count-f primes)
-                      (prev-results limit))})))))
+           :time   (Duration/between start-time (Instant/now))})))))
 
 
 ;; Reenable overflow checks on mathematical ops and turn off warnings.
@@ -315,9 +346,11 @@
 
 (defn format-results
   "Format benchmark results into expected output."
-  [{:keys [primes passes limit time valid? variant count-f threads bits]}]
+  [{:keys [primes passes limit time variant count-f threads bits]}]
   (let [nanos (.toString (.toNanos time))
-        timef (str (subs nanos 0 1) "." (subs nanos 1))]
+        timef (str (subs nanos 0 1) "." (subs nanos 1))
+        valid? (= (count-f primes)
+                  (prev-results limit))]
     (str "Passes: " passes ", "
          "Time: " timef ", "
          "Avg: " (float (/ (/ (.toNanos time) 1000000000) passes)) ", "
@@ -340,6 +373,10 @@
                    :count-f (fn [primes] (count (filter true? primes)))
                    :threads 1
                    :bits 8}
+   :boolean-array-skip-evens {:sieve sieve-ba-skip-even
+                              :count-f (fn [primes] (count (filter true? primes)))
+                              :threads 1
+                              :bits 8}
    :boolean-array-pre {:sieve sieve-ba-pre-even-filter
                        :count-f (fn [primes] (count (filter true? primes)))
                        :threads 1
@@ -357,15 +394,15 @@
             :or   {variant :boolean-array-pre-futures
                    warm-up? false}}]
   (let [conf (confs variant)
-        sieve (:sieve conf)
-        count-f (:count-f conf)]
+        sieve (:sieve conf)]
     (when warm-up?
       ;; Warm-up reduces the variability of results.
-      (format-results (merge conf (benchmark sieve count-f) {:variant variant})))
-    (println (format-results (merge conf (benchmark sieve count-f) {:variant variant})))))
+      (format-results (merge conf (benchmark sieve) {:variant variant})))
+    (println (format-results (merge conf (benchmark sieve) {:variant variant})))))
 
 (comment
   (run {:warm-up? false})
+  (run {:variant :boolean-array-skip-evens :warm-up? false})
   (run {:variant :boolean-array-pre-futures :warm-up? false})
   (run {:variant :boolean-array-pre :warm-up? false})
   (run {:variant :boolean-array-to-vector-futures :warm-up? false})
