@@ -92,7 +92,7 @@ fn reinterpret_slice_mut_u64_u8(words: &mut [u64]) -> &mut [u8] {
 /// approach combined with the elements of the dense-resetting approach in my `bit-storage-striped-hybrid`
 /// solution.
 pub struct FlagStorageUnrolledHybrid {
-    words: Vec<u64>,
+    words: Box<[u64]>,
     length_bits: usize,
 }
 
@@ -100,7 +100,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     fn create_true(size: usize) -> Self {
         let num_words = size / 64 + (size % 64).min(1);
         Self {
-            words: vec![0; num_words],
+            words: vec![0; num_words].into_boxed_slice(),
             length_bits: size,
         }
     }
