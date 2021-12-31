@@ -10,7 +10,7 @@
 # cargo to load the package index from crates.io.
 # This allows it to be cached as part of the build
 # layer, saving a lot of time on repeated builds.
-FROM rust:1.54 AS build
+FROM rust:1.57 AS build
 RUN cargo search num_cpus -q --limit 1
 
 WORKDIR /app
