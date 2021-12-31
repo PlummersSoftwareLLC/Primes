@@ -40,7 +40,7 @@ impl FlagStorage for FlagStorageExtremeHybrid {
                 3,
                 2,
                 17,
-                ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+                ResetterSparseU8::<N>::reset_sparse(self.words.as_mut(), skip),
                 debug_assert!(
                     false,
                     "this case should not occur skip {} equivalent {}",
@@ -51,7 +51,7 @@ impl FlagStorage for FlagStorageExtremeHybrid {
         }
 
         // dense resets for all odd numbers in {3, 5, ... =129}
-        let words = &mut self.words[..];
+        let words = self.words.as_mut();
         extreme_reset!(skip);
     }
 
