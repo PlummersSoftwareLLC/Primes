@@ -13,7 +13,7 @@ use crate::{
 /// Performance, as a result, is very similar. This method has a slight edge over the const-generics, and is
 /// primarily included to demonstrate how this approach can be used in Rust.
 pub struct FlagStorageExtremeHybrid {
-    words: Vec<u64>,
+    words: Box<[u64]>,
     length_bits: usize,
 }
 
@@ -21,7 +21,7 @@ impl FlagStorage for FlagStorageExtremeHybrid {
     fn create_true(size: usize) -> Self {
         let num_words = size / 64 + (size % 64).min(1);
         Self {
-            words: vec![0; num_words],
+            words: vec![0; num_words].into_boxed_slice(),
             length_bits: size,
         }
     }
@@ -40,7 +40,7 @@ impl FlagStorage for FlagStorageExtremeHybrid {
                 3,
                 2,
                 17,
-                ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+                ResetterSparseU8::<N>::reset_sparse(self.words.as_mut(), skip),
                 debug_assert!(
                     false,
                     "this case should not occur skip {} equivalent {}",
@@ -51,7 +51,7 @@ impl FlagStorage for FlagStorageExtremeHybrid {
         }
 
         // dense resets for all odd numbers in {3, 5, ... =129}
-        let words = &mut self.words[..];
+        let words = self.words.as_mut();
         extreme_reset!(skip);
     }
 

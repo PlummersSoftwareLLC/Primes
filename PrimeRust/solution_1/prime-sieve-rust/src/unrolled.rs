@@ -92,7 +92,7 @@ fn reinterpret_slice_mut_u64_u8(words: &mut [u64]) -> &mut [u8] {
 /// approach combined with the elements of the dense-resetting approach in my `bit-storage-striped-hybrid`
 /// solution.
 pub struct FlagStorageUnrolledHybrid {
-    words: Vec<u64>,
+    words: Box<[u64]>,
     length_bits: usize,
 }
 
@@ -100,7 +100,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     fn create_true(size: usize) -> Self {
         let num_words = size / 64 + (size % 64).min(1);
         Self {
-            words: vec![0; num_words],
+            words: vec![0; num_words].into_boxed_slice(),
             length_bits: size,
         }
     }
@@ -118,10 +118,10 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// ```ignore
     /// // dense reset
     /// match skip {
-    ///     3 => ResetterDenseU64::<3>::reset_dense(&mut self.words),
-    ///     5 => ResetterDenseU64::<5>::reset_dense(&mut self.words),
+    ///     3 => ResetterDenseU64::<3>::reset_dense(self.words.as_mut()),
+    ///     5 => ResetterDenseU64::<5>::reset_dense(self.words.as_mut()),
     ///     //... etc
-    ///     129 => ResetterDenseU64::<129>::reset_dense(&mut self.words),
+    ///     129 => ResetterDenseU64::<129>::reset_dense(self.words.as_mut()),
     ///     _ => debug_assert!(false, "this case should not occur"),
     ///  },
     /// ```
@@ -135,7 +135,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
                 3,
                 2,
                 17,
-                ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+                ResetterSparseU8::<N>::reset_sparse(self.words.as_mut(), skip),
                 debug_assert!(
                     false,
                     "this case should not occur skip {} equivalent {}",
@@ -151,7 +151,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
             3,
             2,
             129, // 64 unique sets
-            ResetterDenseU64::<N>::reset_dense(&mut self.words),
+            ResetterDenseU64::<N>::reset_dense(self.words.as_mut()),
             debug_assert!(
                 false,
                 "dense reset function should not be called for skip {}",
