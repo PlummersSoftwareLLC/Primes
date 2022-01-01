@@ -2,8 +2,7 @@
   "Clojure implementation of Sieve of Eratosthenes by Alex Vear (axvr)
 
   This implementation is fast and faithful to Dave's original implementation,
-  is twice the speed of the 1-bit version as it uses an 8-bit data structure
-  instead."
+  is faster than my 1-bit version when run on Linux."
   (:import [java.time Instant Duration]))
 
 
@@ -13,40 +12,52 @@
 (set! *unchecked-math* :warn-on-boxed)
 
 
-;; This macro exists to improve readability of the `sieve` function.  It's
-;; a macro rather than a function to improve performance.
-(defmacro doubl
-  "Efficiently double a number."
-  [n]
-  `(bit-shift-left ~n 1))
+(defmacro << [n shift]
+   `(bit-shift-left ~n ~shift))
 
 
-;; This macro exists to improve readability of the `sieve` function.  It's
-;; a macro rather than a function to improve performance.
-(defmacro halve
-  "Efficiently halve a number."
-  [n]
-  `(bit-shift-right ~n 1))
+(defmacro >> [n shift]
+  `(unsigned-bit-shift-right ~n ~shift))
 
 
-(defn sieve [^long limit]
+;; NOTE: may not make a difference.
+(defmacro sqr [n]
+  `(unchecked-multiply-int ~n ~n))
+
+
+(defn sieve
+  "This returns a boolean-array where the index of each false bit is the prime
+  number (+ 1 (* 2 index)).  Despite this being unidiomatic, the result of this
+  function can be used by the benchmark without needing to convert it into
+  a proper list of primes. [1]
+
+  [1]: <https://github.com/PlummersSoftwareLLC/Primes/discussions/794>"
+  [^long limit]
   (let [q (inc (Math/sqrt limit))
-        ^booleans sieve (make-array Boolean/TYPE (halve limit))]
-    ;; Highly optimised Sieve of Eratosthenes algorithm.
-    (loop [factor 3]
+        ^booleans sieve (boolean-array (>> limit 1))]
+    (loop [factor (int 3)]
       (when (< factor q)
-        (if-not (aget sieve (halve factor))
-          (let [factor*2 (doubl factor)]
-            (loop [num (* factor factor)]
-              (when (<= num limit)
-                (aset sieve (halve num) true)
+        (if-not (aget sieve (>> factor 1))
+          (let [factor*2 (<< factor 1)]
+            (loop [num (sqr factor)]
+              (when (< num limit)
+                (aset sieve (>> num 1) true)
                 (recur (+ num factor*2))))))
         (recur (+ 2 factor))))
-    ;; Return sequence of found prime numbers.
-    (cons 2 (->> (range 3 limit 2)
-                 (map (fn [^long n]
-                        (if-not (aget sieve (halve n)) n)))
-                 (filter some?)))))
+    sieve))
+
+
+(defn sieve->primes
+  "Function to convert the sieve output to a usable/printable list of primes."
+  [^booleans sieve]
+  (let [out  (transient [2])
+        size (count sieve)]
+    (loop [idx (int 1)]
+      (when (< idx size)
+        (when-not (aget sieve idx)
+          (conj! out (inc (<< idx 1))))
+        (recur (inc idx))))
+    (persistent! out)))
 
 
 (def prev-results
@@ -70,17 +81,20 @@
         start-time  (Instant/now)
         end-by      (+ (.toEpochMilli start-time) 5000)]
     (loop [pass 1]
-      (let [primes   (sieve limit)
+      (let [sieve   (sieve limit)
             cur-time (System/currentTimeMillis)]
         (if (<= cur-time end-by)
           (recur (inc pass))
           ;; Return benchmark report.
-          {:primes primes
-           :passes pass
-           :limit  limit
-           :time   (Duration/between start-time (Instant/now))
-           :valid? (= (count primes)
-                      (prev-results limit))})))))
+          (let [finished-at (Instant/now)
+                primes      (sieve->primes sieve)  ; Convert to a vector of primes.
+                num-primes  (count primes)]
+            {:primes primes
+             :passes pass
+             :limit  limit
+             :time   (Duration/between start-time finished-at)
+             :count  num-primes
+             :valid? (= num-primes (prev-results limit))}))))))
 
 
 ;; Reenable overflow checks on mathematical ops and turn off warnings.
@@ -90,22 +104,19 @@
 
 (defn format-results
   "Format benchmark results into expected output."
-  [{:keys [primes passes limit time valid?]}]
-  (let [nanos (.toString (.toNanos time))
+  [{:keys [primes passes valid?] :as result}]
+  (let [nanos (.toString (.toNanos (:time result)))
         timef (str (subs nanos 0 1) "." (subs nanos 1))]
     (str "Passes: " passes ", "
          "Time: " timef ", "
-         "Avg: " (float (/ (/ (.toNanos time) 1000000000) passes)) ", "
-         "Limit: " limit ", "
-         "Count: " (count primes) ", "
+         "Avg: " (float (/ (/ (.toNanos (:time result)) 1000000000) passes)) ", "
+         "Limit: " (:limit result) ", "
+         "Count: " (:count result) ", "
          "Valid: " (if valid? "True" "False")
          "\n"
-         "axvr_clj-sln-2_8-bit;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
+         "axvr_clj_8-bit;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
 
 
-(defn run [{:keys [warm-up?]
-            :or   {warm-up? false}}]
-  (when warm-up?
-    ;; Warm-up reduces the variability of results.
-    (format-results (benchmark)))
-  (println (format-results (benchmark))))
+(defn run [& _]
+  (println (format-results (benchmark)))
+  (flush))

@@ -23,7 +23,7 @@ In summary: There are two storages represented, BitSet and boolean array. For bo
 
 ## Run instructions
 
-The runner infrastructure is built from Alex Vaer's [Clojure Solution 2](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeClojure/solution_2).
+The runner infrastructure is built from Alex Vear's [Clojure Solution 2](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeClojure/solution_2).
 
 1. Install a JDK.
 2. Install the [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
