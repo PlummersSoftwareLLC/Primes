@@ -7,9 +7,6 @@
 
 local ARGS = {...}
 local ffi = require("ffi")
-local clock = os.clock
-local __mi, __ma = math.min, math.max
-local band, bor, lshift, rshift = bit.band, bit.bor, bit.lshift, bit.rshift
 local PRIMES = { 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997}
 local SIZE = 1000000
 
@@ -55,17 +52,17 @@ return function(ARENA)
     end -->loop
     return iter, clock()-begin
 end]===],
-    tostring(SIZE),
-    --1. Primes
-    table.concat(PRIMES, ", "),
-    --2. Length
-    Time or 5,
-    --3. Unroll * 2
-    Unroll,
-    --Unroll*2,
-    --4. Inner loop
-    Inner
-)
+        tostring(SIZE),
+        --1. Primes
+        table.concat(PRIMES, ", "),
+        --2. Length
+        Time or 5,
+        --3. Unroll * 2
+        Unroll,
+        --Unroll*2,
+        --4. Inner loop
+        Inner
+    )
 
     return Func
 end
@@ -74,7 +71,6 @@ local function CompileAndRun(Time,Unroll, Name, Arena, Size)
 
     local Func = Compile(Time, Unroll)
 
-    --print(string.format("Generated: Time @ %s, Unroll @ %s", Time, Unroll))
     collectgarbage("collect")
     collectgarbage("stop")
 
@@ -87,57 +83,48 @@ local function CompileAndRun(Time,Unroll, Name, Arena, Size)
 
 end
 
-if not ARGS[1] then
-    print [[
-    Mooshua LJ Primes
-
-    Usage:
-        luajit prog.lua [mode] [options...]
-        Note: Options are specified in order & all must be included.
-
-    Modes:
-
-        o[nce] - Only benchmark once with optimally tuned benchmark parameters
-
-        q[uick] - Quickly benchmark for 5 seconds, and dump output as if testing.
-
-        b[ench] - Automatically run with different options @ 1,000,000 primes.
-
-        e[mit] - Emit lua code for a single benchmark, using arguments for values.
-            [time: number] Time to run the benchmark for, in seconds.
-            [unroll factor: number] The unroll factor for the code.
-
-        d[ump] - Quickly dump a list of primes to verify correctness (can be checked with test.lua)
-    ]]
-elseif string.lower(string.sub(ARGS[1],1,1)) == "e" then
-    print(Compile(ARGS[2] or 5, ARGS[3] or 1))
-elseif string.lower(string.sub(ARGS[1],1,1)) == "o" then
-
-    local ARENA = ffi.new("bool[?]", SIZE + CalcMax(32))
-    CompileAndRun(5,32,"mooshua_luajit", ARENA, 8)
-
-elseif string.lower(string.sub(ARGS[1],1,1)) == "q" then
-    local ARENA = ffi.new("bool[?]", SIZE)
-    local Iters, Time = CompileAndRun(5, 1, "mooshua_lj_quick_donotbench", ARENA, 8)
-
+local function Dump(Arena)
     local dump = io.open("lj3_primes.txt", "w+")
 
-        if (ARENA[1] == false) then
+    --  Weird condition: Even numbers are not handled by the sieve, but 2 is a prime, so we do this:
+    if (Arena[1] == false) then
         dump:write(tostring(1) .. ", ")
     end
-    if (ARENA[2] == false) then
+    if (Arena[2] == false) then
         dump:write(tostring(2) .. ", ")
     end
     for i = 3,1000000, 2 do
-        if (ARENA[i] == false) then
+        if (Arena[i] == false) then
             dump:write(tostring(i) .. ", ")
         end
     end
 
     print("Primes dumped to lj3_primes.txt")
+end
 
-elseif string.lower(string.sub(ARGS[1],1,1)) == "b" then
-    --  Run multiple benchmarks w/ small unroll counts
+local Module = {}
+
+--  Emit: Emit lua code for specific bench params
+function Module:E()
+    print(Compile(ARGS[2] or 5, ARGS[3] or 1))
+end
+
+--  Once: Run a simple benchmark
+function Module:O()
+    local ARENA = ffi.new("bool[?]", SIZE + CalcMax(32))
+    CompileAndRun(5,32,"mooshua_luajit", ARENA, 8)
+    return Arena
+end
+
+--  Quickdump: Once + Dump
+function Module:Q()
+    local Arena = self:O()
+    Dump(Arena)
+end
+
+--  Benchmark: RTS
+function Module:B()
+        --  Run multiple benchmarks w/ small unroll counts
     do
         local ARENA = ffi.new("bool[?]", SIZE + CalcMax(32))
         CompileAndRun(5,32,"mooshua_lj_b8_u32", ARENA, 8)
@@ -161,23 +148,45 @@ elseif string.lower(string.sub(ARGS[1],1,1)) == "b" then
         local ARENA = {}
         CompileAndRun(5,1,"mooshua_lj_hash_vm", ARENA, "unknown")
     end
+end
 
-elseif string.lower(string.sub(ARGS[1],1,1)) == "d" then
-    local ARENA = ffi.new("bool[?]", SIZE)
-    local Iters, Time = CompileAndRun(0.0001, 1, "mooshua_lj_dump_donotbench", ARENA, 8)
+function Module:D()
+    local ARENA = ffi.new("bool[?]", SIZE + 1)
+    CompileAndRun(0.001,1,"mooshua_lj_dump_donotbench", ARENA, 8)
+    Dump(ARENA)
+end
 
-    local dump = io.open("lj3_primes.txt", "w+")
-    if (ARENA[1] == false) then
-        dump:write(tostring(1) .. ", ")
-    end
-    if (ARENA[2] == false) then
-        dump:write(tostring(2) .. ", ")
-    end
-    for i = 3,1000000, 2 do
-        if (ARENA[i] == false) then
-            dump:write(tostring(i) .. ", ")
-        end
-    end
 
-    print("Primes dumped to lj3_primes.txt")
+
+if not ARGS[1] then
+    print [[
+    Mooshua LJ Primes
+
+    Usage:
+        luajit prog.lua [mode] [options...]
+        Note: Options are specified in order & all must be included.
+
+    Modes:
+
+        o[nce] - Only benchmark once with optimally tuned benchmark parameters
+
+        q[uick] - Quickly benchmark for 5 seconds, and dump output as if testing.
+
+        b[ench] - Automatically run with different options @ 1,000,000 primes.
+
+        e[mit] - Emit lua code for a single benchmark, using arguments for values.
+            [time: number] Time to run the benchmark for, in seconds.
+            [unroll factor: number] The unroll factor for the code.
+
+        d[ump] - Quickly dump a list of primes to verify correctness (can be checked with test.lua)
+    ]]
+else
+
+    local mode = string.upper(string.sub(ARGS[1] or "",1,1))
+
+    if Module[mode](Module) then
+        Module[mode](Module)
+    else
+        print("Error: Unknown option")
+    end
 end
