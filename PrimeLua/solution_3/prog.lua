@@ -184,7 +184,7 @@ else
 
     local mode = string.upper(string.sub(ARGS[1] or "",1,1))
 
-    if Module[mode](Module) then
+    if Module[mode] then
         Module[mode](Module)
     else
         print("Error: Unknown option")
