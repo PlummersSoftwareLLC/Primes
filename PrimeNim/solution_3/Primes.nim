@@ -320,7 +320,7 @@ proc bench(tec: Techniques) =
   for p in ps1(): count.inc
   isValid = isValid and count == EXPECTED # two checks
 
-  sleep 1000 # sleep 1000 milliseconds = one second to let CPU cool down!
+  sleep 5000 # sleep 5000 milliseconds to let CPU cool down!
   let start = getMonoTime().ticks; var duration = 0'i64
   var passes = 0; var rslt: PrimeSieve
   while duration < FORTO:
