@@ -4,13 +4,15 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-64-yellowgreen)
 
 This implementation is very simple, biting the bullet of allocating large swaths of memory in order to avoid loading before storing a prime clear bit. 
 
 While the algorithm is almost faithful, it does not re-create the class with each iteration, and is thus unfaithful. It does, however, check all other boxes, including no external dependencies, using a class system, and allocating the memory at runtime.
 
-The algorithm uses loadstring() to emit specialized lua code for each benchmark. Not much is specialized, however, and it is largely pointless besides manual unrolling done on the inner loop
+The algorithm uses loadstring() to emit specialized lua code for each benchmark. Not much is specialized, however, and it is largely pointless besides manual unrolling done on the inner loop.
+
+This solution changes a Luajit optimization using the primary benchmark with the purpose of speeding up the runs ("Ohotloop=1"). You may disable this when running `prog.lua bench` by using an additional option, `prog.lua bench notune`
 
 ## Run instructions
 ### Windows & *nix
@@ -39,6 +41,6 @@ This test can be used to benchmark the completeness of the solution, and to debu
 2. Run `luajit test.lua`
 
 ## Profiling
-Use `emit` (`luajit prog.lua emit 5 32`) to create a function to visualize profiler results. Once you have the emmitted information and have placed it into a file, use the LuaJIT profiler (`-jv`) and mentally replace instances of `[string]` with the line number in the emitted code file. For this, it is recommended to use the `l` option (`-jv=l`) for line numbers.
+Use `emit` (`luajit prog.lua emit 5 24`) to create a function to visualize profiler results. Once you have the emmitted information and have placed it into a file, use the LuaJIT profiler (`-jv`) and mentally replace instances of `[string]` with the line number in the emitted code file. For this, it is recommended to use the `l` option (`-jv=l`) for line numbers.
 
-*This is not effective for the benchmarks* as they use different parameters, but you can still use `luajit prog.lua emit 5 32` to get a gist of what's going on. This profiling is most effective for `prog.lua once`.
+*This is not effective for the benchmarks* as they use different parameters, but you can still use `luajit prog.lua emit 5 24` to get a gist of what's going on. This profiling is most effective for `prog.lua once`.
