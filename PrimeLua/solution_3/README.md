@@ -1,19 +1,16 @@
 
 # Lua solution by Mooshua
-![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-This implementation is very simple, and it bites the bullet of allocating a full 1MB of memory for the sieve.
-The solution takes advantage of LuaJIT's runtime code emitting to heavily unroll the heaviest loop into a dependent instruction chain. 
+This implementation is very simple, biting the bullet of allocating large swaths of memory in order to avoid loading before storing a prime clear bit. 
 
-The solution uses a wheel factorization algorithm to complete the sieve, and is not faithful as the runtime buffer cannot be resized and has no OOP-like structure (plus the wheel is hardcoded...)
+While the algorithm is almost faithful, it does not re-create the class with each iteration, and is thus unfaithful. It does, however, check all other boxes, including no external dependencies, using a class system, and allocating the memory at runtime.
 
-The bitsize of the LJ_Hashtable and LJ_Hash_VM benchmarks is unknown and architecture-specific.
-
-all_primes is collected from http://my.core.com/~katiemarie10/prime/prime1-1G.htm.
+The algorithm uses loadstring() to emit specialized lua code for each benchmark. Not much is specialized, however, and it is largely pointless besides manual unrolling done on the inner loop
 
 ## Run instructions
 ### Windows & *nix
@@ -25,12 +22,15 @@ all_primes is collected from http://my.core.com/~katiemarie10/prime/prime1-1G.ht
 ## Output
 Intel i9-9900 8-core 16-thread @ 3.10 GHz
 ```
-mooshua_lj_b8_u32;6875;5.015625;1;algorithm=wheel,faithful=false,storage=8,parallelism=1
-mooshua_lj_b8_u24;6968;5.015625;1;algorithm=wheel,faithful=false,storage=8,parallelism=1
-mooshua_lj_b8_u16;6950;5.015625;1;algorithm=wheel,faithful=false,storage=8,parallelism=1
-mooshua_lj_b8_u1;6777;5.015625;1;algorithm=wheel,faithful=false,storage=8,parallelism=1
-mooshua_lj_hashtable_8;3027;5.015625;1;algorithm=wheel,faithful=false,storage=unknown,parallelism=1
-mooshua_lj_hash_vm;606;5.015625;1;algorithm=wheel,faithful=false,storage=unknown,parallelism=1
+mooshua_luajit_24;7016;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_16;7043;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_8;7025;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_1;6764;5;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_hash;2994;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_slow_ffi;2505;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_slow_hash;920;5.003;1;algorithm=base,faithful=no,bits=64
+mooshua_luajit_vm_ffi;163;5.005;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_vm_hash;767;5.005;1;algorithm=base,faithful=no,bits=64
 ```
 
 ## Test instructions

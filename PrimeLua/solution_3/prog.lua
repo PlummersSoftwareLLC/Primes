@@ -1,100 +1,109 @@
---[[
-
-    Luajit Solution 3
-    by Mooshua, donated to the public domain (CC0)
-
-]]
+--  LuaJIT Solution 3
+--  Made by Mooshua, donated to the public domain (CC0)
 
 local ARGS = {...}
 local ffi = require("ffi")
-local PRIMES = { 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997}
-local SIZE = 1000000
 
-local function CalcMax(Unroll)
-    return 997*2*Unroll
+--  =======================
+--  Sieve Class
+--  Uses pure lua OOP in the form of metamethods
+--  =======================
+
+local Sieve = {}
+
+function Sieve.New(o)
+    
+    local self = o or {}
+    self.Unroll = self.Unroll or 1
+    self.Name = self.Name or "mooshua_luajit_untitled"
+    self.Size = self.Size or 1000000
+    self.Time = self.Time or 5
+
+    self.Buffer = self.Buffer or ffi.new("bool[?]", self.Size + (math.sqrt(self.Size)*2*self.Unroll))
+
+    --  apply meta-fun
+    return setmetatable(self, {__index = Sieve})
 end
 
-local function Results(Name,Iterations,Time, Size)
-    return string.format("%s;%s;%s;1;algorithm=wheel,faithful=false,storage=%s,parallelism=1", Name, Iterations, Time, Size)
-end
-
-local function Compile(Time, Unroll)
-
-    Time = Time or 5
-    Unroll = Unroll or 8
+function Sieve:Compile()
     
     local Inner = ""
-    for i = 1, Unroll do
-        Inner = Inner .. "\n\t ARENA[ x" .. string.rep(" + vk", i) .." ] = true;"
+    for i = 1, self.Unroll do
+        Inner = Inner .. "\n\t\tARENA[ x" .. string.rep(" + vk", i) .." ] = true;"
     end
 
+    local Outer = string.format([[
+        for k = 3, PRIME_LEN, 2 do
+            if not ARENA[k] then
+                local v = k
+                local vk = v*2
+                for x = (v*v)-vk, SIZE, vk*%s do
+
+                    %s
+
+                end
+            end
+        end
+    ]], self.Unroll, Inner)
+
     local Func = string.format([===[
+local ffi = require "ffi"
 return function(ARENA)
-    local min = math.min
     local SIZE = %s
-    local PRIMES = { %s };
+    local PRIME_LEN = math.sqrt(SIZE)
     local clock = os.clock
     local begin = clock()
     local iter = 0
 
     while (clock()-begin) <= %s do
-        local u = #PRIMES 
-        for k = 1, u do
-            local v = PRIMES[k]
-            local vk = v*2
-            for x = (v*v)-vk, SIZE, vk*%s do
 
-                %s
+        %s
 
-            end
-        end
         iter = iter + 1
     end -->loop
     return iter, clock()-begin
 end]===],
-        tostring(SIZE),
-        --1. Primes
-        table.concat(PRIMES, ", "),
-        --2. Length
-        Time or 5,
-        --3. Unroll * 2
-        Unroll,
-        --Unroll*2,
-        --4. Inner loop
-        Inner
+        self.Size,
+        self.Time,
+        Outer
     )
 
-    return Func
+    self.Code = Func
+
+    return self
 end
 
-local function CompileAndRun(Time,Unroll, Name, Arena, Size)
+function Sieve:Run()
 
-    local Func = Compile(Time, Unroll)
+    self:Compile()
 
+    local Func = loadstring(self.Code, self.Name)()
+    --  Collect garbage before running, as not to get mangled by the GC
+    --  If we run out of memory, we do it in style!
     collectgarbage("collect")
-    collectgarbage("stop")
 
-    local Invoke = loadstring(Func, Name)()
-    local t1, t2 = Invoke(Arena)
+    local Rounds, Time = Func(self.Buffer, self.Time)
 
     collectgarbage("restart")
-    print(Results(Name, t1, t2, Size))
-    return t1,t2
+    --  LuaJIT will flush code automatically, but being explicit here
+    --  allows us to make sure there is plenty of mcode for new function traces
+    jit.flush(Func)
 
+    return Rounds, Time
 end
 
-local function Dump(Arena)
+function Sieve:Dump()
     local dump = io.open("lj3_primes.txt", "w+")
 
     --  Weird condition: Even numbers are not handled by the sieve, but 2 is a prime, so we do this:
-    if (Arena[1] == false) then
+    if (self.Buffer[1] == false) then
         dump:write(tostring(1) .. ", ")
     end
-    if (Arena[2] == false) then
+    if (self.Buffer[2] == false) then
         dump:write(tostring(2) .. ", ")
     end
     for i = 3,1000000, 2 do
-        if (Arena[i] == false) then
+        if (self.Buffer[i] == false) then
             dump:write(tostring(i) .. ", ")
         end
     end
@@ -102,61 +111,78 @@ local function Dump(Arena)
     print("Primes dumped to lj3_primes.txt")
 end
 
+function Sieve.Execute(o)
+
+    local s = Sieve.New(o)
+
+    local Rounds, Time = s:Run()
+    print(string.format("%s;%s;%s;1;algorithm=base,faithful=no,bits=%s", s.Name, Rounds, Time, o.Bits or ffi.sizeof("bool")*8))
+
+    return s
+end
+
+
+--  =======================
+--  Module
+--  CLI interface
+--  =======================
 local Module = {}
 
 --  Emit: Emit lua code for specific bench params
 function Module:E()
-    print(Compile(ARGS[2] or 5, ARGS[3] or 1))
+    print(Sieve.Compile { Time = ARGS[2] or 5, Unroll = ARGS[3] or 1, Size = ARGS[4] or 1000000}.Code)
 end
 
 --  Once: Run a simple benchmark
 function Module:O()
-    local ARENA = ffi.new("bool[?]", SIZE + CalcMax(32))
-    CompileAndRun(5,32,"mooshua_luajit", ARENA, 8)
-    return Arena
+    Sieve.Execute{ Unroll = 16, Name = "mooshua_luajit"}
 end
 
 --  Quickdump: Once + Dump
 function Module:Q()
-    local Arena = self:O()
-    Dump(Arena)
+    Sieve.Execute{ Unroll = 5, Name = "mooshua_luajit"}:Dump()
 end
 
---  Benchmark: RTS
+--  Benchmark: Run multiple benchmarks with different parameters
 function Module:B()
-        --  Run multiple benchmarks w/ small unroll counts
-    do
-        local ARENA = ffi.new("bool[?]", SIZE + CalcMax(32))
-        CompileAndRun(5,32,"mooshua_lj_b8_u32", ARENA, 8)
-        CompileAndRun(5,24,"mooshua_lj_b8_u24", ARENA, 8)
-        CompileAndRun(5,16,"mooshua_lj_b8_u16", ARENA, 8)
-        --CompileAndRun(5,4,"mooshua_lj_b8_u4", ARENA, 8)
-        CompileAndRun(5,1,"mooshua_lj_b8_u1", ARENA, 8)
 
+    --  Compiler Tuning:
+    --  These have been found to slightly increase the performance of the JIT compiler for this workload
+    --  (about 5% on a good run)
+    --  Your mileage may vary
+    if ARGS[2] ~= "notune" then
+        jit.opt.start("hotloop=1")
     end
+    
+    Sieve.Execute { Unroll = 24, Name = "mooshua_luajit_24"}
+    Sieve.Execute { Unroll = 16, Name = "mooshua_luajit_16"}
+    Sieve.Execute { Unroll = 8, Name = "mooshua_luajit_8"}
+    Sieve.Execute { Unroll = 1, Name = "mooshua_luajit_1"}
 
+    --  Run a hashtable bench
+    Sieve.Execute { Name = "mooshua_luajit_hash", Buffer = {} }
 
-    --  With tables
-    --  Not a good benchmark, but still an interesting data point.
-    do
-        local ARENA = {}
-        CompileAndRun(5,8,"mooshua_lj_hashtable_8", ARENA, "unknown")
-    end
+    --  With optimizations disabled
+    jit.opt.start(0)
+    Sieve.Execute { Name = "mooshua_luajit_slow_ffi"}
+    Sieve.Execute { Name = "mooshua_luajit_slow_hash", Buffer = {}, Bits=64 }
 
-    do
-        jit.off()
-        local ARENA = {}
-        CompileAndRun(5,1,"mooshua_lj_hash_vm", ARENA, "unknown")
-    end
+    --  Turn the JIT off and repeat
+    jit.off()
+    Sieve.Execute { Name = "mooshua_luajit_vm_ffi"}
+    Sieve.Execute { Name = "mooshua_luajit_vm_hash", Buffer = {}, Bits=64 }
+
 end
 
+--  Quickly dump a list of primes for testing
 function Module:D()
-    local ARENA = ffi.new("bool[?]", SIZE + 1)
-    CompileAndRun(0.001,1,"mooshua_lj_dump_donotbench", ARENA, 8)
-    Dump(ARENA)
+    Sieve.Execute{ Unroll = 1, Name = "mooshua_lj_donotbench", Time = 0 }:Dump()
 end
 
-
+--  =======================
+--  Main
+--  Enter the program & execute CLI based on arguments
+--  =======================
 
 if not ARGS[1] then
     print [[
@@ -168,21 +194,23 @@ if not ARGS[1] then
 
     Modes:
 
+        *RECOMMENDED*
+        b[ench] - Automatically run with different options @ 1,000,000 primes.
+
         o[nce] - Only benchmark once with optimally tuned benchmark parameters
 
         q[uick] - Quickly benchmark for 5 seconds, and dump output as if testing.
 
-        b[ench] - Automatically run with different options @ 1,000,000 primes.
-
         e[mit] - Emit lua code for a single benchmark, using arguments for values.
             [time: number] Time to run the benchmark for, in seconds.
             [unroll factor: number] The unroll factor for the code.
+            [size: number] The amount of primes to calculate
 
         d[ump] - Quickly dump a list of primes to verify correctness (can be checked with test.lua)
     ]]
 else
 
-    local mode = string.upper(string.sub(ARGS[1] or "",1,1))
+    local mode = string.upper(string.sub(ARGS[1] or " ",1,1))
 
     if Module[mode] then
         Module[mode](Module)
