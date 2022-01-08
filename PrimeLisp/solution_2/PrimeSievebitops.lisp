@@ -125,10 +125,10 @@
 
 (deftype nonneg-fixnum ()
   `(integer 0 ,most-positive-fixnum))
+  ;`(unsigned-byte ,+bits-per-word+))
 
 (deftype sieve-element-type ()
   `(unsigned-byte ,+bits-per-word+))
-  ;`(unsigned-byte ,+bits-per-word+))
 
 (deftype sieve-array-type ()
   `(simple-array sieve-element-type 1))
