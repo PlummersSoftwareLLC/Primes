@@ -367,7 +367,8 @@ according to the historical data in +results+."
     (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
-(let* ((passes 0)
+(let* ((ignored (sleep 5)) ; sleep for 5 seconds to let CPU cool down
+       (passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
