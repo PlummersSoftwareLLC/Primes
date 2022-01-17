@@ -15,7 +15,4 @@ WORKDIR /app
 COPY --from=build /runtime/ /
 COPY --from=build /app/Runner /app/PrimeDart* ./
 
-# Parallel implementations were removed because they cause a hang on the 5950X runner that's in use on the project. 
-# They can be reinstated once that issue has been resolved. Original line was:
-# ENTRYPOINT [ "./Runner", "./PrimeDart", "./PrimeDartParallel", "./PrimeDartOneBit", "./PrimeDartParallelOneBit" ]
-ENTRYPOINT [ "./Runner", "./PrimeDart", "./PrimeDartOneBit" ]
+ENTRYPOINT [ "./Runner", "./PrimeDart", "./PrimeDartParallel", "./PrimeDartOneBit", "./PrimeDartParallelOneBit" ]
