@@ -65,9 +65,7 @@ class WorkerPool {
           receivePort.sendPort.send(const Continue());
           break;
         case Stop:
-          sendPort.send(count);
-          receivePort.close();
-          break;
+          Isolate.exit(sendPort, count);
         case Continue:
           work();
           count++;
@@ -93,7 +91,10 @@ class WorkerPool {
       final messages = receivePort.take(2).asBroadcastStream();
       final sendPort = await messages.first as SendPort;
       pool._sendPorts.add(sendPort);
-      pool._responses.add(messages.last.then((value) => value as int));
+      pool._responses.add(messages.last.then((value) {
+        receivePort.close();
+        return value as int;
+      }));
     }
 
     return pool;
