@@ -139,18 +139,19 @@ class PrimeSieve {
     if (showResults) {
       // Print a new line after the results if the results are shown.
       stderr.write('\n');
+
+      // This is just for code readability. Since stdout.write doesn't print a new
+      // line at the end of the string, we can split a large string across a few
+      // print requests to keep the code to under 80 columns (personal preference).
+      stderr.write('Passes: $passes, Time: $duration, ');
+      stderr.write('Avg: ${duration / passes}, Limit: $_sieveSize, ');
+      stderr.write('Count1: $count, Count2: ${countPrimes()}, ');
+      stderr.write('Valid: ${_validateResults()}\n');
+
+      // These 2 lines are for the drag race format
+      stderr.write('\n');
     }
 
-    // This is just for code readability. Since stdout.write doesn't print a new
-    // line at the end of the string, we can split a large string across a few
-    // print requests to keep the code to under 80 columns (personal preference).
-    stderr.write('Passes: $passes, Time: $duration, ');
-    stderr.write('Avg: ${duration / passes}, Limit: $_sieveSize, ');
-    stderr.write('Count1: $count, Count2: ${countPrimes()}, ');
-    stderr.write('Valid: ${_validateResults()}\n');
-
-    // These 2 lines are for the drag race format
-    stderr.write('\n');
     stdout.write(
         'eagerestwolf&mmcdon20_8bit;$passes;$duration;1;algorithm=base,faithful=yes,bits=8\n');
   }
@@ -170,7 +171,7 @@ class PrimeSieve {
 
 /// The main method is where our code will begin execution when called from the
 /// command line.
-void main(List<String> arguments) {
+void main() {
   var passes = 0;
   final timer = Stopwatch()..start();
 

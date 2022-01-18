@@ -4,15 +4,11 @@ COPY pubspec.* ./
 RUN pub get
 COPY . .
 RUN pub get --offline \
-    && dart compile exe /app/bin/Runner.dart -o Runner \
-    && dart compile exe /app/bin/PrimeDart.dart -o PrimeDart \
-    && dart compile exe /app/bin/PrimeDartOneBit.dart -o PrimeDartOneBit \
-    && dart compile exe /app/bin/PrimeDartParallel.dart -o PrimeDartParallel \
-    && dart compile exe /app/bin/PrimeDartParallelOneBit.dart -o PrimeDartParallelOneBit
+    && dart compile exe /app/bin/Runner.dart -o Runner 
 
 FROM scratch AS runtime
 WORKDIR /app
 COPY --from=build /runtime/ /
-COPY --from=build /app/Runner /app/PrimeDart* ./
+COPY --from=build /app/Runner ./
 
-ENTRYPOINT [ "./Runner", "./PrimeDart", "./PrimeDartParallel", "./PrimeDartOneBit", "./PrimeDartParallelOneBit" ]
+ENTRYPOINT [ "./Runner" ]
