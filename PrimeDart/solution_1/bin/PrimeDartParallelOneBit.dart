@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
@@ -13,11 +14,10 @@ void work(SendPort port) {
     passes++;
 
     if (timer.elapsedMicroseconds >= 5000000) {
-      port.send({
+      Isolate.exit(port, {
         'time': timer.elapsedMicroseconds / 1000000,
         'passes': passes,
       });
-      return;
     }
   }
 }
@@ -26,7 +26,7 @@ Future<void> main() async {
   final processors = Platform.numberOfProcessors;
   final receivePort = ReceivePort();
   for (var i = 0; i < processors; i++) {
-    await Isolate.spawn(work, receivePort.sendPort);
+    unawaited(Isolate.spawn(work, receivePort.sendPort));
   }
   var passes = 0;
   var time = 0.0;
