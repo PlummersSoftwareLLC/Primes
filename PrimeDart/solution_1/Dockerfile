@@ -4,11 +4,11 @@ COPY pubspec.* ./
 RUN pub get
 COPY . .
 RUN pub get --offline \
-    && dart compile exe /app/bin/Runner.dart -o Runner 
+    && dart compile exe /app/bin/runner.dart -o runner 
 
 FROM scratch AS runtime
 WORKDIR /app
 COPY --from=build /runtime/ /
-COPY --from=build /app/Runner ./
+COPY --from=build /app/runner ./
 
-ENTRYPOINT [ "./Runner" ]
+ENTRYPOINT [ "./runner" ]
