@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
-import 'PrimeDart.dart';
+import 'prime_1_bit.dart';
 
 void work(SendPort port) {
   var passes = 0;
@@ -36,5 +36,5 @@ Future<void> main() async {
   }
   receivePort.close();
   stdout.writeln(
-      'eagerestwolf&mmcdon20_8bit_par;$passes;$time;$processors;algorithm=base,faithful=yes,bits=8');
+      'eagerestwolf&mmcdon20_1bit_par;$passes;$time;$processors;algorithm=base,faithful=yes,bits=1');
 }
