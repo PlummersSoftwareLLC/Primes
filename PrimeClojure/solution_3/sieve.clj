@@ -1,12 +1,144 @@
 (ns sieve
   "Clojure implementations of The Sieve of Eratosthenes by Peter Strömberg (a.k.a. PEZ)"
-  (:require [criterium.core :refer [with-progress-reporting bench quick-bench]])
+  (:require [criterium.core :refer [bench quick-bench with-progress-reporting]])
   (:import [java.time Instant Duration]))
 
 ;; Disable overflow checks on mathematical ops and warn when compiler is unable
 ;; to optimise correctly.
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
+
+(defn sieve-v
+  "Using regular Clojure persistent (immutable) vectors"
+  [^long n]
+  (if (< n 2)
+    []
+    (let [sqrt-n (long (Math/ceil (Math/sqrt n)))
+          half-n (bit-shift-right n 1)]
+      (loop [p 3
+             primes (into [] (repeat (bit-shift-right n 1) true))]
+        (if-not (< p sqrt-n)
+          primes
+          (if-not (nth primes (bit-shift-right p 1))
+            (recur (+ p 2) primes)
+            (recur (+ p 2)
+                   (loop [i (bit-shift-right (* p p) 1)
+                          primes primes]
+                     (if (< i half-n)
+                       (recur (+ i p)
+                              (assoc primes i false))
+                       primes)))))))))
+
+(defn sieve-v-transient
+  "Using a transient vector"
+  [^long n]
+  (if (< n 2)
+    []
+    (let [sqrt-n (long (Math/ceil (Math/sqrt n)))
+          half-n (bit-shift-right n 1)]
+      (loop [p 3
+             primes (transient (into [] (repeat (bit-shift-right n 1) true)))]
+        (if-not (< p sqrt-n)
+          (persistent! primes)
+          (if-not (nth primes (bit-shift-right p 1))
+            (recur (+ p 2) primes)
+            (recur (+ p 2)
+                   (loop [i (bit-shift-right (* p p) 1)
+                          primes primes]
+                     (if (< i half-n)
+                       (recur (+ i p)
+                              (assoc! primes i false))
+                       primes)))))))))
+
+(comment
+  (def sieve sieve-v)
+  (def sieve sieve-v-transient)
+  (defn loot [raw-sieve]
+    (keep-indexed (fn [i v]
+                    (when v (if (zero? i)
+                              2
+                              (inc (* i 2)))))
+                  raw-sieve))
+  (loot (sieve 1))
+  (loot (sieve 10))
+  (loot (sieve 100))
+  (time (count (loot (sieve 1000000))))
+  (quick-bench (sieve 1000000)))
+
+(defn sieve-ba
+  "boolean-array storage
+   Returns the raw sieve with each index representing the odd numbers * 2
+   Skips even indexes.
+   No parallelisation."
+  [^long n]
+  (if (< n 2)
+    (boolean-array n)
+    (let [primes (boolean-array (bit-shift-right n 1) true)
+          sqrt-n (long (Math/ceil (Math/sqrt n)))
+          half-n (bit-shift-right n 1)]
+      (loop [p 3]
+        (when (< p sqrt-n)
+          (when (aget primes (bit-shift-right p 1))
+            (loop [i (bit-shift-right (* p p) 1)]
+              (when (< i half-n)
+                (aset primes i false)
+                (recur (+ i p)))))
+          (recur (+ p 2))))
+      primes)))
+
+(comment
+  (defn loot [raw-sieve]
+    (keep-indexed (fn [i v]
+                    (when v (if (zero? i)
+                              2
+                              (inc (* i 2)))))
+                  raw-sieve))
+  (loot (sieve-ba 1))
+  (loot (sieve-ba 10))
+  (loot (sieve-ba 20))
+  (loot (sieve-ba 100))
+  (count (loot (sieve-ba 1000)))
+  (count (loot (sieve-ba 1000000)))
+  (with-progress-reporting (quick-bench (sieve-ba 1000000)))
+  (time (do (sieve-ba 1000000) nil)))
+
+(defn sieve-bs
+  "Java BitSet storage
+   Returns the raw sieve with each index representing the odd numbers * 2
+   Skips even indexes.
+   No parallelisation."
+  [^long n]
+  (if (< n 2)
+    (java.util.BitSet. (/ n 2))
+    (let [half-n (bit-shift-right n 1)
+          primes (doto (java.util.BitSet. n) (.set 0 half-n))
+          sqrt-n (long (Math/ceil (Math/sqrt n)))]
+      (loop [p 3]
+        (when (< p sqrt-n)
+          (when (.get primes (bit-shift-right p 1))
+            (loop [i (bit-shift-right (* p p) 1)]
+              (when (< i half-n)
+                (.set primes i false)
+                (recur (+ i p)))))
+          (recur (+ p 2))))
+      primes)))
+
+(comment
+  (defn loot [raw-sieve]
+    (map (fn [v]
+           (if (zero? v)
+             2
+             (inc (* v 2))))
+         (-> raw-sieve .stream .toArray)))
+  (loot (sieve-bs 1))
+  (loot (sieve-bs 10))
+  (loot (sieve-bs 20))
+  (loot (sieve-bs 100))
+  (.cardinality (sieve-bs 100))
+  (.cardinality (sieve-bs 1000))
+  (.cardinality (sieve-bs 1000000))
+  (with-progress-reporting (quick-bench (sieve-bs 1000000)))
+  (time (do (sieve-bs 1000000) nil)))
 
 (defn sieve-ba-to-vector-even-filter-futures
   "boolean-array-storage
@@ -69,13 +201,12 @@
   ;; Execution time mean : 2.703046 ms
 
   ;; This one takes a lot of time, you have been warned
-  (with-progress-reporting (bench (sieve-ba-to-vector-even-filter-futures 1000000)))
-  )
+  (with-progress-reporting (bench (sieve-ba-to-vector-even-filter-futures 1000000))))
 
-(defn sieve-ba
+(defn sieve-ba-all
   "boolean-array storage
    Returns the raw sieve.
-   No parallelisation."
+   This version treats evens as equal candidates to any numbers."
   [^long n]
   (if (< n 2)
     (boolean-array n)
@@ -87,10 +218,11 @@
         (if-not (< p sqrt-n)
           primes
           (do
-            (loop [i (* p p)]
-              (when (< i n)
-                (aset primes i false)
-                (recur (+ i p))))
+            (when (aget primes p)
+              (loop [i (* p p)]
+                (when (< i n)
+                  (aset primes i false)
+                  (recur (+ i p)))))
             (recur (inc p))))))))
 
 (defn sieve-ba-pre-even-filter
@@ -113,10 +245,11 @@
         (if-not (< p sqrt-n)
           primes
           (do
-            (loop [i (* p p)]
-              (when (< i n)
-                (aset primes i false)
-                (recur (+ i p p))))
+            (when (aget primes p)
+              (loop [i (* p p)]
+                (when (< i n)
+                  (aset primes i false)
+                  (recur (+ i p p)))))
             (recur (+ p 2))))))))
 
 (defn sieve-ba-pre-even-filter-futures
@@ -154,15 +287,16 @@
         (if-not (< p sqrt-n)
           primes
           (do
-            (loop [i (* p p)]
-              (when (< i n)
-                (aset primes i false)
-                (recur (+ i p p))))
+            (when (aget primes p)
+              (loop [i (* p p)]
+                (when (< i n)
+                  (aset primes i false)
+                  (recur (+ i p p)))))
             (recur (+ p 2))))))))
 
 (comment
   ;; Evaluate the sieve you want to play with
-  (def sieve sieve-ba)
+  (def sieve sieve-ba-all)
   (def sieve sieve-ba-pre-even-filter)
   (def sieve sieve-ba-pre-even-filter-futures)
 
@@ -189,7 +323,7 @@
 
   (-> 1000000
       sieve
-      loot 
+      loot
       count)
   ;; => 78498
 
@@ -201,13 +335,12 @@
   ;; Execution time mean : 1.563407 ms
 
   ;; This one takes a lot of time, you have been warned
-  (with-progress-reporting (bench (sieve 1000000)))
-  )
+  (with-progress-reporting (bench (sieve 1000000))))
 
-(defn sieve-bs
+(defn sieve-bs-all
   "BitSet storage.
    Returns the raw sieve.
-   No parallelisation."
+   This version treats evens as equal candidates to any numbers."
   [^long n]
   (if (< n 2)
     (java.util.BitSet. n)
@@ -217,10 +350,11 @@
         (if-not (< p sqrt-n)
           primes
           (do
-            (loop [i (* p p)]
-              (when (< i n)
-                (.clear primes i)
-                (recur (+ i p))))
+            (when (.get primes p)
+              (loop [i (* p p)]
+                (when (< i n)
+                  (.clear primes i)
+                  (recur (+ i p)))))
             (recur (inc p))))))))
 
 (defn sieve-bs-pre-even-filter
@@ -241,70 +375,42 @@
         (if-not (< p sqrt-n)
           primes
           (do
-            (loop [i (* p p)]
-              (when (< i n)
-                (.clear primes i)
-                (recur (+ i p p))))
+            (when (.get primes p)
+              (loop [i (* p p)]
+                (when (< i n)
+                  (.clear primes i)
+                  (recur (+ i p p)))))
             (recur (+ p 2))))))))
 
 (comment
   ;; Choose wisely
-  (def sieve sieve-bs)
+  (def sieve sieve-bs-all)
   (def sieve sieve-bs-pre-even-filter)
 
+  (defn loot [raw-sieve]
+    (map identity (-> raw-sieve .stream .toArray)))
+
+  (loot (sieve 100))
   ;; We get the raw sieve back, a Java BitSet
-  (sieve-bs 1)
+  (sieve 1)
   ;; => #object [java.util.BitSet 0x222b4705 "{}"]
 
-  (sieve-bs 10)
+  (sieve 10)
   ;; => #object [java.util.BitSet 0x5793c7ae "{2, 3, 5, 7}"]
 
-  (.cardinality (sieve-bs 1000000))
+  (.cardinality (sieve 1000000))
   ;; => 78498
 
-  (sieve-bs 100)
+  (sieve 100)
   ;; You try it!
 
-  (with-progress-reporting (quick-bench (sieve-bs 1000000)))
-  (quick-bench (sieve-bs 1000000))
+  (with-progress-reporting (quick-bench (sieve 1000000)))
+  (quick-bench (sieve 1000000))
   ;; Execution time mean : 5.173709 ms
 
   ;; This one takes a lot of time, you have been warned
-  (with-progress-reporting (bench (sieve-bs 1000000)))
+  (with-progress-reporting (bench (sieve 1000000)))
   )
-
-(defn sieve-ba-skip-even
-  "boolean-array storage
-   Returns the raw sieve with each index representing the odd numbers * 2
-   Skips even indexes.
-   No parallelisation."
-  [^long n]
-  (if (< n 2)
-    (boolean-array n)
-    (let [primes (boolean-array (bit-shift-right n 1) true)
-          sqrt-n (long (Math/ceil (Math/sqrt n)))]
-      (loop [p 3]
-        (if-not (< p sqrt-n)
-          primes
-          (do
-            (loop [i (* p p)]
-              (when (< i n)
-                (aset primes (bit-shift-right i 1) false)
-                (recur (+ i p p))))
-            (recur (+ p 2))))))))
-
-(comment
-  (defn loot [raw-sieve]
-    (keep-indexed (fn [i v]
-                    (when v (if (zero? i) 
-                              2
-                              (inc (* i 2)))))
-                  raw-sieve))
-  (loot (sieve-ba-skip-even 1))
-  (loot (sieve-ba-skip-even 10))
-  (loot (sieve-ba-skip-even 100))
-  (count (loot (sieve-ba-skip-even 1000000)))
-  (quick-bench (sieve-ba-skip-even 1000000)))
 
 (def prev-results
   "Previous results to check against sieve results."
@@ -361,10 +467,22 @@
          "pez-clj-" (name variant) ";" passes ";" timef ";" threads ";algorithm=base,faithful=yes,bits=" bits)))
 
 (def confs
-  {:bitset {:sieve sieve-bs
+  {:vector {:sieve sieve-v
+            :count-f (fn [primes] (count (filter true? primes)))
+            :threads 1
+            :bits "?"}
+   :vector-transient {:sieve sieve-v-transient
+                      :count-f (fn [primes] (count (filter true? primes)))
+                      :threads 1
+                      :bits "?"}
+   :bitset {:sieve sieve-bs
             :count-f (fn [primes] (.cardinality primes))
             :threads 1
             :bits 1}
+   :bitset-all {:sieve sieve-bs-all
+                :count-f (fn [primes] (.cardinality primes))
+                :threads 1
+                :bits 1}
    :bitset-pre {:sieve sieve-bs-pre-even-filter
                 :count-f (fn [primes] (.cardinality primes))
                 :threads 1
@@ -373,10 +491,10 @@
                    :count-f (fn [primes] (count (filter true? primes)))
                    :threads 1
                    :bits 8}
-   :boolean-array-skip-evens {:sieve sieve-ba-skip-even
-                              :count-f (fn [primes] (count (filter true? primes)))
-                              :threads 1
-                              :bits 8}
+   :boolean-array-all {:sieve sieve-ba-all
+                       :count-f (fn [primes] (count (filter true? primes)))
+                       :threads 1
+                       :bits 8}
    :boolean-array-pre {:sieve sieve-ba-pre-even-filter
                        :count-f (fn [primes] (count (filter true? primes)))
                        :threads 1
@@ -391,7 +509,7 @@
                                      :bits 8}})
 
 (defn run [{:keys [variant warm-up?]
-            :or   {variant :boolean-array-pre-futures
+            :or   {variant :boolean-array
                    warm-up? false}}]
   (let [conf (confs variant)
         sieve (:sieve conf)]
@@ -401,12 +519,16 @@
     (println (format-results (merge conf (benchmark sieve) {:variant variant})))))
 
 (comment
-  (run {:warm-up? false})
-  (run {:variant :boolean-array-skip-evens :warm-up? false})
-  (run {:variant :boolean-array-pre-futures :warm-up? false})
-  (run {:variant :boolean-array-pre :warm-up? false})
-  (run {:variant :boolean-array-to-vector-futures :warm-up? false})
-  (run {:variant :boolean-array :warm-up? false})
-  (run {:variant :bitset :warm-up? false})
   (run {:warm-up? true})
+  (run {:warm-up? false})
+  (run {:variant :vector :warm-up? true})
+  (run {:variant :vector-transient :warm-up? true})
+  (run {:variant :bitset :warm-up? true})
+  (run {:variant :bitset-all :warm-up? true})
+  (run {:variant :bitset-pre :warm-up? true})
+  (run {:variant :boolean-array :warm-up? true})
+  (run {:variant :boolean-array-all :warm-up? true})
+  (run {:variant :boolean-array-pre :warm-up? true})
+  (run {:variant :boolean-array-pre-futures :warm-up? true})
+  (run {:variant :boolean-array-to-vector-futures :warm-up? true})
   )
