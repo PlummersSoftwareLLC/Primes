@@ -15,36 +15,41 @@ const Oeis = struct {
 const WheelOpts = struct {
     num_primes: u8,
     PRIME: u8 = 0,
-    bits: bool = false
+    bits: bool = false,
+    copy_vector: usize = 0,
 };
 
-const skip_counts = .{"", "", "8of15", "48of105", "480of1155", "5760of15015", "92160of255255"};
+const skip_counts = .{"", "", "8of30", "48of201", "480of2310", "5760of30030", "92160of510510"};
 
 pub fn Wheel(comptime opts: WheelOpts) type {
     // exists so that we don't run out of compiler credits.  Zig compiler is stingier than AWS.
     @setEvalBranchQuota(100000);
 
     const T = @TypeOf(opts.PRIME);
-    const src_bytes = Oeis.prime_products[opts.num_primes - 1];
+    const wheel_bytes = Oeis.prime_products[opts.num_primes - 1];
     const COMPOSITE: T = if (T == bool) !opts.PRIME else 1 - opts.PRIME;
 
     std.debug.assert(opts.num_primes >= 2);
 
     return struct {
         pub const STARTING_FACTOR: usize = Oeis.primes[opts.num_primes];
-        pub const template: [src_bytes]T align(std.mem.page_size) = makeTemplate();
-        pub const bytes = src_bytes;
-        pub const name = skip_counts[opts.num_primes];
+        pub const template: [wheel_bytes]T align(256) = makeTemplate();
+        pub const bytes = wheel_bytes;
+        pub const name = skip_counts[opts.num_primes] ++ if (opts.copy_vector > 0) "v" else "";
 
         /// rolls the wheel out onto the field.
         pub fn roll(field: [*]T, field_bytes: usize) void {
-            var segment_end = src_bytes;
+            const field_end = @ptrToInt(field) + field_bytes - wheel_bytes;
             var chunk = field;
-            while (segment_end < field_bytes) : (segment_end += src_bytes) {
-                @memcpy(chunk, @ptrCast([*]const T, &template), src_bytes);
-                chunk += src_bytes;
+            while (@ptrToInt(chunk) < field_end) : (chunk += wheel_bytes) {
+                if (opts.copy_vector > 0) {
+                    simd_copy_fixed(chunk);
+                } else {
+                    @memcpy(chunk, @ptrCast([*]const T, &template), wheel_bytes);
+                }
             } else {
-                @memcpy(chunk, @ptrCast([*]const T, &template), src_bytes - (segment_end - field_bytes));
+                const leftovers = field_bytes - (@ptrToInt(chunk) - @ptrToInt(field));
+                @memcpy(chunk, @ptrCast([*]const T, &template), leftovers);
             }
             // when you're done, put the primes back.
             inline for (Oeis.primes[0..opts.num_primes]) |prime| {
@@ -52,17 +57,35 @@ pub fn Wheel(comptime opts: WheelOpts) type {
             }
         }
 
-        fn makeTemplate() [src_bytes]T {
+        inline fn simd_copy_fixed(chunk: [*]T) void {
+            const vector_size = opts.copy_vector;
+            comptime var bytes_so_far = 0;
+            const template_array = @ptrCast([*]const T, &template);
+
+            inline while (bytes_so_far < wheel_bytes) : (bytes_so_far += opts.copy_vector) {
+                const vector = std.math.min(vector_size, wheel_bytes - bytes_so_far);
+                const V = std.meta.Vector(vector_size, u8);
+
+                const src_ptr_t = *const V;
+                const dst_ptr_t = *align(1) V;
+
+                const src_ptr = @ptrCast(src_ptr_t, @alignCast(vector_size, template_array + bytes_so_far));
+                const dst_ptr = @ptrCast(dst_ptr_t, chunk + bytes_so_far);
+                dst_ptr.* = src_ptr.*;
+            }
+        }
+
+        fn makeTemplate() [wheel_bytes]T {
             @setEvalBranchQuota(1_000_000);
 
-            var template_buffer: [src_bytes] T align(std.mem.page_size) = undefined;
+            var template_buffer: [wheel_bytes] T align(std.mem.page_size) = undefined;
 
             // initialize everything to be prime
             for (template_buffer) |*item| { item.* = opts.PRIME; }
 
             // set up a bog-standard sieve.
             var sieve: IntSieve(.{.PRIME = opts.PRIME}) =
-              .{.field = &template_buffer, .field_count = src_bytes};
+              .{.field = &template_buffer, .field_count = wheel_bytes};
 
             inline for (Oeis.primes[0..opts.num_primes]) | prime | {
                 sieve.runFactor(prime);

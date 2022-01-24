@@ -177,12 +177,16 @@ macro denseSetBits(bitbufa, bytelen, ndx0, step: untyped) = # ndx0 must be var
 type BitSeq = ref object
   size: Natural
   buffer: seq[byte]
+  bufferp: ptr UncheckedArray[byte]
 
-func newBitSeq(size: int): BitSeq = # round up to even 64-bit size
-  BitSeq(size: size, buffer: newSeq[byte](((size - 1 + 64) shr 3) and (-8)))
+func newBitSeq(size: int): BitSeq =
+  # round up to even 256-bit size + 256 bits in bytes...
+  let sq = newSeq[byte](((size - 1 + 512) shr 3) and (-32))
+  let sqpi = (cast[int](sq[0].unsafeAddr) + 31) and (-32)
+  BitSeq(size: size, buffer: sq, bufferp: cast[ptr UncheckedArray[byte]](sqpi))
 
 func `[]`(bitseq: BitSeq; i: int): bool {.inline.} =
-  (bitseq.buffer[i shr 3] and BITMASK[i and 7]) != 0'u8
+  (bitseq.bufferp[i shr 3] and BITMASK[i and 7]) != 0'u8
 
 func `[]`(bitseq: BitSeq; startstop: HSlice[int, int];
           step: int = 1): iterator: bool {.closure.} {.inline.} =
@@ -190,14 +194,14 @@ func `[]`(bitseq: BitSeq; startstop: HSlice[int, int];
          "Error:  illegal slice limits or step size!!"
   return iterator: bool {.closure.} =
     for i in countup(startstop.a, startstop.b, step):
-      yield (bitseq.buffer[i shr 3] and BITMASK[i and 7]) != 0
+      yield (bitseq.bufferp[i shr 3] and BITMASK[i and 7]) != 0
 
 # sets a range of the BitSeq by step size to true and returns the next index...
 func setRange(bitseq: BitSeq; start, stop: int; step: int = 1,
               hybrid: bool = false) =
   assert step <= 0 or stop < start or stop > bitseq.size,
          "Error:  illegal slice limits or step size!!!"
-  let bitbufa = cast[int](bitseq.buffer[0].addr)
+  let bitbufa = cast[int](bitseq.bufferp)
   var ndx = start
   let sz = min(bitseq.buffer.len, (stop + 8) shr 3) # round up
   if start <= sz * 8 - 16 * step: # enough loops to be worth the setup
@@ -209,7 +213,7 @@ func setRange(bitseq: BitSeq; start, stop: int; step: int = 1,
     ndx += step
 
 func countTruesTo(bitseq: BitSeq; index: int): int =
-  let bsp = cast[ptr UncheckedArray[uint64]](bitseq.buffer[0].addr)
+  let bsp = cast[ptr UncheckedArray[uint64]](bitseq.bufferp)
   let lstwrd = index shr 6
   let mask = not ((0'u64 - 2'u64) shl (index and 63))
   result = 0
@@ -229,8 +233,7 @@ func newPrimeSieve(lmt: Prime; tec: Techniques): PrimeSieve =
   result = PrimeSieve(limit: lmt, # BitSeq size rounded up to nearest uint64...
                       sievebuffer: newBitSeq((bitlmt + 64) and (-63)))
 
-  let cmpstsBytesp =
-        cast[ptr UncheckedArray[byte]](result.sievebuffer.buffer[0].addr)
+  let cmpstsBytesp = result.sieveBuffer.bufferp
   let starts = newSeq[int](8)
   let startsp = cast[ptr UncheckedArray[int]](starts[0].unsafeAddr)
   
@@ -242,8 +245,6 @@ func newPrimeSieve(lmt: Prime; tec: Techniques): PrimeSieve =
  
     case tec:
       of bittwiddle:
-        let cmpstsBytesp =
-              cast[ptr UncheckedArray[byte]](result.sievebuffer.buffer[0].addr)
         while cullIndex <= bitlmt:
           let byteIndex = cullIndex shr 3
           cmpstsBytesp[byteIndex] =
@@ -251,28 +252,38 @@ func newPrimeSieve(lmt: Prime; tec: Techniques): PrimeSieve =
           cullIndex += basePrime
       
       of stride8:
-        let slmt = min(bitlmt, cullIndex + (basePrime shl 3) - 1)
-        let byteLimit = bitlmt shr 3
+        let bufa = cast[int](cmpstsBytesp)
+        let bytealmt = bufa + (bitlmt shr 3)
+        let slmt = min(bitlmt, cullIndex + (basePrime shl 3) - 1)       
         while cullIndex <= slmt:
-          let mask = BITMASK[cullIndex and 7]; var byteIndex = cullIndex shr 3
-          while byteIndex <= byteLimit:
-            let cp = cast[ptr byte](cmpstsBytesp[byteIndex].unsafeAddr)
-            cp[] = cp[] or mask; byteIndex += basePrime
+          let mask = BITMASK[cullIndex and 7]
+          var bytepa = bufa + (cullIndex shr 3)
+          while bytepa <= bytealmt:
+            let cp = cast[ptr byte](bytepa)
+            cp[] = cp[] or mask; bytepa += basePrime
           cullIndex += basePrime
       
       of stride8block:
-        let startIndex = cullIndex shr 3; let bytelimit = bitlmt shr 3
+        let bufa = cast[int](cmpstsBytesp); let bufalmt = bufa + (bitlmt shr 3)
+        let starta = bufa + ((cullIndex shr 3) and (-CPUL1CACHE))
+        let bp2 = basePrime + basePrime; let bp3 = basePrime + bp2
+        let bp4 = basePrime + bp3
         for _ in 0 .. 7:
-          startsp[cullIndex and 7] = cullIndex shr 3; cullIndex += basePrime
-        for pageIndex in countup(startIndex and (-CPUL1CACHE),
-                                    byteLimit, CPUL1CACHE):
-          let pageLimit = min(byteLimit, pageIndex + CPUL1CACHE - 1)
+          startsp[cullIndex and 7] = bufa + (cullIndex shr 3)
+          cullIndex += basePrime
+        for pagea in countup(starta, bufalmt, CPUL1CACHE):
+          let pageLimit = min(bufalmt, pagea + CPUL1CACHE - 1)
           for si in 0 .. 7:
-            let mask = BITMASK[si]; var byteIndex = startsp[si]
-            while byteIndex <= pageLimit:
-              let cp = cast[ptr byte](cmpstsBytesp[byteIndex].unsafeAddr)
-              cp[] = cp[] or mask; byteIndex += basePrime
-            startsp[si] = byteIndex
+            let mask = BITMASK[si]; var bytea = startsp[si]
+            while bytea <= pageLimit - bp3:
+              let cp = cast[ptr UncheckedArray[byte]](bytea)
+              cp[0] = cp[0] or mask; cp[basePrime] = cp[basePrime] or mask
+              cp[bp2] = cp[bp2] or mask; cp[bp3] = cp[bp3] or mask
+              bytea += bp4
+            while bytea <= pageLimit:
+              let cp = cast[ptr byte](bytea)
+              cp[] = cp[] or mask; bytea += basePrime
+            startsp[si] = bytea
       
       of extreme:
         result.sieveBuffer.setRange(cullIndex, bitlmt, step = basePrime)

@@ -49,7 +49,7 @@ This optimization was inspired by the Cython solution 1 by ssolvest.
 
 ## Choice of Dockerfile
 
-This solution uses Ubuntu 18.04 as the base image over alpine:3.13 because the `memcpy` function on alpine is slow due to the `must clib`. The speed in this solution comes from the use of  `memcpy`, so it is extra slow on alpine.
+This solution uses Ubuntu 18.04 as the base image over alpine:3.13 because the `memcpy` function on alpine is slow due to the `musl libc`. The speed in this solution comes from the use of  `memcpy`, so it is extra slow on alpine.
 
 ## Run instructions
 

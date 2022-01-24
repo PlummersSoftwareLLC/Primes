@@ -1,5 +1,7 @@
 FROM primeimages/ocaml:4.12-r1 AS build
 
+RUN mkdir /home/opam/primeocaml
+
 WORKDIR /home/opam/primeocaml
 
 COPY *.ml ./

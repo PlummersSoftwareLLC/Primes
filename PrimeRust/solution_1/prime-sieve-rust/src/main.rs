@@ -10,9 +10,10 @@ use std::{
 };
 use structopt::StructOpt;
 
-use crate::unrolled::FlagStorageUnrolledHybrid;
+use crate::{unrolled::FlagStorageUnrolledHybrid, unrolled_extreme::FlagStorageExtremeHybrid};
 
 mod unrolled;
+mod unrolled_extreme;
 
 pub mod primes {
     use std::{collections::HashMap, time::Duration, usize};
@@ -752,6 +753,11 @@ struct CommandLineOptions {
     #[structopt(long)]
     bits_unrolled: bool,
 
+    /// Run variant that uses normal, linear bit-level storage, but uses a procedural
+    /// macro to write the code for the dense resets directly. Collaboration with @GordonBGood.
+    #[structopt(long)]
+    bits_extreme: bool,
+
     /// Run variant that uses byte-level storage
     #[structopt(long)]
     bytes: bool,
@@ -771,7 +777,7 @@ fn main() {
         None => vec![1, num_cpus::get()],
     };
 
-    // run all implementations if no options are specified (default)
+    // run default implementations if no options are specified
     let run_all = [
         opt.bits,
         opt.bits_rotate,
@@ -779,6 +785,7 @@ fn main() {
         opt.bits_striped_blocks,
         opt.bits_striped_hybrid,
         opt.bits_unrolled,
+        opt.bits_extreme,
         opt.bytes,
     ]
     .iter()
@@ -787,7 +794,8 @@ fn main() {
     for threads in thread_options {
         print_header(threads, limit, run_duration);
 
-        if opt.bytes || run_all {
+        // not run by default
+        if opt.bytes {
             run_implementation::<FlagStorageByteVector>(
                 "byte",
                 8,
@@ -799,7 +807,8 @@ fn main() {
             );
         }
 
-        if opt.bits || run_all {
+        // not run by default
+        if opt.bits {
             run_implementation::<FlagStorageBitVector>(
                 "bit",
                 1,
@@ -823,7 +832,8 @@ fn main() {
             );
         }
 
-        if opt.bits_striped || run_all {
+        // not run by default
+        if opt.bits_striped {
             run_implementation::<FlagStorageBitVectorStriped>(
                 "bit-striped",
                 1,
@@ -890,6 +900,18 @@ fn main() {
                 repetitions,
             );
         }
+
+        if opt.bits_extreme || run_all {
+            run_implementation::<FlagStorageExtremeHybrid>(
+                "bit-extreme-hybrid",
+                1,
+                run_duration,
+                threads,
+                limit,
+                opt.print,
+                repetitions,
+            );
+        }
     }
 }
 
@@ -927,7 +949,8 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
     repetitions: usize,
 ) {
     for _ in 0..repetitions {
-        thread::sleep(Duration::from_secs(1));
+        // delay prior to start to allow processor to cool down
+        thread::sleep(Duration::from_secs(5));
         match num_threads {
             1 => {
                 run_implementation_st::<T>(label, bits_per_prime, run_duration, limit, print_primes)
@@ -946,6 +969,7 @@ fn run_implementation<T: 'static + FlagStorage + Send>(
 
 /// Single-threaded runner: simpler than spinning up a single thread
 /// to do the work.
+#[inline(never)]
 fn run_implementation_st<T: 'static + FlagStorage + Send>(
     label: &str,
     bits_per_prime: usize,
@@ -958,6 +982,7 @@ fn run_implementation_st<T: 'static + FlagStorage + Send>(
     let mut local_passes = 0;
     let mut last_sieve = None;
     while (Instant::now() - start_time) < run_duration {
+        last_sieve.take(); // drop prior sieve before creating new one
         let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
         sieve.run_sieve();
         last_sieve.replace(sieve);
@@ -987,6 +1012,7 @@ fn run_implementation_st<T: 'static + FlagStorage + Send>(
 }
 
 /// Multithreaded runner
+#[inline(never)]
 fn run_implementation_mt<T: 'static + FlagStorage + Send>(
     label: &str,
     bits_per_prime: usize,
@@ -1005,6 +1031,7 @@ fn run_implementation_mt<T: 'static + FlagStorage + Send>(
                 let mut local_passes = 0;
                 let mut last_sieve = None;
                 while (Instant::now() - start_time) < run_duration {
+                    last_sieve.take(); // drop prior sieve before creating new one
                     let mut sieve: PrimeSieve<T> = primes::PrimeSieve::new(limit);
                     sieve.run_sieve();
                     last_sieve.replace(sieve);
@@ -1044,7 +1071,10 @@ fn run_implementation_mt<T: 'static + FlagStorage + Send>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primes::{minimum_start, square_start, PrimeValidator};
+    use crate::{
+        primes::{minimum_start, square_start, PrimeValidator},
+        unrolled_extreme::FlagStorageExtremeHybrid,
+    };
 
     #[test]
     fn sieve_known_correct_bits() {
@@ -1081,8 +1111,13 @@ mod tests {
     }
 
     #[test]
-    fn sieve_known_correct_unrolled8_bits() {
+    fn sieve_known_correct_unrolled_bits() {
         sieve_known_correct::<FlagStorageUnrolledHybrid>();
+    }
+
+    #[test]
+    fn sieve_known_correct_extreme_bits() {
+        sieve_known_correct::<FlagStorageExtremeHybrid>();
     }
 
     fn sieve_known_correct<T: FlagStorage>() {
@@ -1142,8 +1177,13 @@ mod tests {
     }
 
     #[test]
-    fn storage_bit_unrolled8_correct() {
+    fn storage_bit_unrolled_correct() {
         basic_storage_correct::<FlagStorageUnrolledHybrid>();
+    }
+
+    #[test]
+    fn storage_bit_extreme_correct() {
+        basic_storage_correct::<FlagStorageExtremeHybrid>();
     }
 
     fn basic_storage_correct<T: FlagStorage>() {

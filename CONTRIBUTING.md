@@ -1,4 +1,24 @@
-# Contributing
+# Contributing <!-- omit in toc -->
+
+## Table of Contents <!-- omit in toc -->
+- [Introduction](#introduction)
+- [If (a) solution(s) already exists for your language...](#if-a-solutions-already-exists-for-your-language)
+- [Guide](#guide)
+  - [Determining the implementation characteristics](#determining-the-implementation-characteristics)
+  - [README.md](#readmemd)
+  - [Folder/directory](#folderdirectory)
+  - [Dockerfile](#dockerfile)
+  - [Pull request](#pull-request)
+  - [Help/support](#helpsupport)
+- [Rules](#rules)
+- [Characteristics](#characteristics)
+  - [Algorithm](#algorithm)
+  - [Faithfulness](#faithfulness)
+  - [Parallelism](#parallelism)
+  - [Flag storage](#flag-storage)
+- [Output](#output)
+  - [Tags](#tags)
+  - [Examples](#examples)
 
 ## Introduction
 Please follow the guidelines in this document if you want to submit a solution/implementation for inclusion in the drag race.

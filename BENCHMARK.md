@@ -1,18 +1,26 @@
-# Benchmarks
+# Benchmarks <!-- omit in toc -->
 
-This document describes how to built and run all benchmarks (solutions) for different operating systems.
+This document describes how to build and run all benchmarks (solutions) for different operating systems that can be automatically executed. 
 
-## Table of contents
+Some solutions are not included in the automated benchmark runs, either because no Dockerfile is included in the solution, or due to legal reasons. We do strive to include all solutions in the automated benchmark runs, if it is technically and legally possible to do so.
 
-1. [General working mechanism](#general-working-mechanism)
-2. [Linux](#linux)
-3. [Windows](#windows)
-4. [macOS](#macos)
-5. [Example output](#example-output)
-6. [Running a single benchmark](#running-a-single-benchmark)
-7. [Running a benchmark of all solutions for a particular language](#running-a-benchmark-of-all-solutions-for-a-particular-language)
-8. [Running in unconfined mode](#running-in-unconfined-mode)
-9. [Output formats](#output-formats)
+## Table of contents <!-- omit in toc -->
+- [What operating system to use?](#what-operating-system-to-use)
+- [General working mechanism](#general-working-mechanism)
+- [Linux](#linux)
+  - [Linux run instructions](#linux-run-instructions)
+  - [Linux installation and prerequisites](#linux-installation-and-prerequisites)
+- [Windows](#windows)
+  - [Windows run instructions](#windows-run-instructions)
+  - [Windows installation and prerequisites](#windows-installation-and-prerequisites)
+- [macOS](#macos)
+  - [macOS run instructions](#macos-run-instructions)
+  - [macOS installation and prerequisites](#macos-installation-and-prerequisites)
+- [Example output](#example-output)
+- [Running a single benchmark](#running-a-single-benchmark)
+- [Running a benchmark of all solutions for a particular language](#running-a-benchmark-of-all-solutions-for-a-particular-language)
+- [Running in unconfined mode](#running-in-unconfined-mode)
+- [Output formats](#output-formats)
 
 ## What operating system to use?
 

@@ -7,7 +7,7 @@ use crate::{
 
 use self::patterns::{index_pattern, mask_pattern_set_u64, mask_pattern_set_u8};
 
-mod patterns {
+pub mod patterns {
 
     /// Calculate index pattern for a given word width (BITS) and given skip
     /// factor. These are the relative addresses of the words we need to set
@@ -92,7 +92,7 @@ fn reinterpret_slice_mut_u64_u8(words: &mut [u64]) -> &mut [u8] {
 /// approach combined with the elements of the dense-resetting approach in my `bit-storage-striped-hybrid`
 /// solution.
 pub struct FlagStorageUnrolledHybrid {
-    words: Vec<u64>,
+    words: Box<[u64]>,
     length_bits: usize,
 }
 
@@ -100,7 +100,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     fn create_true(size: usize) -> Self {
         let num_words = size / 64 + (size % 64).min(1);
         Self {
-            words: vec![0; num_words],
+            words: vec![0; num_words].into_boxed_slice(),
             length_bits: size,
         }
     }
@@ -118,10 +118,10 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
     /// ```ignore
     /// // dense reset
     /// match skip {
-    ///     3 => ResetterDenseU64::<3>::reset_dense(&mut self.words),
-    ///     5 => ResetterDenseU64::<5>::reset_dense(&mut self.words),
+    ///     3 => ResetterDenseU64::<3>::reset_dense(self.words.as_mut()),
+    ///     5 => ResetterDenseU64::<5>::reset_dense(self.words.as_mut()),
     ///     //... etc
-    ///     129 => ResetterDenseU64::<129>::reset_dense(&mut self.words),
+    ///     129 => ResetterDenseU64::<129>::reset_dense(self.words.as_mut()),
     ///     _ => debug_assert!(false, "this case should not occur"),
     ///  },
     /// ```
@@ -135,7 +135,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
                 3,
                 2,
                 17,
-                ResetterSparseU8::<N>::reset_sparse(&mut self.words, skip),
+                ResetterSparseU8::<N>::reset_sparse(self.words.as_mut(), skip),
                 debug_assert!(
                     false,
                     "this case should not occur skip {} equivalent {}",
@@ -151,7 +151,7 @@ impl FlagStorage for FlagStorageUnrolledHybrid {
             3,
             2,
             129, // 64 unique sets
-            ResetterDenseU64::<N>::reset_dense(&mut self.words),
+            ResetterDenseU64::<N>::reset_dense(self.words.as_mut()),
             debug_assert!(
                 false,
                 "dense reset function should not be called for skip {}",
@@ -192,9 +192,9 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
             "square_start should be within the bounds of our array; check caller"
         );
         let start_chunk_offset = square_start / 64 / SKIP * SKIP;
-        let slice = &mut words[start_chunk_offset..];
 
-        slice.chunks_exact_mut(SKIP).for_each(|chunk| {
+        let mut chunks = words[start_chunk_offset..].chunks_exact_mut(SKIP);
+        (&mut chunks).for_each(|chunk| {
             const CHUNK_SIZE: usize = 16; // 8, 16, or 32 seems to work
             Self::RELATIVE_INDICES
                 .chunks_exact(CHUNK_SIZE)
@@ -210,7 +210,7 @@ impl<const SKIP: usize> ResetterDenseU64<SKIP> {
                 });
         });
 
-        let remainder = slice.chunks_exact_mut(SKIP).into_remainder();
+        let remainder = chunks.into_remainder();
         for i in 0..Self::BITS {
             let word_idx = Self::RELATIVE_INDICES[i];
             if word_idx < remainder.len() {
@@ -244,7 +244,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
     const SINGLE_BIT_MASK_SET: [u8; 8] = mask_pattern_set_u8(EQUIVALENT_SKIP);
 
     #[inline(always)]
-    fn reset_sparse(words: &mut [u64], skip: usize) {
+    pub fn reset_sparse(words: &mut [u64], skip: usize) {
         // calculate relative indices for the words we need to reset
         let relative_indices = index_pattern::<8>(skip);
 
@@ -264,9 +264,9 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             "sparse resets are for larger skip factors; this starts too early: {}",
             start_chunk_offset
         );
-        let slice = &mut bytes[start_chunk_offset..];
 
-        slice.chunks_exact_mut(skip).for_each(|chunk| {
+        let mut chunks = bytes[start_chunk_offset..].chunks_exact_mut(skip);
+        (&mut chunks).for_each(|chunk| {
             #[allow(clippy::needless_range_loop)]
             for i in 0..8 {
                 let word_idx = relative_indices[i];
@@ -277,7 +277,7 @@ impl<const EQUIVALENT_SKIP: usize> ResetterSparseU8<EQUIVALENT_SKIP> {
             }
         });
 
-        let remainder = slice.chunks_exact_mut(skip).into_remainder();
+        let remainder = chunks.into_remainder();
         #[allow(clippy::needless_range_loop)]
         for i in 0..8 {
             let word_idx = relative_indices[i];

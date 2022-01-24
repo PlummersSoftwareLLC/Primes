@@ -8,7 +8,7 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This implementation of the Prime Sieve uses the Dart Programming Language,
-created by Google. The source file `bin/PrimeDart.dart` contains a lot of
+created by Google. The source file `bin/prime_8_bit.dart` contains a lot of
 comments to allow someone not familiar with Dart to understand what the code is
 doing and why some things look a bit different to many other object oriented
 programming languages (i.e. Java, C#, C++, etc). The reason such thorough
@@ -42,13 +42,13 @@ architecture. This is only supported using the Dart SDK, but can lead to
 increased speed. To compile the binary, run the following command:
 
 ```
-dart compile exe bin/PrimeDart.dart
+dart compile exe bin/prime_8_bit.dart
 ```
 
 Then run the binary with the following command:
 
 ```
-bin/PrimeDart.exe
+bin/prime_8_bit.exe
 ```
 
 **NOTE**: The executable will always have a `.exe` extension, regardless of
@@ -73,7 +73,7 @@ eagerestwolf&mmcdon20_1bit;4234;5.000628;1;algorithm=base,faithful=yes,bits=1
 eagerestwolf&mmcdon20_1bit_par;24644;5.001196;12;algorithm=base,faithful=yes,bits=1
 ```
 
-### Dart SDK (running PrimeDart.dart)
+### Dart SDK (running prime_8_bit.dart)
 
 ```
 Passes: 5213, Time: 5.000862, Avg: 0.0009593059658545943, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
@@ -81,7 +81,7 @@ Passes: 5213, Time: 5.000862, Avg: 0.0009593059658545943, Limit: 1000000, Count1
 eagerestwolf&mmcdon20_8bit;5213;5.000862;1;algorithm=base,faithful=yes,bits=8
 ```
 
-### Dart Compiled (running PrimeDart.exe)
+### Dart Compiled (running prime_8_bit.exe)
 
 ```
 Passes: 5588, Time: 5.000777, Avg: 0.0008949135647816751, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true

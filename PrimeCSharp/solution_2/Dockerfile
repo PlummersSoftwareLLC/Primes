@@ -13,4 +13,4 @@ RUN dotnet publish -c release -o /app --no-restore
 FROM mcr.microsoft.com/dotnet/runtime:3.1-focal
 WORKDIR /app
 COPY --from=build /app .
-ENTRYPOINT ["PrimeSieveCS"]
+ENTRYPOINT ["./PrimeSieveCS"]
