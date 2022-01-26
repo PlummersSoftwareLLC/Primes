@@ -61,63 +61,29 @@
   (time (count (loot (sieve 1000000))))
   (with-progress-reporting (quick-bench (sieve 1000000))))
 
+(defmacro sqr [n]
+  `(let [n# (unchecked-int ~n)] (unchecked-multiply-int n# n#)))
+
 (defn sieve-ba
+  "boolean-array storage
+   Returns the raw sieve with each index representing the odd numbers * 2
+   Skips even indexes.
+   No parallelisation."
   [^long n]
   (if (< n 2)
     (boolean-array n)
-    (let [half-n (bit-shift-right n 1)
-          ^booleans primes (boolean-array half-n true)
-          sqrt-n (long (Math/ceil (Math/sqrt n)))]
+    (let [half-n (int (bit-shift-right n 1))
+          primes (boolean-array half-n true)
+          sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
       (loop [p (int 3)]
         (when (< p sqrt-n)
           (when (aget primes (bit-shift-right p 1))
-            (loop [i (bit-shift-right (* p p) 1)]
+            (loop [i (bit-shift-right (sqr p) 1)]
               (when (< i half-n)
                 (aset primes i false)
-                (recur (+ i p)))))
-          (recur (+ p 2))))
+                (recur (unchecked-add-int i p)))))
+          (recur (unchecked-add-int p 2))))
       primes)))
-
-(defmacro << [n shift]
-  `(bit-shift-left ~n ~shift))
-
-
-(defmacro >> [n shift]
-  `(unsigned-bit-shift-right ~n ~shift))
-
-
-;; NOTE: may not make a difference.
-(defmacro sqr [n]
-  `(unchecked-multiply-int ~n ~n))
-
-
-(defn sieve-axvr
-  [^long limit]
-  (let [q (inc (Math/sqrt limit))
-        half-limit (>> limit 1)
-        ^booleans sieve (boolean-array half-limit)]
-    (loop [factor (int 3)]
-      (when (< factor q)
-        (if-not (aget sieve (>> factor 1))
-          (loop [num (sqr factor)]
-            (when (< num half-limit)
-              (aset sieve num true)
-              (recur (+ num factor)))))
-        (recur (+ 2 factor))))
-    sieve))
-
-
-(defn sieve->primes
-  "Function to convert the sieve output to a usable/printable list of primes."
-  [^booleans sieve]
-  (let [out  (transient [2])
-        size (count sieve)]
-    (loop [idx (int 1)]
-      (when (< idx size)
-        (when-not (aget sieve idx)
-          (conj! out (inc (<< idx 1))))
-        (recur (inc idx))))
-    (persistent! out)))
 
 (comment
   (defn loot [raw-sieve]
@@ -128,14 +94,11 @@
                   raw-sieve))
   (loot (sieve-ba 1))
   (loot (sieve-ba 10))
-  (count (sieve->primes (sieve-axvr 10)))
-  (count (sieve->primes (sieve-axvr 100)))
   (loot (sieve-ba 20))
   (loot (sieve-ba 100))
   (count (loot (sieve-ba 1000)))
   (count (loot (sieve-ba 1000000)))
   (with-progress-reporting (quick-bench (sieve-ba 1000000)))
-  (with-progress-reporting (quick-bench (sieve-axvr 1000000)))
   (with-progress-reporting (bench (sieve-ba 1000000)))
   (time (do (sieve-ba 1000000) nil)))
 
@@ -147,17 +110,17 @@
   [^long n]
   (if (< n 2)
     (java.util.BitSet. (/ n 2))
-    (let [half-n (bit-shift-right n 1)
+    (let [half-n (int (bit-shift-right n 1))
           primes (doto (java.util.BitSet. n) (.set 0 half-n))
-          sqrt-n (long (Math/ceil (Math/sqrt n)))]
-      (loop [p 3]
+          sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
+      (loop [p (int 3)]
         (when (< p sqrt-n)
           (when (.get primes (bit-shift-right p 1))
-            (loop [i (bit-shift-right (* p p) 1)]
+            (loop [i (bit-shift-right (sqr p) 1)]
               (when (< i half-n)
                 (.clear primes i)
-                (recur (+ i p)))))
-          (recur (+ p 2))))
+                (recur (unchecked-add-int i p)))))
+          (recur (unchecked-add-int p 2))))
       primes)))
 
 (comment
@@ -528,10 +491,6 @@
                    :count-f (fn [primes] (count (filter true? primes)))
                    :threads 1
                    :bits 8}
-   :boolean-array-avr {:sieve sieve-axvr
-                       :count-f (fn [primes] (count (filter true? primes)))
-                       :threads 1
-                       :bits 8}
    :boolean-array-all {:sieve sieve-ba-all
                        :count-f (fn [primes] (count (filter true? primes)))
                        :threads 1
@@ -568,7 +527,6 @@
   (run {:variant :bitset-all :warm-up? true})
   (run {:variant :bitset-pre :warm-up? true})
   (run {:variant :boolean-array :warm-up? true})
-  (run {:variant :boolean-array-avr :warm-up? true})
   (run {:variant :boolean-array-all :warm-up? true})
   (run {:variant :boolean-array-pre :warm-up? true})
   (run {:variant :boolean-array-pre-futures :warm-up? true})
