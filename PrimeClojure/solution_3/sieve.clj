@@ -16,18 +16,16 @@
     (let [sqrt-n (long (Math/ceil (Math/sqrt n)))
           half-n (bit-shift-right n 1)]
       (loop [p 3
-             primes (into [] (repeat (bit-shift-right n 1) true))]
-        (if-not (< p sqrt-n)
-          primes
-          (if-not (nth primes (bit-shift-right p 1))
-            (recur (+ p 2) primes)
-            (recur (+ p 2)
-                   (loop [i (bit-shift-right (* p p) 1)
-                          primes primes]
-                     (if (< i half-n)
-                       (recur (+ i p)
-                              (assoc primes i false))
-                       primes)))))))))
+             primes (vec (repeat (bit-shift-right n 1) true))]
+        (if (< p sqrt-n)
+          (if (nth primes (bit-shift-right p 1))
+            (recur (+ p 2) (loop [i (bit-shift-right (* p p) 1)
+                                  primes primes]
+                             (if (< i half-n)
+                               (recur (+ i p) (assoc primes i false))
+                               primes)))
+            (recur (+ p 2) primes))
+          primes)))))
 
 (defn sieve-v-transient
   "Using a transient vector"
@@ -37,18 +35,16 @@
     (let [sqrt-n (long (Math/ceil (Math/sqrt n)))
           half-n (bit-shift-right n 1)]
       (loop [p 3
-             primes (transient (into [] (repeat (bit-shift-right n 1) true)))]
-        (if-not (< p sqrt-n)
-          (persistent! primes)
-          (if-not (nth primes (bit-shift-right p 1))
-            (recur (+ p 2) primes)
-            (recur (+ p 2)
-                   (loop [i (bit-shift-right (* p p) 1)
-                          primes primes]
-                     (if (< i half-n)
-                       (recur (+ i p)
-                              (assoc! primes i false))
-                       primes)))))))))
+             primes (transient (vec (repeat (bit-shift-right n 1) true)))]
+        (if (< p sqrt-n)
+          (if (nth primes (bit-shift-right p 1))
+            (recur (+ p 2) (loop [i (bit-shift-right (* p p) 1)
+                                  primes primes]
+                             (if (< i half-n)
+                               (recur (+ i p) (assoc! primes i false))
+                               primes)))
+            (recur (+ p 2) primes))
+          (persistent! primes))))))
 
 (comment
   (def sieve sieve-v)
@@ -63,7 +59,10 @@
   (loot (sieve 10))
   (loot (sieve 100))
   (time (count (loot (sieve 1000000))))
-  (quick-bench (sieve 1000000)))
+  (with-progress-reporting (quick-bench (sieve 1000000))))
+
+(defmacro sqr [n]
+  `(let [n# (unchecked-int ~n)] (unchecked-multiply-int n# n#)))
 
 (defn sieve-ba
   "boolean-array storage
@@ -73,17 +72,17 @@
   [^long n]
   (if (< n 2)
     (boolean-array n)
-    (let [primes (boolean-array (bit-shift-right n 1) true)
-          sqrt-n (long (Math/ceil (Math/sqrt n)))
-          half-n (bit-shift-right n 1)]
-      (loop [p 3]
+    (let [half-n (int (bit-shift-right n 1))
+          primes (boolean-array half-n true)
+          sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
+      (loop [p (int 3)]
         (when (< p sqrt-n)
           (when (aget primes (bit-shift-right p 1))
-            (loop [i (bit-shift-right (* p p) 1)]
+            (loop [i (bit-shift-right (sqr p) 1)]
               (when (< i half-n)
                 (aset primes i false)
-                (recur (+ i p)))))
-          (recur (+ p 2))))
+                (recur (unchecked-add-int i p)))))
+          (recur (unchecked-add-int p 2))))
       primes)))
 
 (comment
@@ -100,6 +99,7 @@
   (count (loot (sieve-ba 1000)))
   (count (loot (sieve-ba 1000000)))
   (with-progress-reporting (quick-bench (sieve-ba 1000000)))
+  (with-progress-reporting (bench (sieve-ba 1000000)))
   (time (do (sieve-ba 1000000) nil)))
 
 (defn sieve-bs
@@ -110,17 +110,17 @@
   [^long n]
   (if (< n 2)
     (java.util.BitSet. (/ n 2))
-    (let [half-n (bit-shift-right n 1)
+    (let [half-n (int (bit-shift-right n 1))
           primes (doto (java.util.BitSet. n) (.set 0 half-n))
-          sqrt-n (long (Math/ceil (Math/sqrt n)))]
-      (loop [p 3]
+          sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
+      (loop [p (int 3)]
         (when (< p sqrt-n)
           (when (.get primes (bit-shift-right p 1))
-            (loop [i (bit-shift-right (* p p) 1)]
+            (loop [i (bit-shift-right (sqr p) 1)]
               (when (< i half-n)
-                (.set primes i false)
-                (recur (+ i p)))))
-          (recur (+ p 2))))
+                (.clear primes i)
+                (recur (unchecked-add-int i p)))))
+          (recur (unchecked-add-int p 2))))
       primes)))
 
 (comment
