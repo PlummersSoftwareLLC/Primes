@@ -16,18 +16,16 @@
     (let [sqrt-n (long (Math/ceil (Math/sqrt n)))
           half-n (bit-shift-right n 1)]
       (loop [p 3
-             primes (into [] (repeat (bit-shift-right n 1) true))]
-        (if-not (< p sqrt-n)
-          primes
-          (if-not (nth primes (bit-shift-right p 1))
-            (recur (+ p 2) primes)
-            (recur (+ p 2)
-                   (loop [i (bit-shift-right (* p p) 1)
-                          primes primes]
-                     (if (< i half-n)
-                       (recur (+ i p)
-                              (assoc primes i false))
-                       primes)))))))))
+             primes (vec (repeat (bit-shift-right n 1) true))]
+        (if (< p sqrt-n)
+          (if (nth primes (bit-shift-right p 1))
+            (recur (+ p 2) (loop [i (bit-shift-right (* p p) 1)
+                                  primes primes]
+                             (if (< i half-n)
+                               (recur (+ i p) (assoc primes i false))
+                               primes)))
+            (recur (+ p 2) primes))
+          primes)))))
 
 (defn sieve-v-transient
   "Using a transient vector"
@@ -37,18 +35,16 @@
     (let [sqrt-n (long (Math/ceil (Math/sqrt n)))
           half-n (bit-shift-right n 1)]
       (loop [p 3
-             primes (transient (into [] (repeat (bit-shift-right n 1) true)))]
-        (if-not (< p sqrt-n)
-          (persistent! primes)
-          (if-not (nth primes (bit-shift-right p 1))
-            (recur (+ p 2) primes)
-            (recur (+ p 2)
-                   (loop [i (bit-shift-right (* p p) 1)
-                          primes primes]
-                     (if (< i half-n)
-                       (recur (+ i p)
-                              (assoc! primes i false))
-                       primes)))))))))
+             primes (transient (vec (repeat (bit-shift-right n 1) true)))]
+        (if (< p sqrt-n)
+          (if (nth primes (bit-shift-right p 1))
+            (recur (+ p 2) (loop [i (bit-shift-right (* p p) 1)
+                                  primes primes]
+                             (if (< i half-n)
+                               (recur (+ i p) (assoc! primes i false))
+                               primes)))
+            (recur (+ p 2) primes))
+          (persistent! primes))))))
 
 (comment
   (def sieve sieve-v)
@@ -63,20 +59,16 @@
   (loot (sieve 10))
   (loot (sieve 100))
   (time (count (loot (sieve 1000000))))
-  (quick-bench (sieve 1000000)))
+  (with-progress-reporting (quick-bench (sieve 1000000))))
 
 (defn sieve-ba
-  "boolean-array storage
-   Returns the raw sieve with each index representing the odd numbers * 2
-   Skips even indexes.
-   No parallelisation."
   [^long n]
   (if (< n 2)
     (boolean-array n)
-    (let [primes (boolean-array (bit-shift-right n 1) true)
-          sqrt-n (long (Math/ceil (Math/sqrt n)))
-          half-n (bit-shift-right n 1)]
-      (loop [p 3]
+    (let [half-n (bit-shift-right n 1)
+          ^booleans primes (boolean-array half-n true)
+          sqrt-n (long (Math/ceil (Math/sqrt n)))]
+      (loop [p (int 3)]
         (when (< p sqrt-n)
           (when (aget primes (bit-shift-right p 1))
             (loop [i (bit-shift-right (* p p) 1)]
@@ -85,6 +77,47 @@
                 (recur (+ i p)))))
           (recur (+ p 2))))
       primes)))
+
+(defmacro << [n shift]
+  `(bit-shift-left ~n ~shift))
+
+
+(defmacro >> [n shift]
+  `(unsigned-bit-shift-right ~n ~shift))
+
+
+;; NOTE: may not make a difference.
+(defmacro sqr [n]
+  `(unchecked-multiply-int ~n ~n))
+
+
+(defn sieve-axvr
+  [^long limit]
+  (let [q (inc (Math/sqrt limit))
+        half-limit (>> limit 1)
+        ^booleans sieve (boolean-array half-limit)]
+    (loop [factor (int 3)]
+      (when (< factor q)
+        (if-not (aget sieve (>> factor 1))
+          (loop [num (sqr factor)]
+            (when (< num half-limit)
+              (aset sieve num true)
+              (recur (+ num factor)))))
+        (recur (+ 2 factor))))
+    sieve))
+
+
+(defn sieve->primes
+  "Function to convert the sieve output to a usable/printable list of primes."
+  [^booleans sieve]
+  (let [out  (transient [2])
+        size (count sieve)]
+    (loop [idx (int 1)]
+      (when (< idx size)
+        (when-not (aget sieve idx)
+          (conj! out (inc (<< idx 1))))
+        (recur (inc idx))))
+    (persistent! out)))
 
 (comment
   (defn loot [raw-sieve]
@@ -95,11 +128,15 @@
                   raw-sieve))
   (loot (sieve-ba 1))
   (loot (sieve-ba 10))
+  (count (sieve->primes (sieve-axvr 10)))
+  (count (sieve->primes (sieve-axvr 100)))
   (loot (sieve-ba 20))
   (loot (sieve-ba 100))
   (count (loot (sieve-ba 1000)))
   (count (loot (sieve-ba 1000000)))
   (with-progress-reporting (quick-bench (sieve-ba 1000000)))
+  (with-progress-reporting (quick-bench (sieve-axvr 1000000)))
+  (with-progress-reporting (bench (sieve-ba 1000000)))
   (time (do (sieve-ba 1000000) nil)))
 
 (defn sieve-bs
@@ -118,7 +155,7 @@
           (when (.get primes (bit-shift-right p 1))
             (loop [i (bit-shift-right (* p p) 1)]
               (when (< i half-n)
-                (.set primes i false)
+                (.clear primes i)
                 (recur (+ i p)))))
           (recur (+ p 2))))
       primes)))
@@ -491,6 +528,10 @@
                    :count-f (fn [primes] (count (filter true? primes)))
                    :threads 1
                    :bits 8}
+   :boolean-array-avr {:sieve sieve-axvr
+                       :count-f (fn [primes] (count (filter true? primes)))
+                       :threads 1
+                       :bits 8}
    :boolean-array-all {:sieve sieve-ba-all
                        :count-f (fn [primes] (count (filter true? primes)))
                        :threads 1
@@ -527,6 +568,7 @@
   (run {:variant :bitset-all :warm-up? true})
   (run {:variant :bitset-pre :warm-up? true})
   (run {:variant :boolean-array :warm-up? true})
+  (run {:variant :boolean-array-avr :warm-up? true})
   (run {:variant :boolean-array-all :warm-up? true})
   (run {:variant :boolean-array-pre :warm-up? true})
   (run {:variant :boolean-array-pre-futures :warm-up? true})
