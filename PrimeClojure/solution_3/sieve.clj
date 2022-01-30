@@ -61,29 +61,28 @@
   (time (count (loot (sieve 1000000))))
   (with-progress-reporting (quick-bench (sieve 1000000))))
 
-(defmacro sqr [n]
-  `(let [n# (unchecked-int ~n)] (unchecked-multiply-int n# n#)))
+(set! *unchecked-math* true)
 
 (defn sieve-ba
   "boolean-array storage
-   Returns the raw sieve with each index representing the odd numbers * 2
-   Skips even indexes.
-   No parallelisation."
+   Returns the raw sieve with only odd numbers present."
   [^long n]
   (if (< n 2)
-    (boolean-array n)
-    (let [half-n (int (bit-shift-right n 1))
+    (boolean-array 0)
+    (let [half-n (bit-shift-right n 1)
           primes (boolean-array half-n true)
-          sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
-      (loop [p (int 3)]
+          sqrt-n (unchecked-long (Math/ceil (Math/sqrt (double n))))]
+      (loop [p 3]
         (when (< p sqrt-n)
-          (when (aget primes (bit-shift-right p 1))
-            (loop [i (bit-shift-right (sqr p) 1)]
+          (when (aget primes (bit-shift-right p (unchecked-int 1)))
+            (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
               (when (< i half-n)
-                (aset primes i false)
-                (recur (unchecked-add-int i p)))))
-          (recur (unchecked-add-int p 2))))
+                (aset primes (unchecked-int i) false)
+                (recur (unchecked-add i p)))))
+          (recur (unchecked-add p 2))))
       primes)))
+
+(set! *unchecked-math* :warn-on-boxed)
 
 (comment
   (defn loot [raw-sieve]
@@ -109,18 +108,18 @@
    No parallelisation."
   [^long n]
   (if (< n 2)
-    (java.util.BitSet. (/ n 2))
+    (java.util.BitSet. 0)
     (let [half-n (int (bit-shift-right n 1))
           primes (doto (java.util.BitSet. n) (.set 0 half-n))
           sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
-      (loop [p (int 3)]
+      (loop [p 3]
         (when (< p sqrt-n)
           (when (.get primes (bit-shift-right p 1))
-            (loop [i (bit-shift-right (sqr p) 1)]
+            (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
               (when (< i half-n)
                 (.clear primes i)
-                (recur (unchecked-add-int i p)))))
-          (recur (unchecked-add-int p 2))))
+                (recur (unchecked-add i p)))))
+          (recur (unchecked-add p 2))))
       primes)))
 
 (comment
