@@ -103,9 +103,7 @@
 
 (defn sieve-bs
   "Java BitSet storage
-   Returns the raw sieve with each index representing the odd numbers * 2
-   Skips even indexes.
-   No parallelisation."
+   Returns the raw sieve with only odd numbers present."
   [^long n]
   (if (< n 2)
     (java.util.BitSet. 0)
@@ -114,12 +112,12 @@
           sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
       (loop [p 3]
         (when (< p sqrt-n)
-          (when (.get primes (bit-shift-right p 1))
+          (when (.get primes (unchecked-int (bit-shift-right p (unchecked-int 1))))
             (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
               (when (< i half-n)
-                (.clear primes i)
-                (recur (unchecked-add i p)))))
-          (recur (unchecked-add p 2))))
+                (.clear primes (unchecked-int i))
+                (recur (unchecked-add-int i p)))))
+          (recur (unchecked-add-int p 2))))
       primes)))
 
 (comment
