@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RUNS=$(if [ -z "$1" ]; then echo 1; else echo $1; fi)
+RUNS=$(if [ -z "$1" ]; then echo 5; else echo $1; fi)
 for ((i=0;i<${RUNS};i++))
 do
   echo $i
@@ -10,7 +10,6 @@ do
   #clojure -X sieve/run :variant :bitset-all :warm-up? false
   #clojure -X sieve/run :variant :bitset-pre :warm-up? false
   clojure -X sieve/run :variant :boolean-array :warm-up? true
-  sleep 20
   #clojure -X sieve/run :variant :boolean-array-all :warm-up? false
   #clojure -X sieve/run :variant :boolean-array-pre :warm-up? false
   #clojure -X sieve/run :variant :boolean-array-pre-futures :warm-up? false
