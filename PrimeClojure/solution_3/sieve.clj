@@ -69,15 +69,15 @@
   [^long n]
   (if (< n 2)
     (boolean-array 0)
-    (let [half-n (bit-shift-right n 1)
-          primes (boolean-array half-n true)
+    (let [half-n (unchecked-int (bit-shift-right n 1))
+          primes (boolean-array half-n)
           sqrt-n (unchecked-long (Math/ceil (Math/sqrt (double n))))]
       (loop [p 3]
         (when (< p sqrt-n)
-          (when (aget primes (bit-shift-right p (unchecked-int 1)))
+          (when-not (aget primes (bit-shift-right p (unchecked-int 1)))
             (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
               (when (< i half-n)
-                (aset primes (unchecked-int i) false)
+                (aset primes (unchecked-int i) true)
                 (recur (unchecked-add i p)))))
           (recur (unchecked-add p 2))))
       primes)))
@@ -87,9 +87,9 @@
 (comment
   (defn loot [raw-sieve]
     (keep-indexed (fn [i v]
-                    (when v (if (zero? i)
-                              2
-                              (inc (* i 2)))))
+                    (when-not v (if (zero? i)
+                                  2
+                                  (inc (* i 2)))))
                   raw-sieve))
   (loot (sieve-ba 1))
   (loot (sieve-ba 10))
@@ -485,7 +485,7 @@
                 :threads 1
                 :bits 1}
    :boolean-array {:sieve sieve-ba
-                   :count-f (fn [primes] (count (filter true? primes)))
+                   :count-f (fn [primes] (count (filter false? primes)))
                    :threads 1
                    :bits 8}
    :boolean-array-all {:sieve sieve-ba-all
