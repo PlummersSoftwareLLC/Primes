@@ -64,7 +64,7 @@
 (set! *unchecked-math* true)
 
 (defn sieve-ba
-  "boolean-array storage
+  "Java boolean array storage
    Returns the raw sieve with only odd numbers present."
   [^long n]
   (if (< n 2)
@@ -74,12 +74,12 @@
           primes (boolean-array half-n)]
       (loop [p 3]
         (when (< p sqrt-n)
-          (when-not (aget primes (bit-shift-right p (unchecked-int 1)))
-            (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
+          (when-not (aget primes (bit-shift-right p 1))
+            (loop [i (long (bit-shift-right (* p p) 1))]
               (when (< i half-n)
-                (aset primes (unchecked-int i) true)
-                (recur (unchecked-add i p)))))
-          (recur (unchecked-add p 2))))
+                (aset primes i true)
+                (recur (+ i p)))))
+          (recur (+ p 2))))
       primes)))
 
 (comment
