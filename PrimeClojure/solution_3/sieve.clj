@@ -64,32 +64,30 @@
 (set! *unchecked-math* true)
 
 (defn sieve-ba
-  "boolean-array storage
+  "Java boolean array storage
    Returns the raw sieve with only odd numbers present."
   [^long n]
   (if (< n 2)
     (boolean-array 0)
-    (let [half-n (bit-shift-right n 1)
-          primes (boolean-array half-n true)
-          sqrt-n (unchecked-long (Math/ceil (Math/sqrt (double n))))]
+    (let [sqrt-n (unchecked-long (Math/ceil (Math/sqrt (double n))))
+          half-n (unchecked-int (bit-shift-right n 1))
+          primes (boolean-array half-n)]
       (loop [p 3]
         (when (< p sqrt-n)
-          (when (aget primes (bit-shift-right p (unchecked-int 1)))
-            (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
+          (when-not (aget primes (bit-shift-right p 1))
+            (loop [i (long (bit-shift-right (* p p) 1))]
               (when (< i half-n)
-                (aset primes (unchecked-int i) false)
-                (recur (unchecked-add i p)))))
-          (recur (unchecked-add p 2))))
+                (aset primes i true)
+                (recur (+ i p)))))
+          (recur (+ p 2))))
       primes)))
-
-(set! *unchecked-math* :warn-on-boxed)
 
 (comment
   (defn loot [raw-sieve]
     (keep-indexed (fn [i v]
-                    (when v (if (zero? i)
-                              2
-                              (inc (* i 2)))))
+                    (when-not v (if (zero? i)
+                                  2
+                                  (inc (* i 2)))))
                   raw-sieve))
   (loot (sieve-ba 1))
   (loot (sieve-ba 10))
@@ -120,6 +118,29 @@
           (recur (unchecked-add-int p 2))))
       primes)))
 
+(defn sieve-bs-shroedinger
+  "Java BitSet storage
+   Returns the raw sieve with only odd numbers present
+   This one runs faster than `sieve-bs` above, but there's
+   something strange with this one. In 60-70% of the runs, 
+   it runs at less than 0.5X it's max speed. In docker, and
+   when on an intel Linux machine."
+  [^long n]
+  (if (< n 2)
+    (java.util.BitSet. 0)
+    (let [half-n (unchecked-int (bit-shift-right n 1))
+          sqrt-n (unchecked-long (Math/ceil (Math/sqrt (double n))))
+          primes (doto (java.util.BitSet. half-n) (.set (unchecked-int 0) half-n))]
+      (loop [p 3]
+        (when (< p sqrt-n)
+          (when (.get primes (unchecked-long (bit-shift-right p 1)))
+            (loop [i (bit-shift-right (* p p) 1)]
+              (when (< i half-n)
+                (.clear primes (unchecked-long i))
+                (recur (+ i p)))))
+          (recur (+ p 2))))
+      primes)))
+
 (comment
   (defn loot [raw-sieve]
     (map (fn [v]
@@ -136,6 +157,9 @@
   (.cardinality (sieve-bs 1000000))
   (with-progress-reporting (quick-bench (sieve-bs 1000000)))
   (time (do (sieve-bs 1000000) nil)))
+
+(set! *unchecked-math* :warn-on-boxed)
+
 
 (defn sieve-ba-to-vector-even-filter-futures
   "boolean-array-storage
@@ -476,6 +500,10 @@
             :count-f (fn [primes] (.cardinality primes))
             :threads 1
             :bits 1}
+   :bitset-shroedinger {:sieve sieve-bs-shroedinger
+                        :count-f (fn [primes] (.cardinality primes))
+                        :threads 1
+                        :bits 1}
    :bitset-all {:sieve sieve-bs-all
                 :count-f (fn [primes] (.cardinality primes))
                 :threads 1
@@ -485,7 +513,7 @@
                 :threads 1
                 :bits 1}
    :boolean-array {:sieve sieve-ba
-                   :count-f (fn [primes] (count (filter true? primes)))
+                   :count-f (fn [primes] (count (filter false? primes)))
                    :threads 1
                    :bits 8}
    :boolean-array-all {:sieve sieve-ba-all
@@ -520,6 +548,8 @@
   (run {:warm-up? false})
   (run {:variant :vector :warm-up? true})
   (run {:variant :vector-transient :warm-up? true})
+  (run {:variant :bitset :warm-up? true})
+  (run {:variant :bitset-shroedinger :warm-up? true})
   (run {:variant :bitset :warm-up? true})
   (run {:variant :bitset-all :warm-up? true})
   (run {:variant :bitset-pre :warm-up? true})
