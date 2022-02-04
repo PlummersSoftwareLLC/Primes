@@ -1,4 +1,4 @@
-FROM daewok/sbcl:2.1.8-alpine3.14
+FROM daewok/sbcl:2.2.0-alpine3.15
 
 WORKDIR /opt/app
 

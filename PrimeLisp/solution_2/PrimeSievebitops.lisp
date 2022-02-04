@@ -11,27 +11,81 @@
 
 #+(and :sbcl :x86-64)
 (eval-when (:load-toplevel :compile-toplevel :execute)
-(when (member (lisp-implementation-version) '("2.0.0" "2.1.8") :test #'equalp)
-  ;;; "OR r, imm1" + "OR r, imm2" -> "OR r, (imm1 | imm2)"
-  (defpattern "or + or -> or" ((or) (or)) (stmt next)
-    (binding* (((size1 dst1 src1) (parse-2-operands stmt))
-               ((size2 dst2 src2) (parse-2-operands next)))
-      (labels ((larger-of (size1 size2)
-                 (if (or (eq size1 :qword) (eq size2 :qword)) :qword :dword)))
-        (when (and (gpr-tn-p dst1)
-                   (location= dst2 dst1)
-                   (member size1 '(:qword :dword))
-                   (typep src1 '(signed-byte 32))
-                   (member size2 '(:dword :qword))
-                   (typep src2 '(signed-byte 32)))
+
+(when (member (lisp-implementation-version) '("2.0.0" "2.1.8" "2.2.0") :test #'equalp)
+(progn
+
+;;; "OR r, imm1" + "OR r, imm2" -> "OR r, (imm1 | imm2)"
+;;;
+;;; This pattern combines successive OR instructions
+;;; with immediate operands and the same target register.
+;;; It handles not only immediates up to 32 bit
+;;; but RIP relative constants as well.
+;;; It has two flaws: the value of the RIP relative constants
+;;; are found by linear search (slow!), and more importantly:
+;;; no longer used constants are NOT removed from the constant pool.
+;;; So if lots of OR instructions are combined then we end up
+;;; with lots of unused constants.
+(defpattern "or + or -> or" ((or) (or)) (stmt next)
+  (binding* (((size1 dst1 src1) (parse-2-operands stmt))
+             ((size2 dst2 src2) (parse-2-operands next)))
+    (labels ((larger-of (size1 size2)
+               (if (or (eq size1 :qword) (eq size2 :qword)) :qword :dword))
+
+             (find-constant-value (c)
+               (let ((constants (asmstream-constant-vector *asmstream*)))
+                 (when (plusp (length constants))
+                   (dovector (constant constants t)
+                     (when (eq c (cdr constant))
+                       (return (cdar constant)))))))
+
+             (value-of-constant (op)
+               (cond ((ea-p op) (find-constant-value (ea-disp op)))
+                     (t op))))
+
+      (when (and (gpr-tn-p dst1)
+                 (location= dst2 dst1)
+                 (member size1 '(:qword :dword))
+                 (or (typep src1 '(signed-byte 32))
+                     (ea-p src1))
+                 (member size2 '(:dword :qword))
+                 (or (typep src2 '(signed-byte 32))
+                     (ea-p src2)))
+        (let ((src11 (value-of-constant src1))
+              (src22 (value-of-constant src2)))
           (setf (stmt-operands next)
                 (if (equalp "2.0.0" (lisp-implementation-version))
-                      `(,(larger-of size1 size2) ,dst2 ,(logior src1 src2))  ; 2.0.0
-                  `(,(encode-size-prefix (larger-of size1 size2)) ,dst2 ,(logior src1 src2))))  ; 2.1.8
+                      `(,(larger-of size1 size2) ,dst2 ,(sb-vm::constantize (logior src11 src22)))  ; 2.0.0
+                  `(,(encode-size-prefix (larger-of size1 size2)) ,dst2 ,(sb-vm::constantize (logior src11 src22)))))  ; 2.1.8
           (add-stmt-labels next (stmt-labels stmt))
           (delete-stmt stmt)
           next)))))
-)
+
+;;; "OR r, imm1" + "OR r, imm2" -> "OR r, (imm1 | imm2)"
+;;; OR sets the flags according to the result value so combining
+;;; several OR instructions should be ok.
+(defpattern "or + or -> or (signed-byte 32)" ((or) (or)) (stmt next)
+  (binding* (((size1 dst1 src1) (parse-2-operands stmt))
+             ((size2 dst2 src2) (parse-2-operands next)))
+    (flet ((larger-of (size1 size2)
+             (if (or (eq size1 :qword) (eq size2 :qword)) :qword :dword)))
+      (when (and (gpr-tn-p dst1)
+                 (location= dst2 dst1)
+                 (member size1 '(:qword :dword))
+                 (typep src1 '(signed-byte 32))
+                 (member size2 '(:dword :qword))
+                 (typep src2 '(signed-byte 32)))
+        (setf (stmt-operands next)
+              (if (equalp "2.0.0" (lisp-implementation-version))
+                    `(,(larger-of size1 size2) ,dst2 ,(logior src1 src2))  ; 2.0.0
+                `(,(encode-size-prefix (larger-of size1 size2)) ,dst2 ,(logior src1 src2))))  ; 2.1.8
+        (add-stmt-labels next (stmt-labels stmt))
+        (delete-stmt stmt)
+        next))))
+
+) ; end progn
+) ; end when
+) ; end eval-when
 
 (in-package "CL-USER")
 
@@ -294,7 +348,9 @@ according to the historical data in +results+."
     (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
-(let* ((passes 0)
+
+(let* ((ignored (sleep 5)) ; sleep for 5 seconds to let CPU cool down
+       (passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
