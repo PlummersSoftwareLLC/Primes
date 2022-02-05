@@ -58,6 +58,18 @@ public class PrimeSieveJava {
 		}
 	}
 
+	public void run() {
+		//int q = (int) Math.ceil(Math.sqrt(n));
+		int q = sqrtN;
+		for (int p = 3; p < q; p += 2) {
+			if (!sieveArray[p >> 1]) {
+				for (int i = (p * p) >> 1; i < n >> 1; i += p) {
+					sieveArray[i] = true;
+				}
+			}
+		}
+	}
+
 	public void runBitSet(int q) {
 		for (int p = 3; p < q; p += 2) {
 			if (sieveSet.get(p >> 1)) {
@@ -106,7 +118,8 @@ public class PrimeSieveJava {
 			} else {
 				while ((System.currentTimeMillis() - start) < warmupTime) {
 					sieve = new PrimeSieveJava(limit, variant);
-					sieve.runArray(sieve.sqrtN);
+					//sieve.runArray(sieve.sqrtN);
+					sieve.run();
 				}
 			}
 		}
@@ -122,7 +135,8 @@ public class PrimeSieveJava {
 		} else {
 			while ((System.currentTimeMillis() - start) < runTime) {
 				sieve = new PrimeSieveJava(limit, variant);
-				sieve.runArray(sieve.sqrtN);
+				//sieve.runArray(sieve.sqrtN);
+				sieve.run();
 				passes++;
 			}
 		}
