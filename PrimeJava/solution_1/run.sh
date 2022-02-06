@@ -1,5 +1,4 @@
 #!/bin/bash
 
-javac PrimeSieveJava.java
 java PrimeSieveJava -warmup
-java PrimeSieveJava -variant bitset -warmup
+numactl --cpunodebind=0 --membind=0 java PrimeSieveJava -variant bitset -warmup || java PrimeSieveJava -variant bitset -warmup
