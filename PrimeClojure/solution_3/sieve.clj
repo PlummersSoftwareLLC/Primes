@@ -1,6 +1,5 @@
 (ns sieve
   "Clojure implementations of The Sieve of Eratosthenes by Peter Strömberg (a.k.a. PEZ)"
-  (:require [criterium.core :refer [bench quick-bench with-progress-reporting]])
   (:import [java.time Instant Duration]))
 
 ;; Disable overflow checks on mathematical ops and warn when compiler is unable
@@ -58,7 +57,8 @@
   (loot (sieve 1))
   (loot (sieve 10))
   (loot (sieve 100))
-  (time (count (loot (sieve 1000000))))
+  (time (count (loot (sieve 1000000))))'
+  (require '[criterium.core :refer [bench quick-bench with-progress-reporting]])
   (with-progress-reporting (quick-bench (sieve 1000000))))
 
 (set! *unchecked-math* true)
@@ -96,7 +96,6 @@
   (count (loot (sieve-ba 1000)))
   (count (loot (sieve-ba 1000000)))
   (with-progress-reporting (quick-bench (sieve-ba 1000000)))
-  (with-progress-reporting (bench (sieve-ba 1000000)))
   (time (do (sieve-ba 1000000) nil)))
 
 (defn sieve-bs
@@ -114,8 +113,8 @@
             (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
               (when (< i half-n)
                 (.clear primes (unchecked-int i))
-                (recur (unchecked-add-int i p)))))
-          (recur (unchecked-add-int p 2))))
+                (recur (unchecked-add i p)))))
+          (recur (unchecked-add p 2))))
       primes)))
 
 (defn sieve-bs-shroedinger
