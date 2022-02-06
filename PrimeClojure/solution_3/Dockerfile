@@ -1,4 +1,4 @@
-FROM clojure:openjdk-8-tools-deps-bullseye
+FROM clojure:openjdk-18-tools-deps-bullseye
 
 WORKDIR /primes
 

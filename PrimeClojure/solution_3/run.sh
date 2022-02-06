@@ -6,11 +6,11 @@ do
   #echo $i
   clojure -X sieve/run :variant :vector :warm-up? false
   clojure -X sieve/run :variant :vector-transient :warm-up? false
-  numactl numactl --cpunodebind=0 --membind=0 clojure -X sieve/run :variant :bitset :warm-up? true || clojure -X sieve/run :variant :bitset :warm-up? true
+  numactl --cpunodebind=0 --membind=0 clojure -X sieve/run :variant :bitset :warm-up? true || clojure -X sieve/run :variant :bitset :warm-up? true
   #clojure -X sieve/run :variant :bitset-shroedinger :warm-up? true
   #clojure -X sieve/run :variant :bitset-all :warm-up? false
   #clojure -X sieve/run :variant :bitset-pre :warm-up? false
-  clojure -X sieve/run :variant :boolean-array :warm-up? true
+  numactl --cpunodebind=0 --membind=0 clojure -X sieve/run :variant :boolean-array :warm-up? true || clojure -X sieve/run :variant :boolean-array :warm-up? true
   #clojure -X sieve/run :variant :boolean-array-all :warm-up? false
   #clojure -X sieve/run :variant :boolean-array-pre :warm-up? false
   #clojure -X sieve/run :variant :boolean-array-pre-futures :warm-up? false
