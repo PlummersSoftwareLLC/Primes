@@ -1,9 +1,9 @@
 #!/bin/bash
 
-RUNS=$(if [ -z "$1" ]; then echo 1; else echo $1; fi)
+RUNS=$(if [ -z "$1" ]; then echo 1; else echo "$1"; fi)
 for ((i = 0; i < RUNS; i++))
 do
-  echo $i
+  #echo $i
   java -XX:+UseNUMA PrimeSieveJava -warmup
-  java -XX:+UseNUMA PrimeSieveJava -variant bitset -warmup || java PrimeSieveJava -variant bitset -warmup
+  java -XX:+UseNUMA PrimeSieveJava -variant bitset -warmup
 done
