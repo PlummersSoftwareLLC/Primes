@@ -1,8 +1,6 @@
-FROM openjdk:8-bullseye
+FROM openjdk:8
 
 WORKDIR /opt/app
-
-RUN apt-get update -y && apt-get install -y numactl
 
 COPY PrimeSieveJava.java run.sh ./
 
