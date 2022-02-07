@@ -1,9 +1,8 @@
-FROM clojure:openjdk-18-tools-deps-bullseye
+FROM clojure:openjdk-18-tools-deps
 
 WORKDIR /primes
 
-RUN apt-get update -y && apt-get install -y numactl
-
 COPY deps.edn sieve.clj run.sh ./
+RUN mkdir classes && clojure -M -e "(compile 'sieve)" && clojure -M:uberjar --main-class sieve
 
 ENTRYPOINT ["./run.sh"]
