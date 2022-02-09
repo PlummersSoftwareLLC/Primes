@@ -26,15 +26,25 @@ The other implementations either start with all numbers, even and odd, or use so
 The runner infrastructure is built from Alex Vear's [Clojure Solution 2](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeClojure/solution_2).
 
 1. Install a JDK.
-2. Install the [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
-3. Run with `clojure -X sieve/run :warm-up? true`
+1. Install the [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
+1. Run with `clojure -X sieve/run :variant :boolean-array ':warm-up?' true`
 
 The warm-up makes the runner start with a silent run, before running one that is reported, giving slightly more consistent results. (But, really, you should use [Criterium](https://github.com/hugoduncan/criterium) for benchmarking while developing, see below.)
 
-Running the four ”main” solutions via Docker:
+You can also build an executable jar and run that:
+
+1. clojure -T:build uber
+1. java -jar target/primes.jar '{:variant :boolean-array :warm-up? true}'
+
+To run the four ”main” solutions:
 
 ```sh
-$ docker pull clojure:openjdk-18-tools-deps-1.10.3.1040
+./build.sh && ./run.sh
+```
+
+Using Docker:
+
+```sh
 $ docker build -t pez-primes-clojure .
 $ docker run --rm -it pez-primes-clojure
 ```
@@ -61,7 +71,7 @@ If you have experience with Clojure: It's just a regular tools/deps project. Sta
 If not, I suggest using [Calva](https://calva.io) (yes, partly because I created it 😄):
 
 1. Open the project root in in VS Code.
-1. Open `sieve.clj`
+1. Open `src/sieve.clj`
 1. Issue the command **Calva: Start a Clojure REPL in your Project and Connect (aka Jack-in)**
 1. When the REPL has started, issue **Calva: Load current file and its dependencies**
 

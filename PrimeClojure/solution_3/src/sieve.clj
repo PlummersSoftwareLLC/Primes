@@ -1,7 +1,8 @@
 (ns sieve
   "Clojure implementations of The Sieve of Eratosthenes by Peter Strömberg (a.k.a. PEZ)"
-  (:require [criterium.core :refer [bench quick-bench with-progress-reporting]])
-  (:import [java.time Instant Duration]))
+  (:require [clojure.edn])
+  (:import [java.time Instant Duration])
+  (:gen-class))
 
 ;; Disable overflow checks on mathematical ops and warn when compiler is unable
 ;; to optimise correctly.
@@ -58,7 +59,8 @@
   (loot (sieve 1))
   (loot (sieve 10))
   (loot (sieve 100))
-  (time (count (loot (sieve 1000000))))
+  (time (count (loot (sieve 1000000))))'
+  (require '[criterium.core :refer [bench quick-bench with-progress-reporting]])
   (with-progress-reporting (quick-bench (sieve 1000000))))
 
 (set! *unchecked-math* true)
@@ -96,7 +98,6 @@
   (count (loot (sieve-ba 1000)))
   (count (loot (sieve-ba 1000000)))
   (with-progress-reporting (quick-bench (sieve-ba 1000000)))
-  (with-progress-reporting (bench (sieve-ba 1000000)))
   (time (do (sieve-ba 1000000) nil)))
 
 (defn sieve-bs
@@ -105,17 +106,17 @@
   [^long n]
   (if (< n 2)
     (java.util.BitSet. 0)
-    (let [half-n (int (bit-shift-right n 1))
-          primes (doto (java.util.BitSet. n) (.set 0 half-n))
-          sqrt-n (long (Math/ceil (Math/sqrt (double n))))]
+    (let [sqrt-n (unchecked-long (Math/ceil (Math/sqrt (double n))))
+          half-n (unchecked-int (bit-shift-right n 1))
+          primes (doto (java.util.BitSet. half-n) (.set (unchecked-int 0) half-n))]
       (loop [p 3]
         (when (< p sqrt-n)
-          (when (.get primes (unchecked-int (bit-shift-right p (unchecked-int 1))))
-            (loop [i (bit-shift-right (unchecked-multiply p p) 1)]
+          (when (.get primes (unchecked-int (bit-shift-right p 1)))
+            (loop [i (bit-shift-right (* p p) 1)]
               (when (< i half-n)
                 (.clear primes (unchecked-int i))
-                (recur (unchecked-add-int i p)))))
-          (recur (unchecked-add-int p 2))))
+                (recur (+ i p)))))
+          (recur (+ p 2))))
       primes)))
 
 (defn sieve-bs-shroedinger
@@ -542,6 +543,9 @@
       ;; Warm-up reduces the variability of results.
       (format-results (merge conf (benchmark sieve) {:variant variant})))
     (println (format-results (merge conf (benchmark sieve) {:variant variant})))))
+
+(defn -main [& args]
+  (run (clojure.edn/read-string (first args))))
 
 (comment
   (run {:warm-up? true})
