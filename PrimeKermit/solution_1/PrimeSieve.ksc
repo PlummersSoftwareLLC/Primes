@@ -33,6 +33,6 @@ def \%i 0
 assign \%f \Fevaluate(\v(ntime)-\%s)
 
 ### print final array ###
-echo q3w3e3;1;\%f;algorithm=base,faithful=no
+echo q3w3e3;1;\%f;1;algorithm=base,faithful=no
 
 exit

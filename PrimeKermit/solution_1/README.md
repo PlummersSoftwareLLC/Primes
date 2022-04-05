@@ -1,9 +1,9 @@
+# CKermit solution by q3w3e3
+
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
-
-# CKermit solution by q3w3e3
 
 A naive implementation of a prime sieve in CKermit
 
@@ -13,4 +13,4 @@ run `kermit + PrimeSieve.ksc 1000000` in a linux env with kermit installed, or j
 
 ## Output
 
-```q3w3e3;1;75;algorithm=base,faithful=no```
+`q3w3e3;1;75;1;algorithm=base,faithful=no`
