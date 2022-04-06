@@ -5,7 +5,7 @@ const (
 	sieve_size          = 1_000_000
 	q                   = math.sqrt(sieve_size)
 	all_bits_true_array = []bool{len: sieve_size, init: true}
-	dictionary          = map{
+	dictionary          = {
 		'10':          4
 		'100':         25
 		'1000':        168
