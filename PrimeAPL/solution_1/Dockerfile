@@ -1,4 +1,4 @@
-FROM dyalog/dyalog:18.0
+FROM dyalog/dyalog:18.2
 
 WORKDIR /app
 
