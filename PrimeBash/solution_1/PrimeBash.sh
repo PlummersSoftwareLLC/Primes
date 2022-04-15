@@ -148,7 +148,7 @@ function main {
 	# we are working in nanoseconds (10^9)
 	tStart=$(date +%s%N)
 
-	while kill -0 "$sleepPid" 2>&3; do
+	while [[ -d /proc/$sleepPid ]]; do
 		emptyBitArray
 		runSieve
 		((++passes))
