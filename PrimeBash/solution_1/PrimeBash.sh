@@ -24,8 +24,7 @@ readonly RUNTIME_SEC=5
 
 function sqrt {
 	# integer square root using binary search (lilweege)
-	local -n ans=$1 # Output
-	ans=0
+	local -n lo=$1 # Output
 	lo=1
 	hi=$2
 	mid=0
@@ -33,11 +32,11 @@ function sqrt {
 		((mid=(lo+hi)/2))
 		if [[ $((mid*mid)) -le $2 ]]; then
 			((lo=mid+1))
-			((ans=mid))
 		else
 			((hi=mid-1))
 		fi
 	done
+	((--lo))
 }
 
 function initGlobals {
