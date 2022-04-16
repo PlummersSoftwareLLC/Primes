@@ -31,7 +31,7 @@ function sqrt {
 	mid=0
 	while ((lo<=hi)); do
 		((mid=(lo+hi)/2))
-		if [ $((mid*mid)) -le $2 ]; then
+		if [[ $((mid*mid)) -le $2 ]]; then
 			((lo=mid+1))
 			((ans=mid))
 		else
