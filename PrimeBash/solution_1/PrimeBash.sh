@@ -23,12 +23,20 @@ declare -A bitArray=()
 readonly RUNTIME_SEC=5
 
 function sqrt {
-	local -n i=$1 # Output
-	i=1
-	while ((i**2<=$2)); do
-		((++i))
+	# integer square root using binary search (lilweege)
+	local -n lo=$1 # Output
+	lo=1
+	hi=$2
+	mid=0
+	while ((lo<=hi)); do
+		((mid=(lo+hi)/2))
+		if [[ $((mid*mid)) -le $2 ]]; then
+			((lo=mid+1))
+		else
+			((hi=mid-1))
+		fi
 	done
-	((--i))
+	((--lo))
 }
 
 function initGlobals {
