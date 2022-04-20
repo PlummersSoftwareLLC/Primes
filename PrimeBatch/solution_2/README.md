@@ -61,10 +61,9 @@ We needed to create nearly 500,000 files (~80K primes, and ~400K for composites)
 The best place to store all these files is a nice pristine file system, like a freshly created and formatted VHD!
 
 We benchmarked formatting the VHD as NTFS, exFAT, FAT32, and FAT.
-exFAT defaults to a 32KB cluster, but I formatted with a 4KB cluster. exFAT was incredibly slow.
-FAT16 defaults to a 32KB cluster, and required a ~5GB VHD.
-FAT32 defaults to a 4KB cluster, was faster than NTFS, but has a limit of 65536 files per folder.
-NTFS  defaults to a 4KB cluster, can handle large numbers of files in folders, and the VHD needs to be only 768MB, which takes just a couple seconds to create and format.
-NTFS wins.
+-exFAT defaults to a 32KB cluster, but I formatted with a 4KB cluster. exFAT was incredibly slow.
+-FAT16 defaults to a 32KB cluster, and required a ~5GB VHD.
+-FAT32 defaults to a 4KB cluster, was faster than NTFS, but has a limit of 65536 files per folder.
+-NTFS  defaults to a 4KB cluster, can handle large numbers of files in folders, and the VHD needs to be only 768MB, which takes just a couple seconds to create and format. NTFS wins
 
 For fun, we created a 1GB RAMDisk to store the files. As expected, we got a performance bump, but we didn't think this was completely faithful to the challenge.
