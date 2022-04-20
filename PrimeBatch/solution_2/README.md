@@ -39,12 +39,11 @@ PrimeFiles;1;201.720;1;algorithm=base,faithful=yes,bits=unknown
 This output was obtained from a sieve of 1,000,000 natively on Windows 10.
 
 Machine specifications for completeness:
-
+```
 Intel Core i7-3770 CPU @ 3.40GHz
 16 GB RAM
 Samsung SSD 830 (250GB) on SATA2
-
-
+```
 This implementation uses all the tricks we could think of to squeeze every ounce of performance out of the code.
 
 I tried using environment variables in various ways, but the shell just couldn't handle it, so I moved to disk, which was much faster without the certain environment limitations.
