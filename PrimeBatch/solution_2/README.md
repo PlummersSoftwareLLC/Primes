@@ -32,8 +32,8 @@ primeFiles.cmd nmax=1000000 vhd=y
 :GETSQRT
 :SIEVE
 :COUNTPRIMES
-PRIMECOUNT=78498
 :DELETEVDISK
+PRIMECOUNT=78498
 PrimeFiles;1;201.720;1;algorithm=base,faithful=yes,bits=unknown
 ```
 This output was obtained from a sieve of 1,000,000 natively on Windows 10.
