@@ -6,19 +6,21 @@
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 A Windows Batch file implementation of the prime sieve.
+
 IMPORTANT NOTE: Because this implementation is file-based, disabling Anti-Virus, Windows Search, etc., will likely improve performance.
 
 ## Run instructions
 
 Place the CMD on a disk/volume with at least 1GB of free space.
+
 If you're going to use a VHD, contiguous free space will be helpful. The VHD file is created next to the CMD.
 
-PrimeFiles NMAX=1000000 VHD=Y
+`PrimeFiles NMAX=1000000 VHD=Y`
 
 This will create a VHD, use the VHD for all its working files, then tear down and delete the VHD when done.
 
 ## Output
-
+```
 primeFiles.cmd nmax=1000000 vhd=y
 
 :GETARGS
@@ -33,7 +35,7 @@ primeFiles.cmd nmax=1000000 vhd=y
 PRIMECOUNT=78498
 :DELETEVDISK
 PrimeFiles;1;201.720;1;algorithm=base,faithful=yes,bits=unknown
-
+```
 This output was obtained from a sieve of 1,000,000 natively on Windows 10.
 
 Machine specifications for completeness:
