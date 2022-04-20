@@ -5,17 +5,43 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-*Give a short description of your implementation*
+A Windows Batch file implementation of the prime sieve.
+IMPORTANT NOTE: Because this implementation is file-based, disabling Anti-Virus, Windows Search, etc., will likely improve performance.
 
 ## Run instructions
 
-*Describe how to run your application here. If build steps are required to make the solution runnable, include those too.*
+Place the CMD on a disk/volume with at least 1GB of free space.
+If you're going to use a VHD, contiguous free space will be helpful. The VHD file is created next to the CMD.
+
+PrimeFiles NMAX=1000000 VHD=Y
+
+This will create a VHD, use the VHD for all its working files, then tear down and delete the VHD when done.
 
 ## Output
 
-*Show the output you got on your machine(s) here, in code blocks*
+primeFiles.cmd nmax=1000000 vhd=y
 
-A Windows Batch file implementation of the prime sieve.
+:GETARGS
+:DELETEVDISK
+:CREATEVDISK
+:FINDVHDDRIV
+:CREATEFOLDERS
+:DELETEFILES
+:GETSQRT
+:SIEVE
+:COUNTPRIMES
+PRIMECOUNT=78498
+:DELETEVDISK
+PrimeFiles;1;201.720;1;algorithm=base,faithful=yes,bits=unknown
+
+This output was obtained from a sieve of 1,000,000 natively on Windows 10.
+
+Machine specifications for completeness:
+
+Intel Core i7-3770 CPU @ 3.40GHz
+16 GB RAM
+Samsung SSD 830 (250GB) on SATA2
+
 
 This implementation uses all the tricks we could think of to squeeze every ounce of performance out of the code.
 
@@ -41,34 +67,3 @@ NTFS  defaults to a 4KB cluster, can handle large numbers of files in folders, a
 NTFS wins.
 
 For fun, we created a 1GB RAMDisk to store the files. As expected, we got a performance bump, but we didn't think this was completely faithful to the challenge.
-
-Instructions
-Place the CMD on a disk/volume with at least 1GB of free space.
-If you're going to use a VHD, contiguous free space will be helpful. The VHD file is created next to the CMD.
-
-PrimeFiles NMAX=1000000 VHD=Y
-
-This will create a VHD, use the VHD for all its working files, then tear down and delete the VHD when done.
-
-primeFiles.cmd nmax=1000000 vhd=y
-
-:GETARGS
-:DELETEVDISK
-:CREATEVDISK
-:FINDVHDDRIV
-:CREATEFOLDERS
-:DELETEFILES
-:GETSQRT
-:SIEVE
-:COUNTPRIMES
-PRIMECOUNT=78498
-:DELETEVDISK
-PrimeFiles;1;201.720;1;algorithm=base,faithful=yes,bits=unknown
-
-This output was obtained from a sieve of 1,000,000 natively on Windows 10.
-
-Machine specifications for completeness:
-
-Intel Core i7-3770 CPU @ 3.40GHz
-16 GB RAM
-Samsung SSD 830 (250GB) on SATA2
