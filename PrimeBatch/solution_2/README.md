@@ -1,9 +1,8 @@
 # Batch solution by bt2585
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 A Windows Batch file implementation of the prime sieve.
 
@@ -34,7 +33,7 @@ primeFiles.cmd nmax=1000000 vhd=y
 :COUNTPRIMES
 :DELETEVDISK
 PRIMECOUNT=78498
-PrimeFiles;1;201.720;1;algorithm=base,faithful=yes,bits=unknown
+PrimeFiles;1;201.720;1;algorithm=base,faithful=no
 ```
 This output was obtained from a sieve of 1,000,000 natively on Windows 10.
 
