@@ -22,15 +22,14 @@ REM CALL :ENUMPRIMES
 CALL :COUNTPRIMES
 REM CALL :DELETEVARS
 CALL :GETELAPSED BEGSECONDSTOTAL
-ECHO PrimeFiles-bt2585;1;!WHOLES!.!MILLIS!;1;algorithm=base,faithful=yes,bits=unknown
+ECHO PrimeFiles-bt2585;1;!WHOLES!.!MILLIS!;1;algorithm=base,faithful=no
 GOTO :END
 
 :SIEVE
    CALL :GETTIMEINFRACSECONDS BEGSECONDS
    ECHO %0
    SET COMPCOUNT=0
-   FOR /L %%L IN (9,6,!NMAX!) DO SET %%L=~
-   FOR /L %%L IN (5,2,!SQRT!) DO (
+   FOR /L %%L IN (3,2,!SQRT!) DO (
       SET /P _DUMMY=%%L <NUL
       IF NOT DEFINED %%L (
          SET /A START=%%L * %%L
