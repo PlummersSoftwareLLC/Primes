@@ -41,7 +41,7 @@ IF /I "!VHD!" EQU "Y" (
    CALL :DELETEFILES
    )
 CALL :GETELAPSED BEGSECONDSTOTAL
-ECHO PrimeFiles-bt2585;1;!WHOLES!.!MILLIS!;1;algorithm=base,faithful=yes,bits=unknown
+ECHO PrimeFiles-bt2585;1;!WHOLES!.!MILLIS!;1;algorithm=base,faithful=no
 GOTO :END
 
 :SIEVE
