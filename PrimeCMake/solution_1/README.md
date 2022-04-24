@@ -1,4 +1,4 @@
-# Implementation in R
+# Implementation in CMake
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
