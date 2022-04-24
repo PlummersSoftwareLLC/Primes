@@ -1,11 +1,11 @@
 # Implementation in R
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-16-yellowgreen)
 
-This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in R. This implementation makes use of the reference class object oriented method that is available in R. This results in a solution that is closer to the rules defined in [CONTRIBUTING.md](../../CONTRIBUTING.md).
+This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in CMake. Note that this solution is not included in the automated benchmark runs. This is because the execution time of a sieve with limit 1,000,000 is prohibitively long.
 
 ## Bits per logical value
 
