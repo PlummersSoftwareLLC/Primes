@@ -3,19 +3,21 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-16-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) algorithm in CMake. Note that this solution is not included in the automated benchmark runs. This is because the execution time of a sieve with limit 1,000,000 is prohibitively long.
 
 ## Bits per logical value
 
-The CMake solution uses a list containing either 0/1 values.
-So 2 characters are used for each item: the value itself + its separator.
-Assuming CMake uses utf-8 to encode strings, each item has a size of 16 bits.
+This solution uses CMake variables to store primeness, the value is "1" for primes and "0" for non-primes. 
+The storage size is undetermined because the overhead for making this key access (fast) is unknown.
+The minimum required size for each key/value is at least key size + 1.
 
 ### Special findings and performance tweaks
 
-The CMake DSL is not really designed for mathematical operations + big array operations.
+Early versions used lists and/or strings to store the sieve.
+This incurred a lot of unnecessary copying + string look-up.
+This can be avoided by using plain cmake variables.
 
 ### Credits
 
@@ -35,13 +37,13 @@ cd path/to/sieve
 cmake -P primes.cmake
 ```
 
-By default, the algorithm benchmarks the number of primes up to 1,000.
+By default, the algorithm benchmarks the number of primes up to 1,000,000.
 The number of primes for sieve sizes can be calculated by passing `-DSIEVE_SIZE=xxx`.
 Make sure this argument goes *before* `-P primes.cmake`.
 
 ```bash
 cd path/to/sieve
-cmake -DSIEVE_SIZE=1000000 -P primes.cmake
+cmake -DSIEVE_SIZE=100  0 -P primes.cmake
 
 ```
 
@@ -67,9 +69,9 @@ To run with Docker take the following steps:
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-Passes: 44, Time: 5.079399, Avg: 0.115440 (sec/pass), Limit: 1000, Count: 168, Valid: true
+Passes: 1, Time: 20.169636, Avg: 20.169636 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-madebr_cmake;44;5.079399;1;algorithm=base,faithful=no,bits=16
+madebr_cmake;1;20.169636;1;algorithm=base,faithful=no,bits=unknown
 ```
 
 These results are with the following conditions:

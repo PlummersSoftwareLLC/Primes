@@ -1,3 +1,5 @@
+#!/usr/bin/cmake -P
+
 set(PRIMES_COUNT_REFERENCE
              10 4            # Historical data for validating our results - the number of primes
             100 25           # to be found under some limit, such as 168 primes under 1000
@@ -58,45 +60,42 @@ function(is_prime out sieve nb)
 endfunction()
 
 function(run_sieve result size)
-    string(REPEAT "1" ${size} sieve)
-    set(sieve "${sieve}1")
+    # Mark all uneven numbers >=3 as prime
+    set(i 3)
+    while(i LESS_EQUAL size)
+        set(sieve_${i} 1)
+        math(EXPR i "${i}+2")
+    endwhile()
+
     set(factor 3)
     sqrt(q ${size})
     while(factor LESS_EQUAL q)
-        #message("${factor} ${sieve}")
+
+        # Find next prime that is >=factor
         set(num ${factor})
         while(num LESS size)
-            string(SUBSTRING ${sieve} ${num} 1 sieve_num)
-            if(sieve_num)
+            if(sieve_${num})
                 set(factor ${num})
                 break()
             endif()
             math(EXPR num "${num}+2")
         endwhile()
 
-        math(EXPR num "${factor}*${factor}")
-        while(num LESS size)
-            #math(EXPR "prev_len" "${num}-1")
-            math(EXPR "next_idx" "${num}+1")
-            math(EXPR "next_len" "${size}-${num}-1")
-            string(SUBSTRING ${sieve} 0 ${num} prev_sieve)
-            string(SUBSTRING ${sieve} ${next_idx} ${next_len} next_sieve)
-            #message("prev_sieve 0 ${num} -> ${prev_sieve}")
-            #message("next_sieve ${next_idex} ${next_len} ${next_sieve}")
-            set(sieve ${prev_sieve}0${next_sieve})
-
-            #list(REMOVE_AT sieve ${num})
-            #list(INSERT sieve ${num} 0)
-            math(EXPR num "${num}+2*${factor}")
+        # Mark factor^2 + i * 2 * factor (i >= 0) as prime
+        math(EXPR num ${factor}*${factor})
+        math(EXPR step "2*${factor}")
+        while(num LESS_EQUAL size)
+            set(sieve_${num} 0)
+            math(EXPR num ${num}+${step})
         endwhile()
-        math(EXPR factor "${factor}+2")
+        math(EXPR factor ${factor}+2)
     endwhile()
 
+    # Count all primes from >= 3, assume 2 is a prime
     set(count 1)
     set(num 3)
-    while(num LESS size)
-        string(SUBSTRING ${sieve} ${num} 1 val)
-        if(val)
+    while(num LESS_EQUAL size)
+        if(sieve_${num})
             math(EXPR count "${count}+1")
         endif()
         math(EXPR num "${num}+2")
@@ -135,11 +134,11 @@ function(primes_drag_race size seconds)
 
     message("Passes: ${passes}, Time: ${duration}, Avg: ${average_duration} (sec/pass), Limit: ${size}, Count: ${count}, Valid: ${valid_str}")
     message("")
-    message("madebr_cmake;${passes};${duration};1;algorithm=base,faithful=no,bits=16")
+    message("madebr_cmake;${passes};${duration};1;algorithm=base,faithful=no,bits=unknown")
 endfunction()
 
 if(NOT DEFINED SIEVE_SIZE)
-    set(SIEVE_SIZE 1000)
+    set(SIEVE_SIZE 1000000)
 endif()
 
 if(NOT DEFINED DURATION)
