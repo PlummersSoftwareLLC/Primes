@@ -71,7 +71,7 @@ Below is an example of the output on my machine, running with Docker.
 ```bash
 Passes: 1, Time: 20.169636, Avg: 20.169636 (sec/pass), Limit: 1000000, Count: 78498, Valid: true
 
-madebr_cmake;1;20.169636;1;algorithm=base,faithful=no,bits=unknown
+madebr_cmake;1;20.169636;1;algorithm=base,faithful=no
 ```
 
 These results are with the following conditions:

@@ -134,7 +134,7 @@ function(primes_drag_race size seconds)
 
     message("Passes: ${passes}, Time: ${duration}, Avg: ${average_duration} (sec/pass), Limit: ${size}, Count: ${count}, Valid: ${valid_str}")
     message("")
-    message("madebr_cmake;${passes};${duration};1;algorithm=base,faithful=no,bits=unknown")
+    message("madebr_cmake;${passes};${duration};1;algorithm=base,faithful=no")
 endfunction()
 
 if(NOT DEFINED SIEVE_SIZE)
