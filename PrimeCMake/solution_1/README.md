@@ -9,7 +9,8 @@ This is an implementation of the [Sieve of Eratosthenes](https://en.wikipedia.or
 
 ## Bits per logical value
 
-The CMake solution uses a list containing either 0/1 values. So 2 characters are used for each item: the value itself + its separator.
+The CMake solution uses a list containing either 0/1 values.
+So 2 characters are used for each item: the value itself + its separator.
 Assuming CMake uses utf-8 to encode strings, each item has a size of 16 bits.
 
 ### Special findings and performance tweaks
@@ -24,11 +25,24 @@ The CMake DSL is not really designed for mathematical operations + big array ope
 
 ### Run native
 
-To run this solution you need "CMake". This program is available in most package managers of Linux distributions, or downloadable at https://cmake.org/download/. The script is designed to run in batch mode with `Rscript`.
+To run this solution you need "CMake".
+This program is available in most package managers of Linux distributions,
+or downloadable at https://cmake.org/download/.
+The script is designed to run in batch mode with `cmake -P`.
 
 ```bash
 cd path/to/sieve
 cmake -P primes.cmake
+```
+
+By default, the algorithm benchmarks the number of primes up to 1,000.
+The number of primes for sieve sizes can be calculated by passing `-DSIEVE_SIZE=xxx`.
+Make sure this argument goes *before* `-P primes.cmake`.
+
+```bash
+cd path/to/sieve
+cmake -DSIEVE_SIZE=1000000 -P primes.cmake
+
 ```
 
 ### Run with Docker
