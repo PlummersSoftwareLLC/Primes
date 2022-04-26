@@ -13,7 +13,7 @@ IMPORTANT NOTE: Because this implementation is file-based, disabling Anti-Virus,
 
 Place the CMD on a disk/volume with at least 1GB of free space.
 
-If you're going to use a VHD, contiguous free space will be helpful. The VHD file is created next to the CMD.
+If you're going to use a VHD, you MUST have elevated privileges. DISKPART required admin privileges. Contiguous free space will be helpful. The VHD file is created next to the CMD.
 
 `PrimeFiles NMAX=1000000 VHD=Y`
 
