@@ -24,7 +24,7 @@ You must have a working version of Dyalog APL installed. On Linux/UNIX, run `LOA
 	arcfideDfnBaseFaithful;2187;5.002;1;algorithm=base,faithful=yes,bits=1
 	arcfideClassFaithful;1423;5.002;1;algorithm=wheel,faithful=yes,bits=1
 
-## License
+## Terms and conditions for use of Dyalog
 
 Dyalog is free for non-commercial use and for limited commercial use, but is not free software. You may create public docker images which include Dyalog APL in addition to your own work, if you observe the following conditions:
 
