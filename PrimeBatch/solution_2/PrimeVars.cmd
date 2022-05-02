@@ -100,7 +100,7 @@ GOTO :END
    SET OUTVARNAME=%1
    SET T=!T::0=:!
    SET T=!T:.0=.!
-   FOR /F "TOKENS=1-4 DELIMS=:." %%W IN ("!T!") DO (
+   FOR /F "TOKENS=1-4 DELIMS=:.," %%W IN ("!T!") DO (
       SET /A %1=%%W * 360000 + %%X * 6000 + %%Y * 100 + %%Z
       )
    GOTO :EOF
