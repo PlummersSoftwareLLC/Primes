@@ -67,7 +67,7 @@ class PrimeSieve
     public function printResults(): void
     {
         for ($i = 1; $i < $this->sieveSize; $i++) {
-            if ($i % 2 && $this->rawbits[(int)($i * 0.5)] === null) {
+            if ($i % 2 && $this->rawbits[(int)($i * 0.5)] == '0') {
                 echo $i . ", ";
             }
         }
