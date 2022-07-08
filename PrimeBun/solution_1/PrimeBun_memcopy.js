@@ -28,14 +28,14 @@ class bitArray
     constructor(size)
     {
         this.wordSize = 1 + (size >>> 5);
-        const buffer = Buffer.allocUnsafe(this.wordSize * 4).fill(0);   // buffer with allocUnsafe slightly faster
+        const buffer = Buffer.allocUnsafe(this.wordSize * 4).fill(0);  // buffer with allocUnsafe slightly faster
         this.wordArray = new Int32Array(buffer);
     }
 
     setBitTrue(index)
     {
-        const wordOffset = index >>> 5;                                 // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
-        const bitOffset = index & 31;                                  // use & (and) for remainder, faster than modulus of /32
+        const wordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
+        const bitOffset = index & 31;  // use & (and) for remainder, faster than modulus of /32
         this.wordArray[wordOffset] |= (1 << bitOffset);
     }
 
@@ -43,18 +43,18 @@ class bitArray
     {
         const wordOffset = index >>> 5;
         const bitOffset = index & 31;
-        return this.wordArray[wordOffset] & (1 << bitOffset);           // returning result not as bool for performance
+        return this.wordArray[wordOffset] & (1 << bitOffset);  // returning result not as bool for performance
     }
 
     searchBitFalse(index)
     {
-        while (this.testBitTrue(index)) { index++ };                    // will stop automatically because bits were 0 filled
+        while (this.testBitTrue(index)) { index++ };  // will stop automatically because bits were 0 filled
         return index;
     }
 
     copyBlocks(blocksize_bits, range)
     {
-        const blocksize_word = blocksize_bits >>> 5;                    // should be a multiple of 32, so no remainder
+        const blocksize_word = blocksize_bits >>> 5;  // should be a multiple of 32, so no remainder
         const range_in_word = range >>> 5;
 
         for (let blockpart = 0; blockpart < blocksize_word; blockpart++)
