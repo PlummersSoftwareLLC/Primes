@@ -12,17 +12,15 @@ return function(ARENA, TIME)
     while (clock()-begin) <= TIME do
 
                 for k = 3, PRIME_LEN, 2 do
-            if ARENA[ rshift( k , 1) ]  == 0 then
+            if ARENA[ k ]  == null then
                 local v = k--_i32(k)
                 local vk = v*2
-                for x = (k*k), SIZE, k*6 do
+                for x = (k*k), SIZE, k*2 do
 
                     
 
                     
-		ARENA[ rshift( x , 1) ] = 1;
-		ARENA[ rshift( x + vk , 1) ] = 1;
-		ARENA[ rshift( x + vk + vk , 1) ] = 1;
+		ARENA[ x ] = 1;
 
                 end
             end

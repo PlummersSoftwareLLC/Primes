@@ -18,9 +18,16 @@ function Sieve.New(o)
     self.Name = self.Name or "mooshua_luajit_untitled"
     self.Size = self.Size or 1000000
     self.Time = self.Time or 5
+    self.DeoptimizeHashtable = self.DeoptimizeHashtable or false
     self.ExperimentalUnroll = self.ExperimentalUnroll or false
 
-    self.Buffer = self.Buffer or ffi.new("uint8_t[?]", self.Size)
+    --  If using FFI variants, protect against memory exceptions by allocating an overrun zone.
+    local Overrun = 0
+    if (self.DeoptimizeHashtable) then
+        Overrun = math.sqrt(self.Size) * self.Unroll
+    end
+
+    self.Buffer = self.Buffer or ffi.new("uint8_t[?]", self.Size + Overrun)
 
     --  apply meta-fun
     return setmetatable(self, {__index = Sieve})
@@ -28,21 +35,27 @@ end
 
 function Sieve:Compile()
     
+    local Indexer = "rshift( %s , 1)"
+
+    if self.DeoptimizeHashtable then
+        Indexer = "%s"
+    end
+
     local Inner = ""
     if (self.ExperimentalUnroll) then
         for i = 1, math.floor(self.Unroll/2) do
             --if (i ~= math.floor(self.Unroll/2)+1) then
                 --prevent overlaps
-                Inner = Inner .. "\n\t\tARENA[ bit.rshift(x" .. string.rep(" + vk", i-1) ..",1) ] = 1;"
+                Inner = Inner .. "\n\t\tARENA[ ".. string.format(Indexer, "x" .. string.rep(" + vk", i-1)).." ] = 1;"
             --end
             --alternate: start from half
-            Inner = Inner .. "\n\t\tARENA[ bit.rshift(xa" .. string.rep(" + vk", i-1) ..",1) ] = 1;"
+            Inner = Inner .. "\n\t\tARENA[ ".. string.format(Indexer, "xa" .. string.rep(" + vk", i-1)).." ] = 1;"
             
         end
     else
         for i = 1, self.Unroll do
             --if (i % 2 == 1) then
-                Inner = Inner .. "\n\t\tARENA[ bit.rshift(x" .. string.rep(" + vk", i-1) ..",1) ] = 1;"
+                Inner = Inner .. "\n\t\tARENA[ ".. string.format(Indexer, "x" .. string.rep(" + vk", i-1)).." ] = 1;"
             --else
                 --alternate: start from half
                 --Inner = Inner .. "\n\t\tARENA[ xa" .. string.rep(" + vk", i-1) .." ] = 1;"
@@ -64,7 +77,7 @@ function Sieve:Compile()
 
     local Outer = string.format([[
         for k = 3, PRIME_LEN, 2 do
-            if ARENA[bit.rshift(k,1)] %s then
+            if ARENA[ %s ] %s then
                 local v = k--_i32(k)
                 local vk = v*2
                 for x = (k*k), SIZE, k*%s do
@@ -76,7 +89,7 @@ function Sieve:Compile()
                 end
             end
         end
-    ]], Condition, self.Unroll*2, XA, Inner)
+    ]], string.format(Indexer, "k"), Condition, self.Unroll*2, XA, Inner)
 
     --[[
         local function _get(ARENA,idx)
@@ -101,15 +114,16 @@ end
     local Func = string.format([===[
 local bit = require "bit"
 local ffi = require "ffi"
+local rshift = bit.rshift
 local _i32 = ffi.typeof("int32_t")
-return function(ARENA)
+return function(ARENA, TIME)
     local SIZE = %s
     local PRIME_LEN = math.sqrt(SIZE)
     local clock = os.clock
     local begin = clock()
     local iter = 0
 
-    while (clock()-begin) <= %s do
+    while (clock()-begin) <= TIME do
 
         %s
 
@@ -118,7 +132,6 @@ return function(ARENA)
     return iter, clock()-begin
 end]===],
         self.Size,
-        self.Time,
         Outer
     )
 
@@ -145,6 +158,9 @@ function Sieve:Run()
     handle:close()
 
     local Func = require("compiled."..self.Name)
+
+    --  Warm-up the function
+    Func(self.Buffer, 0.01)
 
     --  Collect garbage before running, as not to get mangled by the GC
     --  If we run out of memory, we do it in style!
@@ -235,13 +251,13 @@ function Module:B()
 
     --  With optimizations disabled
     jit.opt.start(1)
-    Sieve.Execute { Name = "mooshua_luajit_slow_ffi"}
-    Sieve.Execute { Name = "mooshua_luajit_slow_hash", Buffer = {}, Bits=64 }
+    Sieve.Execute { Name = "mooshua_luajit_slow_ffi", DeoptimizeHashtable = true }
+    Sieve.Execute { Name = "mooshua_luajit_slow_hash", Buffer = {}, Bits=64, DeoptimizeHashtable = true }
 
     --  Turn the JIT off and repeat
     jit.off()
-    Sieve.Execute { Name = "mooshua_luajit_vm_ffi"}
-    Sieve.Execute { Name = "mooshua_luajit_vm_hash", Buffer = {}, Bits=64 }
+    Sieve.Execute { Name = "mooshua_luajit_vm_ffi", DeoptimizeHashtable = true }
+    Sieve.Execute { Name = "mooshua_luajit_vm_hash", Buffer = {}, Bits=64, DeoptimizeHashtable = true, }
 
     
 
