@@ -218,8 +218,8 @@ const main = (config) =>
 
         console.log(
             `Passes: ${totalPasses},`,
-            `Time: ${parseFloat(durationInSec).toFixed(2)},`,
-            `Avg: ${parseFloat(durationInSec / totalPasses).toFixed(8)} (sec/pass),`,
+            `Time: ${(durationInSec).toFixed(2)},`,
+            `Avg: ${(durationInSec / totalPasses).toFixed(8)} (sec/pass),`,
             `Sieve size: ${sieveSize},`,
             `Primes: ${sieveResult.countedPrimes},`,
             `Valid: ${validResult}`
