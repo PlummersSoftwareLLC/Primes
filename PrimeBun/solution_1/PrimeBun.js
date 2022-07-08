@@ -206,7 +206,7 @@ const main = (config) =>
             "\ndiefbell",  // label
             totalPasses.toString(),
             durationInSec.toString(),
-            "1",  // solution number
+            "1",  // threads
             "algorithm=base,faithful=yes,bits=1" // other info
         ];
         console.log(msg.join(";"))

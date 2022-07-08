@@ -293,7 +293,7 @@ const main = (config) =>
             "\ndiefbell_memcopy",  // label
             totalPasses.toString(),
             durationInSec.toString(),
-            "1",  // solution number
+            "1",  // threads
             "algorithm=other,faithful=yes,bits=1" // other info
         ];
         console.log(msg.join(";"))
