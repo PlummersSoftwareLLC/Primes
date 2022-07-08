@@ -37,7 +37,6 @@ return function(ARENA, TIME)
 		ARENA[ rshift( x + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk , 1) ] = 1;
 		ARENA[ rshift( x + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk + vk , 1) ] = 1;
 
-
                 end
             end
         end

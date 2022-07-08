@@ -24,23 +24,23 @@ Intel i9-9900 8-core 16-thread @ 3.10 GHz
 (lines prefixed with `--` were added for clarity and are not present in output)
 ```
 --  tuned run
-mooshua_luajit;8731;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit;8721;5.001;1;algorithm=base,faithful=no,bits=8
 --  run with different unroll factors
-mooshua_luajit_16;8579;5;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_8;8642;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_1;8631;5;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_16;8690;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_8;8616;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_1;8695;5;1;algorithm=base,faithful=no,bits=8
 --  run with experimental dependency unrolling
-mooshua_luajit_d_16;7717;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_d_8;7751;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_d_4;8015;5;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_d_16;7687;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_d_8;7722;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_d_4;7984;5.001;1;algorithm=base,faithful=no,bits=8
 --  run with luajit hashtable instead of ffi array
-mooshua_luajit_hash;4496;5.001;1;algorithm=base,faithful=no,bits=8
---  run with baseline JIT (no JIT optimizations)
-mooshua_luajit_slow_ffi;1701;5.003;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_slow_hash;962;5.001;1;algorithm=base,faithful=no,bits=64
+mooshua_luajit_hash;4537;5.001;1;algorithm=base,faithful=no,bits=8
+--  run with baseline JIT (no major JIT optimizations)
+mooshua_luajit_slow_ffi;2452;5.002;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_slow_hash;944;5.003;1;algorithm=base,faithful=no,bits=64
 --  run on interpreter
-mooshua_luajit_vm_ffi;125;5.021;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_vm_hash;312;5.012;1;algorithm=base,faithful=no,bits=64
+mooshua_luajit_vm_ffi;162;5.019;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_vm_hash;692;5.005;1;algorithm=base,faithful=no,bits=64
 ```
 
 Each level (_24, _16, etc.) is a different unroll level. The loop is manually unrolled for very small performance gains over LuaJIT's unroller.
