@@ -18,8 +18,16 @@ function Sieve.New(o)
     self.Name = self.Name or "mooshua_luajit_untitled"
     self.Size = self.Size or 1000000
     self.Time = self.Time or 5
+    self.DeoptimizeHashtable = self.DeoptimizeHashtable or false
+    self.ExperimentalUnroll = self.ExperimentalUnroll or false
 
-    self.Buffer = self.Buffer or ffi.new("bool[?]", self.Size + (math.sqrt(self.Size)*2*self.Unroll))
+    --  If using FFI variants, protect against memory exceptions by allocating an overrun zone.
+    local Overrun = 0
+    if (self.DeoptimizeHashtable) then
+        Overrun = math.sqrt(self.Size) * self.Unroll
+    end
+
+    self.Buffer = self.Buffer or ffi.new("uint8_t[?]", self.Size + Overrun)
 
     --  apply meta-fun
     return setmetatable(self, {__index = Sieve})
@@ -27,35 +35,95 @@ end
 
 function Sieve:Compile()
     
+    local Indexer = "rshift( %s , 1)"
+
+    if self.DeoptimizeHashtable then
+        Indexer = "%s"
+    end
+
     local Inner = ""
-    for i = 1, self.Unroll do
-        Inner = Inner .. "\n\t\tARENA[ x" .. string.rep(" + vk", i) .." ] = true;"
+    if (self.ExperimentalUnroll) then
+        for i = 1, math.floor(self.Unroll/2) do
+            --if (i ~= math.floor(self.Unroll/2)+1) then
+                --prevent overlaps
+                Inner = Inner .. "\n\t\tARENA[ ".. string.format(Indexer, "x" .. string.rep(" + vk", i-1)).." ] = 1;"
+            --end
+            --alternate: start from half
+            Inner = Inner .. "\n\t\tARENA[ ".. string.format(Indexer, "xa" .. string.rep(" + vk", i-1)).." ] = 1;"
+            
+        end
+    else
+        for i = 1, self.Unroll do
+            --if (i % 2 == 1) then
+                Inner = Inner .. "\n\t\tARENA[ ".. string.format(Indexer, "x" .. string.rep(" + vk", i-1)).." ] = 1;"
+            --else
+                --alternate: start from half
+                --Inner = Inner .. "\n\t\tARENA[ xa" .. string.rep(" + vk", i-1) .." ] = 1;"
+            --end
+        end
+    end
+
+    local Condition = " == 0"
+
+    if (type(self.Buffer) == "table") then
+        Condition = " == null"
+    end
+
+    local XA = ""
+
+    if (self.ExperimentalUnroll) then
+        XA = "local xa = x + (vk*"..(self.Unroll/2)..")"
     end
 
     local Outer = string.format([[
         for k = 3, PRIME_LEN, 2 do
-            if not ARENA[k] then
-                local v = k
+            if ARENA[ %s ] %s then
+                local v = k--_i32(k)
                 local vk = v*2
-                for x = (v*v)-vk, SIZE, vk*%s do
+                for x = (k*k), SIZE, k*%s do
+
+                    %s
 
                     %s
 
                 end
             end
         end
-    ]], self.Unroll, Inner)
+    ]], string.format(Indexer, "k"), Condition, self.Unroll*2, XA, Inner)
+
+    --[[
+        local function _get(ARENA,idx)
+    local n = bit.rshift(idx,1)
+    local shift = bit.band(n, 7)
+    local idx = bit.rshift(n, 4)
+
+    return bit.band(bit.rshift(ARENA[idx],shift), 1)
+end
+
+local function _set(ARENA, idx, value)
+    local n = bit.rshift(idx,1)
+    local shift = bit.band(n, 255)
+    local negate = bit.bnot(bit.lshift(1, shift))
+    local set = bit.lshift( bit.band(value,1), shift)
+    local idx = bit.rshift(n, 8)
+
+    ARENA[idx] = bit.bor( bit.band( ARENA[idx], negate ), set )
+end
+    ]]
 
     local Func = string.format([===[
+local bit = require "bit"
 local ffi = require "ffi"
-return function(ARENA)
+local rshift = bit.rshift
+local _i32 = ffi.typeof("int32_t")
+return function(ARENA, TIME)
     local SIZE = %s
     local PRIME_LEN = math.sqrt(SIZE)
     local clock = os.clock
     local begin = clock()
     local iter = 0
 
-    while (clock()-begin) <= %s do
+    while (clock()-begin) <= TIME do
 
         %s
 
@@ -64,7 +132,6 @@ return function(ARENA)
     return iter, clock()-begin
 end]===],
         self.Size,
-        self.Time,
         Outer
     )
 
@@ -76,11 +143,29 @@ end
 function Sieve:Run()
 
     self:Compile()
+--[[
+    local Comp, Err = loadstring(self.Code, self.Name)
+    if not Comp then
+        print(Err)
+    end
+    local Func = Comp()
+    ]]
 
-    local Func = loadstring(self.Code, self.Name)()
+    local handle = io.open("compiled/"..self.Name..".lua", "w")
+
+    handle:write(self.Code)
+
+    handle:close()
+
+    local Func = require("compiled."..self.Name)
+
+    --  Warm-up the function
+    Func(self.Buffer, 0.01)
+
     --  Collect garbage before running, as not to get mangled by the GC
     --  If we run out of memory, we do it in style!
     collectgarbage("collect")
+    collectgarbage("stop")
 
     local Rounds, Time = Func(self.Buffer, self.Time)
 
@@ -96,14 +181,14 @@ function Sieve:Dump()
     local dump = io.open("lj3_primes.txt", "w+")
 
     --  Weird condition: Even numbers are not handled by the sieve, but 2 is a prime, so we do this:
-    if (self.Buffer[1] == false) then
+    if (self.Buffer[1] == 0) then
         dump:write(tostring(1) .. ", ")
     end
-    if (self.Buffer[2] == false) then
+    if (self.Buffer[2] == 0) then
         dump:write(tostring(2) .. ", ")
     end
     for i = 3,1000000, 2 do
-        if (self.Buffer[i] == false) then
+        if (self.Buffer[(i-1)/2] == 0) or (self.Buffer[(i-1)/2] == nil) then
             dump:write(tostring(i) .. ", ")
         end
     end
@@ -135,48 +220,115 @@ end
 
 --  Once: Run a simple benchmark
 function Module:O()
-    Sieve.Execute{ Unroll = 16, Name = "mooshua_luajit"}
+    Sieve.Execute{ Unroll = 3, Name = "mooshua_luajit"}
 end
 
 --  Quickdump: Once + Dump
 function Module:Q()
-    Sieve.Execute{ Unroll = 5, Name = "mooshua_luajit"}:Dump()
+    Sieve.Execute{ Unroll = 6, Name = "mooshua_luajit"}:Dump()
+end
+
+function Module:N()
+    Sieve.Execute{ Unroll = 4, Name = "mooshua_luajit", Time = 0.1, ExperimentalUnroll = true}:Dump()
 end
 
 --  Benchmark: Run multiple benchmarks with different parameters
 function Module:B()
 
-    --  Compiler Tuning:
-    --  These have been found to slightly increase the performance of the JIT compiler for this workload
-    --  (about 5% on a good run)
-    --  Your mileage may vary
-    if ARGS[2] ~= "notune" then
-        jit.opt.start("hotloop=1")
-    end
-    
-    Sieve.Execute { Unroll = 24, Name = "mooshua_luajit_24"}
+    Sieve.Execute { Unroll = 3, Name = "mooshua_luajit"}
+
+
     Sieve.Execute { Unroll = 16, Name = "mooshua_luajit_16"}
     Sieve.Execute { Unroll = 8, Name = "mooshua_luajit_8"}
     Sieve.Execute { Unroll = 1, Name = "mooshua_luajit_1"}
+
+    Sieve.Execute { Unroll = 16, ExperimentalUnroll = true, Name = "mooshua_luajit_d_16"}
+    Sieve.Execute { Unroll = 8, ExperimentalUnroll = true, Name = "mooshua_luajit_d_8"}
+    Sieve.Execute { Unroll = 4, ExperimentalUnroll = true, Name = "mooshua_luajit_d_4"}
 
     --  Run a hashtable bench
     Sieve.Execute { Name = "mooshua_luajit_hash", Buffer = {} }
 
     --  With optimizations disabled
-    jit.opt.start(0)
-    Sieve.Execute { Name = "mooshua_luajit_slow_ffi"}
-    Sieve.Execute { Name = "mooshua_luajit_slow_hash", Buffer = {}, Bits=64 }
+    jit.opt.start(1)
+    Sieve.Execute { Name = "mooshua_luajit_slow_ffi", DeoptimizeHashtable = true }
+    Sieve.Execute { Name = "mooshua_luajit_slow_hash", Buffer = {}, Bits=64, DeoptimizeHashtable = true }
 
     --  Turn the JIT off and repeat
     jit.off()
-    Sieve.Execute { Name = "mooshua_luajit_vm_ffi"}
-    Sieve.Execute { Name = "mooshua_luajit_vm_hash", Buffer = {}, Bits=64 }
+    Sieve.Execute { Name = "mooshua_luajit_vm_ffi", DeoptimizeHashtable = true }
+    Sieve.Execute { Name = "mooshua_luajit_vm_hash", Buffer = {}, Bits=64, DeoptimizeHashtable = true, }
+
+    
+
+
+end
+
+-- Benchmark with different opt settings
+function Module:J()
+    
+    jit.on()
+
+    --[[jit.opt.start(1, "+narrow")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_narrow"}
+
+    jit.opt.start(1, "+fuse")
+    Sieve.Execute { Unroll=3, Name = "mooshua_lj_fuse" }
+
+    jit.opt.start(1, "+dse")
+    Sieve.Execute { Unroll=3, Name = "mooshua_lj_store" }
+
+    jit.opt.start(1, "+fwd")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_alias"}
+
+    jit.opt.start(1, "+sink")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_sink"}
+
+    jit.opt.start(1, "+abc")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_array"}
+
+    jit.opt.start(1, "+loop")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_loop"}]]
+
+
+    --  Now, inverse
+
+    jit.opt.start(3, "-fold")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_fold"}
+
+    jit.opt.start(3, "-cse")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_cse"}
+
+    jit.opt.start(3, "-dce")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_dce"}
+
+
+    jit.opt.start(3, "-narrow")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_narrow"}
+
+    jit.opt.start(3, "-fuse")
+    Sieve.Execute { Unroll=3, Name = "mooshua_lj_no_fuse" }
+
+    jit.opt.start(3, "-dse")
+    Sieve.Execute { Unroll=3, Name = "mooshua_lj_no_store" }
+
+    jit.opt.start(3, "-fwd")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_alias"}
+
+    jit.opt.start(3, "-sink")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_sink"}
+
+    jit.opt.start(3, "-abc")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_array"}
+
+    jit.opt.start(3, "-loop")
+    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_loop"}
 
 end
 
 --  Quickly dump a list of primes for testing
 function Module:D()
-    Sieve.Execute{ Unroll = 1, Name = "mooshua_lj_donotbench", Time = 0 }:Dump()
+    Sieve.Execute{ Unroll = 1, Name = "mooshua_lj_donotbench", Time = 0.1, Buffer = {} }:Dump()
 end
 
 --  =======================
@@ -201,6 +353,8 @@ if not ARGS[1] then
 
         q[uick] - Quickly benchmark for 5 seconds, and dump output as if testing.
 
+        j[itanalysis] - Benchmark with same parameters with different JIT opts on/off
+
         e[mit] - Emit lua code for a single benchmark, using arguments for values.
             [time: number] Time to run the benchmark for, in seconds.
             [unroll factor: number] The unroll factor for the code.
@@ -215,6 +369,6 @@ else
     if Module[mode] then
         Module[mode](Module)
     else
-        print("Error: Unknown option")
+        print("Error: Unknown option (no args = help message)")
     end
 end
