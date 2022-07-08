@@ -6,7 +6,8 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 <!-- ![Parallelism](https://img.shields.io/badge/Parallel-yes-green) -->
 
-Implementation in Bun, with a 32 bit integer array as buffer for the bit array.
+Implementation in Bun, with a 32 bit integer array as buffer for the bit array. See the Bun project at https://bun.sh
+
 This implementation essentially a refactored copy of the existing NodeJS implementation
 by Rogier van Dam (as of commit 61ab3fa9576fee399b8d4eac9af14e2e2d2c54fe),
 which was based on the logic from:

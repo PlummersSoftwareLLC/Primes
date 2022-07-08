@@ -6,7 +6,7 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 <!-- ![Parallelism](https://img.shields.io/badge/Parallel-yes-green) -->
 
-Implementation in Bun using TypeScript, with a 32 bit integer array as buffer for the bit array.
+Implementation in Bun using TypeScript, with a 32 bit integer array as buffer for the bit array. See the Bun project at https://bun.sh
 
 This solution tests the output of both Bun's in-built TypeScript transpiler and TypeScript's tsc compiler.
 
