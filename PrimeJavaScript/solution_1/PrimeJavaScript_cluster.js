@@ -1,17 +1,32 @@
 /*
-NodeJS implementation of Prime Sieve
+JavaScript implementation of Prime Sieve
 Based on:
-- previous implementation of NodeJS/solution_1 by Frank van Bakel
-- Python/solution_2 by ssovest
-- MyFirstPython Program (tm) Dave Plummer 8/9/2018
+previous implementation of NodeJS/solution_1 by Frank van Bakel
+Python/solution_2 by ssovest
+MyFirstPython Program (tm) Dave Plummer 8/9/2018
 
 Author:    Rogier van Dam
 Date:      2021-07-08
 */
 'use strict';
 
-// get performance API (for older node versions)
-const { performance }                                  = require('perf_hooks');
+// get performance API (for older node versions) and cluster api for multiprocessor
+const { performance } = require('perf_hooks');
+const cluster         = require('cluster');
+const os              = require('os');
+
+const runtimeParts = process.argv[0].split("/");
+const runtime = runtimeParts[runtimeParts.length - 1];
+
+let config = {
+    'verbose'           : false,
+    'timeLimitSeconds'  : 5,
+    'sieveSize'         : 1000000,
+    'maxShowPrimes'     : 100,
+
+    // automatically get # of threads from os, if intel assume hyperthreading
+    'workers'           : os.cpus().length / (os.cpus()[0].model.includes('Intel')?2:1)
+};
 
 // Historical data for validating our results - the number of primes
 // to be found under some limit, such as 168 primes under 1000
@@ -63,7 +78,7 @@ class PrimeSieve {
     }
 
     runSieve() {
-        const q = Math.ceil( Math.sqrt(this.oddsize) );                  // convert to integer with ceil
+        const q = Math.ceil( Math.sqrt(this.oddsize) );                 // convert to integer with ceil
 
         for (let factor = 1; factor <= q ; factor++ ) {
             if (!this.bitarray.testBitTrue(factor)) {
@@ -93,7 +108,7 @@ class PrimeSieve {
         for (let factor = 1; factor < this.oddsize; factor++ ) {
             if (count >= max) break;
             if (!this.bitarray.testBitTrue(factor)) {
-                count = primes.push( factor * 2 + 1 );
+              count = primes.push( factor * 2 + 1 );
             }
         }
         return primes;
@@ -128,26 +143,10 @@ function evalSieve(sieveSize, maxShowPrimes=100) {
     }
 }
 
-/*
-main procedure
-*/
-
-function main() {
-    // run once, without threads
-    let sieveSize        = 1000000;
-    let timeLimitSeconds = 5;
-    let verbose          = false;
-    let maxShowPrimes    = verbose ? 100 : 0;
-
-    //measure time running the batch
-    let timeStart        = performance.now();
-    let totalPasses      = runSieveBatch(sieveSize, timeLimitSeconds);
-    let timeEnd          = performance.now();
-    let durationInMs     = timeEnd - timeStart;
-    let durationInSec    = durationInMs / 1000;
+function printResult(sieveSize, nrOfPasses=0, durationInSec=0, verbose ) {
 
     // validate algorithm - run one final time on the result
-    let sieveResult = evalSieve(sieveSize);
+    let sieveResult = evalSieve(sieveSize, config['maxShowPrimes']);
     let validResult = false;
     if (sieveSize in knownPrimeCounts) {
         let knownPrimeCount = knownPrimeCounts[sieveSize];
@@ -157,15 +156,73 @@ function main() {
     else console.log(`Warning: cannot validate result of ${sieveResult['countedPrimes']} primes: limit ${sieveSize} is not in the known list of number of primes!`);
 
     if (validResult) {
-        console.log(`\nrogiervandam;${totalPasses};${durationInSec};1;algorithm=base,faithful=yes,bits=1`);
+        const res = [
+            `\nrogiervandam-cluster-${runtime}`,
+            nrOfPasses.toString(),
+            durationInSec.toString(),
+            config.workers.toString(),
+            "algorithm=base,faithful=yes,bits=1"
+        ];
+        console.log(res.join(";"));
     }
 
-    if (verbose) {
+    if (config['verbose']) {
         console.log(`\nThe first ${config['maxShowPrimes']} found primes are:`, sieveResult['primeArray']);
         console.log(`Passes: ${nrOfPasses}, Time: ${parseFloat(durationInSec).toFixed(2)},`,
-                    `Avg: ${parseFloat(durationInSec/nrOfPasses).toFixed(8)} (sec/pass),`,
+                    `Avg: ${parseFloat(durationInSec/nrOfPasses).toFixed(8)} (sec/pass), ${parseFloat(nrOfPasses/durationInSec).toFixed(2)} (pass/sec)`,
                     `Sieve size: ${sieveSize}, Primes: ${sieveResult['countedPrimes']}, Valid: ${validResult}`);
     }
+
 }
 
-main();
+
+function main(sieveSize, timeLimitSeconds=5, maxWorkers=1) {
+    let totalPasses = 0;
+
+    // fire off the helpers
+    let timeStart = performance.now();
+    for (let i=0; i < maxWorkers; i++) {
+        const worker = cluster.fork();
+        worker.send({ workerData: {
+            "sieveSize"         : sieveSize,
+            "timeLimitSeconds"  : timeLimitSeconds
+        }});
+        worker.on('message', result => {
+            totalPasses += result.nrOfPasses;
+        })
+    }
+
+    cluster.on('exit', (worker, code, signal) => {
+        let countRunning = Object.keys(cluster.workers).length;
+        if (countRunning == 0) {
+            let timeEnd       = performance.now();                      // time the last worker, not the first (to give fair results)
+            let durationInMs  = timeEnd - timeStart;
+            let durationInSec = durationInMs / 1000;
+            printResult(sieveSize, totalPasses, durationInSec);
+        }
+    });
+
+}
+
+/*
+main procedure
+*/
+
+if (cluster.isMaster) {
+    main(   config['sieveSize'],
+            config['timeLimitSeconds'],
+            config['workers']
+    );
+}
+
+if (cluster.isWorker) { // is worker for multithreaded
+    process.on('message', msg => {
+        let workerData = msg['workerData'];
+        let sieveSize        = workerData['sieveSize'];
+        let timeLimitSeconds = workerData["timeLimitSeconds"];
+        let nrOfPasses       = runSieveBatch(sieveSize, timeLimitSeconds);
+
+        process.send({ "nrOfPasses": nrOfPasses, "durationInSec": timeLimitSeconds });
+        process.exit(0);
+    });
+}
