@@ -1,6 +1,6 @@
 # use the image below as the preffered base image
 # see CONTRIBUTING.md
-FROM jarredsumner/bun:edge
+FROM diefenbakerbell/ubuntu-bun:0.1.2
 
 WORKDIR /opt/app
 
