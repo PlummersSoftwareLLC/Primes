@@ -6,8 +6,6 @@ WORKDIR /opt/app
 
 RUN apt-get update &&\
     apt-get install -y curl zip unzip &&\
-    # Upgrade Bun (as image is a bit behind)
-    bun upgrade &&\
     # NodeJS
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&\
     apt-get install -y nodejs &&\
