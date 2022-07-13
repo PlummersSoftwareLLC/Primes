@@ -21,6 +21,6 @@ docker run --rm -it janet-sieve
 ## Output
 This is a sample output from my machine
 ```
-Musab-Nazir;193;5.15975;1
+Musab-Nazir;193;5.15975;1;algorithm=base,faithful=yes
 
 ```
