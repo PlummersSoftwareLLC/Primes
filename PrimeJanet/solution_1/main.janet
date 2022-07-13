@@ -28,6 +28,7 @@
         _           (while (<= (os/time) end-by)
                       (let [primes   (sieve-fn limit)]
                         (set pass (inc pass))))]
-    (print (string "Musab-Nazir;" pass ";" (- (os/clock) start-time) ";" 1))))
+    (print (string "Musab-Nazir;" pass ";" (- (os/clock) start-time) ";" 1 
+                   ";algorithm=base,faithful=yes"))))
 
 (benchmark sieve limit)
