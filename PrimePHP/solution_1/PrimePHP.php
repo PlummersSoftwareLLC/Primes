@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 class PrimeSieve
 {
-    private SplFixedArray $rawbits;
+    private string $rawbits;
 
     private int $sieveSize;
     private int $rawBitsSize;
@@ -42,11 +42,12 @@ class PrimeSieve
         $sieveSize = $this->sieveSize;
         $q = sqrt($sieveSize);
 		$rawBitsSize = $this->rawBitsSize;
-        $rb = new SplFixedArray($rawBitsSize);
+        $rb = str_repeat('0', $rawBitsSize);
 
         while ($factor < $q) {
             for ($i = $factor; $i <= $sieveSize; $i += 2) {
-                if ($rb[$i * 0.5] === null) {
+                $rbi = (int)($i * 0.5);
+                if ($rb[$rbi] == '0') {
                     $factor = $i;
                     break;
                 }
@@ -55,7 +56,7 @@ class PrimeSieve
             $ft2 = $factor;
             $start = (int)($factor * $factor * 0.5);
             for ($i = $start; $i < $rawBitsSize; $i += $ft2) {
-                $rb[$i] = 1;
+                $rb[$i] = '1';
             }
 
             $factor += 2;
@@ -66,7 +67,7 @@ class PrimeSieve
     public function printResults(): void
     {
         for ($i = 1; $i < $this->sieveSize; $i++) {
-            if ($i % 2 && $this->rawbits[$i * 0.5] === null) {
+            if ($i % 2 && $this->rawbits[(int)($i * 0.5)] == '0') {
                 echo $i . ", ";
             }
         }
@@ -75,9 +76,9 @@ class PrimeSieve
     public function getRawbitCount(): int
     {
         $sum = 0;
-        $sz = $this->rawbits->getSize();
+        $sz = strlen($this->rawbits);
         for ($i = 0; $i < $sz; $i++){
-            if ($this->rawbits[$i] === null){
+            if ($this->rawbits[$i] == '0'){
                 $sum++;
             }
         }
@@ -120,7 +121,7 @@ printf(
 
 // Following 2 lines added by rbergen to conform to drag race output format
 echo "\n\n";
-printf("DennisdeBest;%d;%f;1;algorithm=base,faithful=yes\n", $passes, ((float)$tD) / 1000);
+printf("DennisdeBest;%d;%f;1;algorithm=base,faithful=yes,bits=8\n", $passes, ((float)$tD) / 1000);
 
 function getTimeDiffInMs(float $tStart): float
 {
