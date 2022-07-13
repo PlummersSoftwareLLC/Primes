@@ -1,7 +1,10 @@
 local bit = require "bit"
 local ffi = require "ffi"
 local rshift = bit.rshift
+local band = bit.band
 local _i32 = ffi.typeof("int32_t")
+local _f32 = ffi.typeof("float")
+
 return function(ARENA, TIME)
     local SIZE = 1000000
     local PRIME_LEN = math.sqrt(SIZE)
@@ -13,29 +16,33 @@ return function(ARENA, TIME)
 
                 for k = 3, PRIME_LEN, 2 do
             if ARENA[ rshift( k , 1) ]  == 0 then
-                local v = k--_i32(k)
-                local vk = v*2
+                --  V:  The add/offset for each non-prime.
+                local v = k
+                --  VP: The halfway point
+                local vp = (k * 16)
                 for x = (k*k), SIZE, k*32 do
 
-                    local xa = x + (vk*8)
+                    local xi = rshift( x , 1)
+
+                    local xa = rshift( x + vp  , 1)
 
                     
-		ARENA[ rshift( x , 1) ] = 1;
-		ARENA[ rshift( xa , 1) ] = 1;
-		ARENA[ rshift( x + vk , 1) ] = 1;
-		ARENA[ rshift( xa + vk , 1) ] = 1;
-		ARENA[ rshift( x + vk + vk , 1) ] = 1;
-		ARENA[ rshift( xa + vk + vk , 1) ] = 1;
-		ARENA[ rshift( x + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( xa + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( x + vk + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( xa + vk + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( x + vk + vk + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( xa + vk + vk + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( x + vk + vk + vk + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( xa + vk + vk + vk + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( x + vk + vk + vk + vk + vk + vk + vk , 1) ] = 1;
-		ARENA[ rshift( xa + vk + vk + vk + vk + vk + vk + vk , 1) ] = 1;
+		ARENA[ xi ] = 1
+		ARENA[ xi + v ] = 1
+		ARENA[ xi + v + v ] = 1
+		ARENA[ xi + v + v + v ] = 1
+		ARENA[ xi + v + v + v + v ] = 1
+		ARENA[ xi + v + v + v + v + v ] = 1
+		ARENA[ xi + v + v + v + v + v + v ] = 1
+		ARENA[ xi + v + v + v + v + v + v + v ] = 1
+		ARENA[ xa ] = 1
+		ARENA[ xa + v ] = 1
+		ARENA[ xa + v + v ] = 1
+		ARENA[ xa + v + v + v ] = 1
+		ARENA[ xa + v + v + v + v ] = 1
+		ARENA[ xa + v + v + v + v + v ] = 1
+		ARENA[ xa + v + v + v + v + v + v ] = 1
+		ARENA[ xa + v + v + v + v + v + v + v ] = 1
 
                 end
             end

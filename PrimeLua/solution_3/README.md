@@ -23,24 +23,16 @@ The algorithm uses `loadstring()` to emit specialized lua code for each benchmar
 Intel i9-9900 8-core 16-thread @ 3.10 GHz
 (lines prefixed with `--` were added for clarity and are not present in output)
 ```
---  tuned run
-mooshua_luajit;8721;5.001;1;algorithm=base,faithful=no,bits=8
---  run with different unroll factors
-mooshua_luajit_16;8690;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_8;8616;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_1;8695;5;1;algorithm=base,faithful=no,bits=8
---  run with experimental dependency unrolling
-mooshua_luajit_d_16;7687;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_d_8;7722;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_d_4;7984;5.001;1;algorithm=base,faithful=no,bits=8
---  run with luajit hashtable instead of ffi array
-mooshua_luajit_hash;4537;5.001;1;algorithm=base,faithful=no,bits=8
---  run with baseline JIT (no major JIT optimizations)
-mooshua_luajit_slow_ffi;2452;5.002;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_slow_hash;944;5.003;1;algorithm=base,faithful=no,bits=64
---  run on interpreter
-mooshua_luajit_vm_ffi;162;5.019;1;algorithm=base,faithful=no,bits=8
-mooshua_luajit_vm_hash;692;5.005;1;algorithm=base,faithful=no,bits=64
+mooshua_luajit;8644;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_16;8639;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_8;8736;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_1;8735;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_hash;4410;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_array;4469;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_slow_ffi;2459;5.002;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_slow_hash;903;5.004;1;algorithm=base,faithful=no,bits=64
+mooshua_luajit_vm_ffi;160;5.027;1;algorithm=base,faithful=no,bits=8
+mooshua_luajit_vm_hash;367;5.001;1;algorithm=base,faithful=no,bits=64
 ```
 
 Each level (_24, _16, etc.) is a different unroll level. The loop is manually unrolled for very small performance gains over LuaJIT's unroller.
@@ -55,17 +47,48 @@ Use `emit` (`luajit prog.lua emit 5 24`) to create a function to visualize profi
 
 For annotation of the source code, use `-jp=m0i0flA` (`luajit -jp=m0i0flA prog.lua o`).
 
+## Assembly
+
+This is the assembly of `mooshua_luajit_8`'s core non-prime-marking loop of x64 2021 luajit 2.1.0-beta3 with `ON SSE3 SSE4.1 BMI2 fold cse dce fwd dse narrow loop abc sink fuse`.
+
+```asm
+->LOOP:
+7fa6e361ffb0  mov ebx, ebp
+7fa6e361ffb2  shr ebx, 1
+7fa6e361ffb4  movsxd rbx, ebx
+7fa6e361ffb7  mov byte [rbx+rdx+0x10], 0x1
+7fa6e361ffbc  add rbx, rsi
+7fa6e361ffbf  mov byte [rdx+rbx+0x10], 0x1
+7fa6e361ffc4  add rbx, rsi
+7fa6e361ffc7  mov byte [rdx+rbx+0x10], 0x1
+7fa6e361ffcc  add rbx, rsi
+7fa6e361ffcf  mov byte [rdx+rbx+0x10], 0x1
+7fa6e361ffd4  add rbx, rsi
+7fa6e361ffd7  mov byte [rdx+rbx+0x10], 0x1
+7fa6e361ffdc  add rbx, rsi
+7fa6e361ffdf  mov byte [rdx+rbx+0x10], 0x1
+7fa6e361ffe4  add rbx, rsi
+7fa6e361ffe7  mov byte [rdx+rbx+0x10], 0x1
+7fa6e361ffec  add rbx, rsi
+7fa6e361ffef  mov byte [rdx+rbx+0x10], 0x1
+7fa6e361fff4  add ebp, ecx
+7fa6e361fff6  cmp ebp, eax
+7fa6e361fff8  jle 0x7fa6e361ffb0        ->LOOP
+7fa6e361fffa  jmp 0x7fa6e361005c        ->4 (exit)
+```
+
+
 ## JIT Effectiveness
 Using `j`, you can see how effective each LuaJIT optimization is. All other optimizations are enabled but the one specified (note--LuaJIT optimizations are generally closely tied, so disabling one will likely disable others)
 ```
-mooshua_lj_no_fold;3445;5;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_cse;3389;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_dce;7695;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_narrow;5017;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_fuse;8402;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_store;8621;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_alias;3354;5.002;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_sink;8672;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_array;8688;5.001;1;algorithm=base,faithful=no,bits=8
-mooshua_lj_no_loop;1243;5.003;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_fold;7405;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_cse;7981;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_dce;7638;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_narrow;5027;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_fuse;8675;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_store;8697;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_alias;8001;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_sink;8667;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_array;8587;5.001;1;algorithm=base,faithful=no,bits=8
+mooshua_lj_no_loop;1360;5.002;1;algorithm=base,faithful=no,bits=8
 ```

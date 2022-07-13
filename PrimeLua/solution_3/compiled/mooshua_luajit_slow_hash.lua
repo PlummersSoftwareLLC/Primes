@@ -1,7 +1,10 @@
 local bit = require "bit"
 local ffi = require "ffi"
 local rshift = bit.rshift
+local band = bit.band
 local _i32 = ffi.typeof("int32_t")
+local _f32 = ffi.typeof("float")
+
 return function(ARENA, TIME)
     local SIZE = 1000000
     local PRIME_LEN = math.sqrt(SIZE)
@@ -12,15 +15,19 @@ return function(ARENA, TIME)
     while (clock()-begin) <= TIME do
 
                 for k = 3, PRIME_LEN, 2 do
-            if ARENA[ k ]  == null then
-                local v = k--_i32(k)
-                local vk = v*2
+            if ARENA[ k ]  == nil then
+                --  V:  The add/offset for each non-prime.
+                local v = k
+                --  VP: The halfway point
+                local vp = (k * 1)
                 for x = (k*k), SIZE, k*2 do
 
+                    local xi = x
+
                     
 
                     
-		ARENA[ x ] = 1;
+		ARENA[ xi ] = 1;
 
                 end
             end
