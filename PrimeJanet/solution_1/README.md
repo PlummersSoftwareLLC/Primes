@@ -1,12 +1,11 @@
 # Janet solution by Musab-Nazir
 
-(Optional) <Badges>
-
 This is just my implementation of the Sieve of Eratosthenes algorithm implemented via a boolean array
 
 ## Run instructions
 
-Install janet (easily done via homebrew)
+Install janet easily done via homebrew or download binaries [here](https://github.com/janet-lang/janet/releases)
+
 cd into the solution folder and run either the `run.sh` script or via the janet cli: `janet main.janet`
 
 With docker:
