@@ -23,13 +23,11 @@
   "Runs the sieve for 5s and prints the results to std out"
   [sieve-fn limit]
   (var pass 1)
-  (let [single-pass-res     (sieve-fn limit)
-        start-time  (os/clock)
+  (let [start-time  (os/clock)
         end-by      (+ start-time 5.0)
         _           (while (<= (os/time) end-by)
                       (let [primes   (sieve-fn limit)]
                         (set pass (inc pass))))]
-    (print (string "Musab-Nazir;" pass ";" (- (os/clock) start-time) ";" 1 
-                   ";algorithm=base,faithful=yes,bits=8"))))
+    (print (string "Musab-Nazir;" pass ";" (- (os/clock) start-time) ";" 1))))
 
 (benchmark sieve limit)
