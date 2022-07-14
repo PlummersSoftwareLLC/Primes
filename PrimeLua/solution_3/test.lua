@@ -13,7 +13,12 @@ local c_not_in_truth = 0
 local dump = io.open("lj3_primes.txt", "r"):read("*a")
 local truthy = io.open("all_primes", "r"):read("*a")
 
-for num in dump:gmatch("(%d+),") do
+for num, idx in dump:gmatch("(%d+),") do
+
+    if ( math.random(100) == 1) then
+        --print("T:", num, "->", idx)
+    end
+
     in_dump[num] = true
     c_dump = c_dump + 1
 end
@@ -29,7 +34,7 @@ function Factors(n)
 end
 for num in truthy:gmatch("(%d+)%s") do
     if not in_dump[num] then
-        print("MISSING FROM DUMP:", num, "(" .. table.concat(Factors(num), ", ") .. ")")
+        --print("MISSING FROM DUMP:", num, "(" .. table.concat(Factors(num), ", ") .. ")")
         c_not_in_dump = c_not_in_dump + 1;
     end
     in_truthy[num] = true
