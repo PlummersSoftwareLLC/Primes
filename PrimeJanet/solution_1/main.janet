@@ -5,6 +5,9 @@
         sqrt-n (math/ceil (math/sqrt n))]
     # remove all even numbers
     (loop [j :range [0 n 2]] (put primes j false))
+    # fix 1 and 2 manually
+    (put primes 1 false)
+    (put primes 2 true)
     # 3 will be the first candidate we test
     (var p 3)
     (if (< n 2)
