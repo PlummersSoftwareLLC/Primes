@@ -7,15 +7,12 @@ WORKDIR /opt/app
 SHELL [ "/bin/bash", "-o", "pipefail", "-c" ]
 
 RUN apt-get update &&\
-    apt-get install --no-install-recommends -y \
+    apt-get install --no-install-recommends -y zip unzip \
         curl=7.81.0-1ubuntu1.3 \
-        zip=3.0-12build2 \
-        unzip=6.0-26ubuntu3 \
     &&\
     # NodeJS
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&\
-    apt-get install --no-install-recommends -y \
-        nodejs=18.4.0-deb-1nodesource1 \
+    apt-get install --no-install-recommends -y nodejs \
     &&\
     # Deno
     curl -fsSL https://deno.land/x/install/install.sh | sh -s v1.23.3 &&\
