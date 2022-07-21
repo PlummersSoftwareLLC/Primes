@@ -1,6 +1,6 @@
-FROM alpine:3.15 AS build
+FROM alpine:3.16 AS build
 
-ENV V_VER="weekly.2022.13"
+ENV V_VER="0.3"
 
 RUN apk update && apk add --no-cache build-base bash git
 
@@ -14,7 +14,7 @@ COPY *.v .
 
 RUN v -prod primes.v
 
-FROM alpine:3.15
+FROM alpine:3.16
 
 COPY --from=build /opt/app/primes /usr/local/bin/primes
 
