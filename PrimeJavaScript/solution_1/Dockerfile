@@ -1,6 +1,6 @@
 # use the image below as the preffered base image
 # see CONTRIBUTING.md
-FROM diefenbakerbell/ubuntu-bun:0.1.4
+FROM ghcr.io/theotterlord/bun:v0.1.10-ubuntu
 
 WORKDIR /opt/app
 
