@@ -29,9 +29,8 @@ class BitArray
 	{
 		const wordOffset = index >>> 5;
 		const bitOffset = index & 31;
-		return this.wordArray[wordOffset] & (1 << bitOffset);  // use a mask to only get the bit at position bitOffset. >0=true, 0=false
+		return this.wordArray[wordOffset] & (1 << bitOffset); // use a mask to only get the bit at position bitOffset. >0=true, 0=false
 	}
-
 }
 
 export class PrimeSieve
@@ -90,5 +89,4 @@ export class PrimeSieve
 		}
 		return primes;
 	}
-
 }
