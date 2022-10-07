@@ -340,7 +340,7 @@ const main = ({ sieveSize, timeLimitSeconds, verbose, runtime, workers, algorith
         if (countRunning == 0) {
             const timeEnd     = performance.now();                      // time the last worker, not the first (to give fair results)
             const durationInSec = (timeEnd - timeStart) / NOW_UNITS_PER_SECOND;
-            console.log(`\nrogiervandam-${runtime}-${algorithm};${totalPasses};${durationInSec};${workers};algorithm=${algorithm=='base'?'base':'other'},faithful=yes,bits=1`); 
+            console.log(`\nrogiervandam-cluster-${algorithm}-${runtime};${totalPasses};${durationInSec};${workers};algorithm=${algorithm=='base'?'base':'other'},faithful=yes,bits=1`); 
         }
     });
 }
