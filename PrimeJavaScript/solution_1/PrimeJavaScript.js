@@ -17,7 +17,9 @@ Date:               2022-07-10
 */
 
 "use strict";
+const { performance } = require('perf_hooks');
 const NOW_UNITS_PER_SECOND = 1000;
+const WORD_SIZE = 32;
 
 let config = {
 	sieveSize: 1000000,
@@ -57,36 +59,49 @@ class BitArray
 		this.wordArray[wordOffset] |= (1 << bitOffset);
 	}
 
-	setBitsTrue(start, step, range)
-	{
-		if (step > 16) 
-		{
-			for (let index = start; index < range; index += step)
-			{
-				this.setBitTrue(index);  // mark every multiple of this prime
-			}
-		}
-		else
-		{ // optimize for setting multiple masks at the same word
-			let index = start;
-			let wordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
-			let wordvalue = this.wordArray[wordOffset];
-
-			while (index < range)
-			{
-				let bitOffset = index & 31;  // use & (and) for remainder, faster than modulus of /32
-				wordvalue |= (1 << bitOffset);
-
-				index += step;
-
-				let newwordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
-				if (newwordOffset != wordOffset) { // store value and get new
-					this.wordArray[wordOffset] = wordvalue;
-					wordOffset = newwordOffset;
-					wordvalue = this.wordArray[wordOffset];
+	setBitsTrue(range_start, step, range_stop) {
+		if (step > WORD_SIZE/2) { 
+			// steps are large: check if the range is large enough to reuse the same mask
+			let range_stop_unique =  range_start + 32 * step;
+			if (range_stop_unique > range_stop) {
+				// range is not large enough for repetition (32 * step)
+				for (let index = range_start; index < range_stop; index += step) {
+					this.setBitTrue(index);
 				}
+				return;
+			}
+			// range is large enough to reuse the mask
+			const range_stop_word = range_stop >>> 5;
+			for (let index = range_start; index < range_stop_unique; index += step) {
+				let wordOffset = index >>> 5;
+				const bitOffset = index & 31;
+				const mask = (1 << bitOffset);
+				do {
+					this.wordArray[wordOffset] |= mask;
+					wordOffset += step; // pattern repeats on word level after {step} words
+				} while (wordOffset <= range_stop_word);
+			}
+			return;
+		}
+
+		// optimized for small sizes: set wordvalue multiple times before committing to memory
+		let index = range_start;
+		let wordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
+		let wordValue = this.wordArray[wordOffset];
+
+		while (index < range_stop) {
+			const bitOffset = index & 31;  // use & (and) for remainder, faster than modulus of /32
+			wordValue |= (1 << bitOffset);
+
+			index += step;
+			const newwordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
+			if (newwordOffset != wordOffset) { // moving to new word: store value and get new value
+				this.wordArray[wordOffset] = wordValue;
+				wordOffset = newwordOffset;
+				wordValue = this.wordArray[wordOffset];
 			}
 		}
+		this.wordArray[wordOffset] = wordValue; // make sure last value is stored
 	}
 
 	testBitTrue(index)

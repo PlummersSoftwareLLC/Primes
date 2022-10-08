@@ -58,13 +58,31 @@ class BitArray {
     }
 
 	setBitsTrue(range_start, step, range_stop) {
-		if (step > WORD_SIZE/2) { // optimize for large steps is not useful
-			for (let index = range_start; index < range_stop; index += step) {
-				this.setBitTrue(index);  // mark every multiple of this prime
+		if (step > WORD_SIZE/2) { 
+			// steps are large: check if the range is large enough to reuse the same mask
+			let range_stop_unique =  range_start + 32 * step;
+			if (range_stop_unique > range_stop) {
+				// range is not large enough for repetition (32 * step)
+				for (let index = range_start; index < range_stop; index += step) {
+					this.setBitTrue(index);
+				}
+				return;
+			}
+			// range is large enough to reuse the mask
+			const range_stop_word = range_stop >>> 5;
+			for (let index = range_start; index < range_stop_unique; index += step) {
+				let wordOffset = index >>> 5;
+				const bitOffset = index & 31;
+				const mask = (1 << bitOffset);
+				do {
+					this.wordArray[wordOffset] |= mask;
+					wordOffset += step; // pattern repeats on word level after {step} words
+				} while (wordOffset <= range_stop_word);
 			}
 			return;
 		}
 
+		// optimized for small sizes: set wordvalue multiple times before committing to memory
 		let index = range_start;
 		let wordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
 		let wordValue = this.wordArray[wordOffset];
