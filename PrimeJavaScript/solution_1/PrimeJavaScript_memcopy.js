@@ -117,7 +117,7 @@ class bitArray {
 	// assumptions:
 	// everything between source_start and destination start should be copied to destination_start and repeated until destination_shop
 
-	copyBlocks(source_start, destination_start, destination_stop)	{
+	copyPattern(source_start, destination_start, destination_stop)	{
 		const size = destination_start - source_start;
 		let copy_start = destination_start;
 
@@ -203,7 +203,7 @@ class PrimeSieve {
 			if (range < this.sieveSizeInBits) { // check if we should copy previous results
 				range = blocksize_bits * step * 2;  // range is x2 so the second block cointains all multiples of primes
 				if (range > this.sieveSizeInBits) range = this.sieveSizeInBits;
-				this.bitArray.copyBlocks(blocksize_bits, blocksize_bits*2, range);
+				this.bitArray.copyPattern(blocksize_bits, blocksize_bits*2, range);
 				blocksize_bits = blocksize_bits * step;
 			}
 
