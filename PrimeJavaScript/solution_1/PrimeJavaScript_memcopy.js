@@ -17,7 +17,6 @@ Based on:
 */
 
 "use strict";
-const { performance } = require('perf_hooks');
 const NOW_UNITS_PER_SECOND =  1000;
 const WORD_SIZE = 32;
 
@@ -37,6 +36,7 @@ try
 }
 catch
 {
+	const { performance } = require('perf_hooks');
 	const runtimeParts = process.argv[0].split("/");
 	config.runtime = runtimeParts[runtimeParts.length - 1];
 	config.verbose = process.argv.includes("verbose");

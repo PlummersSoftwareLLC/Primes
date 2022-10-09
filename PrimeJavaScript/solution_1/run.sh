@@ -16,9 +16,9 @@ node PrimeJavaScript_cluster.js memcopy
 
 node PrimeJavaScript_worker_main.mjs
 
+# worker_main in deno not working because of failed imports
+# deno run PrimeJavaScript_worker_main.mjs
+
 # worker_threads not currently supported by Bun
 # bun PrimeJavaScript_worker_main.mjs
 
-# needs adaptation because Deno has its own Buffer API
-# and I have no idea whether it supports worker_threads
-# deno run PrimeJavaScript_memcopy.js

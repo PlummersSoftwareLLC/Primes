@@ -38,4 +38,4 @@ COPY run.sh \
 ENTRYPOINT [ "./run.sh" ]
 
 # For manual debugging
-# ENTRYPOINT [ "/bin/bash" ]
+#ENTRYPOINT [ "/bin/bash" ]

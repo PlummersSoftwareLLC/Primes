@@ -11,7 +11,6 @@ Date:      2021-07-08
 'use strict';
 
 // get performance API (for older node versions) and cluster api for multiprocessor
-const { performance } = require('perf_hooks');
 const cluster         = require('cluster');
 const os              = require('os');
 
@@ -35,6 +34,7 @@ try
 }
 catch
 {
+	const { performance } = require('perf_hooks');
 	const runtimeParts = process.argv[0].split("/");
 	config.runtime = runtimeParts[runtimeParts.length - 1];
 	config.verbose = process.argv.includes("verbose");
