@@ -7,6 +7,14 @@
 #include <string.h>
 
 
+#define debug if (0)
+#define sieve_limit 1000000
+//#define blocksize (16*1024*8)
+// #define sieve_limit 100
+#define sieve_duration 5
+
+
+
 // Copyright 2013 Alex Reece.
 //
 // A cross platform monotonic timer.
@@ -129,18 +137,15 @@
 // the constant below is a cache of all the possible bit masks
 //const bitword_t offset_mask[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
 
-#define  markmask(factor) ((bitword_t)1U << (factor&31))
+
+#define wordindex(index) (index >> 5U)
+#define bitindex(index) (index&31)
+#define  markmask(index) ((bitword_t)1U << bitindex(index))
 //#define  markmask(factor) (offset_mask[factor&31])
-#define offsetmask(factor) (factor & (sizeof(bitword_t)*8-1))
-#define wordindex(factor) (factor >> 5U)
+#define offsetmask(index) (index & (sizeof(bitword_t)*8-1))
 
 // Return the smallest multiple N of y such that:  x <= y * N
 #define ceiling(x,y) (((x) + (y) - 1) / (y))
-
-
-#define debug if (0)
-#define sieve_limit 10000000
-#define sieve_duration 5
 
 static inline void printBits(size_t const size, void const * const ptr)
 {
@@ -238,45 +243,99 @@ static inline counter_t searchBitFalse(struct sieve_state *sieve, counter_t inde
         index++;
     }
     return index;
+
+    // counter_t index_word = wordindex(index);
+    // counter_t index_bit  = bitindex(index);
+
+    // bitword_t word_value = sieve->bitarray[index_word];
+    // counter_t distance = 0;
+    // word_value >>= index_bit; // first word is special because some bits have to be skipped
+    // while (word_value & 1) { 
+    //     word_value >>= 1;
+    //     distance++;
+    // }
+    // index += distance;
+    // distance += index_bit;
+
+    // while (distance >= 32) {
+    //     index_word++;
+    //     word_value = sieve->bitarray[index_word];
+    //     distance = 0;
+    //     while (word_value & 1) { 
+    //         word_value >>= 1;
+    //         distance++;
+    //     }
+    //     index += distance;
+    // }
+
+    // return index;
 }
 
 static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
-    if (step > 16) {
-        counter_t range_stop_unique =  range_start + 32 * step;
+//    printf("Setbitstrue %d-%d step %d\n",range_start, range_stop, step);
+    // for (counter_t index = range_start; index < range_stop; index += step) {
+    //     // printf("Setting bit %d true\n", index);
+    //     sieve->bitarray[wordindex(index)] |= markmask(index);
+    // }
+    // return;
+
+    if (step > WORD_SIZE) {
+        counter_t range_stop_unique =  range_start + WORD_SIZE * step;
         if (range_stop_unique > range_stop) {
-            for (counter_t index = range_start; index < range_stop; index += step) {
+            for (counter_t index = range_start; index <= range_stop; index += step) {
                 sieve->bitarray[wordindex(index)] |= markmask(index);
             }
             return;
         }
 
         counter_t range_stop_word = wordindex(range_stop);
-        for (counter_t index = range_start; index < range_stop_unique; index += step) {
-            counter_t wordOffset = wordindex(index);
-            bitword_t mask = markmask(index);
-            do {
-                sieve->bitarray[wordOffset] |= mask;
-                wordOffset += step; // pattern repeats on word level after {step} words
-            } while (wordOffset <= range_stop_word);
+        counter_t range_stop_bit  =  markmask(range_stop);
+        for (counter_t index = range_start; index <= range_stop_unique; index += step) {
+            counter_t index_bit = bitindex(index);
+            bitword_t mask = (1 << index_bit);
+            counter_t loop_stop_word = range_stop_word + ((index_bit <= range_stop_bit) ? 1 : 0);
+
+            for (counter_t index_word = wordindex(index); index_word < loop_stop_word; index_word += step) {
+                sieve->bitarray[index_word] |= mask;
+            }
         }
         return;
     }   
 
-    counter_t index = range_start;
-    counter_t wordOffset = wordindex(index);
-    bitword_t wordValue = sieve->bitarray[wordOffset];
-
-    while (index < range_stop) {
-        wordValue |= markmask(index);
-        index += step;
-        counter_t newWordOffset = wordindex(index);
-        if (newWordOffset != wordOffset) {
-            sieve->bitarray[wordOffset] = wordValue;
-            wordOffset = newWordOffset;
-            wordValue = sieve->bitarray[wordOffset];
-        }
+	bitword_t pattern = 1;
+    counter_t patternsize = step;
+    for (; patternsize < WORD_SIZE; patternsize += step) {
+        pattern |= (1 << patternsize);
     }
-    sieve->bitarray[wordOffset] = wordValue;
+    patternsize -= step;
+    counter_t pattern_shift = WORD_SIZE - patternsize; // the amount a pattern drifts (>>) at each word increment
+
+    counter_t shift = bitindex(range_start);
+    counter_t range_stop_word = wordindex(range_stop);
+    counter_t range_stop_bit = bitindex(range_stop);
+    counter_t copy_word = wordindex(range_start);
+
+    if (copy_word == range_stop_word) { // shortcut
+       sieve->bitarray[copy_word] |= ((pattern << shift) & (2 << ((range_stop_bit&31))) - 1 );
+       return;
+    }
+
+    // from now on, we are before range_stop_word
+    // first word is special, because it should not set bits before the range_start_bit
+    sieve->bitarray[copy_word] |= pattern << shift;
+    shift = shift % step;
+    copy_word++;
+
+    while (copy_word < range_stop_word) {
+        if (shift < pattern_shift) shift += step; // prevent shift going negative
+        shift -= pattern_shift; 
+        sieve->bitarray[copy_word] |= pattern << shift;
+        copy_word++;
+    } 
+
+    if (shift < pattern_shift) shift += step;
+    shift -= pattern_shift; 
+    sieve->bitarray[copy_word] |= ((pattern << shift) & (2 << ((range_stop_bit&31))) - 1 );
 
 }
 
@@ -384,30 +443,53 @@ static inline void copyBlocks(struct sieve_state *sieve, counter_t source_start,
 
 	}
 
-static inline struct sieve_state *run_sieve(counter_t maxints) {
+static inline void sieve_block(struct sieve_state *sieve, counter_t block_start, counter_t block_stop) {
+    counter_t prime            = 0;
+    counter_t patternsize_bits = 1;
+    counter_t range            = sieve->bits;
+    counter_t range_stop       = block_stop;
+
+    do {
+        prime = searchBitFalse(sieve, prime+1);
+        counter_t start = prime * prime * 2 + prime * 2;
+        if (start > block_stop) break;
+
+        const counter_t step  = prime * 2 + 1;
+        if (block_start >= (prime + 1)) start = block_start + prime + prime - ((block_start + prime) % step);
+
+        // range_stop = block_start + patternsize_bits * step * 2;  // range is x2 so the second block cointains all multiples of primes
+        // if (range_stop > block_stop) range_stop = block_stop;
+
+        // if (patternsize_bits>1) {
+        //     counter_t pattern_start = block_start || patternsize_bits;
+        //     this.bitArray.copyPattern(pattern_start, patternsize_bits, range_stop);
+        // }
+        // patternsize_bits *= step;
+
+        setBitsTrue(sieve, start, step, range_stop);
+    } while (range_stop < block_stop);
+
+    while (1) {
+        prime = searchBitFalse(sieve, prime+1);
+        counter_t start = prime * prime * 2 + prime * 2;
+        if (start > block_stop) break;
+        const counter_t step  = prime * 2 + 1;
+        if (block_start >= (prime + 1)) start = block_start + prime + prime - ((block_start + prime) % step);
+        setBitsTrue(sieve, start, step, range_stop);
+    } 
+}
+static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) {
     struct sieve_state *sieve = create_sieve(maxints);
-    bitword_t            *bitarray  = sieve->bitarray;
-    counter_t factor         = 1;
+    bitword_t*bitarray       = sieve->bitarray;
+    counter_t prime          = 1;
     counter_t blocksize_bits = 1;
-    counter_t range          = 3;
-    counter_t q              = (counter_t)(1+(isqrt(maxints)>>1U));
+    counter_t range          = sieve->bits;
 
-    while (factor <= q) {
-        const counter_t start = factor * factor * 2 + factor * 2;
-        const counter_t step  = factor * 2 + 1;
+    counter_t block_start = 0;
+    counter_t block_stop = sieve->bits;
 
-        if (factor > 9) {
-            if (range < sieve->bits) { // check if we should copy previous results
-                range = blocksize_bits * step * 2;  // range is x2 so the second block cointains all multiples of primes
-                if (range > sieve->bits) range = sieve->bits;
-                copyBlocks(sieve, blocksize_bits, blocksize_bits*2, range);
-                blocksize_bits = blocksize_bits * step;
-            }
-        }
+    sieve_block(sieve, block_start, block_stop);
 
-        setBitsTrue(sieve, start, step, range);
-        factor = searchBitFalse(sieve, factor+1);
-    }
     return sieve;
 }
 
@@ -418,29 +500,29 @@ static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
     counter_t range_to =  sieve->bits;
     counter_t warn_prime = 0;
     counter_t warn_nonprime = 0;
-    for (counter_t factor = 1; factor < range_to; factor++ ) {
-        if ((sieve->bitarray[wordindex(factor)] & markmask(factor))==0) {                   // is this a prime?
-            counter_t q = (isqrt(factor*2+1)|1)*2+1;
+    for (counter_t prime = 1; prime < range_to; prime++ ) {
+        if ((sieve->bitarray[wordindex(prime)] & markmask(prime))==0) {                   // is this a prime?
+            counter_t q = (isqrt(prime*2+1)|1)*2+1;
             for(counter_t c=1; c<=q; c++) {
-                if ((factor*2+1) % (c*2+1) == 0 && (c*2+1) != (factor*2+1)) {
+                if ((prime*2+1) % (c*2+1) == 0 && (c*2+1) != (prime*2+1)) {
                     if (warn_prime++ < 30) {
-                        printf("Number %d (%d) was marked prime, but %d * %d = %d\n", factor*2+1, factor,  c*2+1, (factor*2+1)/(c*2+1), factor*2+1 );
+                        printf("Number %d (%d) was marked prime, but %d * %d = %d\n", prime*2+1, prime,  c*2+1, (prime*2+1)/(c*2+1), prime*2+1 );
                     }
                 }
             }
         }
         else {
-            counter_t q = (isqrt(factor*2+1)|1)*2+1;
-            counter_t c_factor = 0;
+            counter_t q = (isqrt(prime*2+1)|1)*2+1;
+            counter_t c_prime = 0;
             for(counter_t c=1; c<=q; c++) {
-                if ((factor*2+1) % (c*2+1) == 0 && (c*2+1) != (factor*2+1)) {
-                    c_factor++;
+                if ((prime*2+1) % (c*2+1) == 0 && (c*2+1) != (prime*2+1)) {
+                    c_prime++;
                     break;
                 }
             }
-            if (c_factor==0) {
+            if (c_prime==0) {
                 if (warn_nonprime++ < 30) {
-                    printf("Number %d (%d) was marked non-prime, but no factors found. So it is prime\n", factor*2+1, factor);
+                    printf("Number %d (%d) was marked non-prime, but no factors found. So it is prime\n", prime*2+1, prime);
                 }
             }
         }
@@ -450,6 +532,8 @@ static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
 int main(int argc, char **argv) {
     counter_t maxints  = sieve_limit;
     double    max_time = sieve_duration;
+    counter_t blocksize = 16*1024*8;
+
     if (argc>1) sscanf(argv[1],"%u",&maxints);
 
 //    printf(" 0 has %d trailing zeros\n", __builtin_ctz(0));
@@ -475,27 +559,27 @@ int main(int argc, char **argv) {
 
     // The initial time
 
-    struct sieve_state *sieve;
+    struct sieve_state *sieve_instance;
 
     // Count the number of primes and validate the result
-    sieve = run_sieve(maxints);
-    counter_t primecount = count_primes(sieve);
+    sieve_instance = sieve(maxints, blocksize);
+    counter_t primecount = count_primes(sieve_instance);
     int valid = (primecount==valid_primes);
 
     if (!valid) {
         printf("No valid result. Sievesize %d was expected to have %d primes, but algoritm produced %d primes\n",maxints,valid_primes,primecount );
-//        deepAnalyzePrimes(sieve);
+        deepAnalyzePrimes(sieve_instance);
     }
 
-    delete_sieve(sieve);
+    delete_sieve(sieve_instance);
 
     if (valid) {
         printf("Valid algoritm. Benchmarking...\n");
         double elapsed_time = 0;
         double start_time = monotonic_seconds();
         while (elapsed_time <= max_time) {
-            sieve = run_sieve(maxints);
-            delete_sieve(sieve);
+            sieve_instance = sieve(maxints, blocksize);
+            delete_sieve(sieve_instance);
             passes++;
             elapsed_time = monotonic_seconds()-start_time;
         }
