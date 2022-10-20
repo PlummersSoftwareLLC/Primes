@@ -1,6 +1,6 @@
 #!/bin/sh
 # Serial versions
-for x in sieve_memcopy primes_words; do
+for x in sieve_memcopy2 primes_words; do
     ./$x
 done
 # Thread parallel versions, computing each sieve quicker.

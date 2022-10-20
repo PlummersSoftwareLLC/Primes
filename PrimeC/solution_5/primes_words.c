@@ -152,10 +152,10 @@ static inline void block_cross_out(
                 current_mask = offset_mask[offset];
                 next_start_index += prime;
             }
-//            now apply this mask to all words with steps of the prime
+            // now apply this mask to all words with steps of the prime
             save_len = 0;
             if (max_word_block > prime_3) {
-                save_len = max_word_block - prime_3;//
+                save_len = max_word_block - prime_3;
             }
 
             while (current_word <= save_len && save_len !=0) {
@@ -464,7 +464,7 @@ void set_word_block_size(const unsigned int limit) {
 }
 
 int main(int argc, char **argv) {
-    unsigned int        limit       = 10000000;
+    unsigned int        limit       = 1000000;
     double              maxtime     = 5.;
     unsigned int        show_result = 0;
 
