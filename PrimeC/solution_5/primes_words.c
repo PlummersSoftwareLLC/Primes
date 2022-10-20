@@ -29,7 +29,8 @@ unsigned int BLOCK_SIZE = ( DEFAULT_L1_SIZE - KEEP_FREE ) / sizeof(TYPE);
 const unsigned int BITS_IN_WORD=8*sizeof(TYPE);
 
 // the constant below is a cache of all the possible bit masks
-const TYPE offset_mask[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
+//const TYPE offset_mask[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
+#define offset_mask(bit) (1 << bit)
 
 struct sieve_state {
   TYPE *bit_array;
@@ -82,13 +83,13 @@ static inline void repeat_words_2_max (
 static inline void setBit(struct sieve_state *sieve_state,unsigned int index) {
     unsigned int word_offset = index >> SHIFT;                // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
     unsigned int offset  = index & MASK;                      // use & (and) for remainder, faster than modulus of /32
-    sieve_state->bit_array[word_offset] |=  offset_mask[offset];
+    sieve_state->bit_array[word_offset] |=  offset_mask(offset);
 }
 
 static inline TYPE getBit (struct sieve_state *sieve_state,unsigned int index) {
     unsigned int word_offset = index >> SHIFT;  
     unsigned int offset  = index & MASK;
-    return sieve_state->bit_array[word_offset] & offset_mask[offset];     // use a mask to only get the bit at position bitOffset.
+    return sieve_state->bit_array[word_offset] & offset_mask(offset);     // use a mask to only get the bit at position bitOffset.
 }
 
 /*
@@ -143,13 +144,13 @@ static inline void block_cross_out(
                 current_mask = 0U;
                 grow = 0U;
                 while (offset < 32U) {
-                    current_mask |= offset_mask[offset];
+                    current_mask |= offset_mask(offset);
                     grow +=prime;
                     offset += prime;
                 }
                 next_start_index += grow;
             } else {
-                current_mask = offset_mask[offset];
+                current_mask = offset_mask(offset);
                 next_start_index += prime;
             }
             // now apply this mask to all words with steps of the prime
@@ -425,6 +426,7 @@ double run_timed_sieve(
         if (duration>maxtime) {
             if (print_sumary) {
                 print_results ( sieve_state, show_result, duration, passes);
+                delete_sieve(sieve_state);
             }
             break;
         }
