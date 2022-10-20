@@ -410,7 +410,6 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
             source_word++;
             sieve->bitarray[copy_word] = (sieve->bitarray[source_word] >> shift) | (sieve->bitarray[source_word+1] << shift_flipped); 
         }
-        return;
     }
     if (shift < 0) {
         shift = -shift;
@@ -445,8 +444,6 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
             dest_wordValue = (sieve->bitarray[source_word] << shift);
             sieve->bitarray[copy_word] = dest_wordValue; 
         }
-        return;
-
     }
 
     if (shift == 0) { // first word can be spread over 2 words
@@ -461,6 +458,11 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
             source_word++;
             copy_word++;
         }
+    }
+
+    if (sieve->bitarray[wordindex(210)] & markmask(210)) {
+        printf("Bit 210 is set at copypattern finish\n"); 
+        exit(0);
     }
 
 }
