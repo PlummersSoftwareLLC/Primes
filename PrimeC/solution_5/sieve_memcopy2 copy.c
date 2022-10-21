@@ -131,15 +131,12 @@
 
 
 #define WORD_SIZE 32
-#define PATTERN_FASTER (WORD_SIZE * 0.75)
 #define counter_t uint32_t
 #define bitword_t uint32_t
 
 // the constant below is a cache of all the possible bit masks
 //const bitword_t offset_mask[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824,2147483648};
 
-// the constant below contains the patterns for step 1, 2, etc.
-const bitword_t patterns[] = {0,4294967295,1431655765,1227133513,286331153,1108378657,1090785345,270549121,16843009,134480385,1074791425,4196353,16781313,67117057,268451841,1073774593,65537,131073,262145,524289,1048577,2097153,4194305,8388609,16777217,33554433,67108865,134217729,268435457,536870913,1073741825,2147483649};
 
 #define wordindex(index) ((index) >> 5U)
 #define bitindex(index) ((index)&31)
@@ -284,7 +281,7 @@ static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start,
     // }
     // return;
 
-    if (step > PATTERN_FASTER) {
+    if (step > WORD_SIZE/2) {
         counter_t range_stop_unique =  range_start + WORD_SIZE * step;
         if (range_stop_unique > range_stop) {
             for (counter_t index = range_start; index <= range_stop; index += step) {
@@ -307,15 +304,13 @@ static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start,
         return;
     }   
 
-	// bitword_t pattern = 1;
-    // counter_t patternsize = step;
-    // for (; patternsize < WORD_SIZE; patternsize += step) {
-    //     pattern |= (1 << patternsize);
-    // }
-    // patternsize -= step;
-    // counter_t pattern_shift = WORD_SIZE - patternsize; // the amount a pattern drifts (>>) at each word increment
-    counter_t pattern_shift = WORD_SIZE % step;
-    bitword_t pattern = patterns[step];
+	bitword_t pattern = 1;
+    counter_t patternsize = step;
+    for (; patternsize < WORD_SIZE; patternsize += step) {
+        pattern |= (1 << patternsize);
+    }
+    patternsize -= step;
+    counter_t pattern_shift = WORD_SIZE - patternsize; // the amount a pattern drifts (>>) at each word increment
 
     counter_t shift = bitindex(range_start);
     counter_t range_stop_word = wordindex(range_stop);
@@ -592,14 +587,15 @@ int validatePrimeCount(struct sieve_state *sieve, int verboselevel) {
     }
 
     int valid = (valid_primes == primecount);
-    if (valid  && verboselevel >= 4) printf("Result: Sievesize %d is expected to have %d primes. Algoritm produced %d primes\n",sieve->size,valid_primes,primecount );
-    if (!valid && verboselevel >= 2) printf("No valid result. Sievesize %d was expected to have %d primes, but algoritm produced %d primes\n",sieve->size,valid_primes,primecount );
-    if (!valid && verboselevel >= 3) deepAnalyzePrimes(sieve);
+    printf("Result: Sievesize %d is expected to have %d primes. Algoritm produced %d primes\n",sieve->size,valid_primes,primecount );
+    if (!valid && verboselevel >= 1) printf("No valid result. Sievesize %d was expected to have %d primes, but algoritm produced %d primes\n",sieve->size,valid_primes,primecount );
+    if (!valid && verboselevel >= 1) deepAnalyzePrimes(sieve);
     return (valid);
 }
 
 int main(int argc, char **argv) {
     counter_t maxints  = sieve_limit;
+    double    max_time = sieve_duration;
  //   counter_t blocksize = 16*1024*8;
 
     if (argc>1) sscanf(argv[1],"%u",&maxints);
@@ -615,46 +611,19 @@ int main(int argc, char **argv) {
 	for (counter_t blocksize_bits=1024; blocksize_bits<=64*1024*8; blocksize_bits *= 2) {
 		for (counter_t sieveSize_check = 100; sieveSize_check <= 100000000; sieveSize_check *=10) {
 			// validate algorithm - run one time
-//            printf("Checking size %d blocksize %d",sieveSize_check,blocksize_bits);
+            printf("Checking size %d blocksize %d",sieveSize_check,blocksize_bits);
             sieve_instance = sieve(sieveSize_check, blocksize_bits);
             counter_t primecount = count_primes(sieve_instance);
-            int valid = validatePrimeCount(sieve_instance,0);
+            int valid = validatePrimeCount(sieve_instance,2);
             delete_sieve(sieve_instance);
             if (!valid) return 0;
 		}
 	}
 
-    printf("Valid algoritm. Tuning...\n");
-    double best_avg = 0;
-    counter_t best_blocksize_bits = 0;
+    printf("Valid algoritm. Benchmarking...\n");
     for (counter_t blocksize_kb=128; blocksize_kb>=1; blocksize_kb /= 2) {
-        for (counter_t free_bits=0; free_bits < 8192 * 8 && free_bits < blocksize_kb * 1024 * 8; free_bits += 512) {
-            counter_t passes = 0;
-            counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
-            double elapsed_time = 0;
-            double sample_time = 0.01;
-            double start_time = monotonic_seconds();
-            while (elapsed_time <= sample_time) {
-                sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
-                delete_sieve(sieve_instance);
-                passes++;
-                elapsed_time = monotonic_seconds()-start_time;
-            }
-            double avg = passes/elapsed_time;
-            if (avg > best_avg) {
-                best_avg = avg;
-                best_blocksize_bits = blocksize_bits;
-                printf("blocksize %3dkb; free_bits %4d; passes %3d; time %f;average %f\n", blocksize_kb,free_bits,passes,elapsed_time,avg);
-            }
-        }
-    }
-    printf("Tuned algortim. Best blocksize: %d\n",best_blocksize_bits);
-
-    double max_time = sieve_duration;
-    if (best_blocksize_bits > 0) {
-        printf("Benchmarking...\n");
         counter_t passes = 0;
-        counter_t blocksize_bits = best_blocksize_bits;
+        counter_t blocksize_bits = blocksize_kb * 1024 * 8;
         double elapsed_time = 0;
         double start_time = monotonic_seconds();
         while (elapsed_time <= max_time) {
@@ -663,6 +632,6 @@ int main(int argc, char **argv) {
             passes++;
             elapsed_time = monotonic_seconds()-start_time;
         }
-        printf("rogiervandam_memcopy;%d;%f;1;algorithm=other,faithful=yes,bits=1\n", passes,elapsed_time);
+        printf("rogiervandam_memcopy-%dkb;%d;%f;1;algorithm=other,faithful=yes,bits=1\n", blocksize_kb,passes,elapsed_time);
     }
 }
