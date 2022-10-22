@@ -529,6 +529,7 @@ struct block {
 static inline struct block sieve_block(struct sieve_state *sieve, counter_t block_start, counter_t block_stop) {
     counter_t prime            = 0;
     counter_t patternsize_bits = 1;
+    counter_t pattern_start    = 0;
     counter_t range            = sieve->bits;
     counter_t range_stop       = block_stop;
     struct block block;
@@ -542,13 +543,13 @@ static inline struct block sieve_block(struct sieve_state *sieve, counter_t bloc
         if (block_start >= (prime + 1)) start = block_start + prime + prime - ((block_start + prime) % step);
 
         range_stop = block_start + patternsize_bits * step * 2;  // range is x2 so the second block cointains all multiples of primes
-        if (range_stop > block_stop) range_stop = block_stop;
+        block.patternsize = patternsize_bits;
+        block.patternstart = pattern_start;
+        if (range_stop > block_stop) return block; //range_stop = block_stop;
 
         if (patternsize_bits>1) {
-            counter_t pattern_start = block_start | patternsize_bits;
+            pattern_start = block_start | patternsize_bits;
             copyPattern(sieve, pattern_start, patternsize_bits, range_stop);
-            block.patternsize = patternsize_bits;
-            block.patternstart = pattern_start;
         }
         patternsize_bits *= step;
 
@@ -568,16 +569,41 @@ static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) 
     counter_t block_start = 0;
     counter_t block_stop = blocksize-1;
 
+    // fill the whole sieve bij adding en copying incrementally
+    struct block block = sieve_block(sieve, 0, sieve->bits);
+    copyPattern(sieve, block.patternstart, block.patternsize, sieve->bits);
+    prime = block.prime;
+//    printf("Copyied Start %ld size %ld bits %ld prime %ld\n",(uint64_t)block.patternstart, (uint64_t)block.patternsize, (uint64_t)sieve->bits,(uint64_t) prime);
+
     do {
         if (block_stop > sieve->bits) block_stop = sieve->bits;
-        struct block block = sieve_block(sieve, block_start, block_stop);
-        sieve_block_stripe(sieve, block_start, block_stop, block.prime+1);
+        sieve_block_stripe(sieve, block_start, block_stop, prime+1);
         block_start += blocksize;
         block_stop += blocksize;
     } while (block_start <= sieve->bits);
 
     return sieve;
 }
+
+// static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) {
+//     struct sieve_state *sieve = create_sieve(maxints);
+//     bitword_t*bitarray       = sieve->bitarray;
+//     counter_t prime          = 1;
+//     counter_t range          = sieve->bits;
+
+//     counter_t block_start = 0;
+//     counter_t block_stop = blocksize-1;
+
+//     do {
+//         if (block_stop > sieve->bits) block_stop = sieve->bits;
+//         struct block block = sieve_block(sieve, block_start, block_stop);
+//         sieve_block_stripe(sieve, block_start, block_stop, block.prime+1);
+//         block_start += blocksize;
+//         block_stop += blocksize;
+//     } while (block_start <= sieve->bits);
+
+//     return sieve;
+// }
 
 static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
     printf("DeepAnalyzing\n");
