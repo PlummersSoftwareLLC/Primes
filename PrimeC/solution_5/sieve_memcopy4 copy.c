@@ -505,33 +505,22 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
     // dump_bitarray(sieve);
 }
 
-static inline void sieve_block_stripe(struct sieve_state *sieve, counter_t block_start, counter_t block_stop, counter_t prime_start) {
-    counter_t prime = searchBitFalse(sieve, prime_start);
-    counter_t start = prime * prime * 2 + prime * 2;
-    while (start <= block_stop) {
-        const counter_t step  = prime * 2 + 1;
-        if (block_start >= (prime + 1)) start = block_start + prime + prime - ((block_start + prime) % step);
-        setBitsTrue(sieve, start, step, block_stop);
-        prime = searchBitFalse(sieve, prime+1 );
-        start = prime * prime * 2 + prime * 2;
-    } 
-}
 
-struct block {
-    counter_t patternsize; // size of pattern applied 
-    counter_t patternstart; // start of pattern
-    counter_t prime; // next prime to be striped
-};
+// static inline void sieve_block_from_value(struct sieve_state *sieve, counter_t block_start, counter_t block_stop, counter_t prime) {
+//     counter_t start = prime * prime * 2 + prime * 2;
+//     while (start <= block_stop) {
+//         const counter_t step  = prime * 2 + 1;
+//         if (block_start >= (prime + 1)) start = block_start + prime + prime - ((block_start + prime) % step);
+//         setBitsTrue(sieve, start, step, block_stop);
+//         prime = searchBitFalse(sieve, prime+1);
+//     } 
+// }
 
-// returns prime that could not be handled:
-// start is too large
-// range is too big
-static inline struct block sieve_block(struct sieve_state *sieve, counter_t block_start, counter_t block_stop) {
+static inline void sieve_block(struct sieve_state *sieve, counter_t block_start, counter_t block_stop) {
     counter_t prime            = 0;
     counter_t patternsize_bits = 1;
     counter_t range            = sieve->bits;
     counter_t range_stop       = block_stop;
-    struct block block;
 
     do {
         prime = searchBitFalse(sieve, prime+1);
@@ -547,17 +536,26 @@ static inline struct block sieve_block(struct sieve_state *sieve, counter_t bloc
         if (patternsize_bits>1) {
             counter_t pattern_start = block_start | patternsize_bits;
             copyPattern(sieve, pattern_start, patternsize_bits, range_stop);
-            block.patternsize = patternsize_bits;
-            block.patternstart = pattern_start;
         }
         patternsize_bits *= step;
 
         setBitsTrue(sieve, start, step, range_stop);
-        block.prime = prime;
     } while (range_stop < block_stop);
 
-    return block;
+    // prime = searchBitFalse(sieve, prime+1);
+    // sieve_block_from_value(sieve, block_start, block_stop, prime);
+
+    while (1) {
+        counter_t start = prime * prime * 2 + prime * 2;
+        if (start > block_stop) break;
+        const counter_t step  = prime * 2 + 1;
+        if (block_start >= (prime + 1)) start = block_start + prime + prime - ((block_start + prime) % step);
+        setBitsTrue(sieve, start, step, block_stop);
+        prime = searchBitFalse(sieve, prime+1);
+    } 
 }
+
+
 
 static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) {
     struct sieve_state *sieve = create_sieve(maxints);
@@ -570,8 +568,7 @@ static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) 
 
     do {
         if (block_stop > sieve->bits) block_stop = sieve->bits;
-        struct block block = sieve_block(sieve, block_start, block_stop);
-        sieve_block_stripe(sieve, block_start, block_stop, block.prime+1);
+        sieve_block(sieve, block_start, block_stop);
         block_start += blocksize;
         block_stop += blocksize;
     } while (block_start <= sieve->bits);
