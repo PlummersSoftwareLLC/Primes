@@ -1,6 +1,14 @@
 {
     "files.associations": {
         "chrono": "c",
-        "debugtools.h": "c"
+        "debugtools.h": "c",
+        "format": "c",
+        "initializer_list": "c",
+        "random": "c",
+        "type_traits": "c",
+        "vector": "c",
+        "xstring": "c",
+        "xtree": "c",
+        "xutility": "c"
     }
 }
