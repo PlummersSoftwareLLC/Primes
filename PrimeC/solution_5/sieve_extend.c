@@ -5,7 +5,6 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-#include "monotonic_xplatform.h"
 
 #define debug if (0)
 #define sieve_limit 1000000
@@ -29,7 +28,7 @@
 #define bitshift_t TYPE
 
 counter_t global_SMALLSTEP_FASTER = WORD_SIZE/4;
-counter_t global_MEDIUMSTEP_FASTER = WORD_SIZE*3/4;
+counter_t global_MEDIUMSTEP_FASTER = WORD_SIZE;
 
 #define SAFE_SHIFTBIT (bitword_t)1U
 #define SAFE_ZERO  (bitword_t)0U
@@ -42,7 +41,6 @@ counter_t global_MEDIUMSTEP_FASTER = WORD_SIZE*3/4;
 #define  markmask(index) (SAFE_SHIFTBIT << bitindex(index))
 #define chopmask(index) ((SAFE_SHIFTBIT << bitindex(index))-SAFE_SHIFTBIT)
 #define chopmask2(index) (((bitword_t)2U << bitindex(index))-SAFE_SHIFTBIT)
-//#define offsetmask(index) (((bitword_t)index) & ((bitword_t)sizeof(bitword_t)*8-1))
 
 
 struct sieve_state {
@@ -52,7 +50,7 @@ struct sieve_state {
     counter_t  size;
 };
 
-#include "debugtools.h"
+//#include "debugtools.h"
 
 static inline counter_t count_primes(struct sieve_state *sieve) {
     counter_t       bits = sieve->bits;
@@ -567,8 +565,8 @@ void usage(char *name) {
 int main(int argc, char *argv[]) {
     counter_t maxints  = sieve_limit;
     int verboselevel = 0;
-    int option_check = 1;
-    int option_tune = 1;
+    int option_check = 0;
+    int option_tune = 0;
     for (int arg=1; arg < argc; arg++) {
         if (strcmp(argv[arg], "--help")==0) { usage(argv[0]); }
         else if (strcmp(argv[arg], "--verbose")==0) {
@@ -578,8 +576,8 @@ int main(int argc, char *argv[]) {
             }
             printf("Verboselevel set to %d\n",verboselevel);
         } 
-        else if (strcmp(argv[arg], "--nocheck")==0) { option_check=0; }
-        else if (strcmp(argv[arg], "--notune")==0) { option_tune=0; }
+        else if (strcmp(argv[arg], "--check")==0) { option_check=0; }
+        else if (strcmp(argv[arg], "--tune")==0) { option_tune=1; }
         else if (sscanf(argv[arg], "%ld", &maxints) != 1) {
             fprintf(stderr, "Invalid size %s\n",argv[arg]); usage(argv[0]); 
             printf("Maximum set to %ld\n",(uint64_t)maxints);
@@ -631,13 +629,16 @@ int main(int argc, char *argv[]) {
                         counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
                         double elapsed_time = 0;
                         double sample_time = 0.1;
-                        double start_time = monotonic_seconds();
+                        // double start_time = monotonic_seconds();
+                        clock_gettime(CLOCK_MONOTONIC,&start_time);
                         struct sieve_state *sieve_instance;
                         while (elapsed_time <= sample_time) {
                             sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
                             delete_sieve(sieve_instance);
                             passes++;
-                            elapsed_time = monotonic_seconds()-start_time;
+                            // elapsed_time = monotonic_seconds()-start_time;
+                            clock_gettime(CLOCK_MONOTONIC,&end_time);
+                            elapsed_time = end_time.tv_sec + end_time.tv_nsec*1e-9 - start_time.tv_sec - start_time.tv_nsec*1e-9;
                         }
                         double avg = passes/elapsed_time;
                         if (verboselevel >= 3) printf("\33[2K\r...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ld; mediumstep %ld; passes %3ld; time %f;average %f", (uint64_t)blocksize_bits, (uint64_t)blocksize_kb,(uint64_t)free_bits,(uint64_t)best_smallstep_faster,(uint64_t)best_mediumstep_faster,(uint64_t)passes,elapsed_time,avg);
@@ -676,6 +677,6 @@ int main(int argc, char *argv[]) {
             elapsed_time = end_time.tv_sec + end_time.tv_nsec*1e-9 - start_time.tv_sec - start_time.tv_nsec*1e-9;
 
         }
-        printf("rogiervandam_memcopy;%ld;%f;1;algorithm=other,faithful=yes,bits=1\n", (uint64_t)passes,elapsed_time);
+        printf("rogiervandam_extend;%ld;%f;1;algorithm=other,faithful=yes,bits=1\n", (uint64_t)passes,elapsed_time);
     }
 }

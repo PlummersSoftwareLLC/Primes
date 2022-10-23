@@ -1,3 +1,5 @@
+#include "monotonic_xplatform.h"
+
 static inline void printWord(bitword_t bitword)
 {
     char row[WORD_SIZE*2] = {};
