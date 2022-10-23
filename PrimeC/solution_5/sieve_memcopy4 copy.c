@@ -13,6 +13,7 @@
 // #define sieve_limit 100
 #define sieve_duration 5
 
+
 // 32 bit
 // #define TYPE uint32_t
 // #define WORD_SIZE 32
@@ -25,80 +26,28 @@
 
 #define counter_t TYPE
 #define bitword_t TYPE
+#define bitshift_t int64_t
+
+counter_t global_PATTERN_FASTER = WORD_SIZE;
+
 #define SAFE_SHIFTBIT (bitword_t)1U
-#define PATTERN_FASTER ((bitword_t)WORD_SIZE)//WORD_SIZE)
+#define PATTERN_FASTER ((counter_t)global_PATTERN_FASTER)//WORD_SIZE)
 #define bitindex(index) (((bitword_t)index)&((bitword_t)(WORD_SIZE-1)))
-#define wordindex(index) (((bitword_t)index) >> (bitword_t)SHIFT)
+#define wordindex(index) (((bitword_t)index) >> (bitshift_t)SHIFT)
 #define  markmask(index) (SAFE_SHIFTBIT << bitindex(index))
 #define chopmask(index) ((SAFE_SHIFTBIT << bitindex(index))-SAFE_SHIFTBIT)
 #define chopmask2(index) (((bitword_t)2U << bitindex(index))-SAFE_SHIFTBIT)
 #define offsetmask(index) (((bitword_t)index) & ((bitword_t)sizeof(bitword_t)*8-1))
 
-#define debugnr(index) ((bitword_t)index)
-
-
-
-// Return the smallest multiple N of y such that:  x <= y * N
-#define ceiling(x,y) (((x) + (y) - 1) / (y))
-
-static inline void printWord(bitword_t bitword)
-{
-    char row[WORD_SIZE*2] = {};
-    int col=0;
-    for (int i=WORD_SIZE-1; i>=0; i--) {
-		row[col++] = (bitword & (SAFE_SHIFTBIT<<i))?'1':'.';
-		if (!(i%8)) row[col++] = ' ';
-    }
-
-    printf("%s", row);
-}
-
-static inline void printBits(size_t const size, void const * const ptr)
-{
-    unsigned char *b = (unsigned char*) ptr;
-    unsigned char byte;
-    int i, j;
-
-    for (i = size-1; i >= 0; i--) {
-        for (j = 7; j >= 0; j--) {
-            byte = (b[i] >> j) & 1;
-            if (byte==0) printf(".");
-            else printf("%u", byte);
-        }
-        printf(" ");
-    }
-}
 
 struct sieve_state {
-    bitword_t    *bitarray;
-    counter_t     bits;
-    counter_t     size;
+    bitword_t* bitarray;
+    counter_t  bits;
+//    counter_t  words;
+    counter_t  size;
 };
 
-// https://stackoverflow.com/questions/31117497/fastest-integer-square-root-in-the-least-amount-of-instructions
-static inline unsigned isqrt(unsigned long val) {
-    unsigned long temp, g=0, b = 0x8000, bshft = 15;
-    do {
-        if (val >= (temp = (((g << 1) + b)<<bshft--))) {
-           g += b;
-           val -= temp;
-        }
-    } while (b >>= 1);
-    return g;
-}
-
-static inline void dump_bitarray(struct sieve_state *sieve) {
-    counter_t       bits = sieve->bits;
-    bitword_t  *bitarray = sieve->bitarray;
-    printf("Dumping sieve with %ld bits\n",(uint64_t)bits);
-    for (counter_t word=0; word <= 1+(bits >> SHIFT); word+=2) {
-        printf("word %2ld %2ld ",(uint64_t)word+1,(uint64_t)word);
-        printBits(8,&bitarray[word]);
-        printf(" %6ld - %6ld\n", (uint64_t)word*WORD_SIZE+WORD_SIZE+WORD_SIZE-1,(uint64_t) word*WORD_SIZE);
-
-    }
-    puts("");
-}
+#include "debugtools.h"
 
 static inline counter_t count_primes(struct sieve_state *sieve) {
     counter_t       bits = sieve->bits;
@@ -119,19 +68,79 @@ static inline counter_t count_primes(struct sieve_state *sieve) {
 }
 
 // use cache lines as much as possible
+ #define ceiling(x,y) (((x) + (y) - 1) / (y)) // Return the smallest multiple N of y such that:  x <= y * N
 static inline struct sieve_state *create_sieve(int maxints) {
+    counter_t maxints_c = maxints;
     struct sieve_state *sieve = malloc(sizeof *sieve);//aligned_alloc(8, sizeof(struct sieve_state));
-    counter_t memSize = ceiling(1+maxints/2, 64*8) * 64; //make multiple of 8
-    // debug printf("MemSize %ld bytes  %ld bits\n", memSize, memSize * 8);
-     sieve->bitarray = aligned_alloc(64, memSize );
-    // sieve->bitarray = calloc((maxints>>5)+1,sizeof(bitword_t));
-    sieve->bits     = maxints >> 1;
+    // counter_t memSize = ceiling(1+maxints/2, 64*8) * 64; //make multiple of 8
+    counter_t memSize = ceiling(1+(maxints/2), 64*8) * 64; //make multiple of 8
+//    size_t memSize = ((1+(maxints>>(1+6+3)))<<6) ; // 1 for maxints/2, 6 for 64 bit align, 3 for 8-bit bytes
+//    counter_t memSize = ((SAFE_SHIFTBIT+(maxints_c>>(1+6+3)))<<6) ; // 1 for maxints/2, 6 for 64 bit align, 3 for 8-bit bytes
+
+//    size_t memSize = (SAFE_SHIFTBIT + (maxints >> (SHIFT+SAFE_SHIFTBIT))<<(SHIFT));
+    sieve->bitarray = aligned_alloc(64, memSize );
+    sieve->bits     = maxints >> SAFE_SHIFTBIT;
     sieve->size     = maxints;
-    for(counter_t i=0; i <= (memSize/sizeof(bitword_t)); i++) {
-        sieve->bitarray[i] = (bitword_t)0;
+//    sieve->words    = memSize/sizeof(bitword_t);
+
+//    counter_t words = sieve->words; //maxints >> (SHIFT+SAFE_SHIFTBIT);
+    counter_t words = memSize/sizeof(bitword_t);
+    for(counter_t index_word=0; index_word <= words; index_word++) {
+        sieve->bitarray[index_word] = (bitword_t)0;
     }
+    // for(counter_t i=0; i <= (memSize/sizeof(bitword_t)); i++) {
+    //     sieve->bitarray[i] = (bitword_t)0;
+    // }
     return sieve;
 }
+
+
+// // use cache lines as much as possible
+// #define ceiling(x,y) (((x) + (y) - 1) / (y)) // Return the smallest multiple N of y such that:  x <= y * N
+
+// static inline struct sieve_state *create_sieve(int maxints) {
+//     struct sieve_state *sieve = malloc(sizeof *sieve);//aligned_alloc(8, sizeof(struct sieve_state));
+//     counter_t memSize = ceiling(1+maxints/2, 64*8) * 64; //make multiple of 8
+//      sieve->bitarray = aligned_alloc(64, memSize );
+//     sieve->bits     = maxints >> 1;
+//     sieve->size     = maxints;
+//     for(counter_t i=0; i <= (memSize/sizeof(bitword_t)); i++) sieve->bitarray[i] = (bitword_t)0;
+//     return sieve;
+// }
+
+// // use cache lines as much as possible
+// static inline struct sieve_state *create_sieve(counter_t maxints) {
+//     struct sieve_state *sieve = malloc(sizeof *sieve);//aligned_alloc(8, sizeof(struct sieve_state));
+//     sieve->size     = maxints;
+//     sieve->bits     = maxints >> SAFE_SHIFTBIT;
+// //    sieve->words    = (sieve->bits >> SHIFT);
+
+//     size_t memSize = (SAFE_SHIFTBIT + (maxints >> (SHIFT+SAFE_SHIFTBIT))<<(SHIFT));
+//     sieve->bitarray = aligned_alloc(64, memSize );
+// //     printf("Memsize %d %ld\n", maxints, memSize);
+
+//     counter_t words = maxints >> (SHIFT+SAFE_SHIFTBIT);
+//     for(counter_t index_word=0; index_word <= words; index_word++) {
+//         sieve->bitarray[index_word] = (bitword_t)0;
+//     }
+//     return sieve;
+// }
+
+// use cache lines as much as possible
+// static inline struct sieve_state *create_sieve(counter_t maxints) {
+//     struct sieve_state *sieve = malloc(sizeof *sieve);//aligned_alloc(8, sizeof(struct sieve_state));
+//     sieve->size     = maxints;
+//     sieve->bits     = maxints >> SAFE_SHIFTBIT;
+//     sieve->words    = (sieve->bits >> SHIFT);
+
+//     size_t memSize = SAFE_SHIFTBIT + ((sieve->words)<<(SHIFT));
+//     sieve->bitarray = aligned_alloc(64, memSize );
+
+//     for(counter_t index_word=0; index_word <= sieve->words; index_word++) {
+//         sieve->bitarray[index_word] = (bitword_t)0;
+//     }
+//     return sieve;
+// }
 
 // struct sieve_state *create_sieve(int maxints) {
 //     struct sieve_state *sieve_state = malloc(sizeof *sieve_state);
@@ -152,8 +161,8 @@ static inline counter_t searchBitFalse(struct sieve_state *sieve, counter_t inde
     // return index;
 
     counter_t index_word = wordindex(index);
-    counter_t index_bit  = bitindex(index);
-    counter_t distance = __builtin_ctz( ~(sieve->bitarray[index_word] >> bitindex(index)));  // take inverse to be able to use ctz
+    bitshift_t index_bit  = bitindex(index);
+    counter_t distance = (counter_t) __builtin_ctz( ~(sieve->bitarray[index_word] >> bitindex(index)));  // take inverse to be able to use ctz
     index += distance;
     distance += index_bit;
 
@@ -166,64 +175,17 @@ static inline counter_t searchBitFalse(struct sieve_state *sieve, counter_t inde
     return index;
 }
 
-static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
-//    if (step <= PATTERN_FASTER) printf("Setbitstrue %ld-%ld step %ld\n",range_start, range_stop, step);
+static inline void setBitsTrue_Smallstep(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
 
-    if (step > PATTERN_FASTER) {
-        counter_t range_stop_unique =  range_start + WORD_SIZE * step;
-        if (range_stop_unique > range_stop) {
-            for (counter_t index = range_start; index <= range_stop; index += step) {
-                sieve->bitarray[wordindex(index)] |= markmask(index);
-            }
-            return;
-        }
-
-        counter_t range_stop_word = wordindex(range_stop);
-        counter_t range_stop_bit  =  markmask(range_stop);
-        counter_t step_2 = step * 2;
-        counter_t step_3 = step * 3;
-        counter_t step_4 = step * 4;
-
-        for (counter_t index = range_start; index <= range_stop_unique; index += step) {
-            counter_t index_bit = bitindex(index);
-            bitword_t mask = markmask(index_bit);
-
-            counter_t fast_loop_stop_word = (range_stop_word>step_3) ? (range_stop_word - step_3) : 0;
-
-            counter_t index_word = wordindex(index);
-
-            while (index_word < fast_loop_stop_word) {
-                sieve->bitarray[index_word         ] |= mask;
-                sieve->bitarray[index_word + step  ] |= mask;
-                sieve->bitarray[index_word + step_2] |= mask;
-                sieve->bitarray[index_word + step_3] |= mask;
-                index_word += step_4;
-            }
-
-            while (index_word < range_stop_word) {
-                sieve->bitarray[index_word] |= mask;
-                index_word += step;
-            }
-
-            if (index_word == range_stop_word) {
-                if (index_bit <= range_stop_bit) {
-                    sieve->bitarray[index_word] |= mask;
-                }
-            }
-        }
-
-        return;
-    }   
-
-    counter_t copy_word = wordindex(range_start);
-    counter_t range_stop_word = wordindex(range_stop);
-
+    // build the pattern in a word
 	bitword_t pattern = SAFE_SHIFTBIT;
     for (counter_t patternsize = step; patternsize <= WORD_SIZE; patternsize += patternsize) {
         pattern |= (pattern << patternsize);
     }
 
-    counter_t shift = bitindex(range_start);
+    bitshift_t shift = bitindex(range_start);
+    counter_t copy_word = wordindex(range_start);
+    counter_t range_stop_word = wordindex(range_stop);
 
     if (copy_word == range_stop_word) { // shortcut
        sieve->bitarray[copy_word] |= ((pattern << shift) & chopmask2(range_stop)) ;
@@ -233,10 +195,10 @@ static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start,
     // from now on, we are before range_stop_word
     // first word is special, because it should not set bits before the range_start_bit
     sieve->bitarray[copy_word] |= (pattern << shift);
-    counter_t pattern_shift = WORD_SIZE % step;
+    bitshift_t pattern_shift = WORD_SIZE % step;
     shift = shift % step;
     copy_word++;
-    counter_t pattern_size = WORD_SIZE - pattern_shift;
+    bitshift_t pattern_size = WORD_SIZE - pattern_shift;
     pattern = (pattern << shift); // correct for inital offset
 
     while (copy_word < range_stop_word) {
@@ -248,48 +210,100 @@ static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start,
     sieve->bitarray[copy_word] |= pattern & chopmask2(range_stop);
 }
 
-static inline void copyPattern(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
-    counter_t source_word = wordindex(source_start);
-    counter_t source_bit = bitindex(source_start);
-    counter_t destination_stop_word = wordindex(destination_stop);
-    counter_t copy_start = source_start + size;
+static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
+    if (step <= PATTERN_FASTER) { setBitsTrue_Smallstep(sieve, range_start, step, range_stop); return; }
 
-    // printf("Copying from %ld size %ld to max %ld\n",source_start,size, destination_stop);
-
-    if (size < WORD_SIZE) { // handle small: fill the second word
-        // printf("Copying smallsize from %ld to max %ld with size %ld\n",source_start,destination_stop, size);
-
-        bitword_t pattern = (sieve->bitarray[source_word] >> source_bit) | (sieve->bitarray[source_word+1] << (WORD_SIZE-source_bit));
-        pattern &= chopmask2(size);
-
-        for (counter_t patternsize = size; patternsize <= WORD_SIZE; patternsize += patternsize) {
-             pattern |= (pattern << patternsize);
-        }
-        counter_t pattern_shift = WORD_SIZE % size;
-        counter_t copy_word = wordindex(copy_start);
-        counter_t patternsize = WORD_SIZE - pattern_shift;
-        counter_t shift = WORD_SIZE - bitindex(copy_start);
-        sieve->bitarray[copy_word] |= (pattern << bitindex(copy_start));
-
-        while (copy_word < destination_stop_word) { // = will be handled as well because increment is after this 
-            copy_word++;
-            sieve->bitarray[copy_word] = (pattern << (patternsize-shift)) | (pattern >> shift);
-            shift = bitindex(shift + pattern_shift); 
+    counter_t range_stop_unique =  range_start + WORD_SIZE * step;
+    if (range_stop_unique > range_stop) {
+        for (counter_t index = range_start; index <= range_stop; index += step) {
+            sieve->bitarray[wordindex(index)] |= markmask(index);
         }
         return;
     }
+
+    counter_t range_stop_word = wordindex(range_stop);
+    counter_t range_stop_bit  =  markmask(range_stop);
+    counter_t step_2 = step * 2;
+    counter_t step_3 = step * 3;
+    counter_t step_4 = step * 4;
+
+    for (counter_t index = range_start; index <= range_stop_unique; index += step) {
+        counter_t index_bit = bitindex(index);
+        bitword_t mask = markmask(index_bit);
+
+        counter_t fast_loop_stop_word = (range_stop_word>step_3) ? (range_stop_word - step_3) : 0;
+
+        counter_t index_word = wordindex(index);
+
+        while (index_word < fast_loop_stop_word) {
+            sieve->bitarray[index_word         ] |= mask;
+            sieve->bitarray[index_word + step  ] |= mask;
+            sieve->bitarray[index_word + step_2] |= mask;
+            sieve->bitarray[index_word + step_3] |= mask;
+            index_word += step_4;
+        }
+
+        while (index_word < range_stop_word) {
+            sieve->bitarray[index_word] |= mask;
+            index_word += step;
+        }
+
+        if (index_word == range_stop_word) {
+            if (index_bit <= range_stop_bit) {
+                sieve->bitarray[index_word] |= mask;
+            }
+        }
+    }
+}
+
+static void copyPattern_smallsize(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
+    counter_t source_word = wordindex(source_start);
+    bitshift_t source_bit = bitindex(source_start);
+
+    bitword_t pattern = (sieve->bitarray[source_word] >> source_bit) | (sieve->bitarray[source_word+1] << (WORD_SIZE-source_bit));
+    pattern &= chopmask2(size);
+
+    for (counter_t patternsize = size; patternsize <= WORD_SIZE; patternsize += patternsize) {
+        pattern |= (pattern << patternsize);
+    }
+    counter_t copy_start = source_start + size;
+    counter_t copy_word = wordindex(copy_start);
+    bitshift_t pattern_shift = WORD_SIZE % size;
+    bitshift_t patternsize = WORD_SIZE - pattern_shift;
+    bitshift_t shift = (bitshift_t) WORD_SIZE - bitindex(copy_start);
+    sieve->bitarray[copy_word] |= (pattern << bitindex(copy_start));
+
+    counter_t destination_stop_word = wordindex(destination_stop);
+
+    while (copy_word < destination_stop_word) { // = will be handled as well because increment is after this 
+        copy_word++;
+        sieve->bitarray[copy_word] = (pattern << (patternsize-shift)) | (pattern >> shift);
+        shift = bitindex(shift + pattern_shift);  // alternative, but faster
+    }
+}
+
+static inline void copyPattern(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
+    if (size < WORD_SIZE) { // handle small: fill the second word
+       copyPattern_smallsize(sieve, source_start, size, destination_stop);
+       return;
+    }
+
+    counter_t source_word = wordindex(source_start);
+    bitshift_t source_bit = bitindex(source_start);
+    counter_t destination_stop_word = wordindex(destination_stop);
+    counter_t copy_start = source_start + size;
 
     counter_t copy_word = wordindex(copy_start);
     counter_t copy_bit = bitindex(copy_start);
     counter_t aligned_copy_word = source_word + size; // after <<size>> words, just copy at word level
     if (aligned_copy_word > destination_stop_word) aligned_copy_word = destination_stop_word;
-    int shift = source_bit - copy_bit;
+    bitshift_t shift = source_bit - copy_bit;
 
     // printf("Copying largesize from %ld to max %ld with shift %ld\n",source_start,destination_stop, shift);
 
     if (shift > 0) {
 
-        counter_t shift_flipped = WORD_SIZE-shift;
+        bitshift_t shift_flipped = WORD_SIZE-shift;
         sieve->bitarray[copy_word] |= ((sieve->bitarray[source_word] >> shift) 
                                     | (sieve->bitarray[source_word+1] << shift_flipped))
                                     & ~chopmask(copy_bit); // because this is the first word, dont copy the extra bits in front of the source
@@ -470,6 +484,18 @@ static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) 
     return sieve;
 }
 
+// https://stackoverflow.com/questions/31117497/fastest-integer-square-root-in-the-least-amount-of-instructions
+static inline unsigned isqrt(unsigned long val) {
+    unsigned long temp, g=0, b = 0x8000, bshft = 15;
+    do {
+        if (val >= (temp = (((g << 1) + b)<<bshft--))) {
+           g += b;
+           val -= temp;
+        }
+    } while (b >>= 1);
+    return g;
+}
+
 static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
     printf("DeepAnalyzing\n");
     counter_t range_to =  sieve->bits;
@@ -557,26 +583,30 @@ int main(int argc, char **argv) {
     printf("Valid algoritm. Tuning...\n");
     double best_avg = 0;
     counter_t best_blocksize_bits = 0;
-    for (counter_t blocksize_kb=64; blocksize_kb>=32; blocksize_kb /= 2) {
-        for (counter_t free_bits=0; free_bits < 8192 * 8 && free_bits < blocksize_kb * 1024 * 8; free_bits += 512) {
-            counter_t passes = 0;
-            counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
-            double elapsed_time = 0;
-            double sample_time = 0.05;
-            double start_time = monotonic_seconds();
-            while (elapsed_time <= sample_time) {
-                sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
-                delete_sieve(sieve_instance);
-                passes++;
-                elapsed_time = monotonic_seconds()-start_time;
-            }
-            double avg = passes/elapsed_time;
-            if (avg > best_avg) {
-                best_avg = avg;
-                best_blocksize_bits = blocksize_bits;
-                printf("blocksize_bits %ld; blocksize %3ldkb; free_bits %4ld; passes %3ld; time %f;average %f\n", (uint64_t)blocksize_bits, (uint64_t)blocksize_kb,(uint64_t)free_bits,(uint64_t)passes,elapsed_time,avg);
+    for (counter_t pattern_faster = 16; pattern_faster <= WORD_SIZE; pattern_faster += 8) {
+        global_PATTERN_FASTER = pattern_faster;
+        for (counter_t blocksize_kb=32; blocksize_kb>=32; blocksize_kb /= 2) {
+            for (counter_t free_bits=4096; free_bits < 8192 && free_bits < blocksize_kb * 1024 * 8; free_bits += 512) {
+                counter_t passes = 0;
+                counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
+                double elapsed_time = 0;
+                double sample_time = 0.05;
+                double start_time = monotonic_seconds();
+                while (elapsed_time <= sample_time) {
+                    sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
+                    delete_sieve(sieve_instance);
+                    passes++;
+                    elapsed_time = monotonic_seconds()-start_time;
+                }
+                double avg = passes/elapsed_time;
+                if (avg > best_avg) {
+                    best_avg = avg;
+                    best_blocksize_bits = blocksize_bits;
+                    printf("blocksize_bits %ld; blocksize %3ldkb; free_bits %5ld; pattern_faster: %ld; passes %3ld; time %f;average %f\n", (uint64_t)blocksize_bits, (uint64_t)blocksize_kb,(uint64_t)free_bits,(uint64_t)pattern_faster,(uint64_t)passes,elapsed_time,avg);
+                }
             }
         }
+
     }
     printf("Tuned algoritm. Best blocksize: %ld\n",(uint64_t)best_blocksize_bits);
 

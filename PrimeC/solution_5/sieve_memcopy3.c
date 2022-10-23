@@ -13,6 +13,7 @@
 // #define sieve_limit 100
 #define sieve_duration 5
 
+
 // 32 bit
 // #define TYPE uint32_t
 // #define WORD_SIZE 32
@@ -25,8 +26,12 @@
 
 #define counter_t TYPE
 #define bitword_t TYPE
+
+
+counter_t global_PATTERN_FASTER = WORD_SIZE;
+
 #define SAFE_SHIFTBIT (bitword_t)1U
-#define PATTERN_FASTER ((bitword_t)WORD_SIZE)//WORD_SIZE)
+#define PATTERN_FASTER ((counter_t)global_PATTERN_FASTER)//WORD_SIZE)
 #define bitindex(index) (((bitword_t)index)&((bitword_t)(WORD_SIZE-1)))
 #define wordindex(index) (((bitword_t)index) >> (bitword_t)SHIFT)
 #define  markmask(index) (SAFE_SHIFTBIT << bitindex(index))
@@ -124,6 +129,7 @@ static inline struct sieve_state *create_sieve(int maxints) {
     counter_t memSize = ceiling(1+maxints/2, 64*8) * 64; //make multiple of 8
     // debug printf("MemSize %ld bytes  %ld bits\n", memSize, memSize * 8);
      sieve->bitarray = aligned_alloc(64, memSize );
+//     printf("Memsize %d %ld\n", maxints, memSize);
     // sieve->bitarray = calloc((maxints>>5)+1,sizeof(bitword_t));
     sieve->bits     = maxints >> 1;
     sieve->size     = maxints;
@@ -166,64 +172,17 @@ static inline counter_t searchBitFalse(struct sieve_state *sieve, counter_t inde
     return index;
 }
 
-static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
-//    if (step <= PATTERN_FASTER) printf("Setbitstrue %ld-%ld step %ld\n",range_start, range_stop, step);
+static inline void setBitsTrue_Smallstep(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
 
-    if (step > PATTERN_FASTER) {
-        counter_t range_stop_unique =  range_start + WORD_SIZE * step;
-        if (range_stop_unique > range_stop) {
-            for (counter_t index = range_start; index <= range_stop; index += step) {
-                sieve->bitarray[wordindex(index)] |= markmask(index);
-            }
-            return;
-        }
-
-        counter_t range_stop_word = wordindex(range_stop);
-        counter_t range_stop_bit  =  markmask(range_stop);
-        counter_t step_2 = step * 2;
-        counter_t step_3 = step * 3;
-        counter_t step_4 = step * 4;
-
-        for (counter_t index = range_start; index <= range_stop_unique; index += step) {
-            counter_t index_bit = bitindex(index);
-            bitword_t mask = markmask(index_bit);
-
-            counter_t fast_loop_stop_word = (range_stop_word>step_3) ? (range_stop_word - step_3) : 0;
-
-            counter_t index_word = wordindex(index);
-
-            while (index_word < fast_loop_stop_word) {
-                sieve->bitarray[index_word         ] |= mask;
-                sieve->bitarray[index_word + step  ] |= mask;
-                sieve->bitarray[index_word + step_2] |= mask;
-                sieve->bitarray[index_word + step_3] |= mask;
-                index_word += step_4;
-            }
-
-            while (index_word < range_stop_word) {
-                sieve->bitarray[index_word] |= mask;
-                index_word += step;
-            }
-
-            if (index_word == range_stop_word) {
-                if (index_bit <= range_stop_bit) {
-                    sieve->bitarray[index_word] |= mask;
-                }
-            }
-        }
-
-        return;
-    }   
-
-    counter_t copy_word = wordindex(range_start);
-    counter_t range_stop_word = wordindex(range_stop);
-
+    // build the pattern in a word
 	bitword_t pattern = SAFE_SHIFTBIT;
     for (counter_t patternsize = step; patternsize <= WORD_SIZE; patternsize += patternsize) {
         pattern |= (pattern << patternsize);
     }
 
     counter_t shift = bitindex(range_start);
+    counter_t copy_word = wordindex(range_start);
+    counter_t range_stop_word = wordindex(range_stop);
 
     if (copy_word == range_stop_word) { // shortcut
        sieve->bitarray[copy_word] |= ((pattern << shift) & chopmask2(range_stop)) ;
@@ -246,6 +205,52 @@ static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start,
     } 
     pattern = (pattern >> pattern_shift) | (pattern << (pattern_size - pattern_shift));
     sieve->bitarray[copy_word] |= pattern & chopmask2(range_stop);
+}
+
+static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
+    if (step <= PATTERN_FASTER) { setBitsTrue_Smallstep(sieve, range_start, step, range_stop); return; }
+
+    counter_t range_stop_unique =  range_start + WORD_SIZE * step;
+    if (range_stop_unique > range_stop) {
+        for (counter_t index = range_start; index <= range_stop; index += step) {
+            sieve->bitarray[wordindex(index)] |= markmask(index);
+        }
+        return;
+    }
+
+    counter_t range_stop_word = wordindex(range_stop);
+    counter_t range_stop_bit  =  markmask(range_stop);
+    counter_t step_2 = step * 2;
+    counter_t step_3 = step * 3;
+    counter_t step_4 = step * 4;
+
+    for (counter_t index = range_start; index <= range_stop_unique; index += step) {
+        counter_t index_bit = bitindex(index);
+        bitword_t mask = markmask(index_bit);
+
+        counter_t fast_loop_stop_word = (range_stop_word>step_3) ? (range_stop_word - step_3) : 0;
+
+        counter_t index_word = wordindex(index);
+
+        while (index_word < fast_loop_stop_word) {
+            sieve->bitarray[index_word         ] |= mask;
+            sieve->bitarray[index_word + step  ] |= mask;
+            sieve->bitarray[index_word + step_2] |= mask;
+            sieve->bitarray[index_word + step_3] |= mask;
+            index_word += step_4;
+        }
+
+        while (index_word < range_stop_word) {
+            sieve->bitarray[index_word] |= mask;
+            index_word += step;
+        }
+
+        if (index_word == range_stop_word) {
+            if (index_bit <= range_stop_bit) {
+                sieve->bitarray[index_word] |= mask;
+            }
+        }
+    }
 }
 
 static inline void copyPattern(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
@@ -557,26 +562,30 @@ int main(int argc, char **argv) {
     printf("Valid algoritm. Tuning...\n");
     double best_avg = 0;
     counter_t best_blocksize_bits = 0;
-    for (counter_t blocksize_kb=64; blocksize_kb>=32; blocksize_kb /= 2) {
-        for (counter_t free_bits=0; free_bits < 8192 * 8 && free_bits < blocksize_kb * 1024 * 8; free_bits += 512) {
-            counter_t passes = 0;
-            counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
-            double elapsed_time = 0;
-            double sample_time = 0.05;
-            double start_time = monotonic_seconds();
-            while (elapsed_time <= sample_time) {
-                sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
-                delete_sieve(sieve_instance);
-                passes++;
-                elapsed_time = monotonic_seconds()-start_time;
-            }
-            double avg = passes/elapsed_time;
-            if (avg > best_avg) {
-                best_avg = avg;
-                best_blocksize_bits = blocksize_bits;
-                printf("blocksize_bits %ld; blocksize %3ldkb; free_bits %4ld; passes %3ld; time %f;average %f\n", (uint64_t)blocksize_bits, (uint64_t)blocksize_kb,(uint64_t)free_bits,(uint64_t)passes,elapsed_time,avg);
+    for (counter_t pattern_faster = 16; pattern_faster <= WORD_SIZE; pattern_faster += 8) {
+        global_PATTERN_FASTER = pattern_faster;
+        for (counter_t blocksize_kb=32; blocksize_kb>=32; blocksize_kb /= 2) {
+            for (counter_t free_bits=4096; free_bits < 8192 && free_bits < blocksize_kb * 1024 * 8; free_bits += 512) {
+                counter_t passes = 0;
+                counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
+                double elapsed_time = 0;
+                double sample_time = 0.05;
+                double start_time = monotonic_seconds();
+                while (elapsed_time <= sample_time) {
+                    sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
+                    delete_sieve(sieve_instance);
+                    passes++;
+                    elapsed_time = monotonic_seconds()-start_time;
+                }
+                double avg = passes/elapsed_time;
+                if (avg > best_avg) {
+                    best_avg = avg;
+                    best_blocksize_bits = blocksize_bits;
+                    printf("blocksize_bits %ld; blocksize %3ldkb; free_bits %5ld; pattern_faster: %ld; passes %3ld; time %f;average %f\n", (uint64_t)blocksize_bits, (uint64_t)blocksize_kb,(uint64_t)free_bits,(uint64_t)pattern_faster,(uint64_t)passes,elapsed_time,avg);
+                }
             }
         }
+
     }
     printf("Tuned algoritm. Best blocksize: %ld\n",(uint64_t)best_blocksize_bits);
 

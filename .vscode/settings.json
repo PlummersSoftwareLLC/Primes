@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "chrono": "c"
+        "chrono": "c",
+        "debugtools.h": "c"
     }
 }
