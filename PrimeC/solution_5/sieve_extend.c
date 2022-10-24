@@ -13,7 +13,7 @@
 #define default_sample_duration 0.1
 #define default_sample_max 5
 #define default_verbose_level 0
-#define default_tune_level 2
+#define default_tune_level 1
 #define default_check_level 1
 #define option_runonce 0
 
@@ -39,7 +39,6 @@ counter_t global_MEDIUMSTEP_FASTER = WORD_SIZE;
 #define SAFE_SHIFTBIT (bitword_t)1U
 #define SAFE_ZERO  (bitword_t)0U
 #define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
-//#define SMALLSTEP_FASTER ((counter_t)64)
 #define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
 #define wordindex(index) (((counter_t)index) >> (bitshift_t)SHIFT)
 #define bitindex(index) (((counter_t)index)&((bitword_t)(WORD_SIZE-1)))
@@ -676,6 +675,181 @@ void usage(char *name) {
     exit(1);
 }
 
+typedef struct  {
+    counter_t maxints;
+    counter_t blocksize_bits;
+    counter_t blocksize_kb;
+    counter_t free_bits;
+    counter_t smallstep_faster;
+    counter_t mediumstep_faster;
+    counter_t sample_max;
+    double    sample_duration;
+    counter_t passes;
+    double    elapsed_time;
+    double    avg;
+} tuning_result_type;
+
+int compare_tuning_result(const void *a, const void *b) {
+    tuning_result_type *resultA = (tuning_result_type *)a;
+    tuning_result_type *resultB = (tuning_result_type *)b;
+    return (resultB->avg - resultA->avg);
+}
+
+static void tune_benchmark(tuning_result_type* tuning_result, counter_t tuning_result_index) {
+    counter_t passes = 0;
+    double elapsed_time = 0;
+    struct timespec start_time,end_time;
+    // double start_time = monotonic_seconds();
+    struct sieve_state *sieve_instance;
+
+    global_SMALLSTEP_FASTER = tuning_result[tuning_result_index].smallstep_faster;
+    global_MEDIUMSTEP_FASTER = tuning_result[tuning_result_index].mediumstep_faster;
+
+    clock_gettime(CLOCK_MONOTONIC,&start_time);
+    while (elapsed_time <= tuning_result[tuning_result_index].sample_duration && passes < tuning_result[tuning_result_index].sample_max) {
+        sieve_instance = sieve(tuning_result[tuning_result_index].maxints, tuning_result[tuning_result_index].blocksize_bits);//blocksize_bits);
+        delete_sieve(sieve_instance);
+        passes++;
+        // elapsed_time = monotonic_seconds()-start_time;
+        clock_gettime(CLOCK_MONOTONIC,&end_time);
+        elapsed_time = end_time.tv_sec + end_time.tv_nsec*1e-9 - start_time.tv_sec - start_time.tv_nsec*1e-9;
+    }
+    tuning_result[tuning_result_index].passes = passes;
+    tuning_result[tuning_result_index].elapsed_time = elapsed_time;
+    tuning_result[tuning_result_index].avg = passes/elapsed_time;
+}
+
+static tuning_result_type tune(counter_t tune_level, counter_t maxints, counter_t option_verboselevel) {
+    counter_t best_blocksize_bits = default_blocksize;
+
+    double best_avg = 0;
+    best_blocksize_bits = 0;
+    counter_t best_smallstep_faster = 0;
+    counter_t best_mediumstep_faster = 0;
+    counter_t smallstep_faster_steps = 4;
+    counter_t mediumstep_faster_steps = 4;
+    counter_t freebits_steps = anticiped_cache_line_bytesize*4;
+    counter_t sample_max = default_sample_max;
+    double sample_duration = default_sample_duration;
+
+    // determines the size of the resultset
+    switch (tune_level) {
+        case 1:
+            smallstep_faster_steps  = WORD_SIZE/4;
+            mediumstep_faster_steps = WORD_SIZE/4;
+            freebits_steps = anticiped_cache_line_bytesize*8*2;
+            sample_max = 4;
+            sample_duration = 0.1;
+            break;
+        case 2:
+            smallstep_faster_steps  = WORD_SIZE/8;
+            mediumstep_faster_steps = WORD_SIZE/8;
+            freebits_steps = anticiped_cache_line_bytesize*8;
+            sample_max = 4;
+            sample_duration = 0.2;
+            break;
+        case 3:
+            smallstep_faster_steps  = WORD_SIZE/16;
+            mediumstep_faster_steps = WORD_SIZE/16;
+            freebits_steps = anticiped_cache_line_bytesize/2;
+            sample_max = 4;
+            sample_duration = 0.4;
+            break;
+    }
+    
+    if (option_verboselevel >= 1) printf("Tuning..."); if (option_verboselevel >= 2) printf("\n");
+    const counter_t max_results = ((WORD_SIZE/smallstep_faster_steps)+1) * ((WORD_SIZE / mediumstep_faster_steps)+1) * 32 * (anticiped_cache_line_bytesize*8*4/freebits_steps);
+    tuning_result_type* tuning_result = malloc(max_results * sizeof(tuning_result));
+    counter_t tuning_results=0;
+    counter_t tuning_result_index=0;
+    
+    for (counter_t smallstep_faster = 0; smallstep_faster <= WORD_SIZE/2; smallstep_faster += smallstep_faster_steps) {
+        for (counter_t mediumstep_faster = smallstep_faster; mediumstep_faster <= WORD_SIZE; mediumstep_faster += mediumstep_faster_steps) {
+            for (counter_t blocksize_kb=256; blocksize_kb>=8; blocksize_kb /= 2) {
+                for (counter_t free_bits=0; (free_bits < (anticiped_cache_line_bytesize*8*4) && (free_bits < blocksize_kb * 1024 * 8)); free_bits += freebits_steps) {
+                    counter_t blocksize_bits = (blocksize_kb * 1024 * 8) - free_bits;
+
+                    // set variables
+                    tuning_results++;
+                    tuning_result[tuning_result_index].maxints = maxints;
+                    tuning_result[tuning_result_index].sample_duration = sample_duration;
+                    tuning_result[tuning_result_index].sample_max = sample_max;
+                    tuning_result[tuning_result_index].blocksize_kb = blocksize_kb;
+                    tuning_result[tuning_result_index].free_bits = free_bits;
+                    tuning_result[tuning_result_index].blocksize_bits = blocksize_bits;
+                    tuning_result[tuning_result_index].smallstep_faster = smallstep_faster;
+                    tuning_result[tuning_result_index].mediumstep_faster = mediumstep_faster;
+                    tune_benchmark(tuning_result, tuning_result_index);
+
+                    if ( tuning_result[tuning_result_index].avg > best_avg) {
+                        best_avg = tuning_result[tuning_result_index].avg;
+                        best_blocksize_bits = blocksize_bits;
+                        best_smallstep_faster = smallstep_faster;
+                        best_mediumstep_faster = mediumstep_faster;
+                        if (option_verboselevel >=2) printf(".(>)blocksize_bits %10ju; blocksize %4jukb; free_bits %5ju; smallstep: %2ju; mediumstep %2ju; passes %3ju/%3ju; time %f/%f;average %f\n", 
+                        (uintmax_t)tuning_result[tuning_result_index].blocksize_bits, (uintmax_t)tuning_result[tuning_result_index].blocksize_kb,(uintmax_t)tuning_result[tuning_result_index].free_bits,
+                        (uintmax_t)tuning_result[tuning_result_index].smallstep_faster,(uintmax_t)tuning_result[tuning_result_index].mediumstep_faster,
+                        (uintmax_t)tuning_result[tuning_result_index].passes, (uintmax_t) tuning_result[tuning_result_index].sample_max,
+                        tuning_result[tuning_result_index].elapsed_time, tuning_result[tuning_result_index].sample_duration, tuning_result[tuning_result_index].avg);
+                    }
+                    if (option_verboselevel >= 3) printf("...blocksize_bits %10ju; blocksize %4jukb; free_bits %5ju; smallstep: %2ju; mediumstep %2ju; passes %3ju/%3ju; time %f/%f;average %f\n", 
+                        (uintmax_t)tuning_result[tuning_result_index].blocksize_bits, (uintmax_t)tuning_result[tuning_result_index].blocksize_kb,(uintmax_t)tuning_result[tuning_result_index].free_bits,
+                        (uintmax_t)tuning_result[tuning_result_index].smallstep_faster,(uintmax_t)tuning_result[tuning_result_index].mediumstep_faster,
+                        (uintmax_t)tuning_result[tuning_result_index].passes, (uintmax_t) tuning_result[tuning_result_index].sample_max,
+                        tuning_result[tuning_result_index].elapsed_time, tuning_result[tuning_result_index].sample_duration, tuning_result[tuning_result_index].avg);
+                    tuning_result_index++;
+                }
+            }
+        }
+    }
+    if (option_verboselevel >= 2) {
+        printf("%ju results. Inital best blocksize: %ju; best smallstep %ju; best mediumstep %ju\n",(uintmax_t)tuning_results,(uintmax_t)best_blocksize_bits, (uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster);
+        printf("Best options\n");
+    }
+    counter_t step=0;
+    while (tuning_results>4) {
+        qsort(tuning_result, tuning_results, sizeof(tuning_result_type), compare_tuning_result);
+        step++;
+        if (option_verboselevel >= 2) {
+            tuning_result_index = 0;
+            printf("(%ju) blocksize_bits %10ju; blocksize %4jukb; free_bits %5ju; smallstep: %2ju; mediumstep %2ju; passes %3ju/%3ju; time %f/%f;average %f\n", (uintmax_t)step,
+                            (uintmax_t)tuning_result[tuning_result_index].blocksize_bits, (uintmax_t)tuning_result[tuning_result_index].blocksize_kb,(uintmax_t)tuning_result[tuning_result_index].free_bits,
+                            (uintmax_t)tuning_result[tuning_result_index].smallstep_faster,(uintmax_t)tuning_result[tuning_result_index].mediumstep_faster,
+                            (uintmax_t)tuning_result[tuning_result_index].passes, (uintmax_t) tuning_result[tuning_result_index].sample_max,
+                            tuning_result[tuning_result_index].elapsed_time, tuning_result[tuning_result_index].sample_duration, tuning_result[tuning_result_index].avg);
+            if (option_verboselevel >= 3) {
+                for (counter_t tuning_result_index=0; tuning_result_index<min(10,tuning_results); tuning_result_index++) {
+                    printf("...blocksize_bits %10ju; blocksize %4jukb; free_bits %5ju; smallstep: %2ju; mediumstep %2ju; passes %3ju/%3ju; time %f/%f;average %f\n", 
+                            (uintmax_t)tuning_result[tuning_result_index].blocksize_bits, (uintmax_t)tuning_result[tuning_result_index].blocksize_kb,(uintmax_t)tuning_result[tuning_result_index].free_bits,
+                            (uintmax_t)tuning_result[tuning_result_index].smallstep_faster,(uintmax_t)tuning_result[tuning_result_index].mediumstep_faster,
+                            (uintmax_t)tuning_result[tuning_result_index].passes, (uintmax_t) tuning_result[tuning_result_index].sample_max,
+                            tuning_result[tuning_result_index].elapsed_time, tuning_result[tuning_result_index].sample_duration, tuning_result[tuning_result_index].avg);
+                }
+            }
+        }
+
+        tuning_results = tuning_results / 2;
+
+        for (counter_t tuning_result_index=0; tuning_result_index<tuning_results; tuning_result_index++) {
+            tune_benchmark(tuning_result, tuning_result_index);
+            tuning_result[tuning_result_index].sample_max += sample_max;
+        }
+        
+    }
+    tuning_result_type best_result = tuning_result[0];
+    if (option_verboselevel >= 1) {
+        tuning_result_index = 0;
+        printf(".Best result: blocksize %4jukb; free_bits %ju; smallstep: %ju; mediumstep %ju; passes %3ju/%3ju; time %f/%f;average %f\n", 
+                 (uintmax_t)tuning_result[tuning_result_index].blocksize_kb,(uintmax_t)tuning_result[tuning_result_index].free_bits,
+                (uintmax_t)tuning_result[tuning_result_index].smallstep_faster,(uintmax_t)tuning_result[tuning_result_index].mediumstep_faster,
+                (uintmax_t)tuning_result[tuning_result_index].passes, (uintmax_t) tuning_result[tuning_result_index].sample_max,
+                tuning_result[tuning_result_index].elapsed_time, tuning_result[tuning_result_index].sample_duration, tuning_result[tuning_result_index].avg);
+    }
+
+    free(tuning_result);
+    return best_result;
+}
+
 int main(int argc, char *argv[]) {
     
     uintmax_t maxints  = default_sieve_limit;
@@ -691,7 +865,7 @@ int main(int argc, char *argv[]) {
     for (int arg=1; arg < argc; arg++) {
         if (strcmp(argv[arg], "--help")==0) { usage(argv[0]); }
         else if (strcmp(argv[arg], "--verbose")==0) {
-            if (arg++ == argc) { fprintf(stderr, "No verbose level specified\n"); usage(argv[0]); }
+            if (++arg >= argc) { fprintf(stderr, "No verbose level specified\n"); usage(argv[0]); }
             if (sscanf(argv[arg], "%d", &option_verboselevel) != 1 || option_verboselevel > 4) {
                 fprintf(stderr, "Error: Invalid measurement time: %s\n", argv[arg]); usage(argv[0]);
             }
@@ -699,11 +873,11 @@ int main(int argc, char *argv[]) {
         } 
         else if (strcmp(argv[arg], "--check")==0) { option_check=0; }
         else if (strcmp(argv[arg], "--tune")==0) { option_tunelevel=0;
-            if (arg++ == argc) { fprintf(stderr, "No tune level specified\n"); usage(argv[0]); }
-            if (sscanf(argv[arg], "%d", &option_verboselevel) != 1 || option_verboselevel > 4) {
-                fprintf(stderr, "Error: Invalid measurement time: %s\n", argv[arg]); usage(argv[0]);
+            if (++arg >= argc) { fprintf(stderr, "No tune level specified\n"); usage(argv[0]); }
+            if (sscanf(argv[arg], "%d", &option_tunelevel) != 1 || option_tunelevel > 4) {
+                fprintf(stderr, "Error: Invalid tune level: %s\n", argv[arg]); usage(argv[0]);
             }
-            printf("Verbose level set to %d\n",option_verboselevel);
+            printf("Tune level set to %d\n",option_tunelevel);
         }
         else if (sscanf(argv[arg], "%ju", &maxints) != 1) {
             fprintf(stderr, "Invalid size %s\n",argv[arg]); usage(argv[0]); 
@@ -736,79 +910,10 @@ int main(int argc, char *argv[]) {
     
     counter_t best_blocksize_bits = default_blocksize;
     if (option_tunelevel) {
-
-        if (option_verboselevel >= 1) printf("Tuning...\n");
-        double best_avg = 0;
-        best_blocksize_bits = 0;
-        counter_t best_smallstep_faster = 0;
-        counter_t best_mediumstep_faster = 0;
-        counter_t smallstep_faster_steps = 4;
-        counter_t mediumstep_faster_steps = 4;
-        counter_t freebits_steps = anticiped_cache_line_bytesize*4;
-        counter_t sample_max = default_sample_max;
-        counter_t sample_duration = default_sample_duration;
-        switch (option_tunelevel) {
-            case 1:
-                smallstep_faster_steps  = WORD_SIZE/4;
-                mediumstep_faster_steps = WORD_SIZE/4;
-                freebits_steps = anticiped_cache_line_bytesize*8*2;
-                sample_max = 4;
-                sample_duration = 0.1;
-                break;
-            case 2:
-                smallstep_faster_steps  = WORD_SIZE/8;
-                mediumstep_faster_steps = WORD_SIZE/8;
-                freebits_steps = anticiped_cache_line_bytesize*8;
-                sample_max = 8;
-                sample_duration = 0.2;
-                break;
-            case 3:
-                smallstep_faster_steps  = WORD_SIZE/16;
-                mediumstep_faster_steps = WORD_SIZE/16;
-                freebits_steps = anticiped_cache_line_bytesize/2;
-                sample_max = 32;
-                sample_duration = 0.4;
-                break;
-        }
-        
-        for (counter_t smallstep_faster = 0; smallstep_faster <= WORD_SIZE/2; smallstep_faster += smallstep_faster_steps) {
-            global_SMALLSTEP_FASTER = smallstep_faster;
-            for (counter_t mediumstep_faster = smallstep_faster; mediumstep_faster <= WORD_SIZE; mediumstep_faster += mediumstep_faster_steps) {
-                global_MEDIUMSTEP_FASTER = mediumstep_faster;
-                for (counter_t blocksize_kb=512; blocksize_kb>=8; blocksize_kb /= 2) {
-                    for (counter_t free_bits=0; free_bits < anticiped_cache_line_bytesize*8*4 && free_bits < blocksize_kb * 1024 * 8; free_bits += freebits_steps) {
-                        counter_t passes = 0;
-                        counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
-                        double elapsed_time = 0;
-                        double sample_time = sample_duration;
-                        // double start_time = monotonic_seconds();
-                        clock_gettime(CLOCK_MONOTONIC,&start_time);
-                        struct sieve_state *sieve_instance;
-                        while (elapsed_time <= sample_time && passes < sample_max) {
-                            sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
-                            delete_sieve(sieve_instance);
-                            passes++;
-                            // elapsed_time = monotonic_seconds()-start_time;
-                            clock_gettime(CLOCK_MONOTONIC,&end_time);
-                            elapsed_time = end_time.tv_sec + end_time.tv_nsec*1e-9 - start_time.tv_sec - start_time.tv_nsec*1e-9;
-                        }
-                        double avg = passes/elapsed_time;
-                        if (option_verboselevel >= 3) printf("...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f\n", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
-                        if (avg > best_avg) {
-                            best_avg = avg;
-                            best_blocksize_bits = blocksize_bits;
-                            best_smallstep_faster = smallstep_faster;
-                            best_mediumstep_faster = mediumstep_faster;
-
-                            if (option_verboselevel >= 2) printf("...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f\n", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
-                        }
-                    }
-                }
-            }
-        }
-        if (option_verboselevel >= 1) printf("Tuned algoritm. Best blocksize: %ju; best smallstep %ju; best mediumstep %ju\n",(uintmax_t)best_blocksize_bits, (uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster);
-        global_SMALLSTEP_FASTER = best_smallstep_faster;
-        global_MEDIUMSTEP_FASTER = best_mediumstep_faster;
+        tuning_result_type tuning_result = tune(option_tunelevel, maxints, option_verboselevel);
+        global_SMALLSTEP_FASTER = tuning_result.smallstep_faster;
+        global_MEDIUMSTEP_FASTER = tuning_result.mediumstep_faster;
+        best_blocksize_bits = tuning_result.blocksize_bits;
     }
 
     double max_time = default_sieve_duration;
