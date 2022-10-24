@@ -13,7 +13,7 @@
 #define default_sample_duration 0.1
 #define default_sample_max 5
 #define default_verbose_level 0
-#define default_tune_level 1
+#define default_tune_level 2
 #define default_check_level 1
 #define option_runonce 0
 
@@ -96,7 +96,7 @@ static inline counter_t searchBitFalse(struct sieve_state *sieve, counter_t inde
     return index;
 }
 
-static void applyMask(struct sieve_state *sieve, const counter_t range_start_word, const counter_t step, const counter_t range_stop, const bitword_t mask) {
+static void inline applyMask(struct sieve_state *sieve, const counter_t range_start_word, const counter_t step, const counter_t range_stop, const bitword_t mask) {
     const counter_t range_stop_word = wordindex(range_stop);
     counter_t index_word = range_start_word;
 
@@ -124,7 +124,7 @@ static void applyMask(struct sieve_state *sieve, const counter_t range_start_wor
 }
 
 // set bits by creating a pattern and then extending it to word and range size
-static void setBitsTrue_smallStep(struct sieve_state *sieve, counter_t range_start, bitshift_t step, counter_t range_stop) {
+static void inline setBitsTrue_smallStep(struct sieve_state *sieve, const counter_t range_start, const bitshift_t step, const counter_t range_stop) {
 
     // build the pattern in a word
 	bitword_t pattern = SAFE_SHIFTBIT;
@@ -162,8 +162,8 @@ static void setBitsTrue_smallStep(struct sieve_state *sieve, counter_t range_sta
 // Medium steps could be within the same word.
 // By joining the masks and then writing to memory, we might save some time.
 // This is especially true for longer ranges
-static void setBitsTrue_mediumStep(struct sieve_state *sieve, counter_t range_start, counter_t step, counter_t range_stop) {
-    counter_t range_stop_unique =  range_start + WORD_SIZE * step;
+static void inline setBitsTrue_mediumStep(struct sieve_state *sieve, const counter_t range_start, const counter_t step, const counter_t range_stop) {
+    const counter_t range_stop_unique =  range_start + WORD_SIZE * step;
 
     if (range_stop_unique > range_stop) {
         for (counter_t index = range_start; index <= range_stop;) {
