@@ -1,10 +1,11 @@
+#FROM gcc:12-bullseye
 FROM ubuntu:20.04
 
 RUN apt-get update && apt-get -y install build-essential \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/app
+WORKDIR /home/primes
 
 COPY compile.sh run.sh *.c ./
 
