@@ -7,26 +7,30 @@
 #include <string.h>
 
 #define debug if (0)
-#define sieve_limit 1000000
-//#define blocksize (16*1024*8)
-// #define sieve_limit 100
-#define sieve_duration 5
+#define default_sieve_limit 1000000
+#define default_blocksize (30*1024*8)
+#define default_sieve_duration 5
+#define default_sample_duration 0.1
+#define default_sample_max 5
+#define default_verbose_level 1
+#define default_tune_level 1
+#define default_check_level 1
 
-
+#define anticiped_cache_line_bytesize 128
 // 32 bit 
 // #define TYPE uint32_t
-// #define WORD_SIZE 32
-// #define SHIFT 5U
 
 // 64 bit
 #define TYPE uint64_t
+
+// calculate the rest dynamically
 #define counter_t int64_t
 #define bitword_t TYPE
 #define bitshift_t TYPE
 
 #define WORD_SIZE (sizeof(TYPE)*8)
 #define pow(base,pow) (pow*((base>>pow)&1U))
-#define SHIFT ((bitshift_t)(pow(WORD_SIZE,1)+pow(WORD_SIZE,2)+pow(WORD_SIZE,3)+pow(WORD_SIZE,4)+pow(WORD_SIZE,5)+pow(WORD_SIZE,6)+pow(WORD_SIZE,7)))
+#define SHIFT ((bitshift_t)(pow(WORD_SIZE,1)+pow(WORD_SIZE,2)+pow(WORD_SIZE,3)+pow(WORD_SIZE,4)+pow(WORD_SIZE,5)+pow(WORD_SIZE,6)+pow(WORD_SIZE,7)+pow(WORD_SIZE,8)))
 
 counter_t global_SMALLSTEP_FASTER = WORD_SIZE/4;
 counter_t global_MEDIUMSTEP_FASTER = WORD_SIZE;
@@ -45,35 +49,16 @@ counter_t global_MEDIUMSTEP_FASTER = WORD_SIZE;
 struct sieve_state {
     bitword_t* bitarray;
     counter_t  bits;
-//    counter_t  words;
     counter_t  size;
 };
 
 //#include "debugtools.h"
 
-static inline counter_t count_primes(struct sieve_state *sieve) {
-    counter_t       bits = sieve->bits;
-    bitword_t  *bitarray = sieve->bitarray;
-    counter_t primecount = 1;    // We already have 2
-    for (counter_t factor=1; factor < bits; factor++) {
-        if ((bitarray[wordindex(factor)] & markmask(factor))==0) {
-            if (primecount < 100) {
-                debug printf("%3ju ",(uintmax_t)factor*2+1);
-                debug if (primecount % 10 == 0) printf("\n");
-                printf(" \b"); //don't know why this is necessary workaround?
-            }
-            primecount++;
-        }
-    }
-    debug puts("");
-    return primecount;
-}
-
 // use cache lines as much as possible
  #define ceiling(x,y) (((x) + (y) - 1) / (y)) // Return the smallest multiple N of y such that:  x <= y * N
 static inline struct sieve_state *create_sieve(counter_t maxints) {
     struct sieve_state *sieve = malloc(sizeof *sieve);//aligned_alloc(8, sizeof(struct sieve_state));
-    size_t memSize = ceiling(1+(maxints/2), 64*8) * 64; //make multiple of 8
+    size_t memSize = ceiling(1+(maxints/2), anticiped_cache_line_bytesize*8) * anticiped_cache_line_bytesize; //make multiple of 8
 //    size_t memSize = ((1+(maxints>>(1+6+3)))<<6) ; // 1 for maxints/2, 6 for 64 bit align, 3 for 8-bit bytes -> seems much slower..
 
     sieve->bitarray = aligned_alloc(64, memSize );
@@ -217,7 +202,7 @@ static inline void setBitsTrue(struct sieve_state *sieve, counter_t range_start,
     }
 }
 
-static void copyPattern_smallsize(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
+static void extendSieve_smallsize(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
     counter_t source_word = wordindex(source_start);
     bitshift_t source_bit = bitindex(source_start);
 
@@ -242,9 +227,9 @@ static void copyPattern_smallsize(struct sieve_state *sieve, counter_t source_st
     }
 }
 
-static inline void copyPattern(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
+static inline void extendSieve(struct sieve_state *sieve, counter_t source_start, counter_t size, counter_t destination_stop)	{
     if (size < WORD_SIZE) { // handle small: fill the second word
-       copyPattern_smallsize(sieve, source_start, size, destination_stop);
+       extendSieve_smallsize(sieve, source_start, size, destination_stop);
        return;
     }
 
@@ -264,24 +249,24 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
         sieve->bitarray[copy_word] |= ((sieve->bitarray[source_word] >> shift) 
                                     | (sieve->bitarray[source_word+1] << shift_flipped))
                                     & ~chopmask(copy_bit); // because this is the first word, dont copy the extra bits in front of the source
+
         copy_word++;
         source_word++;
 
-        if (copy_word > source_word+4) {
-            while (copy_word+4 < aligned_copy_word) {
-                bitword_t source0 = sieve->bitarray[source_word  ];
-                bitword_t source1 = sieve->bitarray[source_word+1];
+        const counter_t fast_loop_stop_word = (aligned_copy_word>4) ? (aligned_copy_word - 4) : 0; // safe for unsigned ints
+        while (copy_word < fast_loop_stop_word) {
+            bitword_t source0 = sieve->bitarray[source_word  ];
+            bitword_t source1 = sieve->bitarray[source_word+1];
 
-                sieve->bitarray[copy_word  ] = (source0 >> shift) | (source1 << shift_flipped);
-                bitword_t source2 = sieve->bitarray[source_word+2];
-                sieve->bitarray[copy_word+1] = (source1 >> shift) | (source2 << shift_flipped);
-                bitword_t source3 = sieve->bitarray[source_word+3];
-                sieve->bitarray[copy_word+2] = (source2 >> shift) | (source3 << shift_flipped);
-                bitword_t source4 = sieve->bitarray[source_word+4];
-                sieve->bitarray[copy_word+3] = (source3 >> shift) | (source4 << shift_flipped);
-                copy_word += 4;
-                source_word += 4;
-            }
+            sieve->bitarray[copy_word  ] = (source0 >> shift) | (source1 << shift_flipped);
+            bitword_t source2 = sieve->bitarray[source_word+2];
+            sieve->bitarray[copy_word+1] = (source1 >> shift) | (source2 << shift_flipped);
+            bitword_t source3 = sieve->bitarray[source_word+3];
+            sieve->bitarray[copy_word+2] = (source2 >> shift) | (source3 << shift_flipped);
+            bitword_t source4 = sieve->bitarray[source_word+4];
+            sieve->bitarray[copy_word+3] = (source3 >> shift) | (source4 << shift_flipped);
+            copy_word += 4;
+            source_word += 4;
         }
 
         while (copy_word <= aligned_copy_word) {
@@ -434,7 +419,7 @@ static inline struct block sieve_block(struct sieve_state *sieve, counter_t bloc
 
         if (patternsize_bits>1) {
             pattern_start = block_start | patternsize_bits;
-            copyPattern(sieve, pattern_start, patternsize_bits, range_stop);
+            extendSieve(sieve, pattern_start, patternsize_bits, range_stop);
         }
         patternsize_bits *= step;
 
@@ -455,7 +440,7 @@ static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) 
 
     // fill the whole sieve bij adding en copying incrementally
     struct block block = sieve_block(sieve, 0, sieve->bits);
-    copyPattern(sieve, block.pattern_start, block.pattern_size, sieve->bits);
+    extendSieve(sieve, block.pattern_start, block.pattern_size, sieve->bits);
     prime = block.prime;
 
     do {
@@ -480,6 +465,35 @@ static inline counter_t isqrt(unsigned long val) {
         }
     } while (b >>= 1);
     return g;
+}
+
+static void show_primes(struct sieve_state *sieve) {
+    counter_t       bits = sieve->bits;
+    bitword_t  *bitarray = sieve->bitarray;
+    counter_t primecount = 1;    // We already have 2
+    for (counter_t factor=1; factor < bits; factor++) {
+        if ((bitarray[wordindex(factor)] & markmask(factor))==0) {
+            if (primecount < 100) {
+                printf("%3ju ",(uintmax_t)factor*2+1);
+                if (primecount % 10 == 0) printf("\n");
+                printf(" \b"); //don't know why this is necessary workaround?
+            }
+            primecount++;
+        }
+    }
+    puts("");
+}
+
+static inline counter_t count_primes(struct sieve_state *sieve) {
+    counter_t       bits = sieve->bits;
+    bitword_t  *bitarray = sieve->bitarray;
+    counter_t primecount = 1;    // We already have 2
+    for (counter_t factor=1; factor < bits; factor++) {
+        if ((bitarray[wordindex(factor)] & markmask(factor))==0) {
+            primecount++;
+        }
+    }
+    return primecount;
 }
 
 static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
@@ -517,7 +531,7 @@ static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
 }
 
 
-int validatePrimeCount(struct sieve_state *sieve, int verboselevel) {
+int validatePrimeCount(struct sieve_state *sieve, int option_verboselevel) {
 
     counter_t primecount = count_primes(sieve);
     counter_t valid_primes;
@@ -535,34 +549,53 @@ int validatePrimeCount(struct sieve_state *sieve, int verboselevel) {
     }
 
     int valid = (valid_primes == primecount);
-    if (valid  && verboselevel >= 4) printf("Result: Sievesize %ju is expected to have %ju primes. Algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
-    if (!valid && verboselevel >= 2) printf("No valid result. Sievesize %ju was expected to have %ju primes, but algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
-    if (!valid && verboselevel >= 3) deepAnalyzePrimes(sieve);
+    if (valid  && option_verboselevel >= 4) printf("Result: Sievesize %ju is expected to have %ju primes. Algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
+    if (!valid && option_verboselevel >= 2) {
+        printf("No valid result. Sievesize %ju was expected to have %ju primes, but algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
+        show_primes(sieve);
+    }
+    if (!valid && option_verboselevel >= 3) deepAnalyzePrimes(sieve);
     return (valid);
 }
 
 void usage(char *name) {
-    fprintf(stderr, "Usage: %s [--verbose <level>] --nocheck --notune [maximum]\n", name);
+    fprintf(stderr, "Usage: %s [options] [maximum]\n", name);
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "  --verbose <level> Show more output to a certain level:\n");
+    fprintf(stderr, "                    1 - show phase progress\n");
+    fprintf(stderr, "                    2 - show general progress within the phase\n");
+    fprintf(stderr, "                    3 - show actual work\n");
+    fprintf(stderr, "  --check           check the correctness of the algoritm\n");
+    fprintf(stderr, "  --tune  <level>   find the best settings for the current os and hardware\n");
+    fprintf(stderr, "                    1 - fast tuning\n");
+    fprintf(stderr, "                    2 - refined tuning\n");
+    fprintf(stderr, "                    3 - maximum tuning (takes long)\n");
     exit(1);
 }
 
 int main(int argc, char *argv[]) {
-    uintmax_t maxints  = sieve_limit;
+    uintmax_t maxints  = default_sieve_limit;
     
-    int verboselevel = 0;
-    int option_check = 0;
-    int option_tune = 0;
+    int option_verboselevel = default_verbose_level;
+    int option_check = default_check_level;
+    int option_tunelevel = default_tune_level;
     for (int arg=1; arg < argc; arg++) {
         if (strcmp(argv[arg], "--help")==0) { usage(argv[0]); }
         else if (strcmp(argv[arg], "--verbose")==0) {
-            if (arg++ == argc) { fprintf(stderr, "No verboselevel specified\n"); usage(argv[0]); } 
-            if (sscanf(argv[arg], "%d", &verboselevel) != 1 || verboselevel > 4) {
+            if (arg++ == argc) { fprintf(stderr, "No verbose level specified\n"); usage(argv[0]); }
+            if (sscanf(argv[arg], "%d", &option_verboselevel) != 1 || option_verboselevel > 4) {
                 fprintf(stderr, "Error: Invalid measurement time: %s\n", argv[arg]); usage(argv[0]);
             }
-            printf("Verboselevel set to %d\n",verboselevel);
+            printf("Verbose level set to %d\n",option_verboselevel);
         } 
         else if (strcmp(argv[arg], "--check")==0) { option_check=0; }
-        else if (strcmp(argv[arg], "--tune")==0) { option_tune=1; }
+        else if (strcmp(argv[arg], "--tune")==0) { option_tunelevel=0;
+            if (arg++ == argc) { fprintf(stderr, "No tune level specified\n"); usage(argv[0]); }
+            if (sscanf(argv[arg], "%d", &option_verboselevel) != 1 || option_verboselevel > 4) {
+                fprintf(stderr, "Error: Invalid measurement time: %s\n", argv[arg]); usage(argv[0]);
+            }
+            printf("Verbose level set to %d\n",option_verboselevel);
+        }
         else if (sscanf(argv[arg], "%ju", &maxints) != 1) {
             fprintf(stderr, "Invalid size %s\n",argv[arg]); usage(argv[0]); 
             printf("Maximum set to %ju\n",(uintmax_t)maxints);
@@ -573,47 +606,76 @@ int main(int argc, char *argv[]) {
 
     if (option_check) {
         // Count the number of primes and validate the result
-        if (verboselevel >= 1) printf("Validating... "); if (verboselevel >= 2) printf("\n");
+        if (option_verboselevel >= 1) printf("Validating... ");
+        if (option_verboselevel >= 2) printf("\n");
 
         // validate algorithm - run one time for all sizes
         for (counter_t sieveSize_check = 100; sieveSize_check <= 100000000; sieveSize_check *=10) {
-            if (verboselevel >= 2) printf("...Checking size %ju ...",(uintmax_t)sieveSize_check);
+            if (option_verboselevel >= 2) printf("...Checking size %ju ...",(uintmax_t)sieveSize_check);
             struct sieve_state*sieve_instance;
             for (counter_t blocksize_bits=1024; blocksize_bits<=64*1024*8; blocksize_bits *= 2) {
-                if (verboselevel >= 3) printf(".blocksize %ju-",(uintmax_t)blocksize_bits);
+                if (option_verboselevel >= 3) printf(".blocksize %ju-",(uintmax_t)blocksize_bits);
                 sieve_instance = sieve(sieveSize_check, blocksize_bits);
-                int valid = validatePrimeCount(sieve_instance,3);
+                int valid = validatePrimeCount(sieve_instance,option_verboselevel);
                 delete_sieve(sieve_instance);
-                if (!valid) return 0; else if (verboselevel >= 3) printf("valid;");
+                if (!valid) return 0; else if (option_verboselevel >= 3) printf("valid;");
             }
-            if (verboselevel >= 2) printf("\n");
+            if (option_verboselevel >= 2) printf("\n");
         }
-        if (verboselevel >= 1) printf("...Valid algoritm\n");
+        if (option_verboselevel >= 1) printf("...Valid algoritm\n");
     }
 
-    counter_t best_blocksize_bits = 254976;
-    if (option_tune) {
+    counter_t best_blocksize_bits = default_blocksize;
+    if (option_tunelevel) {
 
-        if (verboselevel >= 1) printf("Tuning...\n");
+        if (option_verboselevel >= 1) printf("Tuning...\n");
         double best_avg = 0;
         best_blocksize_bits = 0;
         counter_t best_smallstep_faster = 0;
         counter_t best_mediumstep_faster = 0;
+        counter_t smallstep_faster_steps = 4;
+        counter_t mediumstep_faster_steps = 4;
+        counter_t freebits_steps = anticiped_cache_line_bytesize*4;
+        counter_t sample_max = default_sample_max;
+        counter_t sample_duration = default_sample_duration;
+        switch (option_tunelevel) {
+            case 1:
+                smallstep_faster_steps  = WORD_SIZE/4;
+                mediumstep_faster_steps = WORD_SIZE/4;
+                freebits_steps = anticiped_cache_line_bytesize*8*2;
+                sample_max = 4;
+                sample_duration = 0.1;
+                break;
+            case 2:
+                smallstep_faster_steps  = WORD_SIZE/8;
+                mediumstep_faster_steps = WORD_SIZE/8;
+                freebits_steps = anticiped_cache_line_bytesize*8;
+                sample_max = 8;
+                sample_duration = 0.2;
+                break;
+            case 3:
+                smallstep_faster_steps  = WORD_SIZE/16;
+                mediumstep_faster_steps = WORD_SIZE/16;
+                freebits_steps = anticiped_cache_line_bytesize/2;
+                sample_max = 32;
+                sample_duration = 0.4;
+                break;
+        }
         
-        for (counter_t smallstep_faster = 0; smallstep_faster <= WORD_SIZE; smallstep_faster += 8) {
+        for (counter_t smallstep_faster = 0; smallstep_faster <= WORD_SIZE/2; smallstep_faster += smallstep_faster_steps) {
             global_SMALLSTEP_FASTER = smallstep_faster;
-            for (counter_t mediumstep_faster = smallstep_faster; mediumstep_faster <= WORD_SIZE; mediumstep_faster += 8) {
+            for (counter_t mediumstep_faster = smallstep_faster; mediumstep_faster <= WORD_SIZE; mediumstep_faster += mediumstep_faster_steps) {
                 global_MEDIUMSTEP_FASTER = mediumstep_faster;
-                for (counter_t blocksize_kb=256; blocksize_kb>=32; blocksize_kb /= 2) {
-                    for (counter_t free_bits=0; free_bits < 8192 && free_bits < blocksize_kb * 1024 * 8; free_bits += 512) {
+                for (counter_t blocksize_kb=512; blocksize_kb>=8; blocksize_kb /= 2) {
+                    for (counter_t free_bits=0; free_bits < anticiped_cache_line_bytesize*8*4 && free_bits < blocksize_kb * 1024 * 8; free_bits += freebits_steps) {
                         counter_t passes = 0;
                         counter_t blocksize_bits = blocksize_kb * 1024 * 8 - free_bits;
                         double elapsed_time = 0;
-                        double sample_time = 0.1;
+                        double sample_time = sample_duration;
                         // double start_time = monotonic_seconds();
                         clock_gettime(CLOCK_MONOTONIC,&start_time);
                         struct sieve_state *sieve_instance;
-                        while (elapsed_time <= sample_time) {
+                        while (elapsed_time <= sample_time && passes < sample_max) {
                             sieve_instance = sieve(maxints, blocksize_bits);//blocksize_bits);
                             delete_sieve(sieve_instance);
                             passes++;
@@ -622,27 +684,27 @@ int main(int argc, char *argv[]) {
                             elapsed_time = end_time.tv_sec + end_time.tv_nsec*1e-9 - start_time.tv_sec - start_time.tv_nsec*1e-9;
                         }
                         double avg = passes/elapsed_time;
-                        if (verboselevel >= 3) printf("\33[2K\r...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
+                        if (option_verboselevel >= 3) printf("...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f\n", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
                         if (avg > best_avg) {
                             best_avg = avg;
                             best_blocksize_bits = blocksize_bits;
                             best_smallstep_faster = smallstep_faster;
                             best_mediumstep_faster = mediumstep_faster;
 
-                            if (verboselevel >= 2) printf("\n...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f\n", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
+                            if (option_verboselevel >= 2) printf("...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f\n", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
                         }
                     }
                 }
             }
         }
-        if (verboselevel >= 1) printf("Tuned algoritm. Best blocksize: %ju; best smallstep %ju; best mediumstep %ju\n",(uintmax_t)best_blocksize_bits, (uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster);
+        if (option_verboselevel >= 1) printf("Tuned algoritm. Best blocksize: %ju; best smallstep %ju; best mediumstep %ju\n",(uintmax_t)best_blocksize_bits, (uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster);
         global_SMALLSTEP_FASTER = best_smallstep_faster;
         global_MEDIUMSTEP_FASTER = best_mediumstep_faster;
     }
 
-    double max_time = sieve_duration;
+    double max_time = default_sieve_duration;
     if (best_blocksize_bits > 0) {
-        if (verboselevel >= 1) printf("Benchmarking...\n");
+        if (option_verboselevel >= 1) printf("Benchmarking...\n");
         counter_t passes = 0;
         counter_t blocksize_bits = best_blocksize_bits;
         double elapsed_time = 0;
