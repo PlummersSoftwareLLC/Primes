@@ -52,10 +52,8 @@ struct sieve_state {
     bitword_t* bitarray;
     counter_t  bits;
     counter_t  size;
-    size_t     memSize;
 };
 
-counter_t usedjoin;
 //#include "debugtools.h"
 
 // use cache lines as much as possible
