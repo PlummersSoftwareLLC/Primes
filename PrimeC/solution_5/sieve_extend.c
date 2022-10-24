@@ -13,7 +13,7 @@
 #define sieve_duration 5
 
 
-// 32 bit
+// 32 bit 
 // #define TYPE uint32_t
 // #define WORD_SIZE 32
 // #define SHIFT 5U
@@ -59,7 +59,7 @@ static inline counter_t count_primes(struct sieve_state *sieve) {
     for (counter_t factor=1; factor < bits; factor++) {
         if ((bitarray[wordindex(factor)] & markmask(factor))==0) {
             if (primecount < 100) {
-                debug printf("%3ld ",(uint64_t)factor*2+1);
+                debug printf("%3ju ",(uintmax_t)factor*2+1);
                 debug if (primecount % 10 == 0) printf("\n");
                 printf(" \b"); //don't know why this is necessary workaround?
             }
@@ -73,7 +73,6 @@ static inline counter_t count_primes(struct sieve_state *sieve) {
 // use cache lines as much as possible
  #define ceiling(x,y) (((x) + (y) - 1) / (y)) // Return the smallest multiple N of y such that:  x <= y * N
 static inline struct sieve_state *create_sieve(counter_t maxints) {
-    counter_t maxints_c = maxints;
     struct sieve_state *sieve = malloc(sizeof *sieve);//aligned_alloc(8, sizeof(struct sieve_state));
     size_t memSize = ceiling(1+(maxints/2), 64*8) * 64; //make multiple of 8
 //    size_t memSize = ((1+(maxints>>(1+6+3)))<<6) ; // 1 for maxints/2, 6 for 64 bit align, 3 for 8-bit bytes -> seems much slower..
@@ -81,7 +80,6 @@ static inline struct sieve_state *create_sieve(counter_t maxints) {
     sieve->bitarray = aligned_alloc(64, memSize );
     sieve->bits     = maxints >> SAFE_SHIFTBIT;
     sieve->size     = maxints;
-//    sieve->words    = memSize/sizeof(bitword_t);
 
     counter_t words = memSize/sizeof(bitword_t);
     for(counter_t index_word=0; index_word <= words; index_word++) {
@@ -104,13 +102,13 @@ static inline counter_t searchBitFalse(struct sieve_state *sieve, counter_t inde
 
     counter_t index_word = wordindex(index);
     bitshift_t index_bit  = bitindex(index);
-    counter_t distance = (counter_t) __builtin_ctz( ~(sieve->bitarray[index_word] >> bitindex(index)));  // take inverse to be able to use ctz
+    counter_t distance = (counter_t) __builtin_ctzll( ~(sieve->bitarray[index_word] >> bitindex(index)));  // take inverse to be able to use ctz
     index += distance;
     distance += index_bit;
 
     while (distance >= WORD_SIZE) {
         index_word++;
-        distance = __builtin_ctz(~(sieve->bitarray[index_word]));
+        distance = __builtin_ctzll(~(sieve->bitarray[index_word]));
         index += distance;
     }
 
@@ -224,7 +222,7 @@ static void copyPattern_smallsize(struct sieve_state *sieve, counter_t source_st
     counter_t source_word = wordindex(source_start);
     bitshift_t source_bit = bitindex(source_start);
 
-    bitword_t pattern = (sieve->bitarray[source_word] >> source_bit) | (sieve->bitarray[source_word+1] << (WORD_SIZE-source_bit)) & chopmask2(size);
+    bitword_t pattern = ((sieve->bitarray[source_word] >> source_bit) | (sieve->bitarray[source_word+1] << (WORD_SIZE-source_bit))) & chopmask2(size);
     for (bitshift_t pattern_size = size; pattern_size <= WORD_SIZE; pattern_size += pattern_size) pattern |= (pattern << pattern_size);
 
     counter_t copy_start = source_start + size;
@@ -260,12 +258,9 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
     counter_t copy_bit = bitindex(copy_start);
     counter_t aligned_copy_word = source_word + size; // after <<size>> words, just copy at word level
     if (aligned_copy_word > destination_stop_word) aligned_copy_word = destination_stop_word;
-    int diff = source_bit - copy_bit;
 
-    // printf("Copying largesize from %ld to max %ld with shift %ld\n",source_start,destination_stop, shift);
-
-    if (diff > 0) {
-        bitshift_t shift = (bitshift_t)diff;
+    if (source_bit > copy_bit) {
+        bitshift_t shift = source_bit - copy_bit;
         bitshift_t shift_flipped = WORD_SIZE-shift;
         sieve->bitarray[copy_word] |= ((sieve->bitarray[source_word] >> shift) 
                                     | (sieve->bitarray[source_word+1] << shift_flipped))
@@ -312,10 +307,8 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
         }
 
     }
-    else if (diff < 0) {
-        // printf("Before firstword\n");
-        // dump_bitarray(sieve);
-        bitshift_t shift = (bitshift_t)-diff;
+    else if (source_bit < copy_bit) {
+        bitshift_t shift = copy_bit - source_bit;
         bitshift_t shift_flipped = WORD_SIZE-shift;
         counter_t source_lastword = wordindex(copy_start);
         sieve->bitarray[copy_word] |= ((sieve->bitarray[source_word] << shift)  // or the start in to not lose data
@@ -362,7 +355,7 @@ static inline void copyPattern(struct sieve_state *sieve, counter_t source_start
             source_word++;
         }
     }
-    else if (diff == 0) { // first word can be spread over 2 words
+    else  { // first word can be spread over 2 words
         sieve->bitarray[copy_word] = sieve->bitarray[source_word] & ~chopmask(copy_bit);
 
         while (copy_word + size <= destination_stop_word) {
@@ -424,9 +417,8 @@ static inline struct block sieve_block(struct sieve_state *sieve, counter_t bloc
     counter_t prime            = 0;
     counter_t patternsize_bits = 1;
     counter_t pattern_start    = 0;
-    counter_t range            = sieve->bits;
     counter_t range_stop       = block_stop;
-    struct block block;
+    struct block block = { .prime = 0, .pattern_start = 0, .pattern_size = 0 };
 
     do {
         prime = searchBitFalse(sieve, prime+1);
@@ -458,21 +450,14 @@ static inline struct block sieve_block(struct sieve_state *sieve, counter_t bloc
 
 static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) {
     struct sieve_state *sieve = create_sieve(maxints);
-    bitword_t*bitarray       = sieve->bitarray;
-    counter_t prime          = 0;
-    counter_t range          = sieve->bits;
-
-    // sieve_block_stripe(sieve, 0, sieve->bits, 1);
-    // return sieve;
-
-    counter_t block_start = 0;
-    counter_t block_stop = blocksize-1;
+    counter_t prime         = 0;
+    counter_t block_start   = 0;
+    counter_t block_stop    = blocksize-1;
 
     // fill the whole sieve bij adding en copying incrementally
     struct block block = sieve_block(sieve, 0, sieve->bits);
     copyPattern(sieve, block.pattern_start, block.pattern_size, sieve->bits);
     prime = block.prime;
-//    printf("Copyied Start %ld size %ld bits %ld prime %ld\n",(uint64_t)block.patternstart, (uint64_t)block.patternsize, (uint64_t)sieve->bits,(uint64_t) prime);
 
     do {
         if (block_stop > sieve->bits) block_stop = sieve->bits;
@@ -487,7 +472,7 @@ static inline struct sieve_state *sieve(counter_t maxints, counter_t blocksize) 
 }
 
 // https://stackoverflow.com/questions/31117497/fastest-integer-square-root-in-the-least-amount-of-instructions
-static inline unsigned isqrt(unsigned long val) {
+static inline counter_t isqrt(unsigned long val) {
     unsigned long temp, g=0, b = 0x8000, bshft = 15;
     do {
         if (val >= (temp = (((g << 1) + b)<<bshft--))) {
@@ -509,7 +494,7 @@ static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
             for(counter_t c=1; c<=q; c++) {
                 if ((prime*2+1) % (c*2+1) == 0 && (c*2+1) != (prime*2+1)) {
                     if (warn_prime++ < 30) {
-                        printf("Number %ld (%ld) was marked prime, but %ld * %ld = %ld\n", (uint64_t)prime*2+1, (uint64_t)prime,  (uint64_t)c*2+1, (uint64_t)(prime*2+1)/(c*2+1), (uint64_t)prime*2+1 );
+                        printf("Number %ju (%ju) was marked prime, but %ju * %ju = %ju\n", (uintmax_t)prime*2+1, (uintmax_t)prime, (uintmax_t)c*2+1, (uintmax_t)((prime*2+1)/(c*2+1)), (uintmax_t)prime*2+1 );
                     }
                 }
             }
@@ -525,7 +510,7 @@ static inline void deepAnalyzePrimes(struct sieve_state *sieve) {
             }
             if (c_prime==0) {
                 if (warn_nonprime++ < 30) {
-                    printf("Number %ld (%ld) was marked non-prime, but no factors found. So it is prime\n", (uint64_t)prime*2+1,(uint64_t) prime);
+                    printf("Number %ju (%ju) was marked non-prime, but no factors found. So it is prime\n", (uintmax_t)prime*2+1,(uintmax_t) prime);
                 }
             }
         }
@@ -551,8 +536,8 @@ int validatePrimeCount(struct sieve_state *sieve, int verboselevel) {
     }
 
     int valid = (valid_primes == primecount);
-    if (valid  && verboselevel >= 4) printf("Result: Sievesize %ld is expected to have %ld primes. Algoritm produced %ld primes\n",(uint64_t)sieve->size,(uint64_t)valid_primes,(uint64_t)primecount );
-    if (!valid && verboselevel >= 2) printf("No valid result. Sievesize %ld was expected to have %ld primes, but algoritm produced %ld primes\n",(uint64_t)sieve->size,(uint64_t)valid_primes,(uint64_t)primecount );
+    if (valid  && verboselevel >= 4) printf("Result: Sievesize %ju is expected to have %ju primes. Algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
+    if (!valid && verboselevel >= 2) printf("No valid result. Sievesize %ju was expected to have %ju primes, but algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
     if (!valid && verboselevel >= 3) deepAnalyzePrimes(sieve);
     return (valid);
 }
@@ -563,7 +548,7 @@ void usage(char *name) {
 }
 
 int main(int argc, char *argv[]) {
-    counter_t maxints  = sieve_limit;
+    uintmax_t maxints  = sieve_limit;
     int verboselevel = 0;
     int option_check = 0;
     int option_tune = 0;
@@ -578,16 +563,13 @@ int main(int argc, char *argv[]) {
         } 
         else if (strcmp(argv[arg], "--check")==0) { option_check=0; }
         else if (strcmp(argv[arg], "--tune")==0) { option_tune=1; }
-        else if (sscanf(argv[arg], "%ld", &maxints) != 1) {
+        else if (sscanf(argv[arg], "%ju", &maxints) != 1) {
             fprintf(stderr, "Invalid size %s\n",argv[arg]); usage(argv[0]); 
-            printf("Maximum set to %ld\n",(uint64_t)maxints);
+            printf("Maximum set to %ju\n",(uintmax_t)maxints);
         }
     }
 
     struct timespec start_time,end_time;
-
-    // The initial time
-    struct sieve_state *sieve_instance;
 
     if (option_check) {
         // Count the number of primes and validate the result
@@ -595,12 +577,11 @@ int main(int argc, char *argv[]) {
 
         // validate algorithm - run one time for all sizes
         for (counter_t sieveSize_check = 100; sieveSize_check <= 100000000; sieveSize_check *=10) {
-            if (verboselevel >= 2) printf("...Checking size %ld ...",(uint64_t)sieveSize_check);
+            if (verboselevel >= 2) printf("...Checking size %ju ...",(uintmax_t)sieveSize_check);
             struct sieve_state*sieve_instance;
             for (counter_t blocksize_bits=1024; blocksize_bits<=64*1024*8; blocksize_bits *= 2) {
-                if (verboselevel >= 3) printf(".blocksize %ld-",(uint64_t)blocksize_bits);
+                if (verboselevel >= 3) printf(".blocksize %ju-",(uintmax_t)blocksize_bits);
                 sieve_instance = sieve(sieveSize_check, blocksize_bits);
-                counter_t primecount = count_primes(sieve_instance);
                 int valid = validatePrimeCount(sieve_instance,3);
                 delete_sieve(sieve_instance);
                 if (!valid) return 0; else if (verboselevel >= 3) printf("valid;");
@@ -641,20 +622,20 @@ int main(int argc, char *argv[]) {
                             elapsed_time = end_time.tv_sec + end_time.tv_nsec*1e-9 - start_time.tv_sec - start_time.tv_nsec*1e-9;
                         }
                         double avg = passes/elapsed_time;
-                        if (verboselevel >= 3) printf("\33[2K\r...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ld; mediumstep %ld; passes %3ld; time %f;average %f", (uint64_t)blocksize_bits, (uint64_t)blocksize_kb,(uint64_t)free_bits,(uint64_t)best_smallstep_faster,(uint64_t)best_mediumstep_faster,(uint64_t)passes,elapsed_time,avg);
+                        if (verboselevel >= 3) printf("\33[2K\r...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
                         if (avg > best_avg) {
                             best_avg = avg;
                             best_blocksize_bits = blocksize_bits;
                             best_smallstep_faster = smallstep_faster;
                             best_mediumstep_faster = mediumstep_faster;
 
-                            if (verboselevel >= 2) printf("\n...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ld; mediumstep %ld; passes %3ld; time %f;average %f\n", (uint64_t)blocksize_bits, (uint64_t)blocksize_kb,(uint64_t)free_bits,(uint64_t)best_smallstep_faster,(uint64_t)best_mediumstep_faster,(uint64_t)passes,elapsed_time,avg);
+                            if (verboselevel >= 2) printf("\n...blocksize_bits %8ld; blocksize %4ldkb; free_bits %5ld; smallstep: %ju; mediumstep %ju; passes %3ld; time %f;average %f\n", (uintmax_t)blocksize_bits, (uintmax_t)blocksize_kb,(uintmax_t)free_bits,(uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster,(uintmax_t)passes,elapsed_time,avg);
                         }
                     }
                 }
             }
         }
-        if (verboselevel >= 1) printf("Tuned algoritm. Best blocksize: %ld; best smallstep %ld; best mediumstep %ld\n",(uint64_t)best_blocksize_bits, (uint64_t)best_smallstep_faster,(uint64_t)best_mediumstep_faster);
+        if (verboselevel >= 1) printf("Tuned algoritm. Best blocksize: %ju; best smallstep %ju; best mediumstep %ju\n",(uintmax_t)best_blocksize_bits, (uintmax_t)best_smallstep_faster,(uintmax_t)best_mediumstep_faster);
         global_SMALLSTEP_FASTER = best_smallstep_faster;
         global_MEDIUMSTEP_FASTER = best_mediumstep_faster;
     }
@@ -677,6 +658,6 @@ int main(int argc, char *argv[]) {
             elapsed_time = end_time.tv_sec + end_time.tv_nsec*1e-9 - start_time.tv_sec - start_time.tv_nsec*1e-9;
 
         }
-        printf("rogiervandam_extend;%ld;%f;1;algorithm=other,faithful=yes,bits=1\n", (uint64_t)passes,elapsed_time);
+        printf("rogiervandam_extend;%ju;%f;1;algorithm=other,faithful=yes,bits=1\n", (uintmax_t)passes,elapsed_time);
     }
 }
