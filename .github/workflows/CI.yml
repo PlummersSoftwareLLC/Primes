@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: "Find Dockerfiles"
         id: "solutions"
@@ -25,7 +25,7 @@ jobs:
           RESULTS+=( "${DIR}" )
           done
           SOLUTIONS=$(printf '%s\n' "${RESULTS[@]}" | jq -R . | jq -sc .)
-          echo "::set-output name=solutions::${SOLUTIONS}"
+          echo "solutions=${SOLUTIONS}" >> $GITHUB_OUTPUT
 
     outputs:
       solutions: ${{ steps.solutions.outputs.solutions }}
@@ -51,20 +51,20 @@ jobs:
         id: solution-name
         run: |
           NAME=$(echo "${{ matrix.solution }}" | sed -r 's/\//-/g' | tr '[:upper:]' '[:lower:]' | sed -r 's/(prime|solution_)//g')
-          echo "::set-output name=normalized::${NAME}"
+          echo "normalized=${NAME}" >> $GITHUB_OUTPUT
 
       - name: Select arm64 build for solutions with arm64 flag file
         id: arch-arm64
         run: |
           if [[ -f "${{ matrix.solution }}/arch-arm64" ]]; then
-          echo "::set-output name=build::true"
-          fi
+          echo "build=true" >> $GITHUB_OUTPUT
+         fi
 
       - name: Select amd64 build for solutions with amd64 or no flag file
         id: arch-amd64
         run: |
           if [[ -f "${{ matrix.solution }}/arch-amd64" || ! -f "${{ matrix.solution }}/arch-arm64" ]]; then
-          echo "::set-output name=build::true"
+          echo "build=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Lint Dockerfile
