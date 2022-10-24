@@ -58,7 +58,7 @@ jobs:
         run: |
           if [[ -f "${{ matrix.solution }}/arch-arm64" ]]; then
           echo "build=true" >> $GITHUB_OUTPUT
-         fi
+          fi
 
       - name: Select amd64 build for solutions with amd64 or no flag file
         id: arch-amd64
