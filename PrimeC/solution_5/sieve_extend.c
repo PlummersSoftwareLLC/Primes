@@ -20,22 +20,21 @@
 
 // 64 bit
 #define TYPE uint64_t
-#define WORD_SIZE 64
-#define SHIFT 6U
-
 #define counter_t int64_t
 #define bitword_t TYPE
 #define bitshift_t TYPE
+
+#define WORD_SIZE (sizeof(TYPE)*8)
+#define pow(base,pow) (pow*((base>>pow)&1U))
+#define SHIFT ((bitshift_t)(pow(WORD_SIZE,1)+pow(WORD_SIZE,2)+pow(WORD_SIZE,3)+pow(WORD_SIZE,4)+pow(WORD_SIZE,5)+pow(WORD_SIZE,6)+pow(WORD_SIZE,7)))
 
 counter_t global_SMALLSTEP_FASTER = WORD_SIZE/4;
 counter_t global_MEDIUMSTEP_FASTER = WORD_SIZE;
 
 #define SAFE_SHIFTBIT (bitword_t)1U
 #define SAFE_ZERO  (bitword_t)0U
-// #define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
-// #define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
-#define SMALLSTEP_FASTER ((counter_t)16)
-#define MEDIUMSTEP_FASTER ((counter_t)WORD_SIZE)
+#define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
+#define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
 #define wordindex(index) (((counter_t)index) >> (bitshift_t)SHIFT)
 #define bitindex(index) (((counter_t)index)&((bitword_t)(WORD_SIZE-1)))
 #define  markmask(index) (SAFE_SHIFTBIT << bitindex(index))
@@ -549,6 +548,7 @@ void usage(char *name) {
 
 int main(int argc, char *argv[]) {
     uintmax_t maxints  = sieve_limit;
+    
     int verboselevel = 0;
     int option_check = 0;
     int option_tune = 0;
