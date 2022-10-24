@@ -637,9 +637,9 @@ int validatePrimeCount(struct sieve_state *sieve, int option_verboselevel) {
     }
 
     int valid = (valid_primes == primecount);
-    if (valid  && option_verboselevel >= 4) printf("Result: Sievesize %ju is expected to have %ju primes. Algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
+    if (valid  && option_verboselevel >= 4) printf("Result: Sievesize %ju is expected to have %ju primes. algorithm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
     if (!valid && option_verboselevel >= 2) {
-        printf("No valid result. Sievesize %ju was expected to have %ju primes, but algoritm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
+        printf("No valid result. Sievesize %ju was expected to have %ju primes, but algorithm produced %ju primes\n",(uintmax_t)sieve->size,(uintmax_t)valid_primes,(uintmax_t)primecount );
         show_primes(sieve);
     }
     if (!valid && option_verboselevel >= 3) deepAnalyzePrimes(sieve);
@@ -653,7 +653,7 @@ void usage(char *name) {
     fprintf(stderr, "                    1 - show phase progress\n");
     fprintf(stderr, "                    2 - show general progress within the phase\n");
     fprintf(stderr, "                    3 - show actual work\n");
-    fprintf(stderr, "  --check           check the correctness of the algoritm\n");
+    fprintf(stderr, "  --check           check the correctness of the algorithm\n");
     fprintf(stderr, "  --tune  <level>   find the best settings for the current os and hardware\n");
     fprintf(stderr, "                    1 - fast tuning\n");
     fprintf(stderr, "                    2 - refined tuning\n");
@@ -889,7 +889,7 @@ int main(int argc, char *argv[]) {
             }
             if (option_verboselevel >= 2) printf("\n");
         }
-        if (option_verboselevel >= 1) printf("...Valid algoritm\n");
+        if (option_verboselevel >= 1) printf("...Valid algorithm\n");
     }
     
     counter_t best_blocksize_bits = default_blocksize;

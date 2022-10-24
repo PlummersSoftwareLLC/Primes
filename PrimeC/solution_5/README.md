@@ -6,10 +6,10 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 This is an implementation in C.
-The algoritm is developed in NodeJS and C in parallel. 
+The algorithm is developed in NodeJS and C in parallel. 
 
 ## The extend algorithm
-The extend algoritm marks all the multiples of a prime factor in the range of the product of the prime and all previous primes x2. E.g.: all multiples of 2,3 and 5 are marked until 2x (1x2x3x5) = 30. The range from 15-30 is a reoccuring pattern. So when we find 7, we can extend the pattern 15-30 until 7x15 = 105. Then we can mark all multiples of 7, and so on. So by gradually extending the seive by repeating the current pattern, we can have significant efficiency gains. 
+The extend algorithm marks all the multiples of a prime factor in the range of the product of the prime and all previous primes x2. E.g.: all multiples of 2,3 and 5 are marked until 2x (1x2x3x5) = 30. The range from 15-30 is a reoccuring pattern. So when we find 7, we can extend the pattern 15-30 until 7x15 = 105. Then we can mark all multiples of 7, and so on. So by gradually extending the seive by repeating the current pattern, we can have significant efficiency gains. 
 
 For larger primes, the range will be so large that it can't be effiently handles by the L1 cache. Therefore, the sieve is divided in blocks, so that the multiples are handler per group. The blocks can be entirely independent (start at prime x and then use the extend algortim again), but a hybrid approach is faster: keep extending till the range for the first product of primes extends the sieve. Then, stripe of per block. 
 
@@ -20,7 +20,7 @@ This defaults to a really small and short tuning. Using the command line, this c
 
 Inspired by: 
 - nodeJS/solution_1 - rogiervandam-memcopy. This is the implementation in C, to see how much speed can be gained by moving from nodeJS to C. 
-- PrimeC/solution_3 - fvbakel C-words. The segmented algoritm has similar concepts. This implementations take is further, by trying to gain speed gains with a sub-byte (bit) level algoritms (race, pattern, small vs largestep optimizations).
+- PrimeC/solution_3 - fvbakel C-words. The segmented algorithm has similar concepts. But the extended algorithm implementations takes it further, by speed gains with a sub-byte (bit) level algorithms (race, pattern, small vs largestep optimizations).
 
 ## Choice of Dockerfile
 This solution uses Ubuntu 20.04 as the base image.
