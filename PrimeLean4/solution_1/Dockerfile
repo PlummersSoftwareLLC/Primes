@@ -1,4 +1,4 @@
-FROM ubuntu:21.04
+FROM ubuntu:22.04
 
 # Install elan, lean4 and runtime deps
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

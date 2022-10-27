@@ -1,6 +1,6 @@
 # Build
 
-FROM ubuntu:21.04 AS build
+FROM ubuntu:22.04 AS build
 
 RUN apt-get update -qq && apt-get install -y g++-11 clang-12 make
 
@@ -15,7 +15,7 @@ RUN make -j bench
 
 # Run
 
-FROM ubuntu:21.04
+FROM ubuntu:22.04
 
 RUN apt-get update -qq && apt-get install -y make \
     && apt-get clean \

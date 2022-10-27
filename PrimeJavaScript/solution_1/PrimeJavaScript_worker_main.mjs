@@ -32,10 +32,7 @@ catch
     verbose = process.argv.includes("verbose");
 }
 
-// as of Bun 0.1.0, there's a bug that means performance.now() returns nanosecond instead of milliseconds
-const NOW_UNITS_PER_SECOND = runtime === "bun"
-    ? 1000000000
-    : 1000;
+const NOW_UNITS_PER_SECOND = 1000;
 
 // Historical data for validating our results - the number of primes
 // to be found under some limit, such as 168 primes under 1000
