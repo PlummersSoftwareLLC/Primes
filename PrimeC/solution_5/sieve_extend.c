@@ -1,4 +1,4 @@
-// Serial code prime sieve by Daniel Spangberg
+// Serial code prime sieve by Rogier van Dam
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
