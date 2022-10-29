@@ -6,6 +6,7 @@ local ffi = require "ffi"
 local name = ARGS[1]
 local type = ARGS[2] or "ffi"
 local size = ARGS[3] or 1000000
+local opt = ARGS[4] or 24000
 
 local buf = {}
 
@@ -15,4 +16,4 @@ end
 
 local chunk, err = loadfile ("./compiled/"..name..".lua")
 print(chunk, err)
-print(chunk()(buf, 5))
+print(chunk()(buf, 5, opt))

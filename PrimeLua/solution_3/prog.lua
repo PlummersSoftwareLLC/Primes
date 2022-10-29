@@ -3,6 +3,7 @@
 
 local ARGS = {...}
 local ffi = require("ffi")
+local L1Sieve = require("l1_sieve")
 
 --  =======================
 --  Sieve Class
@@ -278,6 +279,16 @@ function Module:B()
 --    Sieve.Execute { Unroll = 8, ExperimentalUnroll = true, Name = "mooshua_luajit_d_8"}
 --    Sieve.Execute { Unroll = 4, ExperimentalUnroll = true, Name = "mooshua_luajit_d_4"}
 
+    L1Sieve.Execute { Unroll = 16, CacheSize = 8000, Name = "mooshua_luajit_16_c8k"}
+    L1Sieve.Execute { Unroll = 16, CacheSize = 16000, Name = "mooshua_luajit_16_c16k"}
+    L1Sieve.Execute { Unroll = 16, CacheSize = 24000, Name = "mooshua_luajit_16_c24k"}
+    L1Sieve.Execute { Unroll = 16, CacheSize = 32000, Name = "mooshua_luajit_16_c32k"}
+    L1Sieve.Execute { Unroll = 16, CacheSize = 48000, Name = "mooshua_luajit_16_c48k"}
+    L1Sieve.Execute { Unroll = 16, CacheSize = 64000, Name = "mooshua_luajit_16_c64k"}
+
+    L1Sieve.Execute { Unroll = 8, CacheSize = 24000, Name = "mooshua_luajit_8_c24k"}
+    L1Sieve.Execute { Unroll = 8, CacheSize = 32000, Name = "mooshua_luajit_8_c32k"}
+
     Sieve.Execute { Unroll = 3, Name = "mooshua_luajit"}
 
     Sieve.Execute { Unroll = 16, Name = "mooshua_luajit_16"}
@@ -307,37 +318,12 @@ function Module:B()
     --  _hash seems to work better with the optimized lookup :/
     Sieve.Execute { Name = "mooshua_luajit_vm_hash", Buffer = {}, Bits=64, DeoptimizeHashtable = false, }
 
-
 end
 
 -- Benchmark with different opt settings
 function Module:J()
     
     jit.on()
-
-    --[[jit.opt.start(1, "+narrow")
-    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_narrow"}
-
-    jit.opt.start(1, "+fuse")
-    Sieve.Execute { Unroll=3, Name = "mooshua_lj_fuse" }
-
-    jit.opt.start(1, "+dse")
-    Sieve.Execute { Unroll=3, Name = "mooshua_lj_store" }
-
-    jit.opt.start(1, "+fwd")
-    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_alias"}
-
-    jit.opt.start(1, "+sink")
-    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_sink"}
-
-    jit.opt.start(1, "+abc")
-    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_array"}
-
-    jit.opt.start(1, "+loop")
-    Sieve.Execute { Unroll = 1, Name = "mooshua_lj_loop"}]]
-
-
-    --  Now, inverse
 
     jit.opt.start(3, "-fold")
     Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_fold"}
@@ -370,11 +356,49 @@ function Module:J()
     jit.opt.start(3, "-loop")
     Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_loop"}
 
+    --  Now for L1-optimized
+
+    jit.opt.start(3, "-fold")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_fold_c"}
+
+    jit.opt.start(3, "-cse")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_cse_c"}
+
+    jit.opt.start(3, "-dce")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_dce_c"}
+
+
+    jit.opt.start(3, "-narrow")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_narrow_c"}
+
+    jit.opt.start(3, "-fuse")
+    L1Sieve.Execute { Unroll=3, Name = "mooshua_lj_no_fuse_c" }
+
+    jit.opt.start(3, "-dse")
+    L1Sieve.Execute { Unroll=3, Name = "mooshua_lj_no_store_c" }
+
+    jit.opt.start(3, "-fwd")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_alias_c"}
+
+    jit.opt.start(3, "-sink")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_sink_c"}
+
+    jit.opt.start(3, "-abc")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_array_c"}
+
+    jit.opt.start(3, "-loop")
+    L1Sieve.Execute { Unroll = 1, Name = "mooshua_lj_no_loop_c"}
+
 end
 
 --  Quickly dump a list of primes for testing
 function Module:D()
-    Sieve.Execute{ Unroll = 1, Name = "mooshua_lj_donotbench", Time = 0.1, Buffer = {} }:Dump()
+    Sieve.Execute{ Unroll = 16, CacheSize = 64000, Name = "mooshua_lj_donotbench", Time = 0.1, Buffer = {} }:Dump()
+end
+
+--  Dump L1 sieve
+function Module:L()
+    L1Sieve.Execute{ Unroll = 16, CacheSize = 16000, Name = "mooshua_lj_donotbench", Time = 0.1, Buffer = {} }:Dump()
 end
 
 --  =======================

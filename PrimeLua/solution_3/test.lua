@@ -43,7 +43,7 @@ end
 for k, v in pairs(in_dump) do
     if not in_truthy[k] then
         c_not_in_truth = c_not_in_truth + 1;
-        if (math.random(1000) == 1) then
+        if (math.random(100) == 1) then
             print("MISSING FROM TRUTH:", k,"(" .. table.concat(Factors(k), ", ") .. ")")
         end
     end
