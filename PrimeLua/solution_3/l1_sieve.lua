@@ -105,6 +105,10 @@ function Sieve:Compile()
                 local increment = increment_value[factor]
                 local value = last_value[factor]
 
+                if (value > finish) then
+                    break
+                end
+
                 local v = increment
                 local last = 0
                 for x = value, finish, increment*%s do
@@ -116,7 +120,7 @@ function Sieve:Compile()
                     last = x
 
                 end
-                last_value[factor] = math.max(value,last)
+                last_value[factor] = last --math.max(value,last)
 
             end
         end

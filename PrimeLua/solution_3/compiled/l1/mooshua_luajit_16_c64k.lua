@@ -56,14 +56,17 @@ return function(ARENA, TIME, CACHE)
                 local increment = increment_value[factor]
                 local value = last_value[factor]
 
+                if (value > finish) then
+                    break
+                end
+
                 local v = increment
                 local last = 0
-                if (value <= finish) then
-                    for x = value, finish, increment*32 do
+                for x = value, finish, increment*32 do
 
-                        local xi = rshift( x , 1)
+                    local xi = rshift( x , 1)
 
-                        
+                    
 		ARENA[ xi ] = 1;
 		ARENA[ xi + v ] = 1;
 		ARENA[ xi + v + v ] = 1;
@@ -81,12 +84,10 @@ return function(ARENA, TIME, CACHE)
 		ARENA[ xi + v + v + v + v + v + v + v + v + v + v + v + v + v + v ] = 1;
 		ARENA[ xi + v + v + v + v + v + v + v + v + v + v + v + v + v + v + v ] = 1;
 
-                        last = x
-
-                    end
-                    last_value[factor] = math.max(value,last)
+                    last = x
 
                 end
+                last_value[factor] = last --math.max(value,last)
 
             end
         end

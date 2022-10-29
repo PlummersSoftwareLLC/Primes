@@ -398,7 +398,7 @@ end
 
 --  Dump L1 sieve
 function Module:L()
-    Sieve.Execute{ Unroll = 16, CacheSize = 16000, Name = "mooshua_lj_donotbench", Time = 0.1, Buffer = {} }:Dump()
+    L1Sieve.Execute{ Unroll = 16, CacheSize = 16000, Name = "mooshua_lj_donotbench", Time = 0.1, Buffer = {} }:Dump()
 end
 
 --  =======================

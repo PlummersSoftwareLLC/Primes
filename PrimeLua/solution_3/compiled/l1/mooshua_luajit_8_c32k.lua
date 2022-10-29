@@ -56,9 +56,12 @@ return function(ARENA, TIME, CACHE)
                 local increment = increment_value[factor]
                 local value = last_value[factor]
 
+                if (value > finish) then
+                    break
+                end
+
                 local v = increment
                 local last = 0
-
                 for x = value, finish, increment*16 do
 
                     local xi = rshift( x , 1)
@@ -76,8 +79,7 @@ return function(ARENA, TIME, CACHE)
                     last = x
 
                 end
-                last_value[factor] = math.max(value,last)
-                --print("VFI", value, last.."/".. finish, increment)
+                last_value[factor] = last --math.max(value,last)
 
             end
         end
