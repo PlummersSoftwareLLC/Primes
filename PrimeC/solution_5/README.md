@@ -21,6 +21,21 @@ This defaults to a really small and short tuning. Using the command line, this c
 Inspired by: 
 - nodeJS/solution_1 - rogiervandam-memcopy. This is the implementation in C, to see how much speed can be gained by moving from nodeJS to C. 
 - PrimeC/solution_3 - fvbakel C-words. The segmented algorithm has similar concepts. But the extended algorithm implementations takes it further, by speed gains with a sub-byte (bit) level algorithms (race, pattern, small vs largestep optimizations).
+- PrimeRust/solution_1 - Michael Barber. Inspired the manual loop unroll optimization
+- PrimeC/solution_2 - danielspaangberg_1of2_epar. Inspired the multiprocessor versions. 
+
+## Lessons learned
+- Use #pragma ivdep to signal the compiler that it should not care about rereading memory in a loop.
+- Use manual unroll for small sizes
+- Small changes in code can have huge impact due to -Ofast of -O3 optimizations
+- Using vector can greatly speed thing up, because of the sse/avx extensions
+
+Sources:
+https://stackoverflow.com/questions/21681300/diferences-between-pragmas-simd-and-ivdep-vector-always
+https://stackoverflow.com/questions/25248766/emulating-shifts-on-32-bytes-with-avx
+https://stackoverflow.com/questions/3005564/gcc-recommendations-and-options-for-fastest-code
+https://github.com/simd-everywhere/simde
+https://www.cprogramming.com/tips/tip/common-optimization-tips
 
 ## Choice of Dockerfile
 This solution uses Ubuntu 20.04 as the base image.
@@ -29,8 +44,8 @@ ALso the alpine:3.13 base image has a slow `memcpy` function due to the `musl li
 
 ## Run instructions
 
-### Build and run native
 
+### Build and run native
 To run this solution you need the gcc compiler and dependencies.
 
 ```bash
@@ -38,7 +53,6 @@ cd path/to/sieve
 ./compile.sh
 ./run.sh
 ```
-
 or use the shortcut ./test.sh sieve_extend
 
 ### Run with Docker
@@ -58,10 +72,25 @@ To run with Docker take the following steps:
     docker run --rm -it  c:latest 
     ```
 
+Or do it all in one go:
+
+```bash
+docker build --pull --rm -f "Dockerfile" -t c:latest .; docker run c:latest 
+```
+
+Remember you can go in to the container like this:
+
+```bash
+docker run -it --entrypoint /bin/bash c:latest
+```
+
 ## Output
 
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-rogiervandam_extend;46042;5.000072;1;algorithm=other,faithful=yes,bits=1 
+rogiervandam_extend;59084;5.000057;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend;358748;5.000128;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend;273224;5.000128;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend;158321;5.000052;3;algorithm=other,faithful=yes,bits=1
 ```
