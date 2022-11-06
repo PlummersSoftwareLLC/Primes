@@ -2,6 +2,7 @@
 .vs
 *.o
 *.asm
+*.s
 *.tmp
 testd.sh
 testm.sh
