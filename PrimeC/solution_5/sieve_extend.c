@@ -345,15 +345,36 @@ static void continuePattern_shiftright(bitword_t* bitstorage, const counter_t so
     register counter_t source_word = wordindex(source_start);
     register counter_t copy_word = wordindex(copy_start);
 
-    bitstorage[copy_word] |= ((bitstorage[source_word] << shift) |  (bitstorage[copy_word] >> shift_flipped)) & keepmask(copy_start);
-    if unlikely(++copy_word > destination_stop_word) return; // rapid exit for one word variant
+    if (copy_word >= destination_stop_word) { 
+        bitstorage[copy_word] |= ((bitstorage[source_word] << shift)  // or the start in to not lose data
+                                | (bitstorage[copy_word] >> shift_flipped))
+                                & keepmask(copy_start) & chopmask(destination_stop);
+        return; // rapid exit for one word variant
+    }
+
+    bitstorage[copy_word] |= ((bitstorage[source_word] << shift)  // or the start in to not lose data
+                                | (bitstorage[copy_word] >> shift_flipped))
+                                & keepmask(copy_start);
+    
+    copy_word++;
 
     debug { printf("...start - %ju - %ju - end\n",(uintmax_t)wordindex(copy_start), (uintmax_t)destination_stop_word) ; }
 
-    for (; copy_word <= destination_stop_word; copy_word++, source_word++ ) {
+    for (; copy_word <= destination_stop_word; copy_word++, source_word++ ) 
         bitstorage[copy_word] = (bitstorage[source_word] >> shift_flipped) | (bitstorage[source_word+1] << shift);
-    }
+    // bitstorage[copy_word] &= chopmask(destination_stop);
+
+
+    // bitstorage[copy_word] |= ((bitstorage[source_word] << shift) |  (bitstorage[copy_word] >> shift_flipped)) & keepmask(copy_start);
+    // if unlikely(++copy_word > destination_stop_word) return; // rapid exit for one word variant
+
+    // debug { printf("...start - %ju - %ju - end\n",(uintmax_t)wordindex(copy_start), (uintmax_t)destination_stop_word) ; }
+
+    // for (; copy_word <= destination_stop_word; copy_word++, source_word++ ) {
+    //     bitstorage[copy_word] = (bitstorage[source_word] >> shift_flipped) | (bitstorage[source_word+1] << shift);
+    // }
 }
+
 
 
 static inline counter_t continuePattern_shiftleft_unrolled(bitword_t* __restrict bitstorage, const counter_t aligned_copy_word, const bitshift_t shift, counter_t copy_word, counter_t source_word) {
