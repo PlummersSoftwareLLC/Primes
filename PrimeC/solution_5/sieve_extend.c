@@ -916,7 +916,11 @@ int main(int argc, char *argv[]) {
                 sieve_check = sieve_shake(sieveSize_check, blocksize_bits);
                 int valid = validatePrimeCount(sieve_check,option_verboselevel);
                 sieve_delete(sieve_check);
-                if (!valid) return 0; else verbose(3) printf("valid;");
+                if (!valid) {
+                    printf("Settings used: blocksize %ju, %ju/%ju%ju\n",blocksize_bits,global_SMALLSTEP_FASTER,global_MEDIUMSTEP_FASTER,global_VECTORSTEP_FASTER);
+                    return 0; 
+                }
+                else verbose(3) printf("valid;");
             }
             verbose(2) printf("valid\n");
         }
