@@ -498,6 +498,9 @@ static struct block sieve_block_extend(struct sieve_t *sieve, const counter_t bl
         else if (step < VECTORSTEP_FASTER) setBitsTrue_largeRange_vector(bitstorage, start, step, range_stop);
         else                               setBitsTrue_largeRange(bitstorage, start, step, range_stop);
         block.prime = prime;
+
+        if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("Block_extend at prime %ju blocksize %ju\n",(uintmax_t)prime,(uintmax_t)block_stop); exit(0); }
+
     } 
 
     return block;
