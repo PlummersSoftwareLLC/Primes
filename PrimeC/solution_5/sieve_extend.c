@@ -449,6 +449,8 @@ static void sieve_block_stripe(bitword_t* bitstorage, const counter_t block_star
             prime = searchBitFalse_longRange(bitstorage, prime+1 );
         }
 
+        if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("Block_stripe!"); exit(0); }
+
         step  = prime * 2 + 1;
     }
 }
