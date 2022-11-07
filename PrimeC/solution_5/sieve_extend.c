@@ -350,7 +350,7 @@ static void continuePattern_shiftright(bitword_t* bitstorage, const counter_t so
 
     debug { printf("...start - %ju - %ju - end\n",(uintmax_t)wordindex(copy_start), (uintmax_t)destination_stop_word) ; }
 
-    for (; copy_word <= destination_stop_word; ++copy_word, ++source_word ) {
+    for (; copy_word <= destination_stop_word; copy_word++, source_word++ ) {
         bitstorage[copy_word] = (bitstorage[source_word] >> shift_flipped) | (bitstorage[source_word+1] << shift);
     }
 }
