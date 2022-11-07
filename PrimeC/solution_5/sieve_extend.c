@@ -362,7 +362,7 @@ static void continuePattern_shiftright(bitword_t* bitstorage, const counter_t so
 
     for (; copy_word <= destination_stop_word; copy_word++, source_word++ ) 
         bitstorage[copy_word] = (bitstorage[source_word] >> shift_flipped) | (bitstorage[source_word+1] << shift);
-    // bitstorage[copy_word] &= chopmask(destination_stop);
+    bitstorage[copy_word] &= chopmask(destination_stop);
 
 
     // bitstorage[copy_word] |= ((bitstorage[source_word] << shift) |  (bitstorage[copy_word] >> shift_flipped)) & keepmask(copy_start);
