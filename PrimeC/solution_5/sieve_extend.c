@@ -62,7 +62,7 @@ typedef bitword_t bitvector_t __attribute__ ((vector_size(VECTOR_SIZE_bytes)));
 // #define MEDIUMSTEP_FASTER ((counter_t)16)
 // #define VECTORSTEP_FASTER ((counter_t)128)
 counter_t global_SMALLSTEP_FASTER = 0;
-counter_t global_MEDIUMSTEP_FASTER = 32;
+counter_t global_MEDIUMSTEP_FASTER = 16;
 counter_t global_VECTORSTEP_FASTER = 96;
 #define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
 #define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
@@ -890,7 +890,7 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
         
-    // if --check is needed
+    // command line --check can be used to check the algorithm for all sieve/blocksize combinations
     if (option_check) {
         // Count the number of primes and validate the result
         verbose(1) { printf("Validating..."); fflush(stdout); }
@@ -900,7 +900,7 @@ int main(int argc, char *argv[]) {
         for (counter_t sieveSize_check = 100; sieveSize_check <= 10000000; sieveSize_check *=10) {
             verbose(2) { printf("...Checking size %ju ...",(uintmax_t)sieveSize_check); fflush(stdout); }
             struct sieve_t *sieve_check;
-            for (counter_t blocksize_bits=1024; blocksize_bits<=2*1024*8; blocksize_bits *= 2) {
+            for (counter_t blocksize_bits=1024; blocksize_bits<=256*1024*8; blocksize_bits *= 2) {
                 verbose(3) printf(".blocksize %ju-",(uintmax_t)blocksize_bits);
                 sieve_check = sieve_shake(sieveSize_check, blocksize_bits);
                 int valid = validatePrimeCount(sieve_check,option_verboselevel);
@@ -937,8 +937,19 @@ int main(int argc, char *argv[]) {
     #endif
         verbose(2) printf("\n");
         verbose(1) printf("Benchmarking... with blocksize %ju steps: %ju/%ju/%ju and %ju threads for %.1f seconds - Results:\n", (uintmax_t)best_blocksize_bits,(uintmax_t)global_SMALLSTEP_FASTER, (uintmax_t)global_MEDIUMSTEP_FASTER,(uintmax_t)global_VECTORSTEP_FASTER,(uintmax_t)used_threads,option_max_time );
-        counter_t passes = 0;
         counter_t blocksize_bits = best_blocksize_bits;
+
+        // one last check to make sure this is a valid algorithm for these settings
+        struct sieve_t* sieve_check = sieve_shake(option_maxFactor, blocksize_bits);
+        int valid = validatePrimeCount(sieve_check,option_verboselevel);
+        sieve_delete(sieve_check);
+        if (!valid) {
+            verbose(1) printf("The sieve is not valid for these settings\n");
+            return 0; 
+        }
+        else verbose(3) printf("valid;");
+
+        counter_t passes = 0;
         double elapsed_time = 0;
         struct sieve_t *sieve;
         clock_gettime(CLOCK_MONOTONIC,&start_time);
