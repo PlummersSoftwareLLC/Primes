@@ -14,6 +14,7 @@
 //add debug in front of a line to only compile it if the value below is set to 1 (or !=0)
 #define option_runonce 0
 #define debug if (option_runonce)
+// #define debug if (1) 
 #define verbose(level) if (option_verboselevel >= level)
 #define verbose_at(level) if (option_verboselevel == level)
 
@@ -109,6 +110,7 @@ static struct sieve_t *sieve_create(counter_t size) {
     sieve->bitstorage = aligned_alloc((size_t)anticiped_cache_line_bytesize, (size_t)ceiling(1+((size_t)size>>1), anticiped_cache_line_bytesize<<3) * anticiped_cache_line_bytesize );
     sieve->bits     = size >> 1;
     sieve->size     = size;
+    for (counter_t index_word = 0; index_word <= wordindex(sieve->bits); index_word++) sieve->bitstorage[index_word] = SAFE_ZERO;
     return sieve;
 }
 
@@ -473,7 +475,9 @@ static struct block sieve_block_extend(struct sieve_t *sieve, const counter_t bl
     counter_t range_stop       = block_start;
     struct block block = { .prime = 0, .pattern_start = 0, .pattern_size = 0 };
 
-    sieve->bitstorage[wordindex(block_start)] = SAFE_ZERO; // only the first word has to be cleared; the rest is populated by the extension procedure
+    // for (counter_t index_word=wordindex(block_start); index_word <= wordindex(block_stop); index_word++) {
+    //     sieve->bitstorage[wordindex(block_start)] = SAFE_ZERO; // only the first word has to be cleared; the rest is populated by the extension procedure
+    // }
     
     for (;range_stop < block_stop;) {
         prime = searchBitFalse(bitstorage, prime+1);
@@ -499,7 +503,7 @@ static struct block sieve_block_extend(struct sieve_t *sieve, const counter_t bl
         else                               setBitsTrue_largeRange(bitstorage, start, step, range_stop);
         block.prime = prime;
 
-        if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("Block_extend at prime %ju blocksize %ju\n",(uintmax_t)prime,(uintmax_t)block_stop); exit(0); }
+        // if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("2291 set with block_extend at prime %ju block %ju-%ju\n",(uintmax_t)prime,(uintmax_t)block_start,(uintmax_t)block_stop); exit(0); }
 
     } 
 
@@ -512,7 +516,9 @@ static struct sieve_t* sieve_shake(const counter_t maxints, const counter_t bloc
     struct sieve_t *sieve = sieve_create(maxints);
     bitword_t* bitstorage = sieve->bitstorage;
 
-    debug printf("Running sieve to find all primes up to %ju with blocksize %ju\n",(uintmax_t)maxints,(uintmax_t)blocksize);
+    debug printf("\nShaking sieve to find all primes up to %ju with blocksize %ju\n",(uintmax_t)maxints,(uintmax_t)blocksize);
+
+    // if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("2291 set with sieve_shake at startt\n"); exit(0); }
 
     // fill the whole sieve bij adding en copying incrementally
     struct block block = sieve_block_extend(sieve, 0, sieve->bits);
