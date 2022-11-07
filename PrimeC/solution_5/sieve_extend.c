@@ -12,9 +12,13 @@
 #endif
 
 //add debug in front of a line to only compile it if the value below is set to 1 (or !=0)
-#define option_runonce 0
-#define debug if (option_runonce)
-// #define debug if (1) 
+#define option_debuggable 1
+#if option_debuggable
+int global_option_explain = 0;
+#define debug if (option_debuggable && global_option_explain)
+#else
+#define debug if (0)
+#endif
 #define verbose(level) if (option_verboselevel >= level)
 #define verbose_at(level) if (option_verboselevel == level)
 
@@ -28,7 +32,7 @@
 #define default_tune_level 1
 #define default_check_level 1
 #define default_show_primes_on_error 100
-#define default_showMaxFactor (0 || option_runonce?100:0)
+#define default_showMaxFactor (0 || option_debuggable?100:0)
 #define anticiped_cache_line_bytesize 128
 
 // helper functions
@@ -613,11 +617,14 @@ int validatePrimeCount(struct sieve_t *sieve, int option_verboselevel) {
 void usage(char *name) {
     fprintf(stderr, "Usage: %s [options] [maximum]\n", name);
     fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  --check            check the correctness of the algorithm\n");
+    fprintf(stderr, "  --check            Check the correctness of the algorithm\n");
+    #if option_debuggable
+    fprintf(stderr, "  --explain          Explain the steps of the algorithm - only when compiled for debug\n");
+    #endif
     fprintf(stderr, "  --help             This help function\n");
     fprintf(stderr, "  --show <maximum>   Show the primes found up to the maximum\n");
     #ifdef _OPENMP
-    fprintf(stderr, "  --threads <count>  Set the maximum number of threads to be used\n");
+    fprintf(stderr, "  --threads <count>  Set the maximum number of threads to be used (only when compiled for openmp)\n");
     fprintf(stderr, "                     Use 'all' to use all available threads or 'half' for /2 (e.g. for no hyperthreading)\n");
     #endif
     fprintf(stderr, "  --time  <seconds>  The maximum time (in seconds) to run passes of the sieve algorithm\n");
@@ -848,7 +855,11 @@ int main(int argc, char *argv[]) {
             }
             verbose(1) printf("Verbose level set to %d\n",option_verboselevel);
         } 
+        #if option_debuggable
+        else if (strcmp(argv[arg], "--explain")==0) { global_option_explain=1; }
+        #endif
         else if (strcmp(argv[arg], "--check")==0) { option_check=1; }
+        else if (strcmp(argv[arg], "--nocheck")==0) { option_check=0; }
         else if (strcmp(argv[arg], "--tune")==0) { option_tunelevel=0;
             if (++arg >= argc) { fprintf(stderr, "No tune level specified\n"); usage(argv[0]); }
             if (sscanf(argv[arg], "%d", &option_tunelevel) != 1 || option_tunelevel > 4) {
@@ -890,7 +901,8 @@ int main(int argc, char *argv[]) {
     }
 
     // for debugging
-    if (option_runonce) { // used for stats and debugging
+    #if option_debuggable
+    if (global_option_explain) { // used for stats and debugging
         struct sieve_t* sieve = sieve_shake(option_maxFactor, default_blocksize);
         printf("\nResult set:\n");
         show_primes(sieve, option_showMaxFactor);
@@ -900,7 +912,8 @@ int main(int argc, char *argv[]) {
         sieve_delete(sieve);
         exit(0);
     }
-        
+    #endif
+
     // command line --check can be used to check the algorithm for all sieve/blocksize combinations
     if (option_check) {
         // Count the number of primes and validate the result
@@ -917,7 +930,7 @@ int main(int argc, char *argv[]) {
                 int valid = validatePrimeCount(sieve_check,option_verboselevel);
                 sieve_delete(sieve_check);
                 if (!valid) {
-                    printf("Settings used: blocksize %ju, %ju/%ju%ju\n",blocksize_bits,global_SMALLSTEP_FASTER,global_MEDIUMSTEP_FASTER,global_VECTORSTEP_FASTER);
+                    printf("Settings used: blocksize %ju, %ju/%ju/%ju\n",blocksize_bits,global_SMALLSTEP_FASTER,global_MEDIUMSTEP_FASTER,global_VECTORSTEP_FASTER);
                     return 0; 
                 }
                 else verbose(3) printf("valid;");
