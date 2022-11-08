@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include <immintrin.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -65,17 +66,17 @@ typedef bitword_t bitvector_t __attribute__ ((vector_size(VECTOR_SIZE_bytes)));
 // #define SMALLSTEP_FASTER ((counter_t)0)
 // #define MEDIUMSTEP_FASTER ((counter_t)16)
 // #define VECTORSTEP_FASTER ((counter_t)128)
-static counter_t global_SMALLSTEP_FASTER = 0;
-static counter_t global_MEDIUMSTEP_FASTER = 16;
-static counter_t global_VECTORSTEP_FASTER = 96;
+static counter_t global_SMALLSTEP_FASTER = 0ULL;
+static counter_t global_MEDIUMSTEP_FASTER = 16ULL;
+static counter_t global_VECTORSTEP_FASTER = 96ULL;
 #define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
 #define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
 #define VECTORSTEP_FASTER ((counter_t)global_VECTORSTEP_FASTER)
 
 // Patterns based on types
-#define SAFE_SHIFTBIT (bitshift_t)1U
-#define SAFE_ZERO  (bitword_t)0U
-#define BITWORD_SHIFTBIT (bitword_t)1U
+#define SAFE_SHIFTBIT (bitshift_t)1ULL
+#define SAFE_ZERO  (bitword_t)0ULL
+#define BITWORD_SHIFTBIT (bitword_t)1ULL
 #define WORDMASK ((~SAFE_ZERO)>>(WORD_SIZE_bitshift-SHIFT_WORD))
 #define VECTORMASK ((~SAFE_ZERO)>>(WORD_SIZE_bitshift-SHIFT_VECTOR))
 
@@ -151,22 +152,28 @@ static inline counter_t searchBitFalse_longRange(bitword_t* bitstorage, register
 // manually unlooped - this here is where the main speed increase comes from
 // idea from PrimeRust/solution_1 by Michael Barber 
 static inline void applyMask_word(bitword_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitword_t mask, counter_t index_word) {
-   const counter_t range_stop_word = wordindex(range_stop);
-   register bitword_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_word],8);
-//    register bitword_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_word>step*5) ? (range_stop_word - step*5):0)],8);
-//    #pragma GCC ivdep
-//    while likely(index_ptr < fast_loop_ptr) {
-
-    if likely(range_stop_word > index_word) {
-        #pragma GCC ivdep
-        for (counter_t i= ((range_stop_word - index_word)/(step*5));i>0; i--) {
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-        }
+    const counter_t range_stop_word = wordindex(range_stop);
+    register bitword_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_word],8);
+    register bitword_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_word>step*5) ? (range_stop_word - step*5):0)],8);
+    #pragma GCC ivdep
+    while (index_ptr < fast_loop_ptr) {
+        *index_ptr |= mask;  index_ptr+=step;
+        *index_ptr |= mask;  index_ptr+=step;
+        *index_ptr |= mask;  index_ptr+=step;
+        *index_ptr |= mask;  index_ptr+=step;
+        *index_ptr |= mask;  index_ptr+=step;
     }
+
+    // if likely(range_stop_word > index_word) {
+    //     #pragma GCC ivdep
+    //     for (counter_t i= ((range_stop_word - index_word)/(step*5));i>0; i--) {
+    //         *index_ptr |= mask;  index_ptr+=step;
+    //         *index_ptr |= mask;  index_ptr+=step;
+    //         *index_ptr |= mask;  index_ptr+=step;
+    //         *index_ptr |= mask;  index_ptr+=step;
+    //         *index_ptr |= mask;  index_ptr+=step;
+    //     }
+    // }
 
    register const bitword_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_word)],8);
    #pragma GCC ivdep
@@ -183,15 +190,15 @@ static inline void applyMask_word(bitword_t* __restrict bitstorage, const counte
 static inline void applyMask_vector(bitvector_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitvector_t mask, counter_t index_vector) {
     const counter_t range_stop_vector = vectorindex(range_stop);
     register bitvector_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_vector],anticiped_cache_line_bytesize);
-    // register bitvector_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_vector>step*4) ? (range_stop_vector - step*4):0)],anticiped_cache_line_bytesize);
+    register bitvector_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_vector>step*4) ? (range_stop_vector - step*4):0)],anticiped_cache_line_bytesize);
     
-    // #pragma GCC ivdep
-    // while likely(index_ptr < fast_loop_ptr) {
-    //     *index_ptr |= mask; index_ptr+=step;
-    //     *index_ptr |= mask; index_ptr+=step;
-    //     *index_ptr |= mask; index_ptr+=step;
-    //     *index_ptr |= mask; index_ptr+=step;
-    // }
+    #pragma GCC ivdep
+    while likely(index_ptr < fast_loop_ptr) {
+        *index_ptr |= mask; index_ptr+=step;
+        *index_ptr |= mask; index_ptr+=step;
+        *index_ptr |= mask; index_ptr+=step;
+        *index_ptr |= mask; index_ptr+=step;
+    }
     
     register const bitvector_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_vector)],anticiped_cache_line_bytesize);
     #pragma GCC ivdep
@@ -211,9 +218,10 @@ static void  setBitsTrue_mediumStep(bitword_t* __restrict bitstorage, const coun
         debug printf("Setting bits step %ju in %ju bit range (%ju-%ju) using mediumstep-unique (%ju occurances)\n", (uintmax_t)step, (uintmax_t)range_stop-(uintmax_t)range_start,(uintmax_t)range_start,(uintmax_t)range_stop, (uintmax_t)(((uintmax_t)range_stop-(uintmax_t)range_start)/(uintmax_t)step));
 
         for (register counter_t index = range_start; index <= range_stop;) {
-            register counter_t index_word = wordindex(index);
+            counter_t index_word = wordindex(index);
+            register counter_t index_word_start = wordstart(index);
             register bitword_t mask = SAFE_ZERO;
-            for(; index_word == wordindex(index); index += step) mask |= markmask(index);
+            for(; index_word_start == wordstart(index); index += step) mask |= markmask(index);
             bitstorage[index_word] |= mask;
         }
     }
@@ -221,9 +229,10 @@ static void  setBitsTrue_mediumStep(bitword_t* __restrict bitstorage, const coun
         debug printf("Setting bits step %ju in %ju bit range (%ju-%ju) using mediumstep-repeat (%ju occurances)\n", (uintmax_t)step, (uintmax_t)range_stop-(uintmax_t)range_start,(uintmax_t)range_start,(uintmax_t)range_stop, (uintmax_t)(((uintmax_t)range_stop-(uintmax_t)range_start)/(uintmax_t)step));
         
         for (register counter_t index = range_start; index <= range_stop_unique;) {
-            register counter_t index_word = wordindex(index);
+            counter_t index_word = wordindex(index);
+            register counter_t index_word_start = wordstart(index);
             register bitword_t mask = SAFE_ZERO;
-            for(; index_word == wordindex(index); index += step) mask |= markmask(index);
+            for(; index_word_start == wordstart(index); index += step) mask |= markmask(index);
             applyMask_word(bitstorage, step, range_stop, mask, index_word);
         }
     }
@@ -266,19 +275,28 @@ static inline void setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorag
     debug printf("..building masks in range %ju-%ju\n", (uintmax_t)range_start, (uintmax_t)range_stop_unique);
     for (counter_t index = range_start; index < range_stop_unique;) {
         const counter_t current_vector =  vectorindex(index);
-        const counter_t current_vector_start_word =  current_vector << (SHIFT_VECTOR - SHIFT_WORD);
-        register counter_t word = wordindex(index) - current_vector_start_word;
+
         register bitvector_t quadmask = { };
+        register bitword_t mask = SAFE_ZERO;
+        register const counter_t curent_vector_start = vectorstart(index);
 
-        // build a quadmask
-        do {
-            quadmask[word] |= markmask(index);
-            index += step;
-            word = wordindex(index) - current_vector_start_word;
-        } while (word < (VECTOR_ELEMENTS));// && index <= range_stop_unique);
-
+        #pragma GCC ivdep
+        for(register counter_t vector_wordstart = (curent_vector_start            ); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        quadmask[0] = mask;
+        mask = SAFE_ZERO;
+        #pragma GCC ivdep
+        for(register counter_t vector_wordstart = (curent_vector_start | (64     )); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        quadmask[1] = mask;
+        mask = SAFE_ZERO;
+        #pragma GCC ivdep
+        for(register counter_t vector_wordstart = (curent_vector_start | (128    )); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        quadmask[2] = mask;
+        mask = SAFE_ZERO;
+        #pragma GCC ivdep
+        for(register counter_t vector_wordstart = (curent_vector_start | (128+64 )); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        quadmask[3] = mask;
+ 
         // use mask on all n*step multiples
-        // register counter_t current_vector = current_vector_start_word >> (SHIFT_VECTOR - SHIFT_WORD);
         bitvector_t* __restrict bitstorage_vector = __builtin_assume_aligned( (bitvector_t*) bitstorage_word, anticiped_cache_line_bytesize);
         applyMask_vector(bitstorage_vector, step, range_stop, quadmask, current_vector);
     }
