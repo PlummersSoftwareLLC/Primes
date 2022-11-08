@@ -5,8 +5,8 @@ CC="-Ofast -march=native -funroll-all-loops -mtune=native -fno-asynchronous-unwi
 #CC="-Ofast -march=native -mtune=native -funroll-all-loops -malign-data=cacheline" 
 PAR="-fopenmp"
 PAREXT="_epar"
-gcc -c -g -Wa,-asdlh  $CC $1.c > $1.s
-gcc -c -g -Wa,-asdlh  $CC $PAR $1.c > $1$PAREXT.s
+gcc -c -Wa,-asdlh  $CC $1.c > $1.s
+gcc -c -Wa,-asdlh  $CC $PAR $1.c > $1$PAREXT.s
 gcc $CC -o $1 $1.c -lm
 gcc $CC $PAR -o $1$PAREXT $1.c -lm
 ./$1 $2 $3 $4 $5 $6 $7
