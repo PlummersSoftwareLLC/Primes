@@ -281,21 +281,18 @@ static inline void setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorag
         register const counter_t curent_vector_start = vectorstart(index);
 
         #pragma GCC ivdep
-        for(register counter_t vector_wordstart = (curent_vector_start            ); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
-        quadmask[0] = mask;
-        mask = SAFE_ZERO;
+        for(register counter_t vector_wordstart = (curent_vector_start                        ); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        quadmask[0] = mask; mask = SAFE_ZERO;
         #pragma GCC ivdep
-        for(register counter_t vector_wordstart = (curent_vector_start | (64     )); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
-        quadmask[1] = mask;
-        mask = SAFE_ZERO;
+        for(register counter_t vector_wordstart = (curent_vector_start | (WORD_SIZE_counter  )); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        quadmask[1] = mask; mask = SAFE_ZERO;
         #pragma GCC ivdep
-        for(register counter_t vector_wordstart = (curent_vector_start | (128    )); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
-        quadmask[2] = mask;
-        mask = SAFE_ZERO;
+        for(register counter_t vector_wordstart = (curent_vector_start | (WORD_SIZE_counter*2)); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        quadmask[2] = mask; mask = SAFE_ZERO;
         #pragma GCC ivdep
-        for(register counter_t vector_wordstart = (curent_vector_start | (128+64 )); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
+        for(register counter_t vector_wordstart = (curent_vector_start | (WORD_SIZE_counter*3)); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
         quadmask[3] = mask;
- 
+
         // use mask on all n*step multiples
         bitvector_t* __restrict bitstorage_vector = __builtin_assume_aligned( (bitvector_t*) bitstorage_word, anticiped_cache_line_bytesize);
         applyMask_vector(bitstorage_vector, step, range_stop, quadmask, current_vector);
