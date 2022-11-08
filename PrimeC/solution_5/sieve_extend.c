@@ -281,7 +281,6 @@ static inline void setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorag
 
 static void continuePattern_smallSize(bitword_t* __restrict bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop) {
     debug printf("Extending sieve size %ju in %ju bit range (%ju-%ju) using smallsize (%ju copies)\n", (uintmax_t)size, (uintmax_t)destination_stop-(uintmax_t)source_start,(uintmax_t)source_start,(uintmax_t)destination_stop, (uintmax_t)(((uintmax_t)destination_stop-(uintmax_t)source_start)/(uintmax_t)size));
-    // debug { printf("...At start. "); dump_bitstorage(bitstorage, 4); }
 
     const counter_t source_word = wordindex(source_start);
     register bitword_t pattern = ((bitstorage[source_word] >> bitindex(source_start)) | (bitstorage[source_word+1] << (WORD_SIZE_counter-bitindex_calc(source_start)))) & chopmask(size);
@@ -469,8 +468,6 @@ static void sieve_block_stripe(bitword_t* bitstorage, const counter_t block_star
             prime = searchBitFalse_longRange(bitstorage, prime+1 );
         }
 
-        if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("Block_stripe!"); exit(0); }
-
         step  = prime * 2 + 1;
     }
 }
@@ -518,9 +515,6 @@ static struct block sieve_block_extend(struct sieve_t *sieve, const counter_t bl
         else if (step < VECTORSTEP_FASTER) setBitsTrue_largeRange_vector(bitstorage, start, step, range_stop);
         else                               setBitsTrue_largeRange(bitstorage, start, step, range_stop);
         block.prime = prime;
-
-        // if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("2291 set with block_extend at prime %ju block %ju-%ju\n",(uintmax_t)prime,(uintmax_t)block_start,(uintmax_t)block_stop); exit(0); }
-
     } 
 
     return block;
@@ -533,8 +527,6 @@ static struct sieve_t* sieve_shake(const counter_t maxints, const counter_t bloc
     bitword_t* bitstorage = sieve->bitstorage;
 
     debug printf("\nShaking sieve to find all primes up to %ju with blocksize %ju\n",(uintmax_t)maxints,(uintmax_t)blocksize);
-
-    // if (bitstorage[wordindex(2291)] & markmask_calc(2291)) { printf("2291 set with sieve_shake at startt\n"); exit(0); }
 
     // fill the whole sieve bij adding en copying incrementally
     struct block block = sieve_block_extend(sieve, 0, sieve->bits);
@@ -600,7 +592,6 @@ static void deepAnalyzePrimes(struct sieve_t *sieve) {
 
 
 int validatePrimeCount(struct sieve_t *sieve, int option_verboselevel) {
-
     counter_t primecount = count_primes(sieve);
     counter_t valid_primes = 0;
     switch(sieve->size) {
