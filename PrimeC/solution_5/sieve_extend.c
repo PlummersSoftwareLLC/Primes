@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
-#include <math.h>
 #include <string.h>
 #ifdef _OPENMP
 #include <omp.h>
@@ -66,9 +65,9 @@ typedef bitword_t bitvector_t __attribute__ ((vector_size(VECTOR_SIZE_bytes)));
 // #define SMALLSTEP_FASTER ((counter_t)0)
 // #define MEDIUMSTEP_FASTER ((counter_t)16)
 // #define VECTORSTEP_FASTER ((counter_t)128)
-counter_t global_SMALLSTEP_FASTER = 0;
-counter_t global_MEDIUMSTEP_FASTER = 16;
-counter_t global_VECTORSTEP_FASTER = 96;
+static counter_t global_SMALLSTEP_FASTER = 0;
+static counter_t global_MEDIUMSTEP_FASTER = 16;
+static counter_t global_VECTORSTEP_FASTER = 96;
 #define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
 #define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
 #define VECTORSTEP_FASTER ((counter_t)global_VECTORSTEP_FASTER)
@@ -154,18 +153,23 @@ static inline counter_t searchBitFalse_longRange(bitword_t* bitstorage, register
 static inline void applyMask_word(bitword_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitword_t mask, counter_t index_word) {
    const counter_t range_stop_word = wordindex(range_stop);
    register bitword_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_word],8);
-   register bitword_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_word>step*5) ? (range_stop_word - step*5):0)],8);
+//    register bitword_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_word>step*5) ? (range_stop_word - step*5):0)],8);
+//    #pragma GCC ivdep
+//    while likely(index_ptr < fast_loop_ptr) {
 
-   #pragma GCC ivdep
-   while likely(index_ptr < fast_loop_ptr) {
-       *index_ptr |= mask;  index_ptr+=step;
-       *index_ptr |= mask;  index_ptr+=step;
-       *index_ptr |= mask;  index_ptr+=step;
-       *index_ptr |= mask;  index_ptr+=step;
-       *index_ptr |= mask;  index_ptr+=step;
-   }
+    if likely(range_stop_word > index_word) {
+        #pragma GCC ivdep
+        for (counter_t i= ((range_stop_word - index_word)/(step*5));i>0; i--) {
+            *index_ptr |= mask;  index_ptr+=step;
+            *index_ptr |= mask;  index_ptr+=step;
+            *index_ptr |= mask;  index_ptr+=step;
+            *index_ptr |= mask;  index_ptr+=step;
+            *index_ptr |= mask;  index_ptr+=step;
+        }
+    }
 
    register const bitword_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_word)],8);
+   #pragma GCC ivdep
    while likely(index_ptr < range_stop_ptr) {
        *index_ptr |= mask;  index_ptr+=step;
    }
@@ -179,17 +183,18 @@ static inline void applyMask_word(bitword_t* __restrict bitstorage, const counte
 static inline void applyMask_vector(bitvector_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitvector_t mask, counter_t index_vector) {
     const counter_t range_stop_vector = vectorindex(range_stop);
     register bitvector_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_vector],anticiped_cache_line_bytesize);
-    register bitvector_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_vector>step*4) ? (range_stop_vector - step*4):0)],anticiped_cache_line_bytesize);
+    // register bitvector_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_vector>step*4) ? (range_stop_vector - step*4):0)],anticiped_cache_line_bytesize);
     
-    #pragma GCC ivdep
-    while likely(index_ptr < fast_loop_ptr) {
-        *index_ptr |= mask; index_ptr+=step;
-        *index_ptr |= mask; index_ptr+=step;
-        *index_ptr |= mask; index_ptr+=step;
-        *index_ptr |= mask; index_ptr+=step;
-    }
+    // #pragma GCC ivdep
+    // while likely(index_ptr < fast_loop_ptr) {
+    //     *index_ptr |= mask; index_ptr+=step;
+    //     *index_ptr |= mask; index_ptr+=step;
+    //     *index_ptr |= mask; index_ptr+=step;
+    //     *index_ptr |= mask; index_ptr+=step;
+    // }
     
     register const bitvector_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_vector)],anticiped_cache_line_bytesize);
+    #pragma GCC ivdep
     while likely(index_ptr <= range_stop_ptr) {
         *index_ptr |= mask; index_ptr+=step;
     }
