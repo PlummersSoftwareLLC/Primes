@@ -32,6 +32,7 @@ Inspired by:
 - Using vector can greatly speed thing up, because of the sse/avx extensions
 
 Sources:
+https://www.agner.org/optimize/
 https://stackoverflow.com/questions/21681300/diferences-between-pragmas-simd-and-ivdep-vector-always
 https://stackoverflow.com/questions/25248766/emulating-shifts-on-32-bytes-with-avx
 https://stackoverflow.com/questions/3005564/gcc-recommendations-and-options-for-fastest-code
