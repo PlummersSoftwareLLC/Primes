@@ -31,7 +31,7 @@
 #define default_explain_level 0
 #define default_verbose_level 0
 #define default_tune_level 1
-#define default_check_level 0
+#define default_check_level 1
 #define default_show_primes_on_error 100
 #define default_showMaxFactor (0 || compile_debuggable?100:0)
 #define anticiped_cache_line_bytesize 128
@@ -525,7 +525,7 @@ static inline void continuePattern(bitword_t* bitstorage, const counter_t source
     else                            continuePattern_aligned   (bitstorage, source_start, size, destination_stop);
 }
 
-static void sieve_block_stripe(bitword_t* bitstorage, const counter_t block_start, const counter_t block_stop, const counter_t prime_start)
+static counter_t sieve_block_stripe(bitword_t* bitstorage, const counter_t block_start, const counter_t block_stop, const counter_t prime_start, const counter_t maxprime)
 {
     counter_t prime = prime_start;
     counter_t start = 0;
@@ -533,7 +533,7 @@ static void sieve_block_stripe(bitword_t* bitstorage, const counter_t block_star
 
     debug printf("Block strip for block %ju - %ju\n",(uintmax_t)block_start,(uintmax_t)block_stop);
     
-    while (prime*step <= block_stop) {
+    while ((prime < maxprime) && (prime*step <= block_stop)) {
         if likely(block_start >= (prime + 1)) 
             start = block_start + prime + prime - ((block_start + prime) % step);
         else 
@@ -550,6 +550,7 @@ static void sieve_block_stripe(bitword_t* bitstorage, const counter_t block_star
 
         step  = prime * 2 + 1;
     }
+    return prime;
 }
 
 // structure to help sieve_block_extend report back to the main module
@@ -619,7 +620,7 @@ static struct sieve_t* sieve_shake_blockbyblock(const counter_t maxFactor, const
     for (counter_t block_start = 0,  block_stop = blocksize-1;block_start <= sieve->bits; block_start += blocksize, block_stop += blocksize) {
         if unlikely(block_stop > sieve->bits) block_stop = sieve->bits;
         counter_t prime = searchBitFalse(bitstorage, startprime);
-        sieve_block_stripe(bitstorage, block_start, block_stop, prime);
+        sieve_block_stripe(bitstorage, block_start, block_stop, prime, maxFactor);
     } 
 
     // retunr the completed sieve
@@ -637,11 +638,11 @@ static struct sieve_t* sieve_shake(const counter_t maxFactor, const counter_t bl
     // fill the whole sieve bij adding en copying incrementally
     struct block block = sieve_block_extend(sieve, 0, sieve->bits);
 
-    // returns the max prime that was processed in the pattern
-    counter_t startprime = block.prime;
-
     // continue the found pattern to the entire sieve
     continuePattern(bitstorage, block.pattern_start, block.pattern_size, sieve->bits);
+
+    // continue from the max prime that was processed in the pattern until the tuned value
+    counter_t startprime = sieve_block_stripe(bitstorage, 0, sieve->bits, block.prime, global_SMALLSTEP_FASTER);
 
     // in the sieve all bits for the multiples of primes up to startprime have been set
     // process the sieve and stripe all the multiples of primes > start_prime
@@ -649,7 +650,7 @@ static struct sieve_t* sieve_shake(const counter_t maxFactor, const counter_t bl
     for (counter_t block_start = 0,  block_stop = blocksize-1;block_start <= sieve->bits; block_start += blocksize, block_stop += blocksize) {
         if unlikely(block_stop > sieve->bits) block_stop = sieve->bits;
         counter_t prime = searchBitFalse(bitstorage, startprime);
-        sieve_block_stripe(bitstorage, block_start, block_stop, prime);
+        sieve_block_stripe(bitstorage, block_start, block_stop, prime,maxFactor);
     } 
 
     // retunr the completed sieve
@@ -802,14 +803,14 @@ static tuning_result_t tune(int tune_level, counter_t maxFactor, counter_t threa
     // determines the size of the resultset
     switch (tune_level) {
         case 1:
-            smallstep_faster_steps  = WORD_SIZE/4;
+            smallstep_faster_steps  = WORD_SIZE/2;
             mediumstep_faster_steps = WORD_SIZE/4;
-            vectorstep_faster_steps = WORD_SIZE/4;
+            vectorstep_faster_steps = WORD_SIZE/2;
             freebits_steps = anticiped_cache_line_bytesize*8*2;
             sample_duration = 0.001;
             break;
         case 2:
-            smallstep_faster_steps  = WORD_SIZE/8;
+            smallstep_faster_steps  = WORD_SIZE/4;
             mediumstep_faster_steps = WORD_SIZE/16;
             vectorstep_faster_steps = WORD_SIZE/4;
             freebits_steps = anticiped_cache_line_bytesize*8;
@@ -830,15 +831,15 @@ static tuning_result_t tune(int tune_level, counter_t maxFactor, counter_t threa
         verbose(2) printf(".. best options (shown when found):\n");
         fflush(stdout);
     }
-    const size_t max_results = ((size_t)(WORD_SIZE_counter/smallstep_faster_steps)+1) * ((size_t)(WORD_SIZE_counter/mediumstep_faster_steps)+1) * ((size_t)(VECTOR_SIZE_counter/vectorstep_faster_steps)+1) * 32 * (size_t)(anticiped_cache_line_bytesize*8*4/freebits_steps);
+    const size_t max_results = ((size_t)(VECTOR_SIZE_counter/smallstep_faster_steps)+1) * ((size_t)(VECTOR_SIZE_counter/mediumstep_faster_steps)+1) * ((size_t)(VECTOR_SIZE_counter/vectorstep_faster_steps)+1) * 32 * (size_t)(anticiped_cache_line_bytesize*8*4/freebits_steps);
     tuning_result_t* tuning_result = malloc(max_results * sizeof(tuning_result));
     counter_t tuning_results=0;
     counter_t tuning_result_index=0;
     
-    for (counter_t smallstep_faster = 0; smallstep_faster <= 0; smallstep_faster += smallstep_faster_steps) {
-        for (counter_t mediumstep_faster = smallstep_faster; mediumstep_faster <= WORD_SIZE_counter; mediumstep_faster += mediumstep_faster_steps) {
+    for (counter_t smallstep_faster = 0; smallstep_faster <= VECTOR_SIZE_counter; smallstep_faster += smallstep_faster_steps) {
+        for (counter_t mediumstep_faster = 0; mediumstep_faster <= WORD_SIZE_counter; mediumstep_faster += mediumstep_faster_steps) {
             for (counter_t vectorstep_faster = mediumstep_faster; vectorstep_faster <= VECTOR_SIZE_counter; vectorstep_faster += vectorstep_faster_steps) {
-                for (counter_t blocksize_kB=256; blocksize_kB>=8; blocksize_kB /= 2) {
+                for (counter_t blocksize_kB=64; blocksize_kB>=8; blocksize_kB /= 2) {
                     for (counter_t free_bits=0; (free_bits < (anticiped_cache_line_bytesize*8*4) && (free_bits < blocksize_kB * 1024 * 8)); free_bits += freebits_steps) {
 
                         // hack to ovrrule tuning of user setting

@@ -91,8 +91,9 @@ docker run -it --entrypoint /bin/bash c:latest
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-rogiervandam_extend;59084;5.000057;1;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend;358748;5.000128;12;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend;273224;5.000128;6;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend;158321;5.000052;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend;65863;5.000053;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;352723;5.000135;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;304570;5.000061;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;179989;5.000081;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;65742;5.000010;1;algorithm=other,faithful=yes,bits=1
 ```
