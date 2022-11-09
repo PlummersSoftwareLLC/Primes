@@ -124,7 +124,7 @@ struct options_t {
 // use cache lines as much as possible - alignment might be key
 // moved clearing the sieve with 0 to the sieve_block_extend - it gave weird malloc problems at this point
 #define ceiling(x,y) (((x) + (y) - 1) / (y)) // Return the smallest multiple N of y such that:  x <= y * N
-static struct sieve_t *sieve_create(counter_t size) 
+static inline struct sieve_t * __attribute__((always_inline)) sieve_create(counter_t size) 
 {
     struct sieve_t *sieve = aligned_alloc(8, sizeof(struct sieve_t));
     sieve->bitstorage = aligned_alloc((size_t)anticiped_cache_line_bytesize, (size_t)ceiling(1+((size_t)size>>1), anticiped_cache_line_bytesize<<3) * anticiped_cache_line_bytesize );
@@ -136,14 +136,14 @@ static struct sieve_t *sieve_create(counter_t size)
     return sieve;
 }
 
-static void sieve_delete(struct sieve_t *sieve) 
+static inline void __attribute__((always_inline)) sieve_delete(struct sieve_t *sieve) 
 {
     free(sieve->bitstorage);
     free(sieve);
 }
 
 // search the next bit not set - for small expected distances
-static inline counter_t searchBitFalse(bitword_t* bitstorage, register counter_t index) 
+static inline counter_t __attribute__((always_inline)) searchBitFalse(bitword_t* bitstorage, register counter_t index) 
 {
     while (bitstorage[wordindex(index)] & markmask(index)) index++;
     return index;
@@ -170,7 +170,7 @@ static inline counter_t searchBitFalse_longRange(bitword_t* bitstorage, register
 // apply the same word mask at large ranges
 // manually unlooped - this here is where the main speed increase comes from
 // idea from PrimeRust/solution_1 by Michael Barber 
-static inline void applyMask_word(bitword_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitword_t mask, const counter_t index_word) 
+static inline void __attribute__((always_inline)) applyMask_word(bitword_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitword_t mask, const counter_t index_word) 
 {
 #if defined(__x86_64__) // unexplained (yet) 4k/s performance increase for this version on x86_64
     const counter_t range_stop_word = wordindex(range_stop);
@@ -223,7 +223,7 @@ static inline void applyMask_word(bitword_t* __restrict bitstorage, const counte
 }
 
 // same as word mask, but at a vector level - uses the sse/avx extensions, hopefully
-static inline void applyMask_vector(bitvector_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitvector_t mask, counter_t index_vector) 
+static inline void __attribute__((always_inline)) applyMask_vector(bitvector_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitvector_t mask, counter_t index_vector) 
 {
     const counter_t range_stop_vector = vectorindex(range_stop);
     register bitvector_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_vector],anticiped_cache_line_bytesize);
@@ -253,7 +253,7 @@ static inline void applyMask_vector(bitvector_t* __restrict bitstorage, const co
 // By joining the masks and then writing to memory, we might save some time.
 // This is especially true for small steps over long ranges
 // but it needs tuning, because there is some overhead of checking if the next step is in the same word
-static void  setBitsTrue_mediumStep(bitword_t* __restrict bitstorage, const counter_t range_start, const counter_t step, const counter_t range_stop) 
+static inline void  __attribute__((always_inline)) setBitsTrue_mediumStep(bitword_t* __restrict bitstorage, const counter_t range_start, const counter_t step, const counter_t range_stop) 
 {
     const counter_t range_stop_unique =  range_start + WORD_SIZE_counter * step;
 
@@ -282,7 +282,7 @@ static void  setBitsTrue_mediumStep(bitword_t* __restrict bitstorage, const coun
 }
 
 // Large ranges (> WORD_SIZE * step) mean the same mask can be reused
-static inline void setBitsTrue_largeRange(bitword_t* __restrict bitstorage, const counter_t range_start, const counter_t step, const counter_t range_stop) 
+static inline void  __attribute__((always_inline)) setBitsTrue_largeRange(bitword_t* __restrict bitstorage, const counter_t range_start, const counter_t step, const counter_t range_stop) 
 {
     debug printf("Setting bits step %ju in %ju bit range (%ju-%ju) using largerange (%ju occurances)\n", (uintmax_t)step, (uintmax_t)range_stop-(uintmax_t)range_start,(uintmax_t)range_start,(uintmax_t)range_stop, (uintmax_t)(((uintmax_t)range_stop-(uintmax_t)range_start)/(uintmax_t)step));
     const counter_t range_stop_unique =  range_start + WORD_SIZE_counter * step;
@@ -299,7 +299,7 @@ static inline void setBitsTrue_largeRange(bitword_t* __restrict bitstorage, cons
     }
 }
 
-static inline void setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorage_word, counter_t range_start, const counter_t step, const counter_t range_stop) 
+static inline void  __attribute__((always_inline)) setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorage_word, counter_t range_start, const counter_t step, const counter_t range_stop) 
 {
     debug printf("Setting bits step %ju in %ju bit range (%ju-%ju) using largerange vector (%ju occurances)\n", (uintmax_t)step, (uintmax_t)range_stop-(uintmax_t)range_start,(uintmax_t)range_start,(uintmax_t)range_stop, (uintmax_t)(((uintmax_t)range_stop-(uintmax_t)range_start)/(uintmax_t)step));
 
@@ -352,7 +352,7 @@ static inline void setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorag
     }
 }
 
-static void continuePattern_smallSize(bitword_t* __restrict bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
+static inline void continuePattern_smallSize(bitword_t* __restrict bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
 {
     debug printf("Extending sieve size %ju in %ju bit range (%ju-%ju) using smallsize (%ju copies)\n", (uintmax_t)size, (uintmax_t)destination_stop-(uintmax_t)source_start,(uintmax_t)source_start,(uintmax_t)destination_stop, (uintmax_t)(((uintmax_t)destination_stop-(uintmax_t)source_start)/(uintmax_t)size));
 
@@ -384,7 +384,7 @@ static void continuePattern_smallSize(bitword_t* __restrict bitstorage, const co
     bitstorage[destination_stop_word] &= chopmask(destination_stop);
 }
 
-static void continuePattern_aligned(bitword_t* bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
+static inline void continuePattern_aligned(bitword_t* bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
 {
     debug printf("Extending sieve size %ju in %ju bit range (%ju-%ju) using aligned (%ju copies)\n", (uintmax_t)size, (uintmax_t)destination_stop-(uintmax_t)source_start,(uintmax_t)source_start,(uintmax_t)destination_stop, (uintmax_t)(((uintmax_t)destination_stop-(uintmax_t)source_start)/(uintmax_t)size));
 
@@ -408,7 +408,7 @@ static void continuePattern_aligned(bitword_t* bitstorage, const counter_t sourc
 
 }
 
-static void continuePattern_shiftright(bitword_t* bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
+static inline void continuePattern_shiftright(bitword_t* bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
 {
     debug printf("Extending sieve size %ju in %ju bit range (%ju-%ju) using shiftright (%ju copies)\n", (uintmax_t)size, (uintmax_t)destination_stop-(uintmax_t)source_start,(uintmax_t)source_start,(uintmax_t)destination_stop, (uintmax_t)(((uintmax_t)destination_stop-(uintmax_t)source_start)/(uintmax_t)size));
    
