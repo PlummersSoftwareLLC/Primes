@@ -14,7 +14,7 @@
 #endif
 
 //set compile_debuggable to 1 to enable explain plan
-#define compile_debuggable 0
+#define compile_debuggable 1
 #if compile_debuggable
 #define debug if (compile_debuggable && option.explain)
 #else
@@ -28,9 +28,10 @@
 #define default_blocksize (32*1024*8)
 #define default_maxTime 5
 #define default_sample_duration 0.001
-#define default_verbose_level 1
+#define default_explain_level 0
+#define default_verbose_level 2
 #define default_tune_level 1
-#define default_check_level 0
+#define default_check_level 1
 #define default_show_primes_on_error 100
 #define default_showMaxFactor (0 || compile_debuggable?100:0)
 #define anticiped_cache_line_bytesize 128
@@ -45,7 +46,7 @@
 // types
 #define bitword_t uint64_t
 #define TYPE uint64_t
-#define counter_t TYPE
+#define counter_t uint64_t
 #define bitshift_t TYPE
 
 // masks and mask helpers
@@ -169,12 +170,12 @@ static inline counter_t searchBitFalse_longRange(bitword_t* bitstorage, register
 // apply the same word mask at large ranges
 // manually unlooped - this here is where the main speed increase comes from
 // idea from PrimeRust/solution_1 by Michael Barber 
-static inline void applyMask_word(bitword_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitword_t mask, counter_t index_word) 
+static inline void applyMask_word(bitword_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitword_t mask, const counter_t index_word) 
 {
+#if defined(__x86_64__) // unexplained (yet) 4k/s performance increase for this version on x86_64
     const counter_t range_stop_word = wordindex(range_stop);
     register bitword_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_word],8);
 
-#if defined(__x86_64__) // unexplained (yet) 4k/s performance increase for this version
     register bitword_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_word>step*5) ? (range_stop_word - step*5):0)],8);
     #pragma GCC ivdep
     while (index_ptr < fast_loop_ptr) {
@@ -184,18 +185,7 @@ static inline void applyMask_word(bitword_t* __restrict bitstorage, const counte
         *index_ptr |= mask;  index_ptr+=step;
         *index_ptr |= mask;  index_ptr+=step;
     }
-#else
-    if likely(range_stop_word > index_word) {
-        #pragma GCC ivdep
-        for (counter_t i= ((range_stop_word - index_word)/(step*5));i>0; i--) {
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-            *index_ptr |= mask;  index_ptr+=step;
-        }
-    }
-#endif
+
    register const bitword_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_word)],8);
    #pragma GCC ivdep
    while likely(index_ptr < range_stop_ptr) {
@@ -205,6 +195,32 @@ static inline void applyMask_word(bitword_t* __restrict bitstorage, const counte
    if (index_ptr == range_stop_ptr) { // index_ptr could also end above range_stop_ptr, depending on steps. Then a chop is not needed
       *index_ptr |= (mask & chopmask(range_stop));
    }
+
+#else
+    const counter_t range_stop_word = wordindex(range_stop);
+    register bitword_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_word],8);
+    const counter_t step_4 = step<<2;
+    const counter_t length_word = range_stop_word - index_word;
+    const counter_t fast_iterations = length_word/step_4;
+    #pragma GCC ivdep
+    for (counter_t i=fast_iterations; i--; ) {
+        *index_ptr |= mask;  index_ptr+=step;
+        *index_ptr |= mask;  index_ptr+=step;
+        *index_ptr |= mask;  index_ptr+=step;
+        *index_ptr |= mask;  index_ptr+=step;
+    }
+
+    register const bitword_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[range_stop_word],8);
+    #pragma GCC ivdep
+    for (counter_t i=4; i-- && likely(index_ptr < range_stop_ptr);) { // signal compiler that only <4 iterations are left
+        *index_ptr |= mask;  index_ptr+=step; 
+    }
+
+    // doing this instead of index_ptr <= above is faster. unexplained. 
+    if (index_ptr == range_stop_ptr) { // index_ptr could also end above range_stop_ptr, depending on steps. 
+        *index_ptr |= mask; // chop not needed is block-size aligned with word size
+    }
+#endif
 }
 
 // same as word mask, but at a vector level - uses the sse/avx extensions, hopefully
@@ -237,7 +253,7 @@ static void  setBitsTrue_mediumStep(bitword_t* __restrict bitstorage, const coun
 {
     const counter_t range_stop_unique =  range_start + WORD_SIZE_counter * step;
 
-    if (range_stop_unique > range_stop) { // the range will not repeat itself; no need to try to resuse the mask
+    if unlikely(range_stop_unique > range_stop) { // the range will not repeat itself; no need to try to resuse the mask
         debug printf("Setting bits step %ju in %ju bit range (%ju-%ju) using mediumstep-unique (%ju occurances)\n", (uintmax_t)step, (uintmax_t)range_stop-(uintmax_t)range_start,(uintmax_t)range_start,(uintmax_t)range_stop, (uintmax_t)(((uintmax_t)range_stop-(uintmax_t)range_start)/(uintmax_t)step));
 
         for (register counter_t index = range_start; index <= range_stop;) {
@@ -267,8 +283,15 @@ static inline void setBitsTrue_largeRange(bitword_t* __restrict bitstorage, cons
     debug printf("Setting bits step %ju in %ju bit range (%ju-%ju) using largerange (%ju occurances)\n", (uintmax_t)step, (uintmax_t)range_stop-(uintmax_t)range_start,(uintmax_t)range_start,(uintmax_t)range_stop, (uintmax_t)(((uintmax_t)range_stop-(uintmax_t)range_start)/(uintmax_t)step));
     const counter_t range_stop_unique =  range_start + WORD_SIZE_counter * step;
 
-    for (register counter_t index = range_start; index < range_stop_unique; index += step) {
-        applyMask_word(bitstorage, step, range_stop, markmask(index), wordindex(index));
+    if unlikely(range_stop_unique > range_stop) { // the range will not repeat itself; no need to try to resuse the mask
+        for (register counter_t index = range_start; index <= range_stop; index+= step) {
+            bitstorage[wordindex(index)] |= markmask(index);
+        }
+    }
+    else {
+        for (register counter_t index = range_start; index < range_stop_unique; index += step) {
+            applyMask_word(bitstorage, step, range_stop, markmask(index), wordindex(index));
+        }
     }
 }
 
@@ -291,9 +314,10 @@ static inline void setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorag
             bitstorage_word[wordindex(range_start)] |= markmask(range_start);
     }
     
-    const counter_t range_stop_unique =  range_start + VECTOR_SIZE_counter * step;
+    const counter_t range_stop_unique =  range_start + VECTOR_SIZE_counter * step; // fallback to other methods
     if (range_stop_unique >= range_stop) {
-        setBitsTrue_largeRange(bitstorage_word, range_start, step, range_stop);
+        if (step < WORD_SIZE_counter) setBitsTrue_mediumStep(bitstorage_word, range_start, step, range_stop);
+        else setBitsTrue_largeRange(bitstorage_word, range_start, step, range_stop);
         return;
     }
 
@@ -968,11 +992,11 @@ struct options_t parseCommandLine(int argc, char *argv[], struct options_t optio
 }
 
 struct options_t setDefaultOptions() {
-    option.maxTime      = default_maxTime;
+    option.maxTime       = default_maxTime;
     option.maxFactor     = default_sieve_limit;
     option.showMaxFactor = default_showMaxFactor;
+    option.explain       = default_explain_level;
     option.verboselevel  = default_verbose_level;
-    option.explain       = 0;
     option.check         = default_check_level;
     option.tunelevel     = default_tune_level;
     option.threads       = 1;
@@ -990,7 +1014,7 @@ void explainSieveShake()
     struct sieve_t* sieve = sieve_shake(option.maxFactor, default_blocksize);
     printf("\nResult set:\n");
     show_primes(sieve, option.showMaxFactor);
-    int valid = validatePrimeCount(sieve,3);
+    int valid = validatePrimeCount(sieve);
     if (!valid) printf("The sieve is NOT valid...\n");
     else printf("The sieve is VALID\n");
     sieve_delete(sieve);
@@ -1042,7 +1066,7 @@ int main(int argc, char *argv[])
     }
 
     #if compile_debuggable
-    if (option.explain) explainSieveShake();
+    if (option.explain==1) explainSieveShake();
     #endif
     
     // command line --check can be used to check the algorithm for all sieve/blocksize combinations
@@ -1066,6 +1090,7 @@ int main(int argc, char *argv[])
     }
 
     if (option.blocksize_kB) benchmark_result.blocksize_bits = option.blocksize_kB*1024*8; // overrule all settings with user specified blocksize
+    option.explain = 0; // always turn of explain before benchmarking.
 
     for(counter_t threads=option.threads; threads >= 1; threads = (threads>>1) ) {
         verbose(1) {
