@@ -14,7 +14,7 @@
 #endif
 
 //set compile_debuggable to 1 to enable explain plan
-#define compile_debuggable 1
+#define compile_debuggable 0
 #if compile_debuggable
 #define debug if (compile_debuggable && option.explain)
 #else
@@ -29,9 +29,9 @@
 #define default_maxTime 5
 #define default_sample_duration 0.001
 #define default_explain_level 0
-#define default_verbose_level 2
+#define default_verbose_level 0
 #define default_tune_level 1
-#define default_check_level 1
+#define default_check_level 0
 #define default_show_primes_on_error 100
 #define default_showMaxFactor (0 || compile_debuggable?100:0)
 #define anticiped_cache_line_bytesize 128
@@ -68,8 +68,8 @@ typedef bitword_t bitvector_t __attribute__ ((vector_size(VECTOR_SIZE_bytes)));
 // #define MEDIUMSTEP_FASTER ((counter_t)16)
 // #define VECTORSTEP_FASTER ((counter_t)128)
 static counter_t global_SMALLSTEP_FASTER = 0ULL;
-static counter_t global_MEDIUMSTEP_FASTER = 16ULL;
-static counter_t global_VECTORSTEP_FASTER = 96ULL;
+static counter_t global_MEDIUMSTEP_FASTER = 48ULL;
+static counter_t global_VECTORSTEP_FASTER = 144ULL;
 static counter_t global_BLOCKSIZE_BITS = default_blocksize;
 #define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
 #define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
@@ -152,19 +152,19 @@ static inline counter_t searchBitFalse(bitword_t* bitstorage, register counter_t
 // not much performance gain at smaller sieves, but its's nice to have an implementation
 static inline counter_t searchBitFalse_longRange(bitword_t* bitstorage, register counter_t index)
 {
-   const bitshift_t index_bit  = bitindex_calc(index);
-   register counter_t index_word = wordindex(index);
-   register bitshift_t distance = (bitshift_t) __builtin_ctzll( ~(bitstorage[index_word] >> index_bit));  // take inverse to be able to use ctz
-   index += distance;
-   distance += index_bit;
+    const bitshift_t index_bit  = bitindex_calc(index);
+    register counter_t index_word = wordindex(index);
+    register bitshift_t distance = (bitshift_t) __builtin_ctzll( ~(bitstorage[index_word] >> index_bit));  // take inverse to be able to use ctz
+    index += distance;
+    distance += index_bit;
 
-   while unlikely(distance == WORD_SIZE_bitshift) { // to prevent a bug from optimzer
-       index_word++;
-       distance = (bitshift_t) __builtin_ctzll(~(bitstorage[index_word]));
-       index += distance;
-   }
+    while unlikely(distance == WORD_SIZE_bitshift) { // to prevent a bug from optimzer
+        index_word++;
+        distance = (bitshift_t) __builtin_ctzll(~(bitstorage[index_word]));
+        index += distance;
+    }
 
-   return index;
+    return index;
 }
 
 // apply the same word mask at large ranges
@@ -195,7 +195,6 @@ static inline void applyMask_word(bitword_t* __restrict bitstorage, const counte
    if (index_ptr == range_stop_ptr) { // index_ptr could also end above range_stop_ptr, depending on steps. Then a chop is not needed
       *index_ptr |= (mask & chopmask(range_stop));
    }
-
 #else
     const counter_t range_stop_word = wordindex(range_stop);
     register bitword_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_word],8);
@@ -240,8 +239,13 @@ static inline void applyMask_vector(bitvector_t* __restrict bitstorage, const co
     
     register const bitvector_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_vector)],anticiped_cache_line_bytesize);
     #pragma GCC ivdep
-    while likely(index_ptr <= range_stop_ptr) {
+    while likely(index_ptr < range_stop_ptr) {
         *index_ptr |= mask; index_ptr+=step;
+    }
+
+    // doing this instead of index_ptr <= above is faster. unexplained. 
+    if (index_ptr == range_stop_ptr) {
+        *index_ptr |= mask; 
     }
 }
 
@@ -314,8 +318,8 @@ static inline void setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorag
             bitstorage_word[wordindex(range_start)] |= markmask(range_start);
     }
     
-    const counter_t range_stop_unique =  range_start + VECTOR_SIZE_counter * step; // fallback to other methods
-    if (range_stop_unique >= range_stop) {
+    const counter_t range_stop_unique =  range_start + VECTOR_SIZE_counter * step; 
+    if (range_stop_unique > range_stop) { // fallback to other methods
         if (step < WORD_SIZE_counter) setBitsTrue_mediumStep(bitstorage_word, range_start, step, range_stop);
         else setBitsTrue_largeRange(bitstorage_word, range_start, step, range_stop);
         return;
@@ -597,8 +601,32 @@ static struct block sieve_block_extend(struct sieve_t *sieve, const counter_t bl
     return block;
 }
 
+/* This is the main module that directs all the work*/
+static struct sieve_t* sieve_shake_blockbyblock(const counter_t maxFactor, const counter_t blocksize) 
+{
+    struct sieve_t *sieve = sieve_create(maxFactor);
+    bitword_t* bitstorage = sieve->bitstorage;
+    counter_t startprime  = 1;
+    for(counter_t index=0; index<wordindex(maxFactor/2); index++) {
+        bitstorage[index]=SAFE_ZERO;
+    }
 
-/* This is the main module that does all the work*/
+    debug printf("\nShaking sieve to find all primes up to %ju with blocksize %ju\n",(uintmax_t)maxFactor,(uintmax_t)blocksize);
+
+    // in the sieve all bits for the multiples of primes up to startprime have been set
+    // process the sieve and stripe all the multiples of primes > start_prime
+    // do this block by block to minimize cache misses
+    for (counter_t block_start = 0,  block_stop = blocksize-1;block_start <= sieve->bits; block_start += blocksize, block_stop += blocksize) {
+        if unlikely(block_stop > sieve->bits) block_stop = sieve->bits;
+        counter_t prime = searchBitFalse(bitstorage, startprime);
+        sieve_block_stripe(bitstorage, block_start, block_stop, prime);
+    } 
+
+    // retunr the completed sieve
+    return sieve;
+}
+
+/* This is the main module that directs all the work*/
 static struct sieve_t* sieve_shake(const counter_t maxFactor, const counter_t blocksize) 
 {
     struct sieve_t *sieve = sieve_create(maxFactor);
