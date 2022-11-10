@@ -30,7 +30,7 @@
 #define default_sample_duration 0.001
 #define default_explain_level 0
 #define default_verbose_level 0
-#define default_tune_level 1
+#define default_tune_level 0
 #define default_check_level 1
 #define default_show_primes_on_error 100
 #define default_showMaxFactor (0 || compile_debuggable?100:0)
@@ -67,9 +67,9 @@ typedef bitword_t bitvector_t __attribute__ ((vector_size(VECTOR_SIZE_bytes)));
 // #define SMALLSTEP_FASTER ((counter_t)0)
 // #define MEDIUMSTEP_FASTER ((counter_t)16)
 // #define VECTORSTEP_FASTER ((counter_t)128)
-static counter_t global_SMALLSTEP_FASTER = 0ULL;
-static counter_t global_MEDIUMSTEP_FASTER = 48ULL;
-static counter_t global_VECTORSTEP_FASTER = 144ULL;
+static counter_t global_SMALLSTEP_FASTER = 64ULL;
+static counter_t global_MEDIUMSTEP_FASTER = 32ULL;
+static counter_t global_VECTORSTEP_FASTER = 128ULL;
 static counter_t global_BLOCKSIZE_BITS = default_blocksize;
 #define SMALLSTEP_FASTER ((counter_t)global_SMALLSTEP_FASTER)
 #define MEDIUMSTEP_FASTER ((counter_t)global_MEDIUMSTEP_FASTER)
@@ -186,15 +186,15 @@ static inline void __attribute__((always_inline)) applyMask_word(bitword_t* __re
         *index_ptr |= mask;  index_ptr+=step;
     }
 
-   register const bitword_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_word)],8);
-   #pragma GCC ivdep
-   while likely(index_ptr < range_stop_ptr) {
-       *index_ptr |= mask;  index_ptr+=step;
-   }
+    register const bitword_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_word)],8);
+    #pragma GCC ivdep
+    while likely(index_ptr < range_stop_ptr) {
+        *index_ptr |= mask;  index_ptr+=step;
+    }
 
-   if (index_ptr == range_stop_ptr) { // index_ptr could also end above range_stop_ptr, depending on steps. Then a chop is not needed
-      *index_ptr |= (mask & chopmask(range_stop));
-   }
+    if (index_ptr == range_stop_ptr) { // index_ptr could also end above range_stop_ptr, depending on steps. Then a chop is not needed
+        *index_ptr |= (mask & chopmask(range_stop));
+    }
 #else
     const counter_t range_stop_word = wordindex(range_stop);
     register bitword_t* __restrict index_ptr      =  __builtin_assume_aligned(&bitstorage[index_word],8);
@@ -238,6 +238,7 @@ static inline void __attribute__((always_inline)) applyMask_vector(bitvector_t* 
     }
     
     register const bitvector_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_vector)],anticiped_cache_line_bytesize);
+    
     #pragma GCC ivdep
     while likely(index_ptr < range_stop_ptr) {
         *index_ptr |= mask; index_ptr+=step;
@@ -287,17 +288,18 @@ static inline void  __attribute__((always_inline)) setBitsTrue_largeRange(bitwor
     debug printf("Setting bits step %ju in %ju bit range (%ju-%ju) using largerange (%ju occurances)\n", (uintmax_t)step, (uintmax_t)range_stop-(uintmax_t)range_start,(uintmax_t)range_start,(uintmax_t)range_stop, (uintmax_t)(((uintmax_t)range_stop-(uintmax_t)range_start)/(uintmax_t)step));
     const counter_t range_stop_unique =  range_start + WORD_SIZE_counter * step;
 
-    if unlikely(range_stop_unique > range_stop) { // the range will not repeat itself; no need to try to resuse the mask
-        for (register counter_t index = range_start; index <= range_stop; index+= step) {
-            bitstorage[wordindex(index)] |= markmask(index);
-        }
-    }
-    else {
+    if likely(range_stop_unique <= range_stop) { // the range will not repeat itself; no need to try to resuse the mask
         for (register counter_t index = range_start; index < range_stop_unique; index += step) {
             applyMask_word(bitstorage, step, range_stop, markmask(index), wordindex(index));
         }
     }
+    else {
+        for (register counter_t index = range_start; index <= range_stop; index+= step) {
+            bitstorage[wordindex(index)] |= markmask(index);
+        }
+    }
 }
+
 
 static inline void  __attribute__((always_inline)) setBitsTrue_largeRange_vector(bitword_t* __restrict bitstorage_word, counter_t range_start, const counter_t step, const counter_t range_stop) 
 {
