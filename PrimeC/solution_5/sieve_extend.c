@@ -13,6 +13,9 @@
 #include <omp.h>
 #endif
 
+int debuginfo[100];
+int debuginfo2[100];
+
 //set compile_debuggable to 1 to enable explain plan
 #define compile_debuggable 0
 #if compile_debuggable
@@ -142,28 +145,33 @@ static inline void __attribute__((always_inline)) sieve_delete(struct sieve_t *s
     free(sieve);
 }
 
-// search the next bit not set - for small expected distances
 static inline counter_t __attribute__((always_inline)) searchBitFalse(bitword_t* bitstorage, register counter_t index) 
 {
+    register bitword_t bitword = bitstorage[wordindex(index)] >> bitindex(index);
+
+    // calculate small ranges in one go
+    index   +=  (bitword& 1) // account for that this also matches smaller ranges
+            + (((bitword& 3)+1)>>2) // fast track for larger intervals
+            + (((bitword& 7)+1)>>3) // account for that this also matches smaller ranges
+            + (((bitword&15)+1)>>4) // account for that this also matches smaller ranges
+            // + (((bitword&31)+1)>>5) // account for that this also matches smaller ranges
+            ;
+
+    // reset for the new index, because we could also be at a word bound at the previous step
+    bitword = bitstorage[wordindex(index)] >> bitindex(index);
+    if ((bitword & 1)==0) return index; // fast exit if we are done
+
+    index +=    (bitword& 1) // account for that this also matches smaller ranges
+            + (((bitword& 3)+1)>>2) // fast track for larger intervals
+            + (((bitword& 7)+1)>>3) // account for that this also matches smaller ranges
+            + (((bitword&15)+1)>>4) // account for that this also matches smaller ranges
+            + (((bitword&31)+1)>>5) // account for that this also matches smaller ranges
+            ;
+    bitword = bitstorage[wordindex(index)] >> bitindex(index);
+    if ((bitword & 1)==0) return index; // fast exit if we are done
+
+    // its a longe range. no more optimizations
     while (bitstorage[wordindex(index)] & markmask(index)) index++;
-    return index;
-}
-
-// not much performance gain at smaller sieves, but its's nice to have an implementation
-static inline counter_t searchBitFalse_longRange(bitword_t* bitstorage, register counter_t index)
-{
-    const bitshift_t index_bit  = bitindex_calc(index);
-    register counter_t index_word = wordindex(index);
-    register bitshift_t distance = (bitshift_t) __builtin_ctzll( ~(bitstorage[index_word] >> index_bit));  // take inverse to be able to use ctz
-    index += distance;
-    distance += index_bit;
-
-    while unlikely(distance == WORD_SIZE_bitshift) { // to prevent a bug from optimzer
-        index_word++;
-        distance = (bitshift_t) __builtin_ctzll(~(bitstorage[index_word]));
-        index += distance;
-    }
-
     return index;
 }
 
@@ -547,7 +555,7 @@ static counter_t sieve_block_stripe(bitword_t* bitstorage, const counter_t block
         }
         else {
             setBitsTrue_largeRange(bitstorage, start, step, block_stop);
-            prime = searchBitFalse_longRange(bitstorage, prime+1 );
+            prime = searchBitFalse(bitstorage, prime+1 );
         }
 
         step  = prime * 2 + 1;
@@ -1154,6 +1162,7 @@ int main(int argc, char *argv[])
         #endif
         verbose(1) {
             printf("\033[0;32m(Passes - per %.1f seconds: \033[1;33m%f\033[0m - per second \033[1;33m%.1f\033[0;32m)\033[0m\n", option.maxTime, option.maxTime*benchmark_result.passes/benchmark_result.elapsed_time, benchmark_result.passes/benchmark_result.elapsed_time);
+            if (option.maxTime!=5.0) printf("\033[0;32m(Passes - per %.1f seconds: \033[1;33m%f\033[0m - per second \033[1;33m%.1f\033[0;32m)\033[0m\n", 5.0, 5.0*benchmark_result.passes/benchmark_result.elapsed_time, benchmark_result.passes/benchmark_result.elapsed_time);
             if (threads>1) printf("\033[0;32m(Passes per thread (total %ju) - per %.1f seconds: %.1f - per second \033[1;33m%.1f\033[0;32m)\033[0m\n", 
                                  (uintmax_t)threads,  option.maxTime, option.maxTime*benchmark_result.passes/benchmark_result.elapsed_time/threads, benchmark_result.passes/benchmark_result.elapsed_time/threads);
             fflush(stdout);
