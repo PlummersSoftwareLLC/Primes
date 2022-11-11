@@ -13,9 +13,6 @@
 #include <omp.h>
 #endif
 
-int debuginfo[100];
-int debuginfo2[100];
-
 //set compile_debuggable to 1 to enable explain plan
 #define compile_debuggable 0
 #if compile_debuggable
@@ -154,10 +151,9 @@ static inline counter_t __attribute__((always_inline)) searchBitFalse(bitword_t*
             + (((bitword& 3)+1)>>2) // fast track for larger intervals
             + (((bitword& 7)+1)>>3) // account for that this also matches smaller ranges
             + (((bitword&15)+1)>>4) // account for that this also matches smaller ranges
-            // + (((bitword&31)+1)>>5) // account for that this also matches smaller ranges
             ;
 
-    // reset for the new index, because we could also be at a word bound at the previous step
+    // reset to the new index, because we could also be at a word bound at the previous step
     bitword = bitstorage[wordindex(index)] >> bitindex(index);
     if ((bitword & 1)==0) return index; // fast exit if we are done
 
