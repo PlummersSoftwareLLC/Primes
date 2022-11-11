@@ -33,7 +33,7 @@ int debuginfo2[100];
 #define default_sample_duration 0.001
 #define default_explain_level 0
 #define default_verbose_level 0
-#define default_tune_level 0
+#define default_tune_level 1
 #define default_check_level 1
 #define default_show_primes_on_error 100
 #define default_showMaxFactor (0 || compile_debuggable?100:0)
