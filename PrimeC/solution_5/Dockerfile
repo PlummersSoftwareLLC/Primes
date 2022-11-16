@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM gcc:12.2
 
 RUN apt-get update && apt-get -y install build-essential \
     && apt-get clean \

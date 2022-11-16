@@ -34,7 +34,7 @@ Inspired by:
 - doing while (index<range_stop) and then if (index==range_stop) is faster than while (index<=range_stop)
 
 Sources:
-- https://www.agner.org/optimize/
+- https://www.agner.org/optimize/ - excellent manuals on optimization
 - https://stackoverflow.com/questions/21681300/diferences-between-pragmas-simd-and-ivdep-vector-always
 - https://stackoverflow.com/questions/25248766/emulating-shifts-on-32-bytes-with-avx
 - https://stackoverflow.com/questions/3005564/gcc-recommendations-and-options-for-fastest-code
@@ -89,14 +89,30 @@ Remember you can go in to the container like this:
 docker run -it --entrypoint /bin/bash c:latest
 ```
 
-## Output
+### Command line options
+Usage: ./sieve_extend [options] [maximum]
+Options:
+  --block <kilobyte> Set the block size to a specific <size> in kilobytes
+  --check            Check the correctness of the algorithm
+  --help             This help function
+  --show  <maximum>  Show the primes found up to the maximum
+  --time  <seconds>  The maximum time (in seconds) to run passes of the sieve algorithm
+  --tune  <level>    find the best settings for the current os and hardware
+                     1 - fast tuning
+                     2 - refined tuning
+                     3 - maximum tuning (takes long)
+  --verbose <level>  Show more output to a certain level:
+                     1 - show phase progress
+                     2 - show general progress within the phase
+                     3 - show actual work
 
+## Output
 Below is an example of the output on my machine, running with Docker.
 
 ```bash
-rogiervandam_extend;65863;5.000053;1;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;352723;5.000135;12;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;304570;5.000061;6;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;179989;5.000081;3;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;65742;5.000010;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend;66705;5.000056;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;350148;60.001882;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;269084;30.000645;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;161169;15.000181;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar;58202;5.000022;1;algorithm=other,faithful=yes,bits=1
 ```
