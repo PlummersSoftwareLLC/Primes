@@ -43,9 +43,9 @@ Sources:
 - https://codeforces.com/blog/entry/96344?locale=ru
 
 ## Choice of Dockerfile
-This solution uses Ubuntu 20.04 as the base image.
-The gcc image at gcc:12-bullseye seems to be slower.
-ALso the alpine:3.13 base image has a slow `memcpy` function due to the `musl libc`. 
+This solution uses gcc:12-bullseye build, as described in https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/CONTRIBUTING.md#dockerfile
+The ubuntu 20.04 version seems to have roughly the same speed, but the newer gcc versions work better on the M1 processor. 
+Also the alpine:3.13 base image has a slow `memcpy` function due to the `musl libc`. 
 
 ## Run instructions
 
