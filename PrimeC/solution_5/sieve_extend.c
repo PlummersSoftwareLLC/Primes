@@ -631,9 +631,7 @@ static counter_t sieve_block_stripe(bitword_t* bitstorage, const counter_t block
         if unlikely(step < VECTORSTEP_FASTER)
             setBitsTrue_largeRange_vector(bitstorage, start, step, block_stop);
         else 
-        else 
             setBitsTrue_largeRange(bitstorage, start, step, block_stop);
-        prime = searchBitFalse(bitstorage, prime + 1 );
         prime = searchBitFalse(bitstorage, prime + 1 );
         step  = prime * 2 + 1;
     }
