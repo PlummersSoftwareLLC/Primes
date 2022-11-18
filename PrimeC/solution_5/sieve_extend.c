@@ -201,10 +201,10 @@ static inline void __attribute__((always_inline)) applyMask_word(bitword_t* __re
     register const counter_t step_3 = step_2 + step;
     register const counter_t step_4 = step << 2;
 
-    register bitword_t* __restrict index_ptr            =  __builtin_assume_aligned(&bitstorage[index_word],8);
+    register bitword_t* __restrict index_ptr            =  &bitstorage[index_word];
 
     const counter_t range_stop_word = wordindex(range_stop);
-    register const bitword_t* __restrict fast_loop_ptr  =  __builtin_assume_aligned(&bitstorage[((range_stop_word>step_4) ? (range_stop_word - step_4):0)],8);
+    register const bitword_t* __restrict fast_loop_ptr  =  &bitstorage[((range_stop_word>step_4) ? (range_stop_word - step_4):0)];
 
     #pragma GCC ivdep
     while (index_ptr < fast_loop_ptr) {
@@ -214,7 +214,7 @@ static inline void __attribute__((always_inline)) applyMask_word(bitword_t* __re
         *(index_ptr + step_3) |= mask; 
         index_ptr += step_4;
     }
-    register const bitword_t* __restrict range_stop_ptr = __builtin_assume_aligned(&bitstorage[(range_stop_word)],8);
+    register const bitword_t* __restrict range_stop_ptr = &bitstorage[(range_stop_word)];
 
     for (counter_t i=4; i-- && likely(index_ptr < range_stop_ptr);  index_ptr += step) { // signal compiler that only <4 iterations are left
         *index_ptr |= mask; 
@@ -229,8 +229,6 @@ static inline void __attribute__((always_inline)) applyMask_word(bitword_t* __re
 // same as word mask, but at a vector level - uses the sse/avx extensions, hopefully
 static inline void __attribute__((always_inline)) applyMask_vector(bitvector_t* __restrict bitstorage, const counter_t step, const counter_t range_stop, const bitvector_t mask, counter_t index_vector) 
 {
-    bitstorage = __builtin_assume_aligned(bitstorage, anticiped_cache_line_bytesize);
-
     const counter_t range_stop_vector = vectorindex(range_stop);
     register const counter_t step_4 = step << 2;
     register bitvector_t* __restrict index_ptr      =  &bitstorage[index_vector];
@@ -435,7 +433,6 @@ static inline void __attribute__((always_inline)) continuePattern_smallSize(bitw
 
 static inline void  __attribute__((always_inline)) continuePattern_aligned(bitword_t* bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
 {
-    bitstorage = __builtin_assume_aligned(bitstorage, anticiped_cache_line_bytesize);
     debug printf("Extending sieve size %ju in %ju bit range (%ju-%ju) using aligned (%ju copies)\n", (uintmax_t)size, (uintmax_t)destination_stop-(uintmax_t)source_start,(uintmax_t)source_start,(uintmax_t)destination_stop, (uintmax_t)(((uintmax_t)destination_stop-(uintmax_t)source_start)/(uintmax_t)size));
     debug timerLapStart();
 
@@ -461,7 +458,6 @@ static inline void  __attribute__((always_inline)) continuePattern_aligned(bitwo
 
 static inline void  __attribute__((always_inline)) continuePattern_shiftright(bitword_t* __restrict bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
 {
-    bitstorage = __builtin_assume_aligned(bitstorage, anticiped_cache_line_bytesize);
     debug printf("Extending sieve size %ju in %ju bit range (%ju-%ju) using shiftright (%ju copies)\n", (uintmax_t)size, (uintmax_t)destination_stop-(uintmax_t)source_start,(uintmax_t)source_start,(uintmax_t)destination_stop, (uintmax_t)(((uintmax_t)destination_stop-(uintmax_t)source_start)/(uintmax_t)size));
     debug timerLapStart();
 
@@ -531,7 +527,6 @@ static inline void  __attribute__((always_inline)) continuePattern_shiftright(bi
 
 static inline counter_t  __attribute__((always_inline)) continuePattern_shiftleft_unrolled(bitword_t* __restrict bitstorage, const counter_t aligned_copy_word, const bitshift_t shift, counter_t copy_word, counter_t source_word) 
 {
-    bitstorage = __builtin_assume_aligned(bitstorage, anticiped_cache_line_bytesize);
     const counter_t fast_loop_stop_word = (aligned_copy_word>2) ? (aligned_copy_word - 2) : 0; // safe for unsigned ints
     register const bitshift_t shift_flipped = WORD_SIZE_bitshift-shift;
     counter_t distance = 0;
@@ -551,7 +546,6 @@ static inline counter_t  __attribute__((always_inline)) continuePattern_shiftlef
 
 static inline void __attribute__((always_inline)) continuePattern_shiftleft(bitword_t* bitstorage, const counter_t source_start, const counter_t size, const counter_t destination_stop)
 {
-    // bitstorage = __builtin_assume_aligned(bitstorage, anticiped_cache_line_bytesize);
     debug printf("Extending sieve size %ju in %ju bit range (%ju-%ju) using shiftleft (%ju copies)\n", (uintmax_t)size, (uintmax_t)destination_stop-(uintmax_t)source_start,(uintmax_t)source_start,(uintmax_t)destination_stop, (uintmax_t)(((uintmax_t)destination_stop-(uintmax_t)source_start)/(uintmax_t)size));
     debug timerLapStart();
     
@@ -615,7 +609,6 @@ static inline void __attribute__((always_inline)) continuePattern(bitword_t* bit
 
 static counter_t sieve_block_stripe(bitword_t* bitstorage, const counter_t block_start, const counter_t block_stop, const counter_t prime_start, const counter_t maxprime)
 {
-    bitstorage = __builtin_assume_aligned(bitstorage, anticiped_cache_line_bytesize);
     counter_t prime = prime_start;
     counter_t start = 0;
     counter_t step  = prime * 2 + 1;
