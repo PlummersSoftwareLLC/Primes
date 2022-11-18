@@ -42,11 +42,6 @@ Sources:
 - https://www.cprogramming.com/tips/tip/common-optimization-tips
 - https://codeforces.com/blog/entry/96344?locale=ru
 
-## Choice of Dockerfile
-This solution uses gcc:12-bullseye build, as described in https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/CONTRIBUTING.md#dockerfile
-The ubuntu 20.04 version seems to have roughly the same speed, but the newer gcc versions work better on the M1 processor. 
-Also the alpine:3.13 base image has a slow `memcpy` function due to the `musl libc`. 
-
 ## Run instructions
 
 
@@ -90,6 +85,7 @@ docker run -it --entrypoint /bin/bash c:latest
 ```
 
 ### Command line options
+```bash
 Usage: ./sieve_extend [options] [maximum]
 Options:
   --block <kilobyte> Set the block size to a specific <size> in kilobytes
@@ -105,6 +101,7 @@ Options:
                      1 - show phase progress
                      2 - show general progress within the phase
                      3 - show actual work
+```
 
 ## Output
 Below is an example of the output on my machine, running with Docker.

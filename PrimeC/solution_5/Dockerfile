@@ -1,4 +1,4 @@
-FROM gcc:12.2
+FROM ubuntu:22.04
 
 RUN apt-get update && apt-get -y install build-essential \
     && apt-get clean \
