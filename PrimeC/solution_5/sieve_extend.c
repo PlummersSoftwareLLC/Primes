@@ -848,7 +848,7 @@ static void benchmark(tuning_result_t* tuning_result)
         passes++;
     }
     tuning_result->passes = passes;
-    tuning_result->elapsed_time = elapsed_time / CLOCKS_PER_SEC;
+    tuning_result->elapsed_time = elapsed_time / CLOCKS_PER_SEC / tuning_result->threads;
     tuning_result->avg = passes/elapsed_time;
 }
 
