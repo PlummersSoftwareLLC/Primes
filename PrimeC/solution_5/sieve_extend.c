@@ -30,11 +30,6 @@
 #define verbose(level)    if (level < compile_verboselevel) if (option.verboselevel >= level) 
 #define verbose_at(level) if (level < compile_verboselevel) if (option.verboselevel == level)
 
-// set this to the level of verbose messages that will be compiled
-#define compile_verboselevel 4 
-#define verbose(level)    if (level < compile_verboselevel) if (option.verboselevel >= level) 
-#define verbose_at(level) if (level < compile_verboselevel) if (option.verboselevel == level)
-
 // defaults
 #define default_sieve_limit 1000000
 #define default_blocksize (32*1024*8)
@@ -44,9 +39,7 @@
 #define default_verbose_level 0
 #define default_tune_level 1
 #define default_check_level 0
-#define default_check_level 0
 #define default_show_primes_on_error 100
-#define default_showMaxFactor 0
 #define default_showMaxFactor 0
 #define anticiped_cache_line_bytesize 128
 
@@ -380,7 +373,7 @@ static inline void  __attribute__((always_inline)) setBitsTrue_largeRange_vector
             for(register counter_t vector_wordstart = (current_vector_start | (WORD_SIZE_counter*3)); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
             quadmask[3] = mask;
         #else
-            for(int qw = 0; qw < 4; qw++) {
+            for(int qw = 0; qw < VECTOR_ELEMENTS; qw++) {
                 register bitword_t mask = SAFE_ZERO;
                 #pragma GCC ivdep
                 for(register counter_t vector_wordstart = (current_vector_start | (WORD_SIZE_counter*qw)); wordstart(index) == vector_wordstart; index += step) mask |= markmask(index);
