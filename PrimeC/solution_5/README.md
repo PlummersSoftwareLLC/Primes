@@ -26,6 +26,7 @@ Inspired by:
 - PrimeC/solution_2 - danielspaangberg_1of2_epar. Inspired the multiprocessor versions. 
 
 ## Lessons learned
+- 32 bit vectors can be faster than 64 bit
 - Use #pragma ivdep to signal the compiler that it should not care about rereading memory in a loop.
 - Use manual unroll for small sizes
 - Small changes in code can have huge impact due to -Ofast of -O3 optimizations
@@ -104,12 +105,40 @@ Options:
 ```
 
 ## Output
-Below is an example of the output on my machine, running with Docker.
-
+The extension means the following:
 ```bash
-rogiervandam_extend;66705;5.000056;1;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;350148;60.001882;12;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;269084;30.000645;6;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;161169;15.000181;3;algorithm=other,faithful=yes,bits=1
-rogiervandam_extend_epar;58202;5.000022;1;algorithm=other,faithful=yes,bits=1
+u32v8b31t3
+u32---------> unsigned 32 bit to store integers
+   v8-------> vectorized extending and striping using 8 x u 32 (or otherwise specified above)
+     b31----> block size of 31kB 
+        t3--> threads = 3 
+```
+
+Below is an example of the output on my machine, running with Docker.
+```bash
+rogiervandam_extend-u64v2b31;62520;5.000061;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend-u32v4b32;62281;5.000014;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend-u32v8b32;68550;5.000067;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend-u64v4b32;72737;5.000043;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend-u64v8b31;37117;5.000108;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v2b31t12;326098;5.000173;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v2b31t6;291160;5.000140;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v2b31t3;168067;5.000066;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v2b31;60189;5.000004;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v4b15t12;323704;5.000171;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v4b15t6;270277;5.000113;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v4b15t3;157055;5.000071;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v4b15;55885;5.000028;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v8b15t12;372283;5.000150;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v8b15t6;296594;5.000084;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v8b15t3;175971;5.000070;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u32v8b15;62281;5.000028;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v4b32t12;349984;5.000152;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v4b32t6;302958;5.000100;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v4b32t3;181114;5.000065;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v4b32;64122;5.000054;1;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v8b32t12;264962;5.000275;12;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v8b32t6;172144;5.000174;6;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v8b32t3;93330;5.000147;3;algorithm=other,faithful=yes,bits=1
+rogiervandam_extend_epar-u64v8b32;32110;5.000124;1;algorithm=other,faithful=yes,bits=1
 ```
