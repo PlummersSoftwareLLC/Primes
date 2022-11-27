@@ -6,7 +6,7 @@ RUN apt-get update && apt-get -y install build-essential \
 
 WORKDIR /home/primes
 
-COPY compile.sh run.sh *.c ./
+COPY *.sh *.c ./
 
 RUN ./compile.sh
 
