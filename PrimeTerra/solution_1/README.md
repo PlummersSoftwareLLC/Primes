@@ -6,7 +6,10 @@ running sieve putting all prime values at the start. Because of that there's no 
 
 ## Run instructions
 
-To run the program you need a Terra compiler in your PATH
+There's no way to install Terra through the package so the best way is to get
+release from a terralang GitHub.
+After that to run the program you need a Terra compiler in your PATH
+
 Put the folowing command in terminal:
 '''
 terra Primes.t
