@@ -27,5 +27,5 @@ all: benchmark
 clean:
 	rm -f benchmark
 
-benchmark: benchmark.cu $(CS_LIB)
+benchmark: benchmark.cu $(CUDASIEVE_DIR)/$(CS_LIB)
 	$(NVCC) $(NVCC_FLAGS) $(CC_LIBS) $(INCLUDES) $(LIB_DIR) -l$(CS_MAIN) $< -o $@
