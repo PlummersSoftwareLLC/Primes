@@ -142,7 +142,8 @@ terra main()
         end
     end
     c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
- Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d", pass, ct*0.001, 0.0, N, p.res, 64)
+ Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ct*0.001, 0.0, N, p.res, 64)
+    c.printf("Enter1he;%d;%f;64;algorithm=other,faithful=no,bits=1", pass, ct*0.001)
     c.free(p.arr)
     if p.nums ~= nil then
         c.free(p.nums)
