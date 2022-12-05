@@ -53,7 +53,7 @@ CUDA Capability Major/Minor version number:    6.1
 CUDASieve is added to this solution as a submodule. It can be initialized and checked out by running the following command:
 
 ```text
-git submodule update --init
+git submodule update --init CUDASieve
 ``` 
 
 The CUDASieve makefile includes some variables that may well need to be changed to match your environment. They are at the top of the file `CUDASieve/makefile`. 
