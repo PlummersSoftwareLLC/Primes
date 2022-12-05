@@ -1,11 +1,10 @@
-# Location of the CUDA Toolkit
-# In ubuntu (all debian based distros?) this is /usr/local/cuda
+# Note: these three variables must match their counterparts in CUDASieve/makefile
 CUDA_DIR = /usr/local/cuda
-# Location of CUDASieve
-CUDASIEVE_DIR = ~/source/CUDASieve
-# Compute capability of the target GPU
 GPU_ARCH = compute_60
 GPU_CODE = sm_60,sm_61,sm_62
+
+# Location of CUDASieve
+CUDASIEVE_DIR = CUDASieve
 
 # Compilers to use
 NVCC = $(CUDA_DIR)/bin/nvcc

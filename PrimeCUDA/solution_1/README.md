@@ -50,12 +50,10 @@ CUDA Capability Major/Minor version number:    6.1
 
 ### Cloning and building CUDASieve
 
-_**Note:** The contents of this solution's Makefile are based on the first commands in this section being executed from the directory `~/source`. The [section that discusses building this solution](#building-and-running-the-primes-cuda-solution) indicates what to do if you use a different directory._
-
-CUDASieve is published in a [GitHub repository](https://github.com/curtisseizert/CUDASieve). Clone the repo with the following commands:
+CUDASieve is added to this solution as a submodule. It can be initialized and checked out by running the following command:
 
 ```text
-git clone https://github.com/curtisseizert/CUDASieve.git
+git submodule update --init
 mkdir CUDASieve/obj
 ``` 
 
@@ -75,14 +73,7 @@ make
 
 ### Building and running the Primes CUDA solution
 
-Before the solution in this directory can be built, the solution's `Makefile` needs to be modified to match your environment. Specifically, the following variables must be set to their correct values:
-
-|Variable|Description|
-|-|-|
-|`CUDA_DIR`|Set this to the same value the `CUDA_DIR` variable is set to in the `makefile` for CUDASieve.|
-|`CUDASIEVE_DIR`|The directory that CUDASieve is located in. This is the directory CUDASieve was cloned into while following the steps in the [CUDASieve section](#cloning-and-building-cudasieve) of this README.|
-|`GPU_ARCH`|Set this to the same value the `GPU_ARCH` variable is set to in the `makefile` for CUDASieve.|
-|`GPU_CODE`|Set this to the same value the `GPU_CODE` variable is set to in the `makefile` for CUDASieve.|
+Before the solution in this directory can be built, the solution's `Makefile` needs to be modified to match that of CUDASieve. Specifically, the following variables must be identical to the values set in the previous step: `CUDA_DIR`, `GPU_ARCH`, `GPU_CODE`.
 
 After modifying the `Makefile`, build and run the solution by executing the following command from its root directory:
 
