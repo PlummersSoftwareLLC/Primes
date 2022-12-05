@@ -54,10 +54,9 @@ CUDASieve is added to this solution as a submodule. It can be initialized and ch
 
 ```text
 git submodule update --init
-mkdir CUDASieve/obj
 ``` 
 
-The CUDASieve makefile includes some variables that may well need to be changed to match your environment. They are at the top of the `makefile` file in the `CUDASieve` directory. 
+The CUDASieve makefile includes some variables that may well need to be changed to match your environment. They are at the top of the file `CUDASieve/makefile`. 
 
 |Variable|Description|
 |-|-|
@@ -65,15 +64,16 @@ The CUDASieve makefile includes some variables that may well need to be changed 
 |`GPU_ARCH`|The compute architecture of the GPU in your system. The value of this variable can be based on the output of the `deviceQuery` tool mentioned in the [CUDA Samples section](#installing-the-nvidia-cuda-samples-optional).|
 |`GPU_CODE`|The GPU architectures for which code should be compiled. As with `GPU_ARCH`, the values of this variable can be based on the output of `deviceQuery`, and should at least include the respective value for `GPU_ARCH`. Fewer entries will yield smaller executables.|
 
-After modifying the `makefile`, build CUDASieve by running the following command from the `CUDASieve` directory:
+After setting these variables to the correct values, build CUDASieve by running the following commands:
 
 ```text
-make 
+mkdir CUDASieve/obj
+make -C CUDASieve
 ```
 
 ### Building and running the Primes CUDA solution
 
-Before the solution in this directory can be built, the solution's `Makefile` needs to be modified to match that of CUDASieve. Specifically, the following variables must be identical to the values set in the previous step: `CUDA_DIR`, `GPU_ARCH`, `GPU_CODE`.
+Before the solution in this directory can be built, the solution's `Makefile` needs to be modified to match that of CUDASieve. Specifically, the following variables must be identical to the values set in the `CUDASieve/makefile`: `CUDA_DIR`, `GPU_ARCH`, `GPU_CODE`.
 
 After modifying the `Makefile`, build and run the solution by executing the following command from its root directory:
 
