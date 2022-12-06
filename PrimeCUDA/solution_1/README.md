@@ -11,7 +11,7 @@ The solution heavily depends on CUDASieve, a [GitHub-hosted project](https://git
 
 ## Notes
 
-- Getting the solution to run on a system with a suitable NVIDIA GPU does take some work, as detailed in the [Run Instructions](#run-instructions) below.
+- Getting the solution to run on a system with a suitable NVIDIA GPU does take some work, as detailed in the [Run instructions](#run-instructions) below.
 The reason is that the way to setup the primary dependencies (CUDASieve and CUDA Toolkit) varies across platforms and GPUs. It includes some case-specific manual changes to the Makefiles of CUDASieve and this solution. 
 - To build this solution and its prerequisites, a basic build toolchain needs be in place. On Ubuntu systems, it can be installed using the following command:
   
@@ -50,7 +50,7 @@ CUDA Capability Major/Minor version number:    6.1
 
 ### Cloning and building CUDASieve
 
-CUDASieve is added to this solution as a submodule. It can be initialized and checked out by running the following command:
+CUDASieve is added to this solution as a submodule. It can be initialized and checked out by running the following command from this solution's directory (`PrimeCUDA/solution_1`):
 
 ```text
 git submodule update --init CUDASieve
