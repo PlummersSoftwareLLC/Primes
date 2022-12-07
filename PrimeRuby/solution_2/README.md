@@ -1,9 +1,9 @@
-# Ruby solution by rbergen
+# Ruby solution by darnellbrawner
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
 This is an implementation in Ruby using Numo gem ruby's version of numpy
 
@@ -17,6 +17,10 @@ ruby prime.rb
 
 ### Docker
 A Dockerfile has been provided.
+
+# Results on my machine
+
+ - Macbook Pro M1
 
 ## Output
 ```
