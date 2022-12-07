@@ -54,4 +54,4 @@ end
 duration = (Time.now.to_f - start_time).round(3)
 
 puts "WARNING: result is incorrect! #{reference_results[sieve_size]} != #{sieve.count_primes}" unless reference_results[sieve_size] == sieve.count_primes
-puts "rbergen;#{pass_count};#{duration};1;algorithm=base,faithful=yes"
+puts "darnellbrawner;#{pass_count};#{duration};1;algorithm=base,faithful=no"

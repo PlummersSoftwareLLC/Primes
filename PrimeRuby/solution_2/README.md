@@ -3,10 +3,9 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-This is an implementation in Ruby using Numo gem ruby's version of numpy
-
+This is an implementation in Ruby using the Numo gem, Ruby's version of Numpy.
 ## Run instructions
 
 ### Ruby
@@ -24,5 +23,5 @@ A Dockerfile has been provided.
 
 ## Output
 ```
-rbergen;1550;5.028;1;algorithm=base,faithful=yes
+darnellbrawner;1550;5.028;1;algorithm=base,faithful=no
 ```
