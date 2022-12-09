@@ -111,6 +111,22 @@ macro Primes:print() -- macro for debugging
     end
 end
 
+local results = {
+             [10] = 4,               -- Historical data for validating our results - the number of primes
+            [100] = 25,              -- to be found under some limit, such as 168 primes under 1000
+           [1000] = 168,
+          [10000] = 1229,
+         [100000] = 9592,
+        [1000000] = 78498,
+       [10000000] = 664579,
+      [100000000] = 5761455,
+     [1000000000] = 50847534,
+    [10000000000] = 455052511,
+}
+
+terra Primes:validate()
+    return [ results[N] ] == self.res
+end
 
 terra main()
     var pass = 1
@@ -141,9 +157,10 @@ terra main()
             break;
         end
     end
+    var ti = ct*0.001
     c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
- Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ct*0.001, 0.0, N, p.res, 64)
-    c.printf("Enter1he;%d;%f;64;algorithm=other,faithful=no,bits=1", pass, ct*0.001)
+ Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, p.res, p:validate())
+    c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=no,bits=64\n", pass, ti)
     c.free(p.arr)
     if p.nums ~= nil then
         c.free(p.nums)
@@ -151,5 +168,4 @@ terra main()
     
 end
 
-
-terralib.saveobj("Primes.exe", {main=main}, true)
+terralib.saveobj("Sieve", {main=main}, true)
