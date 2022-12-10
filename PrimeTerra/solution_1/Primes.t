@@ -8,8 +8,10 @@ local c = terralib.includecstring[[
 import "macro" -- simplifiyng macro syntax to stop using unnecessary macro(function()) bullshit
 
 local N = 1000000
-local st = math.floor(math.sqrt(N))
-local dur = 5
+local st = math.ceil(math.sqrt(N))
+local clocks = 0.000001
+print(st)
+local dur = 6
 
 struct Primes{
     finish: bool; 
@@ -43,7 +45,6 @@ end
 
 macro Primes:sort()
     return quote
-        
         var last = self.check + 1
         var check = self.arr[self.check]
         for i = last, self.size do
@@ -52,6 +53,7 @@ macro Primes:sort()
                 last = last + 1
                 
             end
+            
         end
         self.check = self.check + 1
         
@@ -124,7 +126,7 @@ local results = {
     [10000000000] = 455052511,
 }
 
-terra Primes:validate()
+terra Primes:validate() : bool
     return [ results[N] ] == self.res
 end
 
@@ -135,8 +137,8 @@ terra main()
 
     p:new()
     var start = c.clock()
-    var ct = c.clock() - start
-    
+    var ct: c.clock_t = 1
+
     while true do
         if p.check < st then
             p:sort() -- sorting values
@@ -151,16 +153,17 @@ terra main()
             p:get_result() -- finding first non-prime - easy
         end
         ct = c.clock() - start
-        pass = pass + 1
-        if ct/1000 >= dur then
-           
+        
+        if ct*clocks > dur then
             break;
         end
+        pass = pass + 1
     end
-    var ti = ct*0.001
+    var ti = ct*clocks
     c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
  Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, p.res, p:validate())
     c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=no,bits=64\n", pass, ti)
+
     c.free(p.arr)
     if p.nums ~= nil then
         c.free(p.nums)
@@ -168,4 +171,6 @@ terra main()
     
 end
 
-terralib.saveobj("Sieve", {main=main}, true)
+
+
+terralib.saveobj("Sieve.exe", {main=main}, nil, nil, true)
