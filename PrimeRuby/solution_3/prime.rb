@@ -44,12 +44,6 @@ reference_results = {
 # number of cores on your system
 cores = Concurrent.processor_count - 1
 
-pipe = Ractor.new 'listen_and_send' do
-  loop do
-    Ractor.yield Ractor.receive
-  end
-end
-
 workers = (1..cores).map do |i|
   Ractor.new i.to_s do
     loop do
@@ -59,14 +53,12 @@ workers = (1..cores).map do |i|
 end
 
 r = nil
-loop do
-  pipe << pass_count
+begin
   r = Ractor.select(*workers)
   pass_count += 1
-  break if (Time.now.to_f - start_time) > 5.0
-end
+end until (Time.now.to_f - start_time) > 5.0
 
 duration = (Time.now.to_f - start_time).round(3)
 
 puts 'WARNING: result is incorrect!' unless reference_results[SIEVE_SIZE] == r[1].count(true)
-puts "darnellbrawner;#{pass_count};#{duration};1;algorithm=base,faithful=no"
+puts "darnellbrawner-MultiThreaded;#{pass_count};#{duration};1;algorithm=base,faithful=no"
