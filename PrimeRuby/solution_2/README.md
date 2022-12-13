@@ -5,8 +5,8 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-This implements single threaded Numo solution (ruby's verison of numpy), multithreaded solution using Ractor and 
-a hybrid multithreaded numo solution. There seems to be a flaw in Numo that causes a slow down when using more 
+This implements single threaded Numo solution (ruby's version of numpy), multithreaded solution using Ractor and 
+a hybrid multithreaded Numo solution. There seems to be a flaw in Numo that causes a slow down when using more 
 than 2 Ractors. 
 
 ## Run instructions
