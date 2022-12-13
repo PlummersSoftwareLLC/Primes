@@ -2,10 +2,13 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
-![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-This is an implementation in Ruby using the Numo gem, Ruby's version of Numpy.
+This implements single threaded Numo solution (ruby's verison of numpy), multithreaded solution using Ractor and 
+a hybrid multithreaded numo solution. There seems to be a flaw in Numo that causes a slow down when using more 
+than 2 Ractors. 
+
 ## Run instructions
 
 ### Ruby
@@ -19,9 +22,12 @@ A Dockerfile has been provided.
 
 # Results on my machine
 
- - Macbook Pro M1
+ - Macbook Pro M1 2021
 
 ## Output
 ```
-darnellbrawner;1550;5.028;1;algorithm=base,faithful=no
+darnellbrawner-Numo;1562;5.001;1;algorithm=base,faithful=no
+darnellbrawner-MultiThreaded;987;5.013;1;algorithm=base,faithful=no
+darnellbrawner-MultiThreaded-Numo_2core;2517;5.002;1;algorithm=base,faithful=no
+
 ```
