@@ -1,4 +1,4 @@
-# Ruby solution by rbergen
+# Ruby solution by darnellbrawner
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-green)
