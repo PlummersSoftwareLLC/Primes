@@ -119,7 +119,7 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
 
 ## Rules
 
-* Your solution uses the [sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes).
+* Your solution uses the [sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes).
 * Your benchmarked code returns either a list of primes or the `is_prime` array, containing the result of the sieve.
 * Your solution runs for at least 5 seconds, and stops as quickly as possible after that.
 * Your solution calculates all the primes up to 1,000,000.
