@@ -5,8 +5,8 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
-This is an multi-threaded implementation in Ruby using Ractor.
-900+ on M1 Macbook Pro running outside of Docker local much less in 
+This is an multi-threaded implementation using Ractor.
+900+ on M1 Macbook Pro running outside of Docker. 
 
 ## Run instructions
 
