@@ -1,8 +1,7 @@
 # Terra solution by Enter1he
 
 
-Non-faithfull solution counting the number of primes up to 1 million. Based on the idea of sorting numbers before
-running sieve putting all prime values at the start. Because of that there's no need in marking all non-prime values.
+1-bit solution for counting the number of primes up to 1 million written in Terra programming language. 
 
 ## Run instructions
 
@@ -21,6 +20,6 @@ From AMD Ryzen 5 3500U 3.7 Ghz 4 cores
 '''
 Computing primes to 1000000 on 1 thread for 5 seconds.
 
- Passes: 79499, Time: 2.547000, Avg: 0.000000, Limit: 1000000, Count: 78498, Valid: 64
- Enter1he;%d;%f;64;algorithm=other,faithful=no,bits=1
+ Passes: 2058, Time: 5.000956, Avg: 0.002430, Limit: 1000000, Count: 78498, Valid: 1
+Enter1he;2058;5.000956;1;algorithm=other,faithful=no,bits=1
 '''

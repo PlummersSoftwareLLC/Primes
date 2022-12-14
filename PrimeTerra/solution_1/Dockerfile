@@ -1,20 +1,11 @@
 FROM ubuntu:22.04 AS build
 
-RUN apt-get update && apt-get install -y wget \
+RUN apt-get update && apt-get install -y wget tar xz-utils sudo \
   && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://github.com/terralang/terra/releases/download/release-1.0.6/terra-Linux-x86_64-6184586.tar.xz -P /tmp/
 
-RUN apt-get update && apt-get install -y tar \
-  && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y xz-utils \
-  && rm -rf /var/lib/apt/lists/*
-
 RUN tar -xvf /tmp/terra-Linux-x86_64-6184586.tar.xz -C /tmp/
-
-RUN apt-get update \
- && apt-get install -y sudo
 
 RUN adduser --disabled-password --gecos '' docker
 RUN adduser docker sudo
