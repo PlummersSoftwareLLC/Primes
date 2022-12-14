@@ -3,113 +3,100 @@ local c = terralib.includecstring[[
     #include <stdio.h>
     #include <stdlib.h>
     #include <time.h>
+    #include <string.h>
 ]]
+
+local std = require "std"
 
 import "macro" -- simplifiyng macro syntax to stop using unnecessary macro(function()) bullshit
 
 local N = 1000000
 local st = math.ceil(math.sqrt(N))
 local clocks = 0.000001
-print(st)
-local dur = 6
+local dur = 5
 
 struct Primes{
-    finish: bool; 
-    cur: uint64; -- iterator
-    check: uint64; -- iterator
-    prime: uint64; -- iterator
-    res: uint64; -- the amount of primes goes here
-    size: uint64;
-    arr: &uint64;
-    nums: &uint64;
+    res: uint32; -- the amount of primes goes here
+    size: uint32;
+    arr: &uint32;
+    nums: &uint32;
 };
 
 macro Primes:new()
     return quote
-        self.arr = [&uint64](c.malloc(sizeof(uint64)*N/2))
-        var j = 0
-        for i = 1, N, 2 do
-            self.arr[j] = i
-            j = j + 1 
+        var size = N >> 5
+        
+        if N % 32 > 0 then
+            size = size + 1
         end
-        self.size = N/2
-        self.arr[0] = 2
-        self.check = 1
-        self.prime = 1
+        self.arr = [&uint32](c.malloc(sizeof(uint32)*size))
+            self.arr[0] = 0x55555556
+        for i = 1, size do
+            self.arr[i] = 0x55555555
+        end
+        self:set_subOne(0)
+        self.size = size
+        self.res = 1
+    end
+end
+
+
+macro Primes:get_subOne(i)
+    return `(self.arr[i >> 5] >> (i % 32)) and 0x01
+end
+
+macro Primes:set_subOne(i)
+    return quote
+        self.arr[i >> 5] = self.arr[i >> 5] and (not(0x01 << (i % 32)))
+    end
+end
+
+
+macro Primes:run()
+    return quote
+        var check = 3
+        var i = 0
+        while check <= st do
+            i = check - 1
+            if self:get_subOne(i) == 1 then
+                for n = check+check, N+1, check do
+                    self:set_subOne(n - 1)
+                    i = i + 1
+                end
+            end
+            check = check + 1
+        end
+        self:count()
+    end
+end
+
+macro Primes:count()
+    return quote
         self.res = 0
-        self.cur = 1
-        self.nums = nil
-        self.finish = false
-    end
-end
-
-macro Primes:sort()
-    return quote
-        var last = self.check + 1
-        var check = self.arr[self.check]
-        for i = last, self.size do
-            if self.arr[i] % check ~= 0 then
-                self.arr[i], self.arr[last] = self.arr[last], self.arr[i]
-                last = last + 1
-                
-            end
-            
-        end
-        self.check = self.check + 1
-        
-    end
-end
-
-
-macro Primes:fillin_gaps()
-    return quote
-        var last = self.prime + 1
-        var a = self.arr
-        var check = a[self.prime]
-        for i = last, self.size do
-            if a[i] == 1 then 
-                i = i + 1
-            end
-            if a[i] % check == 0 then
-                a[i] = 1
-                
+        for i = 1, N do
+            if self:get_subOne(i) == 1 then
+                self.res = self.res + 1
             end
         end
-        self.prime = last
-    end
-end
-
-macro Primes:get_result()
-    return quote
-        var i = self.cur
-        if i < self.size then
-            if self.arr[i] == 1 then
-                self.res = i
-                self.finish = true
-            end
-            self.res = i
-            i = i + 1
-        end
-        
-        self.cur = i
-    end
-end
-
-macro Primes:save_sieve()
-    return quote
-        self.nums = [&uint64](c.malloc(self.res*sizeof(uint64)))
-        for i = 0, self.res do
-            self.nums[i] = self.arr[i]
-        end
+        -- self.nums = [&uint32](c.malloc(sizeof(uint32)*N))
+        -- for i = 0, N do
+        --     self.nums[i] = (i+1) * self:get_subOne(i)
+        -- end
     end
 end
 
 macro Primes:print() -- macro for debugging
     return quote
-        for i = 0, N/2 do
-            c.printf("%d ", self.arr[i])
+        var count = 0
+        for i = 0, N  do
+            c.printf("%d ", self:get_subOne(i))
+            count = count + 1
         end
-        c.printf("\n")
+        -- c.printf(" %d\n", count)
+        -- for i = 0, N do
+        --     c.printf("%d ", self.nums[i])
+        --     count = count + 1
+        -- end
     end
 end
 
@@ -130,47 +117,47 @@ terra Primes:validate() : bool
     return [ results[N] ] == self.res
 end
 
+terra Primes:destruct()
+    c.free(self.arr)
+    if self.nums ~= nil then
+        c.free(self.nums)
+    end
+end
+
 terra main()
-    var pass = 1
+    var pass = 0
     
-    var p: Primes
-
-    p:new()
+    
+    var ct: c.clock_t = 0
+    
     var start = c.clock()
-    var ct: c.clock_t = 1
-
+    
     while true do
-        if p.check < st then
-            p:sort() -- sorting values
-        elseif p.prime < 2 then -- yea, i don't need much for this
-            p:fillin_gaps() -- filling non-prime values
-        else
-            if p.finish then
-                p:save_sieve() -- saving results
-                ct = c.clock() - start
-                break;
-            end
-            p:get_result() -- finding first non-prime - easy
-        end
-        ct = c.clock() - start
+        var p: Primes
         
-        if ct*clocks > dur then
+        p:new()
+        defer p:destruct()
+
+        p:run()
+        pass = pass + 1
+        
+        
+        -- p:print()
+        
+
+        ct = c.clock() - start
+        if ct*clocks >= dur then
+            var ti = ct*clocks
+            c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
+ Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, p.res, p:validate())
+            c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=no,bits=1\n", pass, ti)
             break;
         end
-        pass = pass + 1
-    end
-    var ti = ct*clocks
-    c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
- Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, p.res, p:validate())
-    c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=no,bits=64\n", pass, ti)
-
-    c.free(p.arr)
-    if p.nums ~= nil then
-        c.free(p.nums)
+        
     end
     
 end
 
 
 
-terralib.saveobj("Sieve.exe", {main=main}, nil, nil, true)
+terralib.saveobj("Sieve", {main=main}, nil, nil, true)

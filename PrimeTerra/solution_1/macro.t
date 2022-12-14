@@ -25,8 +25,8 @@ local statement = function(self, lex)
         table.insert(ret[1] or ret, "methods")
         table.insert(ret[1] or ret, vname)
     end
-    ret[1] = ret[1] or vname
     
+    ret[1] = ret[1] or vname
     lex:expect"("
     local expl = terralib.newlist();
     repeat
@@ -45,12 +45,15 @@ local statement = function(self, lex)
         local m = macro( function(...)
             local arg = {...}
             local j = 1
-            if type(ret[1]) == 'table' then
+            if tname then
                 j = 2
                 env.self = arg[1]
+                
             end
-            for i = j, #expl do
-                env[expl[i]] = arg[i]
+            
+            for i = 1, #expl do
+                env[expl[i]] = arg[j]
+                j = j + 1
             end
             return expfn(env)
         end)
