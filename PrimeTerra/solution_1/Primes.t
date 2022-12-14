@@ -92,11 +92,6 @@ macro Primes:print() -- macro for debugging
             c.printf("%d ", self:get_subOne(i))
             count = count + 1
         end
-        -- c.printf(" %d\n", count)
-        -- for i = 0, N do
-        --     c.printf("%d ", self.nums[i])
-        --     count = count + 1
-        -- end
     end
 end
 
@@ -126,23 +121,17 @@ end
 
 terra main()
     var pass = 0
-    
-    
     var ct: c.clock_t = 0
     
     var start = c.clock()
     
     while true do
         var p: Primes
-        
         p:new()
         defer p:destruct()
 
         p:run()
         pass = pass + 1
-        
-        
-        -- p:print()
         
 
         ct = c.clock() - start
@@ -153,7 +142,6 @@ terra main()
             c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=no,bits=1\n", pass, ti)
             break;
         end
-        
     end
     
 end
