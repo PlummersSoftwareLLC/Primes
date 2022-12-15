@@ -19,7 +19,6 @@ struct Primes{
     res: uint32; -- the amount of primes goes here
     size: uint32;
     arr: &uint32;
-    nums: &uint32;
 };
 
 macro Primes:new()
@@ -40,7 +39,6 @@ macro Primes:new()
     end
 end
 
-
 macro Primes:get_subOne(i)
     return `(self.arr[i >> 5] >> (i % 32)) and 0x01
 end
@@ -50,7 +48,6 @@ macro Primes:set_subOne(i)
         self.arr[i >> 5] = self.arr[i >> 5] and (not(0x01 << (i % 32)))
     end
 end
-
 
 macro Primes:run()
     return quote
@@ -78,10 +75,6 @@ macro Primes:count()
                 self.res = self.res + 1
             end
         end
-        -- self.nums = [&uint32](c.malloc(sizeof(uint32)*N))
-        -- for i = 0, N do
-        --     self.nums[i] = (i+1) * self:get_subOne(i)
-        -- end
     end
 end
 
@@ -92,6 +85,33 @@ macro Primes:print() -- macro for debugging
             c.printf("%d ", self:get_subOne(i))
             count = count + 1
         end
+    end
+end
+
+macro println()
+    return `c.printf"\n"
+end
+
+macro Primes:draw()
+    return quote
+        for n = 0, N do
+            if self:get_subOne(n) == 1 then
+                c.printf("%d ", n+1)
+            end
+        end
+        println()
+    end
+end
+
+macro Primes:printResults(printNums, pass, ct)
+    return quote
+        if printNums then
+            self:draw()
+        end
+        var ti = ct*clocks
+        c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
+ Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, self.res, self:validate())
+        c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=yes,bits=1\n", pass, ti)
     end
 end
 
@@ -112,11 +132,8 @@ terra Primes:validate() : bool
     return [ results[N] ] == self.res
 end
 
-terra Primes:destruct()
+terra Primes:delete()
     c.free(self.arr)
-    if self.nums ~= nil then
-        c.free(self.nums)
-    end
 end
 
 terra main()
@@ -128,7 +145,7 @@ terra main()
     while true do
         var p: Primes
         p:new()
-        defer p:destruct()
+        defer p:delete()
 
         p:run()
         pass = pass + 1
@@ -136,10 +153,7 @@ terra main()
 
         ct = c.clock() - start
         if ct*clocks >= dur then
-            var ti = ct*clocks
-            c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
- Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, p.res, p:validate())
-            c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=no,bits=1\n", pass, ti)
+            p:printResults(false, pass, ct)
             break;
         end
     end
