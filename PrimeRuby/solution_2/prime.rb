@@ -57,31 +57,6 @@ class PrimeSieve
   def count_primes
     (@prime_array.class == Numo::Bit) ? @prime_array.count_1 : @prime_array.count(true)
   end
-
-end
-
-def run_sieve(sieve_size, prime_array)
-  factor = 3
-  sieve_sqrt = Integer.sqrt(sieve_size)
-  sqrt_by_2_plus_one = sieve_sqrt / 2 + 1
-  sieve_size_by_2 = sieve_size / 2
-
-  while factor <= sieve_sqrt
-    number = factor
-    div_2 = number / 2
-    div_2 += 1 until prime_array[div_2] || div_2 > sqrt_by_2_plus_one
-    number = div_2 * 2 + 1
-    break unless number <= sieve_sqrt
-
-    factor = number
-    number = factor * factor / 2
-    while number < sieve_size_by_2
-      prime_array[number] = false
-      number += factor
-    end
-    factor += 2
-  end
-  prime_array
 end
 
 reference_results = { 10 => 4,
@@ -92,7 +67,6 @@ reference_results = { 10 => 4,
                       1_000_000 => 78_498,
                       10_000_000 => 664_579,
                       100_000_000 => 5_761_455 }.freeze
-SIEVE_SIZE = 1_000_000
 sieve_size = 1_000_000
 pass_count = 0
 start_time = Time.now.to_f
@@ -100,7 +74,7 @@ sieve = nil
 
 loop do
   sieve = PrimeSieve.new(sieve_size, Numo::Bit.ones((sieve_size + 1) / 2))
-  sieve.run_sieve_numo()
+  sieve.run_sieve_numo
   pass_count += 1
   break if (Time.now.to_f - start_time) > 5.0
 end
@@ -114,7 +88,7 @@ pass_count = 0
 start_time = Time.now.to_f
 
 workers = (1..cores).map do |i|
-  sieve = PrimeSieve.new(SIEVE_SIZE, Array.new((SIEVE_SIZE + 1) / 2, true))
+  sieve = PrimeSieve.new(sieve_size, Array.new((sieve_size + 1) / 2, true))
   Ractor.new (sieve) do |sieve|
     loop do
       Ractor.yield sieve.run_sieve
