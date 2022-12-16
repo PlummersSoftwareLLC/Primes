@@ -68,7 +68,6 @@ macro Primes:run()
             end
             check = check + 2
         end
-        self:count()
     end
 end
 
@@ -97,7 +96,7 @@ macro println()
     return `c.printf"\n"
 end
 
-macro Primes:draw()
+macro Primes:draw() -- prints the values of self.arr
     return quote
         for n = 0, N do
             if self:get_subOne(n) == 1 then
@@ -113,6 +112,7 @@ macro Primes:printResults(printNums, pass, ct)
         if printNums then
             self:draw()
         end
+        self:count()
         var ti = ct*clocks
         c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
  Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, self.res, self:validate())
