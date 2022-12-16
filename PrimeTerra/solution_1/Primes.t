@@ -29,11 +29,10 @@ macro Primes:new()
             size = size + 1
         end
         self.arr = [&uint32](c.malloc(sizeof(uint32)*size))
-            self.arr[0] = 0x55555556
+        self.arr[0] = 0x55555556
         for i = 1, size do
             self.arr[i] = 0x55555555
         end
-        self:set_subOne(0)
         self.size = size
         self.res = 1
     end
@@ -49,19 +48,25 @@ macro Primes:set_subOne(i)
     end
 end
 
+macro rol(x, n) 
+    return `((x<<n) or (x>>(32-n)))
+end
+
 macro Primes:run()
     return quote
         var check = 3
-        var i = 0
         while check <= st do
-            i = check - 1
-            if self:get_subOne(i) == 1 then
-                for n = check+check, N+1, check do
-                    self:set_subOne(n - 1)
-                    i = i + 1
+            if self:get_subOne(check - 1) == 1 then
+                var skip = check + check
+                var start = check*check
+                var rolling_mask = not[uint32](1 << (start-1) % 32);
+                var roll_bits = skip % 32;
+                for n = start, N+1, skip do
+                    self.arr[n>>5] = self.arr[n>>5] and rolling_mask
+                    rolling_mask = rol(rolling_mask, roll_bits)
                 end
             end
-            check = check + 1
+            check = check + 2
         end
         self:count()
     end
@@ -69,8 +74,8 @@ end
 
 macro Primes:count()
     return quote
-        self.res = 0
-        for i = 1, N do
+        self.res = 1
+        for i = 2, N, 2 do
             if self:get_subOne(i) == 1 then
                 self.res = self.res + 1
             end
@@ -111,7 +116,7 @@ macro Primes:printResults(printNums, pass, ct)
         var ti = ct*clocks
         c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
  Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, self.res, self:validate())
-        c.printf("Enter1he;%d;%f;1;algorithm=other,faithful=yes,bits=1\n", pass, ti)
+        c.printf("Enter1he;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", pass, ti)
     end
 end
 
@@ -162,4 +167,4 @@ end
 
 
 
-terralib.saveobj("Sieve", {main=main}, nil, nil, true)
+terralib.saveobj("Sieve", {main=main}, {"-O3"}, nil, true)

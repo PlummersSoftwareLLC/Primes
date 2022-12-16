@@ -20,6 +20,6 @@ From AMD Ryzen 5 3500U 3.7 Ghz 4 cores
 '''
 Computing primes to 1000000 on 1 thread for 5 seconds.
 
- Passes: 2058, Time: 5.000956, Avg: 0.002430, Limit: 1000000, Count: 78498, Valid: 1
-Enter1he;2058;5.000956;1;algorithm=other,faithful=no,bits=1
+ Passes: 3497, Time: 5.001121, Avg: 0.001430, Limit: 1000000, Count: 78498, Valid: 1
+Enter1he;3497;5.001121;1;algorithm=base,faithful=yes,bits=1
 '''
