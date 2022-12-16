@@ -83,7 +83,7 @@ duration = (Time.now.to_f - start_time).round(3)
 puts "WARNING: result is incorrect! #{reference_results[sieve_size]} != #{sieve.count_primes}" unless reference_results[sieve_size] == sieve.count_primes
 puts "darnellbrawner-Numo;#{pass_count};#{duration};1;algorithm=base,faithful=no"
 
-cores = Concurrent.processor_count - 1
+cores = Concurrent.processor_count
 pass_count = 0
 start_time = Time.now.to_f
 
