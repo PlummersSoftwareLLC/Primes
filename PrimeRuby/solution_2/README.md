@@ -27,8 +27,8 @@ A Dockerfile has been provided.
 
 ## Output
 ```
-darnellbrawner-Numo;1562;5.001;1;algorithm=base,faithful=no
-darnellbrawner-MultiThreaded;987;5.013;1;algorithm=base,faithful=no
-darnellbrawner-MultiThreaded-Numo_2core;2517;5.002;1;algorithm=base,faithful=no
+darnellbrawner-Numo;1618;5.002;1;algorithm=base,faithful=no
+darnellbrawner-MultiThreaded;1051;5.005;9;algorithm=base,faithful=no
+darnellbrawner-MultiThreaded-Numo_2core;2648;5.002;2;algorithm=base,faithful=no
 
 ```
