@@ -104,7 +104,7 @@ end until (Time.now.to_f - start_time) > 5.0
 duration = (Time.now.to_f - start_time).round(3)
 
 puts 'WARNING: result is incorrect!' unless reference_results[sieve_size] == r[1].count(true)
-puts "darnellbrawner-MultiThreaded;#{pass_count};#{duration};#{cores};algorithm=base,faithful=no"
+puts "darnellbrawner-MultiThreaded;#{pass_count};#{duration};#{cores};algorithm=base,faithful=yes"
 
 cores = 2 #Concurrent.processor_count - 1
 pass_count = 0
