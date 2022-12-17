@@ -1,6 +1,6 @@
 FROM ubuntu:22.04 AS build
 
-WORKDIR opt/app/
+WORKDIR /opt/app/
 
 RUN apt-get update && apt-get install -y wget tar xz-utils build-essential llvm-11-dev libclang-11-dev clang-11 libedit-dev libncurses5-dev zlib1g-dev libpfm4-dev\
   && rm -rf /var/lib/apt/lists/* \
