@@ -28,7 +28,8 @@ macro Primes:new()
         if N % 32 > 0 then
             size = size + 1
         end
-        self.arr = [&uint32](c.malloc(sizeof(uint32)*size))
+        self.arr = [&uint32](c.malloc(sizeof(uint32)*(N>>5)))
+        
         self.arr[0] = 0x55555556
         for i = 1, size do
             self.arr[i] = 0x55555555
@@ -116,7 +117,7 @@ macro Primes:printResults(printNums, pass, ct)
         var ti = ct*clocks
         c.printf("Computing primes to 1000000 on 1 thread for 5 seconds.\n\
  Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %d\n", pass, ti, ti/pass, N, self.res, self:validate())
-        c.printf("Enter1he;%d;%f;1;algorithm=base,faithful=yes,bits=1\n", pass, ti)
+        c.printf("Enter1he;%d;%f;1;algorithm=base,faithful=no,bits=1\n", pass, ti)
     end
 end
 
@@ -137,8 +138,10 @@ terra Primes:validate() : bool
     return [ results[N] ] == self.res
 end
 
-terra Primes:delete()
+macro Primes:delete()
+return quote
     c.free(self.arr)
+    end
 end
 
 terra main()
@@ -146,21 +149,21 @@ terra main()
     var ct: c.clock_t = 0
     
     var start = c.clock()
-    
-    while true do
+    var fin = true
+    while fin do
         var p: Primes
         p:new()
-        defer p:delete()
+        
 
         p:run()
         pass = pass + 1
-        
 
         ct = c.clock() - start
         if ct*clocks >= dur then
             p:printResults(false, pass, ct)
-            break;
+            fin = false
         end
+        p:delete()
     end
     
 end
