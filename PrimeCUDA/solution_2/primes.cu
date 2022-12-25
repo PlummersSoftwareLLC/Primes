@@ -17,8 +17,8 @@ using namespace std::chrono;
 
 __global__ void initialize_buffer(uint64_t blockSize, uint64_t wordCount, uint32_t *sieve)
 {
-    uint64_t startIndex = blockIdx.x * blockSize;
-    uint64_t endIndex = umin(startIndex + blockSize, wordCount);
+    const uint64_t startIndex = blockIdx.x * blockSize;
+    const uint64_t endIndex = umin(startIndex + blockSize, wordCount);
 
     for (uint64_t index = startIndex; index < endIndex; index++)
         sieve[index] = UINT32_MAX;
@@ -29,8 +29,8 @@ __global__ void unmark_multiples(uint32_t primeCount, uint32_t *primes, uint64_t
     // We unmark every "THREAD_COUNT"th prime's multiples, starting with our thread index
     for (uint32_t primeIndex = threadIdx.x; primeIndex < primeCount; primeIndex += THREAD_COUNT) 
     {
-        uint32_t prime = primes[primeIndex];
-        uint64_t primeSquared = (uint64_t)prime * prime;
+        const uint32_t prime = primes[primeIndex];
+        const uint64_t primeSquared = (uint64_t)prime * prime;
 
         // Unmark multiples starting at just beyond the square root of the sieve size or the square of the prime, 
         //   whichever is larger.
