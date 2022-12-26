@@ -141,7 +141,7 @@ class Sieve
         }
 
         word = host_sieve_buffer[lastWord];
-        uint32_t lastBit = BIT_INDEX(half_size);
+        const uint32_t lastBit = BIT_INDEX(half_size);
         for (uint32_t index = 0; word && index <= lastBit; index++) 
         {
             if (word & 1)
