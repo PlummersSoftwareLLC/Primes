@@ -47,24 +47,24 @@ __global__ void unmark_multiples(uint32_t primeCount, uint32_t *primes, uint64_t
 
 class Sieve 
 {
-    uint64_t half_size;
-    uint32_t size_sqrt;
-    uint64_t buffer_byte_size;
+    const uint64_t half_size;
+    const uint32_t size_sqrt;
+    const uint64_t buffer_word_size;
+    const uint64_t buffer_byte_size;
     uint32_t *device_sieve_buffer;
     uint32_t *host_sieve_buffer;
 
     public:
 
-    Sieve(unsigned long size)
+    Sieve(unsigned long size) :
+        half_size(size >> 1),
+        size_sqrt((uint32_t)sqrt(size) + 1),
+        buffer_word_size((half_size >> 5) + 1),
+        buffer_byte_size(buffer_word_size << 2)
     {
-        half_size = size >> 1;
-        size_sqrt = (uint32_t)sqrt(size) + 1;
-        uint64_t bufferWordSize = (half_size >> 5) + 1;
-        buffer_byte_size = bufferWordSize << 2;
-
         // Allocate and initialize device sieve buffer
         cudaMalloc(&device_sieve_buffer, buffer_byte_size);
-        initialize_buffer<<<THREAD_COUNT, 1>>>(bufferWordSize / THREAD_COUNT + 1, bufferWordSize, device_sieve_buffer);
+        initialize_buffer<<<THREAD_COUNT, 1>>>(buffer_word_size / THREAD_COUNT + 1, buffer_word_size, device_sieve_buffer);
         
         // Allocate host sieve buffer and initialize the bytes up to the square root of the sieve size
         host_sieve_buffer = (uint32_t *)malloc(buffer_byte_size);
@@ -83,13 +83,13 @@ class Sieve
         // Calculate the size of the array we need to reserve for the primes we find up to and including the square root of
         //   the sieve size. x / (ln(x) - 1) is a good approximation, but often lower than the actual number, which would
         //   cause out-of-bound indexing. This is why we use x / (ln(x) - 1.2) to "responsibly over-allocate".
-        uint32_t primeListSize = (uint32_t)((double)size_sqrt / (log(size_sqrt) - 1.2));
+        const uint32_t primeListSize = (uint32_t)((double)size_sqrt / (log(size_sqrt) - 1.2));
 
         uint32_t primeList[primeListSize];
         uint32_t primeCount = 0;
 
         // We clear multiples up to and including size_sqrt
-        uint32_t lastMultipleIndex = size_sqrt >> 1;
+        const uint32_t lastMultipleIndex = size_sqrt >> 1;
 
         for (uint32_t factor = 3; factor <= size_sqrt; factor += 2)
         {
@@ -125,7 +125,7 @@ class Sieve
     uint64_t count_primes() 
     {
         uint64_t primeCount = 0;
-        uint64_t lastWord = WORD_INDEX(half_size);
+        const uint64_t lastWord = WORD_INDEX(half_size);
         uint32_t word;
 
         for (uint64_t index = 0; index < lastWord; index++)
@@ -174,7 +174,7 @@ uint64_t determineSieveSize(int argc, char *argv[])
     if (argc < 2)
         return DEFAULT_SIEVE_SIZE;
 
-    uint64_t sieveSize = strtoul(argv[1], nullptr, 0);
+    const uint64_t sieveSize = strtoul(argv[1], nullptr, 0);
 
     if (sieveSize == 0) 
         return DEFAULT_SIEVE_SIZE;
@@ -187,8 +187,8 @@ uint64_t determineSieveSize(int argc, char *argv[])
 
 void printResults(uint64_t sieveSize, uint64_t primeCount, double duration, uint64_t passes)
 {
-    auto expectedCount = resultsDictionary.find(sieveSize);
-    auto countValidated = expectedCount != resultsDictionary.end() && expectedCount->second == primeCount;
+    const auto expectedCount = resultsDictionary.find(sieveSize);
+    const auto countValidated = expectedCount != resultsDictionary.end() && expectedCount->second == primeCount;
 
     fprintf(stderr, "Passes: %zu, Time: %lf, Avg: %lf, GPU threads: %d, Limit: %zu, Count: %zu, Validated: %d\n\n", 
             passes,
@@ -204,18 +204,17 @@ void printResults(uint64_t sieveSize, uint64_t primeCount, double duration, uint
 
 int main(int argc, char *argv[])
 {
-    uint64_t sieveSize = determineSieveSize(argc, argv);
+    const uint64_t sieveSize = determineSieveSize(argc, argv);
     uint64_t passes = 0;
 
-    auto startTime = steady_clock::now();
+    const auto startTime = steady_clock::now();
     duration<double, std::micro> runTime;
 
     Sieve *sieve = nullptr;
 
     do
     {
-        if (sieve)
-            delete sieve;
+        delete sieve;
 
         sieve = new Sieve(sieveSize);
         sieve->run();
@@ -226,7 +225,7 @@ int main(int argc, char *argv[])
     }
     while (duration_cast<seconds>(runTime).count() < 5);
 
-    size_t primeCount = sieve->count_primes();
+    const size_t primeCount = sieve->count_primes();
     delete sieve;
 
     printResults(sieveSize, primeCount, duration_cast<microseconds>(runTime).count() / 1000000.0, passes); 
