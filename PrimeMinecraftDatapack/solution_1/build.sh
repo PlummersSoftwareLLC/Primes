@@ -6,7 +6,7 @@
 mkdir env
 cd env
 
-wget https://launcher.mojang.com/v1/objects/a16d67e5807f57fc4e550299cf20226194497dc2/server.jar
+wget https://piston-data.mojang.com/v1/objects/c9df48efed58511cdd0213c56b9013a7b5c9ac1f/server.jar
 cp ../eula.txt ../server.properties ../buildioscript.txt ../runioscript.txt .
 
 gcc ../playio.c -o playio
