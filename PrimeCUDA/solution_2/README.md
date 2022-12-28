@@ -82,7 +82,10 @@ If you'd like to run the solution with a different sieve size than the standard 
 ## Output
 
 ```text
-Passes: 489, Time: 5.009237, Avg: 0.010244, GPU threads: 128, Limit: 1000000, Count: 78498, Validated: 1
+Passes: 852, Time: 5.000628, Avg: 0.005869, Max GPU threads: 128, Type: threads, Limit: 1000000, Count: 78498, Validated: 1
+rbergen_faithful_cuda_threads;852;5.000628;1;algorithm=base,faithful=yes,bits=1
 
-rbergen_faithful_cuda;489;5.009237;1;algorithm=base,faithful=yes,bits=1
-``
+Passes: 4469, Time: 5.000142, Avg: 0.001119, Max GPU threads: 128, Type: blocks, Limit: 1000000, Count: 78498, Validated: 1
+rbergen_faithful_cuda_blocks;4469;5.000142;1;algorithm=base,faithful=yes,bits=1
+
+```
