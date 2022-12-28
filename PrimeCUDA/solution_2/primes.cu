@@ -46,13 +46,13 @@ __global__ void unmark_multiples_threads(uint32_t primeCount, uint32_t *primes, 
     }
 }
 
-__global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, uint64_t halfSize, uint32_t sizeSqrt, uint32_t maxThreadIndex, uint64_t blockSize, uint32_t *sieve)
+__global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, uint64_t halfSize, uint32_t sizeSqrt, uint32_t maxBlockIndex, uint64_t blockSize, uint32_t *sieve)
 {
     // Calculate the start and end of the block we need to work on, at buffer word boundaries. 
     //   Note that the first variable is a number in sieve space...
     uint64_t blockStart = uint64_t(blockIdx.x) * blockSize + sizeSqrt;
     //   ...and the second is an index in the sieve buffer (representing odd numbers only)
-    const uint64_t lastIndex = (blockIdx.x == maxThreadIndex) ? halfSize : (((blockStart + blockSize) & ~uint64_t(63)) >> 1) - 1;
+    const uint64_t lastIndex = (blockIdx.x == maxBlockIndex) ? halfSize : (((blockStart + blockSize) & ~uint64_t(63)) >> 1) - 1;
 
     // If this is not the first block, we actually start at the beginning of the first block word
     if (blockIdx.x != 0)
@@ -82,6 +82,12 @@ enum class Parallelization : char
     blocks
 };
 
+template<typename E>
+constexpr auto to_integral(E e) -> typename std::underlying_type<E>::type 
+{
+   return static_cast<typename std::underlying_type<E>::type>(e);
+}
+
 class Sieve 
 {
     const uint64_t sieve_size;
@@ -102,23 +108,34 @@ class Sieve
         cudaMemcpy(devicePrimeList, primeList, primeCount << 2, cudaMemcpyHostToDevice);
 
         // Unmark multiples on the GPU and then release the prime list buffer
-        if (type == Parallelization::threads)
+        switch(type)
         {
-            const uint32_t threadCount = min(MAX_THREADS, primeCount);
-            unmark_multiples_threads<<<1, threadCount>>>(primeCount, devicePrimeList, half_size, size_sqrt, device_sieve_buffer);
-        }
-        else
-        {
-            const uint64_t sieveSpace = sieve_size - size_sqrt;
-            uint64_t blockCount = sieveSpace << 6;
-            if (sieveSpace & 63)
-                blockCount++;
-            const uint32_t threadCount = (uint32_t)min(uint64_t(MAX_THREADS), blockCount);
-            uint64_t blockSize = sieveSpace / threadCount;
-            if (sieveSpace % threadCount)
-                blockSize++;
+            case Parallelization::threads:
+            {
+                const uint32_t threadCount = min(MAX_THREADS, primeCount);
+                unmark_multiples_threads<<<1, threadCount>>>(primeCount, devicePrimeList, half_size, size_sqrt, device_sieve_buffer);
+            }
+            break;
 
-            unmark_multiples_blocks<<<threadCount, 1>>>(primeCount, devicePrimeList, half_size, size_sqrt, threadCount - 1, blockSize, device_sieve_buffer);
+            case Parallelization::blocks:
+            {
+                const uint64_t sieveSpace = sieve_size - size_sqrt;
+                uint64_t wordCount = sieveSpace << 6;
+                if (sieveSpace & 63)
+                    wordCount++;
+                const uint32_t blockCount = (uint32_t)min(uint64_t(MAX_THREADS), wordCount);
+                uint64_t blockSize = sieveSpace / blockCount;
+                if (sieveSpace % blockCount)
+                    blockSize++;
+
+                unmark_multiples_blocks<<<blockCount, 1>>>(primeCount, devicePrimeList, half_size, size_sqrt, blockCount - 1, blockSize, device_sieve_buffer);
+            }
+            break;
+
+            default:
+                // This is some variation we don't know, so we warn and do nothing.
+                fprintf(stderr, "WARNING: Parallelization type %d unknown, multiple unmarking skipped!\n\n", to_integral(type));
+            break;
         }
         
         cudaFree(devicePrimeList);
@@ -230,6 +247,12 @@ const std::map<uint64_t, const int> resultsDictionary =
     { 10'000'000'000UL, 455052511 },
 };
 
+const std::map<Parallelization, const char *> parallelizationDictionary = 
+{
+    { Parallelization::threads, "threads" },
+    { Parallelization::blocks,  "blocks"  }
+};
+
 // Assumes any first argument is the desired sieve size. Defaults to DEFAULT_SIEVE_SIZE.
 uint64_t determineSieveSize(int argc, char *argv[])
 {
@@ -251,7 +274,8 @@ void printResults(Parallelization type, uint64_t sieveSize, uint64_t primeCount,
 {
     const auto expectedCount = resultsDictionary.find(sieveSize);
     const auto countValidated = expectedCount != resultsDictionary.end() && expectedCount->second == primeCount;
-    const char *parallelizationLabel = type == Parallelization::threads ? "threads" : "blocks";
+    const auto parallelizationEntry = parallelizationDictionary.find(type);
+    const char *parallelizationLabel = parallelizationEntry != parallelizationDictionary.end() ? parallelizationEntry->second : "unknown";
 
     fprintf(stderr, "Passes: %zu, Time: %lf, Avg: %lf, Max GPU threads: %d, Type: %s, Limit: %zu, Count: %zu, Validated: %d\n", 
             passes,
