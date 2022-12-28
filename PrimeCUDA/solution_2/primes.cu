@@ -11,7 +11,7 @@
 using namespace std::chrono;
 
 #define DEFAULT_SIEVE_SIZE 1'000'000
-#define MAX_THREADS 128
+#define MAX_THREADS 256
 
 #define WORD_INDEX(index) (index >> 5)
 #define BIT_INDEX(index) (index & 31)
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
 {
     const uint64_t sieveSize = determineSieveSize(argc, argv);
 
-    Parallelization types[] = { Parallelization::threads, Parallelization::blocks };
+    Parallelization types[] = { Parallelization::blocks, Parallelization::threads };
 
     for (auto &type : types)
     {
