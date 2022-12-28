@@ -7,14 +7,21 @@
 
 This is an implementation using NVIDIA CUDA. This means it runs part of the sieve algorithm on a CUDA-capable NVIDIA GPU.
 
-Primes up to and including the square root of the sieve limit are sieved on the CPU. The unmarking of multiples beyond the square root is done on the GPU in a heavily parallelized fashion. Credits for coming up with this combined CPU/GPU approach go to Dave Plummer.
+Primes up to and including the square root of the sieve limit are sieved on the CPU. The unmarking of multiples beyond the square root is done on the GPU in a heavily parallelized fashion. In fact, the solution implements two ways of doing this:
+
+- One where each thread unmarks all the multiples of one or more individual primes
+- One where the sieve space is cut up into blocks, and each thread unmarks the multiples of all primes in one block
+
+The second method seems to be consistently faster than the first. This is most likely related at least in part to heavy use of an "atomic binary AND" in the first method.
+
+Credits for coming up with the idea for a combined CPU/GPU approach go to Dave Plummer.
 
 This solution depends on the [NVIDIA CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) but does not use other CUDA-related dependencies. In this, it differs from [the first CUDA solution](../solution_1/) in this repository.
 
 ## Notes
 
 - Getting the solution to run on a system with a suitable NVIDIA GPU does take some work, as detailed in the [Run instructions](#run-instructions) below.
-The reason is that the way to setup CUDA Toolkit varies across platforms and GPUs. It includes some case-specific manual changes to the Makefiles of this solution. 
+The reason is that the way to setup CUDA Toolkit varies across platforms and GPUs. It includes some case-specific manual changes to the Makefiles of this solution.
 - To build this solution and its prerequisites, a basic build toolchain needs be in place. On Ubuntu systems, it can be installed using the following command:
   
   ```text
@@ -51,7 +58,7 @@ CUDA Capability Major/Minor version number:    6.1
 
 ### Building and running the Primes CUDA solution
 
-This solution's Makefile includes some variables that may well need to be changed to match your environment. They are at the top of the file `Makefile`. 
+This solution's Makefile includes some variables that may well need to be changed to match your environment. They are at the top of the file `Makefile`.
 
 |Variable|Description|
 |-|-|
@@ -74,8 +81,8 @@ If you'd like to run the solution with a different sieve size than the standard 
 
 ## Output
 
-```
+```text
 Passes: 489, Time: 5.009237, Avg: 0.010244, GPU threads: 128, Limit: 1000000, Count: 78498, Validated: 1
 
 rbergen_faithful_cuda;489;5.009237;1;algorithm=base,faithful=yes,bits=1
-```
+``
