@@ -110,8 +110,7 @@ __global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, u
         #if ROLLING_LIMIT > 0
         }
         #endif
-
-        }
+    }
 }
 
 class Sieve 
