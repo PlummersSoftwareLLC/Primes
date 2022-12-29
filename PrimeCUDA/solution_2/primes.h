@@ -52,8 +52,9 @@ enum class Parallelization : char
     blocks
 };
 
-template<typename E>
-constexpr auto to_integral(E e) -> typename std::underlying_type<E>::type 
+// We have to define this ourselves, as we're not doing C++23 (yet)
+template<class TEnum>
+constexpr auto to_underlying(TEnum enumValue)  
 {
-   return static_cast<typename std::underlying_type<E>::type>(e);
+   return static_cast<typename std::underlying_type<TEnum>::type>(enumValue);
 }

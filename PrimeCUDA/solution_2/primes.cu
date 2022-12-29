@@ -169,7 +169,7 @@ class Sieve
 
             default:
                 // This is some variation we don't know, so we warn and do nothing.
-                fprintf(stderr, "WARNING: Parallelization type %d unknown, multiple unmarking skipped!\n\n", to_integral(type));
+                fprintf(stderr, "WARNING: Parallelization type %d unknown, multiple unmarking skipped!\n\n", to_underlying(type));
             break;
         }
         
