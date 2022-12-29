@@ -53,9 +53,9 @@ __global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, u
     if (blockIdx.x != 0)
         blockStart &= SIEVE_WORD_MASK;
 
-#ifdef DEBUG
+    #ifdef DEBUG
     printf("  - block %d: blockStart = %" PRIu64 " (index %" PRIu64 "), lastIndex = %" PRIu64 ".\n", blockIdx.x, blockStart, (blockStart >> 1), lastIndex);
-#endif
+    #endif
 
     for (uint32_t primeIndex = 0; primeIndex < primeCount; primeIndex++)
     {
@@ -69,7 +69,7 @@ __global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, u
         if (!(firstUnmarked & 1))
             firstUnmarked += prime;
 
-    #if ROLLING_LIMIT > 0
+        #if ROLLING_LIMIT > 0
         if (prime <= ROLLING_LIMIT)
         {
             uint64_t index = firstUnmarked >> 1;
@@ -101,17 +101,17 @@ __global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, u
         }
         else
         {
-    #endif
+        #endif // ROLLING_LIMIT > 0
 
             for (uint64_t index = firstUnmarked >> 1; index <= lastIndex; index += prime) 
                 // Clear the bit in the word that corresponds to the last part of the index 
                 sieve[WORD_INDEX(index)] &= ~(sieve_t(1) << BIT_INDEX(index));
 
-    #if ROLLING_LIMIT > 0
+        #if ROLLING_LIMIT > 0
         }
-    #endif
+        #endif
 
-    }
+        }
 }
 
 class Sieve 
@@ -139,9 +139,11 @@ class Sieve
             case Parallelization::threads:
             {
                 const uint32_t threadCount = min(MAX_THREADS, primeCount);
-            #ifdef DEBUG
+
+                #ifdef DEBUG
                 printf("- starting thread multiple unmarking with %u threads.\n", threadCount);
-            #endif
+                #endif
+
                 unmark_multiples_threads<<<1, threadCount>>>(primeCount, devicePrimeList, half_size, size_sqrt, device_sieve_buffer);
             }
             break;
@@ -157,9 +159,10 @@ class Sieve
                 if (sieveSpace % blockCount)
                     blockSize++;
 
-            #ifdef DEBUG
+                #ifdef DEBUG
                 printf("- starting block multiple unmarking with blockCount %u and blockSize %zu.\n", blockCount, blockSize);
-            #endif
+                #endif
+
                 unmark_multiples_blocks<<<blockCount, 1>>>(primeCount, devicePrimeList, half_size, size_sqrt, blockCount - 1, blockSize, device_sieve_buffer);
             }
             break;
@@ -174,9 +177,10 @@ class Sieve
 
         // Copy the sieve buffer from the device to the host 
         cudaMemcpy(host_sieve_buffer, device_sieve_buffer, buffer_byte_size, cudaMemcpyDeviceToHost);
-    #ifdef DEBUG
+        
+        #ifdef DEBUG
         printf("- device to host copy of sieve buffer complete.\n");
-    #endif
+        #endif
     }
 
     public:
@@ -188,9 +192,9 @@ class Sieve
         buffer_word_size((half_size >> WORD_SHIFT) + 1),
         buffer_byte_size(buffer_word_size * BYTES_PER_WORD)
     {
-    #ifdef DEBUG
+        #ifdef DEBUG
         printf("- constructing sieve with buffer_word_size %zu and buffer_byte_size %zu.\n", buffer_word_size, buffer_byte_size);
-    #endif
+        #endif
 
         // Allocate and initialize device sieve buffer
         cudaMalloc(&device_sieve_buffer, buffer_byte_size);
@@ -200,18 +204,20 @@ class Sieve
         if (buffer_word_size % blockCount)
             blockSize++;
 
-    #ifdef DEBUG
+        #ifdef DEBUG
         printf("- initializing device buffer with blockCount %u and blockSize %zu.\n", blockCount, blockSize);
-    #endif
+        #endif
+
         initialize_buffer<<<blockCount, 1>>>(blockSize, buffer_word_size, device_sieve_buffer);
 
         // Allocate host sieve buffer and initialize the bytes up to the square root of the sieve size
         host_sieve_buffer = (sieve_t *)malloc(buffer_byte_size);
         memset(host_sieve_buffer, 255, (size_sqrt >> 4) + 1);
         cudaDeviceSynchronize();
-    #ifdef DEBUG
+
+        #ifdef DEBUG
         printf("- post buffer initialization device sync complete.\n");
-    #endif
+        #endif
     }
 
     ~Sieve() 
@@ -357,10 +363,10 @@ int main(int argc, char *argv[])
         const auto startTime = steady_clock::now();
         duration<double, std::micro> runTime;
 
-    #ifndef DEBUG
+        #ifndef DEBUG
         do
         {
-    #endif
+        #endif
 
             delete sieve;
 
@@ -371,12 +377,14 @@ int main(int argc, char *argv[])
 
             runTime = steady_clock::now() - startTime;
 
-    #ifndef DEBUG
+        #ifndef DEBUG
         }
         while (duration_cast<seconds>(runTime).count() < 5);
-    #else
+        #endif
+        
+        #ifdef DEBUG
         printf("\n");
-    #endif
+        #endif
 
         const size_t primeCount = sieve->count_primes();
         
