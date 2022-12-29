@@ -1,5 +1,3 @@
-#include <cinttypes>
-#include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -9,44 +7,9 @@
 #include <map>
 #include <cuda_runtime.h>
 
+#include "primes.h"
+
 using namespace std::chrono;
-
-#define DEFAULT_SIEVE_SIZE 1'000'000
-
-// The actual number of threads used can be lower, if there aren't enough "chunks of work" to keep this
-//   number of threads busy.
-#define MAX_THREADS 256
-
-// Highest prime number for which we'll use a rolling bit mask. This value cannot be higher than the
-//   number of bits per word! Set to 0 to disable the use of a rolling bit mask. The relevant code won't
-//   be compiled then, thus reducing performance side effects to zero. 
-#define ROLLING_LIMIT 29
-
-// If defined, the code will show debug output and run both unmarking methods once.
-//#define DEBUG
-
-// Modify the following 4 lines if you want to switch to another word type for the sieve buffer. Two sets
-//   of values are supported:
-//   - for 32 bit words: 
-//     sieve_t = unsigned int, BITS_PER_WORD = UINT32_WIDTH, MAX_WORD_VALUE = UINT32_MAX, WORD_SHIFT = 5
-//   - for 64 bit words: 
-//     sieve_t = unsigned long long, BITS_PER_WORD = UINT64_WIDTH, MAX_WORD_VALUE = UINT64_MAX, WORD_SHIFT = 6
-typedef unsigned int sieve_t;
-#define BITS_PER_WORD UINT32_WIDTH
-#define MAX_WORD_VALUE UINT32_MAX
-#define WORD_SHIFT 5
-
-// The following defines are derived from the previous 4, so it's not necessary to modify these
-#define BYTES_PER_WORD (BITS_PER_WORD >> 3)
-#define MAX_BIT_INDEX (BITS_PER_WORD - 1)
-#define WORD_INDEX(index) (index >> WORD_SHIFT)
-#define BIT_INDEX(index) (index & MAX_BIT_INDEX)
-// This is actually BITS_PER_WORD * 2 - 1, but this is a "cheap" way to get there
-#define SIEVE_WORD_MASK ~uint64_t(BITS_PER_WORD + MAX_BIT_INDEX)
-
-#if ROLLING_LIMIT > BITS_PER_WORD
-  #error "ROLLING_LIMIT can't be greater than the number of bits per word!"
-#endif
 
 __global__ void initialize_buffer(uint64_t blockSize, uint64_t wordCount, sieve_t *sieve)
 {
@@ -149,18 +112,6 @@ __global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, u
     #endif
 
     }
-}
-
-enum class Parallelization : char
-{
-    threads,
-    blocks
-};
-
-template<typename E>
-constexpr auto to_integral(E e) -> typename std::underlying_type<E>::type 
-{
-   return static_cast<typename std::underlying_type<E>::type>(e);
 }
 
 class Sieve 

@@ -30,6 +30,20 @@ The reason is that the way to setup CUDA Toolkit varies across platforms and GPU
 
 - Due to the rather system-specific steps required to make this solution work, as well as it requiring the presence of a CUDA-capable NVIDIA GPU, no `Dockerfile` has been provided.
 
+## Configuration
+
+At the top of the [primes.h](primes.h) header file, there are some defines that can be used to modify certain aspects of the sieve's implementation. They are described in the following table:
+
+| Define | Description |
+|-|-|
+| `DEFAULT_SIEVE_SIZE` | The sieve limit that is used if none is passed as an argument to the program (see [Building and running the Primes CUDA solution](#building-and-running-the-primes-cuda-solution) below). |
+| `MAX_THREADS` | The maximum number of parallel threads used on the GPU. The actual number of threads used can be lower, if there aren't enough "chunks of work" to keep this number of threads busy. |
+| `BITS_PER_WORD` | The number of bits per sieve buffer word. Can be 32 or 64. |
+| `ROLLING_LIMIT` | The highest (prime) number for which we'll use a rolling bit mask. This value cannot be higher than the number of bits per word. Set to 0 to disable the use of a rolling bit mask. The relevant code won't be compiled then, thus reducing performance side effects to zero. |
+| `DEBUG` | If defined, the code will show debug output and run both unmarking methods once. |
+
+The values currently set in `primes.h` are the ones that work best for me on my machine that's equipped with a CUDA-capable GPU, but YMMV.
+
 ## Run instructions
 
 ### Disclaimer
