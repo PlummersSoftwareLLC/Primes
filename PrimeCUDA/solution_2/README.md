@@ -4,6 +4,7 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Deviation](https://img.shields.io/badge/Deviation-GPU_processing-blue)
 
 This is an implementation using NVIDIA CUDA. This means it runs part of the sieve algorithm on a CUDA-capable NVIDIA GPU.
 
