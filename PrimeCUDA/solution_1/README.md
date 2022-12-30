@@ -1,9 +1,10 @@
-# NVIDIA CUDA solution by rbergen
+# NVIDIA CUDASieve solution by rbergen
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Deviation](https://img.shields.io/badge/Deviation-GPU_processing-blue)
 
 This is an implementation using NVIDIA CUDA, meaning it runs the actual sieve on a CUDA-capable NVIDIA GPU.
 
