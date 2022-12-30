@@ -43,8 +43,9 @@
 #define MAX_BIT_INDEX (BITS_PER_WORD - 1)
 #define WORD_INDEX(index) (index >> WORD_SHIFT)
 #define BIT_INDEX(index) (index & MAX_BIT_INDEX)
-// This is actually the binary NOT of BITS_PER_WORD * 2 - 1, but this is a "cheap" way to get there
-#define SIEVE_WORD_MASK ~uint64_t(BITS_PER_WORD + MAX_BIT_INDEX)
+// This is actually BITS_PER_WORD * 2 - 1, but this is a "cheap" way to get there
+#define SIEVE_BITS_MASK (BITS_PER_WORD + MAX_BIT_INDEX)
+#define SIEVE_WORD_MASK ~uint64_t(SIEVE_BITS_MASK)
 
 enum class Parallelization : char
 {

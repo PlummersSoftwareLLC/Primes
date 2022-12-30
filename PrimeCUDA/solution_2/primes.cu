@@ -14,8 +14,10 @@ using namespace std::chrono;
 __global__ void initialize_buffer(uint64_t blockSize, uint64_t wordCount, sieve_t *sieve)
 {
     const uint64_t startIndex = uint64_t(blockIdx.x) * blockSize;
+    // Don't initialize beyond the end of the buffer
     const uint64_t endIndex = ullmin(startIndex + blockSize, wordCount);
 
+    // Set all block words to all 1s
     for (uint64_t index = startIndex; index < endIndex; index++)
         sieve[index] = MAX_WORD_VALUE;
 }
@@ -82,21 +84,27 @@ __global__ void unmark_multiples_blocks(uint32_t primeCount, uint32_t *primes, u
 
             do
             {
+                // Check if our bit index has moved past the current word's bits. If so...
                 if (bitIndex > MAX_BIT_INDEX) 
                 {
-                    // Clear the bits that are set in the mask
+                    // ...clear the current word's bits that are set in the mask, and move on the next word.
                     sieve[wordIndex++] &= ~bitMask;
+                    // "Shift bitmask one word to the right" through calculation. It has to be done that way
+                    //   in part because our word length may be the maximum the GPU supports (64 bits). 
                     bitIndex %= BITS_PER_WORD;
                     bitMask = sieve_t(1) << bitIndex;
                 }
                 else
+                    // Just add the current bit index to the current word's mask
                     bitMask |= sieve_t(1) << bitIndex;
 
+                // Add prime to overall sieve index and current word's bit index
                 index += prime;
                 bitIndex += prime;
             }
             while (index <= lastIndex);
 
+            // Let's not forget to apply the last bitmask
             sieve[wordIndex] &= ~bitMask;
         }
         else
@@ -132,11 +140,12 @@ class Sieve
         cudaMalloc(&devicePrimeList, primeCount * sizeof(uint32_t));
         cudaMemcpy(devicePrimeList, primeList, primeCount << 2, cudaMemcpyHostToDevice);
 
-        // Unmark multiples on the GPU and then release the prime list buffer
+        // Unmark multiples on the GPU using the selected method
         switch(type)
         {
             case Parallelization::threads:
             {
+                // The number of threads we use is the maximum or the number of primes to process, whichever is lower
                 const uint32_t threadCount = min(MAX_THREADS, primeCount);
 
                 #ifdef DEBUG
@@ -149,12 +158,19 @@ class Sieve
 
             case Parallelization::blocks:
             {
+                // Our workspace is the part of the sieve beyond the square root of its size...
                 const uint64_t sieveSpace = sieve_size - size_sqrt;
-                uint64_t wordCount = sieveSpace << (WORD_SHIFT + 1);
-                if (sieveSpace & SIEVE_WORD_MASK)
+                // ...which we halve and then divide by the word bit count to establish the number of words...
+                uint64_t wordCount = sieveSpace >> (WORD_SHIFT + 1);
+                // ...and increase that if the division left a remainder.
+                if (sieveSpace & SIEVE_BITS_MASK)
                     wordCount++;
+                
+                // The number of blocks is the maximum thread count or the number of words, whichever is lower
                 const uint32_t blockCount = (uint32_t)min(uint64_t(MAX_THREADS), wordCount);
+                
                 uint64_t blockSize = sieveSpace / blockCount;
+                // Increase block size if the calculating division left a remainder
                 if (sieveSpace % blockCount)
                     blockSize++;
 
@@ -167,14 +183,15 @@ class Sieve
             break;
 
             default:
-                // This is some variation we don't know, so we warn and do nothing.
+                // This is some method variation we don't know, so we warn and do nothing
                 fprintf(stderr, "WARNING: Parallelization type %d unknown, multiple unmarking skipped!\n\n", to_underlying(type));
             break;
         }
         
+        // Release the device prime list buffer
         cudaFree(devicePrimeList);
 
-        // Copy the sieve buffer from the device to the host 
+        // Copy the sieve buffer from the device to the host. This function implies a wait for all GPU threads to finish.
         cudaMemcpy(host_sieve_buffer, device_sieve_buffer, buffer_byte_size, cudaMemcpyDeviceToHost);
         
         #ifdef DEBUG
@@ -195,11 +212,14 @@ class Sieve
         printf("- constructing sieve with buffer_word_size %zu and buffer_byte_size %zu.\n", buffer_word_size, buffer_byte_size);
         #endif
 
-        // Allocate and initialize device sieve buffer
+        // Allocate the device sieve buffer
         cudaMalloc(&device_sieve_buffer, buffer_byte_size);
 
+        // The number of blocks is the maximum number of threads or the number of words in the buffer, whichever is lower
         const uint32_t blockCount = (uint32_t)min(uint64_t(MAX_THREADS), buffer_word_size);
+        
         uint64_t blockSize = buffer_word_size / blockCount;
+        // Increase block size if the calculating division left a remainder
         if (buffer_word_size % blockCount)
             blockSize++;
 
@@ -209,9 +229,12 @@ class Sieve
 
         initialize_buffer<<<blockCount, 1>>>(blockSize, buffer_word_size, device_sieve_buffer);
 
-        // Allocate host sieve buffer and initialize the bytes up to the square root of the sieve size
+        // Allocate host sieve buffer (odd numbers only) and initialize the bytes up to the square root of the sieve 
+        //   size to all 1s.
         host_sieve_buffer = (sieve_t *)malloc(buffer_byte_size);
         memset(host_sieve_buffer, 255, (size_sqrt >> 4) + 1);
+
+        // Make sure the initialization of the device sieve buffer has completed
         cudaDeviceSynchronize();
 
         #ifdef DEBUG
@@ -235,7 +258,9 @@ class Sieve
         uint32_t primeList[primeListSize];
         uint32_t primeCount = 0;
 
-        // We clear multiples up to and including size_sqrt
+        // What follows is the basic Sieve of Eratosthenes algorithm, except we clear multiples up to and including the
+        //   square root of the sieve size instead of to the sieve limit. We also keep track of the primes we find, so the
+        //   GPU can unmark them later.
         const uint32_t lastMultipleIndex = size_sqrt >> 1;
 
         for (uint32_t factor = 3; factor <= size_sqrt; factor += 2)
@@ -251,6 +276,7 @@ class Sieve
             }
         }
 
+        // Use the GPU to unmark the rest of the primes multiples
         unmark_multiples(type, primeCount, primeList);
 
         // Required to be truly compliant with Primes project rules
@@ -263,6 +289,10 @@ class Sieve
         const uint64_t lastWord = WORD_INDEX(half_size);
         sieve_t word;
 
+        // For all buffer words except the last one, just count the set bits in the word until there are none left.
+        //   We only hold bits for odd numbers in the sieve buffer. However, due to a small "mathematical coincidence"
+        //   bit 0 of word 0 effectively represents the only even prime 2. This means the "count set bits" approach 
+        //   in itself yields the correct result.
         for (uint64_t index = 0; index < lastWord; index++)
         {
             word = host_sieve_buffer[index];
@@ -275,6 +305,7 @@ class Sieve
             }
         }
 
+        // For the last word, only count bits up to the (halved) sieve limit
         word = host_sieve_buffer[lastWord];
         const uint32_t lastBit = BIT_INDEX(half_size);
         for (uint32_t index = 0; word && index <= lastBit; index++) 
@@ -309,7 +340,7 @@ const std::map<Parallelization, const char *> parallelizationDictionary =
     { Parallelization::blocks,  "blocks"  }
 };
 
-// Assumes any first argument is the desired sieve size. Defaults to DEFAULT_SIEVE_SIZE.
+// Assumes any numerical first argument is the desired sieve size. Defaults to DEFAULT_SIEVE_SIZE.
 uint64_t determineSieveSize(int argc, char *argv[])
 {
     if (argc < 2)
