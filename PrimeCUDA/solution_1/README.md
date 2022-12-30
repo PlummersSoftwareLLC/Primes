@@ -1,4 +1,4 @@
-# NVIDIA CUDA solution by rbergen
+# NVIDIA CUDASieve solution by rbergen
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
