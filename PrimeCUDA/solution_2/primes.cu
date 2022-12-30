@@ -163,7 +163,7 @@ class Sieve
                 // ...which we halve and then divide by the word bit count to establish the number of words...
                 uint64_t wordCount = sieveSpace >> (WORD_SHIFT + 1);
                 // ...and increase that if the division left a remainder.
-                if (sieveSpace & SIEVE_WORD_MASK)
+                if (sieveSpace & SIEVE_BITS_MASK)
                     wordCount++;
                 
                 // The number of blocks is the maximum thread count or the number of words, whichever is lower
