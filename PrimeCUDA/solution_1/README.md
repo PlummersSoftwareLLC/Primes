@@ -13,7 +13,7 @@ The solution heavily depends on CUDASieve, a [GitHub-hosted project](https://git
 ## Notes
 
 - Getting the solution to run on a system with a suitable NVIDIA GPU does take some work, as detailed in the [Run instructions](#run-instructions) below.
-The reason is that the way to setup the primary dependencies (CUDASieve and CUDA Toolkit) varies across platforms and GPUs. It includes some case-specific manual changes to the Makefiles of CUDASieve and this solution. 
+The reason is that the way to setup the primary dependencies (CUDASieve and CUDA Toolkit) varies across platforms and GPUs. It includes some case-specific manual changes to the Makefiles of CUDASieve and this solution.
 - To build this solution and its prerequisites, a basic build toolchain needs be in place. On Ubuntu systems, it can be installed using the following command:
   
   ```text
@@ -36,7 +36,6 @@ The NVIDIA CUDA Toolkit can be downloaded from [the NVIDIA Developer website](ht
 
 NVIDIA has published a [GitHub repository](https://github.com/NVIDIA/cuda-samples) with a number of sample programs that use the NVIDIA CUDA Toolkit. Instructions for cloning and building the samples are provided in the [repository's README](https://github.com/NVIDIA/cuda-samples#getting-started).
 
-
 Installing the CUDA Samples is optional, but can help with identifying the exact characteristics of the CUDA card in your system. Specifically, it is the `deviceQuery` tool that can be used for this. To run it, from the root of the CUDA Samples (`cuda-samples`) repository clone, execute the following command:
 
 ```text
@@ -55,9 +54,9 @@ CUDASieve is added to this solution as a submodule. It can be initialized and ch
 
 ```text
 git submodule update --init CUDASieve
-``` 
+```
 
-The CUDASieve makefile includes some variables that may well need to be changed to match your environment. They are at the top of the file `CUDASieve/makefile`. 
+The CUDASieve makefile includes some variables that may well need to be changed to match your environment. They are at the top of the file `CUDASieve/makefile`.
 
 |Variable|Description|
 |-|-|
@@ -91,7 +90,7 @@ If you'd like to run the solution with a different sieve size than the standard 
 
 ## Output
 
-```
+```text
 Passes: 2007, Time: 5.001347, Avg: 0.002492, Limit: 1000000, Count: 78498, Validated: 1
 
 rbergen_cuda;2007;5.001347;1;algorithm=other,faithful=yes,bits=1
