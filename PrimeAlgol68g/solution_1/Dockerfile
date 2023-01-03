@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 RUN apt-get update -qq \
-    && apt-get install -y algol68g build-essential \
+    && apt-get install -y algol68g gcc \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
