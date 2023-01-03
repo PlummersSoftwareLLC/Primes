@@ -1,6 +1,6 @@
 # Sieve of Eratosthenes in Algol 68g #
 
-PROC run sieve = (REF []BOOL sieve) VOID:
+PROC run sieve = (REF []BOOL sieve, INT sieve size) VOID:
 (
     INT num bits := UPB sieve;
     FOR k TO num bits
@@ -8,7 +8,7 @@ PROC run sieve = (REF []BOOL sieve) VOID:
         sieve[k] := TRUE
     OD;
 
-    INT q := ENTIER (sqrt(n) / 2);
+    INT q := ENTIER (sqrt(sieve size) / 2);
     INT bit := 1;
     WHILE bit <= q
     DO
@@ -108,7 +108,7 @@ HEAP [num bits]BOOL sieve;
 BOOL show results := FALSE;
 WHILE 
     passes +:= 1;
-    run sieve(sieve);
+    run sieve(sieve, n);
     IF (seconds - start) >= 5
     THEN
         print results(sieve, n, show results, seconds - start, passes);
