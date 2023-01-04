@@ -25,8 +25,8 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 151, Time: 5.02437500, Avg: .03327401, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 150, Time: 5.02579600, Avg: .03350531, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-rzuckerm;151;5.02437500;1;algorithm=base,faithful=yes,bits=unknown
+rzuckerm;150;5.02579600;1;algorithm=base,faithful=yes,bits=unknown
 ```
 
