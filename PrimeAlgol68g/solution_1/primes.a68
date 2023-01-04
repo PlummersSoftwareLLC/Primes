@@ -102,7 +102,7 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
         newline,
         "rzuckerm;", whole(passes, 0),
         ";", fixed(duration, 0, 8),
-        ";1;algorithm=base,faithful=yes,bits=unknown",
+        ";1;algorithm=base,faithful=yes",
         newline
     ))
     
