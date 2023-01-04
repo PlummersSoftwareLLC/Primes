@@ -1,25 +1,25 @@
 # Sieve of Eratosthenes in Algol 68g #
 
-MODE PRIMESIEVE = STRUCT(INT sieve size, REF []CHAR sieve);
+MODE PRIMESIEVE = STRUCT(INT sieve size, REF []BOOL sieve);
 
 PROC run sieve = (INT sieve size) PRIMESIEVE:
 (
     INT num bits := ENTIER((sieve size - 1) / 2);
-    HEAP [num bits]CHAR sieve;
+    HEAP [num bits]BOOL sieve;
     FOR k TO num bits
     DO
-        sieve[k] := "1"
+        sieve[k] := TRUE
     OD;
 
     INT q := ENTIER (sqrt(sieve size) / 2);
     INT bit := 1;
     WHILE bit <= q
     DO
-        IF sieve[bit] = "1"
+        IF sieve[bit]
         THEN
             FOR k FROM 2 * bit * (bit + 1) BY 2 * bit + 1 TO num bits
             DO
-                sieve[k] := "0"
+                sieve[k] := FALSE
             OD
         FI;
         bit +:= 1
@@ -30,10 +30,10 @@ PROC run sieve = (INT sieve size) PRIMESIEVE:
 PROC count primes = (PRIMESIEVE this) INT:
 (
     INT count := 1;
-    REF []CHAR sieve = sieve OF this;
+    REF []BOOL sieve = sieve OF this;
     FOR k TO UPB sieve
     DO
-        IF sieve[k] = "1"
+        IF sieve[k]
         THEN
             count +:= 1
         FI
@@ -70,10 +70,10 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
 
     INT count := 1;
     INT sieve size = sieve size OF this;
-    REF []CHAR sieve = sieve OF this;
+    REF []BOOL sieve = sieve OF this;
     FOR k TO UPB sieve
     DO
-        IF sieve[k] = "1"
+        IF sieve[k]
         THEN
             IF show results
             THEN
@@ -102,7 +102,7 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
         newline,
         "rzuckerm;", whole(passes, 0),
         ";", fixed(duration, 0, 8),
-        ";1;algorithm=base,faithful=yes,bits=8",
+        ";1;algorithm=base,faithful=yes,bits=unknown",
         newline
     ))
     
@@ -130,7 +130,7 @@ DO
     sweep heap;
     IF debug heap
     THEN
-        print((garbage - prev garbage, newline));
+        print((passes, garbage - prev garbage, newline));
         prev garbage := garbage
     FI
 OD
