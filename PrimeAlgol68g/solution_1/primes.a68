@@ -118,11 +118,6 @@ WHILE
     passes +:= 1;
 
     PRIMESIEVE sieve = run sieve(n);
-    IF debug heap
-    THEN
-        print((garbage - prev garbage, newline));
-        prev garbage := garbage
-    FI;
 
     IF (seconds - start) >= 5
     THEN
@@ -132,6 +127,11 @@ WHILE
         TRUE
     FI
 DO
-    sweep heap
+    sweep heap;
+    IF debug heap
+    THEN
+        print((garbage - prev garbage, newline));
+        prev garbage := garbage
+    FI
 OD
 
