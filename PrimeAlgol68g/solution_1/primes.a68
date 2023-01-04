@@ -1,34 +1,39 @@
 # Sieve of Eratosthenes in Algol 68g #
 
-PROC run sieve = (REF []BOOL sieve, INT sieve size) VOID:
+MODE PRIMESIEVE = STRUCT(INT sieve size, REF []CHAR sieve);
+
+PROC run sieve = (INT sieve size) PRIMESIEVE:
 (
-    INT num bits := UPB sieve;
+    INT num bits := ENTIER((sieve size - 1) / 2);
+    HEAP [num bits]CHAR sieve;
     FOR k TO num bits
     DO
-        sieve[k] := TRUE
+        sieve[k] := "1"
     OD;
 
     INT q := ENTIER (sqrt(sieve size) / 2);
     INT bit := 1;
     WHILE bit <= q
     DO
-        IF sieve[bit]
+        IF sieve[bit] = "1"
         THEN
             FOR k FROM 2 * bit * (bit + 1) BY 2 * bit + 1 TO num bits
             DO
-                sieve[k] := FALSE
+                sieve[k] := "0"
             OD
         FI;
         bit +:= 1
-    OD
+    OD;
+    PRIMESIEVE(sieve size, sieve)
 );
 
-PROC count primes = (REF []BOOL sieve) INT:
+PROC count primes = (PRIMESIEVE this) INT:
 (
     INT count := 1;
+    REF []CHAR sieve = sieve OF this;
     FOR k TO UPB sieve
     DO
-        IF sieve[k]
+        IF sieve[k] = "1"
         THEN
             count +:= 1
         FI
@@ -36,10 +41,11 @@ PROC count primes = (REF []BOOL sieve) INT:
     count
 );
 
-PROC validate results = (REF []BOOL sieve, INT sieve size) BOOL:
+PROC validate results = (PRIMESIEVE this) BOOL:
 (
     # Cannot support sieve size over 100 million #
 
+    INT sieve size = sieve size OF this;
     INT expected count := -1;
     IF sieve size = 10 THEN expected count := 4
     ELIF sieve size = 100 THEN expected count := 25
@@ -52,10 +58,10 @@ PROC validate results = (REF []BOOL sieve, INT sieve size) BOOL:
     ELSE print(("Invalid sieve size", new line))
     FI;
 
-    count primes(sieve) = expected count
+    count primes(this) = expected count
 );
 
-PROC print results = (REF []BOOL sieve, INT sieve size, BOOL show results, REAL duration, INT passes) VOID:
+PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT passes) VOID:
 (
     IF show results
     THEN
@@ -63,9 +69,11 @@ PROC print results = (REF []BOOL sieve, INT sieve size, BOOL show results, REAL 
     FI;
 
     INT count := 1;
+    INT sieve size = sieve size OF this;
+    REF []CHAR sieve = sieve OF this;
     FOR k TO UPB sieve
     DO
-        IF sieve[k]
+        IF sieve[k] = "1"
         THEN
             IF show results
             THEN
@@ -86,15 +94,15 @@ PROC print results = (REF []BOOL sieve, INT sieve size, BOOL show results, REAL 
         ", Avg: ", fixed(duration / passes, 0, 8),
         ", Limit: ", whole(sieve size, 0),
         ", Count1: ", whole(count, 0),
-        ", Count2: ", whole(count primes(sieve), 0),
-        ", Valid: ", (validate results(sieve, sieve size) | "true" | "false"),
+        ", Count2: ", whole(count primes(this), 0),
+        ", Valid: ", (validate results(this) | "true" | "false"),
         newline
     ));
     print((
         newline,
         "rzuckerm;", whole(passes, 0),
         ";", fixed(duration, 0, 8),
-        ";1;algorithm=base,faithful=no,bits=1",
+        ";1;algorithm=base,faithful=yes,bits=1",
         newline
     ))
     
@@ -103,15 +111,14 @@ PROC print results = (REF []BOOL sieve, INT sieve size, BOOL show results, REAL 
 REAL start = seconds;
 INT passes := 0;
 INT n := 1 000 000;
-INT num bits := ENTIER ((n - 1) / 2);
-HEAP [num bits]BOOL sieve;
 BOOL show results := FALSE;
 WHILE 
     passes +:= 1;
-    run sieve(sieve, n);
+
+    PRIMESIEVE sieve = run sieve(n);
     IF (seconds - start) >= 5
     THEN
-        print results(sieve, n, show results, seconds - start, passes);
+        print results(sieve, show results, seconds - start, passes);
         FALSE
     ELSE
         TRUE

@@ -1,3 +1,3 @@
 #!/bin/bash
-docker run --rm -it primes_algol68g:latest
+docker run --rm primes_algol68g:latest
 

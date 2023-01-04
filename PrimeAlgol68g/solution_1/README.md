@@ -1,11 +1,9 @@
 # Algol 68g solution by rzuckerm
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
-
-Faithfulness is *no* due to not being able to run a sieve size greater than 100 million.
 
 ## Run instructions
 
@@ -23,12 +21,12 @@ You should only need to do this once. Run the docker image:
 
 ## Output
 
-On a Intel i7-7500U CPU @ 2.7 GHz with 16 GB of memory on a Windows 10 laptop running
-a Ubuntu 22.04 VM in VirtualBox 7:
+On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 10 desktop running
+a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 136, Time: 5.01671700, Avg: .03688762, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 156, Time: 5.00019300, Avg: .03205252, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-rzuckerm;136;5.01671700;1;algorithm=base,faithful=no,bits=1
+rzuckerm;156;5.00019300;1;algorithm=base,faithful=yes,bits=1
 ```
 
