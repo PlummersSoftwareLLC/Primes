@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-8-green)
 
 ## Run instructions
 
@@ -25,8 +25,8 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 156, Time: 5.00019300, Avg: .03205252, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 150, Time: 5.02451900, Avg: .03349679, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-rzuckerm;156;5.00019300;1;algorithm=base,faithful=yes,bits=1
+rzuckerm;150;5.02451900;1;algorithm=base,faithful=yes,bits=8
 ```
 

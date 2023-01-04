@@ -102,7 +102,7 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
         newline,
         "rzuckerm;", whole(passes, 0),
         ";", fixed(duration, 0, 8),
-        ";1;algorithm=base,faithful=yes,bits=1",
+        ";1;algorithm=base,faithful=yes,bits=8",
         newline
     ))
     
@@ -112,10 +112,18 @@ REAL start = seconds;
 INT passes := 0;
 INT n := 1 000 000;
 BOOL show results := FALSE;
+BOOL debug heap := FALSE;
+LONG INT prev garbage := 0;
 WHILE 
     passes +:= 1;
 
     PRIMESIEVE sieve = run sieve(n);
+    IF debug heap
+    THEN
+        print((garbage - prev garbage, newline));
+        prev garbage := garbage
+    FI;
+
     IF (seconds - start) >= 5
     THEN
         print results(sieve, show results, seconds - start, passes);
@@ -124,6 +132,6 @@ WHILE
         TRUE
     FI
 DO
-    SKIP
+    sweep heap
 OD
 
