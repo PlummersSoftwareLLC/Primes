@@ -30,7 +30,7 @@ PROC run sieve = (INT sieve size) PRIMESIEVE:
 PROC count primes = (PRIMESIEVE this) INT:
 (
     INT count := 1;
-    REF []BOOL sieve = sieve OF this;
+    REF []BOOL sieve := sieve OF this;
     FOR k TO UPB sieve
     DO
         IF sieve[k]
@@ -45,7 +45,7 @@ PROC validate results = (PRIMESIEVE this) BOOL:
 (
     # Cannot support sieve size over 100 million #
 
-    INT sieve size = sieve size OF this;
+    INT sieve size := sieve size OF this;
     INT expected count := -1;
     IF sieve size = 10 THEN expected count := 4
     ELIF sieve size = 100 THEN expected count := 25
@@ -69,8 +69,8 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
     FI;
 
     INT count := 1;
-    INT sieve size = sieve size OF this;
-    REF []BOOL sieve = sieve OF this;
+    INT sieve size := sieve size OF this;
+    REF []BOOL sieve := sieve OF this;
     FOR k TO UPB sieve
     DO
         IF sieve[k]
