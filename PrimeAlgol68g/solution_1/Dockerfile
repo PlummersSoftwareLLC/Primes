@@ -7,8 +7,8 @@ RUN apt-get update -qq \
 
 WORKDIR /opt/app
 COPY primes*.a68 run_primes.sh ./
-RUN a68g -O3 --compile primes.a68
-RUN a68g -O3 --compile primes_bit.a68
+RUN a68g -O3 --compile primes.a68 && \
+    a68g -O3 --compile primes_bit.a68
 
 ENTRYPOINT [ "./run_primes.sh" ]
 
