@@ -1,39 +1,65 @@
-# Sieve of Eratosthenes in Algol 68g #
+# Sieve of Eratosthenes in Algol 68g using bits #
 
-MODE PRIMESIEVE = STRUCT(INT sieve size, REF []BOOL sieve);
+PROC set bits = (REF []BITS this, INT num bits) VOID:
+(
+    BITS all ones := NOT 2r0;
+    INT num bytes := UPB this;
+    FOR k TO num bytes - 1
+    DO
+        this[k] := all ones
+    OD;
+
+    BITS remaining ones := all ones SHL ((bits width - num bits) MOD bits width);
+    this[num bytes] := remaining ones
+);
+
+PROC clear bit = (REF []BITS this, INT bit num) VOID:
+(
+    INT byte num := 1 + ENTIER((bit num - 1) / bits width);
+    INT bit pos := 1 + ((bit num - 1) MOD bits width);
+    this[byte num] := bit pos CLEAR this[byte num]
+);
+
+PROC get bit = (REF []BITS this, INT bit num) BOOL:
+(
+    INT byte num := 1 + ENTIER((bit num - 1) / bits width);
+    INT bit pos := 1 + ((bit num - 1) MOD bits width);
+    bit pos ELEM this[byte num]
+);
+
+MODE PRIMESIEVE = STRUCT(INT sieve size, INT num bits, REF []BITS sieve);
 
 PROC run sieve = (INT sieve size) PRIMESIEVE:
 (
     INT num bits := ENTIER((sieve size - 1) / 2);
-    HEAP [num bits]BOOL sieve;
-    FOR k TO num bits
-    DO
-        sieve[k] := TRUE
-    OD;
+    INT num bytes := ENTIER((num bits + bits width - 1) / bits width);
+    HEAP [num bytes]BITS sieve;
+    set bits(sieve, num bits);
 
     INT q := ENTIER (sqrt(sieve size) / 2);
     INT bit := 1;
     WHILE bit <= q
     DO
-        IF sieve[bit]
+        IF get bit(sieve, bit)
         THEN
             FOR k FROM 2 * bit * (bit + 1) BY 2 * bit + 1 TO num bits
             DO
-                sieve[k] := FALSE
+                clear bit(sieve, k)
             OD
         FI;
         bit +:= 1
     OD;
-    PRIMESIEVE(sieve size, sieve)
+    PRIMESIEVE(sieve size, num bits, sieve)
 );
 
 PROC count primes = (PRIMESIEVE this) INT:
 (
     INT count := 1;
-    REF []BOOL sieve := sieve OF this;
-    FOR k TO UPB sieve
+    REF []BITS sieve := sieve OF this;
+    INT num bits := num bits OF this;
+    FOR k TO num bits
     DO
-        IF sieve[k]
+        IF get bit(sieve, k)
         THEN
             count +:= 1
         FI
@@ -70,10 +96,11 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
 
     INT count := 1;
     INT sieve size := sieve size OF this;
-    REF []BOOL sieve := sieve OF this;
-    FOR k TO UPB sieve
+    INT num bits := num bits OF this;
+    REF []BITS sieve := sieve OF this;
+    FOR k TO num bits
     DO
-        IF sieve[k]
+        IF get bit(sieve, k)
         THEN
             IF show results
             THEN
@@ -102,7 +129,7 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
         newline,
         "rzuckerm;", whole(passes, 0),
         ";", fixed(duration, 0, 8),
-        ";1;algorithm=base,faithful=yes",
+        ";1;algorithm=base,faithful=yes,bits=1",
         newline
     ))
     
