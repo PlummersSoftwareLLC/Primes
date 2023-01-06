@@ -13,11 +13,23 @@ PROC set bits = (REF []BITS this, INT num bits) VOID:
     this[num bytes] := remaining ones
 );
 
-PROC clear bit = (REF []BITS this, INT bit num) VOID:
+PROC clear bits = (REF []BITS this, INT num bits, INT start, INT step) VOID:
 (
-    INT byte num := 1 + ENTIER((bit num - 1) / bits width);
-    INT bit pos := 1 + ((bit num - 1) MOD bits width);
-    this[byte num] := bit pos CLEAR this[byte num]
+    INT byte num := 1 + ENTIER((start - 1) / bits width);
+    INT bit pos := 1 + ((start - 1) MOD bits width);
+    INT byte inc := ENTIER(step / bits width);
+    INT bit inc := step MOD bits width;
+    FOR k FROM start BY step TO num bits
+    DO
+        this[byte num] := bit pos CLEAR this[byte num];
+        byte num +:= byte inc;
+        bit pos +:= bit inc;
+        IF bit pos > bits width
+        THEN
+            bit pos -:= bits width;
+            byte num +:= 1
+        FI
+    OD
 );
 
 PROC get bit = (REF []BITS this, INT bit num) BOOL:
@@ -42,10 +54,7 @@ PROC run sieve = (INT sieve size) PRIMESIEVE:
     DO
         IF get bit(sieve, bit)
         THEN
-            FOR k FROM 2 * bit * (bit + 1) BY 2 * bit + 1 TO num bits
-            DO
-                clear bit(sieve, k)
-            OD
+            clear bits(sieve, num bits, 2 * bit * (bit + 1), 2 * bit + 1)
         FI;
         bit +:= 1
     OD;

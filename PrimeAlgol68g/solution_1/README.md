@@ -35,8 +35,8 @@ Passes: 153, Time: 5.00621800, Avg: .03272038, Limit: 1000000, Count1: 78498, Co
 
 rzuckerm;153;5.00621800;1;algorithm=base,faithful=yes
 
-Passes: 14, Time: 5.28676900, Avg: .37762636, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 23, Time: 5.09794500, Avg: .22164978, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-rzuckerm;14;5.28676900;1;algorithm=base,faithful=yes,bits=1
+rzuckerm;23;5.09794500;1;algorithm=base,faithful=yes,bits=1
 ```
 
