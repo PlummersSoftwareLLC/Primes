@@ -105,7 +105,7 @@ During the review of any PR, a CI workflow is triggered that includes a linting 
 If you want to run hadolint locally before submitting your Dockerfile, you can do so using the configuration in [config/hadolint.yml](config/hadolint.yml).
 Instructions for installing hadolint can be found in the tool's documentation. Using a Docker container is a "non-intrusive" way of running hadolint once Docker is installed. In a Unix-like shell, this can be done by running the following command from the root directory of the Primes repository (replace `<language>` and `<number>` with the applicable values for your solution):
 ```
-docker run --rm -i -v `pwd`/config:/.config hadolint/hadolint < Prime<language>/solution_<number>/Dockerfile
+tools/hadolint.sh <language> <number>
 ```  
 
 ### Pull request
