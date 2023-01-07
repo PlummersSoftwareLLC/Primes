@@ -44,8 +44,6 @@ namespace PrimeSieveCS
                 // the buffer we get from the pool may not be zero-initialized
                 for (int i = 0; i < arraySize; i++)
                     halfbits[i] = 0;
-
-
             }
 
             public int countOfPrimes
@@ -55,8 +53,8 @@ namespace PrimeSieveCS
                     var bits = halfbits.AsSpan();
 
                     int count = 0;
-                    for (int num = 1; num <= this.sieveSize / 2; num++)
-                        if ((bits[num >> shiftAmount] & (1UL << (num))) == 0)
+                    for (int num = 1; num <= this.halfLimit; num++)
+                        if ((bits[num >> shiftAmount] & (1U << (num))) == 0)
                             count++;
                     return count;
                 }
@@ -89,29 +87,26 @@ namespace PrimeSieveCS
                 {
                     // Scan for the next unset bit which means it is a prime factor
 
-                    var halfNum = halfFactor;
-                    while (halfNum < halfLimit)
+                    while (halfFactor <= halfRoot)
                     {
-                        // Remember that halfNum is already "pre-divided" by 2, so we divide it by 32
-                        // rather than 64 when locating the 64-bit word in which the bit will land in
-
-                        if ((bits[halfNum >> shiftAmount] & (1UL << (halfNum))) == 0UL)
+                        if ((bits[halfFactor >> shiftAmount] & (1U << (halfFactor))) == 0U)
                             break;
-                        halfNum++;
+                        halfFactor++;
                     }
 
-                    factor = (halfNum << 1) + 1;
-                    halfFactor = halfNum + 1;
+                    factor = (halfFactor << 1) + 1;
 
                     // Mark off all multiples starting with the factor's square up to the square root of the limit
 
                     for (var index = (factor * factor) >> 1; index < halfLimit; index += factor)
-                        bits[index >> shiftAmount] |= (1UL << (index));
+                        bits[index >> shiftAmount] |= (1U << (index));
+
+                    halfFactor++;
                 }
 
                 // Return the memory to the pool
 
-                ArrayPool<UInt64>.Shared.Return(halfbits);
+                ArrayPool<UInt32>.Shared.Return(halfbits);
             }
 
             public void printResults(bool showResults, double duration, int passes)
@@ -124,7 +119,7 @@ namespace PrimeSieveCS
                 int count = 1;
                 for (int num = 3; num <= this.sieveSize; num += 2)
                 {
-                    if ((bits[(num / 2) >> shiftAmount] & (1UL << (num / 2))) == 0)
+                    if ((bits[(num / 2) >> shiftAmount] & (1U << (num / 2))) == 0)
                     {
                         if (showResults)
                             Console.Write(num + ", ");
@@ -161,7 +156,7 @@ namespace PrimeSieveCS
 
             var tD = DateTime.UtcNow - tStart;
             if (sieve != null)
-                sieve.printResults(false, tD.TotalSeconds, passes);
+                sieve.printResults(true, tD.TotalSeconds, passes);
         }
     }
 }
