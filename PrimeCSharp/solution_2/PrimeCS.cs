@@ -17,9 +17,9 @@ namespace PrimeSieveCS
         {
             private int sieveSize = 0;
             private int halfLimit;
-            private const int shiftAmount = 6;
+            private const int shiftAmount = 5;
 
-            private readonly UInt64[] halfbits;
+            private readonly UInt32[] halfbits;
 
             private static Dictionary<int, int> myDict = new Dictionary<int, int>
             {
@@ -37,7 +37,15 @@ namespace PrimeSieveCS
             {
                 sieveSize = size;
                 halfLimit = (size + 1) / 2;
-                halfbits = ArrayPool<UInt64>.Shared.Rent(halfLimit / sizeof(UInt64) + 1);
+                
+                int arraySize = (halfLimit >> shiftAmount) + 1;
+                halfbits = ArrayPool<UInt32>.Shared.Rent(arraySize);
+                
+                // the buffer we get from the pool may not be zero-initialized
+                for (int i = 0; i < arraySize; i++)
+                    halfbits[i] = 0;
+
+
             }
 
             public int countOfPrimes
