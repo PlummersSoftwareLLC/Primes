@@ -156,7 +156,7 @@ namespace PrimeSieveCS
 
             var tD = DateTime.UtcNow - tStart;
             if (sieve != null)
-                sieve.printResults(true, tD.TotalSeconds, passes);
+                sieve.printResults(false, tD.TotalSeconds, passes);
         }
     }
 }
