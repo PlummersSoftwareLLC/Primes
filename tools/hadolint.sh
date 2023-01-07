@@ -12,9 +12,9 @@ then
     exit 1
 fi
 
-if [ ! -d "Prime$1/solution_$2" ]
+if [ ! -f "Prime$1/solution_$2/Dockerfile" ]
 then
-    echo "Directory 'Primes$1/solution_$2' does not exist"
+    echo "'Primes$1/solution_$2/Dockerfile' does not exist"
     exit 1
 fi
 
