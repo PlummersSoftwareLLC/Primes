@@ -110,7 +110,7 @@ tools/hadolint.sh <language> <number>
 
 where:
 
-* `<language>` corresponds to `Prime` directory for the specified language. This is case-insensitive.
+* `<language>` corresponds to the `Prime` directory for the specified language. This is case-insensitive.
 * `<number>` corresponds to the solution number.
 
 Examples:
