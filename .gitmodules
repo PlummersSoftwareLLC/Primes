@@ -1,0 +1,3 @@
+[submodule "PrimeCUDA/solution_1/CUDASieve"]
+	path = PrimeCUDA/solution_1/CUDASieve
+	url = https://github.com/curtisseizert/CUDASieve.git

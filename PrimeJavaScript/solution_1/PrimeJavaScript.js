@@ -17,39 +17,29 @@ Date:               2022-07-10
 */
 
 "use strict";
+const NOW_UNITS_PER_SECOND = 1000;
+const WORD_SIZE = 32;
 
+let config = {
+	sieveSize: 1000000,
+	timeLimitSeconds: 5,
+	verbose: false,
+	runtime: ''
+};
 
-let runtime = "";
-let verbose = false;
 try
 {
 	!!Deno;
-	runtime = "deno";
-	verbose = Deno.args.includes("verbose");
+	config.runtime = "deno";
+	config.verbose = Deno.args.includes("verbose");
 }
 catch
 {
+	const { performance } = require('perf_hooks');
 	const runtimeParts = process.argv[0].split("/");
-	runtime = runtimeParts[runtimeParts.length - 1];
-	verbose = process.argv.includes("verbose");
+	config.runtime = runtimeParts[runtimeParts.length - 1];
+	config.verbose = process.argv.includes("verbose");
 }
-
-
-const NOW_UNITS_PER_SECOND = 1000;
-
-
-// Historical data for validating our results - the number of primes
-// to be found under some limit, such as 168 primes under 1000
-const knownPrimeCounts = {
-	10: 4,
-	100: 25,
-	1000: 168,
-	10000: 1229,
-	100000: 9592,
-	1000000: 78498,
-	10000000: 664579,
-	100000000: 5761455
-};
 
 // 32-bit bitarray for javascript, with only needed functions
 // int32, not uint and not 64bit because: javascript uses 32int
@@ -69,6 +59,51 @@ class BitArray
 		this.wordArray[wordOffset] |= (1 << bitOffset);
 	}
 
+	setBitsTrue(range_start, step, range_stop) {
+		if (step > WORD_SIZE/2) { 
+			// steps are large: check if the range is large enough to reuse the same mask
+			let range_stop_unique =  range_start + 32 * step;
+			if (range_stop_unique > range_stop) {
+				// range is not large enough for repetition (32 * step)
+				for (let index = range_start; index < range_stop; index += step) {
+					this.setBitTrue(index);
+				}
+				return;
+			}
+			// range is large enough to reuse the mask
+			const range_stop_word = range_stop >>> 5;
+			for (let index = range_start; index < range_stop_unique; index += step) {
+				let wordOffset = index >>> 5;
+				const bitOffset = index & 31;
+				const mask = (1 << bitOffset);
+				do {
+					this.wordArray[wordOffset] |= mask;
+					wordOffset += step; // pattern repeats on word level after {step} words
+				} while (wordOffset <= range_stop_word);
+			}
+			return;
+		}
+
+		// optimized for small sizes: set wordvalue multiple times before committing to memory
+		let index = range_start;
+		let wordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
+		let wordValue = this.wordArray[wordOffset];
+
+		while (index < range_stop) {
+			const bitOffset = index & 31;  // use & (and) for remainder, faster than modulus of /32
+			wordValue |= (1 << bitOffset);
+
+			index += step;
+			const newwordOffset = index >>> 5;  // 1 word = 2ˆ5 = 32 bit, so shift 5, much faster than /32
+			if (newwordOffset != wordOffset) { // moving to new word: store value and get new value
+				this.wordArray[wordOffset] = wordValue;
+				wordOffset = newwordOffset;
+				wordValue = this.wordArray[wordOffset];
+			}
+		}
+		this.wordArray[wordOffset] = wordValue; // make sure last value is stored
+	}
+
 	testBitTrue(index)
 	{
 		const wordOffset = index >>> 5;
@@ -76,6 +111,11 @@ class BitArray
 		return this.wordArray[wordOffset] & (1 << bitOffset); // use a mask to only get the bit at position bitOffset. >0=true, 0=false
 	}
 
+	searchBitFalse(index)
+	{
+		while (this.testBitTrue(index)) { index++ };  // will stop automatically because bits were 0 filled
+		return index;
+	}
 }
 
 /*
@@ -89,35 +129,32 @@ class PrimeSieve
 	constructor(sieveSize)
 	{
 		this.sieveSize = sieveSize;
-		this.oddsize = sieveSize >>> 1;
-		this.bitarray = new BitArray(1 + this.oddsize);
+		this.sieveSizeInBits = sieveSize >>> 1;
+		this.bitArray = new BitArray(1 + this.sieveSizeInBits);
 	}
 
 	runSieve()
 	{
-		const q = Math.ceil(Math.sqrt(this.oddsize));  // convert to integer with ceil
+		const q = Math.ceil(Math.sqrt(this.sieveSizeInBits));  // convert to integer with ceil
+		let factor = 1;
 
-		for (let factor = 1; factor <= q; factor++)
+		while (factor < q)
 		{
-			if (!this.bitarray.testBitTrue(factor))
-			{
-				const step = factor * 2 + 1;
-				const start = factor * factor * 2 + factor + factor;
+			const step = factor * 2 + 1;
+			const start = factor * factor * 2 + factor + factor;
 
-				for (let multiple = start; multiple < this.oddsize; multiple = multiple + step)
-				{
-					this.bitarray.setBitTrue(multiple);  // mark every multiple of this prime
-				}
-			}
+			this.bitArray.setBitsTrue(start, step, this.sieveSizeInBits); // mark every multiple of this prime
+			factor = this.bitArray.searchBitFalse(factor + 1);
 		}
+		return this;
 	}
 
 	countPrimes()
 	{
 		let total = 1;  // account for prime 2
-		for (let index = 1; index < this.oddsize; index++)
+		for (let index = 1; index < this.sieveSizeInBits; index++)
 		{
-			if (!this.bitarray.testBitTrue(index))  // if bit is false, it's a prime, because non-primes are marked true
+			if (!this.bitArray.testBitTrue(index))  // if bit is false, it's a prime, because non-primes are marked true
 			{
 				total++;
 			}
@@ -128,14 +165,54 @@ class PrimeSieve
 	getPrimes(max = 100)
 	{
 		const primes = [2];  // 2 is a special prime
-		for (let factor = 1, count = 0; factor < this.oddsize; factor++)
+		for (let factor = 1, count = 0; factor < this.sieveSizeInBits; factor++)
 		{
 			if (count >= max) break;
-			if (!this.bitarray.testBitTrue(factor)) count = primes.push(factor * 2 + 1);
+			if (!this.bitArray.testBitTrue(factor)) count = primes.push(factor * 2 + 1);
 		}
 		return primes;
 	}
 
+	validatePrimeCount(verbose) 
+	{
+		// Historical data for validating our results - the number of primes
+		// to be found under some limit, such as 168 primes under 1000
+		const maxShowPrimes = 100;
+		const knownPrimeCounts = {
+			10: 4,
+			100: 25,
+			1000: 168,
+			10000: 1229,
+			100000: 9592,
+			1000000: 78498,
+			10000000: 664579,
+			100000000: 5761455
+		};
+		const countedPrimes = this.countPrimes();
+		const primeArray = this.getPrimes(maxShowPrimes);
+
+		let validResult = false;
+		if (this.sieveSize in knownPrimeCounts)
+		{
+			const knownPrimeCount = knownPrimeCounts[this.sieveSize];
+			validResult = (knownPrimeCount == countedPrimes);
+			if (!validResult)
+				console.log(
+					"\nError: invalid result.",
+					`Limit for ${this.sieveSize} should be ${knownPrimeCount} `,
+					`but result contains ${countedPrimes} primes`
+				);
+		}
+		else console.log(
+			`Warning: cannot validate result of ${countedPrimes} primes:`,
+			`limit ${this.sieveSize} is not in the known list of number of primes!`
+		);
+
+		if (verbose)
+			console.log(`\nThe first ${maxShowPrimes} found primes are:`, primeArray);
+	
+		return validResult;
+	}
 }
 
 // run the sieve for timeLimitSeconds
@@ -157,80 +234,19 @@ const runSieveBatch = (sieveSize, timeLimitSeconds = 5) =>
 	return nrOfPasses;
 }
 
-// get a single sieve (for validation and statistics)
-const evalSieve = (sieveSize, maxShowPrimes = 100) =>
+// main procedure
+const main = ({ sieveSize, timeLimitSeconds, verbose, runtime }) =>
 {
-	const sieve = new PrimeSieve(sieveSize);
-	sieve.runSieve();
-	return {
-		countedPrimes: sieve.countPrimes(),
-		primeArray: sieve.getPrimes(maxShowPrimes)
-	}
-}
+	// validate algorithm - run one time
+	const validResult = new PrimeSieve(sieveSize).runSieve().validatePrimeCount(verbose);
+	if (!validResult) return false;
 
-/*
-main procedure
-*/
-
-const main = ({ sieveSize, timeLimitSeconds, verbose, maxShowPrimes }) =>
-{
-	// run once, without threads
 	//measure time running the batch
 	const timeStart = performance.now();
 	const totalPasses = runSieveBatch(sieveSize, timeLimitSeconds);
 	const timeEnd = performance.now();
 	const durationInSec = (timeEnd - timeStart) / NOW_UNITS_PER_SECOND;
-
-	// validate algorithm - run one final time on the result
-	const sieveResult = evalSieve(sieveSize);
-	let validResult = false;
-	if (sieveSize in knownPrimeCounts)
-	{
-		const knownPrimeCount = knownPrimeCounts[sieveSize];
-		validResult = (knownPrimeCount == sieveResult.countedPrimes);
-		if (!validResult)
-			console.log(
-				"\nError: invalid result.",
-				`Limit for ${sieveSize} should be ${knownPrimeCount} `,
-				`but result contains ${sieveResult.countedPrimes} primes`
-			);
-	}
-	else console.log(
-		`Warning: cannot validate result of ${sieveResult.countedPrimes} primes:`,
-		`limit ${sieveSize} is not in the known list of number of primes!`
-	);
-
-	if (validResult)
-	{
-		const res = [
-			`\nrogiervandam-${runtime}`,
-			totalPasses.toString(),
-			durationInSec.toString(),
-			"1",
-			"algorithm=base,faithful=yes,bits=1"
-		];
-		console.log(res.join(";"));
-	}
-
-	if (verbose)
-	{
-		console.log(`\nThe first ${maxShowPrimes} found primes are:`, sieveResult.primeArray);
-		console.log(
-			`Passes: ${totalPasses},`,
-			`Time: ${(durationInSec).toFixed(2)},`,
-			`Avg: ${(durationInSec / totalPasses).toFixed(8)} (sec/pass),`,
-			`Sieve size: ${sieveSize},`,
-			`Primes: ${sieveResult.countedPrimes},`,
-			`Valid: ${validResult}`
-		);
-	}
+	console.log(`\nrogiervandam-${runtime};${totalPasses};${durationInSec};1;algorithm=base,faithful=yes,bits=1`); 
 }
-
-const config = {
-	sieveSize: 1000000,
-	timeLimitSeconds: 5,
-	verbose: verbose,
-	maxShowPrimes: verbose ? 100 : 0
-};
 
 main(config);

@@ -41,7 +41,7 @@ This implementation is based on the logic from:
 <br />
 
 
-**PrimeJavaScript_memcopy** - New algorithm in which the product of a prime is only marked until a certain block range is reached. Thereafter, a block copy algorithm takes over and the recurring pattern 4 bytes at a time to different offsets, carefully trying to keep using cpu cache level 1. It follows the basic rules, but is not "base", because it does not follow the rule "*When clearing non-primes in the sieve (the second operation), the algorithm clears all non-primes individually, increasing the number with 2 * factor on each cycle.*"
+**PrimeJavaScript_memcopy** - New algorithm in which the product of a prime is only marked until a certain block range is reached. Thereafter, a block copy algorithm takes over and the recurring pattern which copies 4 bytes at a time to different offsets, carefully trying to keep using cpu cache level 1. It follows the basic rules, but is not "base", because it does not follow the rule "*When clearing non-primes in the sieve (the second operation), the algorithm clears all non-primes individually, increasing the number with 2 * factor on each cycle.*"
 - NodeJS &check;
 - Deno &cross;
 - Bun &check;
