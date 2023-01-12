@@ -1,7 +1,7 @@
 FROM adoptopenjdk/openjdk11:jdk-11.0.11_9-alpine-slim
 WORKDIR /home/netrexx
-RUN apk add --no-cache curl unzip \
-	&& curl -G http://netrexx.org/files/NetRexx-4.01-GA.zip -o ./NetRexx4.zip \
+RUN apk add --no-cache wget unzip \
+	&& wget http://netrexx.org/files/NetRexx-4.01-GA.zip -O ./NetRexx4.zip \
 	&& unzip ./NetRexx4.zip -d . \
 	&& rm NetRexx4.zip
 
