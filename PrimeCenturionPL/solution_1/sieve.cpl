@@ -102,9 +102,6 @@ LOOP WHILE(FACTOR.LE.SQRTPRIME)
   END LOOP
   ; Skip to the next possible factor.
   INCR FACTOR,2
-  DIRECT
-    SVC 7
-  CPL
 END LOOP
 ; Get the end time.
 GTIME(INTEGER,ENDTIME)
