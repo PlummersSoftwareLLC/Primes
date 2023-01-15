@@ -8,9 +8,9 @@
 This implementation is almost identical to [Euphoria solution 1](../../PrimeEuphoria/solution_1).
 [Phix](http://phix.x10.mx/) is a newer language based on
 [Euphoria](https://en.wikipedia.org/wiki/Euphoria_(programming_language)). The performance
-of the `integer` sieve solution is about twice the speed in Phix. However, there are a number
+of the `integer` sieve solution is about 2.5 times faster in Phix. However, there are a number
 of issues with Phix. I was hoping to use the Phix compiler to further improve the performance,
-bit I could not get it to work. Also, I wanted to implement the single-bit algorithm, but
+but I could not get it to work. Also, I wanted to implement the single-bit algorithm, but
 the bitwise functions do not seem to work consistently.
 
 ## Run instructions
@@ -37,3 +37,4 @@ Passes: 996, Time: 5.00274072, Avg: 0.00502283, Limit: 1000000, Count: 78498, Va
 
 rzuckerm;996;5.00274072;1;algorithm=base,faithful=yes
 ```
+
