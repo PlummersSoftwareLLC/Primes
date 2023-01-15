@@ -1,4 +1,5 @@
 include std/io.e
+include std/utils.e
 without type_check
 
 enum SIEVE_SIZE, SIEVE
@@ -23,15 +24,29 @@ function run_sieve(integer sieve_size)
     return {sieve_size, sieve}
 end function
 
-function count_primes(sequence this)
+function count_primes(sequence this, integer show_results=FALSE)
     integer count = 1
+    if show_results = TRUE
+    then
+        printf(STDOUT, "2, ")
+    end if
+
     for bit = 1 to length(this[SIEVE])
     do
         if this[SIEVE][bit] = TRUE
         then
             count += 1
+            if show_results = TRUE
+            then
+                printf(STDOUT, "%d, ", 2 * bit + 1)
+            end if
         end if
     end for
+
+    if show_results = TRUE
+    then
+        printf(STDOUT, "\n")
+    end if
 
     return count
 end function
@@ -56,48 +71,18 @@ function validate_results(sequence this)
     return count_primes(this) = expected_count
 end function
 
-procedure print_results(sequence this, atom show_results, atom duration, integer passes)
-    if show_results = TRUE
-    then
-        printf(STDOUT, "2, ")
-    end if
-
-    integer count = 1
-    for bit = 1 to length(this[SIEVE])
-    do
-        if this[SIEVE][bit] = TRUE
-        then
-            count += 1
-            if show_results = TRUE
-            then
-                printf(STDOUT, "%d, ", 2 * bit + 1)
-            end if
-        end if
-    end for
-
-    if show_results = TRUE
-    then
-        printf(STDOUT, "\n")
-    end if
-
-    atom valid = "false"
-    if validate_results(this)
-    then
-        valid = "true"
-    end if
-
+procedure print_results(sequence this, integer show_results, atom duration, integer passes)
     -- Euphoria seems to only provide time in 1/100th of a second --
     printf(
         STDOUT,
-        "Passes: %d, Time: %.2f, Avg: %.8f, Limit: %d, Count1: %d, Count2: %d, Valid: %s\n",
+        "Passes: %d, Time: %.2f, Avg: %.8f, Limit: %d, Count: %d, Valid: %s\n",
         {
             passes,
             duration,
             duration / passes,
             this[SIEVE_SIZE],
-            count,
-            count_primes(this),
-            valid
+            count_primes(this, show_results),
+            iff(validate_results(this), "true", "false")
         }
     )
     printf(
@@ -111,7 +96,7 @@ procedure main()
     atom start = time()
     integer n = 1_000_000
     integer passes = 0
-    atom show_results = FALSE
+    integer show_results = FALSE
     sequence sieve
     atom duration
     while 1 do
