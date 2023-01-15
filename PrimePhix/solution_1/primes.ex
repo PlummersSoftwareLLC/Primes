@@ -21,15 +21,29 @@ function run_sieve(integer sieve_size)
     return {sieve_size, sieve}
 end function
 
-function count_primes(sequence this)
+function count_primes(sequence this, integer show_results=FALSE)
     integer count = 1
+    if show_results = TRUE
+    then
+        printf(STDOUT, "2, ")
+    end if
+    
     for bit = 1 to length(this[SIEVE])
     do
         if this[SIEVE][bit] = TRUE
         then
             count += 1
+            if show_results = TRUE
+            then
+                printf(STDOUT, "%d, ", 2 * bit + 1)
+            end if
         end if
     end for
+
+    if show_results = TRUE
+    then
+        printf(STDOUT, "\n")
+    end if
 
     return count
 end function
@@ -55,39 +69,15 @@ function validate_results(sequence this)
 end function
 
 procedure print_results(sequence this, atom show_results, atom duration, integer passes)
-    if show_results = TRUE
-    then
-        printf(STDOUT, "2, ")
-    end if
-
-    integer count = 1
-    for bit = 1 to length(this[SIEVE])
-    do
-        if this[SIEVE][bit] = TRUE
-        then
-            count += 1
-            if show_results = TRUE
-            then
-                printf(STDOUT, "%d, ", 2 * bit + 1)
-            end if
-        end if
-    end for
-
-    if show_results = TRUE
-    then
-        printf(STDOUT, "\n")
-    end if
-
     printf(
         STDOUT,
-        "Passes: %d, Time: %.8f, Avg: %.8f, Limit: %d, Count1: %d, Count2: %d, Valid: %s\n",
+        "Passes: %d, Time: %.8f, Avg: %.8f, Limit: %d, Count: %d, Valid: %s\n",
         {
             passes,
             duration,
             duration / passes,
             this[SIEVE_SIZE],
-            count,
-            count_primes(this),
+            count_primes(this, show_results),
             iff(validate_results(this) ? "true" : "false")
         }
     )
