@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 RUN apt-get update -qq \
-    && apt-get install -y gcc unzip wget \
+    && apt-get install -y unzip wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && wget http://phix.x10.mx/phix.1.0.1.zip \
