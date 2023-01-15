@@ -29,12 +29,12 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 298, Time: 5.00, Avg: 0.01677852, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 400, Time: 5.01, Avg: 0.01252500, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-rzuckerm;298;5.00;1;algorithm=base,faithful=yes
+rzuckerm;400;5.01;1;algorithm=base,faithful=yes
 
-Passes: 127, Time: 5.02, Avg: 0.03952756, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 158, Time: 5.00, Avg: 0.03164557, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-rzuckerm;127;5.02;1;algorithm=base,faithful=yes,bits=1
+rzuckerm;158;5.00;1;algorithm=base,faithful=yes,bits=1
 ```
 
