@@ -49,7 +49,7 @@ function count_primes(sequence this, integer show_results=FALSE)
 end function
 
 function validate_results(sequence this)
-    -- Cannot support sieve size greater than 1 billion --
+    -- Cannot support sieve size greater than 10 million --
     integer expected_count = -1
     switch this[SIEVE_SIZE]
     do
@@ -60,8 +60,6 @@ function validate_results(sequence this)
         case 100_000 then expected_count = 9592
         case 1_000_000 then expected_count = 78498
         case 10_000_000 then expected_count = 664579
-        case 100_000_000 then expected_count = 5761455
-        case 1_000_000_000 then expected_count = 50847534
         case else printf(STDOUT, "Invalid sieve size\n")
     end switch
 
