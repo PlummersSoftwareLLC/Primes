@@ -141,7 +141,7 @@ sequence NOT_BITS_TABLE = {
 
 function set_bits(integer num_bits)
     integer num_words = floor((num_bits + 63) / 64)
-    integer num_leftover_bits = 1 + and_bits(num_bits, 0x3f)
+    integer num_leftover_bits = 1 + and_bits(num_bits - 1, 0x3f)
     atom all_ones = not_bits(0)
     atom leftover_bits = BITS_TABLE[num_leftover_bits] * 2 - 1
     return repeat(all_ones, num_words - 1) & leftover_bits
