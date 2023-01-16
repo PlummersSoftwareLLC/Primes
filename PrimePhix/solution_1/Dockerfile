@@ -21,6 +21,6 @@ RUN apt-get update -qq \
     && echo "" | p
 
 WORKDIR /opt/app
-COPY primes.ex ./
+COPY primes*.ex run_primes.sh ./
 
-ENTRYPOINT ["p", "primes.ex"]
+ENTRYPOINT ["./run_primes.sh"]

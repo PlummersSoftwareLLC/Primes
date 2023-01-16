@@ -66,7 +66,7 @@ function validate_results(sequence this)
     return count_primes(this) = expected_count
 end function
 
-procedure print_results(sequence this, atom show_results, atom duration, integer passes)
+procedure print_results(sequence this, integer show_results, atom duration, integer passes)
     printf(
         STDOUT,
         "Passes: %d, Time: %.8f, Avg: %.8f, Limit: %d, Count: %d, Valid: %s\n",
@@ -90,7 +90,7 @@ procedure main()
     atom start = time()
     integer n = 1_000_000
     integer passes = 0
-    atom show_results = FALSE
+    integer show_results = FALSE
     sequence sieve
     atom duration
     while 1 do
