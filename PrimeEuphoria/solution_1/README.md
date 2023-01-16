@@ -33,7 +33,7 @@ Passes: 400, Time: 5.01, Avg: 0.01252500, Limit: 1000000, Count: 78498, Valid: t
 
 rzuckerm;400;5.01;1;algorithm=base,faithful=yes
 
-Passes: 158, Time: 5.00, Avg: 0.03164557, Limit: 1000000, Count: 78498, Valid: true
+Passes: 1409, Time: 5.00, Avg: 0.00354862, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;158;5.00;1;algorithm=base,faithful=yes,bits=1
+rzuckerm;1409;5.00;1;algorithm=base,faithful=yes,bits=1
 ```
