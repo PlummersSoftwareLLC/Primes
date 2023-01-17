@@ -11,9 +11,10 @@ This implementation is almost identical to [Euphoria solution 1](../../PrimeEuph
 [Euphoria](https://en.wikipedia.org/wiki/Euphoria_(programming_language)). The performance
 of the `integer` sieve solution is about 2.4 times faster in Phix, but the 1-bit sieve
 solution is about 6.7 times slower. There are a number of problems with Phix.
-The interpreter needs to be run through `ld-linux-x86-64.so` or it crashes with a SEGFAULT.
-The compiler (which I hoped would greatly improve performance) crashes with a SEGFAULT
-regardless of whether it runs through `ld-linux-x86-64.so` or not.
+The interpreter and compiler need to be run through `ld-linux-x86-64.so`, or it crashes with
+a SEGFAULT. The executable that the compiler produces also needs to be run through
+`ld-linux-x86-64.so`. Sadly, the compiled executable was not significantly faster
+than the interpreted version.
 
 ## Run instructions
 
@@ -35,12 +36,11 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 953, Time: 5.00248559, Avg: 0.00524920, Limit: 1000000, Count: 78498, Valid: true
+Passes: 976, Time: 5.00290729, Avg: 0.00512593, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;953;5.00248559;1;algorithm=base,faithful=yes
+rzuckerm;976;5.00290729;1;algorithm=base,faithful=yes
 
-Passes: 209, Time: 5.02, Avg: 0.02401389, Limit: 1000000, Count: 78498, Valid: true
+Passes: 216, Time: 5.01057405, Avg: 0.02319710, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;209;5.02;1;algorithm=base,faithful=yes,bits=1
+rzuckerm;216;5.01057405;1;algorithm=base,faithful=yes,bits=1
 ```
-

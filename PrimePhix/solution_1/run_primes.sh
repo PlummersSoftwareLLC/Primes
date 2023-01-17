@@ -1,7 +1,7 @@
 #!/bin/bash
-for script in primes.ex primes_bit.ex
+for script in primes primes_bit
 do
-    p "${script}"
+    p_exec "./${script}"
     echo ""
 done
 
