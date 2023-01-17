@@ -3,6 +3,9 @@ constant STDOUT = 1
 constant TRUE = 1
 constant FALSE = 0
 
+without type_check
+with inline
+
 -- Phix have bit shift operations, but they are slow, so need to have a bit table for speed --
 sequence BITS_TABLE = {
     0x0000_0001,

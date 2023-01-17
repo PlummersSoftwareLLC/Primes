@@ -3,6 +3,8 @@ constant STDOUT = 1
 constant TRUE = 1
 constant FALSE = 0
 
+without type_check
+
 function run_sieve(integer sieve_size)
     integer num_bits = floor((sieve_size - 1) / 2)
     sequence sieve = repeat(TRUE, num_bits)

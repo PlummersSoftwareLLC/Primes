@@ -36,11 +36,11 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 976, Time: 5.00290729, Avg: 0.00512593, Limit: 1000000, Count: 78498, Valid: true
+Passes: 1006, Time: 5.00226523, Avg: 0.00497243, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;976;5.00290729;1;algorithm=base,faithful=yes
+rzuckerm;1006;5.00226523;1;algorithm=base,faithful=yes
 
-Passes: 216, Time: 5.01057405, Avg: 0.02319710, Limit: 1000000, Count: 78498, Valid: true
+Passes: 210, Time: 5.00272310, Avg: 0.02382249, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;216;5.01057405;1;algorithm=base,faithful=yes,bits=1
+rzuckerm;210;5.00272310;1;algorithm=base,faithful=yes,bits=1
 ```
