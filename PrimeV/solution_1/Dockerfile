@@ -1,20 +1,11 @@
-FROM alpine:3.16 AS build
-
-ENV V_VER="weekly.2022.46"
-
-RUN apk update && apk add --no-cache build-base bash git
-
-WORKDIR /opt/vlang
-RUN git clone https://github.com/vlang/v /opt/vlang && git checkout "${V_VER}" && make
-
-ENV PATH=/opt/vlang:$PATH
+FROM thevlang/vlang:alpine-dev AS build
 
 WORKDIR /opt/app
 COPY *.v .
 
 RUN v -prod primes.v
 
-FROM alpine:3.16
+FROM thevlang/vlang:alpine
 
 COPY --from=build /opt/app/primes /usr/local/bin/primes
 
