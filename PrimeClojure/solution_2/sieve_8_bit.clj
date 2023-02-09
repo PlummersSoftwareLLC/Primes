@@ -5,25 +5,22 @@
   is faster than my 1-bit version when run on Linux."
   (:import [java.time Instant Duration]))
 
-
 ;; Disable overflow checks on mathematical ops and warn when compiler is unable
 ;; to optimise correctly.
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
 
+(alter-var-root #'clojure.core/*compiler-options*
+                assoc :direct-linking true)
 
 (defmacro << [n shift]
    `(bit-shift-left ~n ~shift))
 
-
 (defmacro >> [n shift]
   `(unsigned-bit-shift-right ~n ~shift))
 
-
-;; NOTE: may not make a difference.
 (defmacro sqr [n]
   `(unchecked-multiply-int ~n ~n))
-
 
 (defn sieve
   "This returns a boolean-array where the index of each false bit is the prime
@@ -46,7 +43,6 @@
         (recur (+ 2 factor))))
     sieve))
 
-
 (defn sieve->primes
   "Function to convert the sieve output to a usable/printable list of primes."
   [^booleans sieve]
@@ -58,7 +54,6 @@
           (conj! out (inc (<< idx 1))))
         (recur (inc idx))))
     (persistent! out)))
-
 
 (def prev-results
   "Previous results to check against sieve results."
@@ -72,7 +67,6 @@
    100000000   5761455
    1000000000  50847534
    10000000000 455052511})
-
 
 (defn benchmark
   "Benchmark Sieve of Eratosthenes algorithm."
@@ -96,11 +90,9 @@
              :count  num-primes
              :valid? (= num-primes (prev-results limit))}))))))
 
-
 ;; Reenable overflow checks on mathematical ops and turn off warnings.
 (set! *warn-on-reflection* false)
 (set! *unchecked-math* false)
-
 
 (defn format-results
   "Format benchmark results into expected output."
@@ -115,7 +107,6 @@
          "Valid: " (if valid? "True" "False")
          "\n"
          "axvr_clj_8-bit;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=8")))
-
 
 (defn run [& _]
   (println (format-results (benchmark)))

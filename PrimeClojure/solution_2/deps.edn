@@ -1,2 +1,2 @@
 {:paths ["."]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
+ :deps {org.clojure/clojure {:mvn/version "1.12.0-alpha1"}}}

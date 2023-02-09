@@ -19,8 +19,6 @@ variant.  The 8-bit variant is roughly twice as fast as the 1-bit variant.
 2. Install the [Clojure CLI tools](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
 3. Run with `./run.sh`
 
-(Warm-up is enabled by default for the 8-bit variant.)
-
 
 ## Output
 

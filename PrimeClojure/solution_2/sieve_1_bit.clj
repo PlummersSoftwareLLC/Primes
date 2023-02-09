@@ -1,66 +1,79 @@
 (ns sieve-1-bit
   "Clojure implementation of Sieve of Eratosthenes by Alex Vear (axvr)
 
-  This implementation is fast and faithful to Dave's original implementation,
-  when run on Linux it is slower than my 8-bit version (for some reason)."
-  (:import [java.time Instant Duration]
-           java.util.BitSet))
-
+  This implementation is fast and faithful to Dave's original implementation."
+  (:import [java.time Instant Duration]))
 
 ;; Disable overflow checks on mathematical ops and warn when compiler is unable
 ;; to optimise correctly.
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* :warn-on-boxed)
 
+(alter-var-root #'clojure.core/*compiler-options* assoc :direct-linking true)
 
 (defmacro << [n shift]
    `(bit-shift-left ~n ~shift))
 
-
 (defmacro >> [n shift]
   `(unsigned-bit-shift-right ~n ~shift))
 
-
-;; NOTE: may not make a difference.
 (defmacro sqr [n]
-  `(unchecked-multiply-int ~n ~n))
+  `(unchecked-multiply ~n ~n))
 
+(defmacro ++ [n]
+  `(unchecked-inc ~n))
+
+(def ^:const width Long/SIZE)
+(def ^:const shift 6)
+(def ^:const hshift (++ shift))
+
+(defmacro abget
+  "Get a bit in long-array."
+  [array idx]
+  `(let [slot# (>> ~idx shift)
+         bit#  (- ~idx (<< slot# shift))]
+     (bit-test (aget ~array slot#) bit#)))
+
+(defmacro abset
+  "Set a bit in long-array."
+  [array idx]
+  `(let [slot# (>> ~idx shift)
+         bit#  (- ~idx (<< slot# shift))
+         val#  (aget ~array slot#)]
+     (when (false? (bit-test val# bit#))
+       (aset ~array slot# ^Long (bit-set val# bit#)))))
 
 (defn sieve
-  "This returns a java.util.BitSet object where the index of each true bit is
-  the prime number (+ 1 (* 2 index)).  Despite this being unidiomatic, the
-  result of this function can be used by the benchmark without needing to
-  convert it into a proper list of primes. [1]
+  "This returns a long-array where the index of each false bit is the prime
+  number (+ 1 (* 2 index)).  Despite this being unidiomatic, the result of this
+  function can be used by the benchmark without needing to convert it into
+  a proper list of primes. [1]
 
   [1]: <https://github.com/PlummersSoftwareLLC/Primes/discussions/794>"
   [^long limit]
-  (let [q (inc (int (Math/sqrt limit)))
-        sieve (BitSet. (>> limit 1))]
-    (loop [factor (int 3)]
+  (let [q (long (inc (Math/sqrt limit)))
+        ^longs sieve (long-array (inc (>> limit hshift)))]
+    (loop [factor 3]
       (when (< factor q)
-        (when-not (.get sieve (>> factor 1))
+        (when-not (abget sieve (>> factor 1))
           (let [factor*2 (<< factor 1)]
             (loop [num (sqr factor)]
               (when (< num limit)
-                (.set sieve (>> num 1))
+                (abset sieve (>> num 1))
                 (recur (+ factor*2 num))))))
         (recur (+ 2 factor))))
-    (.flip sieve 0 (.length sieve))
     sieve))
-
 
 (defn sieve->primes
   "Function to convert the sieve output to a usable/printable list of primes."
-  [^BitSet sieve]
-  (let [out (transient [2])
-        size (.length sieve)]
-    (loop [idx (int 1)]
-      (when (pos? idx)
-        (when (.get sieve idx)
-          (conj! out (inc (<< idx 1))))
-        (recur (.nextSetBit sieve (inc idx)))))
+  [^longs sieve ^long limit]
+  (let [out  (transient [2])]
+    (loop [idx 3]
+      (when (< idx limit)
+        (when-not (abget sieve (>> idx 1))
+          (conj! out idx))
+        (recur (+ 2 idx))))
     (persistent! out)))
-
 
 (def prev-results
   "Previous results to check against sieve results."
@@ -75,7 +88,6 @@
    1000000000  50847534
    10000000000 455052511})
 
-
 (defn benchmark
   "Benchmark Sieve of Eratosthenes algorithm."
   []
@@ -83,24 +95,24 @@
         start-time (Instant/now)
         end-by     (+ (.toEpochMilli start-time) 5000)]
     (loop [pass 1]
-      (let [^BitSet sieve (sieve limit)
-            cur-time      (System/currentTimeMillis)]
+      (let [sieve    (sieve limit)
+            cur-time (System/currentTimeMillis)]
         (if (<= cur-time end-by)
           (recur (inc pass))
           ;; Return benchmark report.
-          (let [finished-at (Instant/now)]
-            {:primes (sieve->primes sieve)  ; Construct a printable version of sieve result.
+          (let [finished-at (Instant/now)
+                primes      (sieve->primes sieve limit)
+                num-primes  (count primes)]
+            {:primes primes
              :passes pass
              :limit  limit
              :time   (Duration/between start-time finished-at)
-             :count  (.cardinality sieve)
-             :valid? (= (.cardinality sieve) (prev-results limit))}))))))
-
+             :count  num-primes
+             :valid? (= num-primes (prev-results limit))}))))))
 
 ;; Reenable overflow checks on mathematical ops and turn off warnings.
 (set! *warn-on-reflection* false)
 (set! *unchecked-math* false)
-
 
 (defn format-results
   "Format benchmark results into expected output."
@@ -115,7 +127,6 @@
          "Valid: " (if valid? "True" "False")
          "\n"
          "axvr_clj_1-bit;" passes ";" timef ";1;algorithm=base,faithful=yes,bits=1")))
-
 
 (defn run [& _]
   (println (format-results (benchmark)))
