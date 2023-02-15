@@ -19,10 +19,10 @@ _Finally_, of particular note (especially after the latest episode of Dave's Gar
 
 This solution is designed to run with PHP 8.2 or later. You will need The opcache module enabled and its JIT switched on for best results.
 
-```bash
+```
 cd path/to/sieve
 ```
-```php
+```
 php prime.php [--once] [--print] [--size=sieveSize]
 ```
 
@@ -40,12 +40,12 @@ Unit tests exist for and pass for sieve sizes 10 thru 100,000,000, with sizes 10
 
 First install Unit Test dependancies:
 
- ```bash
+ ```
  cd path/to/sieve
  composer install
  ```
  Then run tests:
- ```php
+ ```
  vendor/bin/phpunit --testdox tests
  ```
  
