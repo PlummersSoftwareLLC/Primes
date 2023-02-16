@@ -13,8 +13,6 @@ The prime count storage utilises bitwise operations, as with many other high per
 
 This solution instead runs a series of ints as storage for every 100 units, storing the whole lot in an array. 
 
-_Finally_, of particular note (especially after the latest episode of Dave's Garage) is the core algorithm in this solution is heavily influenced and aided by ChatGPT, which assisted over many iterations of trial and error in producing a workable solution. In the spirit of that video's key frame - it really did help '10x' my solution!
-
 ### Running with PHP
 
 This solution is designed to run with PHP 8.2 or later. You will need The opcache module enabled and its JIT switched on for best results.
