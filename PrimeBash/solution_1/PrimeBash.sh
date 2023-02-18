@@ -90,20 +90,16 @@ function runSieve {
 }
 
 function printResults {
-	local showresults dur_nano avg_dur_nano dur_str avg_dur_str passes count valid
+	local showresults dur_usec avg_dur_usec dur_str avg_dur_str passes count valid
 	showresults="$1"
-	dur_nano="$2"
+	dur_usec="$2"
 	passes="$3"
-	# create duration strings from nanosecond duration time
-	avg_dur_nano=$((dur_nano/passes))
-	dur_str="$(printf "%d.%09d"\
-		"$((dur_nano/1000000000))"\
-		"$((dur_nano%1000000000))"\
-	)"
-	avg_dur_str="$(printf "%d.%09d"\
-		"$((avg_dur_nano/1000000000))"\
-		"$((avg_dur_nano%1000000000))"\
-	)"
+	# create duration strings from millisecond duration time
+	avg_dur_usec=$[dur_usec/passes]
+	printf -v dur_str "%d.%06d" \
+		"$[dur_usec/1000000]" "$[dur_usec%1000000]"
+	printf -v avg_dur_str "%d.%06d" \
+		"$[avg_dur_usec/1000000]" "$[avg_dur_usec%1000000]"
 	# create validity string
 	if validateResults "$(countPrimes)"; then
 		valid="True"
@@ -140,30 +136,28 @@ function printResults {
 
 function main {
 	export LC_ALL=C
-	local passes=0 sleepPid tStart tRun
+	local passes=0 tStart tStop tNow tRun
 
 	# Keep /dev/null handle open so we don't pay for opening it later
 	exec 3>/dev/null
 
 	initGlobals "1000000"
 
-	# Spawning subshells is expensive so run a background task which we can
-	# probe for liveness to determine when time is up.
-	local sleepPid
-	sleep "$RUNTIME_SEC" &
-	sleepPid=$!
+	tStart="${EPOCHREALTIME/.}"
+	# we are working in microseconds (10^6)
+	tStop="$[tStart + RUNTIME_SEC*1000000]"
 
-	# we are working in nanoseconds (10^9)
-	tStart=$(date +%s%N)
-
-	while kill -0 "$sleepPid" 2>&3; do
+	tNow="${EPOCHREALTIME/.}"
+	while [ $tNow -lt $tStop ]
+	do
 		emptyBitArray
 		runSieve
 		((++passes))
+		tNow="${EPOCHREALTIME/.}"
 	done
 
 	# calculate real runtime
-	tRun=$(($(date +%s%N) - tStart))
+	tRun=$[tNow - tStart]
 
 	printResults "0" "$tRun" "$passes"
 }
