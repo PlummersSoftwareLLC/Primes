@@ -1,15 +1,28 @@
 <?php declare(strict_types=1);
 
+define('BITS_PER_BYTE', 8);
+define('BITS_PER_INT', (BITS_PER_BYTE * PHP_INT_SIZE) - 1);
+
+function getPreparedResults(int $size): ?array
+{
+    $file = __DIR__."/tests/expected/$size.txt";
+    if (! file_exists($file))
+        return null;
+    return explode(',', file_get_contents($file));
+}
+
 class PrimeSieve implements Countable
 {
-    private array $rawbits;
+    private array $sieve;
 
-    private readonly int $rbs;
-
+    private readonly int $int_count;
+    private readonly int $half_n;
+    
     public function __construct(private readonly int $sieveSize)
     {
-        $this->rbs = (int)(($sieveSize + 1) / 100);
-        $this->rawbits = array_fill(0, $this->rbs, 0);
+        $this->half_n = (int)(($sieveSize + 1) >> 1);
+        $this->int_count = (int)(($sieveSize + 1) / BITS_PER_INT) + 1;
+        $this->sieve = array_fill(0, $this->int_count, 0);
     }
 
     public function __tostring(): string 
@@ -19,28 +32,39 @@ class PrimeSieve implements Countable
     
     public function primes(): array 
     {
-        $indexes = [];
-        for ($i = 3; $i <= $this->sieveSize; $i += 2) {
-            if (! $this->isComposite($i))
-                $indexes[] = $i;
+        $primes = [];
+        for ($i = 1; $i < $this->sieveSize; $i++)
+        {
+            if ($i % 2) 
+            {
+                $sieveIndex = (int)($i >> 1);
+                $byteIndex = (int)($sieveIndex / BITS_PER_INT);
+                $bitIndex = $sieveIndex % BITS_PER_INT;
+                if (! ($this->sieve[$byteIndex] & (1 << $bitIndex)))
+                    $primes[] = $i;
+            }
         }
-        return $indexes;
+        return $primes;
     }
 
     private function isComposite(int $n): bool
     {
-        if ($n <= 1) return true;
-        if ($n <= 3) return false;
-        if ($n % 2 == 0 || $n % 3 == 0) return true;
+        if ($n <= 1) {
+            return true;
+        }
 
-        $i = 5;
-        $w = 2;
+        if ($n == 2 || $n == 3) {
+            return false;
+        }
 
-        while ($i * $i <= $n) {
-            if ($n % $i == 0) return true;
+        $i = 3;
+        $sqrt = (int)sqrt($n);
 
-            $i += $w;
-            $w = 6 - $w;
+        while ($i <= $sqrt) {
+            if ($n % $i == 0) {
+                return true;
+            }
+            $i += 2;
         }
 
         return false;
@@ -50,16 +74,30 @@ class PrimeSieve implements Countable
     {
         $factor = 3;
         $q = sqrt($this->sieveSize);
-    
-        while ($factor <= $q) 
+        $intIdx = 0;
+        $nextEnd = BITS_PER_INT-1;
+        while ($factor <= $q)
         {
-            if (! $this->isComposite($factor)) {
+            if (! $this->isComposite($factor))
+            {
                 $start = (int)($factor * $factor / 2);
-                for ($i = $start; $i < $this->rbs; $i += $factor)
-                    $this->rawbits[$i] |= 1 << ($factor % 100);
+                $iiIdx = $intIdx;
+                $iiEnd = $nextEnd;
+                for ($i = $start; $i < $this->half_n; $i += $factor) 
+                {
+                    while ($iiEnd < $i) {
+                        $iiIdx++;
+                        $iiEnd += BITS_PER_INT;
+                    }
+                    $this->sieve[$iiIdx] |= 1 << ($i % BITS_PER_INT);
+                }
             }
 
             $factor += 2;
+            if ($factor > $nextEnd) {
+                $intIdx++;
+                $nextEnd += BITS_PER_INT;
+            }
         }
     }
 
@@ -70,13 +108,9 @@ class PrimeSieve implements Countable
 
     public function count(): int 
     { 
-        $sum = 1;
-        for ($i = 3; $i <= $this->sieveSize; $i += 2) {
-            if (! $this->isComposite($i))
-                $sum++;
-        }
-        return $sum;
+        return count($this->primes());
     }
+    
     
     private const primeCounts = [
         10 => 4, 

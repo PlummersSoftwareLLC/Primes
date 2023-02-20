@@ -2,16 +2,14 @@
 
 
 [![Minimum PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.2-yellow)](https://php.net/)
-![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-other-yellow)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-red)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-yellowgreen)
 
-This solution attempts to boost the performance out of PHP significantly, by using anything that will allow the interpreter and the Opcache JIT to precompile where possible. 
+This solution is in-effective but was a worthwhile test.
 
-The prime count storage utilises bitwise operations, as with many other high performance solutions for other languages. However, PHP has a limitation with regard to its type handling, and the maximum size it can allocate for a single integer. And so in my experiments simply replacing an array of bools with a singular int will only output the correct count for a sieve of 100 or 10. 
-
-This solution instead runs a series of ints as storage for every 100 units, storing the whole lot in an array. 
+The fixed algorithm is functional but impractical for speed.
 
 ### Running with PHP
 
@@ -47,25 +45,4 @@ First install Unit Test dependancies:
  vendor/bin/phpunit --testdox tests
  ```
  
-### Benchmarks / Performance
-
-Personal computer:
-
- - Apple M1 Max (ARM64) 64-bit
- - PHP: 8.2.2
- - Opcache: enabled
- - Opcache JIT: enabled
-
-#### Sieve 100,000
-sqonk;416899;5.00;1;algorithm=base,faithful=yes,bits=1
-
-#### Sieve 1,000,000
- sqonk;47706;5.00;1;algorithm=base,faithful=yes,bits=1
- 
-#### Sieve 10,000,000
- sqonk;4200;5.00;1;algorithm=base,faithful=yes,bits=1
- 
- 
-#### Solution_1 Sieve of 1,000,000
-DennisdeBest;1169;5.011909;1;algorithm=base,faithful=yes,bits=8
 
