@@ -46,7 +46,7 @@ function main(array $args): void
 
     // Following 2 lines added by rbergen to conform to drag race output format
     echo PHP_EOL, PHP_EOL;
-    echo "sqonk;$passes;$dstr;1;algorithm=base,faithful=yes,bits=1", PHP_EOL;
+    echo "sqonk;$passes;$dstr;1;algorithm=other,faithful=no,bits=1", PHP_EOL;
 }
 
 
