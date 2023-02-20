@@ -42,6 +42,21 @@ function main(array $args): void
     $avg = number_format($duration / $passes, 2);
     $dstr = number_format($duration, 2);
     $valid = $sieve->valid() ? 'True' : 'False';
+    if ($valid == 'False') 
+    {
+        $expected = getPreparedResults($size);
+        if ($expected)
+        {
+            $actual = $sieve->primes();
+            $missing = array_diff($expected, $actual);
+            if (count($missing) > 0)
+                echo "## MISSING: The following primes are missing from the sieve: ", implode(',', $missing), PHP_EOL;
+        
+            $falsePrimes = array_diff($actual, $expected);
+            if (count($falsePrimes) > 0)
+                echo "## INCORRECT PRIMES: The following numbers were miscalculated as primes: ", implode(',', $falsePrimes), PHP_EOL;
+        }
+    }
     echo "Passes: $passes, Time: {$dstr}, Avg: $avg, Limit: $size, Count: $count, Valid: $valid", PHP_EOL;
 
     // Following 2 lines added by rbergen to conform to drag race output format
