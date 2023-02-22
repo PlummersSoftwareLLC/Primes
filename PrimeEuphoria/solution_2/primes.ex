@@ -53,7 +53,7 @@ procedure print_results(sequence primes, integer sieve_size, integer show_result
     )
     printf(
         STDOUT,
-        "\nrzuckerm-builtin;%d;%.2f;1;algorithm=unknown,faithful=no\n",
+        "\nrzuckerm-builtin;%d;%.2f;1;algorithm=other,faithful=no\n",
         {passes, duration}
     )
 end procedure
