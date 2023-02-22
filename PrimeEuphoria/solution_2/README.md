@@ -27,3 +27,6 @@ You should only need to do this once. Run the docker image:
 On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 10 desktop running
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
+Passes: 74257, Time: 5.00, Avg: 0.00006733, Limit: 1000000, Count: 78498, Valid: true
+
+rzuckerm-builtin;74257;5.00;1;algorithm=unknown,faithful=no
