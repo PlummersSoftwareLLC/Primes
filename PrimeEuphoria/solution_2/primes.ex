@@ -7,7 +7,6 @@ constant TRUE = 1
 constant FALSE = 0
 
 function count_primes(sequence primes, integer show_results=FALSE)
-    integer count = length(primes)
     integer n = length(primes)
     if show_results = TRUE
     then
@@ -26,7 +25,7 @@ function count_primes(sequence primes, integer show_results=FALSE)
 end function
 
 function validate_results(sequence primes, integer sieve_size)
-    -- Cannot support sieve size greater than 1 billion --
+    -- Cannot support sieve size greater than 1 million --
     integer expected_count = -1
     switch sieve_size
     do
@@ -36,9 +35,6 @@ function validate_results(sequence primes, integer sieve_size)
         case 10_000 then expected_count = 1229
         case 100_000 then expected_count = 9592
         case 1_000_000 then expected_count = 78498
-        case 10_000_000 then expected_count = 664579
-        case 100_000_000 then expected_count = 5761455
-        case 1_000_000_000 then expected_count = 50847534
         case else printf(STDOUT, "Invalid sieve size\n")
     end switch
 
