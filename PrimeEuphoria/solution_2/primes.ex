@@ -41,7 +41,7 @@ function validate_results(sequence primes, integer sieve_size)
     return count_primes(primes) = expected_count
 end function
 
-procedure print_results(sequence primes, integer seive_size, integer show_results, atom duration, integer passes)
+procedure print_results(sequence primes, integer sieve_size, integer show_results, atom duration, integer passes)
     -- Euphoria seems to only provide time in 1/100th of a second --
     printf(
         STDOUT,
@@ -50,9 +50,9 @@ procedure print_results(sequence primes, integer seive_size, integer show_result
             passes,
             duration,
             duration / passes,
-            seive_size,
+            sieve_size,
             count_primes(primes, show_results),
-            iff(validate_results(primes, seive_size), "true", "false")
+            iff(validate_results(primes, sieve_size), "true", "false")
         }
     )
     printf(
