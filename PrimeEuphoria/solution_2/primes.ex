@@ -17,10 +17,6 @@ function count_primes(sequence primes, integer show_results=FALSE)
         printf(STDOUT, "\n")
     end if
 
-    if show_results = TRUE
-    then
-    end if
-
     return n
 end function
 
