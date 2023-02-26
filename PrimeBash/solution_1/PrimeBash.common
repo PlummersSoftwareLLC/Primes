@@ -73,11 +73,11 @@ function printResults {
 	local name="$4"
 
 	# create duration strings from millisecond duration time
-	avg_dur_usec=$[dur_usec/passes]
+	avg_dur_usec=$((dur_usec/passes))
 	printf -v dur_str "%d.%06d" \
-		"$[dur_usec/1000000]" "$[dur_usec%1000000]"
+		$((dur_usec/1000000)) $((dur_usec%1000000))
 	printf -v avg_dur_str "%d.%06d" \
-		"$[avg_dur_usec/1000000]" "$[avg_dur_usec%1000000]"
+		$((avg_dur_usec/1000000)) $((avg_dur_usec%1000000))
 
 	# create validity string
 	if validateResults "$(countPrimes)"; then
@@ -113,28 +113,30 @@ function printResults {
 
 function main {
 	export LC_ALL=C
-	local passes=0 tStart tStop tNow tRun name="$1"
+	local passes=0 tStart tRun name="$1"
 
 	# Keep /dev/null handle open so we don't pay for opening it later
 	exec 3>/dev/null
 
 	initGlobals "1000000"
 
-	tStart="${EPOCHREALTIME/.}"
-	# we are working in microseconds (10^6)
-	tStop="$[tStart + RUNTIME_SEC*1000000]"
+	# Spawning subshells is expensive so run a background task which we can
+	# probe for liveness to determine when time is up.
+	local sleepPid
+	read -rt "$RUNTIME_SEC" <> <(:) & # pure bash sleep
+	sleepPid=$!
 
-	tNow="${EPOCHREALTIME/.}"
-	while [ $tNow -lt $tStop ]
-	do
+	# we are working in microseconds (10^6)
+	tStart="${EPOCHREALTIME/.}"
+
+	while kill -0 "$sleepPid" 2>&3; do
 		emptyBitArray
 		runSieve
 		((++passes))
-		tNow="${EPOCHREALTIME/.}"
 	done
 
 	# calculate real runtime
-	tRun=$[tNow - tStart]
+	tRun=$((${EPOCHREALTIME/.} - tStart))
 	#printf 'Done in %d.%06d seconds. Validating...\n' "$[tRun/1000000]" "$[tRun%1000000]"
 
 	printResults "0" "$tRun" "$passes" "$name"
