@@ -137,7 +137,6 @@ function main {
 
 	# calculate real runtime
 	tRun=$((${EPOCHREALTIME/.} - tStart))
-	#printf 'Done in %d.%06d seconds. Validating...\n' "$[tRun/1000000]" "$[tRun%1000000]"
 
 	printResults "0" "$tRun" "$passes" "$name"
 }
