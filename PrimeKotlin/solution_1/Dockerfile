@@ -9,8 +9,9 @@ WORKDIR /src
 COPY . .
 RUN ./compile.sh
 # Ensure that nativeExecutable product exists for Docker build to complete successfully, despite not being used in ARM Linux
-RUN mkdir -p /src/build/bin/native/releaseExecutable
-RUN touch /src/build/bin/native/releaseExecutable/PrimeSieve.kexe
+RUN ./compile.sh && \
+    mkdir -p /src/build/bin/native/releaseExecutable && \
+    touch /src/build/bin/native/releaseExecutable/PrimeSieve.kexe
 
 FROM eclipse-temurin:${JDK_VERSION}-jdk-jammy
 
