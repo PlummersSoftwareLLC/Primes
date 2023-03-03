@@ -98,7 +98,7 @@ Note that these benchmarks are out of sync with the most recent code revision.
 
 ### macOS
 
-Specs: 2021 MacBook Pro 16", M1 Pro 10/10/16, 32 GB 6400 MHz LPDDR5 RAM, macOS Ventura 13.2.1
+Specs: 2021 MacBook Pro 16", M1 Pro 10/16/16, 32 GB 6400 MHz LPDDR5 RAM, macOS Ventura 13.2.1
 
 Tests were run outside of Docker due to a lack of support for ARM64 Linux with Kotlin/Native.
 
