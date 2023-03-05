@@ -1,25 +1,27 @@
 import kotlinx.coroutines.*
+import kotlin.native.concurrent.AtomicInt
+import kotlin.native.concurrent.AtomicReference
 import kotlin.system.getTimeMillis
 
 actual fun getSystemTimeMillis() = getTimeMillis().toDouble()
-actual fun defaultCoresCount() = 6
+@OptIn(ExperimentalStdlibApi::class)
+actual fun defaultCoresCount() = Platform.getAvailableProcessors()
 actual fun getArgs() = arrayOf<String>()
 
 actual inline fun <reified T : PrimeSieve> benchmarkPrimeSieve(
     multithreaded: Boolean,
     crossinline newInstance: (Int) -> T
 ) {
-    runBlocking {
-        if (multithreaded) {
-            error("The Kotlin/Native Multithreading implementation is incomplete.")
-            /*val iterations = AtomicInt(0)
-            val lastIteration = AtomicReference(newInstance(PRIME_SIEVE_SIZE))
+    if (multithreaded) {
+        runBlocking(Dispatchers.Default) {
+            val iterations = AtomicInt(0)
+            val lastIteration = AtomicReference<T?>(null)
             val primeSieveJobs = ArrayList<Job>()
 
             repeat(CORES) {
                 primeSieveJobs += launch {
                     while (isActive) {
-                        /*lastIteration.value = */newInstance(PRIME_SIEVE_SIZE)
+                        lastIteration.value = newInstance(PRIME_SIEVE_SIZE)
                         iterations.increment()
                     }
                 }
@@ -27,15 +29,14 @@ actual inline fun <reified T : PrimeSieve> benchmarkPrimeSieve(
 
             delay(5000)
             primeSieveJobs.forEach { it.cancel() }
-
-            if (!lastIteration.value.isValid) error("Invalid Implementation")
+            if (!lastIteration.value!!.isValid) error("Invalid Implementation")
             IterationResult(
                 duration = 5000.0,
                 iterations = iterations.value,
-                result = lastIteration.value,
-            ).print("native", "multi")*/
-        } else {
-            runTest(newInstance).print("native", "single")
+                result = lastIteration.value!!,
+            ).print("native", "multi")
         }
+    } else {
+        runTest(newInstance).print("native", "single")
     }
 }

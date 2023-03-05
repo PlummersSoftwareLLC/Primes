@@ -1,5 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # gradle clean 
 gradle jvmMainClasses shadowJar
 gradle jsNodeProductionRun
-gradle linkReleaseExecutableNative
+# Building the Kotlin/Native executable on Linux ARM64 will fail;
+# Kotlin/Native does not support Linux for ARM64 platforms.
+if [[ "$(arch)" =~ "^arm*" ]]; then
+	gradle linkReleaseExecutableNative
+fi
