@@ -4,15 +4,17 @@ RUN apt-get update -qq \
     && apt-get install -y unzip wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && wget http://phix.x10.mx/phix.1.0.1.zip \
-    && wget http://phix.x10.mx/phix.1.0.1.1.zip \
-    && wget http://phix.x10.mx/phix.1.0.1.2.zip \
-    && wget http://phix.x10.mx/phix.1.0.1.3.zip \
+    && wget http://phix.x10.mx/phix.1.0.2.zip \
+    && wget http://phix.x10.mx/phix.1.0.2.1.zip \
+    && wget http://phix.x10.mx/phix.1.0.2.2.zip \
+    && wget http://phix.x10.mx/phix.1.0.2.3.zip \
+    && wget http://phix.x10.mx/phix.1.0.2.4.zip \
     && wget http://phix.x10.mx/p64 \
-    && unzip -o phix.1.0.1.zip -d /usr/local/phix \
-    && unzip -o phix.1.0.1.1.zip -d /usr/local/phix \
-    && unzip -o phix.1.0.1.2.zip -d /usr/local/phix \
-    && unzip -o phix.1.0.1.3.zip -d /usr/local/phix \
+    && unzip phix.1.0.2.zip -d /usr/local/phix \
+    && unzip phix.1.0.2.1.zip -d /usr/local/phix \
+    && unzip phix.1.0.2.2.zip -d /usr/local/phix \
+    && unzip phix.1.0.2.3.zip -d /usr/local/phix \
+    && unzip phix.1.0.2.4.zip -d /usr/local/phix \
     && mv p64 /usr/local/phix/p \
     && chmod +x /usr/local/phix/p \
     && rm -f phix*.zip \
