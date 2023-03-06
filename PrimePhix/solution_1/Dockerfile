@@ -18,9 +18,8 @@ RUN apt-get update -qq \
     && mv p64 /usr/local/phix/p \
     && chmod +x /usr/local/phix/p \
     && rm -f phix*.zip \
-    && printf '#!/bin/bash\n/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 /usr/local/phix/p "$@"\n' >/usr/local/bin/p \
-    && printf '#!/bin/bash\n/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 "$@"\n' >/usr/local/bin/p_exec \
-    && chmod +x /usr/local/bin/p /usr/local/bin/p_exec \
+    && printf '#!/bin/bash\n/usr/local/phix/p "$@"\n' >/usr/local/bin/p \
+    && chmod +x /usr/local/bin/p \
     && echo "" | p
 
 WORKDIR /opt/app
