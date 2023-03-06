@@ -10,11 +10,8 @@ This implementation is almost identical to [Euphoria solution 1](../../PrimeEuph
 [Phix](http://phix.x10.mx/) is a newer language based on
 [Euphoria](https://en.wikipedia.org/wiki/Euphoria_(programming_language)). The performance
 of the `integer` sieve solution is about 2.4 times faster in Phix, but the 1-bit sieve
-solution is about 6.7 times slower. There are a number of problems with Phix.
-The interpreter and compiler need to be run through `ld-linux-x86-64.so`, or it crashes with
-a SEGFAULT. The executable that the compiler produces also needs to be run through
-`ld-linux-x86-64.so`. Sadly, the compiled executable was not significantly faster
-than the interpreted version.
+solution is about 6.7 times slower. Sadly, the compiled executable was not significantly
+faster than the interpreted version.
 
 ## Run instructions
 
