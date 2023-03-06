@@ -1,7 +1,7 @@
 #!/bin/bash
 for script in primes primes_bit
 do
-    p_exec "./${script}"
+    "./${script}"
     echo ""
 done
 
