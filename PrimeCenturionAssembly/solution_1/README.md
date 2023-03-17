@@ -15,7 +15,7 @@ The Centurion minicomputer was built around the [CPU6 board](https://github.com/
 As it stands, there does not seem to be a comprehensive programmer's manual available for Centurion CPU6 assembly. The instruction set and the assembly syntax used in this solution have been deduced by combining the following sources:
 
 - [The EE200 documentation](https://github.com/Nakazoto/CenturionComputer/tree/main/Computer/EE200) referred to earlier.
-- [A wiki page](https://github.com/sjsoftware/centurion-cpu6/wiki/Centurion-CPU6-Instruction-Reference) written by [sjsoftware/gecho](https://github.com/sjsoftware). The page documents their efforts towards disassembling the CPU6 microcode to fully document the CPU's opcode behavior.
+- [A wiki page](https://github.com/sjsoftware/centurion-cpu6/wiki/Centurion-CPU6-Instruction-Reference) written by [sjsoftware/gecho](https://github.com/sjsoftware). The page covers their efforts towards disassembling the CPU6 microcode to fully document the CPU's opcode behavior.
 - The output of the CPL compiler. CPL is a language for which [a Primes solution is also available](../../PrimeCenturionPL/solution_1/).
 - Reverse engineering of XASSM, the Centurion assembler executable.
 
