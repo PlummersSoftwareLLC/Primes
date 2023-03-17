@@ -1,4 +1,4 @@
-# Centurion Programming Language solution by ren14500
+# Centurion assembly solution by ren14500
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
