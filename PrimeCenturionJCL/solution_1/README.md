@@ -20,3 +20,10 @@ Due to memory limitations that apply to JCL's execution environment on the Centu
 ## Run instructions
 
 This solution can be executed on an actual Centurion minicomputer, or a sufficiently complete emulator. A list of known emulators can be found on [the respective page](https://github.com/Nakazoto/CenturionComputer/wiki/Emulators-and-Simulations) on the aforementioned wiki.
+
+Use the following commands to edit and run the solution:
+
+```text
+S.CED SIEVE 0 CRT0
+SIEVE
+```

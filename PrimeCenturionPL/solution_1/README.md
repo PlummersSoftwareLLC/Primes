@@ -21,3 +21,11 @@ Due to memory limitations that apply to CPL's execution environment on the Centu
 ## Run instructions
 
 This solution can be compiled and executed on an actual Centurion minicomputer, or a sufficiently complete emulator. A list of known emulators can be found on [the respective page](https://github.com/Nakazoto/CenturionComputer/wiki/Emulators-and-Simulations) on Nakazoto's [CenturionComputer wiki](https://github.com/Nakazoto/CenturionComputer/wiki) on GitHub.
+
+Use the following commands to edit, compile and run the solution:
+
+```text
+S.CED ZSIEVE 0 CRT0
+P.CPL SIEVE 0 DUMMY X
+.RUN XSIEVE
+```

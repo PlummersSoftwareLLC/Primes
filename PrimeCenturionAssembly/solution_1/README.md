@@ -36,3 +36,13 @@ The maxmimum sieve size supported by the implementations is 65,535.
 ## Run instructions
 
 This solution's implementations can be assembled and executed on an actual Centurion minicomputer, or a sufficiently complete emulator. A list of known emulators can be found on [the respective page](https://github.com/Nakazoto/CenturionComputer/wiki/Emulators-and-Simulations) on Nakazoto's [CenturionComputer wiki](https://github.com/Nakazoto/CenturionComputer/wiki) on GitHub.
+
+Use the following commands to edit, assemble and run the solution:
+
+```text
+S.CED ZSIEVE 0 CRT0
+P.ASM SIEVE 0 DUMMY X
+.RUN XSIEVE
+```
+
+For the bare metal version, use the same commands to edit and compile, but don't use `.RUN` to run the program. Instead, one needs to reboot the (emulated) Centurion and run it from the bootloader - those instructions are in the top of the sieveb.asm file.
