@@ -5,6 +5,10 @@
 ; * The sieve size needs to be divisable by 16
 ; * The square root of the sieve size needs to be divisible by 8, or else rounded up to the nearest multiple of 8
 
+;====================================================
+; Main symbols
+;====================================================
+
 SIEVE_SIZE = 250000
 SIEVE_SQRT = 504                                ; Actual square root is 500, rounded up to multiple of 8
 
@@ -14,13 +18,12 @@ CNT_HIGH = $56
 
 BUF_BITS = SIEVE_SIZE / 2
 BUF_BYTES = BUF_BITS / 8
+BUF_LAST = BUF_BYTES - 1
 SQRT_BYTES = SIEVE_SQRT / 8
 
-BUF_START = $200
-BUF_LAST = BUF_BYTES - 1
-BUF_END = BUF_START + BUF_LAST
-
+;====================================================
 ; I/O defines
+;====================================================
 
 PORTB = $6000
 PORTA = $6001
@@ -34,7 +37,9 @@ BF = %10000000
 
 DISPLAY_WIDTH = 16
 
+;====================================================
 ; Zero page variables
+;====================================================
 
     .dsect
     .org $0000              ; .dsect defaults to this, just adding it for clarity
@@ -56,7 +61,16 @@ stringptr: .wrd             ; Pointer to current string to be printed.
 
     .dend
 
-; Program in ROM
+;====================================================
+; Main sieve buffer
+;====================================================
+
+buffer = $200
+buffer_end = buffer + BUF_LAST
+
+;====================================================
+; Program - ROM starts here
+;====================================================
 
     .org $8000
 
@@ -109,6 +123,7 @@ reset:
     ; Set display line to the second one. We'll show progress there.
     lda #1
     sta lcd_line
+    jsr line_start
     
     ; Show that we're clearing memory
     lda #"-"
@@ -122,9 +137,9 @@ reset:
     ;
 
     ; Set pointer to prime sieve buffer
-    lda #<BUF_START
+    lda #<buffer
     sta curptr
-    lda #>BUF_START
+    lda #>buffer
     sta curptr + 1
 
 .cnd_loop:
@@ -199,8 +214,9 @@ reset:
     ; Count bits in buffer
     jsr cnt_buf
 
-    ; Clear screen
-    lda #%00000001
+    lda #%00001100          ; Display on; cursor off; blink off
+    jsr lcd_instruction
+    lda #%00000001          ; Clear screen
     jsr lcd_instruction
 
     ; We write the "result valid" line first, but at the bottom line of the display.
@@ -259,7 +275,7 @@ reset:
     ; Convert count value to decimal string
     jsr count_to_string
 
-    ; Print the clock tick count
+    ; Print the primes count
     lda #<count_string
     sta stringptr
     lda #>count_string
@@ -279,9 +295,9 @@ reset:
 init_buf:
 
     ; Set pointer to buffer address
-    lda #<BUF_START
+    lda #<buffer
     sta curptr
-    lda #>BUF_START
+    lda #>buffer
     sta curptr + 1
 
     lda #<BUF_LAST
@@ -336,7 +352,7 @@ inc_ptrbit:
     rol curptr_bit          ; First, rotate the bit out of Carry into bit 0 of the pointer
 
     inc curptr              ; Increase pointer low byte
-    bne inc_ptrbit_end      ; If we didn't roll over to 0, we're done
+    bne .inc_ptrbit_end      ; If we didn't roll over to 0, we're done
 
     inc curptr + 1          ; Increase high byte of pointer
 
@@ -373,17 +389,18 @@ inc_fctr:
 
 ;====================================================
 ; Clear multiples of factor in the sieve buffer. This routine is not 
-; optimal from ar arithmatic perspective, in the sense that it clears
-; all uneven multiples of the factor. The most efficient approach would
-; be to start at factor * factor. However, with the 6502 not having a 
-; multiply instruction computing that would itself be almost as much work
+; optimal from an arithmatic perspective, in the sense that it clears
+; all odd multiples of the factor. The most efficient approach would
+; be to start at factor * factor. However, with the 65c02 not having a 
+; multiply instruction, computing that would itself be almost as much work
 ; as just starting from the beginning. As such, saving the few actual 
-; "clear bit" instructions would almost double the code of this routine.
+; "clear bit" instructions at runtime would almost double the code of this 
+; routine.
 ;
 ; In: 
 ;   curptr and curptr_bit: pointer to the factor bit in the sieve. The
-;                          clearing will start at the next (=first) multiple
-;                          from a sieve bit perspective.
+;                          clearing will start at the next (i.e. first) 
+;                          multiple from a sieve bit perspective.
 ;   fctr_byte and fctr_bitcnt: factor of which multiples must be cleared
 ; Uses: A, X, curptr and curptr_bit
 ;====================================================
@@ -414,17 +431,17 @@ clear_multiples:
     ; See if we've reached the end of our buffer. Start with the high byte
     ;   of the pointer.
     lda curptr + 1
-    cmp #>BUF_END
+    cmp #>buffer_end
     bcc .unset_curbit
     bne .unset_buf_end
 
     lda curptr
-    cmp #<BUF_END
+    cmp #<buffer_end
     bcc .unset_curbit
     bne .unset_buf_end
 
 .unset_curbit:
-    jsr unset_ptrbit        ; Clear the bit under the pointer
+    jsr clear_ptrbit        ; Clear the bit under the pointer
 
     ; Clear next multiple
     jmp clear_multiples
@@ -439,12 +456,12 @@ clear_multiples:
 ;   curptr and curptr_bit: pointer to sieve bit to be cleared
 ; Uses: A
 ;====================================================
-unset_ptrbit:
+clear_ptrbit:
     ; Load and invert bit part of pointer, to create a bit mask for the next step
     lda curptr_bit
     eor #$ff
 
-    ; Unset the correct bit in the byte at curptr by ANDing the mask with it
+    ; Clear the correct bit in the byte at curptr by ANDing the mask with it
     and (curptr)
     sta (curptr)
 
@@ -459,9 +476,9 @@ unset_ptrbit:
 ;====================================================
 cnt_buf:
     ; Make curptr point to start of buffer
-    lda #<BUF_START
+    lda #<buffer
     sta curptr
-    lda #>BUF_START
+    lda #>buffer
     sta curptr + 1
 
 .cnt_byteloop
@@ -488,11 +505,11 @@ cnt_buf:
 
 ; check if we're at the last buffer byte
 .cnt_chkend:
-    lda #<BUF_END
+    lda #<buffer_end
     cmp curptr
     bne .cnt_next
 
-    lda #>BUF_END
+    lda #>buffer_end
     cmp curptr + 1
     bne .cnt_next
 
@@ -579,10 +596,11 @@ count_to_string:
     rts
 
 ;====================================================
-; Print zero-terminate string to LCD
+; Print null-terminated string to LCD.
 ;
 ; In:
 ;   stringptr: pointer to string to write
+; Uses: A, Y
 ;====================================================
 print_string:
     ldy #0
@@ -600,7 +618,7 @@ print_string:
     rts
 
 ;====================================================
-; Wait until the LCD's busy flag is off
+; Wait until the LCD's busy flag is off.
 ;====================================================
 lcd_wait:
     pha                     ; Push A onto the stack
@@ -636,7 +654,7 @@ lcd_wait:
 clear_line:
     jsr line_start          ; Move to beginning of current line
 
-    ldx #16                 ; Number of spaces to put
+    ldx #DISPLAY_WIDTH      ; Number of spaces to put
 
 .space_loop:
     lda #" "
@@ -665,7 +683,7 @@ line_start:
     ora #%10000000          ; Instruction is to set DDRAM address
     
     ; Reset char space counter, as we'll be at the beginning of the line
-    ldx #16
+    ldx #DISPLAY_WIDTH
     stx lcd_charspace
 
 ; Note: line_start falls through into lcd_instruction!
@@ -694,8 +712,8 @@ lcd_instruction:
     rts
 
 ;====================================================
-; Print a character to the LCD. This routine keeps track of where we are on our current line, 
-; and clears it if we try to print beyond the end of it.
+; Print a character to the LCD. This routine keeps track of where we are on our 
+; current line, and clears it if we try to print beyond the end of it.
 ;
 ; In:
 ;   A: Character to print
@@ -739,7 +757,7 @@ send_char:
 ; String constants
 ;====================================================
 
-processing_label:   .string "Processing...   "
+processing_label:   .string "Processing..."
 count_label:        .string "Count: "
 valid_label:        .string "Valid: "
 yes_value:          .string "yes"

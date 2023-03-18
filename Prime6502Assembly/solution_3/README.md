@@ -6,7 +6,7 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Deviation](https://img.shields.io/badge/Deviation-sievesize-blue)
 
-This is a solution written in 65(c)02 assembly, targeting the Ben Eater breadboard 65c02 computer. That computer is the topic of [a series of videos](https://youtube.com/playlist?list=PLowKtXNTBypFbtuVMUVXNR0z1mu7dp7eH) on [Ben Eater's YouTube channel](https://www.youtube.com/@BenEater).
+This is a solution written in 65c02 assembly, targeting the Ben Eater breadboard 65c02 computer. That computer is the topic of [a series of videos](https://youtube.com/playlist?list=PLowKtXNTBypFbtuVMUVXNR0z1mu7dp7eH) on [Ben Eater's YouTube channel](https://www.youtube.com/@BenEater).
 
 ## Description
 
@@ -15,8 +15,9 @@ This is a solution written in 65(c)02 assembly, targeting the Ben Eater breadboa
 The following applies to the implementation embedded in this solution:
 
 - It runs a sieve of size 250,000 instead of 1,000,000. The reason is that the breadboard computer doesn't have enough RAM to hold more prime number candidates. (More actually it does, but half of its RAM is not used.)
-- It uses a bitmap to keep track of prime number candidates. The bitmap only contains entries for odd numbers. This means that the total sieve buffer is 400,000/2/8 = 25,000 bytes in size.
-- The implementation uses a pointer consisting of a 16-bit (low byte/high byte) memory address pointer, and a bit index. The current factor is kept in a byte value and a bit number. The actual factor can thus be calculated using 8 * &lt;byte value&gt; + &lt;bit number&gt;. 
+- It uses a bitmap to keep track of prime number candidates. The bitmap only contains entries for odd numbers. This means that the total sieve buffer is 250,000/2/8 = 15,625 bytes in size.
+- The implementation uses a pointer consisting of a 16-bit (low byte/high byte) memory address pointer, and a bit index. The current factor is kept in a byte value and a bit number. The actual factor can thus be calculated using 8 * &lt;byte value&gt; + &lt;bit number&gt;.
+- This solution uses a number of features that are only available on the 65c02, not on the original 6502. These include unindexed indirect zero page addressing, and branch always - although the latter via the assembler's respective optimization option.
 
 The first two points come with the consequence that some specific peculiarities apply:
 
@@ -26,7 +27,7 @@ The first two points come with the consequence that some specific peculiarities 
 
 ### Decimal conversion
 
-Aside from the actual sieve implementation, the source code includes a routine called `clock_to_string` to output the number of software clock ticks it took to run the sieve, in decimal format. This is not strictly necessary for the solution; a previous version printed the number of ticks in hex. The reason I included the conversion to decimal in the assembly code is that I think it's a wonderful demonstration of how non-trivial a "simple operation" like binary to decimal conversion is on a CPU like the 6502. The challenge largely lies in the fact that the 6502 does not include instructions to multiply or divide.
+Aside from the actual sieve implementation, the source code includes a routine called `count_to_string` to output the number of primes found, in decimal format. This is not strictly necessary for the solution; it would have been possible to only show if the result was valid. The reason I included the conversion to decimal in the assembly code is that I think it's a wonderful demonstration of how non-trivial a "simple operation" like binary to decimal conversion is on a CPU like the 65c02. The challenge largely lies in the fact that the 65c02 does not include instructions to multiply or divide.
 
 The routine in question is one of the pieces of code taken from the aforementioned [YouTube video series](https://youtube.com/playlist?list=PLowKtXNTBypFbtuVMUVXNR0z1mu7dp7eH).
 
@@ -41,7 +42,7 @@ The implementation shows progress indicators on the screen, as follows:
 The results of the sieve run are shown on the LCD. It consists of two lines:
 
 - A line reporting the number of primes identified during the run: `Count: nnnnn`
-- A line indicating if the prime count is valid: `Valid: Y` or `Valid: N`
+- A line indicating if the prime count is valid: `Valid: yes` or `Valid: no`
 
 Runtime is not reported, as the breadboard computer has no concept of time in its current configuration.
 
@@ -59,7 +60,6 @@ vasm6502_oldstyle -Fbin -dotdir -wdc02 -opt-branch primes.s
 This outputs a file called `a.out` that has to be flashed onto the breadboard computer's EEPROM. With the EEPROM installed back into the computer, the solution can be run by powering on the computer and pushing the reset button.
 
 ## Results
-On my system, on Windows 10, the following is shown when the parse command is executed:
-```
-rbergen-pet;1;63.2;1;algorithm=base,faithful=no,bits=1
-```
+
+On my breadboard computer, the following is shown when the program completes:
+![Results](results.jpg)
