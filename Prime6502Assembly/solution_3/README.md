@@ -23,7 +23,7 @@ The first two points come with the consequence that some specific peculiarities 
 
 - The sieve size (as specified using the `SIEVE_SIZE` symbol) needs to be divisable by 16.
 - The square root of the sieve size (as specifed using the `SIEVE_SQRT` symbol) needs to be divisible by 8, or else rounded up to the nearest multiple of 8.
-- The total memory available for the sieve buffer is 15,872 bytes (0x200 to 0x4000), which adds up to 126,976. That means the largest supported sieve size is 253,952.
+- The total memory available for the sieve buffer is 15,872 bytes (0x200 to 0x4000), which adds up to 126,976 bits. That means the largest supported sieve size is 253,952.
 
 ### Decimal conversion
 
