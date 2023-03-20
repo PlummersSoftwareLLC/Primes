@@ -14,7 +14,7 @@ This is a solution written in 65c02 assembly, targeting the Ben Eater breadboard
 
 The following applies to the implementation embedded in this solution:
 
-- It runs a sieve of size 250,000 instead of 1,000,000. The reason is that the breadboard computer doesn't have enough RAM to hold more prime number candidates. (More actually it does, but half of its RAM is not used.)
+- It runs a sieve of size 250,000 instead of 1,000,000. The reason is that the breadboard computer doesn't have enough RAM to hold more prime number candidates. (More accurately stated: it does, but half of its RAM is not used.)
 - It uses a bitmap to keep track of prime number candidates. The bitmap only contains entries for odd numbers. This means that the total sieve buffer is 250,000/2/8 = 15,625 bytes in size.
 - The implementation uses a pointer consisting of a 16-bit (low byte/high byte) memory address pointer, and a bit index. The current factor is kept in a byte value and a bit number. The actual factor can thus be calculated using 8 * &lt;byte value&gt; + &lt;bit number&gt;.
 - This solution uses a number of features that are only available on the 65c02, not on the original 6502. These include unindexed indirect zero page addressing, and branch always - although the latter via the assembler's respective optimization option.
