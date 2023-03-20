@@ -52,7 +52,7 @@ curptr_bit: .byt            ; Bit part of current prime candidate pointer. Initi
 cndptr: .wrd                ; Address part of last found unset prime candidate pointer.
 cndptr_bit: .byt            ; Bit part of last found unset prime candidate pointer.
 lcd_line: .byt              ; LCD line we're printing to, either 0 or 1. Initialized to 00 at startup.
-lcd_charspace: .byt         ; Number of characters left on current LCD line. Initialized to 16 at startup.
+lcd_charspace: .byt         ; Number of characters left on current LCD line. Initialized to 17 at startup.
 count_string: .blk 6        ; Memory space for string with number of primes found. It's 6 bytes, because the 
                             ;   largest value a 16-bit word can hold is 65535. The 6th byte in the string is for
                             ;   the terminating zero. First byte is initialized to 00 at startup.
@@ -94,7 +94,7 @@ reset:
     lda #01
     sta curptr_bit
 
-    lda #DISPLAY_WIDTH
+    lda #DISPLAY_WIDTH + 1
     sta lcd_charspace
 
     ; Initalize VIA and LCD
@@ -670,9 +670,13 @@ clear_line:
 ;
 ; In:
 ;   lcd_line: line to set the pointer to (0 or 1)
-; Uses: A, X
+; Uses: A
 ;====================================================
 line_start:
+    ; Reset char space counter, as we'll be at the beginning of the line
+    lda #DISPLAY_WIDTH + 1
+    sta lcd_charspace
+
     lda lcd_line
 
     beq .instr_bit          ; If A is 0, that matches the DDRAM address
@@ -682,10 +686,6 @@ line_start:
 .instr_bit:
     ora #%10000000          ; Instruction is to set DDRAM address
     
-    ; Reset char space counter, as we'll be at the beginning of the line
-    ldx #DISPLAY_WIDTH
-    stx lcd_charspace
-
 ; Note: line_start falls through into lcd_instruction!
 
 ;====================================================
