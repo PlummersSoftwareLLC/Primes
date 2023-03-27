@@ -510,23 +510,18 @@ ignore_result:
     clc
     adc #'0'
 
-    pha
     ldy #0
 
 ; add clock digit to beginning of clock string
 push_loop:
-    lda clock_string,Y
-    tax
-    pla
+    ldx clock_string,Y
     sta clock_string,Y
     iny
     txa
-    pha
 
     bne push_loop
 
     ; don't forget the closing null
-    pla
     sta clock_string,Y
 
     ; are we done dividing?
