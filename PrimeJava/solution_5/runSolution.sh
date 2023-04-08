@@ -1,0 +1,1 @@
+java -cp src BitmaskSieve
