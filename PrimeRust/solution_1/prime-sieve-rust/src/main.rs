@@ -774,7 +774,7 @@ fn main() {
 
     let thread_options = match opt.threads {
         Some(t) => vec![t],
-        None => vec![1, num_cpus::get()],
+        None => vec![1, num_cpus::get_physical(), num_cpus::get()],
     };
 
     // run default implementations if no options are specified
