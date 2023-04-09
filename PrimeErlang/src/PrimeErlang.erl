@@ -29,11 +29,39 @@ num_primes(1_000_000_000) ->
 num_primes(10_000_000_000) ->
   455052511.
 
+main([]) ->
+  main(["1000000"]);
 main([Arg]) ->
   N = list_to_integer(Arg),
-  {Time, Primes} = timer:tc(fun() -> run_sieve(N) end),
-  ?assertEqual(Primes, num_primes(N)),
-  io:format("Time: ~p msecs~n", [Time / 1000]).
+  T0 = os:system_time(nanosecond),
+  Limit = erlang:convert_time_unit(5, second, nanosecond),
+  Iterations = do_main(T0, Limit, N, 0),
+  T1 = os:system_time(nanosecond),
+  TotalTime = (T1 - T0) / 1_000_000_000.0,
+  NumThread = 1,
+  Label = "jesperes",
+  Tags = #{algorithm => base,
+           faithful => yes,
+           bits => 64},
+  io:format("~s;~w;~g;~w;~s~n",
+            [Label,
+             Iterations,
+             TotalTime,
+             NumThread,
+             lists:join(",", lists:map(fun({K, V}) -> io_lib:format("~w=~w", [K, V]) end, maps:to_list(Tags)))
+            ]).
+
+do_main(T0, Limit, N, NIter) ->
+  T1 = os:system_time(nanosecond),
+  Elapsed = T1 - T0,
+  if Elapsed > Limit ->
+      NIter;
+     true ->
+      NumPrimes = run_sieve(N),
+      ?assertEqual(NumPrimes, num_primes(N)),
+      do_main(T0, Limit, N, NIter + 1)
+  end.
+
 
 %% -- Implementation --
 
