@@ -198,11 +198,19 @@ defmodule PrimeSieve do
   def main do
     sieve_size = 1_000_000
     start_time = Time.utc_now()
-    pass_count = start(sieve_size, start_time)
+
+    pass_count =
+      1..System.schedulers()
+      |> Enum.map(fn _ ->
+        Task.async(fn -> start(sieve_size, start_time) end)
+      end)
+      |> Task.await_many(7000)
+      |> Enum.sum()
+
     duration = Time.diff(Time.utc_now(), start_time, :microsecond)
 
     IO.puts(
-      "thomas9911;#{pass_count};#{Float.round(duration / 1_000_000, 3)};1;algorithm=base,faithful=yes,bits=1"
+      "thomas9911_parr;#{pass_count};#{Float.round(duration / 1_000_000, 3)};1;algorithm=base,faithful=yes,bits=1"
     )
   end
 
