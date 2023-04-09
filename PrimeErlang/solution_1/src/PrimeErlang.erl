@@ -40,28 +40,29 @@ main([Arg]) ->
   TotalTime = (T1 - T0) / 1_000_000_000.0,
   NumThread = 1,
   Label = "jesperes",
-  Tags = #{algorithm => base,
-           faithful => yes,
-           bits => 64},
+  Tags =
+    #{algorithm => base,
+      faithful => yes,
+      bits => 64},
   io:format("~s;~w;~g;~w;~s~n",
             [Label,
              Iterations,
              TotalTime,
              NumThread,
-             lists:join(",", lists:map(fun({K, V}) -> io_lib:format("~w=~w", [K, V]) end, maps:to_list(Tags)))
-            ]).
+             lists:join(",",
+                        lists:map(fun({K, V}) -> io_lib:format("~w=~w", [K, V]) end,
+                                  maps:to_list(Tags)))]).
 
 do_main(T0, Limit, N, NIter) ->
   T1 = os:system_time(nanosecond),
   Elapsed = T1 - T0,
   if Elapsed > Limit ->
-      NIter;
+       NIter;
      true ->
-      NumPrimes = run_sieve(N),
-      ?assertEqual(NumPrimes, num_primes(N)),
-      do_main(T0, Limit, N, NIter + 1)
+       NumPrimes = run_sieve(N),
+       ?assertEqual(NumPrimes, num_primes(N)),
+       do_main(T0, Limit, N, NIter + 1)
   end.
-
 
 %% -- Implementation --
 
@@ -98,9 +99,9 @@ bits_new(N) ->
 bits_value(N, Bits) ->
   V = atomics:get(Bits, N),
   if V == 0 ->
-      1;
+       1;
      true ->
-      0
+       0
   end.
 
 bits_is_prime(N, Bits) ->
