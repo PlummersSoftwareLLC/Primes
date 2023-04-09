@@ -39,39 +39,45 @@ main([Arg]) ->
 
 run_sieve(N) ->
   Q = math:sqrt(N),
-  A = bits_new(),
-  A0 = run_sieve_loop(2, Q, N, A),
-  count_primes(2, N, A0, 0).
+  A = bits_new(N),
+  run_sieve_loop(2, Q, N, A),
+  count_primes(2, N, A, 0).
 
-run_sieve_loop(I, Q, _, A) when I > Q ->
-  A;
+run_sieve_loop(I, Q, _, _) when I > Q ->
+  ok;
 run_sieve_loop(I, Q, N, A) ->
-  case bits_is_set(I, A) of
+  case bits_is_prime(I, A) of
     true ->
-      A0 = run_sieve_inner_loop(I * I, I, N, A),
-      run_sieve_loop(I + 1, Q, N, A0);
+      run_sieve_inner_loop(I * I, I, N, A);
     false ->
-      run_sieve_loop(I + 1, Q, N, A)
-  end.
+      ok
+  end,
+  run_sieve_loop(I + 1, Q, N, A).
 
 run_sieve_inner_loop(J, _, N, A) when J > N ->
   A;
 run_sieve_inner_loop(J, Incr, N, A) ->
-  run_sieve_inner_loop(J + Incr, Incr, N, bits_clear(J, A)).
+  run_sieve_inner_loop(J + Incr, Incr, N, bits_set_not_prime(J, A)).
 
 count_primes(I, N, _, Acc) when I > N ->
   Acc;
 count_primes(I, N, A, Acc) ->
   count_primes(I + 1, N, A, Acc + bits_value(I, A)).
 
-bits_new() ->
-  #{}.
+bits_new(N) ->
+  atomics:new(N, []).
 
 bits_value(N, Bits) ->
-  maps:get(N, Bits, 1).
+  V = atomics:get(Bits, N),
+  if V == 0 ->
+      1;
+     true ->
+      0
+  end.
 
-bits_is_set(N, Bits) ->
-  maps:get(N, Bits, 1) == 1.
+bits_is_prime(N, Bits) ->
+  atomics:get(Bits, N) == 0.
 
-bits_clear(N, Bits) ->
-  maps:put(N, 0, Bits).
+bits_set_not_prime(N, Bits) ->
+  ok = atomics:put(Bits, N, 1),
+  Bits.
