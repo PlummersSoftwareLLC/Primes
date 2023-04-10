@@ -1,4 +1,4 @@
-FROM erlang:25.3
+FROM erlang:26
 
 WORKDIR /home/primes
 
