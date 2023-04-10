@@ -197,6 +197,29 @@ defmodule PrimeSieve do
   """
   def main do
     sieve_size = 1_000_000
+    sequential_run(sieve_size)
+    parr_run(sieve_size)
+  end
+
+  @doc """
+  Run the start function in a sequential manner
+  """
+  def sequential_run(sieve_size) do
+    start_time = Time.utc_now()
+
+    pass_count = start(sieve_size, start_time)
+
+    duration = Time.diff(Time.utc_now(), start_time, :microsecond)
+
+    IO.puts(
+      "thomas9911;#{pass_count};#{Float.round(duration / 1_000_000, 3)};1;algorithm=base,faithful=yes,bits=1"
+    )
+  end
+
+  @doc """
+  run the start function across multiple processes
+  """
+  def parr_run(sieve_size) do
     start_time = Time.utc_now()
 
     pass_count =
