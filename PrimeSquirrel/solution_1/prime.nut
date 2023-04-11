@@ -51,7 +51,6 @@ class SieveClass {
                 number++;
             }
         }
-        local finaltime = 
         print("Tmob;" + passes + ";" + end + ";" + "1;algorithm=base,faithful=yes");
     }
 
