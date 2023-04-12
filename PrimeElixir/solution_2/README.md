@@ -29,12 +29,12 @@ Intel Core i5 9400F, Windows 10 pre Task useage:
 
 ```txt
 thomas9911;36;5.603;1;algorithm=base,faithful=yes,bits=1
-thomas9911_parr;127;6.083;1;algorithm=base,faithful=yes,bits=1
+thomas9911_parr;127;6.083;6;algorithm=base,faithful=yes,bits=1
 ```
 
 Intel Core i5 9400F, docker post Task useage:
 
 ```txt
 thomas9911;51;6.093;1;algorithm=base,faithful=yes,bits=1
-thomas9911_parr;196;6.079;1;algorithm=base,faithful=yes,bits=1
+thomas9911_parr;196;6.07961;6;algorithm=base,faithful=yes,bits=1
 ```
