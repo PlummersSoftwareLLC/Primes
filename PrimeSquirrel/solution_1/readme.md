@@ -15,4 +15,4 @@ Download [Going Nuts Compiler](https://forum.goingnuts.net/ReleaseBundle.zip)
 ## Output
 
 Ryzen 9 5900x
-`Tmob;42;5.058;1;algorithm=base,faithful=yes`
+`Tmob;115;5.383;1;algorithm=base,faithful=yes`

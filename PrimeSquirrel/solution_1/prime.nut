@@ -4,9 +4,6 @@ class SieveClass {
         constructor(maxSize) {
             bitArray = array(maxSize);
             sieveSize = maxSize;
-            foreach (i, j in bitArray) {
-                bitArray[i] = 1;
-            }
         }
 
     function GetBit(index)
@@ -14,30 +11,25 @@ class SieveClass {
         return bitArray[index];
     }
 
-    function ClearBit(index)
-    {
-        bitArray[index] = 0;
-    }
-
     function runSieve()
     {
-        ClearBit(0);
-        ClearBit(1);
+		bitArray[0] = 1;
+		bitArray[1] = 1;
     
         local factor = 3;
-        local q = sqrt(sieveSize);
+        local sq = sqrt(sieveSize);
 
-        while (factor <= q) {
+        while (factor <= sq) {
             for (local i = factor; i < sieveSize; i += 2) {
-                if (GetBit(i) == 1) {
+                if (GetBit(i) == null) {
                     factor = i;
                     break;
                 }
             }
-
-            for (local num = factor * factor; num < sieveSize; num += factor * 2)
+			local factordoubled = factor * 2
+            for (local num = factor * factor; num < sieveSize; num += factordoubled)
             {
-                ClearBit(num);
+                bitArray[num] = 1; 			// ClearBit(num);
             }
             factor += 2;
         }   
@@ -47,11 +39,13 @@ class SieveClass {
     {
         local number = 1; // account for the prime number 2
         foreach (i, j in bitArray) {
-            if (i > 2 && i % 2 != 0 && bitArray[i] == 1) {
+            if (i > 2 && i % 2 != 0 && bitArray[i] == null) {
                 number++;
             }
         }
-        print("Tmob;" + passes + ";" + end + ";" + "1;algorithm=base,faithful=yes");
+		if (number == 78498) {
+			print("Tmob;" + passes + ";" + end + ";" + "1;algorithm=base,faithful=yes");
+		}
     }
 
 }
@@ -73,7 +67,6 @@ function main () {
         sieve.runSieve();
         passes++
     }
-    
     local progEnd = clock();
 
     sieve.writeResults(progEnd, passes);
