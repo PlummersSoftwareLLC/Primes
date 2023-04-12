@@ -233,7 +233,7 @@ defmodule PrimeSieve do
     duration = Time.diff(Time.utc_now(), start_time, :microsecond)
 
     IO.puts(
-      "thomas9911_parr;#{pass_count};#{Float.round(duration / 1_000_000, 3)};1;algorithm=base,faithful=yes,bits=1"
+      "thomas9911_parr;#{pass_count};#{Float.round(duration / 1_000_000, 3)};#{System.schedulers()};algorithm=base,faithful=yes,bits=1"
     )
   end
 
