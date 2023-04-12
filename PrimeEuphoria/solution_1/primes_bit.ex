@@ -77,33 +77,6 @@ sequence NOT_BITS_TABLE = {
     0x7FFF_FFFF
 }
 
-function set_bits(integer num_bits)
-    integer num_words = floor((num_bits + 31) / 32)
-    integer num_leftover_bits = 1 + and_bits(num_bits - 1, 0x1f)
-    integer all_ones = not_bits(0)
-    integer leftover_bits = BITS_TABLE[num_leftover_bits] * 2 - 1
-    return repeat(all_ones, num_words - 1) & leftover_bits
-end function
-
-function clear_bits(sequence this, integer num_bits, integer start, integer step)
-    integer word_num = 1 + floor((start - 1) / 32)
-    integer bit_pos = 1 + and_bits(start - 1, 0x1f)
-    integer word_inc = floor(step / 32)
-    integer bit_inc = and_bits(step, 0x1f)
-    for k = start to num_bits by step
-    do
-        this[word_num] = and_bits(this[word_num], NOT_BITS_TABLE[bit_pos])
-        word_num += word_inc
-        bit_pos += bit_inc
-        if bit_pos > 32
-        then
-            bit_pos -= 32
-            word_num += 1
-        end if
-    end for
-    return this
-end function
-
 function get_bit(sequence this, integer bit_num)
     integer word_pos = 1 + floor((bit_num - 1) / 32)
     integer bit_pos = 1 + and_bits(bit_num - 1, 0x1f)
@@ -112,13 +85,51 @@ end function
 
 function run_sieve(integer sieve_size)
     integer num_bits = floor((sieve_size - 1) / 2)
-    sequence sieve = set_bits(num_bits)
+    integer num_words = floor((num_bits + 31) / 32)
+    integer num_leftover_bits = 1 + and_bits(num_bits - 1, 0x1f)
+    integer all_ones = not_bits(0)
+    integer leftover_bits = BITS_TABLE[num_leftover_bits] * 2 - 1
+    sequence sieve = repeat(all_ones, num_words - 1) & leftover_bits
+
+    integer start
+    integer step
+    integer word_pos2
+    integer bit_pos2
+    integer bit_inc
+    integer word_inc
+
+    integer bit_value = 1
+    integer word_pos = 1
     integer q = floor(sqrt(sieve_size) / 2)
     for bit = 1 to q
     do
-        if get_bit(sieve, bit)
+        if and_bits(sieve[word_pos], bit_value)
         then
-            sieve = clear_bits(sieve, num_bits, 2 * bit * (bit + 1), 2 * bit + 1)
+            start = 2 * bit * (bit + 1)
+            step = 2 * bit + 1
+            word_pos2 = 1 + floor((start - 1) / 32)
+            bit_pos2 = 1 + and_bits(start - 1, 0x1f)
+            word_inc = floor(step / 32)
+            bit_inc = and_bits(step, 0x1f)
+            for k = start to num_bits by step
+            do
+                sieve[word_pos2] = and_bits(sieve[word_pos2], NOT_BITS_TABLE[bit_pos2])
+                word_pos2 += word_inc
+                bit_pos2 += bit_inc
+                if bit_pos2 > 32
+                then
+                    bit_pos2 -= 32
+                    word_pos2 += 1
+                end if
+            end for
+        end if
+
+        if bit_value = 0x8000_0000
+        then
+            bit_value = 1
+            word_pos += 1
+        else
+            bit_value *= 2
         end if
     end for
 
@@ -198,11 +209,10 @@ procedure main()
     integer n = 1_000_000
     integer passes = 0
     integer show_results = FALSE
-    sequence sieve
     atom duration
     while 1 do
         passes += 1
-        sieve = run_sieve(n)
+        sequence sieve = run_sieve(n)
         duration = time() - start
         if duration >= 5
         then

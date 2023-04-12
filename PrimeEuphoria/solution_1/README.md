@@ -7,7 +7,8 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 * `primes.ex` uses `integer` for each sieve item
-* `primes_bit.ex` packs 64 sieve items in an `atom`
+* `primes_bit.ex` packs 32 sieve items in an `integer`. The bit manipulation functions are inlined
+  in the sieve to improve performance.
 
 ## Run instructions
 
@@ -29,11 +30,11 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 400, Time: 5.01, Avg: 0.01252500, Limit: 1000000, Count: 78498, Valid: true
+Passes: 388, Time: 5.00, Avg: 0.01288660, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;400;5.01;1;algorithm=base,faithful=yes
+rzuckerm;388;5.00;1;algorithm=base,faithful=yes
 
-Passes: 1409, Time: 5.00, Avg: 0.00354862, Limit: 1000000, Count: 78498, Valid: true
+Passes: 3035, Time: 5.00, Avg: 0.00164745, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;1409;5.00;1;algorithm=base,faithful=yes,bits=1
+rzuckerm;3035;5.00;1;algorithm=base,faithful=yes,bits=1
 ```
