@@ -87,7 +87,7 @@ procedure print_results(sequence this, integer show_results, atom duration, inte
     )
     printf(
         STDOUT,
-        "\nrzuckerm;%d;%.2f;1;algorithm=base,faithful=yes\n",
+        "\nrzuckerm-bool;%d;%.2f;1;algorithm=base,faithful=yes\n",
         {passes, duration}
     )
 end procedure
@@ -97,11 +97,10 @@ procedure main()
     integer n = 1_000_000
     integer passes = 0
     integer show_results = FALSE
-    sequence sieve
     atom duration
     while 1 do
         passes += 1
-        sieve = run_sieve(n)
+        sequence sieve = run_sieve(n)
         duration = time() - start
         if duration >= 5.0
         then
