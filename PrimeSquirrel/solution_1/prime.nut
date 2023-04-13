@@ -13,9 +13,6 @@ class SieveClass {
 
     function runSieve()
     {
-		bitArray[0] = 1;
-		bitArray[1] = 1;
-    
         local factor = 3;
         local sq = sqrt(sieveSize);
 
@@ -26,7 +23,7 @@ class SieveClass {
                     break;
                 }
             }
-			local factordoubled = factor * 2
+			local factordoubled = factor * 2;
             for (local num = factor * factor; num < sieveSize; num += factordoubled)
             {
                 bitArray[num] = 1; 			// ClearBit(num);
@@ -65,7 +62,7 @@ function main () {
     {
         sieve <- SieveClass(1000000);
         sieve.runSieve();
-        passes++
+        passes++;
     }
     local progEnd = clock();
 
