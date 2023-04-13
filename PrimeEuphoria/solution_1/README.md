@@ -32,9 +32,9 @@ a Ubuntu 22.04 VM in VirtualBox 6.1:
 ```
 Passes: 388, Time: 5.00, Avg: 0.01288660, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;388;5.00;1;algorithm=base,faithful=yes
+rzuckerm-bool;388;5.00;1;algorithm=base,faithful=yes
 
 Passes: 3035, Time: 5.00, Avg: 0.00164745, Limit: 1000000, Count: 78498, Valid: true
 
-rzuckerm;3035;5.00;1;algorithm=base,faithful=yes,bits=1
+rzuckerm-bit;3035;5.00;1;algorithm=base,faithful=yes,bits=1
 ```
