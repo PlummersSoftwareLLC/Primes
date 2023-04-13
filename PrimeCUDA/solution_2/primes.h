@@ -2,7 +2,7 @@
 
 // Maximum number of parallel threads used on the GPU. The actual number of threads used can be lower, 
 //   if there aren't enough "chunks of work" to keep this number of threads busy.
-#define MAX_THREADS 1024
+#define MAX_THREADS 256
 
 // Bits per sieve buffer word. Can be 32 or 64.
 #define BITS_PER_WORD 32
