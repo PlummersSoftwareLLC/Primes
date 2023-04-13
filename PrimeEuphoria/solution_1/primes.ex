@@ -87,7 +87,7 @@ procedure print_results(sequence this, integer show_results, atom duration, inte
     )
     printf(
         STDOUT,
-        "\nrzuckerm;%d;%.2f;1;algorithm=base,faithful=yes\n",
+        "\nrzuckerm-bool;%d;%.2f;1;algorithm=base,faithful=yes\n",
         {passes, duration}
     )
 end procedure
