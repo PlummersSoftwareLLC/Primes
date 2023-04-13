@@ -24,36 +24,22 @@ __global__ void initialize_buffer(uint64_t blockSize, uint64_t wordCount, sieve_
 
 __global__ void unmark_multiples_threads(uint32_t primeCount, uint32_t *primes, uint64_t halfSize, uint32_t sizeSqrt, sieve_t *sieve)
 {
-    // Declare shared memory for the primes array
-    __shared__ uint32_t shared_primes[MAX_THREADS];
-
-    // Iterate over primes in blocks
-    
-    for (uint32_t basePrimeIndex = 0; basePrimeIndex < primeCount; basePrimeIndex += blockDim.x)
+    // We unmark every "MAX_THREADS"th prime's multiples, starting with our thread index
+    for (uint32_t primeIndex = threadIdx.x; primeIndex < primeCount; primeIndex += MAX_THREADS) 
     {
-        // Load primes into shared memory
-        uint32_t primeIndex = basePrimeIndex + threadIdx.x;
-        if (primeIndex < primeCount)
-            shared_primes[threadIdx.x] = primes[primeIndex];
+        const uint32_t prime = primes[primeIndex];
+        const uint64_t primeSquared = uint64_t(prime) * prime;
 
-        __syncthreads();
+        // Unmark multiples starting at just beyond the square root of the sieve size or the square of the prime, 
+        //   whichever is larger.
+        uint64_t firstUnmarked = primeSquared > sizeSqrt ? primeSquared : ((sizeSqrt / prime + 1) * prime);
+        // We're marking off odd multiples only, so make sure we start with one of those!
+        if (!(firstUnmarked & 1))
+            firstUnmarked += prime;
 
-        // Iterate over the primes in shared memory
-        for (uint32_t i = 0; i < blockDim.x && basePrimeIndex + i < primeCount; ++i)
-        {
-            const uint32_t prime = shared_primes[i];
-            const uint64_t primeSquared = uint64_t(prime) * prime;
-
-            uint64_t firstUnmarked = primeSquared > sizeSqrt ? primeSquared : ((sizeSqrt / prime + 1) * prime);
-            if (!(firstUnmarked & 1))
-                firstUnmarked += prime;
-
-            // Start with multiples of the current prime in a way that consecutive threads work on consecutive multiples
-            for (uint64_t index = (firstUnmarked >> 1) + threadIdx.x * prime; index <= halfSize; index += blockDim.x * prime)
-                atomicAnd(&sieve[WORD_INDEX(index)], ~(sieve_t(1) << BIT_INDEX(index)));
-        }
-
-        __syncthreads();
+        for (uint64_t index = firstUnmarked >> 1; index <= halfSize; index += prime) 
+            // Clear the bit in the word that corresponds to the last part of the index 
+            atomicAnd(&sieve[WORD_INDEX(index)], ~(sieve_t(1) << BIT_INDEX(index)));
     }
 }
 
@@ -373,9 +359,9 @@ uint64_t determineSieveSize(int argc, char *argv[])
 
 void printResults(Parallelization type, uint64_t sieveSize, uint64_t primeCount, double duration, uint64_t passes)
 {
-    const auto expectedCount         = resultsDictionary.find(sieveSize);
-    const auto countValidated        = expectedCount != resultsDictionary.end() && expectedCount->second == primeCount;
-    const auto parallelizationEntry  = parallelizationDictionary.find(type);
+    const auto expectedCount = resultsDictionary.find(sieveSize);
+    const auto countValidated = expectedCount != resultsDictionary.end() && expectedCount->second == primeCount;
+    const auto parallelizationEntry = parallelizationDictionary.find(type);
     const char *parallelizationLabel = parallelizationEntry != parallelizationDictionary.end() ? parallelizationEntry->second : "unknown";
 
     fprintf(stderr, "Passes: %zu, Time: %lf, Avg: %lf, Word size: %d, Max GPU threads: %d, Type: %s, Limit: %zu, Count: %zu, Validated: %d\n", 
