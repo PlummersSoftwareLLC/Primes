@@ -16,7 +16,7 @@ This is a collection of prime sieve algorithms implemented in C#, using .NET 6.
 
 Visual Studio: You can build this using Visual Studio 2022 (17.0) or later.
 
-Commandline: `dotnet build -c release` from within the solution directory.  The output will be placed in `.\bin\x64\Release\net6.0\`.
+Commandline: `dotnet build -c release` from within the solution directory.  The output will be placed in `.\bin\x64\Release\net7.0\`.
 
 Docker: From the commandline, in the `PrimeCSharp\solution_1` directory, run `docker build -t PrimeCSharp_1 .`
 
