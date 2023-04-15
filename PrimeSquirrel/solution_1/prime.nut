@@ -68,3 +68,6 @@ function main () {
 
     sieve.writeResults(progEnd, passes);
 }
+
+
+main();

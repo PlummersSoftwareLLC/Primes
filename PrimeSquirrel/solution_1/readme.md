@@ -8,11 +8,11 @@ Based on Python solution_1
 
 ## Run instructions
 
-Download [Going Nuts Compiler](https://forum.goingnuts.net/ReleaseBundle.zip)
+`apt-get install -y squirrel3`
 
-`gonuts.exe prime.nut`
+`squirrel ./prime.nut`
 
 ## Output
 
 Ryzen 9 5900x
-`Tmob;117;5.083;1;algorithm=base,faithful=yes`
+`Tmob;179;5.31056;1;algorithm=base,faithful=yes`
