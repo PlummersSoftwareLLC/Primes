@@ -41,7 +41,7 @@ class SieveClass {
             }
         }
 		if (number == 78498) {
-			print("Tmob;" + passes + ";" + end + ";" + "1;algorithm=base,faithful=yes");
+			print("Tmob;" + passes + ";" + end + ";" + "1;algorithm=base,faithful=yes\n");
 		}
     }
 
