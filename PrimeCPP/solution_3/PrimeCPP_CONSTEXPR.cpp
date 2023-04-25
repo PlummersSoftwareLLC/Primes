@@ -79,7 +79,7 @@ void printResults(const Sieve &sieve, bool showResults, double duration, int pas
     printf("Passes: %d, Time: %lf, Avg: %lf, Limit: %lu, Count1: %d, Count2: %d, Valid: %d\n",
            passes,
            duration,
-           duration / passes,
+           passes / duration, //average is passes/time, not time/passes
            sieveSize,
            count,
            countPrimes(sieve),
