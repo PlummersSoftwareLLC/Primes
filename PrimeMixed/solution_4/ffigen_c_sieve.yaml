@@ -1,0 +1,9 @@
+name: 'CSieve'
+output: 'bin/c_sieve.ffigen.dart'
+headers:
+  entry-points:
+    - 'c_library/c_sieve.h'
+preamble: |
+  // ignore_for_file: type=lint
+  // ignore_for_file: unused_element
+  // ignore_for_file: unused_field

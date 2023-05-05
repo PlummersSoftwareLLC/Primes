@@ -1,4 +1,5 @@
-#!/bin/bash
+#! /usr/bin/env bash
+echo "$BASH_VERSION"
 
 cd "${0%/*}"
 

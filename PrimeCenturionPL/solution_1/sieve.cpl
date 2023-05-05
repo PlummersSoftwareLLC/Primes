@@ -1,0 +1,146 @@
+; Sieve of Eratosthenes by ren14500. Public domain.
+TITLE 'SIEVE'
+SYSTEM ZSIEVE(MAIN,EXP=D,LL=80)
+FORMAT PRIMEFMT:C1,N7
+FORMAT LINEFMT:C80
+FORMAT COUNTFMT:C6,N9
+FORMAT SUMMARYFMT:C11,N9,C1,N1,C2
+FILE CRT:SYSIPT,CLASS=0,SEQ
+; Working variables.
+INTEGER I,J,K,?POW2,?BIT,INDEX,OFFSET,FACTOR,FACTOR2,COUNT
+; Timing.
+INTEGER STARTTIME,ENDTIME,DIFF,DIFFSEC,DIFFTENTH
+; Constants for remainder calculations.
+SET TWO:2,TEN:10
+; Maximum prime and the square root of it. Uncomment just one of the
+; following depending on your maximum:
+SET MAXPRIME:100000,SQRTPRIME:316
+;SET MAXPRIME:10000,SQRTPRIME:100
+;SET MAXPRIME:1000,SQRTPRIME:31
+;SET MAXPRIME:100,SQRTPRIME:10
+; Number of bits we use in each word.
+SET SIGBITS:47
+; Bits set to 0 are not a prime. These are 48-bit integers, and we use
+; 47 bits from each to keep positive numbers, so ceil(100000/47) = 2128.
+; This saves 264 bytes over using 32-bit integers. Uncomment the
+; appropriate pair of lines depending on the max prime above.
+SET BITWORDS:2128 ; 100,000
+TABLE ?BITS(2128) ; 100,000
+;SET BITWORDS:214 ; 10,000
+;TABLE ?BITS(214) ; 10,000
+;SET BITWORDS:22 ; 1,000
+;TABLE ?BITS(22) ; 1,000
+;SET BITWORDS:4 ; 100
+;TABLE ?BITS(4) ; 100
+; Start program.
+ENTRYPOINT CRT
+ENTRY
+; Open the console.
+OPEN IO(CRT)
+; Get the start time.
+GTIME(INTEGER,STARTTIME)
+; Set all odd bits to 1 to assume prime. Non-primes will get zeroed later.
+I=1
+LOOP WHILE(I.LE.BITWORDS)
+  ?BITS(I)=46912496118442 ; = 0x2AAAAAAAAAAA
+  INCR I
+  ?BITS(I)=93824992236885 ; = 0x555555555555
+  INCR I
+  DIRECT
+    SVC 7
+  CPL
+END LOOP
+; Outer loop to search for the next prime and clear multiples thereof.
+FACTOR=3
+LOOP WHILE(FACTOR.LE.SQRTPRIME)
+  ; Find the next prime.
+  I=FACTOR
+  LOOP WHILE(I.LT.MAXPRIME)
+    INDEX=I/SIGBITS         ; Calculate which word has the factor.
+    OFFSET=@REM             ; And which bit within that word.
+    INCR INDEX              ; Table indexes are 1-based.
+    J=0\?POW2=1             ; Start calculating the power of 2 to
+    LOOP WHILE(J.LT.OFFSET) ; extract the bit we want.
+      ?POW2=?POW2*2
+      INCR J
+    END LOOP
+    ?BIT=?BITS(INDEX)       ; Get the word.
+    ?BIT=?BIT/?POW2         ; Divide to get our bit in the 0 position.
+    ?BIT=?BIT/TWO           ; Divide by two; the remainder will then
+    ?BIT=@REM               ; be the value of bit 0, which is our bit.
+    IF(?BIT.NE.0)DO         ; If set,
+      FACTOR=I              ; it is a prime,
+      I=MAXPRIME            ; so break out of the loop.
+    END DO
+    INCR I,2
+  END LOOP
+  ; Clear multiples of this prime.
+  I=FACTOR*FACTOR           ; Start at the factor squared.
+  FACTOR2=FACTOR*2          ; Calculate double the factor.
+  LOOP WHILE(I.LT.MAXPRIME)
+    INDEX=I/SIGBITS         ; Calculate which word has the factor.
+    OFFSET=@REM             ; And which bit within that word.
+    INCR INDEX              ; Table indexes are 1-based.
+    J=0\?POW2=1             ; Start calculating the power of 2 to
+    LOOP WHILE(J.LT.OFFSET) ; line up with the bit we want.
+      ?POW2=?POW2*2
+      INCR J
+    END LOOP
+    ?BIT=?BITS(INDEX)       ; Get the word.
+    ?BIT=?BIT/?POW2         ; Divide to get our bit in the 0 position.
+    ?BIT=?BIT/TWO           ; Divide by two; the remainder will then
+    ?BIT=@REM               ; be the value of bit 0, which is our bit.
+    IF(?BIT.NE.0)DO         ; If the bit is set,
+      ?BIT=?BITS(INDEX)     ; get the word,
+      ?BIT=?BIT-?POW2       ; clear the bit,
+      ?BITS(INDEX)=?BIT     ; and set the word back.
+    END DO
+    I=I+FACTOR2             ; Go to the next multiple.
+    DIRECT
+      SVC 7
+    CPL
+  END LOOP
+  ; Skip to the next possible factor.
+  INCR FACTOR,2
+END LOOP
+; Get the end time.
+GTIME(INTEGER,ENDTIME)
+DIFF=ENDTIME-STARTTIME
+DIFFSEC=DIFF/TEN
+DIFFTENTH=@REM
+; Skip past the first prime (2).
+J=3
+?BIT=?BITS(1)
+?BIT=?BIT/8
+WRITEN(CRT,LINEFMT)'      2'
+; Print primes and get the count.
+I=3
+INDEX=1
+COUNT=1
+LOOP WHILE(I.LE.MAXPRIME)
+  LOOP WHILE(J.LT.SIGBITS)      ; Loop over each bit in the word.
+    ?BIT=?BIT/TWO               ; Divide by two to pop the next bit
+    K=@REM                      ; into the remainder.
+    IF(K.NE.0)DO                ; If set,
+      WRITEN(CRT,PRIMEFMT)',',I ; write this as a prime.
+      INCR COUNT
+    END DO
+    INCR J
+    INCR I
+    IF(I.GT.MAXPRIME)J=SIGBITS
+  END LOOP
+  J=0                         ; Reset bit position.
+  INCR INDEX                  ; Go to the next index.
+  ?BIT=?BITS(INDEX)           ; Get the word.
+END LOOP
+WRITE(CRT,LINEFMT)''
+WRITE(CRT,COUNTFMT)'Count:',COUNT
+; Print summary.
+WRITE(CRT,LINEFMT)''
+WRITE(CRT,SUMMARYFMT)'ren14500;1;',DIFFSEC,'.',DIFFTENTH,';1'
+; Close the console and return success.
+CLOSE CRT
+STOP 0
+; End of source.
+END
+

@@ -1,21 +1,25 @@
-ARG GRADLE_VERSION=7.1.1
-ARG JDK_VERSION=16
+ARG GRADLE_VERSION=8.0.1
+ARG JDK_VERSION=19
 
-FROM gradle:${GRADLE_VERSION}-jdk-hotspot as BUILD
+FROM gradle:${GRADLE_VERSION}-jdk${JDK_VERSION}-jammy as BUILD
 
 RUN apt-get update && apt-get -y install libncurses5
 
 WORKDIR /src
 COPY . .
 RUN ./compile.sh
+# Ensure that nativeExecutable product exists for Docker build to complete successfully, despite not being used in ARM Linux
+RUN ./compile.sh && \
+    mkdir -p /src/build/bin/native/releaseExecutable && \
+    touch /src/build/bin/native/releaseExecutable/PrimeSieve.kexe
 
-FROM adoptopenjdk:${JDK_VERSION}-jdk-hotspot
+FROM eclipse-temurin:${JDK_VERSION}-jdk-jammy
 
 WORKDIR /opt/app
 #
 # Add node to the JDK to allow to run all solutions for different targets in one
 # go
-ENV NODE_VERSION 16.5.0
+ENV NODE_VERSION 19.7.0
 
 RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
   && case "${dpkgArch##*-}" in \
@@ -35,6 +39,6 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
   && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /bin/node --strip-components=1
 
 COPY ./run.sh ./
-COPY --from=BUILD /src/build/libs/PrimeSieve-1.0-all.jar /src/build/compileSync/main/productionExecutable/kotlin/PrimeSieve.js /src/build/bin/native/releaseExecutable/PrimeSieve.kexe ./
+COPY --from=BUILD /src/build/libs/PrimeSieve-1.0-all.jar /src/build/compileSync/js/main/productionExecutable/kotlin/*.js /src/build/bin/native/releaseExecutable/PrimeSieve.kexe ./
 
 ENTRYPOINT ["./run.sh"]

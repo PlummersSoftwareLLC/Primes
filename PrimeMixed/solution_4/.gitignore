@@ -1,0 +1,13 @@
+# Files and directories created by pub.
+.dart_tool/
+.packages
+pubspec.lock
+
+# Conventional directory for build output.
+build/
+
+# C library
+*.o
+*.dll
+*.dylib
+*.so

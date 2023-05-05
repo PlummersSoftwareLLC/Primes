@@ -1,140 +1,140 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Objects;
 
-public class PrimeSieveJava
-{
+public class PrimeSieveJava {
 	private static final Map<Integer, Integer> VALIDATION_DATA;
-	
-	// Java has a BitSet class included but switching to a boolean array of size improves performance by a lot
-	// This brings the limitation of the sieve only being able to test numbers up to Integer.MAX_VALUE - 2 (Requested array size exceeds VM limit)
-	private final boolean[] dataSet;
-	private final int sieveSize;
-	
-	public PrimeSieveJava(int sieveSize)
-	{
-		this.sieveSize = sieveSize;
-		// unlike the other old implementations the dataSet isn't initialized with true values to optimize speed
-		dataSet = new boolean[(sieveSize + 1) >> 1];
+	private final boolean[] sieveArray;
+	private final BitSet sieveSet;
+	private final int n;
+	private final String variant;
+
+	public PrimeSieveJava(int n, String variant) {
+		this.variant = variant;
+		this.n = n;
+		int half_n = (n + 1) >> 1;
+		if (Objects.equals(variant, "bitset")) {
+			sieveArray = null;
+			sieveSet = new BitSet(half_n);
+			sieveSet.set(0, half_n);
+		} else {
+			sieveSet = null;
+			sieveArray = new boolean[half_n];
+		}
 	}
-	
-	public int countPrimes()
-	{
-		int count = 0;
-		for (int i = 0; i < dataSet.length; i++)
-		{
-			if (!dataSet[i])
-			{
-				count++;
+
+	public int count() {
+		if (Objects.equals(variant, "bitset")) {
+			return this.sieveSet.cardinality();
+		} else {
+			int count = 0;
+			for (int i = 0; i < sieveArray.length; i++) {
+				if (!sieveArray[i]) {
+					count++;
+				}
 			}
+			return count;
 		}
-		
-		return count;
 	}
-	
-	public boolean validateResults()
-	{
-		if (VALIDATION_DATA.containsKey(sieveSize))
-		{
-			return VALIDATION_DATA.get(sieveSize) == countPrimes();
+
+	public boolean validateResults() {
+		if (VALIDATION_DATA.containsKey(n)) {
+			return VALIDATION_DATA.get(n) == count();
 		}
-		
 		return false;
 	}
-	
-	// Naming hasn't changed for comparison of the methods but removing the if statement for a branchless comparison
-	// and inverting the statement due to not initializing the dataSet to true results in a boost too.
-	// Also rather interesting: checking index % 2 != 0 is slower than index % 2 == 1
-	private boolean getBit(int index)
-	{
-		return (index & 1) == 1 && !dataSet[index >> 1];
-	}
-	
-	// Again instead of checking if index is even we just update the array at that index equivalent to that check
-	// to boost performance
-	private void clearBit(int index)
-	{
-		dataSet[index >> 1] = (index & 1) == 1;
-	}
-	
-	public void runSieve()
-	{
-		int factor = 3;
-		int q = (int) Math.sqrt(sieveSize);
-		
-		while (factor < q)
-		{
-			for (int num = factor; num <= sieveSize; num++)
-			{
-				if (getBit(num))
-				{
-					factor = num;
-					break;
-				}
-			}
-			
-			for (int num = factor * factor; num <= sieveSize; num += factor * 2)
-				clearBit(num);
-			
-			factor += 2;
-		}
-	}
-	
-	public void printResults(boolean showResults, double duration, int passes)
-	{
-		if (showResults)
-		{
-			System.out.print("2, ");
-		}
-		
-		int count = 1;
-		for (int num = 3; num <= this.sieveSize; num++)
-		{
-			if (getBit(num))
-			{
-				if (showResults)
-				{
-					System.out.print(num + ", ");
-				}
-				
-				count++;
-			}
-		}
-		
-		if (showResults)
-		{
-			System.out.println();
-		}
-		
-		System.out.printf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %s%n", passes, duration, (duration / passes), sieveSize, count, validateResults());
 
-        // Following 2 lines added by rbergen to conform to drag race output format
-		System.out.println();
-		System.out.printf("MansenC;%d;%f;1;algorithm=base,faithful=yes\n", passes, duration);
-		
+	public void runArray() {
+		int q = (int) Math.ceil(Math.sqrt(n));
+		for (int p = 3; p < q; p += 2) {
+			if (!sieveArray[p >> 1]) {
+				for (int i = (p * p) >> 1; i < n >> 1; i += p) {
+					sieveArray[i] = true;
+				}
+			}
+		}
 	}
-	
-	public static void main(String[] args)
-	{
+
+	public void runBitSet() {
+		int q = (int) Math.ceil(Math.sqrt(n));
+		for (int p = 3; p < q; p += 2) {
+			if (sieveSet.get(p >> 1)) {
+				for (int i = (p * p) >> 1; i < n >> 1; i += p) {
+					sieveSet.clear(i);
+				}
+			}
+		}
+	}
+
+	public void printResults(double duration, int passes) {
+		int count = count();
+		String label = Objects.equals(variant, "bitset") ? "pez-bitset" : "MansenC+pez-boolean-array";
+		String bits = Objects.equals(variant, "bitset") ? "1" : "8";
+		System.out.printf("Passes: %d, Time: %f, Avg: %f, Limit: %d, Count: %d, Valid: %s%n", passes,
+				duration, (duration / passes), n, count, validateResults());
+		System.out.printf("%s;%d;%f;1;algorithm=base,faithful=yes,bits=%s\n", label, passes, duration, bits);
+	}
+
+	public static void main(String[] args) {
 		long start = System.currentTimeMillis();
-		int passes = 0;
 		PrimeSieveJava sieve = null;
-		
-		while ((System.currentTimeMillis() - start) < 5000)
-		{
-			sieve = new PrimeSieveJava(1000000);
-			sieve.runSieve();
-			passes++;
+		int limit = 1000000;
+		boolean warmup = false;
+		int warmupTime = 5000;
+		int runTime = 5000;
+		String variant = "array";
+
+		for (int i = 0; i < args.length; i++) {
+			if (args[i].equals("-limit") && args.length - 1 > i) {
+				limit = Integer.parseInt(args[i + 1]);
+			}
+			if (args[i].equals("-variant") && args.length - 1 > i) {
+				variant = args[i + 1];
+			}
+			if (args[i].equals("-warmup")) {
+				warmup = true;
+			}
 		}
-		
+
+		if (warmup) {
+			if (Objects.equals(variant, "bitset")) {
+				while ((System.currentTimeMillis() - start) < warmupTime) {
+					sieve = new PrimeSieveJava(limit, variant);
+					sieve.runBitSet();
+				}
+			} else {
+				while ((System.currentTimeMillis() - start) < warmupTime) {
+					sieve = new PrimeSieveJava(limit, variant);
+					sieve.runArray();
+				}
+			}
+		}
+
+		int passes = 0;
+		start = System.currentTimeMillis();
+		if (Objects.equals(variant, "bitset")) {
+			while ((System.currentTimeMillis() - start) < runTime) {
+				sieve = new PrimeSieveJava(limit, variant);
+				sieve.runBitSet();
+				passes++;
+			}
+		} else {
+			while ((System.currentTimeMillis() - start) < runTime) {
+				sieve = new PrimeSieveJava(limit, variant);
+				sieve.runArray();
+				passes++;
+			}
+		}
+
 		long delta = System.currentTimeMillis() - start;
-		if (sieve != null)
-		{
-			sieve.printResults(false, delta / 1000d, passes);
+		if (sieve != null) {
+			sieve.printResults(delta / 1000d, passes);
 		}
 	}
-	
-	static
-	{
+
+	static {
 		VALIDATION_DATA = new HashMap<>();
 		VALIDATION_DATA.put(10, 4);
 		VALIDATION_DATA.put(100, 25);

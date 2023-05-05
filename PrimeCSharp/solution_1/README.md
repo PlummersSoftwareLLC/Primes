@@ -10,13 +10,13 @@
 
 ## C# solution by @Kinematics
 
-This is a collection of prime sieve algorithms implemented in C#, using .NET 6.
+This is a collection of prime sieve algorithms implemented in C#.
 
 ## Building
 
 Visual Studio: You can build this using Visual Studio 2022 (17.0) or later.
 
-Commandline: `dotnet build -c release` from within the solution directory.  The output will be placed in `.\bin\x64\Release\net6.0\`.
+Commandline: `dotnet build -c release` from within the solution directory.  The output will be placed in `.\bin\x64\Release\net7.0\`.
 
 Docker: From the commandline, in the `PrimeCSharp\solution_1` directory, run `docker build -t PrimeCSharp_1 .`
 
@@ -136,9 +136,9 @@ The sieves that are benchmarked depend on whether the commandline is set for V1 
 
 ## Results (Native)
 
-Summary results for V1 sieves using .NET 5 vs V1 sieves using .NET 6 vs V2 sieves using .NET 6:
+Summary results for the sieves, as run on my computer:
 
-Change from .NET 5 to .NET 6:
+V1 sieves, and the improvement from upgrading from .NET 5 to .NET 6:
 
 |Name       | NET5 Loops |  NET6 Loops |     Diff   |
 |-----------|------------|-------------|-----------:|
@@ -160,42 +160,44 @@ Change from .NET 5 to .NET 6:
 
 Overall: +6.9%
 
-V2 Performance:
+V2 sieves, and the improvement from upgrading from .NET 6 to .NET 7:
 
-|Name          |  Loops |
-|--------------|--------|
-|Bit2          |   3728 |
-|Bit2While     |   3732 |
-|Bit6          |   6973 |
-|Bit30         |  10046 |
-|Bool2         |   9150 |
-|Bool2While    |  10356 |
-|Bool6         |  10978 |
-|Bool30        |  13135 |
-|IBool2        |   9440 |
-|IBool2While   |   9348 |
-|IBool6        |  10759 |
-|IBool30       |  13777 |
-|PoolB2        |   5799 |
-|PoolB6        |   9377 |
-|PoolB30       |  11912 |
-|PoolD2        |   7328 |
-|PoolD6        |   9907 |
-|PoolD30       |  13628 |
-|PoolQ2        |   6511 |
-|PoolQ6        |   9855 |
-|PoolQ30       |  13498 |
-|PoolQ30M      |  17665 |
-|RawB2         |   6129 |
-|RawB6         |   9040 |
-|RawB30        |  10855 |
-|RawD2         |   6150 |
-|RawD6         |  10104 |
-|RawD30        |  12019 |
-|RawQ2         |   5800 |
-|RawQ6         |   9700 |
-|RawQ30        |  12045 |
-|PoolQ30M      |  16204 |
+|Name          | .NET 6 Loops | .NET 7 Loops |     Diff |
+|--------------|--------------|--------------|----------|
+|Bit2          |         3728 |         3645 |    -2.2% |
+|Bit2While     |         3732 |         3675 |    -1.5% |
+|Bit6          |         6973 |         6964 |    -0.1% |
+|Bit30         |        10046 |        10148 |     1.0% |
+|Bool2         |         9150 |        12187 |    33.2% |
+|Bool2While    |        10356 |         9964 |    -3.8% |
+|Bool6         |        10978 |        13206 |    20.3% |
+|Bool30        |        13135 |        13663 |     4.0% |
+|IBool2        |         9440 |        12502 |    32.4% |
+|IBool2While   |         9348 |        10051 |     7.5% |
+|IBool6        |        10759 |        11586 |     7.7% |
+|IBool30       |        13777 |        14250 |     3.4% |
+|PoolB2        |         5799 |         6376 |     9.9% |
+|PoolB6        |         9377 |         9597 |     2.3% |
+|PoolB30       |        11912 |        13159 |    10.5% |
+|PoolD2        |         7328 |         7877 |     7.5% |
+|PoolD6        |         9907 |        10524 |     6.2% |
+|PoolD30       |        13628 |        14836 |     8.9% |
+|PoolQ2        |         6511 |         7090 |     8.9% |
+|PoolQ6        |         9855 |        10656 |     8.1% |
+|PoolQ30       |        13498 |        14007 |     3.8% |
+|PoolQ30M      |        17665 |        19100 |     8.1% |
+|RawB2         |         6129 |         6169 |     0.7% |
+|RawB6         |         9040 |         9044 |     0.0% |
+|RawB30        |        10855 |        11664 |     7.5% |
+|RawD2         |         6150 |         6567 |     6.8% |
+|RawD6         |        10104 |        10327 |     2.2% |
+|RawD30        |        12019 |        12608 |     4.9% |
+|RawQ2         |         5800 |         6167 |     6.3% |
+|RawQ6         |         9700 |         9754 |     0.6% |
+|RawQ30        |        12045 |        12276 |     1.9% |
+|PoolQ30M      |        16204 |        17891 |    10.4% |
+
+Overall: +6.8%
 
 
 V1 vs V2 performance (.NET 6):
@@ -252,7 +254,7 @@ AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
 |     ArrayPool8of30 |   1000000 |   387.2 us | 1.98 us | 1.75 us |  0.29 |        - |        - |        - |      96 B |
 |    ArrayPool8of30M |   1000000 |   288.2 us | 1.30 us | 1.22 us |  0.21 |        - |        - |        - |     912 B |
 
-### V2 Benchmark
+### V2 Benchmark with .NET 6
 
 ```
 BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19042.1348 (20H2/October2020Update)
@@ -295,4 +297,50 @@ AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
 |     RawQ6 |   1000000 |   525.3 us | 0.81 us | 0.72 us |  0.39 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
 |    RawQ30 |   1000000 |   429.0 us | 3.36 us | 3.15 us |  0.32 |  19.5313 |  19.5313 |  19.5313 |     61 KB |
 |   RawQ30M |   1000000 |   308.2 us | 2.88 us | 2.70 us |  0.23 |  19.5313 |  19.5313 |  19.5313 |     62 KB |
+
+
+### V2 Benchmark with .NET 7
+
+```
+BenchmarkDotNet=v0.13.5, OS=Windows 10 (10.0.19044.2846/21H2/November2021Update)
+AMD Ryzen 7 3700X, 1 CPU, 16 logical and 8 physical cores
+.NET SDK=7.0.202
+  [Host]     : .NET 7.0.5 (7.0.523.17405), X64 RyuJIT AVX2
+  DefaultJob : .NET 7.0.5 (7.0.523.17405), X64 RyuJIT AVX2
+```
+
+
+|    Method | SieveSize |       Mean |   Error |  StdDev | Ratio |     Gen0 |     Gen1 |     Gen2 | Allocated | Alloc Ratio |
+|---------- |---------- |-----------:|--------:|--------:|------:|---------:|---------:|---------:|----------:|------------:|
+|      Bit2 |   1000000 | 1,375.6 us | 3.47 us | 3.25 us |  1.00 |   5.8594 |        - |        - |  61.13 KB |        1.00 |
+| Bit2While |   1000000 | 1,362.8 us | 3.96 us | 3.71 us |  0.99 |   5.8594 |        - |        - |  61.13 KB |        1.00 |
+|      Bit6 |   1000000 |   731.6 us | 1.38 us | 1.29 us |  0.53 |   6.8359 |   0.9766 |        - |  61.13 KB |        1.00 |
+|     Bit30 |   1000000 |   494.9 us | 2.80 us | 2.62 us |  0.36 |   6.8359 |   0.9766 |        - |  61.19 KB |        1.00 |
+|     Bool2 |   1000000 |   492.5 us | 6.12 us | 5.73 us |  0.36 | 142.5781 | 142.5781 | 142.5781 | 488.38 KB |        7.99 |
+|     Bool6 |   1000000 |   458.0 us | 2.18 us | 1.93 us |  0.33 | 142.5781 | 142.5781 | 142.5781 | 488.38 KB |        7.99 |
+|    Bool30 |   1000000 |   445.1 us | 1.42 us | 1.33 us |  0.32 | 142.5781 | 142.5781 | 142.5781 | 488.45 KB |        7.99 |
+|    IBool2 |   1000000 |   462.0 us | 1.77 us | 1.57 us |  0.34 | 142.5781 | 142.5781 | 142.5781 | 488.38 KB |        7.99 |
+|    IBool6 |   1000000 |   492.2 us | 3.34 us | 3.13 us |  0.36 | 142.5781 | 142.5781 | 142.5781 | 488.38 KB |        7.99 |
+|   IBool30 |   1000000 |   421.9 us | 3.44 us | 3.05 us |  0.31 | 142.5781 | 142.5781 | 142.5781 | 488.45 KB |        7.99 |
+|    PoolB2 |   1000000 |   782.7 us | 2.86 us | 2.68 us |  0.57 |   7.8125 |        - |        - |  64.06 KB |        1.05 |
+|    PoolB6 |   1000000 |   520.4 us | 2.18 us | 2.04 us |  0.38 |   7.8125 |        - |        - |  64.06 KB |        1.05 |
+|   PoolB30 |   1000000 |   383.6 us | 3.35 us | 3.13 us |  0.28 |   7.8125 |        - |        - |  64.12 KB |        1.05 |
+|    PoolD2 |   1000000 |   632.2 us | 7.59 us | 6.33 us |  0.46 |   7.8125 |        - |        - |  64.06 KB |        1.05 |
+|    PoolD6 |   1000000 |   474.6 us | 5.42 us | 4.23 us |  0.35 |   7.8125 |        - |        - |  64.05 KB |        1.05 |
+|   PoolD30 |   1000000 |   329.9 us | 2.01 us | 1.88 us |  0.24 |   7.8125 |        - |        - |  64.12 KB |        1.05 |
+|    PoolQ2 |   1000000 |   710.3 us | 2.99 us | 2.80 us |  0.52 |   7.8125 |        - |        - |  64.06 KB |        1.05 |
+|    PoolQ6 |   1000000 |   470.7 us | 2.09 us | 1.95 us |  0.34 |   7.8125 |        - |        - |  64.05 KB |        1.05 |
+|   PoolQ30 |   1000000 |   356.4 us | 1.55 us | 1.45 us |  0.26 |   7.8125 |        - |        - |  64.12 KB |        1.05 |
+|  PoolQ30M |   1000000 |   256.0 us | 1.77 us | 1.57 us |  0.19 |   7.8125 |   1.4648 |        - |  64.91 KB |        1.06 |
+|     RawB2 |   1000000 |   831.9 us | 5.55 us | 5.19 us |  0.60 |  19.5313 |  19.5313 |  19.5313 |   61.1 KB |        1.00 |
+|     RawB6 |   1000000 |   564.4 us | 2.56 us | 2.39 us |  0.41 |  19.5313 |  19.5313 |  19.5313 |   61.1 KB |        1.00 |
+|    RawB30 |   1000000 |   435.6 us | 1.21 us | 1.13 us |  0.32 |  19.5313 |  19.5313 |  19.5313 |  61.16 KB |        1.00 |
+|     RawD2 |   1000000 |   776.0 us | 8.74 us | 8.17 us |  0.56 |  19.5313 |  19.5313 |  19.5313 |   61.1 KB |        1.00 |
+|     RawD6 |   1000000 |   516.6 us | 5.48 us | 5.13 us |  0.38 |  19.5313 |  19.5313 |  19.5313 |   61.1 KB |        1.00 |
+|    RawD30 |   1000000 |   411.0 us | 2.57 us | 2.40 us |  0.30 |  19.5313 |  19.5313 |  19.5313 |  61.16 KB |        1.00 |
+|     RawQ2 |   1000000 |   820.5 us | 5.85 us | 5.18 us |  0.60 |  19.5313 |  19.5313 |  19.5313 |   61.1 KB |        1.00 |
+|     RawQ6 |   1000000 |   522.1 us | 4.54 us | 4.25 us |  0.38 |  19.5313 |  19.5313 |  19.5313 |   61.1 KB |        1.00 |
+|    RawQ30 |   1000000 |   418.0 us | 3.44 us | 3.22 us |  0.30 |  19.5313 |  19.5313 |  19.5313 |  61.16 KB |        1.00 |
+|   RawQ30M |   1000000 |   288.6 us | 3.08 us | 2.73 us |  0.21 |  19.5313 |  19.5313 |  19.5313 |  61.96 KB |        1.01 |
+
 

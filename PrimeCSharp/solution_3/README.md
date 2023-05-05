@@ -7,7 +7,7 @@
 
 ## Run instructions
 
-1. Get the latest version of .NET 5 or later: https://dotnet.microsoft.com/download
+1. Get the latest version of .NET 7 or later: https://dotnet.microsoft.com/download
 2. From the solution root, run `dotnet run -c Release`
 
 ## Output

@@ -1,3 +1,8 @@
-{:paths ["."]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        criterium/criterium {:mvn/version "0.4.6"}}}
+{:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
+ :aliases {:benchmark {:extra-deps {criterium/criterium {:mvn/version "0.4.6"}}}
+           :decompiler {:extra-deps {com.clojure-goes-fast/clj-java-decompiler {:mvn/version "0.3.1"}}}
+           :profiler {:extra-deps {com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.5.1"}}
+                      :jvm-opts ["-Djdk.attach.allowAttachSelf" "-XX:+UnlockDiagnosticVMOptions" "-XX:+DebugNonSafepoints"]}
+           :build {:deps {io.github.clojure/tools.build {:git/tag "v0.7.5" :git/sha "34727f7"}}
+                   :ns-default build}}}

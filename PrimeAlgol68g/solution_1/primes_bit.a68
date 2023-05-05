@@ -1,0 +1,166 @@
+# Sieve of Eratosthenes in Algol 68g using bits #
+
+PROC set bits = (REF []BITS this, INT num bits) VOID:
+(
+    BITS all ones := NOT 2r0;
+    INT num bytes := UPB this;
+    FOR k TO num bytes - 1
+    DO
+        this[k] := all ones
+    OD;
+
+    BITS remaining ones := all ones SHL ((bits width - num bits) MOD bits width);
+    this[num bytes] := remaining ones
+);
+
+PROC clear bits = (REF []BITS this, INT num bits, INT start, INT step) VOID:
+(
+    INT byte num := 1 + ENTIER((start - 1) / bits width);
+    INT bit pos := 1 + ((start - 1) MOD bits width);
+    INT byte inc := ENTIER(step / bits width);
+    INT bit inc := step MOD bits width;
+    FOR k FROM start BY step TO num bits
+    DO
+        this[byte num] := bit pos CLEAR this[byte num];
+        byte num +:= byte inc;
+        bit pos +:= bit inc;
+        IF bit pos > bits width
+        THEN
+            bit pos -:= bits width;
+            byte num +:= 1
+        FI
+    OD
+);
+
+PROC get bit = (REF []BITS this, INT bit num) BOOL:
+(
+    INT byte num := 1 + ENTIER((bit num - 1) / bits width);
+    INT bit pos := 1 + ((bit num - 1) MOD bits width);
+    bit pos ELEM this[byte num]
+);
+
+MODE PRIMESIEVE = STRUCT(INT sieve size, INT num bits, REF []BITS sieve);
+
+PROC run sieve = (INT sieve size) PRIMESIEVE:
+(
+    INT num bits := ENTIER((sieve size - 1) / 2);
+    INT num bytes := ENTIER((num bits + bits width - 1) / bits width);
+    HEAP [num bytes]BITS sieve;
+    set bits(sieve, num bits);
+
+    INT q := ENTIER (sqrt(sieve size) / 2);
+    INT bit := 1;
+    WHILE bit <= q
+    DO
+        IF get bit(sieve, bit)
+        THEN
+            clear bits(sieve, num bits, 2 * bit * (bit + 1), 2 * bit + 1)
+        FI;
+        bit +:= 1
+    OD;
+    PRIMESIEVE(sieve size, num bits, sieve)
+);
+
+PROC count primes = (PRIMESIEVE this) INT:
+(
+    INT count := 1;
+    REF []BITS sieve := sieve OF this;
+    INT num bits := num bits OF this;
+    FOR k TO num bits
+    DO
+        IF get bit(sieve, k)
+        THEN
+            count +:= 1
+        FI
+    OD;
+    count
+);
+
+PROC validate results = (PRIMESIEVE this) BOOL:
+(
+    # Cannot support sieve size over 100 million #
+
+    INT sieve size := sieve size OF this;
+    INT expected count := -1;
+    IF sieve size = 10 THEN expected count := 4
+    ELIF sieve size = 100 THEN expected count := 25
+    ELIF sieve size = 1 000 THEN expected count := 168
+    ELIF sieve size = 10 000 THEN expected count := 1229
+    ELIF sieve size = 100 000 THEN expected count := 9592
+    ELIF sieve size = 1 000 000 THEN expected count := 78498
+    ELIF sieve size = 10 000 000 THEN expected count := 664579
+    ELIF sieve size = 100 000 000 THEN expected count := 5761455
+    ELSE print(("Invalid sieve size", new line))
+    FI;
+
+    count primes(this) = expected count
+);
+
+PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT passes) VOID:
+(
+    IF show results
+    THEN
+        print("2, ")
+    FI;
+
+    INT count := 1;
+    INT sieve size := sieve size OF this;
+    INT num bits := num bits OF this;
+    REF []BITS sieve := sieve OF this;
+    FOR k TO num bits
+    DO
+        IF get bit(sieve, k)
+        THEN
+            IF show results
+            THEN
+                print((whole(2*k + 1, 0), ", "))
+            FI;
+            count +:= 1
+        FI
+    OD;
+
+    IF show results
+    THEN
+        print(newline)
+    FI;
+
+    print((
+        "Passes: ", whole(passes, 0),
+        ", Time: ", fixed(duration, 0, 8),
+        ", Avg: ", fixed(duration / passes, 0, 8),
+        ", Limit: ", whole(sieve size, 0),
+        ", Count1: ", whole(count, 0),
+        ", Count2: ", whole(count primes(this), 0),
+        ", Valid: ", (validate results(this) | "true" | "false"),
+        newline
+    ));
+    print((
+        newline,
+        "rzuckerm;", whole(passes, 0),
+        ";", fixed(duration, 0, 8),
+        ";1;algorithm=base,faithful=yes,bits=1",
+        newline
+    ))
+    
+);
+
+REAL start = seconds;
+INT passes := 0;
+INT n := 1 000 000;
+BOOL show results := FALSE;
+WHILE 
+    passes +:= 1;
+
+    PRIMESIEVE sieve = run sieve(n);
+
+    IF (seconds - start) >= 5
+    THEN
+        print results(sieve, show results, seconds - start, passes);
+        FALSE
+    ELSE
+        TRUE
+    FI
+DO
+    SKIP
+OD
+
