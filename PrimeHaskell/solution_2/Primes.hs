@@ -7,14 +7,16 @@ import PrimesNoLSR ( Technique(..), primesSoENoLSR )
 import Data.Time.Clock.POSIX ( getPOSIXTime, POSIXTime )
 import Data.Word ( Word8, Word64 )
 import Data.Bits ( Bits((.|.), (.&.), shiftL, shiftR) )
-import Control.Concurrent ( threadDelay )
-import Control.Monad ( forM_, foldM_, foldM )
+import Data.Maybe (fromMaybe)
+import Control.Monad ( forM_, forM, foldM_, foldM )
 import Control.Monad.ST ( ST )
 import Data.Array ( Array )
 import Data.Array.Base ( MArray(newArray), STUArray(STUArray),
                          castSTUArray, unsafeRead, unsafeWrite,
                          UArray, listArray, assocs, unsafeAt )
 import Data.Array.ST ( runSTUArray )
+import Control.Concurrent ( threadDelay, setNumCapabilities, forkIO )
+import Control.Concurrent.MVar ( MVar, newEmptyMVar, putMVar, takeMVar )
 
 type Prime = Word64
 type SieveBuffer = UArray Int Bool
@@ -27,6 +29,9 @@ cFORTIME = 5
 
 cCPUL1CACHE :: Int 
 cCPUL1CACHE = 16384 -- in bytes, must be power of two
+
+cNUMPROCS :: Int
+cNUMPROCS = 4
 
 -- | Historical data for validating our results - the number of primes
 -- to be found under some limit, such as 168 primes under 1000
@@ -42,7 +47,7 @@ primeCounts =
   ]
 
 cEXPECTED :: Int
-cEXPECTED = maybe 0 id $ lookup cLIMIT primeCounts
+cEXPECTED = fromMaybe 0 $ lookup cLIMIT primeCounts
 
 cBITMASK :: UArray Int Word8 -- faster than bit shifting...
 cBITMASK = listArray (0, 7) [ 1, 2, 4, 8, 16, 32, 64, 128 ]
@@ -122,9 +127,8 @@ listPrimes :: SieveBuffer -> [Prime]
 listPrimes sb =
    sb `seq` 2 : [ fromIntegral (i + i + 3) | (i, False) <- assocs sb ]
 
-benchMark :: Technique -> IO ()
-benchMark tec = do
-  threadDelay 1000000
+singleTest :: Technique -> IO (Int, Bool)
+singleTest tec = do
   strttm <- getPOSIXTime
   let loop _ [] = error "Should never get here!!!"
       loop passes (hd : rst) = do
@@ -135,20 +139,40 @@ benchMark tec = do
         now <- cmpstsBuffer `seq` getPOSIXTime -- force immediate execution
         let duration = now - strttm
         if duration < cFORTIME then passes `seq` loop (passes + 1) rst else
-          let count = length $ listPrimes cmpstsBuffer in
-          if count == cEXPECTED then
-            let label = case tec of
-                          BitTwiddle -> "bittwiddle"
-                          Stride8 -> "stride8"
-                          Stride8Block -> "stride8-block16K"
-                          Extreme -> "extreme"
-                          ExtremeHybrid -> "extreme-hybrid"
-            in putStrLn $ "GordonBGood_" ++ label ++ ";"
-                        ++ show passes ++ ";" ++ show (realToFrac duration)
-                        ++ ";1;algorithm=base,faithful=yes,bits=1"
-          else putStrLn $ "Invalid result:  " ++ show count ++ " primes." ++ show passes
+          return (passes, length (listPrimes cmpstsBuffer) == cEXPECTED)
   loop 0 (repeat cLIMIT)
 
-main :: IO ()
-main = forM_ [ BitTwiddle .. ExtremeHybrid ] benchMark
+threadedTest :: Int -> Technique -> IO (Int, Bool)
+threadedTest thrds tec = do
+  setNumCapabilities thrds
+  mvrs <- forM [1 .. thrds] $ const newEmptyMVar
+  forM_ mvrs $ \ mvr -> forkIO $ do answr <- singleTest tec
+                                    putMVar mvr $! answr
+  rslts <- forM mvrs $ \ mvr -> takeMVar mvr
+  return (sum $ map fst rslts, all snd rslts)
 
+benchMark :: Int -> Technique -> IO ()
+benchMark thrds tec = do
+  threadDelay 1000000
+  strttm <- getPOSIXTime
+  (passes, chk) <- if thrds < 2 then singleTest tec
+                   else threadedTest cNUMPROCS tec
+  now <- chk `seq` getPOSIXTime -- force immediate execution
+  let duration = now - strttm
+  if chk then
+    let label = case tec of
+                  BitTwiddle -> "bittwiddle"
+                  Stride8 -> "stride8"
+                  Stride8Block -> "stride8-block16K"
+                  Extreme -> "extreme"
+                  ExtremeHybrid -> "extreme-hybrid"
+    in putStrLn $ "GordonBGood_" ++ label ++ ";"
+                ++ show passes ++ ";" ++ show (realToFrac duration)
+                ++ ";" ++ show thrds
+                ++ ";algorithm=base,faithful=yes,bits=1"
+  else putStrLn "Invalid result!!!"
+
+main :: IO ()
+main = do
+  forM_ [ BitTwiddle .. ExtremeHybrid ] $ benchMark 1 -- single threaded
+  forM_ [ BitTwiddle .. ExtremeHybrid ] $ benchMark cNUMPROCS -- multi threaded
