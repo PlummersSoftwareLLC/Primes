@@ -377,7 +377,7 @@ class PrimeSieve {
 
 // producing, verifying, showing results...
 
-proc benchmark(tech: Techniques) {
+proc singleTest(tech: Techniques): (int, bool) {
   var passes: int = 0;
   var duration: real(64) = 0;
   var sieve: shared PrimeSieve? = nil;
@@ -391,7 +391,39 @@ proc benchmark(tech: Techniques) {
   var count: int = 0;
   for p in sieve: shared PrimeSieve do count += 1;
 
-  if count == EXPECTED {
+  return if (count == EXPECTED) then (passes, true) else (passes, false);
+}
+
+class Result { // must use a class to use with `sync` variable!
+  const passes: int;
+  const chk: bool;
+}
+
+proc threadedTest(tech: Techniques, thrds: int): (int, bool) {
+  var rslt$: sync shared Result?;
+  for i in 1 .. thrds {
+    begin with (const in tech) {
+      const r = singleTest(tech);
+      rslt$.writeEF(new shared Result(r(0), r(1)): shared Result?);
+    }
+  }
+  var passes: int = 0; var chk: bool = true;
+  for i in 1 .. thrds {
+    const r = rslt$.readFE();
+    passes += r!.passes; chk &= r!.chk;
+  }
+  return (passes, chk);
+}
+
+proc benchmark(tech: Techniques, multi: bool = false) {
+  const thrds = if (multi) then here.maxTaskPar else 1;
+  var passes: int = 0; var chk: bool;
+  var timer: Timer; timer.start();
+  (passes, chk) = if (multi) then threadedTest(tech, thrds) else singleTest(tech);
+  timer.stop();
+  const duration: real(64) = timer.elapsed();
+
+  if chk {
     const lbl: string =
       "GordonBGood_" +
         if tech == Techniques.BitTwiddle then "bittwiddle;"
@@ -399,9 +431,10 @@ proc benchmark(tech: Techniques) {
         else if tech == Techniques.UnpeeledBlock then "stride8_block16K;"
         else if tech == Techniques.Unrolled then "extreme;"
         else "extreme_hybrid;";
-    writeln(lbl, passes, ";", duration, ";1;algorithm=base,faithful=yes,bits=1");
+    writeln(lbl, passes, ";", duration, ";", thrds, ";algorithm=base,faithful=yes,bits=1");
   }
-  else { writeln("Invalid result:  ", count, " should be ", EXPECTED, "!"); }  
+  else { writeln("Invalid result!!!"); }  
 }
 
 for t in Techniques do benchmark(t);
+for t in Techniques do benchmark(t, multi = true);
