@@ -2,8 +2,9 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
-![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+
+Although there is little point to a multi-threaded solution in showing which language is fastest for any of the languages as they will only show the effect of CPU throttling due to increased power usage for multiple cores and the effect of sharing resources, especially "Hyper-Threading" (HT)/""Simultaneous Multi Threading" (SMT) in sharing threads using common core execution unit resources and will be consistent in ratio to single threaded uses across languages, to be competitive a multi-threaded solution is provided.  Since for the metric of work done per thread for HT/SMT threads when all available threads are used drops by almost a factor of two plus the thermal throttling factor, some implementations have used less than the maximum number of threads to gain an apparent advantage in the multi-threading leaderboard, with one precident example using 4 threads and some forcing 16 threads in order to gain an advantage in the main test machine which has 32 threads on 16 cores using HT/SMT.  This seems objectionable as it tailors the test to this specific CPU and this implementation uses four threads, which should be available for all test machines.  This will provide an advantage on the 16 core test machine in less thermal throttling and less sharing of compute engine resources, but it will be no more than the advantage of the other accepted implementation using four thread.  As implied above, the multi-threading contest ruls should really be modified that all available threads must be used for a "maximum total work done" implementation.
 
 ## Run
 
@@ -13,6 +14,7 @@ You may have [to build the Chapel compiler yourself](https://chapel-lang.org/doc
 
 ```
 chpl --fast primes.chpl
+export CHPL_RT_NUM_THREADS_PER_LOCALE=4
 ./primes
 ```
 
@@ -29,11 +31,16 @@ The Dockerfile uses an official Debian image and then builds and installs Chapel
 
 ## Output
 ```
-GordonBGood_bittwiddle;7728;5.00028;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_stride8;9828;5.00024;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_stride8_block16K;10326;5.00016;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_extreme;15810;5.00001;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_extreme_hybrid;34785;5.00003;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;7805;5.00092;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;9856;5.0008;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8_block16K;10550;5.00064;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;16148;5.00062;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme_hybrid;35946;5.00046;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;31741;5.00081;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;40306;5.0008;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8_block16K;42994;5.00859;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;66169;5.00176;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme_hybrid;152777;5.01418;4;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Benchmarks
@@ -41,11 +48,16 @@ GordonBGood_extreme_hybrid;34785;5.00003;1;algorithm=base,faithful=yes,bits=1
 Running locally on my Intel SkyLake i5-6500 at 3.6 GHz when single threaded, I get some astounding numbers:
 
 ```
-GordonBGood_bittwiddle;7728;5.00028;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_stride8;9828;5.00024;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_stride8_block16K;10326;5.00016;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_extreme;15810;5.00001;1;algorithm=base,faithful=yes,bits=1
-GordonBGood_extreme_hybrid;34785;5.00003;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;7805;5.00092;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;9856;5.0008;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8_block16K;10550;5.00064;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;16148;5.00062;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme_hybrid;35946;5.00046;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;31741;5.00081;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;40306;5.0008;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8_block16K;42994;5.00859;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;66169;5.00176;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme_hybrid;152777;5.01418;4;algorithm=base,faithful=yes,bits=1
 ```
 Which matches the results when run with Docker on the same machine as follows:
 
@@ -54,11 +66,21 @@ Which matches the results when run with Docker on the same machine as follows:
 ┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-│   1   │ chapel         │ 1        │ GordonBGood_extreme_hybrid   │ 34555  │ 5.00013  │    1    │   base    │   yes    │ 1    │  6910.82032   │
-│   2   │ chapel         │ 1        │ GordonBGood_extreme          │ 16206  │ 5.00016  │    1    │   base    │   yes    │ 1    │  3241.09628   │
-│   3   │ chapel         │ 1        │ GordonBGood_stride8_block16K │ 10262  │ 5.00046  │    1    │   base    │   yes    │ 1    │  2052.21120   │
-│   4   │ chapel         │ 1        │ GordonBGood_stride8          │  9565  │ 5.00020  │    1    │   base    │   yes    │ 1    │  1912.92348   │
-│   5   │ chapel         │ 1        │ GordonBGood_bittwiddle       │  7743  │ 5.00032  │    1    │   base    │   yes    │ 1    │  1548.50090   │
+│   1   │ chapel         │ 1        │ GordonBGood_extreme_hybrid   │ 35024  │ 5.00055  │    1    │   base    │   yes    │ 1    │  7004.02956   │
+│   2   │ chapel         │ 1        │ GordonBGood_extreme          │ 16269  │ 5.00046  │    1    │   base    │   yes    │ 1    │  3253.50068   │
+│   3   │ chapel         │ 1        │ GordonBGood_stride8_block16K │  9747  │ 5.00080  │    1    │   base    │   yes    │ 1    │  1949.08815   │
+│   4   │ chapel         │ 1        │ GordonBGood_stride8          │  8697  │ 5.00092  │    1    │   base    │   yes    │ 1    │  1739.08001   │
+│   5   │ chapel         │ 1        │ GordonBGood_bittwiddle       │  7565  │ 5.00104  │    1    │   base    │   yes    │ 1    │  1512.68536   │
+└───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+                                                                 Multi-threaded                                                                 
+┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ chapel         │ 1        │ GordonBGood_extreme_hybrid   │ 151071 │ 5.00057  │    4    │   base    │   yes    │ 1    │  7552.68899   │
+│   2   │ chapel         │ 1        │ GordonBGood_extreme          │ 66892  │ 5.00074  │    4    │   base    │   yes    │ 1    │  3344.10507   │
+│   3   │ chapel         │ 1        │ GordonBGood_stride8_block16K │ 42320  │ 5.00093  │    4    │   base    │   yes    │ 1    │  2115.60650   │
+│   4   │ chapel         │ 1        │ GordonBGood_stride8          │ 35995  │ 5.00095  │    4    │   base    │   yes    │ 1    │  1799.40811   │
+│   5   │ chapel         │ 1        │ GordonBGood_bittwiddle       │ 31627  │ 5.00118  │    4    │   base    │   yes    │ 1    │  1580.97689   │
 └───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
 
