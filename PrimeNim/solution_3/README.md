@@ -1,11 +1,12 @@
-# Nim implementation #3 by GordonBGood
+# Nim solution #3 by GordonBGood
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
-![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 ## Description
+
+Although there is little point to a multi-threaded solution in showing which language is fastest for any of the languages as they will only show the effect of CPU throttling due to increased power usage for multiple cores and the effect of sharing resources, especially "Hyper-Threading" (HT)/""Simultaneous Multi Threading" (SMT) in sharing threads using common core execution unit resources and will be consistent in ratio to single threaded uses across languages, to be competitive a multi-threaded solution is provided.  Since for the metric of work done per thread for HT/SMT threads when all available threads are used drops by almost a factor of two plus the thermal throttling factor, some implementations have used less than the maximum number of threads to gain an apparent advantage in the multi-threading leaderboard, with one precident example using 4 threads and some forcing 16 threads in order to gain an advantage in the main test machine which has 32 threads on 16 cores using HT/SMT.  This seems objectionable as it tailors the test to this specific CPU and this implementation uses four threads, which should be available for all test machines.  This will provide an advantage on the 16 core test machine in less thermal throttling and less sharing of compute engine resources, but it will be no more than the advantage of the other accepted implementation using four thread.  As implied above, the multi-threading contest ruls should really be modified that all available threads must be used for a "maximum total work done" implementation.
 
 This solution contains implentations for five different composite number representations culling/marking techniques that all conform to being of the Sieve of Erathosthen type as follows:
 1. The simplest is just the bit twidding/bit-packed masking one, with one small improvement in using a Look Up Table (LUT) for the bit masking patterns by bit index rather than using shifting as this is slightly faster.
@@ -43,7 +44,16 @@ This version runs about the same speed run either on the Docker image or locally
 
 The following is as run on an Intel SkyLake i5-6500 at 3.6 GHz (single-threaded):
 ```
-GordonBGood_extreme_hybrid;44473;5.000062845;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;8436;5.000193184;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;12126;5.00009495;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8block-16K;15331;5.000233742;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;17846;5.000123127;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme-hybrid;43711;5.000105359;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;31778;5.006587674;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;45603;5.003502314;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8block-16K;52680;5.00327773;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;67359;5.005868927;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme-hybrid;163564;5.002152956;4;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Benchmarks
@@ -51,16 +61,16 @@ GordonBGood_extreme_hybrid;44473;5.000062845;1;algorithm=base,faithful=yes,bits=
 Running locally on my Intel SkyLake i5-6500 at 3.6 GHz when single threaded, I get some astounding numbers:
 
 ```
-Passes: 8549, Time: 5.00003205, Avg: 0.0005848674757281553, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-GordonBGood_bittwiddle;8549;5.00003205;1;algorithm=base,faithful=yes,bits=1
-Passes: 12179, Time: 5.000142803, Avg: 0.0004105544628458823, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-GordonBGood_stride8;12179;5.000142803;1;algorithm=base,faithful=yes,bits=1
-Passes: 15481, Time: 5.000130019, Avg: 0.0003229849505199923, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-GordonBGood_stride8block-16K;15481;5.000130019;1;algorithm=base,faithful=yes,bits=1
-Passes: 18332, Time: 5.000006381, Avg: 0.0002727474569605062, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-GordonBGood_extreme;18332;5.000006381;1;algorithm=base,faithful=yes,bits=1
-Passes: 44094, Time: 5.000062015, Avg: 0.0001133955190048533, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
-GordonBGood_extreme-hybrid;44094;5.000062015;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;8436;5.000193184;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;12126;5.00009495;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8block-16K;15331;5.000233742;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;17846;5.000123127;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme-hybrid;43711;5.000105359;1;algorithm=base,faithful=yes,bits=1
+GordonBGood_bittwiddle;31778;5.006587674;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8;45603;5.003502314;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_stride8block-16K;52680;5.00327773;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme;67359;5.005868927;4;algorithm=base,faithful=yes,bits=1
+GordonBGood_extreme-hybrid;163564;5.002152956;4;algorithm=base,faithful=yes,bits=1
 ```
 Which matches the results when run with Docker on the same machine as follows:
 
@@ -69,11 +79,21 @@ Which matches the results when run with Docker on the same machine as follows:
 ┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-│   1   │ nim            │ 3        │ GordonBGood_extreme-hybrid   │ 43730  │ 5.00014  │    1    │   base    │   yes    │ 1    │  8745.75303   │
-│   2   │ nim            │ 3        │ GordonBGood_extreme          │ 18115  │ 5.00016  │    1    │   base    │   yes    │ 1    │  3622.88491   │
-│   3   │ nim            │ 3        │ GordonBGood_stride8block-16K │ 15389  │ 5.00014  │    1    │   base    │   yes    │ 1    │  3077.71376   │
-│   4   │ nim            │ 3        │ GordonBGood_stride8          │ 12196  │ 5.00025  │    1    │   base    │   yes    │ 1    │  2439.07929   │
-│   5   │ nim            │ 3        │ GordonBGood_bittwiddle       │  8480  │ 5.00022  │    1    │   base    │   yes    │ 1    │  1695.92701   │
+│   1   │ nim            │ 3        │ GordonBGood_extreme-hybrid   │ 42971  │ 5.00002  │    1    │   base    │   yes    │ 1    │  8594.17189   │
+│   2   │ nim            │ 3        │ GordonBGood_extreme          │ 18030  │ 5.00009  │    1    │   base    │   yes    │ 1    │  3605.93329   │
+│   3   │ nim            │ 3        │ GordonBGood_stride8block-16K │ 15434  │ 5.00030  │    1    │   base    │   yes    │ 1    │  3086.61194   │
+│   4   │ nim            │ 3        │ GordonBGood_stride8          │ 12074  │ 5.00028  │    1    │   base    │   yes    │ 1    │  2414.66308   │
+│   5   │ nim            │ 3        │ GordonBGood_bittwiddle       │  8469  │ 5.00029  │    1    │   base    │   yes    │ 1    │  1693.70180   │
+└───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+                                                                 Multi-threaded                                                                 
+┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ nim            │ 3        │ GordonBGood_extreme-hybrid   │ 161461 │ 5.00080  │    4    │   base    │   yes    │ 1    │  8071.76310   │
+│   2   │ nim            │ 3        │ GordonBGood_extreme          │ 67586  │ 5.00086  │    4    │   base    │   yes    │ 1    │  3378.71766   │
+│   3   │ nim            │ 3        │ GordonBGood_stride8block-16K │ 52922  │ 5.00060  │    4    │   base    │   yes    │ 1    │  2645.78250   │
+│   4   │ nim            │ 3        │ GordonBGood_stride8          │ 45735  │ 5.00106  │    4    │   base    │   yes    │ 1    │  2286.26753   │
+│   5   │ nim            │ 3        │ GordonBGood_bittwiddle       │ 31845  │ 5.00113  │    4    │   base    │   yes    │ 1    │  1591.88924   │
 └───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
 
