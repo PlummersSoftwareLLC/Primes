@@ -54,7 +54,7 @@ class CSieve {
   }
 
   late final ___security_check_cookiePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(uintptr_t)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.UintPtr)>>(
           '__security_check_cookie');
   late final ___security_check_cookie =
       ___security_check_cookiePtr.asFunction<void Function(int)>();
@@ -68,13 +68,13 @@ class CSieve {
   }
 
   late final ___report_gsfailurePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(uintptr_t)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.UintPtr)>>(
           '__report_gsfailure');
   late final ___report_gsfailure =
       ___report_gsfailurePtr.asFunction<void Function(int)>();
 
-  late final ffi.Pointer<uintptr_t> ___security_cookie =
-      _lookup<uintptr_t>('__security_cookie');
+  late final ffi.Pointer<ffi.UintPtr> ___security_cookie =
+      _lookup<ffi.UintPtr>('__security_cookie');
 
   int get __security_cookie => ___security_cookie.value;
 
@@ -113,17 +113,16 @@ class CSieve {
     int index,
   ) {
     return _get_bit(
-          sieve,
-          index,
-        ) !=
-        0;
+      sieve,
+      index,
+    );
   }
 
   late final _get_bitPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Uint8 Function(ffi.Pointer<sieve>, ffi.Uint64)>>('get_bit');
+          ffi.Bool Function(ffi.Pointer<sieve>, ffi.Uint64)>>('get_bit');
   late final _get_bit =
-      _get_bitPtr.asFunction<int Function(ffi.Pointer<sieve>, int)>();
+      _get_bitPtr.asFunction<bool Function(ffi.Pointer<sieve>, int)>();
 
   void clear_bit(
     ffi.Pointer<sieve> sieve,
@@ -170,10 +169,9 @@ class CSieve {
       _count_primesPtr.asFunction<int Function(ffi.Pointer<sieve>)>();
 }
 
-typedef va_list = ffi.Pointer<ffi.Int8>;
-typedef uintptr_t = ffi.Uint64;
+typedef va_list = ffi.Pointer<ffi.Char>;
 
-class sieve extends ffi.Struct {
+final class sieve extends ffi.Struct {
   external ffi.Pointer<ffi.Uint64> array;
 
   @ffi.Uint64()
