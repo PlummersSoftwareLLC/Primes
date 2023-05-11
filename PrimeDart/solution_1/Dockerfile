@@ -1,9 +1,9 @@
 FROM dart:3.0.0 AS build
 WORKDIR /app
 COPY pubspec.* ./
-RUN pub get
+RUN dart pub get
 COPY . .
-RUN pub get --offline \
+RUN dart pub get --offline \
     && dart compile exe /app/bin/runner.dart -o runner 
 
 FROM scratch AS runtime
