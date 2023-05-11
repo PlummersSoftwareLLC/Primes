@@ -15,6 +15,7 @@ import Data.Array.Base ( MArray(newArray), STUArray(STUArray),
                          castSTUArray, unsafeRead, unsafeWrite,
                          UArray, listArray, assocs, unsafeAt )
 import Data.Array.ST ( runSTUArray )
+import GHC.Conc (getNumProcessors)
 import Control.Concurrent ( threadDelay, setNumCapabilities, forkIO )
 import Control.Concurrent.MVar ( MVar, newEmptyMVar, putMVar, takeMVar )
 
@@ -144,7 +145,6 @@ singleTest tec = do
 
 threadedTest :: Int -> Technique -> IO (Int, Bool)
 threadedTest thrds tec = do
-  setNumCapabilities thrds
   mvrs <- forM [1 .. thrds] $ const newEmptyMVar
   forM_ mvrs $ \ mvr -> forkIO $ do answr <- singleTest tec
                                     putMVar mvr $! answr
@@ -153,7 +153,7 @@ threadedTest thrds tec = do
 
 benchMark :: Int -> Technique -> IO ()
 benchMark thrds tec = do
-  threadDelay 1000000
+  threadDelay 5000000
   strttm <- getPOSIXTime
   (passes, chk) <- if thrds < 2 then singleTest tec
                    else threadedTest cNUMPROCS tec
@@ -174,5 +174,8 @@ benchMark thrds tec = do
 
 main :: IO ()
 main = do
+  maxthrds <- getNumProcessors
+  let thrds = min cNUMPROCS maxthrds
+  setNumCapabilities thrds
   forM_ [ BitTwiddle .. ExtremeHybrid ] $ benchMark 1 -- single threaded
-  forM_ [ BitTwiddle .. ExtremeHybrid ] $ benchMark cNUMPROCS -- multi threaded
+  forM_ [ BitTwiddle .. ExtremeHybrid ] $ benchMark thrds -- multi threaded
