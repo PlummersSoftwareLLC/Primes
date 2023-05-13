@@ -860,7 +860,8 @@ fn main() {
             );
         }
 
-        if opt.bits_striped_blocks || run_all {
+        // not run by default
+        if opt.bits_striped_blocks {
             run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>(
                 "bit-striped-blocks16k",
                 1,
@@ -882,7 +883,8 @@ fn main() {
             );
         }
 
-        if opt.bits_striped_hybrid || run_all {
+        // not run by default
+        if opt.bits_striped_hybrid {
             run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>(
                 "bit-striped-hybrid-blocks16k",
                 1,
