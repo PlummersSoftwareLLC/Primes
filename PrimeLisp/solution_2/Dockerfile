@@ -1,4 +1,4 @@
-FROM daewok/sbcl:2.2.0-alpine3.15
+FROM fukamachi/sbcl:2.3.4-alpine
 
 WORKDIR /opt/app
 

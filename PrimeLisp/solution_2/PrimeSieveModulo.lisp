@@ -259,23 +259,42 @@ according to the historical data in +results+."
     (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
+(defconstant +threads+ 32)
+(declaim (fixnum *run-workers*))
+(defglobal *run-workers* 0)
+(defvar *results* nil)
+(defvar *workers* nil)
+
+(defun worker ()
+  (loop if (= *run-workers* 0) do (sb-thread:thread-yield)
+          else do (atomic-push (run-sieve (create-sieve 1000000)) *results*)))
+
+(loop repeat +threads+ do (push (sb-thread:make-thread #'worker) *workers*))
+
+
 (let* ((passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
   (declare (fixnum passes))
 
+  (atomic-incf *run-workers*)
+
   (loop while (<= (get-internal-real-time) end)
-        do (setq result (run-sieve (create-sieve 1000000)))
-           (incf passes))
+        do (let ((top-result (atomic-pop *results*)))
+             (when top-result
+               (setf result top-result)
+               (incf passes)))
+           finally (atomic-decf *run-workers*))
 
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
+    (dolist (thread *workers*) (sb-thread:terminate-thread thread))
     (when *list-to* (list-primes result))
-    (format *error-output* "Algorithm: base w/ modulo  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
-            passes duration (* 1000 avg) (count-primes result) (validate result))
+    (format *error-output* "Algorithm: base w/ modulo  Threads: ~d  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
+            +threads+ passes duration (* 1000 avg) (count-primes result) (validate result))
 
-    (format t "mayerrobert-cl-modulo;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration)))
+    (format t "mayerrobert-YaroslavKhnygin-cl-modulo;~d;~f;~d;algorithm=base,faithful=yes,bits=1~%" passes duration +threads+)))
 
 
 ; uncomment the following line to display the generated loop stmt for setting every 3rd bit starting at 4

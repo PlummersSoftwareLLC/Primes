@@ -360,6 +360,19 @@
     result))
 
 
+(defconstant +threads+ 32)
+(declaim (fixnum *run-workers*))
+(defglobal *run-workers* 0)
+(defvar *results* nil)
+(defvar *workers* nil)
+
+(defun worker ()
+  (loop if (= *run-workers* 0) do (sb-thread:thread-yield)
+          else do (atomic-push (run-sieve (create-sieve 1000000) +steps+) *results*)))
+
+(loop repeat +threads+ do (push (sb-thread:make-thread #'worker) *workers*))
+
+
 (defun validate (sieve-state)
   "Invoke test, and then check if sieve-state is correct
 according to the historical data in +results+."
@@ -374,13 +387,19 @@ according to the historical data in +results+."
        result)
   (declare (nonneg-fixnum passes))
 
+  (atomic-incf *run-workers*)
+
   (loop while (<= (get-internal-real-time) end)
-        do (setq result (run-sieve (create-sieve 1000000) +steps+))
-           (incf passes))
+        do (let ((top-result (atomic-pop *results*)))
+             (when top-result
+               (setf result top-result)
+               (incf passes)))
+           finally (atomic-decf *run-workers*))
 
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
-    (format *error-output* "Algorithm: wheel bitvector  Passes: ~d, Time: ~f, Avg: ~f ms, Count: ~d  Valid: ~A~%"
-            passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
+    (dolist (thread *workers*) (sb-thread:terminate-thread thread))
+    (format *error-output* "Algorithm: wheel bitvector  Threads: ~d  Passes: ~d, Time: ~f, Avg: ~f ms, Count: ~d  Valid: ~A~%"
+            +threads+ passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
 
-    (format t "mayerrobert-cl-wheel-bitvector;~d;~f;1;algorithm=wheel,faithful=yes,bits=1~%" passes duration)))
+    (format t "mayerrobert-YaroslavKhnygin-cl-wheel-bitvector;~d;~f;~d;algorithm=wheel,faithful=yes,bits=1~%" passes duration +threads+)))
