@@ -195,7 +195,6 @@ Using sbcl 2.3.4 on Windows 11, WSL2, Ubuntu 22.04, 13th Gen Intel(R) Core(TM) i
 
     $ sh run.sh 2> /dev/null
     mayerrobert-cl;17652;5.000019;1;algorithm=base,faithful=yes,bits=1
-    mayerrobert-cl-hashdot;1174647672;5.000063;1;algorithm=base,faithful=no,bits=1
     mayerrobert-cl-modulo;12615;5.000081;1;algorithm=base,faithful=yes,bits=1
     mayerrobert-cl-modulo-functions;20403;5.000057;1;algorithm=base,faithful=yes,bits=1
     mayerrobert-cl-wheel-bitvector;51692;5.009988;1;algorithm=wheel,faithful=yes,bits=1
@@ -211,7 +210,6 @@ Using sbcl 2.3.4 on Windows 11, WSL2, Ubuntu 22.04, 13th Gen Intel(R) Core(TM) i
 
     $ sh run.sh 2> /dev/null
     mayerrobert-YaroslavKhnygin-cl;169347;5.00212;32;algorithm=base,faithful=yes,bits=1 (~9.6x speedup)
-    mayerrobert-cl-hashdot;1147598560;5.009997;1;algorithm=base,faithful=no,bits=1 (not parallelized)
     mayerrobert-YaroslavKhnygin-cl-modulo;144798;5.009999;32;algorithm=base,faithful=yes,bits=1 (~11.5x speedup)
     mayerrobert-YaroslavKhnygin-cl-modulo-functions;166947;5.01;32;algorithm=base,faithful=yes,bits=1 (~8.2x speedup)
     mayerrobert-YaroslavKhnygin-cl-wheel-bitvector;263743;5.000134;32;algorithm=wheel,faithful=yes,bits=1 (~5.1x speedup)

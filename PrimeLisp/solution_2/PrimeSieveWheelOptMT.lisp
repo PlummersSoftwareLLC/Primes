@@ -1,17 +1,21 @@
 ;;;; Common Lisp port of PrimeC/solution_2/sieve_5760of30030_only_write_read_bits.c by Daniel Spangberg
 ;;;
 ;;; run as:
-;;;     sbcl --script PrimeSieveWheelBitvector.lisp
+;;;     sbcl --script PrimeSieveWheelOpt.lisp
+;;;
+;;; For Common Lisp bit ops see https://lispcookbook.github.io/cl-cookbook/numbers.html#bit-wise-operation,
+;;; although most of the shifts were replaced by "normal" Lisp functions,
+;;; e.g. x>>n -> (floor x m), a&b -> (mod a b), 1<<x -> (expt 2 x),
+;;; because sbcl optimizes these rather efficiently.
+;;; Only logior remains.
 ;;;
 
 
-#+(and :sbcl :x86-64)
-(when (equalp "2.0.0" (lisp-implementation-version))
-  (load "bitvector-set-2.0.0-2.1.8-snap.lisp")) ; teach sbcl 2.0.0 the new bitvector-set from sbcl 2.1.8
-
-
 (declaim
-  (optimize (speed 3) (safety 0) (debug 0)))
+  (optimize (speed 3) (safety 0) (debug 0))
+
+  (inline nth-bit-set-p)
+  (inline set-nth-bit))
 
 
 (defparameter *list-to* 100
@@ -33,14 +37,25 @@
    to be found under some limit, such as 168 primes under 1000")
 
 
+; Should match machine register size for efficient code.
+; Too small hurts a litle, too big hurts a lot
+; because sbcl will be forced to use bignums
+#+64-bit (defconstant +bits-per-word+ 64)
+#-64-bit (defconstant +bits-per-word+ 32)
 
 ; Apparently some Lisps have non-negative-fixnum, sbcl doesn't.
 ; Also it's not in the ANSI CL specs.
 (deftype nonneg-fixnum ()
   `(integer 0 ,most-positive-fixnum))
 
+(deftype sieve-bitpos-type ()
+  `(integer 0 ,(1- +bits-per-word+)))
+
+(deftype sieve-element-type ()
+  `(unsigned-byte ,+bits-per-word+))
+
 (deftype sieve-array-type ()
-  `simple-bit-vector)
+  `(simple-array sieve-element-type 1))
 
 
 (defconstant +steps+ (coerce
@@ -295,9 +310,26 @@
   (make-instance 'sieve-state
     :maxints maxints
     :a (make-array
-         (ceiling maxints 2)
-         :element-type 'bit
+         (ceiling (ceiling maxints +bits-per-word+) 2)
+         :element-type 'sieve-element-type
          :initial-element 0)))
+
+
+(defun nth-bit-set-p (a n)
+  (declare (type sieve-array-type a)
+           (type nonneg-fixnum n))
+  (multiple-value-bind (q r) (floor n +bits-per-word+)
+    (declare (nonneg-fixnum q) (type sieve-bitpos-type r))
+    (logbitp r (aref a q))))
+
+
+(defun set-nth-bit (a n)
+  (declare (type sieve-array-type a)
+           (type nonneg-fixnum n))
+  (multiple-value-bind (q r) (floor n +bits-per-word+)
+    (declare (nonneg-fixnum q) (type sieve-bitpos-type r))
+    (setf #1=(aref a q)
+         (logior #1# (expt 2 r)))) 0)
 
 
 (defun run-sieve (sieve-state steps)
@@ -312,14 +344,14 @@
        ((> factorh qh) sieve-state)
     (declare (nonneg-fixnum maxints maxintsh qh step factorh)
              (type sieve-array-type a))
-    (when (zerop (sbit a factorh))
+    (unless (nth-bit-set-p a factorh)
       (do* ((istep step (if (>= istep 5759) 0 (1+ istep)))
             (ninc (aref steps istep) (aref steps istep))
             (factor (1+ (the nonneg-fixnum (* factorh 2))))
             (i (floor (the nonneg-fixnum (* factor factor)) 2)))
            ((>= i maxintsh))
         (declare (nonneg-fixnum istep ninc factor i))
-        (setf (sbit a i) 1)
+        (set-nth-bit a i)
         (incf i (the nonneg-fixnum (* factor ninc)))))
 
     (setq factorh (+ factorh (aref steps step)))))
@@ -342,7 +374,7 @@
           ncount)
        (declare (nonneg-fixnum maxints ncount factor inc)
                 (type sieve-array-type a))
-       (when (zerop (sbit a (floor factor 2)))
+       (unless (nth-bit-set-p a (floor factor 2))
          (incf ncount)
          (when (and *list-to* (<= factor *list-to*))
            (format *error-output* "~d, " factor)))
@@ -367,20 +399,38 @@ according to the historical data in +results+."
     (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
-(let* ((ignored (sleep 5)) ; sleep for 5 seconds to let CPU cool down
-       (passes 0)
+(defconstant +threads+ 32)
+(declaim (fixnum *run-workers*))
+(defglobal *run-workers* 0)
+(defvar *results* nil)
+(defvar *workers* nil)
+
+(defun worker ()
+  (loop if (= *run-workers* 0) do (sb-thread:thread-yield)
+          else do (atomic-push (run-sieve (create-sieve 1000000) +steps+) *results*)))
+
+(loop repeat +threads+ do (push (sb-thread:make-thread #'worker) *workers*))
+
+
+(let* ((passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
   (declare (nonneg-fixnum passes))
 
+  (atomic-incf *run-workers*)
+
   (loop while (<= (get-internal-real-time) end)
-        do (setq result (run-sieve (create-sieve 1000000) +steps+))
-           (incf passes))
+        do (let ((top-result (atomic-pop *results*)))
+             (when top-result
+               (setf result top-result)
+               (incf passes)))
+           finally (atomic-decf *run-workers*))
 
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
-    (format *error-output* "Algorithm: wheel bitvector  Passes: ~d, Time: ~f, Avg: ~f ms, Count: ~d  Valid: ~A~%"
-            passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
+    (dolist (thread *workers*) (sb-thread:terminate-thread thread))
+    (format *error-output* "Algorithm: wheel optimized  Threads: ~d  Passes: ~d, Time: ~f, Avg: ~f ms, Count: ~d  Valid: ~A~%"
+            +threads+ passes duration (* 1000 avg) (count-primes result) (let ((*list-to* nil)) (validate result)))
 
-    (format t "mayerrobert-cl-wheel-bitvector;~d;~f;1;algorithm=wheel,faithful=yes,bits=1~%" passes duration)))
+    (format t "mayerrobert-YaroslavKhnygin-cl-wheel-opt;~d;~f;~d;algorithm=wheel,faithful=yes,bits=1~%" passes duration +threads+)))

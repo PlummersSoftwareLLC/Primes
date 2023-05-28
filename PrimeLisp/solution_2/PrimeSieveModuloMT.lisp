@@ -1,7 +1,7 @@
 ;;;; based on https://github.com/PlummersSoftwareLLC/Primes/pull/641
 ;;;
 ;;; run as:
-;;;     sbcl --script PrimeSieveModuloFuncs.lisp
+;;;     sbcl --script PrimeSieveModulo.lisp
 ;;;
 
 
@@ -40,8 +40,8 @@
 (defconstant +bits-per-word+ 8)
 
 (deftype nonneg-fixnum ()
-  ;`(integer 0 ,most-positive-fixnum))
-  `(unsigned-byte 64))
+  `(integer 0 ,most-positive-fixnum))
+  ;`(unsigned-byte 64))
 
 (deftype sieve-element-type ()
   `(unsigned-byte ,+bits-per-word+))
@@ -148,29 +148,23 @@
   (the nonneg-fixnum (+ (floor startmod 2) (ash (floor skipmod 2) 2))))
 
 
-(defun generate-functions ()
-  (loop for y from 1 below +bits-per-word+ by 2
-        append (loop for x from 0 below +bits-per-word+ by 4
-                     collect `(setf (aref funcs ,(make-index x y))
-                                    (lambda (bits first-incl last-excl every-nth bulkstartword bulkendword)
-                                      (declare (type nonneg-fixnum first-incl last-excl every-nth bulkstartword bulkendword)
-                                               (type sieve-array-type bits))
-                                      ,(generate-x-y-loop x y)
-                                      (set-bits-simple bits first-incl last-excl every-nth))))))
+(defmacro generate-ecase ()
+  ; first-incl is even, every-nth is odd, see comment in run-sieve below.
+  ; therefore only a few combinations can happen: startmod [0 2 4 6] and skipmod [1 3 5 7]
+  ; if the ecase keys are small (and maybe dense?) fixnums then SBCL will compile the ecase into a jump table
+  `(ecase (the nonneg-fixnum (make-index startmod skipmod))
+     ,@(loop for y from 1 below +bits-per-word+ by 2
+             append (loop for x from 0 below +bits-per-word+ by 4
+                          collect `(,(make-index x y)
+                                    ,(generate-x-y-loop x y)
+                                    (set-bits-simple bits first-incl last-excl every-nth))))))
 
 ) ; end eval-when
 
 
-(deftype func-t () '(function (sieve-array-type nonneg-fixnum nonneg-fixnum nonneg-fixnum nonneg-fixnum nonneg-fixnum) t))
-
-(defconstant +functions+ (let ((funcs (make-array 16 :initial-element nil)))
-                           #.`(progn ,@(generate-functions))
-                           funcs))
-
-
 (defun set-bits (bits first-incl last-excl every-nth)
   "Set every every-nth bit in array bits between first-incl and last-excl."
-  (declare (type (integer 0 #.most-positive-fixnum) first-incl last-excl every-nth)
+  (declare (type nonneg-fixnum first-incl last-excl every-nth)
            (type sieve-array-type bits))
 
   (let* ((bulkstartword (floor first-incl +bits-per-word+))
@@ -185,7 +179,7 @@
                 (bulkendword (floor (the nonneg-fixnum (- last-excl (the nonneg-fixnum (* +bits-per-word+ every-nth)))) +bits-per-word+)))
             (declare (nonneg-fixnum startmod skipmod bulkendword))
 
-            (funcall (the func-t (aref +functions+ (make-index startmod skipmod))) bits first-incl last-excl every-nth bulkstartword bulkendword))
+            (generate-ecase))
 
       (set-bits-unrolled bits first-incl last-excl every-nth))))
 
@@ -195,7 +189,7 @@
 
   (let* ((rawbits (sieve-state-a sieve-state))
          (sieve-size (sieve-state-maxints sieve-state))
-         (sieve-sizeh (floor (the nonneg-fixnum (1+ sieve-size)) 2))
+         (sieve-sizeh (ceiling sieve-size 2))
          (factor 0)
          (factorh 1)
          (qh (floor (the nonneg-fixnum (1+ (isqrt sieve-size))) 2)))
@@ -206,7 +200,7 @@
             from factorh
             to qh
             while (nth-bit-set-p rawbits num)
-            finally (setq factor (1+ (the nonneg-fixnum (* num 2))))
+            finally (setq factor (1+ (* num 2)))
                     (setq factorh (1+ num)))
 
       (when (> factorh qh)
@@ -265,28 +259,47 @@ according to the historical data in +results+."
     (if (and (test) hist (= (count-primes sieve-state) hist)) "yes" "no")))
 
 
+(defconstant +threads+ 32)
+(declaim (fixnum *run-workers*))
+(defglobal *run-workers* 0)
+(defvar *results* nil)
+(defvar *workers* nil)
+
+(defun worker ()
+  (loop if (= *run-workers* 0) do (sb-thread:thread-yield)
+          else do (atomic-push (run-sieve (create-sieve 1000000)) *results*)))
+
+(loop repeat +threads+ do (push (sb-thread:make-thread #'worker) *workers*))
+
+
 (let* ((passes 0)
        (start (get-internal-real-time))
        (end (+ start (* internal-time-units-per-second 5)))
        result)
   (declare (fixnum passes))
 
+  (atomic-incf *run-workers*)
+
   (loop while (<= (get-internal-real-time) end)
-        do (setq result (run-sieve (create-sieve 1000000)))
-           (incf passes))
+        do (let ((top-result (atomic-pop *results*)))
+             (when top-result
+               (setf result top-result)
+               (incf passes)))
+           finally (atomic-decf *run-workers*))
 
   (let* ((duration  (/ (- (get-internal-real-time) start) internal-time-units-per-second))
          (avg (/ duration passes)))
+    (dolist (thread *workers*) (sb-thread:terminate-thread thread))
     (when *list-to* (list-primes result))
-    (format *error-output* "Algorithm: base w/ modulo functions  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
-            passes duration (* 1000 avg) (count-primes result) (validate result))
+    (format *error-output* "Algorithm: base w/ modulo  Threads: ~d  Passes: ~d  Time: ~f Avg: ~f ms Count: ~d  Valid: ~A~%"
+            +threads+ passes duration (* 1000 avg) (count-primes result) (validate result))
 
-    (format t "mayerrobert-cl-modulo-functions;~d;~f;1;algorithm=base,faithful=yes,bits=1~%" passes duration)))
+    (format t "mayerrobert-YaroslavKhnygin-cl-modulo;~d;~f;~d;algorithm=base,faithful=yes,bits=1~%" passes duration +threads+)))
 
 
 ; uncomment the following line to display the generated loop stmt for setting every 3rd bit starting at 4
 ;(format *error-output* "The bit-setting loop for startmod=4 and skipmod=3:~%~A~%" (generate-x-y-loop 4 3))
 
 
-; uncomment the following line to display the statements that assign lambda forms to the vector of functions
-;(format *error-output* "Filling of the +functions+ vector with lambda forms:~%~A~%" `(progn ,@(generate-functions)))
+; uncomment the following line to display the generated ecase stmt containing all bit-setting loops
+;(format *error-output* "Expansion of macro generate-ecase:~%~A~%" (macroexpand-1 '(generate-ecase)))
