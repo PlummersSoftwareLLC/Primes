@@ -763,6 +763,21 @@ struct CommandLineOptions {
     bytes: bool,
 }
 
+/// Get list of threads to use for different runs. Physical cores are not reliably
+/// reported on all systems (even with hyperthreading), so we run with
+/// (logical cores / 2) if possible, as well as 4 threads for parity with Gordon's
+/// submissions.
+fn get_auto_threads_list(logical_cores: usize) -> Vec<usize> {
+    let mut threads: Vec<_> = [1, 4, logical_cores / 2, logical_cores]
+        .iter()
+        .copied()
+        .filter(|&t| t > 0 && t <= logical_cores)
+        .collect();
+    threads.sort();
+    threads.dedup();
+    threads
+}
+
 fn main() {
     // command line options are handled by the `structopt` and `clap` crates, which
     // makes life very pleasant indeed. At the cost of a bit of compile time :)
@@ -774,11 +789,7 @@ fn main() {
 
     let thread_options = match opt.threads {
         Some(t) => vec![t],
-        None => {
-            let mut threads = vec![1, num_cpus::get_physical(), num_cpus::get()];
-            threads.dedup();
-            threads
-        }
+        None => get_auto_threads_list(num_cpus::get()),
     };
 
     // run default implementations if no options are specified
@@ -849,7 +860,8 @@ fn main() {
             );
         }
 
-        if opt.bits_striped_blocks || run_all {
+        // not run by default
+        if opt.bits_striped_blocks {
             run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, false>>(
                 "bit-striped-blocks16k",
                 1,
@@ -871,7 +883,8 @@ fn main() {
             );
         }
 
-        if opt.bits_striped_hybrid || run_all {
+        // not run by default
+        if opt.bits_striped_hybrid {
             run_implementation::<FlagStorageBitVectorStripedBlocks<BLOCK_SIZE_DEFAULT, true>>(
                 "bit-striped-hybrid-blocks16k",
                 1,
@@ -1079,6 +1092,21 @@ mod tests {
         primes::{minimum_start, square_start, PrimeValidator},
         unrolled_extreme::FlagStorageExtremeHybrid,
     };
+
+    #[test]
+    fn get_auto_threads_list_correct() {
+        assert_eq!(get_auto_threads_list(1), vec![1]);
+        assert_eq!(get_auto_threads_list(2), vec![1, 2]);
+        assert_eq!(get_auto_threads_list(3), vec![1, 3]);
+        assert_eq!(get_auto_threads_list(4), vec![1, 2, 4]);
+        assert_eq!(get_auto_threads_list(6), vec![1, 3, 4, 6]);
+        assert_eq!(get_auto_threads_list(8), vec![1, 4, 8]);
+        assert_eq!(get_auto_threads_list(10), vec![1, 4, 5, 10]);
+        assert_eq!(get_auto_threads_list(12), vec![1, 4, 6, 12]);
+        assert_eq!(get_auto_threads_list(16), vec![1, 4, 8, 16]);
+        assert_eq!(get_auto_threads_list(32), vec![1, 4, 16, 32]);
+        assert_eq!(get_auto_threads_list(64), vec![1, 4, 32, 64]);
+    }
 
     #[test]
     fn sieve_known_correct_bits() {
