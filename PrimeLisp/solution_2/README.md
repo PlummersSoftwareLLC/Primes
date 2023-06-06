@@ -5,6 +5,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
@@ -101,6 +102,12 @@ into the word-array.
 
 All: The state of the sieve is stored in a Lisp class.
 
+---
+
+I added multithreading to all of the algorithms except hashdot by running a pass in an SBCL thread (32 by default),
+atomically pushing the results from each thread to one shared list, then popping and counting this list in the main thread.
+The worker threads are spawned idle before the loop, then they're activated inside the loop.
+
 
 ## Run instructions
 
@@ -170,7 +177,7 @@ Using sbcl 2.1.8 on Windows 10, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (
     mayerrobert-cl-words;12952;5.000072;1;algorithm=other,faithful=yes,bits=1
 
 
-Using sbcl 2.1.8 on Windows 10/ WSL2/ debian 10.9, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (max turbo frequency 4.2 GHz) I get
+Using sbcl 2.1.8 on Windows 10, WSL2, debian 10.9, 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (max turbo frequency 4.2 GHz) I get
 
     $ sh run.sh 2> /dev/null
     mayerrobert-cl;9490;5.01;1;algorithm=base,faithful=yes,bits=1
@@ -181,3 +188,31 @@ Using sbcl 2.1.8 on Windows 10/ WSL2/ debian 10.9, 11th Gen Intel(R) Core(TM) i5
     mayerrobert-cl-wheel-bitvector;17870;5.01;1;algorithm=wheel,faithful=yes,bits=1
     mayerrobert-cl-wheel-opt;16053;5.01;1;algorithm=wheel,faithful=yes,bits=1
     mayerrobert-cl-words;14025;5.01;1;algorithm=other,faithful=yes,bits=1
+
+---
+
+Using sbcl 2.3.4 on Windows 11, WSL2, Ubuntu 22.04, 13th Gen Intel(R) Core(TM) i9-13900 @ 2.00 GHz (max turbo frequency 5.6 GHz) I get
+
+    $ sh run.sh 2> /dev/null
+    mayerrobert-cl;17652;5.000019;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo;12615;5.000081;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-modulo-functions;20403;5.000057;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-wheel-bitvector;51692;5.009988;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-wheel-opt;40565;5.000033;1;algorithm=wheel,faithful=yes,bits=1
+    mayerrobert-cl-dense;30667;5.000027;1;algorithm=base,faithful=yes,bits=1
+    mayerrobert-cl-words;23425;5.009996;1;algorithm=other,faithful=yes,bits=1
+
+---
+
+After adding parallelism...
+
+Using sbcl 2.3.4 on Windows 11, WSL2, Ubuntu 22.04, 13th Gen Intel(R) Core(TM) i9-13900 @ 2.00 GHz (max turbo frequency 5.6 GHz) I get
+
+    $ sh run.sh 2> /dev/null
+    mayerrobert-YaroslavKhnygin-cl;169347;5.00212;32;algorithm=base,faithful=yes,bits=1 (~9.6x speedup)
+    mayerrobert-YaroslavKhnygin-cl-modulo;144798;5.009999;32;algorithm=base,faithful=yes,bits=1 (~11.5x speedup)
+    mayerrobert-YaroslavKhnygin-cl-modulo-functions;166947;5.01;32;algorithm=base,faithful=yes,bits=1 (~8.2x speedup)
+    mayerrobert-YaroslavKhnygin-cl-wheel-bitvector;263743;5.000134;32;algorithm=wheel,faithful=yes,bits=1 (~5.1x speedup)
+    mayerrobert-YaroslavKhnygin-cl-wheel-opt;230758;5.001088;32;algorithm=wheel,faithful=yes,bits=1 (~5.7x speedup)
+    mayerrobert-YaroslavKhnygin-cl-dense;194721;5.009873;32;algorithm=base,faithful=yes,bits=1 (~6.3x speedup)
+    mayerrobert-YaroslavKhnygin-cl-words;171292;5.009966;32;algorithm=other,faithful=yes,bits=1 (~7.3x speedup)
