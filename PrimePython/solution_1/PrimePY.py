@@ -51,19 +51,6 @@ class prime_sieve(object):
         else:
             return this.rawbits[int(index/2)]
 
-    # ClearBit
-    #
-    # Reciprocal of GetBit, ignores even numbers and just stores the odds. Since the prime sieve work should
-    # never waste time clearing even numbers, this code will assert if you try to
-
-    def ClearBit(this, index):
-
-        if (index % 2 == 0):
-            assert("If you're setting even bits, you're sub-optimal for some reason!")
-            return False
-        else:
-            this.rawbits[int(index/2)] = False
-
     # primeSieve
     # 
     # Calculate the primes up to the specified limit
@@ -81,9 +68,8 @@ class prime_sieve(object):
 
             # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
             # We can then step by factor * 2 because every second one is going to be even by definition
-
-            for num in range (factor * 3, this.sieveSize, factor * 2): 
-                this.ClearBit(num)
+            # the for loop to clear the bits is "hidden" in the array slicing
+            this.rawbits[factor*3//2::factor] = [0] * ((this.sieveSize-factor*3+factor*2-1)//(factor*2))
 
             factor += 2 # No need to check evens, so skip to next odd (factor = 3, 5, 7, 9...)
 
