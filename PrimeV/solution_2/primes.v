@@ -5,7 +5,7 @@ type Prime = u64
 const (
 	limit = Prime(1_000_000)
 	cpul1cache = 16384
-	results = {		
+	results = {
 	    Prime(10): 4
 	    Prime(100): 25
 	    Prime(1000): 168
@@ -22,7 +22,7 @@ const (
 	dense_threshold = 19
 	extreme_bitset = [ // only four case used -> base prime value modulo 8
 		// for modulo 1
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
 			unsafe {
 				bytearrp := &bytearr[0]
 				mut bytendx := strti >> 3
@@ -50,7 +50,7 @@ const (
 			}
 		},
 		// for modulo 3
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
 			unsafe {
 				bytearrp := &bytearr[0]
 				mut bytendx := strti >> 3
@@ -78,7 +78,7 @@ const (
 			}
 		},
 		// for modulo 5
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
 			unsafe {
 				bytearrp := &bytearr[0]
 				mut bytendx := strti >> 3
@@ -106,7 +106,7 @@ const (
 			}
 		},
 		// for modulo 7
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
 			unsafe {
 				bytearrp := &bytearr[0]
 				mut bytendx := strti >> 3
@@ -134,10 +134,10 @@ const (
 			}
 		}
 	]
-	dense_bitset = [		
+	dense_bitset = [
 		// for step of 3
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -222,8 +222,8 @@ const (
 			}
 		},
 		// for step of 5
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -308,8 +308,8 @@ const (
 			}
 		},
 		// for step of 7
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -394,8 +394,8 @@ const (
 			}
 		},
 		// for step of 9; never used
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -480,8 +480,8 @@ const (
 			}
 		},
 		// for step of 11
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -566,8 +566,8 @@ const (
 			}
 		},
 		// for step of 13
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -652,8 +652,8 @@ const (
 			}
 		},
 		// for step of 15 - never used
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -738,8 +738,8 @@ const (
 			}
 		},
 		// for step of 17
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
@@ -824,8 +824,8 @@ const (
 			}
 		},
 		// for step of 19
-		fn (bytearr []byte, strti int, lmti int, stepi int) {
-			unsafe {				
+		fn (bytearr []u8, strti int, lmti int, stepi int) {
+			unsafe {
 				bytearrp := &bytearr[0]
 				ilmt := strti | 63
 				mut ndx := strti
