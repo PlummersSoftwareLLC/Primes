@@ -309,6 +309,10 @@ class Sieve
             }
         }
 
+        // Ok, for the curious: the entire code block of the previous for loop could be replaced with this line:
+        //
+        //  for (word = host_sieve_buffer[index]; word; (word &= word - 1), primeCount++);
+
         // For the last word, only count bits up to the (halved) sieve limit
         word = host_sieve_buffer[lastWord];
         const uint32_t lastBit = BIT_INDEX(half_size);
