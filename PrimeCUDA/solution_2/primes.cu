@@ -303,14 +303,16 @@ class Sieve
                 primeCount++;
         }
 
-        // For the last word, only count bits up to the (halved) sieve limit
         word = host_sieve_buffer[lastWord];
+
+        // For the last word, only count bits up to the (halved) sieve limit...
         const uint32_t lastBit = BIT_INDEX(half_size);
-        for (uint32_t index = 0; word && index <= lastBit; word >>= 1, index++)
-        {
-            if (word & 1)
-                primeCount++;
-        }
+        // ...and only keep the bits set that we want to count
+        if (lastBit < MAX_BIT_INDEX)
+            word &= (sieve_t(1) << lastBit + 1) - 1;
+
+        for (; word; word &= word - 1)
+            primeCount++;
 
         return primeCount;
     }
