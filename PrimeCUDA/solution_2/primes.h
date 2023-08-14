@@ -1,6 +1,6 @@
 #define DEFAULT_SIEVE_SIZE 1'000'000
 
-// Maximum number of parallel threads used on the GPU. The actual number of threads used can be lower, 
+// Maximum number of parallel threads used on the GPU. The actual number of threads used can be lower,
 //   if there aren't enough "chunks of work" to keep this number of threads busy.
 #define MAX_THREADS 256
 
@@ -9,7 +9,7 @@
 
 // Highest prime number for which we'll use a rolling bit mask. This value cannot be higher than the
 //   number of bits per word. Set to 0 to disable the use of a rolling bit mask. The relevant code won't
-//   be compiled then, thus reducing performance side effects to zero. 
+//   be compiled then, thus reducing performance side effects to zero.
 #define ROLLING_LIMIT 29
 
 // If defined, the code will show debug output and run both unmarking methods once.
@@ -28,11 +28,11 @@
 #endif
 
 #if BITS_PER_WORD == 32
-    typedef unsigned int sieve_t;
+    typedef uint32_t sieve_t;
     #define MAX_WORD_VALUE UINT32_MAX
     #define WORD_SHIFT 5
 #elif BITS_PER_WORD == 64
-    typedef unsigned long long sieve_t;
+    typedef uint64_t sieve_t;
     #define MAX_WORD_VALUE UINT64_MAX
     #define WORD_SHIFT 6
 #else
@@ -55,7 +55,7 @@ enum class Parallelization : char
 
 // We have to define this ourselves, as we're not doing C++23 (yet)
 template<class TEnum>
-constexpr auto to_underlying(TEnum enumValue)  
+constexpr auto to_underlying(TEnum enumValue)
 {
    return static_cast<typename std::underlying_type<TEnum>::type>(enumValue);
 }
