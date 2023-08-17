@@ -35,5 +35,5 @@ A Dockerfile has been provided.
 ## Output
 
 ```log
-davepl-msbasic;1644;5.002;1;algorithm=base,faithful=no
+davepl-msbasic;249;5.001;1;algorithm=base,faithful=no
 ```
