@@ -35,5 +35,5 @@ A Dockerfile has been provided.
 ## Output
 
 ```log
-rbergen_8of30;4197;5.001;1;algorithm=wheel,faithful=yes,bits=1
+davepl-msbasic;1644;5.002;1;algorithm=base,faithful=no
 ```
