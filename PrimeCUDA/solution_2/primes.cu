@@ -295,30 +295,24 @@ class Sieve
         //   in itself yields the correct result.
         for (uint64_t index = 0; index < lastWord; index++)
         {
-            word = host_sieve_buffer[index];
-
             // This is Brian Kernighan's algorithm for counting set bits. It uses the fact that subtracting 1 from an
-            //   integer flips all bits right of the right-most set bit, and that set bit itself. So, doing a bitwise
-            //   AND of an integer with "itself minus one" clears the right-most set bit. This reduces the number of
-            //   loop iterations to the number of set bits. There is a one-statement implementation for this using a
-            //   for loop, but we'll be kind to our readers. :)
-            while (word)
-            {
-                word &= word - 1;
+            //   integer flips any bits right of the right-most set bit, and that set bit itself. So, doing a bitwise
+            //   AND of an integer with "itself minus one" clears the right-most set bit. This makes the number of
+            //   loop iterations until the word is 0 equal to the number of bits that were originally set in the word.
+            for (word = host_sieve_buffer[index]; word; word &= word - 1)
                 primeCount++;
-            }
         }
 
-        // For the last word, only count bits up to the (halved) sieve limit
         word = host_sieve_buffer[lastWord];
-        const uint32_t lastBit = BIT_INDEX(half_size);
-        for (uint32_t index = 0; word && index <= lastBit; index++)
-        {
-            if (word & 1)
-                primeCount++;
 
-            word >>= 1;
-        }
+        // For the last word, only count bits up to the (halved) sieve limit...
+        const uint32_t lastBit = BIT_INDEX(half_size);
+        // ...and only keep the bits set that we want to count
+        if (lastBit < MAX_BIT_INDEX)
+            word &= (sieve_t(1) << lastBit + 1) - 1;
+
+        for (; word; word &= word - 1)
+            primeCount++;
 
         return primeCount;
     }
