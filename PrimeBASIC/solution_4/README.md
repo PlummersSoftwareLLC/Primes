@@ -19,7 +19,7 @@ The actual sieve code in both files is identical. The former file can be used to
 
 ## Run instructions
 
-### cbmbasic
+### Linux/cbmbasic
 
 Execute the following commands from the implementation directory, in a bash shell:
 
@@ -30,7 +30,12 @@ Execute the following commands from the implementation directory, in a bash shel
 
 ### Docker
 
-A Dockerfile has been provided.
+A Dockerfile has been provided. With Docker installed on a supported operating system, it can be used with the following commands:
+
+```bash
+docker build -t primes-basic-4 .
+docker run primes-basic-4
+```
 
 ## Output
 
