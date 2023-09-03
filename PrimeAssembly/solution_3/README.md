@@ -14,6 +14,11 @@ This solution can be considered an assembly translation of davepl's implementati
 
 The build and run scripts, and therefore also the included Dockerfile, use [emuStudio](https://www.emustudio.net/) to assemble the source code and run it in a MITS Altair 8800 emulator. As the emulator aims to be clock accurate, the performance reported from the emulator should be very close to that on an actual Altair 8800.
 
+To make the code assemble in emuStudio, some minor changes to the source code had to be made:
+
+- Labels were postfixed with a colon
+- The endless loop at the end of the program was replaced with an `hlt` instruction.
+
 ## Run instructions
 
 ### Linux/cbmbasic
