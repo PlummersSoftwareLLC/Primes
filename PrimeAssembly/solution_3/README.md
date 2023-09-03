@@ -21,7 +21,7 @@ To make the code assemble in emuStudio, some minor changes to the source code ha
 
 ## Run instructions
 
-### Linux/cbmbasic
+### Linux
 
 With awk, gcc, git, grep, OpenJDK and wget installed, execute the following commands from the implementation directory, in a bash shell:
 
