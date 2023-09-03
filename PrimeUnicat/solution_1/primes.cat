@@ -10,7 +10,7 @@
 0o004 😻😹😻🙀🙀😹😺🙀🙀 Memory 3 = 0o12 (10)
 0o005 😻😹😼🙀🙀😹🙀🙀 Memory 4 = 1
 
-# Loop start: Get contents of input_ptr
+# input_loop: Get contents of input_ptr
 0o006 😻😹😽🙀🙀😸🙀🙀 Memory 5 = 0
 0o007 😿🙀😼😽🙀🙀😹🙀🙀 Memory 5 += Memory 1 (input_ptr)
 0o010 😼😾😽🙀🙀 Memory 5 = pointer(Memory 5) (digit)
@@ -19,91 +19,144 @@
 # Convert digit to number
 0o012 😿🙀😺😽🙀🙀😺🙀🙀 Memory 5 -= Memory 2 (value = char - '0')
 
-# If invalid digit, exit loop_count
+# If invalid digit, goto done_input
 0o013 😻😹😾🙀🙀😹😹🙀😿 Memory 6 = -0o11 (-9)
 0o014 😿🙀😾😾🙀🙀😽🙀🙀 Memory 6 += Memory 5 (value - 9)
-0o015 😽😿😾🙀🙀😺😻🙀🙀 If Memory 6 > 0, jump to 0o24 (0o23 + 1) (if value > 9)
+0o015 😽😿😾🙀🙀😺😻🙀🙀 If Memory 6 > 0, goto 0o24 (0o23 + 1) (if value > 9)
 0o016 😻😹😾🙀🙀😸🙀🙀 Memory 6 = 0
 0o017 😿🙀😺😾🙀🙀😽🙀🙀 Memory 6 -= Memory 5 (-value)
-0o020 😽😿😾🙀🙀😺😻🙀🙀 If Memory 6 > 0, jump to 0o24 (0o23 + 1) (if value < 0)
+0o020 😽😿😾🙀🙀😺😻🙀🙀 If Memory 6 > 0, goto 0o24 (0o23 + 1) (if value < 0)
 
 # n = n * 10 + value
 0o021 😿🙀🙀😸🙀🙀😻🙀🙀 Memory 0 *= Memory 3 (n * 10)
 0o022 😿🙀😸😸🙀🙀😽🙀🙀 Memory 0 += Memory 5 (n * 10 + value)
-0o023 😻😹😹🙀😿😽🙀🙀 Jump to 6 (5 + 1) (Loop start)
+0o023 😻😹😹🙀😿😽🙀🙀 goto 6 (5 + 1) (input_loop)
 
-# sieve = 0 (Memory 1)
+# done_input: sieve (Memory 1) = 0
 0o024 😻😹😹🙀🙀😸🙀🙀
 
-# factor = 3 (Memory 2)
+# factor (Memory 2) = 3
 0o025 😻😹😺🙀🙀😻🙀🙀
 
-# factor_inc = 6 (Memory 4)
+# factor_inc (Memory 4) = 6
 0o026 😻😹😼🙀🙀😾🙀🙀
 
-# factor_sq = 9 (0o11) (Memory 5)
+# factor_sq (Memory 5) = 9 (0o11)
 0o027 😻😹😽🙀🙀😹😹🙀🙀
 
-# factor_sq_inc = 16 (0o20) (Memory 6)
+# factor_sq_inc (Memory 6) = 16 (0o20)
 0o030 😻😹😾🙀🙀😺😸🙀🙀
 
-# mask = 1 (Memory 7)
+# mask (Memory 7) = 1
 0o031 😻😹😿🙀🙀😹🙀🙀
 
-# start_mask = 8 (0o10) (Memory 8 [0o10])
+# start_mask (Memory 8 [0o10]) = 8 (0o10)
 0o032 😻😹😹😸🙀🙀😹😸🙀🙀
 
-# mask_multiplier = 8 (0o10) (Memory 9 [0o11])
+# mask_multiplier (Memory 9 [0o11]) = 8 (0o10)
 0o033 😻😹😹😹🙀🙀😹😸🙀🙀
 
-# start_mask_multiplier = 256 (0o400) (Memory 10 [0o12])
+# start_mask_multiplier (Memory 10 [0o12]) = 256 (0o400)
 0o034 😻😹😹😺🙀🙀😼😸😸🙀🙀
 
-# two = 2 (Memory 11 [0o13])
+# two (Memory 11 [0o13]) = 2
 0o035 😻😹😹😻🙀🙀😺🙀🙀
 
-# four = 4 (Memory 12 [0o14])
+# four (Memory 12 [0o14]) = 4
 0o036 😻😹😹😼🙀🙀😼🙀🙀
 
-# eight = 8 (0o10) (Memory 13 [0o15])
+# eight (Memory 13 [0o15]) = 8 (0o10)
 0o037 😻😹😹😽🙀🙀😹😸🙀🙀
 
-# sixteen = 16 (0x20) (Memory 14 [0o16])
+# sixteen (Memory 14 [0o16]) = 16 (0x20)
 0o040 😻😹😹😾🙀🙀😺😸🙀🙀
 
-outer:
-    if factor_sq - n > 0, goto done
+# outer: if factor_sq - n > 0, goto done
+0o041 😻😹😹😿🙀🙀😸🙀🙀 temp = 0 (Memory 15 [0o17])
+0o042 😿🙀😸😹😿🙀🙀😽🙀🙀 temp += factor_sq (Memory 5)
+0o043 😿🙀😺😹😿🙀🙀😸🙀🙀 temp -= n (Memory 0)
+0o044 😽😿😹😿🙀🙀😹😹😻🙀🙀 if temp > 0, goto done (0o114) (0o113 + 1)
 
-    temp = floor(sieve / mask)
-    if temp - floor(temp / 2) * 2 > 0
-        goto next_outer_factor
+# temp = floor(sieve / mask) (Memory 15 [0o17])
+0o045 😻😹😹😿🙀🙀😸🙀🙀 temp = 0 (Memory 15 [0o17])
+0o046 😿🙀😸😹😿🙀🙀😹🙀🙀 temp += sieve (Memory 1)
+0o047 😿🙀😿😹😿🙀🙀😿🙀🙀 temp /= mask (Memory 7)
 
-    k = factor_sq
-    sieve_mask = start_mask
-inner:
-    if k - n > 0, goto next_factor
+# if temp - floor(temp / 2) * 2 > 0, goto next_outer_factor
+0o050 😻😹😺😸🙀🙀😸🙀🙀 temp2 = 0 (Memory 16 [0o20])
+0o051 😿🙀😸😺😸🙀🙀😹😿🙀🙀 temp2 += temp (Memory 15 [0o17])
+0o052 😿🙀😿😺😸🙀🙀😹😻🙀🙀 temp2 /= two (Memory 11 [0o13])
+0o053 😿🙀🙀😺😸🙀🙀😹😻🙀🙀 temp2 *= two
+0o054 😿🙀😺😹😿🙀🙀😺😸🙀🙀 temp -= temp2
+0o055 😽😿😹😿🙀🙀😹😸😺🙀🙀 if temp > 0, goto next_outer_factor (0o103) (0o102 + 1)
 
-    temp = floor(sieve / sieve_mask)
-    if temp - floor(temp / 2) * 2 > 0, goto next_inner_factor
-    sieve += sieve_mask
+# k = factor_sq
+0o056 😻😹😺😹🙀🙀😸🙀🙀 k (Memory 17 [0o21]) = 0
+0o057 😿🙀😸😺😹🙀🙀😽🙀🙀 k += factor_sq (Memory 5)
 
-next_inner_factor:
-    k += factor_inc
-    sieve_mask *= mask_multiplier
-    goto inner
+# sieve_mask = start_mask
+0o060 😻😹😺😺🙀🙀😸🙀🙀 sieve_mask (Memory 18 [0o22]) = 0
+0o061 😿🙀😸😺😺🙀🙀😹😸🙀🙀 sieve_mask += start_mask (Memory 8 [10])
 
-next_outer_factor:
-    factor += 2
-    factor_inc += 4
-    factor_sq += factor_sq_inc
-    factor_sq_inc += 8
-    mask *= 2
-    start_mask *= start_mask_multiplier
-    mask_multiplier *= 4
-    start_mask_multiplier *= 16
-    goto outer
+# inner: if k - n > 0, goto next_outer_factor
+0o062 😻😹😹😿🙀🙀😸😸🙀🙀 temp (Memory 15 [0o17]) = 0
+0o063 😿🙀😸😹😿🙀🙀😺😹🙀🙀 temp += k (Memory 17 [0o21])
+0o064 😿🙀😺😹😿🙀🙀😸🙀🙀 temp -= n (Memory 0)
+0o065 😽😿😹😿🙀🙀😹😸😺🙀🙀 if temp > 0, goto next_outer_factor (0o103) (0o102 + 1)
+
+# temp = floor(sieve / sieve_mask)
+0o066 😻😹😹😿🙀🙀😸😸🙀🙀 temp (Memory 15 [0o17]) = 0
+0o067 😿🙀😸😹😿🙀🙀😹🙀🙀 temp += sieve (Memory 1)
+0o070 😿🙀😿😹😿🙀🙀😺😺🙀🙀 temp /= sieve_mask (Memory 18 [0o22])
+
+# if temp - floor(temp / 2) * 2 > 0, goto next_inner_factor
+0o071 😻😹😺😸🙀🙀😸🙀🙀 temp2 = 0 (Memory 16 [0o20])
+0o072 😿🙀😸😺😸🙀🙀😹😿🙀🙀 temp2 += temp (Memory 15 [0o17])
+0o073 😿🙀😿😺😸🙀🙀😹😻🙀🙀 temp2 /= two (Memory 11 [0o13])
+0o074 😿🙀🙀😺😸🙀🙀😹😻🙀🙀 temp2 *= two
+0o075 😿🙀😺😹😿🙀🙀😺😸🙀🙀 temp -= temp2
+0o076 😽😿😹😿🙀🙀😿😿🙀🙀 if temp > 0, goto next_inner_factor (0o100) (0o77 + 1)
+
+# sieve += sieve_mask
+0o077 😿🙀😸😹🙀🙀😺😺🙀🙀 sieve (Memory 1) += sieve_mask (Memory 18 [0o22])
+
+# next_inner_factor: k += factor_inc
+0o100 😿🙀😸😺😹🙀🙀😼🙀🙀 k (Memory 17 [0o21]) += factor_inc (Memory 4)
+
+# sieve_mask *= mask_multiplier
+0o101 😿🙀🙀😺😺🙀🙀😹😹🙀🙀 sieve_mask (Memory 18 [0o22]) *= mask_multiplier (Memory 9 [0o11])
+
+# goto inner
+0o102 😻😹😹🙀😿😾😹🙀🙀 goto 0o62 (0o61 + 1)
+
+# next_outer_factor: factor += 2
+0o103 😿🙀😸😺🙀🙀😹😻🙀🙀 factor (Memory 2) += two (Memory 11 [0o13])
+
+# factor_inc += 4
+0o104 😿🙀😸😼🙀🙀😹😼🙀🙀 factor_inc (Memory 4) += four (Memory 12 [0o14])
+
+# factor_sq += factor_sq_inc
+0o105 😿🙀😸😽🙀🙀😾🙀🙀 factor_sq (Memory 5) += factor_sq_inc (Memory 6)
+
+# factor_sq_inc += 8
+0o106 😿🙀😸😾🙀🙀😹😽🙀🙀 factor_sq_inc (Memory 6) + eight (Memory 13 [0o15])
+
+# mask *= 2
+0o107 😿🙀🙀😿🙀🙀😹😻🙀🙀 mask (Memory 7) *= two (Memory 11 [0o13])
+
+# start_mask *= start_mask_multiplier
+0o110 😿🙀🙀😹😸🙀🙀😹😺🙀🙀 start_mask (Memory 8 [0o10]) *= start_mask_multiplier (Memory 10 [0o12])
+
+# mask_multiplier *= 4
+0o111 😿🙀🙀😹😹🙀🙀😹😼🙀🙀 mask_multiplier (Memory 9 [0o11]) *= four (Memory 12 [0o14])
+
+# start_mask_multiplier *= 16
+0o112 😿🙀🙀😹😺🙀🙀😹😾🙀🙀 start_mask_multiplier (Memory 10 [0o12]) *= sixteen (Memory 14 [0o16])
+
+# goto outer
+0o113 😻😹😹🙀😿😼😸🙀🙀 goto 0o41 (0o40 + 1)
 
 # done: output sieve as value and newline
-0o041 😼😼😹🙀🙀 Output Memory 1 as value
-0o042 😽😼😻🙀🙀 Output Memory 3 ("\n")
-0o043 🙀🙀 Exit
+0o114 😼😼😹🙀🙀 Output Memory 1 as value
+0o115 😽😼😻🙀🙀 Output Memory 3 ("\n")
+0o116 🙀🙀 Exit

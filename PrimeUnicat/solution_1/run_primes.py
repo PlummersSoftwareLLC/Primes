@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import argparse
-import time
 import sys
 from io import StringIO
 from contextlib import redirect_stdout
+from timeit import default_timer
 from typing import List
 
 from unicat_esolang import unicat
@@ -131,7 +131,7 @@ def main():
         "-l",
         help="Upper limit for calculating prime numbers",
         type=int,
-        default=1_000_000,
+        default=10_000,
     )
     parser.add_argument("--time", "-t", help="Time limit", type=float, default=5)
     parser.add_argument("--show", "-s", help="Print found prime numbers", action="store_true")
@@ -143,12 +143,14 @@ def main():
 
     passes = 0
     instructions = unicat.compile_instructions("primes.cat")
-    start = time.time()
-    while (elapsed_time := time.time() - start) < parsed_args.time:
+    start = default_timer()
+    duration = 0
+    while duration < parsed_args.time:
         bitmap = run_unicat_sieve(instructions, parsed_args.limit)
         passes += 1
+        duration = default_timer() - start
 
-    print_results(passes, int(bitmap), parsed_args.limit, elapsed_time, parsed_args.show)
+    print_results(passes, int(bitmap), parsed_args.limit, duration, parsed_args.show)
 
 
 if __name__ == "__main__":
