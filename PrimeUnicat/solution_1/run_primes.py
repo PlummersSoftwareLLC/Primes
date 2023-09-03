@@ -9,68 +9,6 @@ from typing import List
 from unicat_esolang import unicat
 
 
-def run_sieve(sieve_size: int) -> int:
-    two = 2
-    four = 4
-    eight = 8
-    sixteen = 16
-
-    sieve = 0
-
-    factor = 3
-    factor_inc = 6
-    factor_sq = 9
-    factor_sq_inc = 16
-    mask = 1
-    start_mask = 8
-    mask_multiplier = 8
-    start_mask_multiplier = 256
-    while factor_sq - sieve_size <= 0:
-        temp = 0
-        temp += sieve
-        temp //= mask
-
-        temp2 = 0
-        temp2 += temp
-        temp2 //= 2
-        temp2 *= 2
-
-        temp -= temp2
-        if not temp:
-            k = 0
-            k += factor_sq
-
-            sieve_mask = 0
-            sieve_mask += start_mask
-            while k - sieve_size <= 0:
-                temp = 0
-                temp += sieve
-                temp //= sieve_mask
-
-                temp2 = 0
-                temp2 += temp
-                temp2 //= 2
-                temp2 *= 2
-
-                temp -= temp2
-                if not temp:
-                    sieve += sieve_mask
-
-                k += factor_inc
-                sieve_mask *= mask_multiplier
-
-        factor += two
-        factor_inc += four
-        factor_sq += factor_sq_inc
-        factor_sq_inc += eight
-        mask *= two
-        start_mask *= start_mask_multiplier
-        mask_multiplier *= four
-        start_mask_multiplier *= sixteen
-
-    return sieve
-
-
 def run_unicat_sieve(instructions: List[tuple], sieve_size: int) -> str:
     sys.stdin = StringIO(str(sieve_size) + "\n")
     output = StringIO()
