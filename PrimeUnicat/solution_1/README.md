@@ -67,28 +67,140 @@ At a high level, the steps are as follows:
   * ...
   * Bit `k`: `2*k + 3`
   * ...
+  * Bit `(n - 3) // 2`: `n`
 * The result (`sieve`) is output as a decimal value that is decoded by the python code.
 
-Since Unicat does not have any bitwise operations, this must be simulated as follows:
-
-* Testing if bit `x` is set in `y` is done by checking if `(y // 2**x) mod 2` is greater than zero,
-  where `2**x` is pre-computed.
-* Setting bit `x` of `y` is done by adding `2**x` to `y` if bit `x` is not set in `y`.
-
-Before diving into the actual implementation, let's take a look at the algorithm first:
+Before diving into the actual implementation of the prime sieve, let's take a look at the algorithm
+first:
 
 ```
 sieve = 0
 factor = 3
 while factor*factor <= n:
-    factor_bit = (factor - 3) // 2
-    if bit "factor_bit" is not set in sieve:
-        for k = factor*factor to n step factor*2:
-            k_bit = (k - 3) / 2
-            if bit "k_bit" is not set in sieve:
-                sieve += 2**k_bit
+  factor_bit = (factor - 3) // 2
+  if bit "factor_bit" is not set in sieve:
+    k = factor*factor
+    while k <= n:
+      k_bit = (k - 3) // 2
+      Set bit "k_bit" in sieve
+      k += 2*factor
 
     factor += 2
+
+output sieve
+```
+
+Since bit number is actually what is important, this can be reworked to just deal this bit number.
+
+```
+num_bits = (n - 3) // 2
+factor = 3
+factor_bit = (3 - 3) // 2 = 0
+while factor*factor <= n:
+  if bit "factor_bit" is not set in sieve:
+    k_bit = (factor*factor - 3) // 2
+    while k_bit <= num_bits:
+      Set "k_bit" in sieve
+      k_bit += factor
+
+  factor += 2
+  factor_bit += 1
+
+output sieve
+```
+
+The square operation can be reworked as repeat addition. Using the fact that the factor is
+increased by 2 each time, an increment that must be added to the current value of `factor*factor`
+to get the next value is this:
+
+```
+factor_sq_inc = (factor + 2)**2 - factor**2 = 4*factor + 4
+```
+
+The difference between this increment value and the next can be calculated as this:
+
+```
+4*(factor + 2) - 4*factor = 4*2 = 8
+```
+
+Therefore, `factor*factor` can be calculated like this:
+
+```
+initial factor_sq = 3*3 = 9
+initial factor_sq_inc = 5*5 - 3*3 = 25 - 9 = 16
+next factor_sq = current factor_sq + current factor_sq_inc
+next factor_sq_inc = current factor_sq_inc + 8
+```
+
+However, we're interested in bit numbers, so this changes as follows:
+
+```
+initial factor_sq_bit = (3*3 - 3) // 2 = 3
+initial factor_sq_inc_bit = 16 // 2 = 8
+next factor_sq_bit = current factor_sq_bit + factor_sq_inc_bit
+next factor_sq_inc_bit = current factor_sq_inc_bit + 4
+```
+
+Here's the algorithm is transformed to just work with bit numbers:
+
+```
+num_bits = (n - 3) // 2
+factor = 3
+factor_bit = (3 - 3) // 2 = 0
+factor_sq_bit = (3*3 - 3) // 2 = 3
+factor_sq_bit_inc = (5*5 - 3*3) // 2 = 8
+while factor_sq_bit <= num_bits:
+  if bit "factor_bit" is not set in sieve:
+    k_bit = factor_sq_bit
+    while k_bit <= num_bits:
+      Set "k_bit" in sieve
+      k_bit += factor
+
+  factor += 2
+  factor_bit += 1
+  factor_sq_bit += factor_sq_bit_inc
+  factor_sq_bit_inc += 4
+
+output sieve
+```
+
+Since Unicat does not have any bitwise operations, this must be simulated as follows:
+
+* Testing if bit `x` is set in `y` is done by checking if `(y // 2**x) mod 2` is greater than zero,
+  where `2**x` is pre-computed, `z mod 2` is calculated as `z - (z // 2) * 2`, and `z` is
+  `y // 2**x`
+* Setting bit `x` of `y` is done by adding `2**x` to `y` if bit `x` is not set in `y`.
+
+Therefore, the algorithm needs to be transformed to use this simulated behavior:
+
+```
+num_bits = (n - 3) // 2
+factor_mask = 2**[(3 - 3) // 2]) = 2**0 = 1
+factor_mask_multiplier = 2**3 = 8
+
+factor_sq_bit = (3*3 - 3) // 2 = 3
+factor_sq_bit_inc = (5*5 - 3*3) // 2 = 8
+factor_sq_mask = 2**factor_sq_bit = 2**3 = 8
+factor_sq_mask_multiplier = 2**factor_sq_bit_inc = 2**8 = 256
+
+while factor_sq_bit <= num_bits:
+  temp = sieve // factor_mask
+  if temp - (temp // 2) * 2 == 0:
+    k_bit = factor_sq_bit
+    k_mask = factor_sq_mask
+    while k_bit <= num_bits:
+      temp = sieve // k_mask
+      if temp - (temp // 2) * 2 == 0:
+        sieve += k_mask
+
+      k_bit += factor
+      k_mask *= factor_mask_multiplier
+
+  factor_mask *= 2
+  factor_mask_multiplier *= 2
+
+  factor_sq_bit += factor_sq_bit_inc
+  factor_sq_bit_inc += 4
 
 output sieve
 ```
@@ -121,18 +233,18 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 51853, Time: 5.000091032000029, Avg: 10370.411192145611, Count: 4, Valid: True
-rzuckerm;51853;5.000091032000029;1;algorithm=base,faithful=no,bits=1
+Passes: 51087, Time: 5.000006045000191, Avg: 10217.387647177944, Count: 4, Valid: True
+rzuckerm;51087;5.000006045000191;1;algorithm=base,faithful=no,bits=1
 
-Passes: 8385, Time: 5.0001593920000005, Avg: 1676.9465416273672, Count: 25, Valid: True
-rzuckerm;8385;5.0001593920000005;1;algorithm=base,faithful=no,bits=1
+Passes: 8221, Time: 5.000473509000585, Avg: 1644.0443060447453, Count: 25, Valid: True
+rzuckerm;8221;5.000473509000585;1;algorithm=base,faithful=no,bits=1
 
-Passes: 660, Time: 5.006048645999954, Avg: 131.84050868689982, Count: 168, Valid: True
-rzuckerm;660;5.006048645999954;1;algorithm=base,faithful=no,bits=1
+Passes: 663, Time: 5.001794854000764, Avg: 132.55241755260897, Count: 168, Valid: True
+rzuckerm;663;5.001794854000764;1;algorithm=base,faithful=no,bits=1
 
-Passes: 39, Time: 5.016214545000025, Avg: 7.774787073027755, Count: 1229, Valid: True
-rzuckerm;39;5.016214545000025;1;algorithm=base,faithful=no,bits=1
+Passes: 39, Time: 5.028150220998214, Avg: 7.756331510767298, Count: 1229, Valid: True
+rzuckerm;39;5.028150220998214;1;algorithm=base,faithful=no,bits=1
 
-Passes: 1, Time: 29.761020798000004, Avg: 0.03360099798953139, Count: 9592, Valid: True
-rzuckerm;1;29.761020798000004;1;algorithm=base,faithful=no,bits=1
+Passes: 1, Time: 30.191323400998954, Avg: 0.03312209891292518, Count: 9592, Valid: True
+rzuckerm;1;30.191323400998954;1;algorithm=base,faithful=no,bits=1
 ```
