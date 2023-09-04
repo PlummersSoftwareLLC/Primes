@@ -69,7 +69,7 @@ def main():
         "-l",
         help="Upper limit for calculating prime numbers",
         type=int,
-        default=10_000,
+        default=100_000,
     )
     parser.add_argument("--time", "-t", help="Time limit", type=float, default=5)
     parser.add_argument("--show", "-s", help="Print found prime numbers", action="store_true")
