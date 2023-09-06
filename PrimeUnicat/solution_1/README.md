@@ -233,18 +233,18 @@ On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
 ```
-Passes: 51087, Time: 5.000006045000191, Avg: 10217.387647177944, Count: 4, Valid: True
-rzuckerm;51087;5.000006045000191;1;algorithm=base,faithful=no,bits=1
+Passes: 57440, Time: 5.000059496000006, Avg: 11487.863303616965, Count: 4, Valid: True
+rzuckerm;57440;5.000059496000006;1;algorithm=base,faithful=no,bits=1
 
-Passes: 8221, Time: 5.000473509000585, Avg: 1644.0443060447453, Count: 25, Valid: True
-rzuckerm;8221;5.000473509000585;1;algorithm=base,faithful=no,bits=1
+Passes: 9895, Time: 5.000114415999988, Avg: 1978.954715183466, Count: 25, Valid: True
+rzuckerm;9895;5.000114415999988;1;algorithm=base,faithful=no,bits=1
 
-Passes: 663, Time: 5.001794854000764, Avg: 132.55241755260897, Count: 168, Valid: True
-rzuckerm;663;5.001794854000764;1;algorithm=base,faithful=no,bits=1
+Passes: 755, Time: 5.006424405999979, Avg: 150.80623190777948, Count: 168, Valid: True
+rzuckerm;755;5.006424405999979;1;algorithm=base,faithful=no,bits=1
 
-Passes: 39, Time: 5.028150220998214, Avg: 7.756331510767298, Count: 1229, Valid: True
-rzuckerm;39;5.028150220998214;1;algorithm=base,faithful=no,bits=1
+Passes: 44, Time: 5.066154589000007, Avg: 8.685088310478308, Count: 1229, Valid: True
+rzuckerm;44;5.066154589000007;1;algorithm=base,faithful=no,bits=1
 
-Passes: 1, Time: 30.191323400998954, Avg: 0.03312209891292518, Count: 9592, Valid: True
-rzuckerm;1;30.191323400998954;1;algorithm=base,faithful=no,bits=1
+Passes: 1, Time: 29.600349334000015, Avg: 0.033783385078207995, Count: 9592, Valid: True
+rzuckerm;1;29.600349334000015;1;algorithm=base,faithful=no,bits=1
 ```
