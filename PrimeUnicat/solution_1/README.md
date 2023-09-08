@@ -232,19 +232,28 @@ You can add the following command-line arguments to `run.sh`:
 On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 10 desktop running
 a Ubuntu 22.04 VM in VirtualBox 6.1:
 
-```
-Passes: 57440, Time: 5.000059496000006, Avg: 11487.863303616965, Count: 4, Valid: True
-rzuckerm;57440;5.000059496000006;1;algorithm=base,faithful=no,bits=1
+```console
+$ ./run.sh -l 10
+Passes: 54664, Time: 5.000086383999999, Avg: 10932.611119464213, Count: 4, Valid: True
+rzuckerm;54664;5.000086383999999;1;algorithm=base,faithful=no,bits=1
 
-Passes: 9895, Time: 5.000114415999988, Avg: 1978.954715183466, Count: 25, Valid: True
-rzuckerm;9895;5.000114415999988;1;algorithm=base,faithful=no,bits=1
+$ ./run.sh -l 100
+Passes: 10633, Time: 5.000036713, Avg: 2126.584385341492, Count: 25, Valid: True
+rzuckerm;10633;5.000036713;1;algorithm=base,faithful=no,bits=1
 
-Passes: 755, Time: 5.006424405999979, Avg: 150.80623190777948, Count: 168, Valid: True
-rzuckerm;755;5.006424405999979;1;algorithm=base,faithful=no,bits=1
+$ ./run.sh -l 1000
+Passes: 907, Time: 5.001584391999998, Avg: 181.34253646719242, Count: 168, Valid: True
+rzuckerm;907;5.001584391999998;1;algorithm=base,faithful=no,bits=1
 
-Passes: 44, Time: 5.066154589000007, Avg: 8.685088310478308, Count: 1229, Valid: True
-rzuckerm;44;5.066154589000007;1;algorithm=base,faithful=no,bits=1
+$ ./run.sh -l 10000
+Passes: 66, Time: 5.026044870999996, Avg: 13.131597845617414, Count: 1229, Valid: True
+rzuckerm;66;5.026044870999996;1;algorithm=base,faithful=no,bits=1
 
-Passes: 1, Time: 29.600349334000015, Avg: 0.033783385078207995, Count: 9592, Valid: True
-rzuckerm;1;29.600349334000015;1;algorithm=base,faithful=no,bits=1
+$ ./run.sh -l 100000
+Passes: 3, Time: 6.704778101999992, Avg: 0.44744210089594455, Count: 9592, Valid: True
+rzuckerm;3;6.704778101999992;1;algorithm=base,faithful=no,bits=1
+
+$ ./run.sh -l 1000000
+Passes: 1, Time: 245.23979778499998, Avg: 0.0040776415941946465, Count: 78498, Valid: True
+rzuckerm;1;245.23979778499998;1;algorithm=base,faithful=no,bits=1
 ```
