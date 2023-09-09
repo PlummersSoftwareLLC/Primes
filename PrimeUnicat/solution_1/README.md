@@ -4,6 +4,7 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Deviation](https://img.shields.io/badge/Deviation-sieve_size-blue)
 
 ## Introduction
 
