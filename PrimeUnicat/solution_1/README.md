@@ -18,16 +18,21 @@ the following:
   - `mem[addr1] -= mem[addr2]`
   - `mem[addr1] *= mem[addr2]`
   - `mem[addr1] //= mem[addr2]` (integer division)
-- Dereference a memory address (`mem[addr] = mem[mem[addr]]`.
+- Dereference a memory address (`mem[addr] = mem[mem[addr]]`).
 - Output the contents of memory address as a number or a ASCII/Unicode character to `stdout`.
 - Input an ASCII string from `stdin`, and store it to a consecutive set of memory addresses as
   the ASCII/Unicode value of each character with a null-termination.
-- Conditional jump to an instruction address if memory address contains a value greater than zero.
+- Conditionally jump to an instruction address if memory address contains a value greater than
+  zero.
 - Unconditionally jump to an insruction address.
 - Exit the program.
 
 The amount of memory is arbitrarily large, each memory address can hold an arbitrarily large
-integer. If you'd like a more in-depth description of the language, see
+integer. Memory address `-1` is the instruction address. It is initialized to `-1`, and it
+is incremented before the start of each instruction. Therefore, any jump (conditionally or
+unconditionally) must be done to the desired instruction address minus 1. It should be noted that
+instruction memory is totally separate from the memory used by the program, so the program cannot
+modify itself. If you'd like a more in-depth description of the language, see
 [this article](https://sampleprograms.io/languages/unicat/).
 
 This is not intended as a serious solution. It was done more as a challenge to see if I could
@@ -40,7 +45,8 @@ following reasons:
 - I didn't want the compilation time to be counted, so
   [I wrote a version of the Unicat language](https://github.com/rzuckerm/unicat-esolang)
   based on [gemdude46's original code](https://github.com/gemdude46/unicat/blob/master/cat.py) in
-  python 3 that separates the compilation from the execution.
+  python 3 that separates the compilation from the execution (in addition to improving
+  the performance of the language and fixing some bugs).
 
 ## Python implementation
 
