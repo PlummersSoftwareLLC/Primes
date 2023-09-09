@@ -68,7 +68,8 @@ At a high level, the steps are as follows:
   * Bit `k`: `2*k + 3`
   * ...
   * Bit `(n - 3) // 2`: `n`
-* The result (`sieve`) is output as a decimal value that is decoded by the python code.
+* The result (`sieve`) is output as a decimal value (plus a newline) that is decoded by the python
+code.
 
 Before diving into the actual implementation of the prime sieve, let's take a look at the algorithm
 first:
@@ -85,9 +86,10 @@ while factor*factor <= n:
       Set bit "inner_factor_bit" in sieve
       inner_factor += 2*factor
 
-    factor += 2
+  factor += 2
 
 output sieve
+output newline
 ```
 
 The square operation can be reworked as repeat addition. Using the fact that the factor is
@@ -104,6 +106,44 @@ The difference between this increment value and the next can be calculated as th
 4*(factor + 2) - 4*factor = 4*2 = 8
 ```
 
+The bit number calculations can be reworked as well using the above. However, everything is
+halved since the bit number is calculated based on odd numbers.
+
+Therefore, the algorithm can be refactored like this:
+
+```
+sieve = 0
+
+factor = 3
+
+factor_sq = 3*3 = 9
+factor_sq_inc = 5*5 - 3*3 = 16
+
+factor_bit = (3 - 3) // 2 = 0
+factor_sq_bit = (9 - 3) // 2 = 3
+factor_sq_bit_inc = 16 // 2 = 8
+
+while factor_sq <= n:
+  if bit "factor_bit" is not set in sieve:
+    inner_factor = factor_sq
+    inner_factor_bit = factor_sq_bit
+    while inner_factor <= n:
+      Set bit "inner_factor_bit" in sieve
+      inner_factor += factor*2
+      inner_factor_bit += factor
+
+  factor += 2
+  factor_bit += 1
+
+  factor_sq += factor_sq_inc
+  factor_sq_inc += 8
+
+  factor_sq_bit += factor_sq_bit_inc
+  factor_sq_bit_inc += 4
+
+output sieve
+output newline
+```
 
 Since Unicat does not have any bitwise operations, this must be simulated as follows:
 
@@ -111,6 +151,144 @@ Since Unicat does not have any bitwise operations, this must be simulated as fol
   where `2**x` is pre-computed, `z mod 2` is calculated as `z - (z // 2) * 2`, and `z` is
   `y // 2**x`
 * Setting bit `x` of `y` is done by adding `2**x` to `y` if bit `x` is not set in `y`.
+
+Therefore, the algorithm needs to be reworked so that `2**bit_number` is pre-computed:
+
+```
+sieve = 0
+
+factor_times_two = 3*2 = 6
+
+factor_sq = 3*3 = 9
+factor_sq_inc = 5*5 - 3*3 = 16
+
+factor_mask = 2**[(3 - 3) // 2] = 2**0 = 1
+factor_sq_mask = 2**[(9 - 3) // 2] = 2**3 = 8
+factor_sq_mask_multiplier = 2**(16 // 2) = 2**8 = 256
+
+inner_factor_mask_multiplier = 2**(6 // 2) = 2**3 = 8
+
+while factor_sq <= n:
+  temp = sieve // factor_mask
+  if temp - (temp // 2) * 2 <= 0:
+    inner_factor = factor_sq
+    inner_factor_mask = factor_sq_mask
+    while inner_factor <= n:
+      temp = sieve // inner_factor_mask
+      if temp - (temp // 2) * 2 > 0:
+          sieve += inner_factor_mask
+
+      inner_factor += factor_times_two
+      inner_factor_mask *= inner_factor_mask_multiplier
+
+  factor_times_two += 2*2 (4)
+  factor_mask *= 2**1 (2)
+
+  factor_sq += factor_sq_inc
+  factor_sq_inc += 8
+
+  inner_factor_mask_multiplier *= 2**2 (4)
+
+  factor_sq_mask *= factor_sq_mask_multiplier
+  factor_sq_mask_multiplier *= 2**4 (16)
+
+output sieve
+output newline
+```
+
+I later discovered that I could get a signifant performance gain by refactoring the
+``sieve // inner_factor_mask`` out of the inner loop like this:
+
+```
+sieve = 0
+
+factor_times_two = 3*2 = 6
+
+factor_sq = 3*3 = 9
+factor_sq_inc = 5*5 - 3*3 = 16
+
+factor_mask = 2**[(3 - 3) // 2] = 2**0 = 1
+factor_sq_mask = 2**[(9 - 3) // 2] = 2**3 = 8
+factor_sq_mask_multiplier = 2**(16 // 2) = 2**8 = 256
+
+inner_factor_mask_multiplier = 2**(6 // 2) = 2**3 = 8
+
+while factor_sq <= n:
+  temp = sieve // factor_mask
+  if temp - (temp // 2) * 2 <= 0:
+    inner_factor = factor_sq
+    inner_factor_mask = factor_sq_mask
+    inner_sieve = sieve // factor_sq_mask
+    while inner_factor <= n:
+      if inner_sieve - (inner_sieve // 2) * 2 <= 0:
+          sieve += inner_factor_mask
+
+      inner_factor += factor_times_two
+      inner_factor_mask *= inner_factor_mask_multiplier
+      inner_sieve //= inner_factor_mask_multiplier
+
+  factor_times_two += 2*2 (4)
+  factor_mask *= 2**1 (2)
+
+  factor_sq += factor_sq_inc
+  factor_sq_inc += 8
+
+  inner_factor_mask_multiplier *= 2**2 (4)
+
+  factor_sq_mask *= factor_sq_mask_multiplier
+  factor_sq_mask_multiplier *= 2**4 (16)
+
+output sieve
+output newline
+```
+
+Since Unicat only has the ability to compare to zero, `x <= y` has to be reworked as `x - y <= 0`.
+Therefore, the algorithm must be refactored to use an outer and inner counter like this:
+
+```
+outer_counter = 3*3 - n = 9 - n
+
+sieve = 0
+
+factor_times_two = 3*2 = 6
+
+factor_sq = 3*3 = 9
+factor_sq_inc = 5*5 - 3*3 = 16
+
+factor_mask = 2**[(3 - 3) // 2] = 2**0 = 1
+factor_sq_mask = 2**[(9 - 3) // 2] = 2**3 = 8
+factor_sq_mask_multiplier = 2**(16 // 2) = 2**8 = 256
+
+inner_factor_mask_multiplier = 2**(6 // 2) = 2**3 = 8
+
+while outer_counter <= 0:
+  temp = sieve // factor_mask
+  if temp - (temp // 2) * 2 <= 0:
+    inner_counter = outer_counter
+    inner_factor_mask = factor_sq_mask
+    inner_sieve = sieve // factor_sq_mask
+    while inner_counter <= 0:
+      if inner_sieve - (inner_sieve // 2) * 2 <= 0:
+          sieve += inner_factor_mask
+
+      inner_counter += factor_times_two
+      inner_factor_mask *= inner_factor_mask_multiplier
+      inner_sieve //= inner_factor_mask_multiplier
+
+  factor_times_two += 2*2 (4)
+  factor_mask *= 2**1 (2)
+
+  outer_counter += factor_sq_inc
+  factor_sq_inc += 8
+
+  inner_factor_mask_multiplier *= 2**2 (4)
+
+  factor_sq_mask *= factor_sq_mask_multiplier
+  factor_sq_mask_multiplier *= 2**4 (16)
+
+output sieve
+output newline
+```
 
 ## Run instructions
 

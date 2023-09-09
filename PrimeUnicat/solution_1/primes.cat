@@ -51,7 +51,7 @@
 # factor_sq_mask (Memory 8 [0o10]) = 8 (0o10)
 0o032 😻😹😹😸🙀🙀😹😸🙀🙀
 
-# inner_mask_multiplier (Memory 9 [0o11]) = 8 (0o10)
+# inner_factor_mask_multiplier (Memory 9 [0o11]) = 8 (0o10)
 0o033 😻😹😹😹🙀🙀😹😸🙀🙀
 
 # factor_sq_mask_multiplier (Memory 10 [0o12]) = 256 (0o400)
@@ -97,9 +97,9 @@
 0o057 😿🙀😸😺🙀🙀😹🙀🙀 inner_sieve += sieve (Memory 1)
 0o060 😿🙀😿😺🙀🙀😹😸🙀🙀 inner_sieve //= factor_sq_mask (Memory 8 [0o10])
 
-# inner_sieve_mask = factor_sq_mask
-0o061 😻😹😺😺🙀🙀😸🙀🙀 inner_sieve_mask = 0 (Memory 18 [0o22])
-0o062 😿🙀😸😺😺🙀🙀😹😸🙀🙀 inner_sieve_mask += factor_sq_mask (Memory 8 [0o10])
+# inner_factor_mask = factor_sq_mask
+0o061 😻😹😺😺🙀🙀😸🙀🙀 inner_factor_mask = 0 (Memory 18 [0o22])
+0o062 😿🙀😸😺😺🙀🙀😹😸🙀🙀 inner_factor_mask += factor_sq_mask (Memory 8 [0o10])
 
 # inner: if inner_counter > 0, goto next_outer_factor
 0o063 😽😿😺😹🙀🙀😿😾🙀🙀 if inner_counter (Memory 17 [0o21]) > 0, goto next_outer_factor (0o77) (0o076 + 1)
@@ -112,17 +112,17 @@
 0o070 😿🙀😸😹😿🙀🙀😺🙀🙀 temp += inner_sieve (Memory 2)
 0o071 😽😿😹😿🙀🙀😿😺🙀🙀 if temp > 0, goto next_inner_factor (0o73) (0o72 + 1)
 
-# sieve += inner_sieve_mask
-0o072 😿🙀😸😹🙀🙀😺😺🙀🙀 sieve (Memory 1) += inner_sieve_mask (Memory 18 [0o22])
+# sieve += inner_factor_mask
+0o072 😿🙀😸😹🙀🙀😺😺🙀🙀 sieve (Memory 1) += inner_factor_mask (Memory 18 [0o22])
 
 # next_inner_factor: inner_counter += factor_times_two
 0o073 😿🙀😸😺😹🙀🙀😼🙀🙀 inner_counter (Memory 17 [0o21]) += factor_times_two (Memory 4)
 
-# inner_sieve //= inner_mask_multiplier
-0o074 😿🙀😿😺🙀🙀😹😹🙀🙀 inner_sieve (Memory 2) //= inner_mask_multiplier (Memory 9 [0o11])
+# inner_sieve //= inner_factor_mask_multiplier
+0o074 😿🙀😿😺🙀🙀😹😹🙀🙀 inner_sieve (Memory 2) //= inner_factor_mask_multiplier (Memory 9 [0o11])
 
-# inner_sieve_mask *= inner_mask_multiplier
-0o075 😿🙀🙀😺😺🙀🙀😹😹🙀🙀 inner_sieve_mask (Memory 18 [0o22]) *= inner_mask_multiplier (Memory 9 [0o11])
+# inner_factor_mask *= inner_factor_mask_multiplier
+0o075 😿🙀🙀😺😺🙀🙀😹😹🙀🙀 inner_factor_mask (Memory 18 [0o22]) *= inner_factor_mask_multiplier (Memory 9 [0o11])
 
 # goto inner
 0o076 😻😹😹🙀😿😾😺🙀🙀 goto 0o63 (0o62 + 1)
@@ -142,8 +142,8 @@
 # factor_sq_mask *= factor_sq_mask_multiplier
 0o103 😿🙀🙀😹😸🙀🙀😹😺🙀🙀 factor_sq_mask (Memory 8 [0o10]) *= factor_sq_mask_multiplier (Memory 10 [0o12])
 
-# inner_mask_multiplier *= 4
-0o104 😿🙀🙀😹😹🙀🙀😹😼🙀🙀 inner_mask_multiplier (Memory 9 [0o11]) *= four (Memory 12 [0o14])
+# inner_factor_mask_multiplier *= 4
+0o104 😿🙀🙀😹😹🙀🙀😹😼🙀🙀 inner_factor_mask_multiplier (Memory 9 [0o11]) *= four (Memory 12 [0o14])
 
 # factor_sq_mask_multiplier *= 16
 0o105 😿🙀🙀😹😺🙀🙀😹😾🙀🙀 factor_sq_mask_multiplier (Memory 10 [0o12]) *= sixteen (Memory 14 [0o16])
