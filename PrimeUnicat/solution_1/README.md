@@ -11,33 +11,33 @@ Unicat is an esoteric language was developed by [gemdude46](https://github.com/g
 The language is entirely made of up 9 cat emojis. It has a very limited instruction set that can do
 the following:
 
-* Set the contents of a memory address to a constant (`mem[addr] = constant`).
-* Do basic math (addition, subtraction, multiplication, and division) between a pair of memory
+- Set the contents of a memory address to a constant (`mem[addr] = constant`).
+- Do basic math (addition, subtraction, multiplication, and division) between a pair of memory
   addresses:
-  * `mem[addr1] += mem[addr2]`
-  * `mem[addr1] -= mem[addr2]`
-  * `mem[addr1] *= mem[addr2]`
-  * `mem[addr1] //= mem[addr2]` (integer division)
-* Dereference a memory address (`mem[addr] = mem[mem[addr]]`.
-* Output the contents of memory address as a number or a ASCII/Unicode character to `stdout`.
-* Input an ASCII string from `stdin`, and store it to a consecutive set of memory addresses as
+  - `mem[addr1] += mem[addr2]`
+  - `mem[addr1] -= mem[addr2]`
+  - `mem[addr1] *= mem[addr2]`
+  - `mem[addr1] //= mem[addr2]` (integer division)
+- Dereference a memory address (`mem[addr] = mem[mem[addr]]`.
+- Output the contents of memory address as a number or a ASCII/Unicode character to `stdout`.
+- Input an ASCII string from `stdin`, and store it to a consecutive set of memory addresses as
   the ASCII/Unicode value of each character with a null-termination.
-* Conditional jump to an instruction address if memory address contains a value greater than zero.
-* Unconditionally jump to an insruction address.
-* Exit the program.
+- Conditional jump to an instruction address if memory address contains a value greater than zero.
+- Unconditionally jump to an insruction address.
+- Exit the program.
 
 The amount of memory is arbitrarily large, each memory address can hold an arbitrarily large
 integer. If you'd like a more in-depth description of the language, see
 [this article](https://sampleprograms.io/languages/unicat/).
 
-This is not intended as a serious solution. It was done more as a challenge to so if I could actually
-implement something as complicated as a Prime Number Sieve in such a limited language and have
-it complete in a reasonable amount of time. This solution is marked as "unfaithful" for the following
-reasons:
+This is not intended as a serious solution. It was done more as a challenge to see if I could
+actually implement something as complicated as a Prime Number Sieve in such a limited language and
+have it complete in a reasonable amount of time. This solution is marked as "unfaithful" for the
+following reasons:
 
-* I could only get the solution to complete in a reasonable amount of time for 100,000 or less.
-* Since Unicat has no ability to measure time, I had to write a python wrapper to run it
-* I didn't want the compilation time to be counted, so
+- I could only get the solution to complete in a reasonable amount of time for 100,000 or less.
+- Since Unicat has no ability to measure time, I had to write a python wrapper to run it
+- I didn't want the compilation time to be counted, so
   [I wrote a version of the Unicat language](https://github.com/rzuckerm/unicat-esolang)
   based on [gemdude46's original code](https://github.com/gemdude46/unicat/blob/master/cat.py) in
   python 3 that separates the compilation from the execution.
@@ -46,11 +46,11 @@ reasons:
 
 At a high level, the steps are as follows:
 
-* The Unicat code is compiled into a list of instructions
-* While time limit not expired, the Unicat instructions are run, sending the sieve size to
+- The Unicat code is compiled into a list of instructions
+- While time limit not expired, the Unicat instructions are run, sending the sieve size to
   the `stdin` of the Unicat program, and capturing the `stdout` of the Unicat program, keeping
   track of the number of passes and the elapsed time
-* The required information about the performance and accuracy of the Unicat program is displayed.
+- The required information about the performance and accuracy of the Unicat program is displayed.
   The accuracy is determined by decoding the `stdout` of the Unicat program and comparing the number
   of primes found against the expected value for the sieve size
 
@@ -58,8 +58,8 @@ At a high level, the steps are as follows:
 
 At a high level, the steps are as follows:
 
-* The sieve size (or limit) is taken from `stdin` and converted to an integer (`n`).
-* The prime numbers up to `n` (for odd values starting at 3) is calculated, and the result
+- The sieve size (or limit) is taken from `stdin` and converted to an integer (`n`).
+- The prime numbers up to `n` (for odd values starting at 3) are calculated, and the result
   (`sieve`) is stored as bitmap in a single memory address, where `1` means composite, and `0`
   means prime. The bits are numbered as follows:
   * Bit 0: `3`
@@ -67,8 +67,8 @@ At a high level, the steps are as follows:
   * ...
   * Bit `k`: `2*k + 3`
   * ...
-  * Bit `(n - 3) // 2`: `n`
-* The result (`sieve`) is output as a decimal value (plus a newline) that is decoded by the python
+  * Bit `(n - 3) // 2`: `n - (n mod 2)` (next lowest odd value -- e.g., 1000 becomes 999)
+- The result (`sieve`) is output as a decimal value (plus a newline) that is decoded by the python
 code.
 
 Before diving into the actual implementation of the prime sieve, let's take a look at the algorithm
@@ -147,10 +147,10 @@ output newline
 
 Since Unicat does not have any bitwise operations, this must be simulated as follows:
 
-* Testing if bit `x` is set in `y` is done by checking if `(y // 2**x) mod 2` is greater than zero,
+- Testing if bit `x` is set in `y` is done by checking if `(y // 2**x) mod 2` is greater than zero,
   where `2**x` is pre-computed, `z mod 2` is calculated as `z - (z // 2) * 2`, and `z` is
   `y // 2**x`
-* Setting bit `x` of `y` is done by adding `2**x` to `y` if bit `x` is not set in `y`.
+- Setting bit `x` of `y` is done by adding `2**x` to `y` if bit `x` is not set in `y`.
 
 Therefore, the algorithm needs to be reworked so that `2**bit_number` is pre-computed:
 
@@ -308,9 +308,9 @@ You should only need to do this once. Run the docker image:
 
 You can add the following command-line arguments to `run.sh`:
 
-* `-l <limit>` or `--limit <limit>` - Upper limit for calculating prime numbers. Default: 100000
-* `-t <time>` or `--time <time>` - Time limit in seconds. Default: 5
-* `-s` or `--show-results` - Print found prime numbers
+- `-l <limit>` or `--limit <limit>` - Upper limit for calculating prime numbers. Default: 100000
+- `-t <time>` or `--time <time>` - Time limit in seconds. Default: 5
+- `-s` or `--show-results` - Print found prime numbers
 
 ## Output
 
