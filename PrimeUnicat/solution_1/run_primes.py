@@ -75,7 +75,7 @@ def main():
     parser.add_argument("--show", "-s", help="Print found prime numbers", action="store_true")
     parsed_args = parser.parse_args()
 
-    # Estimate number of digits needed (plus a fudge factor):
+    # Estimate number of digits needed (plus a fudge factor) to convert sieve to a string:
     # log10[2 ^ floor(limit / 2)] = floor(limit / 2) * log10(2) ~ floor(0.30103 / 2 * limit)
     sys.set_int_max_str_digits(30103 * parsed_args.limit // 200000 + 5000)
 
