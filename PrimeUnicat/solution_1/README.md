@@ -79,32 +79,13 @@ factor = 3
 while factor*factor <= n:
   factor_bit = (factor - 3) // 2
   if bit "factor_bit" is not set in sieve:
-    k = factor*factor
-    while k <= n:
-      k_bit = (k - 3) // 2
-      Set bit "k_bit" in sieve
-      k += 2*factor
+    inner_factor = factor*factor
+    while inner_factor <= n:
+      inner_factor_bit = (inner_factor - 3) // 2
+      Set bit "inner_factor_bit" in sieve
+      inner_factor += 2*factor
 
     factor += 2
-
-output sieve
-```
-
-Since bit number is actually what is important, this can be reworked to just deal this bit number.
-
-```
-num_bits = (n - 3) // 2
-factor = 3
-factor_bit = (3 - 3) // 2 = 0
-while factor*factor <= n:
-  if bit "factor_bit" is not set in sieve:
-    k_bit = (factor*factor - 3) // 2
-    while k_bit <= num_bits:
-      Set "k_bit" in sieve
-      k_bit += factor
-
-  factor += 2
-  factor_bit += 1
 
 output sieve
 ```
@@ -123,46 +104,6 @@ The difference between this increment value and the next can be calculated as th
 4*(factor + 2) - 4*factor = 4*2 = 8
 ```
 
-Therefore, `factor*factor` can be calculated like this:
-
-```
-initial factor_sq = 3*3 = 9
-initial factor_sq_inc = 5*5 - 3*3 = 25 - 9 = 16
-next factor_sq = current factor_sq + current factor_sq_inc
-next factor_sq_inc = current factor_sq_inc + 8
-```
-
-However, we're interested in bit numbers, so this changes as follows:
-
-```
-initial factor_sq_bit = (3*3 - 3) // 2 = 3
-initial factor_sq_inc_bit = 16 // 2 = 8
-next factor_sq_bit = current factor_sq_bit + factor_sq_inc_bit
-next factor_sq_inc_bit = current factor_sq_inc_bit + 4
-```
-
-Here's the algorithm is transformed to just work with bit numbers:
-
-```
-num_bits = (n - 3) // 2
-factor = 3
-factor_bit = (3 - 3) // 2 = 0
-factor_sq_bit = (3*3 - 3) // 2 = 3
-factor_sq_bit_inc = (5*5 - 3*3) // 2 = 8
-while factor_sq_bit <= num_bits:
-  if bit "factor_bit" is not set in sieve:
-    k_bit = factor_sq_bit
-    while k_bit <= num_bits:
-      Set "k_bit" in sieve
-      k_bit += factor
-
-  factor += 2
-  factor_bit += 1
-  factor_sq_bit += factor_sq_bit_inc
-  factor_sq_bit_inc += 4
-
-output sieve
-```
 
 Since Unicat does not have any bitwise operations, this must be simulated as follows:
 
@@ -170,40 +111,6 @@ Since Unicat does not have any bitwise operations, this must be simulated as fol
   where `2**x` is pre-computed, `z mod 2` is calculated as `z - (z // 2) * 2`, and `z` is
   `y // 2**x`
 * Setting bit `x` of `y` is done by adding `2**x` to `y` if bit `x` is not set in `y`.
-
-Therefore, the algorithm needs to be transformed to use this simulated behavior:
-
-```
-num_bits = (n - 3) // 2
-factor_mask = 2**[(3 - 3) // 2]) = 2**0 = 1
-factor_mask_multiplier = 2**3 = 8
-
-factor_sq_bit = (3*3 - 3) // 2 = 3
-factor_sq_bit_inc = (5*5 - 3*3) // 2 = 8
-factor_sq_mask = 2**factor_sq_bit = 2**3 = 8
-factor_sq_mask_multiplier = 2**factor_sq_bit_inc = 2**8 = 256
-
-while factor_sq_bit <= num_bits:
-  temp = sieve // factor_mask
-  if temp - (temp // 2) * 2 == 0:
-    k_bit = factor_sq_bit
-    k_mask = factor_sq_mask
-    while k_bit <= num_bits:
-      temp = sieve // k_mask
-      if temp - (temp // 2) * 2 == 0:
-        sieve += k_mask
-
-      k_bit += factor
-      k_mask *= factor_mask_multiplier
-
-  factor_mask *= 2
-  factor_mask_multiplier *= 2
-
-  factor_sq_bit += factor_sq_bit_inc
-  factor_sq_bit_inc += 4
-
-output sieve
-```
 
 ## Run instructions
 
