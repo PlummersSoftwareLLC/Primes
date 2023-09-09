@@ -14,4 +14,4 @@ do
 done
 duration=$(echo "scale=3;($currenttime-$starttime)/1000" | bc)
 
-echo "davepl-msbasic;$iterations;$duration;1;algorithm=base,faithful=no"
+echo "rzuckerm-msbasic;$iterations;$duration;1;algorithm=base,faithful=no"
