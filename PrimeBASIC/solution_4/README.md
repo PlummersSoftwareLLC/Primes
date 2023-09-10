@@ -4,7 +4,7 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
-![Bit count](https://img.shields.io/badge/Bits-1-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Deviation](https://img.shields.io/badge/Deviation-sievesize-blue)
 
 This is an implementation in Mirosoft BASIC version 2, as available and used on many home computers in the 1970s and '80s.
