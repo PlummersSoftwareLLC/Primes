@@ -7,7 +7,7 @@ RUN apt-get update -qq \
 
 WORKDIR /opt/app
 
-COPY primes.bas *.sh ./
+COPY *.bas *.sh ./
 
 RUN ./build.sh
 
