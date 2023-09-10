@@ -51,8 +51,8 @@ Execute the following commands from the implementation directory, in a bash shel
 A Dockerfile has been provided. With Docker installed on a supported operating system, it can be used with the following commands:
 
 ```bash
-./build-docker.sh
-./run-docker.sh
+docker build -t primes-basic-4 .
+docker run primes-basic-4
 ```
 
 ## Output
