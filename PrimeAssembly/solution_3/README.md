@@ -10,7 +10,7 @@ This is an implementation in Intel 8080 assembly. The Intel 8080 processor was u
 
 As the systems in question typically had a maximum of 64KiB of total system RAM (and the Intel 8080 couldn't address more than that) this implementation uses a sieve size of 10,000.
 
-This solution can be considered an assembly translation of davepl's implementation in Microsoft BASIC, included in this repository as [PrimeBASIC/solution_4](../../PrimeBASIC/solution_4/).
+This solution can be considered an assembly translation of the original version of davepl's implementation in Microsoft BASIC, included in this repository as [PrimeBASIC/solution_4](../../PrimeBASIC/solution_4/).
 
 The build and run scripts, and therefore also the included Dockerfile, use [emuStudio](https://www.emustudio.net/) to assemble the source code and run it in a MITS Altair 8800 emulator. As the emulator aims to be clock accurate, the performance reported from the emulator should be very close to that on an actual Altair 8800.
 
