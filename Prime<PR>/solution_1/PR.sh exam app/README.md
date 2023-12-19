@@ -15,4 +15,35 @@ command
   14 - 2 = 2 ^ 3 +[4]
 
 
+
+
+# <LANGUAGE> solution by <YourUserName>
+
+# <PR.sh> solution by <Giannis9891>
+
+(Optional) <Badges>
+
+*Give a short description of your implementation*
+
+cat shell app editor while do enhancement proposal
+
+## Run instructions
+
+*Describe how to run your application here. If build steps are required to make the solution runnable, include those too.*
+
+ecept reverse and group based and parallel reverse group after selfprocedure
+## Output
+
+*Show the output you got on your machine(s) here, in code blocks*
+
+10^6 in 5 seconds
+
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
+
+
+
+
+
+<label>;<iterations>;<total_time>;<num_threads>;<tags>
+<PR.sh>;<10^6>;<5 seconds>;<16>;<https://fortran-lang.discourse.group/t/79-languages-speed-competition-can-we-make-fortran-win/3038>
   
