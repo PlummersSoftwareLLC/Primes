@@ -62,14 +62,14 @@ fun run-sieve(opts :: D.StringDict) block:
 end
 
 fun do-sieve(limit :: Number) -> RawArray<Boolean> block:
-  num-bits = num-floor((limit - 3) / 2)
+  num-bits = num-floor((limit - 1) / 2)
   sieve-bits = raw-array-of(true, num-bits)
 
-  q = num-floor(num-sqrt(limit) / 2)
+  q = num-floor((-3 + num-sqrt(3 + (2 * num-bits))) / 2)
   clr-bit = {(k :: Number): raw-array-set(sieve-bits, k, false)}
   for each(bit from range(0, q + 1)):
     when raw-array-get(sieve-bits, bit):
-      range-by((2 * (bit + 1) * (bit + 2)) - 1, num-bits + 1, (2 * bit) + 3)
+      range-by((2 * (bit + 1) * (bit + 2)) - 1, num-bits, (2 * bit) + 3)
         .each(clr-bit)
     end
   end
