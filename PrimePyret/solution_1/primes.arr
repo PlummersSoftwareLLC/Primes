@@ -13,13 +13,15 @@ fun show-help(options :: D.StringDict, message :: String) block:
   raise(ERR.exit-quiet(1))
 end
 
+type SieveResults = {passes :: Number, sieve-bits :: RawArray<Boolean>, elapsed-time :: Number}
+
 fun run-sieve(opts :: D.StringDict) block:
   limit = opts.get-value("limit")
   time-limit = opts.get-value("time") * 1000
 
   start-time = time-now()
   rec timed-do-sieve =
-    lam(results) block:
+    lam(results :: SieveResults) -> SieveResults block:
       elapsed-time = time-now() - start-time
       if elapsed-time >= time-limit:
         {passes: results.passes, sieve-bits: results.sieve-bits, elapsed-time: elapsed-time}
@@ -30,7 +32,7 @@ fun run-sieve(opts :: D.StringDict) block:
       end
     end
 
-  sieve-results = timed-do-sieve({passes: 0, sieve-bits: empty, elapsed-time: 0})
+  sieve-results = timed-do-sieve({passes: 0, sieve-bits: [raw-array: ], elapsed-time: 0})
   when opts.has-key("s"):
     print-primes(sieve-results.sieve-bits)
   end
