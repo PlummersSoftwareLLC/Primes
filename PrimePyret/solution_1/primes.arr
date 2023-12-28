@@ -37,7 +37,6 @@ fun run-sieve(opts :: D.StringDict) block:
 
   prime-count = count-primes(sieve-results.sieve-bits)
   is-valid = validate-primes-count(limit, prime-count)
-  avg-time = num-to-string(num-to-roughnum(sieve-results.elapsed-time / sieve-results.passes))
   print(
     F.format(
       "Passes: ~a, Time: ~ams, Avg: ~ams, Limit: ~a, Count: ~a, Valid: ~a\n",

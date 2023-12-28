@@ -30,7 +30,7 @@ where `<options>` are optional command-line arguments:
 
 ## Output
 
-On an 12th Gen Intel(R) Core(TM) i7-12850HX 2.10 GHz with 32 GB of memory on a Windows 10
+On a 12th Gen Intel(R) Core(TM) i7-12850HX 2.10 GHz with 32 GB of memory on a Windows 10
 laptop running a Ubuntu 22.04 VM in VirtualBox 7.0.6:
 
 ```
