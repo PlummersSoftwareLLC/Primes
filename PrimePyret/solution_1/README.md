@@ -30,8 +30,10 @@ where `<options>` are optional command-line arguments:
 
 ## Output
 
-On an Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz with 32 GB of memory on a Windows 10 desktop running
-a Ubuntu 22.04 VM in VirtualBox 6.1:
+On an 12th Gen Intel(R) Core(TM) i7-12850HX 2.10 GHz with 32 GB of memory on a Windows 10
+desktop running a Ubuntu 22.04 VM in VirtualBox 7.0.6:
 
 ```
+Passes: 11, Time: 5018ms, Avg: 456.1818181818182ms, Limit: 1000000, Count: 78498, Valid: true
+rzuckerm;11;5.018;1;algorithm=base,faithful=yes
 ```
