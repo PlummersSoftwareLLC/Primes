@@ -69,7 +69,7 @@ fun do-sieve(limit :: Number) -> RawArray<Boolean> block:
   clr-bit = {(k :: Number): raw-array-set(sieve-bits, k, false)}
   for each(bit from range(0, q + 1)):
     when raw-array-get(sieve-bits, bit):
-      range-by((2 * (bit + 1) * (bit + 2)) - 1, num-bits, (2 * bit) + 3)
+      range-by((2 * (bit + 1) * (bit + 2)) - 1, num-bits + 1, (2 * bit) + 3)
         .each(clr-bit)
     end
   end
@@ -82,7 +82,7 @@ fun print-primes(sieve-bits :: RawArray<Boolean>) block:
   is-bit-set = {(x :: Number) -> Boolean: raw-array-get(sieve-bits, num-floor((x - 3) / 2))}
   print(
     "2, " + 
-    range-by(3, (2 * num-bits) + 3, 2)
+    range-by(3, (2 * num-bits) + 4, 2)
       .filter(is-bit-set)
       .map(num-to-string)
       .join-str(", ")
