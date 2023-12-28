@@ -82,7 +82,7 @@ fun print-primes(sieve-bits :: RawArray<Boolean>) block:
   is-bit-set = {(x :: Number) -> Boolean: raw-array-get(sieve-bits, num-floor((x - 3) / 2))}
   print(
     "2, " + 
-    range-by(3, (2 * num-bits) + 4, 2)
+    range-by(3, (2 * num-bits) + 3, 2)
       .filter(is-bit-set)
       .map(num-to-string)
       .join-str(", ")
