@@ -68,57 +68,65 @@ data SieveValues:
 end
 
 data SieveResults:
-  | sieve-results(passes :: Number, sieve-vals :: SieveValues, elapsed-time :: Number)
+  | sieve-results(passes :: Number, sieve-vals :: SieveValues, elapsed-time :: Number) with:
+    method print-results(self, show-primes :: Boolean) block:
+      when show-primes:
+        self.sieve-vals.print-primes()
+      end
+
+      prime-count = self.sieve-vals.count-primes()
+      is-valid = self.sieve-vals.validate-primes-count(prime-count)
+      print(
+        F.format(
+          "Passes: ~a, Time: ~ams, Avg: ~ams, Limit: ~a, Count: ~a, Valid: ~a\n",
+          [list:
+            self.passes,
+            self.elapsed-time,
+            format-float(self.elapsed-time / self.passes),
+            self.sieve-vals.limit,
+            prime-count,
+            is-valid
+          ]
+        )
+      )
+      print(
+        F.format(
+          "rzuckerm;~a;~a;1;algorithm=base,faithful=yes\n",
+          [list:
+            self.passes,
+            format-float(self.elapsed-time / 1000)
+          ]
+        )
+      )
+    end
 end
 
-fun run-sieve(opts :: D.StringDict) block:
-  limit = opts.get-value("limit")
-  time-limit = opts.get-value("time") * 1000
-
+fun timed-do-sieve(limit :: Number, time-limit :: Number) -> SieveResults:
   start-time = time-now()
-  rec timed-do-sieve =
+  rec inner-timed-do-sieve =
     lam(results :: SieveResults) -> SieveResults block:
       elapsed-time = time-now() - start-time
       if elapsed-time < time-limit block:
         num-bits = num-floor((limit - 1) / 2)
         values = sieve-values(limit, num-bits, raw-array-of(true, num-bits))
         values.do-sieve()
-        timed-do-sieve(sieve-results(results.passes + 1, values, elapsed-time))
+        inner-timed-do-sieve(sieve-results(results.passes + 1, values, elapsed-time))
       else:
         sieve-results(results.passes, results.sieve-vals, elapsed-time)
       end
     end
 
   values = sieve-values(0, 0, [raw-array:])
-  sieve-res = timed-do-sieve(sieve-results(0, values, 0))
-  when opts.has-key("s"):
-    sieve-res.sieve-vals.print-primes()
-  end
+  inner-timed-do-sieve(sieve-results(0, values, 0))
+end
 
-  prime-count = sieve-res.sieve-vals.count-primes()
-  is-valid = sieve-res.sieve-vals.validate-primes-count(prime-count)
-  print(
-    F.format(
-      "Passes: ~a, Time: ~ams, Avg: ~ams, Limit: ~a, Count: ~a, Valid: ~a\n",
-      [list:
-        sieve-res.passes,
-        sieve-res.elapsed-time,
-        format-float(sieve-res.elapsed-time / sieve-res.passes),
-        limit,
-        prime-count,
-        is-valid
-      ]
-    )
-  )
-  print(
-    F.format(
-      "rzuckerm;~a;~a;1;algorithm=base,faithful=yes\n",
-      [list:
-        sieve-res.passes,
-        format-float(sieve-res.elapsed-time / 1000)
-      ]
-    )
-  )
+fun run-sieve(opts :: D.StringDict) block:
+  limit = opts.get-value("limit")
+  time-limit = opts.get-value("time") * 1000
+  show-primes = opts.has-key("s")
+
+  sieve-res = timed-do-sieve(limit, time-limit)
+  sieve-res.print-results(show-primes)
 end
 
 fun format-float(n :: Number) -> String block:
