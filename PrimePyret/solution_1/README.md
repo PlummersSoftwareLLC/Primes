@@ -34,6 +34,6 @@ On a 12th Gen Intel(R) Core(TM) i7-12850HX 2.10 GHz with 32 GB of memory on a Wi
 laptop running a Ubuntu 22.04 VM in VirtualBox 7.0.6:
 
 ```
-Passes: 11, Time: 5018ms, Avg: 456.1818181818182ms, Limit: 1000000, Count: 78498, Valid: true
-rzuckerm;11;5.018;1;algorithm=base,faithful=yes
+Passes: 11, Time: 5254ms, Avg: 477.6363636363636ms, Limit: 1000000, Count: 78498, Valid: true
+rzuckerm;11;5.254;1;algorithm=base,faithful=yes
 ```
