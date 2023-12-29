@@ -78,8 +78,8 @@ fun run-sieve(opts :: D.StringDict) block:
     lam(results :: SieveResults) -> SieveResults block:
       elapsed-time = time-now() - start-time
       if elapsed-time < time-limit block:
-        num-bits = num-floor((results.sieve-vals.limit - 1) / 2)
-        values = sieve-values(results.sieve-vals.limit, num-bits, raw-array-of(true, num-bits))
+        num-bits = num-floor((limit - 1) / 2)
+        values = sieve-values(limit, num-bits, raw-array-of(true, num-bits))
         values.do-sieve()
         timed-do-sieve({passes: results.passes + 1, sieve-vals: values, elapsed-time: elapsed-time})
       else:
@@ -87,7 +87,7 @@ fun run-sieve(opts :: D.StringDict) block:
       end
     end
 
-  values = sieve-values(limit, 0, [raw-array:])
+  values = sieve-values(0, 0, [raw-array:])
   sieve-results = timed-do-sieve({passes: 0, sieve-vals: values, elapsed-time: 0})
   when opts.has-key("s"):
     sieve-results.sieve-vals.print-primes()
