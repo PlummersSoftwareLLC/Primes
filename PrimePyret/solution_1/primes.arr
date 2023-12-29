@@ -13,7 +13,61 @@ fun show-help(options :: D.StringDict, message :: String) block:
   raise(ERR.exit-quiet(1))
 end
 
-type SieveResults = {passes :: Number, sieve-bits :: RawArray<Boolean>, elapsed-time :: Number}
+data SieveValues:
+  | sieve-values(limit :: Number, num-bits :: Number, sieve-bits :: RawArray<Boolean>) with:
+    method clear-bits(self, start-bit :: Number, end-bit :: Number, inc :: Number):
+      range-by(start-bit, end-bit, inc)
+        .each({(k :: Number): raw-array-set(self.sieve-bits, k, false)})
+    end,
+
+    method is-bit-set(self, bit :: Number) -> Boolean:
+      raw-array-get(self.sieve-bits, bit)
+    end,
+
+    method do-sieve(self):
+      q = num-floor((-3 + num-sqrt(3 + (2 * self.num-bits))) / 2)
+      for each(bit from range(0, q + 1)):
+        when self.is-bit-set(bit):
+          self.clear-bits((2 * (bit + 1) * (bit + 2)) - 1, self.num-bits, (2 * bit) + 3)
+        end
+      end
+    end,
+
+    method print-primes(self) block:
+      print(
+        "2, " + 
+        range(0, self.num-bits)
+          .filter(self.is-bit-set)
+          .map({(k :: Number) -> String: num-to-string((2 * k) + 3)})
+          .join-str(", ")
+          + "\n"
+        )
+    end,
+
+    method count-primes(self) -> Number:
+      1 + raw-array-to-list(self.sieve-bits)
+        .filter({(x :: Boolean) -> Boolean: x})
+        .length()
+    end,
+
+    method get-expected-primes-count(self) -> Number:
+      ask:
+        | self.limit == 10 then: 4
+        | self.limit == 100 then: 25
+        | self.limit == 1000 then: 168
+        | self.limit == 10000 then: 1229
+        | self.limit == 100000 then: 9592
+        | self.limit == 1000000 then: 78498
+        | otherwise: -1
+      end
+    end,
+
+    method validate-primes-count(self, prime-count :: Number) -> Boolean:
+      self.get-expected-primes-count() == prime-count
+    end
+end
+
+type SieveResults = {passes :: Number, sieve-vals :: SieveValues, elapsed-time :: Number}
 
 fun run-sieve(opts :: D.StringDict) block:
   limit = opts.get-value("limit")
@@ -23,22 +77,24 @@ fun run-sieve(opts :: D.StringDict) block:
   rec timed-do-sieve =
     lam(results :: SieveResults) -> SieveResults block:
       elapsed-time = time-now() - start-time
-      if elapsed-time >= time-limit:
-        {passes: results.passes, sieve-bits: results.sieve-bits, elapsed-time: elapsed-time}
+      if elapsed-time < time-limit block:
+        num-bits = num-floor((results.sieve-vals.limit - 1) / 2)
+        values = sieve-values(results.sieve-vals.limit, num-bits, raw-array-of(true, num-bits))
+        values.do-sieve()
+        timed-do-sieve({passes: results.passes + 1, sieve-vals: values, elapsed-time: elapsed-time})
       else:
-        timed-do-sieve(
-          {passes: results.passes + 1, sieve-bits: do-sieve(limit), elapsed-time: elapsed-time}
-        )
+        {passes: results.passes, sieve-vals: results.sieve-vals, elapsed-time: elapsed-time}
       end
     end
 
-  sieve-results = timed-do-sieve({passes: 0, sieve-bits: [raw-array: ], elapsed-time: 0})
+  values = sieve-values(limit, 0, [raw-array:])
+  sieve-results = timed-do-sieve({passes: 0, sieve-vals: values, elapsed-time: 0})
   when opts.has-key("s"):
-    print-primes(sieve-results.sieve-bits)
+    sieve-results.sieve-vals.print-primes()
   end
 
-  prime-count = count-primes(sieve-results.sieve-bits)
-  is-valid = validate-primes-count(limit, prime-count)
+  prime-count = sieve-results.sieve-vals.count-primes()
+  is-valid = sieve-results.sieve-vals.validate-primes-count(prime-count)
   print(
     F.format(
       "Passes: ~a, Time: ~ams, Avg: ~ams, Limit: ~a, Count: ~a, Valid: ~a\n",
@@ -61,57 +117,6 @@ fun run-sieve(opts :: D.StringDict) block:
       ]
     )
   )
-end
-
-fun do-sieve(limit :: Number) -> RawArray<Boolean> block:
-  num-bits = num-floor((limit - 1) / 2)
-  sieve-bits = raw-array-of(true, num-bits)
-
-  q = num-floor((-3 + num-sqrt(3 + (2 * num-bits))) / 2)
-  clr-bit = {(k :: Number): raw-array-set(sieve-bits, k, false)}
-  for each(bit from range(0, q + 1)):
-    when raw-array-get(sieve-bits, bit):
-      range-by((2 * (bit + 1) * (bit + 2)) - 1, num-bits, (2 * bit) + 3)
-        .each(clr-bit)
-    end
-  end
-
-  sieve-bits
-end
-
-fun print-primes(sieve-bits :: RawArray<Boolean>) block:
-  num-bits = raw-array-length(sieve-bits)
-  is-bit-set = {(x :: Number) -> Boolean: raw-array-get(sieve-bits, num-floor((x - 3) / 2))}
-  print(
-    "2, " + 
-    range-by(3, (2 * num-bits) + 3, 2)
-      .filter(is-bit-set)
-      .map(num-to-string)
-      .join-str(", ")
-      + "\n"
-  )
-end
-
-fun count-primes(sieve-bits :: RawArray<Boolean>) -> Number block:
-  1 + raw-array-to-list(sieve-bits)
-    .filter({(x :: Boolean) -> Boolean: x})
-    .length()
-end
-
-fun get-expected-primes-count(limit :: Number) -> Number:
-  ask:
-    | limit == 10 then: 4
-    | limit == 100 then: 25
-    | limit == 1000 then: 168
-    | limit == 10000 then: 1229
-    | limit == 100000 then: 9592
-    | limit == 1000000 then: 78498
-    | otherwise: -1
-  end
-end
-
-fun validate-primes-count(limit :: Number, prime-count :: Number) -> Boolean:
-  get-expected-primes-count(limit) == prime-count
 end
 
 fun format-float(n :: Number) -> String block:
