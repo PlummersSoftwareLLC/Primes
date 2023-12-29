@@ -67,7 +67,9 @@ data SieveValues:
     end
 end
 
-type SieveResults = {passes :: Number, sieve-vals :: SieveValues, elapsed-time :: Number}
+data SieveResults:
+  | sieve-results(passes :: Number, sieve-vals :: SieveValues, elapsed-time :: Number)
+end
 
 fun run-sieve(opts :: D.StringDict) block:
   limit = opts.get-value("limit")
@@ -81,27 +83,27 @@ fun run-sieve(opts :: D.StringDict) block:
         num-bits = num-floor((limit - 1) / 2)
         values = sieve-values(limit, num-bits, raw-array-of(true, num-bits))
         values.do-sieve()
-        timed-do-sieve({passes: results.passes + 1, sieve-vals: values, elapsed-time: elapsed-time})
+        timed-do-sieve(sieve-results(results.passes + 1, values, elapsed-time))
       else:
-        {passes: results.passes, sieve-vals: results.sieve-vals, elapsed-time: elapsed-time}
+        sieve-results(results.passes, results.sieve-vals, elapsed-time)
       end
     end
 
   values = sieve-values(0, 0, [raw-array:])
-  sieve-results = timed-do-sieve({passes: 0, sieve-vals: values, elapsed-time: 0})
+  sieve-res = timed-do-sieve(sieve-results(0, values, 0))
   when opts.has-key("s"):
-    sieve-results.sieve-vals.print-primes()
+    sieve-res.sieve-vals.print-primes()
   end
 
-  prime-count = sieve-results.sieve-vals.count-primes()
-  is-valid = sieve-results.sieve-vals.validate-primes-count(prime-count)
+  prime-count = sieve-res.sieve-vals.count-primes()
+  is-valid = sieve-res.sieve-vals.validate-primes-count(prime-count)
   print(
     F.format(
       "Passes: ~a, Time: ~ams, Avg: ~ams, Limit: ~a, Count: ~a, Valid: ~a\n",
       [list:
-        sieve-results.passes,
-        sieve-results.elapsed-time,
-        format-float(sieve-results.elapsed-time / sieve-results.passes),
+        sieve-res.passes,
+        sieve-res.elapsed-time,
+        format-float(sieve-res.elapsed-time / sieve-res.passes),
         limit,
         prime-count,
         is-valid
@@ -112,8 +114,8 @@ fun run-sieve(opts :: D.StringDict) block:
     F.format(
       "rzuckerm;~a;~a;1;algorithm=base,faithful=yes\n",
       [list:
-        sieve-results.passes,
-        format-float(sieve-results.elapsed-time / 1000)
+        sieve-res.passes,
+        format-float(sieve-res.elapsed-time / 1000)
       ]
     )
   )
