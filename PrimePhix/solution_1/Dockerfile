@@ -1,4 +1,4 @@
-FROM rzuckerm/phix:1.0.2-ubuntu22-gcc-1
+FROM rzuckerm/phix:1.0.4-ubuntu22-gcc-2
 
 WORKDIR /opt/app
 COPY primes*.ex run_primes.sh ./
