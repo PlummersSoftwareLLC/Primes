@@ -30,8 +30,8 @@ where `<options>` are optional command-line arguments:
 
 * `--limit=<limit>` - Upper limit for calculating prime. Default value is 1000000
 * `--time=<time>` - Time limit in seconds. Default value is 5
-* `-s` - Print found prime numbers
-* `-h` - Show help
+* `--show` - Print found prime numbers
+* `--help` - Show help
 
 ## Output
 
