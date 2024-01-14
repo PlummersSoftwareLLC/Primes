@@ -168,7 +168,7 @@ class Program
         StringView trimmedStr = scope String(str);
         trimmedStr.Trim();
 
-        // For some reason T.Parse does not treat a sign without a number is not an error.
+        // For some reason T.Parse does not treat a sign without a number as an error
         if (trimmedStr == "-" || trimmedStr == "+")
         {
             return .Err;
