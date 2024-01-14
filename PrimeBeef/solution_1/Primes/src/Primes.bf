@@ -64,7 +64,7 @@ class PrimeSieve
     public uint64 CountPrimes(bool showResults)
     {
         uint64 numPrimes = 0;
-        if (mNumBits > 0)
+        if (mSieveSize >= 2)
         {
             numPrimes++;
             if (showResults)
@@ -144,14 +144,22 @@ struct PrimeOptions
 
 class Program
 {
-    public static void ShowHelp()
+    public static void ShowHelp(StringView errorMessage="")
     {
+        int statusCode = 0;
+        if (errorMessage.Length > 0)
+        {
+            Console.WriteLine(errorMessage);
+            Console.WriteLine();
+            statusCode = 1;
+        }
+
         Console.WriteLine("Options:\n");
         Console.WriteLine("--limit=<sieveSize>  Upper limit for calculating primes");
         Console.WriteLine("--time=<timeLimit>   Time limit in seconds");
         Console.WriteLine("--show               Print found prime numbers");
         Console.WriteLine("--help               Show help message");
-        Environment.Exit(1);
+        Environment.Exit(statusCode);
     }
 
     public static Result<T> ParseInt<T>(StringView str)
@@ -172,15 +180,16 @@ class Program
     public static T ParseIntOrDie<T>(StringView str, StringView errorMessage)
     where T : IParseable<T>
     {
+        T val = default(T);
         switch (ParseInt<T>(str))
         {
             case .Err:
                 Console.WriteLine(errorMessage);
                 Environment.Exit(1);
-                return default(T); // Get compiler to stop complaining about no return value
-            case .Ok(let val):
-                return val;
+            case .Ok(out val):
         }
+
+        return val;
     }
 
     public static PrimeOptions ParseArgs(String[] args)
@@ -201,29 +210,25 @@ class Program
                 optionValue = arg.Substring(index + 1);
             }
 
-            String errorMessage = scope String(arg);
             if (optionName == "--limit")
             {
-                errorMessage.Append(": Invalid sieve size");
-                options.sieveSize = ParseIntOrDie<uint64>(optionValue, errorMessage);
+                options.sieveSize = ParseIntOrDie<uint64>(optionValue, @"{arg}: Invalid sieve size");
             }
             else if (optionName == "--time")
             {
-                errorMessage.Append(": Invalid time limit");
-                options.timeLimit = ParseIntOrDie<uint32>(optionValue, errorMessage);
+                options.timeLimit = ParseIntOrDie<uint32>(optionValue, @"{arg}: Invalid time limit");
             }
-            else if (optionName == "--show")
+            else if (arg == "--show")
             {
                 options.showResults = true;
             }
-            else if (optionName == "--help")
+            else if (arg == "--help")
             {
                 ShowHelp();
             }
             else
             {
-                Console.WriteLine($"Invalid option '{arg}'\n");
-                ShowHelp();
+                ShowHelp(@"Invalid option '{arg}'");
             }
         }
 
