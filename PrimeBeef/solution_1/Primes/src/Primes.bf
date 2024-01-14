@@ -128,7 +128,7 @@ class PrimeSieve
             valid
         );
         Console.WriteLine(
-            "rzuckerm;{};{};1;algorithm=base,faithful=yes",
+            "rzuckerm;{};{};1;algorithm=base,faithful=yes,bits=1",
             passes,
             (double)elapsedTimeMsec / 1000.0
         );
