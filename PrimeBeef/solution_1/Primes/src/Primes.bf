@@ -13,9 +13,9 @@ class PrimeSieve
     {
         mSieveSize = sieveSize;
         mNumBits = (sieveSize - 1) / 2;
-        int numBytes = (int)((mNumBits + 31) / 32);
-        mSieveBits = new uint32[numBytes];
-        Internal.MemSet(mSieveBits.CArray(), 0xff, sizeof(uint32) * numBytes);
+        int numItems = (int)((mNumBits + 31) / 32);
+        mSieveBits = new uint32[numItems];
+        Internal.MemSet(mSieveBits.CArray(), 0xff, sizeof(uint32) * numItems);
     }
 
     [Optimize]
