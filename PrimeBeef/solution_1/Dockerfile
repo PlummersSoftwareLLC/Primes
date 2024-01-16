@@ -1,4 +1,4 @@
-FROM rzuckerm/beef:0.43.5a1-3
+FROM rzuckerm/beef:0.43.5a2-4
 
 WORKDIR /opt/app
 COPY *.sh ./

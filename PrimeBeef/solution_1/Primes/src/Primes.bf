@@ -46,17 +46,17 @@ class PrimeSieve
     private void ClearBits(uint64 startBit, uint64 inc)
     {
         int bit = (int)(startBit & 0x1f);
-        int byte = (int)(startBit >> 5);
+        int index = (int)(startBit >> 5);
         int bitInc = (int)(inc & 0x1f);
-        int byteInc = (int)(inc >> 5);
+        int indexInc = (int)(inc >> 5);
         for (uint64 currBit = startBit; currBit < mNumBits; currBit += inc)
         {
-            mSieveBits[byte] &= ~(1 << bit);
+            mSieveBits[index] &= ~(1 << bit);
             bit += bitInc;
-            byte += byteInc;
+            index += indexInc;
             if (bit >= 32) {
                 bit -= 32;
-                byte++;
+                index++;
             }
         }
     }
@@ -167,13 +167,6 @@ class Program
     {
         StringView trimmedStr = scope String(str);
         trimmedStr.Trim();
-
-        // For some reason T.Parse does not treat a sign without a number as an error
-        if (trimmedStr == "-" || trimmedStr == "+")
-        {
-            return .Err;
-        }
-
         return T.Parse(trimmedStr);
     }
 
