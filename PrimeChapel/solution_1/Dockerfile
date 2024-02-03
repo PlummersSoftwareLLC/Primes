@@ -1,4 +1,4 @@
-FROM primeimages/chapel:1.24.1
+FROM primeimages/chapel:1.33.0
 
 WORKDIR /opt/app
 COPY primes.chpl .

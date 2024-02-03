@@ -6,7 +6,7 @@
 // computed `goto`, must use an array of
 // classes emulating first class functions with captures...
 
-use Time; use BitOps; use CPtr;
+use Time; use BitOps; use CTypes;
 
 type Prime = uint(64);
 
@@ -433,7 +433,7 @@ proc benchmark(tech: Techniques, multi: bool = false) {
         else "extreme_hybrid;";
     writeln(lbl, passes, ";", duration, ";", thrds, ";algorithm=base,faithful=yes,bits=1");
   }
-  else { writeln("Invalid result!!!"); }  
+  else { writeln("Invalid result!!!"); }
 }
 
 for t in Techniques do benchmark(t);
