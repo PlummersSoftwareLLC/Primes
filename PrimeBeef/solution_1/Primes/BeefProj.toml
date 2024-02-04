@@ -1,0 +1,5 @@
+FileVersion = 1
+
+[Project]
+Name = "Primes"
+StartupObject = "Primes.Program"
