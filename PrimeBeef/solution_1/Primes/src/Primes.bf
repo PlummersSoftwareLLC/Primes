@@ -45,19 +45,9 @@ class PrimeSieve
     [Inline]
     private void ClearBits(uint64 startBit, uint64 inc)
     {
-        int bit = (int)(startBit & 0x1f);
-        int index = (int)(startBit >> 5);
-        int bitInc = (int)(inc & 0x1f);
-        int indexInc = (int)(inc >> 5);
-        for (uint64 currBit = startBit; currBit < mNumBits; currBit += inc)
+        for (uint64 bit = startBit; bit < mNumBits; bit += inc)
         {
-            mSieveBits[index] &= ~(1 << bit);
-            bit += bitInc;
-            index += indexInc;
-            if (bit >= 32) {
-                bit -= 32;
-                index++;
-            }
+            mSieveBits[(int)(bit >> 5)] &= ~(1 << (bit & 0x1f));
         }
     }
 
