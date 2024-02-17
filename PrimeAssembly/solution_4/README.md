@@ -8,6 +8,12 @@
 
 This solution uses Assembly language to compute as fast as possibly.
 
+The assembly code PrimeAssembly.s is derived from [PrimeCPP/solution_3](https://github.com/PlummersSoftwareLLC/Primes/tree/drag-race/PrimeCPP/solution_3) resulting from the following command:
+
+```shell
+clang++ $CXX_ARGS -S -masm=intel PrimeCPP_CONSTEXPR.cpp -o PrimeAssembly.s
+```
+
 *Deviation*: It does use the base algorithm but due to compile time optimization, a lot of the actual calculation does not happen at runtime
 
 *Faithfulness*: Since the buffer size is fixed, it is [not considered faithful](https://github.com/PlummersSoftwareLLC/Primes/pull/274).
