@@ -24,14 +24,6 @@ All on Dell M5510 - Intel(R) Xeon(R) CPU E3-1505M V5
 
 ### Native performance
 
-<style>
-.tablelines table, .tablelines td, .tablelines th {
-    border: 1px solid black;
-    padding: 10px;
-    text-align: center; /* Center-align the content */
-}
-</style>
-
 #### Single-threaded
 
 | Index | Implementation | Solution | Label      | Passes    | Duration | Threads | Algorithm | Faithful | Bits | Passes/Second |
