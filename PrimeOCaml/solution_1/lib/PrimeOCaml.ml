@@ -1,7 +1,7 @@
 (*
 	Greyson Potter - 04/18/2021 - https://github.com/gkpotter
 	
-	PrimeOCamlFunctional.ml : A functional implementation of Dave Plummer's prime 
+	PrimeOCaml.ml :  A faithful implementation of Dave Plummer's prime 
 	sieving algorithm in OCaml.
 *)
 
@@ -74,16 +74,3 @@ class prime_sieve limit =
 	end
 ;;
 
-let () =
-	let start_time = Unix.gettimeofday () in
-	let limit = 1000000 in
-	let sieve = Ref.create (new prime_sieve limit) in
-	let passes = Ref.create 0 in
-	while Float.(<) ((Unix.gettimeofday ()) -. start_time) 5.0 do
-		sieve := new prime_sieve limit;
-		!sieve#run_sieve;
-		passes := !passes + 1
-	done;
-	let duration = ((Unix.gettimeofday ()) -. start_time) in
-	!sieve#print_results false duration !passes; 
-;;
