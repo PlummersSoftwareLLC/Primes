@@ -16,8 +16,31 @@ Since the standard library does not provide required functions, sqrt and bitfiel
 *Note*: this solution is limited to numbers up to around 50,000,000 (stack size limit on Mac OS it seems).
 
 ## Run instructions
+### From CPP Binary
 
 `./run.sh`, requires CLANG in a fairly recent version (supporting C++ 20)
+
+### From Derived Assembly
+
+The generated assembly code of this solution can be inspected by running the following command:
+
+```shell
+clang++ $CXX_ARGS -S -masm=intel PrimeCPP_CONSTEXPR.cpp -o PrimeAssembly.s
+```
+
+This code might be further optimised by a seasoned assembly developer. To generate the binary, run:
+
+```shell
+ASM_ARGS="-pthread -O3 -m64 -mtune=native"
+
+clang++ $ASM_ARGS PrimeAssembly.s -o primes
+```
+
+and to run the solution simply execute the binary:
+
+```shell
+./primes
+```
 
 ## Output
 
@@ -79,25 +102,3 @@ Compared to other C++ implementations:
      ├───────┼────────────────┼──────────┼─────────────────────┼───────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
      │   1   │ PrimeCPP       │ 3        │ flo80_pol_constexpr │ 587300645 │ 5.00052  │   24    │   base    │    no    │ 1    │ 4893659.18618 │
      └───────┴────────────────┴──────────┴─────────────────────┴───────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
-
-### Derived Assembly
-
-The generated assembly code of this solution can be inspected by running the following command:
-
-```shell
-clang++ $CXX_ARGS -S -masm=intel PrimeCPP_CONSTEXPR.cpp -o PrimeAssembly.s
-```
-
-This code might be further optimised by a seasoned assembly developer. To generate the binary, run:
-
-```shell
-ASM_ARGS="-pthread -O3 -m64 -mtune=native"
-
-clang++ $ASM_ARGS PrimeAssembly.s -o primes
-```
-
-and to run the solution simply execute the binary:
-
-```shell
-./primes
-```
