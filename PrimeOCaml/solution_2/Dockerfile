@@ -1,16 +1,14 @@
-FROM primeimages/ocaml:4.12-r1 AS build
+FROM primeimages/ocaml:5.1 AS build
 
-RUN mkdir /home/opam/primeocaml
+WORKDIR /prime-ocaml-functional
 
-WORKDIR /home/opam/primeocaml
+COPY . .
 
-COPY *.ml ./
+RUN dune build
 
-RUN corebuild PrimeOCamlFunctional.native
-
-FROM alpine:3.13
+FROM alpine:3.19
 
 WORKDIR /app
-COPY --from=build /home/opam/primeocaml/PrimeOCamlFunctional.native PrimeOCamlFunctional.native
+COPY --from=build /prime-ocaml-functional/_build/install/default/bin/prime-ocaml-functional prime-ocaml-functional.exe
 
-ENTRYPOINT [ "./PrimeOCamlFunctional.native" ]
+ENTRYPOINT [ "./prime-ocaml-functional.exe" ]

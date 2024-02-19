@@ -1,0 +1,13 @@
+(lang dune 3.13)
+
+(name prime-ocaml)
+
+(generate_opam_files true)
+
+(authors "Greyson Potter <https://github.com/gkpotter>")
+
+(package
+ (name prime-ocaml)
+ (synopsis "A faithful implementation of Dave Plummer's prime 
+	sieving algorithm in OCaml.")
+ (depends ocaml core dune))

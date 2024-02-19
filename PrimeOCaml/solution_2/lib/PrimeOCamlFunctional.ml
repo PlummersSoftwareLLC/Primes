@@ -78,18 +78,3 @@ let print_results sieve show_results duration passes =
 let create_sieve limit = 
 	{sieve_size = limit; raw_bits = (Array.init ((limit+1)/2) ~f:(fun _ -> true))}
 ;;
-
-let () =
-	let start_time = Unix.gettimeofday () in
-	let limit = 1000000 in
-	let rec run_test sieve passes =
-		if Float.(>) ((Unix.gettimeofday ()) -. start_time) 5.0 then
-			let duration = ((Unix.gettimeofday ()) -. start_time) in
-			print_results sieve false duration passes 
-		else
-			let sieve = (create_sieve limit) in
-			run_sieve sieve;
-			run_test sieve (passes+1)
-	in
-	run_test (create_sieve limit) 0
-;;
