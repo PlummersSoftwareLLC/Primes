@@ -16,8 +16,31 @@ Since the standard library does not provide required functions, sqrt and bitfiel
 *Note*: this solution is limited to numbers up to around 50,000,000 (stack size limit on Mac OS it seems).
 
 ## Run instructions
+### From CPP Binary
 
 `./run.sh`, requires CLANG in a fairly recent version (supporting C++ 20)
+
+### From Derived Assembly
+
+The generated assembly code of this solution can be inspected by running the following command:
+
+```shell
+clang++ $CXX_ARGS -S -masm=intel PrimeCPP_CONSTEXPR.cpp -o PrimeAssembly.s
+```
+
+This code might be further optimised by a seasoned assembly developer. To generate the binary, run:
+
+```shell
+ASM_ARGS="-pthread -O3 -m64 -mtune=native"
+
+clang++ $ASM_ARGS PrimeAssembly.s -o primes
+```
+
+and to run the solution simply execute the binary:
+
+```shell
+./primes
+```
 
 ## Output
 
@@ -46,34 +69,34 @@ Compared to other C++ implementations:
 
      Computing primes to 10000000 on 8 threads for 5 seconds.
      Passes: 2264, Threads: 8, Time: 5.00982, Average: 0.00221282, Limit: 10000000, Counts: 664579/664579, Valid : Pass
-     
+
      davepl_par;2264;5.00982;8;algorithm=base,faithful=yes,bits=1
 
 ### Docker performance
 
-                                                          Single-threaded                                                      
+                                                          Single-threaded
      ┌───────┬────────────────┬──────────┬────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
      │ Index │ Implementation │ Solution │ Label  │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
      ├───────┼────────────────┼──────────┼────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
      │   1   │ cpp            │ 1        │ davepl │  3982  │ 5.00001  │    1    │   base    │   yes    │ 1    │   796.39857   │
      └───────┴────────────────┴──────────┴────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
-     
-                                                           Multi-threaded                                                        
+
+                                                           Multi-threaded
      ┌───────┬────────────────┬──────────┬────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
      │ Index │ Implementation │ Solution │ Label      │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
      ├───────┼────────────────┼──────────┼────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
      │   1   │ cpp            │ 2        │ davepl_par │ 13192  │ 5.00080  │    4    │   base    │   yes    │ 1    │   659.49448   │
      └───────┴────────────────┴──────────┴────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
-     
-     
-                                                               Single-threaded                                                          
+
+
+                                                               Single-threaded
      ┌───────┬────────────────┬──────────┬─────────────────────┬───────────┬──────────┬─────────┬───────────┬──────────┬──────┬────────────────┐
      │ Index │ Implementation │ Solution │ Label               │  Passes   │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second  │
      ├───────┼────────────────┼──────────┼─────────────────────┼───────────┼──────────┼─────────┼───────────┼──────────┼──────┼────────────────┤
      │   1   │ PrimeCPP       │ 3        │ flo80_pol_constexpr │ 234051587 │ 5.00000  │    1    │   base    │    no    │ 1    │ 46810317.40000 │
      └───────┴────────────────┴──────────┴─────────────────────┴───────────┴──────────┴─────────┴───────────┴──────────┴──────┴────────────────┘
-     
-                                                               Multi-threaded                                                           
+
+                                                               Multi-threaded
      ┌───────┬────────────────┬──────────┬─────────────────────┬───────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
      │ Index │ Implementation │ Solution │ Label               │  Passes   │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
      ├───────┼────────────────┼──────────┼─────────────────────┼───────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
