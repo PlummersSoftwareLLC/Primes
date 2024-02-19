@@ -1,0 +1,4 @@
+(executable
+ (public_name prime-ocaml)
+ (name main)
+ (libraries core PrimeOCaml))

@@ -1,0 +1,3 @@
+(library
+ (name PrimeOCamlFunctional)
+ (libraries core))
