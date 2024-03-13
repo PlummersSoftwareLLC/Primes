@@ -1,4 +1,6 @@
-FROM openjdk:8
+FROM adoptopenjdk/openjdk8:x86_64-alpine-jdk8u402-b06-slim
+
+RUN apk add --no-cache bash
 
 WORKDIR /opt/app
 
