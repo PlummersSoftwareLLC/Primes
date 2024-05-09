@@ -15,11 +15,11 @@ import "macro" -- simplifiyng macro syntax to stop using unnecessary macro(funct
 
 local N = 1000000
 local st = math.ceil(math.sqrt(N))
-local progname = "Sieve"
+local progname = "Sieve2"
 local clocks = 0.001
 if terralib.os == "Windows" then
     clocks = 0.001
-    progname = "Sieve.exe"
+    progname = "Sieve2.exe"
 else
     clocks = 0.000001
 end

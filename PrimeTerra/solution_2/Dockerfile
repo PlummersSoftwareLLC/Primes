@@ -12,4 +12,4 @@ COPY *.t ./
 RUN /tmp/terra-Linux-x86_64-6184586/bin/terra Primes.t
 
 
-CMD ["./Sieve"]
+CMD ["./Sieve2"]
