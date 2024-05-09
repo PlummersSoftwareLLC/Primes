@@ -1,17 +1,18 @@
 # Extreme-Loop-Unrolled Odds-Only Bit-Packed Sieve of Eratosthenes Benchmark...
 # This was created for the "Software Drag Racing" GitHub repo as per:
 # https://github.com/PlummersSoftwareLLC/Primes...
- 
+
 import std/[ monotimes, tables, strformat ] # timing, verifying, displaying
 import std/macros
 from bitops import popCount
 from os import sleep
- 
+from cpuinfo import countProcessors
+
 type
   Prime = uint64
   Techniques = enum
     bittwiddle, stride8, stride8block, extreme, extremehybrid  
- 
+
 const RANGE = 1_000_000.Prime
 const DICT = {
   10.Prime : 4,
@@ -34,6 +35,8 @@ const FORTO = 5_000_000_000 # nanoseconds to test = five secondsS
 const DENSETHRESHOLD = 129
 
 const BITMASK = [ 1'u8, 2, 4, 8, 16, 32, 64, 128 ] # faster than shifting!
+
+const MAXTHRDS = 4 # no more than this threads for multi-threading
 
 # Nim does not have a bit array slice stepping by a value so
 # this implements it using a macro; works like Python arr{start:step:limit}
@@ -183,6 +186,7 @@ func newBitSeq(size: int): BitSeq =
   # round up to even 256-bit size + 256 bits in bytes...
   let sq = newSeq[byte](((size - 1 + 512) shr 3) and (-32))
   let sqpi = (cast[int](sq[0].unsafeAddr) + 31) and (-32)
+#  let sqpi = cast[int](sq[0].unsafeAddr)
   BitSeq(size: size, buffer: sq, bufferp: cast[ptr UncheckedArray[byte]](sqpi))
 
 func `[]`(bitseq: BitSeq; i: int): bool {.inline.} =
@@ -311,7 +315,28 @@ method countPrimes(this: PrimeSieve): int64 {.base.} =
   2 + lstmod + lstwrd * 64 - this.sieveBuffer.countTruesTo(lstndx.int).int64
 
 # verifying, producing, showing results...
-proc bench(tec: Techniques) =
+proc singleTest(tec: Techniques): (int, bool) =
+  let start = getMonoTime().ticks; var duration = 0'i64
+  var passes = 0; var rslt: PrimeSieve
+  while duration < FORTO:
+    rslt = RANGE.newPrimeSieve(tec)
+    duration = getMonoTime().ticks - start; passes += 1
+  return (passes, rslt.countPrimes == EXPECTED)
+
+proc multiTest(tec: Techniques, thrds: int): (int, bool) =
+  result[1] = true
+  var thrd: Thread[(Techniques, ptr Channel[(int, bool)])]
+  var ch: Channel[(int, bool)]; ch.open()
+  let chp = addr(ch)
+  let wrk = proc(arg: (Techniques, ptr Channel[(int, bool)])) =
+    arg[1][].send(singleTest(arg[0]))
+  for _ in 1 .. thrds:
+    createThread[(Techniques, ptr Channel[(int, bool)])](thrd, wrk, (tec, chp))
+  for _ in 1 .. thrds:
+    let r = ch.recv(); result[0] += r[0]; result[1] = result[1] and r[1]
+  ch.close()
+
+proc bench(tec: Techniques, multi: bool = false) =
   var rslts = ""; let ps0 = 100.newPrimeSieve(tec).primes
   for p in ps0(): rslts &= $p & " "
   var isValid = rslts == "2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 "
@@ -320,16 +345,17 @@ proc bench(tec: Techniques) =
   for p in ps1(): count.inc
   isValid = isValid and count == EXPECTED # two checks
 
-  sleep 5000 # sleep 5000 milliseconds to let CPU cool down!
-  let start = getMonoTime().ticks; var duration = 0'i64
-  var passes = 0; var rslt: PrimeSieve
-  while duration < FORTO:
-    rslt = RANGE.newPrimeSieve(tec)
-    duration = getMonoTime().ticks - start; passes += 1
+  sleep 5000 # sleep 5000 milliseconds = five seconds to let CPU cool down!
+  let numthrds = countProcessors()
+  let thrds = if multi:
+                if MAXTHRDS < numthrds: MAXTHRDS else: numthrds
+              else: 1
+  let start = getMonoTime().ticks
 
-  let elapsed = duration.float64 / 1e9 # in float64 seconds
-  let primeCount = rslt.countPrimes
-  isValid = isValid and primeCount == EXPECTED # a third check
+  let rslt = if multi: multiTest(tec, thrds) else: singleTest(tec)
+
+  let elapsed = (getMonoTime().ticks - start).float64 / 1e9 # in float64 seconds
+  isValid = isValid and rslt[1] # a third check
 
   let label = "GordonBGood_" & (
                 case tec:
@@ -339,12 +365,10 @@ proc bench(tec: Techniques) =
                     of extreme: "extreme"
                     of extremehybrid: "extreme-hybrid" )
   
-  stderr.write(&"Passes: {passes}, Time: {elapsed}, ")
-  stderr.write(&"Avg: {(elapsed / passes.float64)}, Limit: {RANGE}, ")
-  stderr.writeLine(&"Count1: {count}, Count2: {primeCount}, Valid: {isValid}")
-
-  stdout.write(&"{label};{passes};{elapsed}")
-  echo ";1;algorithm=base,faithful=yes,bits=1"
+  if rslt[1]:
+    stdout.write(&"{label};{rslt[0]};{elapsed};{thrds}")
+    echo ";algorithm=base,faithful=yes,bits=1"
+  else: stderr.writeLine("result error!!!")
 
 for t in Techniques.bittwiddle .. Techniques.extremehybrid: bench t
-
+for t in Techniques.bittwiddle .. Techniques.extremehybrid: bench(t, multi=true)

@@ -1,10 +1,11 @@
 # Benchmarks <!-- omit in toc -->
 
-This document describes how to build and run all benchmarks (solutions) for different operating systems that can be automatically executed. 
+This document describes how to build and run all benchmarks (solutions) for different operating systems that can be automatically executed.
 
 Some solutions are not included in the automated benchmark runs, either because no Dockerfile is included in the solution, or due to legal reasons. We do strive to include all solutions in the automated benchmark runs, if it is technically and legally possible to do so.
 
 ## Table of contents <!-- omit in toc -->
+
 - [What operating system to use?](#what-operating-system-to-use)
 - [General working mechanism](#general-working-mechanism)
 - [Linux](#linux)
@@ -349,8 +350,9 @@ make DIRECTORY=PrimeCPP
 ## Running in unconfined mode
 
 For some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero effect slowing CPU-intensive code.
-See https://github.com/moby/moby/issues/41389 for the related docker issue. You can disable some of the sandboxing
+See <https://github.com/moby/moby/issues/41389> for the related docker issue. You can disable some of the sandboxing
 to obtain near-native performance (at least on Linux) with the `UNCONFINED=1` option:
+
 ```bash
 make UNCONFINED=1
 make DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED=1
@@ -361,15 +363,15 @@ make DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED=1
 The benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format.
 Here are the supported values:
 
-* table
-* chart
-* csv
-* json (this also includes the machine information data)
-* minifiedjson (same as json, but not pretty-printed)
+- table
+- chart
+- csv
+- json (this also includes the machine information data)
+- minifiedjson (same as json, but not pretty-printed)
 
 The output format can be controlled via the `FORMATTER` variable like this:
 
-```
+```shell
 make FORMATTER=json
 make DIRECTORY=PrimeCrystal/solution_1 FORMATTER=csv
 ```

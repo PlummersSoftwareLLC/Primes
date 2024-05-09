@@ -7,6 +7,8 @@
 
 It is often spoken that functional languages such as Haskell must be slower than imperative ones; this implementation tries to dispell that notion.
 
+Although there is little point to a multi-threaded solution in showing which language is fastest for any of the languages as they will only show the effect of CPU throttling due to increased power usage for multiple cores and the effect of sharing resources, especially "Hyper-Threading" (HT)/""Simultaneous Multi Threading" (SMT) in sharing threads using common core execution unit resources and will be consistent in ratio to single threaded uses across languages, to be competitive a multi-threaded solution is provided.  Since for the metric of work done per thread for HT/SMT threads when all available threads are used drops by almost a factor of two plus the thermal throttling factor, some implementations have used less than the maximum number of threads to gain an apparent advantage in the multi-threading leaderboard, with one precident example using 4 threads and some forcing 16 threads in order to gain an advantage in the main test machine which has 32 threads on 16 cores using HT/SMT.  This seems objectionable as it tailors the test to this specific CPU and this implementation uses four threads, which should be available for all test machines.  This will provide an advantage on the 16 core test machine in less thermal throttling and less sharing of compute engine resources, but it will be no more than the advantage of the other accepted implementation using four thread.  As implied above, the multi-threading contest ruls should really be modified that all available threads must be used for a "maximum total work done" implementation.
+
 The first three techniques used in this Haskell solution are implemented in an imperative style using `forM_` so that the core algorithm remains recognizable.  Unlike the earlier solution, this solution does not use imported libraries to accomplish the task, so thus is `faithful to base`.  The number representation is one bit per odd number.
 
 The "stride8" techniques use a similar algorithm as the Rust "striped" algorithm but instead of changing the order of bits within the sieve buffer, leaves the order as normal and culls/marks them by "strides" in place, so thus is also `faithful base`.  The actual loops are very simple and thus no separate storage implementation is used.  The outer loop searches for the base prime values as required; The next inner loop level has a limit set so that it never runs more than eight times, then loops by just setting up the constant mask value and starting byte index to be used in the innermost actual marking loops.  The boolean deliverable array is returned after masking off all values above the given range in the above two lines as those values may not have been processed and aren't desired in the output listing.
@@ -44,6 +46,7 @@ docker run --rm primes
 
 ## Output
 
+The following outputs haven't been updated to show multi-threading results as the final Docker image shows that multi-theading is just directly proportional to the effect of thermal throttling this CPU from 3.6 GHz down to 3.2 GHz since it has no HT/SMT threads:
 - Intel SkyLake i5-6500, GHC Haskell version 8.10.7, no LLVM
 
   ```
@@ -84,19 +87,29 @@ Intel SkyLake i5-6500, GHC Haskell version 8.10.7, with LLVM (version 12) and 25
   GordonBGood_extreme-hybrid;39752;5.000006059;1;algorithm=base,faithful=yes,bits=1
   ```
 
-- Intel SkyLake i5-6500, docker, GHC Haskell version 8.8.4, with LLVM (version 11, which is likely a little slower), 256-bit registers
+- Intel SkyLake i5-6500, Docker, GHC Haskell version 8.8.4, with LLVM (version 11, which is likely a little slower), 256-bit registers
 
   ```
-                                                                  Single-threaded                                                                 
-  ┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
-  │ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
-  ├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
-  │   1   │ haskell        │ 2        │ GordonBGood_extreme-hybrid   │ 39659  │ 5.00000  │    1    │   base    │   yes    │ 1    │  7931.79792   │
-  │   2   │ haskell        │ 2        │ GordonBGood_extreme          │ 18140  │ 5.00015  │    1    │   base    │   yes    │ 1    │  3627.89364   │
-  │   3   │ haskell        │ 2        │ GordonBGood_stride8-block16K │ 12276  │ 5.00021  │    1    │   base    │   yes    │ 1    │  2455.09589   │
-  │   4   │ haskell        │ 2        │ GordonBGood_stride8          │ 11040  │ 5.00034  │    1    │   base    │   yes    │ 1    │  2207.85061   │
-  │   5   │ haskell        │ 2        │ GordonBGood_bittwiddle       │  7237  │ 5.00014  │    1    │   base    │   yes    │ 1    │  1447.36032   │
-  └───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+                                                                 Single-threaded                                                                 
+┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ haskell        │ 2        │ GordonBGood_extreme-hybrid   │ 39149  │ 5.00124  │    1    │   base    │   yes    │ 1    │  7827.85860   │
+│   2   │ haskell        │ 2        │ GordonBGood_extreme          │ 17873  │ 5.00143  │    1    │   base    │   yes    │ 1    │  3573.58140   │
+│   3   │ haskell        │ 2        │ GordonBGood_stride8-block16K │ 12989  │ 5.00153  │    1    │   base    │   yes    │ 1    │  2597.00306   │
+│   4   │ haskell        │ 2        │ GordonBGood_stride8          │ 10638  │ 5.00148  │    1    │   base    │   yes    │ 1    │  2126.97251   │
+│   5   │ haskell        │ 2        │ GordonBGood_bittwiddle       │  8407  │ 5.00148  │    1    │   base    │   yes    │ 1    │  1680.90359   │
+└───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
+                                                                 Multi-threaded                                                                 
+┌───────┬────────────────┬──────────┬──────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
+│ Index │ Implementation │ Solution │ Label                        │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
+├───────┼────────────────┼──────────┼──────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
+│   1   │ haskell        │ 2        │ GordonBGood_extreme-hybrid   │ 143040 │ 5.00523  │    4    │   base    │   yes    │ 1    │  7144.52101   │
+│   2   │ haskell        │ 2        │ GordonBGood_extreme          │ 56708  │ 5.00542  │    4    │   base    │   yes    │ 1    │  2832.32992   │
+│   3   │ haskell        │ 2        │ GordonBGood_stride8-block16K │ 48547  │ 5.00567  │    4    │   base    │   yes    │ 1    │  2424.59851   │
+│   4   │ haskell        │ 2        │ GordonBGood_stride8          │ 34046  │ 5.00520  │    4    │   base    │   yes    │ 1    │  1700.53002   │
+│   5   │ haskell        │ 2        │ GordonBGood_bittwiddle       │ 26708  │ 5.02640  │    4    │   base    │   yes    │ 1    │  1328.38523   │
+└───────┴────────────────┴──────────┴──────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
   ```
 
 ## Notes

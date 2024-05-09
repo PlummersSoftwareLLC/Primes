@@ -7,8 +7,11 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
+#include <sstream>
 #include <bitset>
 #include <map>
+#include <unordered_map>
+#include <stdexcept>
 #include <cstring>
 #include <cmath>
 #include <vector>
@@ -24,38 +27,47 @@ class BitArray {
     uint32_t *array;
     size_t arrSize;
 
-    inline static size_t arraySize(size_t size) {
+    inline static size_t arraySize(size_t size) 
+    {
         return (size >> 5) + ((size & 31) > 0);
     }
 
-    inline static size_t index(size_t n) {
+    inline static size_t index(size_t n) 
+    {
         return (n >> 5);
     }
 
-    inline static uint32_t getSubindex(size_t n, uint32_t d) {
+    inline static uint32_t getSubindex(size_t n, uint32_t d) 
+    {
         return d & uint32_t(uint32_t(0x01) << (n % 32));
     }
 
-    inline void setFalseSubindex(size_t n, uint32_t &d) {
+    inline void setFalseSubindex(size_t n, uint32_t &d) 
+    {
         d &= ~uint32_t(uint32_t(0x01) << (n % (8*sizeof(uint32_t))));
     }
+
 public:
-    explicit BitArray(size_t size) : arrSize(size) {
+    explicit BitArray(size_t size) : arrSize(size) 
+    {
         array = new uint32_t[arraySize(size)];
         std::memset(array, 0xFF, (size >> 3) + ((size & 7) > 0));
     }
 
     ~BitArray() {delete [] array;}
 
-    bool get(size_t n) const {
+    bool get(size_t n) const 
+    {
         return getSubindex(n, array[index(n)]);
     }
 
-    static constexpr uint32_t rol(uint32_t x, uint32_t n) {
+    static constexpr uint32_t rol(uint32_t x, uint32_t n) 
+    {
         return (x<<n) | (x>>(32-n));
     }
 
-    void setFlagsFalse(size_t n, size_t skip) {
+    void setFlagsFalse(size_t n, size_t skip) 
+    {
         auto rolling_mask = ~uint32_t(1 << n % 32);
         auto roll_bits = skip % 32;
         while (n < arrSize) {
@@ -65,7 +77,10 @@ public:
         }
     }
     
-    inline size_t size() const {return arrSize;}
+    inline size_t size() const 
+    {
+        return arrSize;
+    }
 };
 
 
@@ -205,6 +220,43 @@ class prime_sieve
   
 };
 
+// custom_atoll
+//
+// Like atoll(), but accepts K, M, G, and T as magnitude suffixes.
+
+long long custom_atoll(const std::string& value_str) {
+    static const std::unordered_map<char, long long> suffixes = {
+        {'K', 1000LL},
+        {'M', 1000000LL},
+        {'G', 1000000000LL},
+        {'T', 1000000000000LL}
+    };
+
+    std::string input_str = value_str;
+    for (char& c : input_str) {
+        c = std::toupper(c);
+    }
+
+    char last_char = input_str.back();
+    if (suffixes.find(last_char) != suffixes.end()) {
+        long long multiplier = suffixes.at(last_char);
+        std::string numeric_part = input_str.substr(0, input_str.size() - 1);
+        std::istringstream iss(numeric_part);
+        double numeric_value;
+        if (!(iss >> numeric_value)) {
+            throw std::invalid_argument("Invalid numeric part: " + numeric_part);
+        }
+        return static_cast<long long>(numeric_value * multiplier);
+    }
+
+    std::istringstream iss(input_str);
+    long long result;
+    if (!(iss >> result)) {
+        throw std::invalid_argument("Invalid input format");
+    }
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     vector<string> args(argv + 1, argv + argc);         // From first to last argument in the argv array
@@ -236,7 +288,7 @@ int main(int argc, char **argv)
         else if (*i == "-l" || *i == "--limit") 
         {
             i++;
-            ullLimitRequested = (i == args.end()) ? 0LL : max((long long)1, atoll(i->c_str()));
+            ullLimitRequested = (i == args.end()) ? 0LL : max((long long)1, custom_atoll(i->c_str()));
         }
         else if (*i == "-1" || *i == "--oneshot") 
         {

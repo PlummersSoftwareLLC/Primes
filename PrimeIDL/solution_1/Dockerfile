@@ -1,4 +1,4 @@
-FROM primeimages/gdl:1.0.0-rc3
+FROM primeimages/gdl:1.0.4
 
 WORKDIR /opt/app
 

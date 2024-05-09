@@ -1,0 +1,5 @@
+FileVersion = 1
+Projects = {Primes = {Path = "."}}
+
+[Workspace]
+StartupProject = "Primes"

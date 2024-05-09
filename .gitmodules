@@ -1,0 +1,6 @@
+[submodule "PrimeCUDA/solution_1/CUDASieve"]
+	path = PrimeCUDA/solution_1/CUDASieve
+	url = https://github.com/curtisseizert/CUDASieve.git
+[submodule "PrimeGNUMake/solution_1/gmsl"]
+	path = PrimeGNUMake/solution_1/gmsl
+	url = https://github.com/jgrahamc/gmsl

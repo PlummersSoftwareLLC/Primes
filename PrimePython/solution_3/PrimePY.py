@@ -47,33 +47,17 @@ class PrimeSieve:
 
         """Calculate the primes up to the specified limit"""
 
-        factor = 1
+        # Rounding to use as an upper index. Adding 1 to account for the square special case.
+        q = round(sqrt(self._size) / 2) + 1
 
-
-        # sqrt doesn't seem to make any difference in CPython,
-        # but works much faster than "x**.5" in Pypy
-        q = sqrt(self._size) / 2
-
-
-        bits_view = self._bits[factor:]
-        while factor <= q:
-            for v in bits_view.flat:
-                if v:
-                    break
-                factor += 1
-
-            bits_view = self._bits[factor + 1:]
-
-            # If marking factor 3, you wouldn't mark 6 (it's a mult of 2) so start with the 3rd instance of this factor's multiple.
-            # We can then step by factor * 2 because every second one is going to be even by definition
-            factor2 = 2 * factor
-            start = factor2 * (factor + 1) - factor - 1
-            step = factor2 + 1
-
-            # mark non-primes in sieve
-            bits_view[start::step] = False
-
-            factor += 1
+        # Builtin functions are faster than custom numerics (in CPython).
+        # The `enumerate` function lets us keep track of the current index.
+        for factor, bit in enumerate(self._bits[1:q], start=1):
+            if bit:
+                prime = 2*factor + 1                # The prime number represented by this index.
+                start = factor + prime * factor     # Any indices for prime numbers between `factor` and `start`
+                                                     # have already been zeroed by previous iterations.
+                self._bits[start::prime] = False    # Every `prime`'th odd number is a multiple of `prime`.
 
     def count_primes(self):
 

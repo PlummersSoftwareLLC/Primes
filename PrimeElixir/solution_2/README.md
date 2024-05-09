@@ -1,7 +1,8 @@
-# Elixir solution by Thomas9911
+# Elixir solution by Thomas9911, (Parallelised by Deemooneill)
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
@@ -24,14 +25,16 @@ docker run primeelixir
 
 ## Output
 
-Intel Core i7 4770k, Windows 10
+Intel Core i5 9400F, Windows 10 pre Task useage:
 
 ```txt
-thomas9911;34;5.732;1;algorithm=base,faithful=yes,bits=1
+thomas9911;36;5.603;1;algorithm=base,faithful=yes,bits=1
+thomas9911_parr;127;6.083;6;algorithm=base,faithful=yes,bits=1
 ```
 
-AMD Ryzen 7 5800H, Ubuntu 21.04 in Docker
+Intel Core i5 9400F, docker post Task useage:
 
 ```txt
-thomas9911;48;5.156;1;algorithm=base,faithful=yes,bits=1
+thomas9911;51;6.093;1;algorithm=base,faithful=yes,bits=1
+thomas9911_parr;196;6.07961;6;algorithm=base,faithful=yes,bits=1
 ```

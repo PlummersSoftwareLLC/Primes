@@ -4,7 +4,7 @@ COPY /c_library .
 RUN gcc -c -Ofast c_sieve.c \
     && gcc -shared -o c_sieve.so c_sieve.o
 
-FROM dart:2.15.1 AS dart
+FROM dart:3.0.0 AS dart
 WORKDIR /app
 COPY /bin .
 RUN dart compile exe runner.dart -o runner 

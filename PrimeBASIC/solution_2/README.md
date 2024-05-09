@@ -10,15 +10,19 @@ This is an implementation in Visual Basic.
 ## Run instructions
 
 ### .NET 5.0
+
 Execute the following command from the implementation directory:
-```
+
+```bash
 dotnet run -c release
 ```
 
 ### Docker
+
 A Dockerfile has been provided.
 
 ## Output
-```
+
+```log
 rbergen_vb;2457;5.0012308;1;algorithm=base,faithful=yes,bits=1
 ```

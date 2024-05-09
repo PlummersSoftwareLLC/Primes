@@ -1,4 +1,5 @@
 import kotlinx.coroutines.*
+import java.util.ArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
@@ -39,7 +40,6 @@ actual inline fun <reified T : PrimeSieve> benchmarkPrimeSieve(
                 ).print("jvm", "multi", CORES)
             }
         }
-
     } else {
         runTest(newInstance).print("jvm", "single")
     }
