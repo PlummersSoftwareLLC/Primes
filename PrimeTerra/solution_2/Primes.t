@@ -20,7 +20,7 @@ local clocks = 0.001
 if terralib.os == "Windows" then
     clocks = 0.001
     progname = "Sieve.exe"
-elseif terralib.os == "Linux" then
+else
     clocks = 0.000001
 end
 local dur = 5
