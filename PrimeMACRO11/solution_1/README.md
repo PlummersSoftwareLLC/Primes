@@ -16,7 +16,7 @@ This solution provides two implementations in [MACRO-11](https://en.wikipedia.or
 This solution includes two implementations:
 
 - One ([SIEVE.ASM](SIEVE.ASM)) uses one byte per prime candidate. Due to applicable memory constraints, the sieve size for this implementation is 1,000.
-- The other ([SIEVE2.ASM](SIEVE.ASM)) uses one bit per prime candidate. This implementation's sieve size is 10,000.
+- The other ([SIEVE2.ASM](SIEVE2.ASM)) uses one bit per prime candidate. This implementation's sieve size is 10,000.
 
 ## Run instructions
 
