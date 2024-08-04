@@ -20,7 +20,7 @@ This solution includes two implementations:
 
 ## Run instructions
 
-This solution's implementations can be assembled and executed on an actual PDP-11 computer or a sufficiently complete emulator, provided it's running an operating system that has MACRO-11 installed. A list of available emulators can be found in the [Emulators section on the PDP-11 WikiPedia page](https://en.wikipedia.org/wiki/PDP-11#Emulators).
+This solution's implementations can be assembled and executed on an actual PDP-11 computer or a sufficiently complete emulator, provided it's running an operating system that has MACRO-11 installed. A list of available emulators can be found in the [Emulators section on the PDP-11 Wikipedia page](https://en.wikipedia.org/wiki/PDP-11#Emulators).
 
 Use the following commands to edit, assemble and run an implementation on the solution. These specific commands apply to a PDP-11 running RT-11 and build and run SIEVE2.ASM which is located on the D1 device. Adapt the commands for your specific situation where appropriate:
 
