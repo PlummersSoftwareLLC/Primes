@@ -1,4 +1,4 @@
-FROM library/swipl:8.3.26
+FROM library/swipl:9.2.6
 
 WORKDIR /opt/app
 COPY primes-*.pl bitvector.c run.sh ./
