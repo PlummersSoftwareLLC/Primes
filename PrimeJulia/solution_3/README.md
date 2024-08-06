@@ -10,7 +10,7 @@ optimizations. This is a sort-of "low-level" style implementation in
 Julia to get as much as speed as possible out of the language. It is
 *not* designed to be idiomatic Julia code.
 
-This solution requires at least **Julia 1.5** to run. Julia 1.10 is
+This solution requires at least **Julia 1.5** to run. the latest stable 1.X Julia version is
 recommended and is used in the Docker image.
 
 ## Description
