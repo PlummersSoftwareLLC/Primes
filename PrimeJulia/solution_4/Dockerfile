@@ -1,4 +1,4 @@
-FROM julia:1.6-buster
+FROM julia:1.10
 
 WORKDIR /opt/app
 
