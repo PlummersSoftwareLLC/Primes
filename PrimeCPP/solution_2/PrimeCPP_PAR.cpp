@@ -24,56 +24,61 @@ using namespace std::chrono;
 const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
 class BitArray {
-    uint32_t *array;
+    uint8_t *array;
     size_t arrSize;
 
     inline static size_t arraySize(size_t size) 
     {
-        return (size >> 5) + ((size & 31) > 0);
+        return (size >> 3) + ((size & 7) > 0);
     }
 
     inline static size_t index(size_t n) 
     {
-        return (n >> 5);
+        return (n >> 3);
     }
 
-    inline static uint32_t getSubindex(size_t n, uint32_t d) 
+    inline static uint8_t getSubindex(size_t n, uint8_t d) 
     {
-        return d & uint32_t(uint32_t(0x01) << (n % 32));
+        return d & uint8_t(uint8_t(0x01) << (n % 8));
     }
 
-    inline void setFalseSubindex(size_t n, uint32_t &d) 
+    inline void setFalseSubindex(size_t n, uint8_t &d) 
     {
-        d &= ~uint32_t(uint32_t(0x01) << (n % (8*sizeof(uint32_t))));
+        d &= ~uint8_t(uint8_t(0x01) << (n % 8));
     }
 
 public:
     explicit BitArray(size_t size) : arrSize(size) 
     {
-        array = new uint32_t[arraySize(size)];
-        std::memset(array, 0xFF, (size >> 3) + ((size & 7) > 0));
+        array = new uint8_t[arraySize(size)];
+        std::memset(array, 0xFF, arraySize(size));
     }
 
-    ~BitArray() {delete [] array;}
+    ~BitArray() { delete[] array; }
 
     bool get(size_t n) const 
     {
-        return getSubindex(n, array[index(n)]);
+        return (array[index(n)] & (uint8_t(1) << (n % 8))) != 0;
     }
 
-    static constexpr uint32_t rol(uint32_t x, uint32_t n) 
+    static constexpr uint8_t rol(uint8_t x, uint8_t n)
     {
-        return (x<<n) | (x>>(32-n));
+        n %= 8;
+        if (n == 0)
+            return x;
+        else
+            return (x << n) | (x >> (8 - n));
     }
 
     void setFlagsFalse(size_t n, size_t skip) 
     {
-        auto rolling_mask = ~uint32_t(1 << n % 32);
-        auto roll_bits = skip % 32;
+        auto rolling_mask = ~uint8_t(1 << n % 8);
+        auto roll_bits = skip % 8;
         while (n < arrSize) {
             array[index(n)] &= rolling_mask;
             n += skip;
-            rolling_mask = rol(rolling_mask, roll_bits);
+            if (roll_bits != 0)
+                rolling_mask = rol(rolling_mask, roll_bits);
         }
     }
     
