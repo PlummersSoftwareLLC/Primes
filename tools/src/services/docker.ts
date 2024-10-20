@@ -7,9 +7,11 @@ export default class DockerService {
     });
   }
 
-  public runContainer(imageName: string, options: Array<string>): string {
+  public runContainer(imageName: string, duration: number, options: Array<string>): string {
     const output = child_process.execSync(`docker run --rm ${options.join(' ')} ${imageName}`, {
-      stdio: 'pipe'
+      stdio: 'pipe',
+      timeout: duration ? duration * 60000 : undefined,
+      killSignal: 'SIGKILL'
     });
     return output.toString('utf8');
   }
