@@ -5,6 +5,10 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
+## Note: solution build (temporarily) disabled
+
+As discussed in issue [#980](https://github.com/PlummersSoftwareLLC/Primes/issues/980), the CI build and benchmark runs for this solution have been disabled until the matter described in said issue has been resolved.
+
 ## Run
 
 ### Run locally
