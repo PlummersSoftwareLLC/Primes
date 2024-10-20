@@ -43,8 +43,7 @@ public:
     {
         arrSize = (size + 1) / 2; // Only store bits for odd numbers
         array = new uint8_t[arraySize(arrSize)];
-        // Bits are left at zero default, so no need to initialize them
-        // std::memset(array, 0x00, arraySize(arrSize));
+        std::memset(array, 0x00, arraySize(arrSize));
     }
 
     ~BitArray() { delete[] array; }
