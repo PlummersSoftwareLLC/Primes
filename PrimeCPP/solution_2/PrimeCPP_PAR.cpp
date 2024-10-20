@@ -25,7 +25,6 @@ const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
 class BitArray {
     uint8_t *array;
-    size_t arrSize;
     size_t logicalSize;
 
     static constexpr size_t arraySize(size_t size) 
@@ -41,7 +40,7 @@ class BitArray {
 public:
     explicit BitArray(size_t size) : logicalSize(size)
     {
-        arrSize = (size + 1) / 2; // Only store bits for odd numbers
+        auto arrSize = (size + 1) / 2; // Only store bits for odd numbers
         array = new uint8_t[arraySize(arrSize)];
         std::memset(array, 0x00, arraySize(arrSize));
     }
