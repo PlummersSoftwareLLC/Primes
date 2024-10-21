@@ -32,7 +32,7 @@ end
 BITMASKP = Pointer.malloc(8) { |i| 1_u8 << i }
 
 macro unroll_setbits(bitarrp, starti, limiti, stepi)
-  ndx: Int32 = {{starti}} & 7
+  ndx : Int32 = {{starti}} & 7
   r0 = {{starti}} >> 3
   r1 = {{starti}} + {{stepi}}
   r2 = r1 + {{stepi}}
@@ -47,8 +47,8 @@ macro unroll_setbits(bitarrp, starti, limiti, stepi)
   r3 = (r3 >> 3) - r0
   r2 = (r2 >> 3) - r0
   r1 = (r1 >> 3) - r0
-  bytep: Pointer(UInt8) = {{bitarrp}} + r0
-  looplmtp: Pointer(UInt8) = {{bitarrp}} + (({{limiti}} >> 3) - r7)
+  bytep : Pointer(UInt8) = {{bitarrp}} + r0
+  looplmtp : Pointer(UInt8) = {{bitarrp}} + (({{limiti}} >> 3) - r7)
   case ((({{stepi}} & 7) << 3) | ({{starti}} & 7)).to_u8
   {% for n in (0_u8..0x3F) %}
     when {{n}}
@@ -77,8 +77,8 @@ end
 #  swi = (ndx + ndx) * (ndx + 3) + 3
 #  r = ((swi | 63) + 1 - swi) % (ndx + ndx + 3)
 #  starti = if r == 0 then 0 else ndx + ndx + 3 - r
-STARTIS = [ 2, 2, 1, 2, 6, 7, 13, 2, 6, 5, 12, 16, 6, 0, 29, 0,
-            6, 16, 30, 25, 6, 32, 45, 32, 6, 48, 30, 16, 6, 0, 62 ]
+STARTIS = [2, 2, 1, 2, 6, 7, 13, 2, 6, 5, 12, 16, 6, 0, 29, 0,
+           6, 16, 30, 25, 6, 32, 45, 32, 6, 48, 30, 16, 6, 0, 62]
 
 macro dense_setbits(bitarrp, starti, limiti, stepi)
   dndx = {{starti}}
@@ -86,9 +86,9 @@ macro dense_setbits(bitarrp, starti, limiti, stepi)
   while dndx <= dndxlmt # cull to an even 64-bit boundary...
     {{bitarrp}}[dndx >> 3] |= BITMASKP[dndx & 7]; dndx += {{stepi}}
   end
-  wordp: Pointer(UInt64) = ({{bitarrp}} + ((dndx >> 3) & (-8))).as(Pointer(UInt64))
+  wordp : Pointer(UInt64) = ({{bitarrp}} + ((dndx >> 3) & (-8))).as(Pointer(UInt64))
   keep = wordp
-  wordlmtp: Pointer(UInt64) = ({{bitarrp}} + ((({{limiti}} >> 3) & (-8)) -
+  wordlmtp : Pointer(UInt64) = ({{bitarrp}} + ((({{limiti}} >> 3) & (-8)) -
                                   (({{stepi}} << 3) - 8))).as(Pointer(UInt64))
   dndx &= 63
   case {{stepi}}.to_u8
@@ -96,10 +96,10 @@ macro dense_setbits(bitarrp, starti, limiti, stepi)
       when {{stpvi + stpvi + 3}}.to_u8
         while wordp <= wordlmtp
           # for all modulo pattern 64-bit words
-          {% for wi in (0 ... (stpvi + stpvi + 3)) %}
+          {% for wi in (0...(stpvi + stpvi + 3)) %}
             # for all modulo pattern 64-bit words
-            {% for bi in (((wi * 64 - 1 - STARTIS[stpvi]) / (stpvi + stpvi + 3) + 1) .. ((wi * 64 + 63 - STARTIS[stpvi]) / (stpvi + stpvi + 3))) %}
-              {% if (STARTIS[stpvi] + (bi - 1) * (stpvi + stpvi + 3)) < wi * 64 && (STARTIS[stpvi] + (bi + 1) * (stpvi + stpvi + 3)) >= (wi + 1) * 64  %} # only one bit
+            {% for bi in (((wi * 64 - 1 - STARTIS[stpvi]) / (stpvi + stpvi + 3) + 1)..((wi * 64 + 63 - STARTIS[stpvi]) / (stpvi + stpvi + 3))) %}
+              {% if (STARTIS[stpvi] + (bi - 1) * (stpvi + stpvi + 3)) < wi * 64 && (STARTIS[stpvi] + (bi + 1) * (stpvi + stpvi + 3)) >= (wi + 1) * 64 %} # only one bit
                 wordp[{{wi}}] |= {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
               {% elsif (STARTIS[stpvi] + (bi - 1) * (stpvi + stpvi + 3)) < wi * 64 %} # first bit of many in word
                 v = wordp[{{wi}}] | {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
@@ -107,7 +107,7 @@ macro dense_setbits(bitarrp, starti, limiti, stepi)
                 wordp[{{wi}}] = v | {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
               {% else %} # not the first nor the last bit in the word
                 v |= {{1_u64 << ((STARTIS[stpvi] + bi * (stpvi + stpvi + 3)) & 63)}}
-              {% end %} 
+              {% end %}
             {% end %}
           {% end %}
           wordp += {{stpvi + stpvi + 3}}
@@ -140,7 +140,6 @@ class PrimeSieve
           bap[swi >> 3] |= BITMASKP[swi & 7]; swi += bp
         end
       end
-
     in Techniques::Stride8
       (0..).each do |i|
         swi = (i + i) * (i + 3) + 3 # calculate start marking index
@@ -158,7 +157,6 @@ class PrimeSieve
           swi += bp
         end
       end
-
     in Techniques::Stride8Block16K
       strtsp = Pointer.malloc(8, nil.as Pointer(UInt8))
       (0..).each do |i|
@@ -176,17 +174,16 @@ class PrimeSieve
             mask = BITMASKP[si]; bytendxp = strtsp[si]
             while bytendxp <= blockstopp
               bytendxp[0] |= mask; bytendxp[bp] |= mask
-              bytendxp[bp2] |= mask; bytendxp[bp3] |= mask ; bytendxp += bp4
+              bytendxp[bp2] |= mask; bytendxp[bp3] |= mask; bytendxp += bp4
             end
             while bytendxp <= blocklmtp
-              bytendxp[0] |= mask ; bytendxp += bp
+              bytendxp[0] |= mask; bytendxp += bp
             end
             strtsp[si] = bytendxp
           end
           pagebytendx += CPUL1CACHE
         end
       end
-
     in Techniques::Extreme
       (0..).each do |i|
         swi = (i + i) * (i + 3) + 3 # calculate start marking index
@@ -208,7 +205,7 @@ class PrimeSieve
         end
       end
     end
- end
+  end
 
   def count_primes
     if @range < 3
@@ -245,8 +242,8 @@ def bench(tec : Techniques)
     end
     if duration >= FORTO
       prime_count = sieve.count_primes
-      count =  sieve.@range < 2 ?  0 : 1
-      (0 .. ((sieve.@range - 3) >> 1).to_i32).each do |i|
+      count = sieve.@range < 2 ? 0 : 1
+      (0..((sieve.@range - 3) >> 1).to_i32).each do |i|
         count += 1 if (sieve.@bufp[i >> 3] & BITMASKP[i & 7]) == 0
       end
       valid = count == EXPECTED && prime_count == EXPECTED
@@ -256,14 +253,15 @@ def bench(tec : Techniques)
         printf("Invalid result!!!:  ")
       end
       STDERR.printf("Passes: %d Time: %f Avg: %f Limit: %d Count1: %d Count2: %d Valid: %s\n",
-                      passes, duration, (duration / passes),
-                      sieve.@range, count, prime_count, valid)
+        passes, duration, (duration / passes),
+        sieve.@range, count, prime_count, valid)
       break
     end
   end
 end
 
-{% if flag? :expand_macro  %} # only one bit
+{% if flag? :expand_macro %}
+  # only one bit
   bap = Pointer.malloc(16384, 0_u8)
   bp = 3
   swi = (bp * bp - 3) >> 3
@@ -271,6 +269,7 @@ end
   unroll_setbits(bap, swi, lmti, bp)
   dense_setbits(bap, swi, lmti, bp)
 {% else %}
-  Techniques.each do |t| bench(t) end
+  Techniques.each do |t|
+    bench(t)
+  end
 {% end %}
-
