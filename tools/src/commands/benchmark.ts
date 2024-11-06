@@ -30,9 +30,11 @@ export const command = new Command('benchmark')
   .option('-f, --formatter <type>', 'Output formatter', 'table')
   .option('-o, --output-file <file>', 'Write output to given file')
   .option('-u, --unconfined', 'Run with seccomp:unconfined (native performance for interpreted languages)')
+  .option('-t, --timeout <minutes>', 'Timeout for each benchmark in minutes', '10')
   .action(async (args) => {
     const directory = path.resolve(args.directory as string);
     const unconfined = args.unconfined === true;
+    const timeout = parseInt(args.timeout as string);
 
     logger.info(`Unconfined mode: ${unconfined}`);
 
@@ -106,11 +108,18 @@ export const command = new Command('benchmark')
       let output = '';
       try {
         logger.info(`[${implementation}][${solution}] Running...`);
-        output = dockerService.runContainer(imageName, options);
+        output = dockerService.runContainer(imageName, timeout, options);
       } catch (err) {
-        logger.warn(
-          `[${implementation}][${solution}] Exited with abnormal code: ${err.status}. Results might be partial...`
-        );
+        if (err.signal) {
+          logger.warn(
+            `[${implementation}][${solution}] Killed after ${timeout} minutes with signal: ${err.signal}. Results are likely partial...`
+          );
+        }
+        else {
+            logger.warn(
+              `[${implementation}][${solution}] Exited with abnormal code: ${err.status}. Results might be partial...`
+            );
+        }
         output = err.output
           .filter((block: Buffer | null) => block !== null)
           .map((block: Buffer) => block.toString('utf8'))

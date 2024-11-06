@@ -10,7 +10,7 @@ optimizations. This is a sort-of "low-level" style implementation in
 Julia to get as much as speed as possible out of the language. It is
 *not* designed to be idiomatic Julia code.
 
-This solution requires at least **Julia 1.5** to run. Julia 1.6 is
+This solution requires at least **Julia 1.5** to run. the latest stable 1.X Julia version is
 recommended and is used in the Docker image.
 
 ## Description
@@ -40,7 +40,7 @@ and bits are unset when the number is *prime*. This simplifies the
 set_bit operation slightly (`arr[i] |= mask vs. arr[i] &= ~mask`).
 
 If you see any room for improvement in the code or have any
-suggestions, don't hesitate to open an issue, pull request (PR), 
+suggestions, don't hesitate to open an issue, pull request (PR),
 Discussion, or the like. Don't forget to tag me at `@louie-github` so I
 can be notified if my personal input is either wanted or needed.
 I'm open to fixing stylistic issues or discussing cosmetic changes to

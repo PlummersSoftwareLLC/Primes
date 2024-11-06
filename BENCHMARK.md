@@ -22,6 +22,7 @@ Some solutions are not included in the automated benchmark runs, either because 
 - [Running a benchmark of all solutions for a particular language](#running-a-benchmark-of-all-solutions-for-a-particular-language)
 - [Running in unconfined mode](#running-in-unconfined-mode)
 - [Output formats](#output-formats)
+- [Setting the solution timeout](#setting-the-solution-timeout)
 
 ## What operating system to use?
 
@@ -374,4 +375,14 @@ The output format can be controlled via the `FORMATTER` variable like this:
 ```shell
 make FORMATTER=json
 make DIRECTORY=PrimeCrystal/solution_1 FORMATTER=csv
+```
+
+## Setting the solution timeout
+
+The run of each solution is limited to a certain duration, which is 10 minutes by default.
+You can change this setting through the `TIMEOUT` variable like this:
+
+```shell
+make TIMEOUT=15
+make DIRECTORY=PrimeCPP/solution_2 TIMEOUT=15
 ```

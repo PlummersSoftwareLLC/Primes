@@ -4,6 +4,7 @@ SHELL := /bin/bash
 
 DIRECTORY := $(shell pwd)
 FORMATTER := "table"
+TIMEOUT := "10"
 
 .PHONY: all
 all: benchmark
@@ -14,6 +15,7 @@ benchmark: check-env
 	ARGS=("-d $${REALPATH}" "-f $(FORMATTER)"); \
 	[ ! -z $${OUTPUT_FILE} ] && ARGS+=( "-o $${OUTPUT_FILE}" ); \
 	[ ! -z $${UNCONFINED} ] && ARGS+=( "--unconfined" ); \
+	[ ! -z $${TIMEOUT} ] && ARGS+=( "-t $${TIMEOUT}" ); \
 	cd ./tools; npm ci --silent && npm start --silent -- benchmark $${ARGS[@]}
 
 .PHONY: check-env
