@@ -24,117 +24,65 @@ using namespace std::chrono;
 const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
 class BitArray {
-    uint32_t *array;
+    uint8_t *array;
     size_t arrSize;
+    size_t logicalSize;
 
-    inline static size_t arraySize(size_t size) 
+    static constexpr size_t arraySize(size_t size) 
     {
-        return (size >> 5) + ((size & 31) > 0);
+        return (size >> 3) + ((size & 7) > 0);
     }
 
-    inline static size_t index(size_t n) 
+    static constexpr size_t index(size_t n) 
     {
-        return (n >> 5);
-    }
-
-    inline static uint32_t getSubindex(size_t n, uint32_t d) 
-    {
-        return d & uint32_t(uint32_t(0x01) << (n % 32));
-    }
-
-    inline void setFalseSubindex(size_t n, uint32_t &d) 
-    {
-        d &= ~uint32_t(uint32_t(0x01) << (n % (8*sizeof(uint32_t))));
+        return (n >> 3);
     }
 
 public:
-    explicit BitArray(size_t size) : arrSize(size) 
+    explicit BitArray(size_t size) : logicalSize(size)
     {
-        array = new uint32_t[arraySize(size)];
-        std::memset(array, 0xFF, (size >> 3) + ((size & 7) > 0));
+        arrSize = (size + 1) / 2; // Only store bits for odd numbers
+        array = new uint8_t[arraySize(arrSize)];
+        fill_n(array, arrSize, 0x00);
     }
 
-    ~BitArray() {delete [] array;}
+    ~BitArray() { delete[] array; }
 
-    bool get(size_t n) const 
+    constexpr bool get(size_t n) const 
     {
-        return getSubindex(n, array[index(n)]);
+        if (n % 2 == 0)
+            return false; // Even numbers > 2 are not prime
+        n = n / 2; // Map the actual number to the index in the array
+        return !(array[index(n)] & (uint8_t(1) << (n % 8)));
     }
 
-    static constexpr uint32_t rol(uint32_t x, uint32_t n) 
+    void set(size_t n)
     {
-        return (x<<n) | (x>>(32-n));
+        n = n / 2; // Map the actual number to the index in the array
+        array[index(n)] |= (uint8_t(1) << (n % 8));
     }
 
-    static constexpr uint32_t buildSkipMask(size_t skip, size_t offset) 
+    constexpr size_t size() const 
     {
-        uint32_t mask = 0;
-        for (size_t i = offset; i < 32; i += skip) {
-            mask |= (1u << i);
-        }
-        return ~mask;
-    }
-
-    void setFlagsFalse(size_t n, size_t skip) 
-    {
-        if (skip <= 12) {
-            // For small skips, use pre-built mask approach
-            size_t word_idx = index(n);
-            size_t bit_pos = n % 32;
-            size_t curr_n = n;
-            
-            while (curr_n < arrSize) 
-            {
-                // Build mask for current word starting at bit_pos
-                uint32_t mask = buildSkipMask(skip, bit_pos);
-                
-                // Apply mask to current word
-                array[word_idx] &= mask;
-                
-                // Move to next word
-                size_t bits_remaining = 32 - bit_pos;
-                curr_n += ((bits_remaining + skip - 1) / skip) * skip;
-                
-                if (curr_n >= arrSize) break;
-                
-                word_idx = index(curr_n);
-                bit_pos = curr_n % 32;
-            }
-        } 
-        else 
-        {
-            // Original implementation for larger skips
-            auto rolling_mask = ~uint32_t(1 << (n % 32));
-            auto roll_bits = skip % 32;
-            while (n < arrSize) {
-                array[index(n)] &= rolling_mask;
-                n += skip;
-                rolling_mask = rol(rolling_mask, roll_bits);
-            }
-        }
-    }
-    
-    inline size_t size() const 
-    {
-        return arrSize;
+        return logicalSize;
     }
 };
 
 
 // prime_sieve
 //
-// Represents the data comprising the sieve (an array of N bits, where N is the upper limit prime being tested)
-// as well as the code needed to eliminate non-primes from its array, which you perform by calling runSieve.
+// Represents the data comprising the sieve (an array of bits representing odd numbers starting from 3)
+// and includes the code needed to eliminate non-primes from its array by calling runSieve.
 
 class prime_sieve
 {
   private:
 
-      BitArray Bits;                                        // Sieve data, where 1==prime, 0==not
+      BitArray Bits; // Sieve data, where 0==prime, 1==not
 
    public:
 
-      prime_sieve(uint64_t n) : Bits(n)                     // Initialize all to true (potential primes)
+      prime_sieve(uint64_t n) : Bits(n) // Initialize bits to zero default
       {
       }
 
@@ -154,15 +102,15 @@ class prime_sieve
 
           while (factor <= q)
           {
-              for (uint64_t num = factor; num < Bits.size(); num += 2)
-              {
-                  if (Bits.get(num))
-                  {
-                      factor = num;
+              // Find the next prime number
+              for (NULL; factor <= q; factor += 2)
+                  if (Bits.get(factor))
                       break;
-                  }
-              }
-              Bits.setFlagsFalse(factor * factor, factor + factor);
+
+              // Mark multiples of the prime number as not prime
+              uint64_t start = factor * factor;
+              for (uint64_t num = start; num <= Bits.size(); num += factor * 2)
+                  Bits.set(num);
 
               factor += 2;            
           }
@@ -174,9 +122,9 @@ class prime_sieve
 
       size_t countPrimes() const
       {
-          size_t count = (Bits.size() >= 2);                   // Count 2 as prime if within range
-          for (int i = 3; i < Bits.size(); i+=2)
-              if (Bits.get(i))
+          size_t count = (Bits.size() >= 2); // Count 2 as prime if within range
+          for (uint64_t num = 3; num <= Bits.size(); num += 2)
+              if (Bits.get(num))
                   count++;
           return count;
       }
@@ -187,23 +135,24 @@ class prime_sieve
 
       bool isPrime(uint64_t n) const
       {
-          if (n & 1)
-              return Bits.get(n);
-          else
+          if (n == 2)
+              return true;
+          if (n < 2 || n % 2 == 0)
               return false;
+          return Bits.get(n);
       }
 
       // validateResults
       //
-      // Checks to see if the number of primes found matches what we should expect.  This data isn't used in the
+      // Checks to see if the number of primes found matches what we should expect. This data isn't used in the
       // sieve processing at all, only to sanity check that the results are right when done.
 
       bool validateResults() const
       {
           const std::map<const uint64_t, const int> resultsDictionary =
           {
-                {             10LLU, 4         },               // Historical data for validating our results - the number of primes
-                {            100LLU, 25        },               // to be found under some limit, such as 168 primes under 1000
+                {             10LLU, 4         }, // Historical data for validating our results - the number of primes
+                {            100LLU, 25        }, // to be found under some limit, such as 168 primes under 1000
                 {          1'000LLU, 168       },
                 {         10'000LLU, 1229      },
                 {        100'000LLU, 9592      },
@@ -227,8 +176,8 @@ class prime_sieve
           if (showResults)
               cout << "2, ";
 
-          size_t count = (Bits.size() >= 2);                   // Count 2 as prime if in range
-          for (uint64_t num = 3; num <= Bits.size(); num+=2)
+          size_t count = (Bits.size() >= 2); // Count 2 as prime if in range
+          for (uint64_t num = 3; num <= Bits.size(); num += 2)
           {
               if (Bits.get(num))
               {
@@ -247,7 +196,7 @@ class prime_sieve
                << "Average: " << duration/passes << ", "
                << "Limit: "   << Bits.size() << ", "
                << "Counts: "  << count << "/" << countPrimes() << ", "
-               << "Valid : "  << (validateResults() ? "Pass" : "FAIL!") 
+               << "Valid: "   << (validateResults() ? "Pass" : "FAIL!") 
                << "\n";
 
           // Following 2 lines added by rbergen to conform to drag race output format
@@ -354,7 +303,7 @@ int main(int argc, char **argv)
     }
 
     if (bOneshot)
-        cout << "Oneshot is on.  A single pass will be used to simulate a 5 second run." << endl;
+        cout << "Oneshot is on. A single pass will be used to simulate a 5 second run." << endl;
 
     if (bOneshot && (cSecondsRequested > 0 || cThreadsRequested > 1))   
     {
@@ -389,8 +338,8 @@ int main(int argc, char **argv)
     else
     {
         auto tStart       = steady_clock::now();
-        std::thread threads[cThreads];
-        uint64_t l_passes[cThreads];
+        std::vector<std::thread> threads(cThreads);
+        std::vector<uint64_t> l_passes(cThreads);
         for (unsigned int i = 0; i < cThreads; i++)
             threads[i] = std::thread([i, &l_passes, &tStart](size_t llUpperLimit)
             {
