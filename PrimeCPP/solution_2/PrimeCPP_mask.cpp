@@ -24,41 +24,46 @@ using namespace std::chrono;
 const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
 class BitArray {
-    uint8_t *array;
+    uint32_t *array;
     size_t logicalSize;
 
-    static constexpr size_t arraySize(size_t size) 
+    inline static size_t arraySize(size_t size) 
     {
-        return (size >> 3) + ((size & 7) > 0);
+        return (size >> 5) + ((size & 31) > 0);
     }
 
-    static constexpr size_t index(size_t n) 
+    inline static size_t index(size_t n) 
     {
-        return (n >> 3);
+        return (n >> 5);
+    }
+
+    inline static uint32_t getSubindex(size_t n, uint32_t d) 
+    {
+        return d & uint32_t(0x01) << (n % 32);
+    }
+
+    inline void setFalseSubindex(size_t n, uint32_t &d) 
+    {
+        d &= ~uint32_t(uint32_t(0x01) << (n % (8*sizeof(uint32_t))));
     }
 
 public:
-    explicit BitArray(size_t size) : logicalSize(size)
+    explicit BitArray(size_t size) : logicalSize(size) 
     {
-        auto arrSize = (size + 1) / 2; // Only store bits for odd numbers
-        array = new uint8_t[arraySize(arrSize)];
-        std::memset(array, 0x00, arraySize(arrSize));
+        array = new uint32_t[arraySize(size)];
+        std::memset(array, 0xFF, arraySize(size) * sizeof(uint32_t));
     }
 
-    ~BitArray() { delete[] array; }
+    ~BitArray() {delete [] array;}
 
-    constexpr bool get(size_t n) const 
+    bool get(size_t n) const 
     {
-        if (n % 2 == 0)
-            return false; // Even numbers > 2 are not prime
-        n = n / 2; // Map the actual number to the index in the array
-        return !(array[index(n)] & (uint8_t(1) << (n % 8)));
+        return getSubindex(n, array[index(n)]);
     }
 
-    void set(size_t n)
+    static constexpr uint32_t rol(uint32_t x, uint32_t n) 
     {
-        n = n / 2; // Map the actual number to the index in the array
-        array[index(n)] |= (uint8_t(1) << (n % 8));
+        return (x<<n) | (x>>(32-n));
     }
 
     static constexpr uint32_t buildSkipMask(size_t skip, size_t offset) 
@@ -68,15 +73,6 @@ public:
             mask |= (1u << i);
         }
         return ~mask;
-    }
-
-    uint32_t rol(uint32_t value, size_t bits) 
-    {
-        bits %= 32;
-        if (bits == 0) 
-            return value;
-        // Ensure that the number of bits to rotate is within 0-31
-        return (value << bits) | (value >> (32 - bits));
     }
 
     void setFlagsFalse(size_t n, size_t skip) 
@@ -117,7 +113,7 @@ public:
             }
         }
     }
-    
+
     inline size_t size() const 
     {
         return logicalSize;
@@ -127,18 +123,18 @@ public:
 
 // prime_sieve
 //
-// Represents the data comprising the sieve (an array of bits representing odd numbers starting from 3)
-// and includes the code needed to eliminate non-primes from its array by calling runSieve.
+// Represents the data comprising the sieve (an array of N bits, where N is the upper limit prime being tested)
+// as well as the code needed to eliminate non-primes from its array, which you perform by calling runSieve.
 
 class prime_sieve
 {
   private:
 
-      BitArray Bits; // Sieve data, where 0==prime, 1==not
+      BitArray Bits;                                        // Sieve data, where 1==prime, 0==not
 
    public:
 
-      prime_sieve(uint64_t n) : Bits(n) // Initialize bits to zero default
+      prime_sieve(uint64_t n) : Bits(n)                     // Initialize all to true (potential primes)
       {
       }
 
@@ -158,21 +154,15 @@ class prime_sieve
 
           while (factor <= q)
           {
-              // Find the next prime number
-              for (; factor <= q; factor += 2)
+              for (uint64_t num = factor; num < Bits.size(); num += 2)
               {
-                  if (Bits.get(factor))
+                  if (Bits.get(num))
                   {
+                      factor = num;
                       break;
                   }
               }
-
-              // Mark multiples of the prime number as not prime
-              uint64_t start = factor * factor;
-              for (uint64_t num = start; num <= Bits.size(); num += factor * 2)
-              {
-                  Bits.set(num);
-              }
+              Bits.setFlagsFalse(factor * factor, factor + factor);
 
               factor += 2;            
           }
@@ -184,9 +174,9 @@ class prime_sieve
 
       size_t countPrimes() const
       {
-          size_t count = (Bits.size() >= 2); // Count 2 as prime if within range
-          for (uint64_t num = 3; num <= Bits.size(); num += 2)
-              if (Bits.get(num))
+          size_t count = (Bits.size() >= 2);                   // Count 2 as prime if within range
+          for (int i = 3; i < Bits.size(); i+=2)
+              if (Bits.get(i))
                   count++;
           return count;
       }
@@ -197,24 +187,23 @@ class prime_sieve
 
       bool isPrime(uint64_t n) const
       {
-          if (n == 2)
-              return true;
-          if (n < 2 || n % 2 == 0)
+          if (n & 1)
+              return Bits.get(n);
+          else
               return false;
-          return Bits.get(n);
       }
 
       // validateResults
       //
-      // Checks to see if the number of primes found matches what we should expect. This data isn't used in the
+      // Checks to see if the number of primes found matches what we should expect.  This data isn't used in the
       // sieve processing at all, only to sanity check that the results are right when done.
 
       bool validateResults() const
       {
           const std::map<const uint64_t, const int> resultsDictionary =
           {
-                {             10LLU, 4         }, // Historical data for validating our results - the number of primes
-                {            100LLU, 25        }, // to be found under some limit, such as 168 primes under 1000
+                {             10LLU, 4         },               // Historical data for validating our results - the number of primes
+                {            100LLU, 25        },               // to be found under some limit, such as 168 primes under 1000
                 {          1'000LLU, 168       },
                 {         10'000LLU, 1229      },
                 {        100'000LLU, 9592      },
@@ -238,8 +227,8 @@ class prime_sieve
           if (showResults)
               cout << "2, ";
 
-          size_t count = (Bits.size() >= 2); // Count 2 as prime if in range
-          for (uint64_t num = 3; num <= Bits.size(); num += 2)
+          size_t count = (Bits.size() >= 2);                   // Count 2 as prime if in range
+          for (uint64_t num = 3; num <= Bits.size(); num+=2)
           {
               if (Bits.get(num))
               {
@@ -258,7 +247,7 @@ class prime_sieve
                << "Average: " << duration/passes << ", "
                << "Limit: "   << Bits.size() << ", "
                << "Counts: "  << count << "/" << countPrimes() << ", "
-               << "Valid: "   << (validateResults() ? "Pass" : "FAIL!") 
+               << "Valid : "  << (validateResults() ? "Pass" : "FAIL!") 
                << "\n";
 
           // Following 2 lines added by rbergen to conform to drag race output format
@@ -365,7 +354,7 @@ int main(int argc, char **argv)
     }
 
     if (bOneshot)
-        cout << "Oneshot is on. A single pass will be used to simulate a 5 second run." << endl;
+        cout << "Oneshot is on.  A single pass will be used to simulate a 5 second run." << endl;
 
     if (bOneshot && (cSecondsRequested > 0 || cThreadsRequested > 1))   
     {
@@ -400,8 +389,8 @@ int main(int argc, char **argv)
     else
     {
         auto tStart       = steady_clock::now();
-        std::vector<std::thread> threads(cThreads);
-        std::vector<uint64_t> l_passes(cThreads);
+        std::thread threads[cThreads];
+        uint64_t l_passes[cThreads];
         for (unsigned int i = 0; i < cThreads; i++)
             threads[i] = std::thread([i, &l_passes, &tStart](size_t llUpperLimit)
             {
