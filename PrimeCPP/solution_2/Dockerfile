@@ -5,8 +5,8 @@ RUN apt-get update -qq \
 
 WORKDIR /opt/app
 COPY *.cpp .
-RUN clang++ -march=native -mtune=native -pthread -Ofast -std=c++17 PrimeCPP_array.cpp -oprimes_array
-RUN clang++ -march=native -mtune=native -pthread -Ofast -std=c++17 PrimeCPP_mask.cpp -oprimes_mask
+RUN clang++ -march=native -mtune=native -pthread -Ofast -std=c++17 PrimeCPP_array.cpp -oprimes_array \
+    && clang++ -march=native -mtune=native -pthread -Ofast -std=c++17 PrimeCPP_mask.cpp -oprimes_mask
 
 FROM ubuntu:22.04
 
