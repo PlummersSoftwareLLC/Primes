@@ -25,7 +25,6 @@ const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
 class BitArray {
     uint8_t *array;
-    size_t arrSize;
     size_t logicalSize;
 
     static constexpr size_t arraySize(size_t size) 
@@ -41,9 +40,9 @@ class BitArray {
 public:
     explicit BitArray(size_t size) : logicalSize(size)
     {
-        arrSize = (size + 1) / 2; // Only store bits for odd numbers
+        auto arrSize = (size + 1) / 2; // Only store bits for odd numbers
         array = new uint8_t[arraySize(arrSize)];
-        fill_n(array, arrSize, 0x00);
+        std::memset(array, 0x00, arraySize(arrSize));
     }
 
     ~BitArray() { delete[] array; }
@@ -103,14 +102,20 @@ class prime_sieve
           while (factor <= q)
           {
               // Find the next prime number
-              for (NULL; factor <= q; factor += 2)
+              for (; factor <= q; factor += 2)
+              {
                   if (Bits.get(factor))
+                  {
                       break;
+                  }
+              }
 
               // Mark multiples of the prime number as not prime
               uint64_t start = factor * factor;
               for (uint64_t num = start; num <= Bits.size(); num += factor * 2)
+              {
                   Bits.set(num);
+              }
 
               factor += 2;            
           }
@@ -201,7 +206,7 @@ class prime_sieve
 
           // Following 2 lines added by rbergen to conform to drag race output format
           cout << "\n";
-          cout << "davepl_par;" << passes << ";" << duration << ";" << threads << ";algorithm=base,faithful=yes,bits=1\n";
+          cout << "davepl_array;" << passes << ";" << duration << ";" << threads << ";algorithm=base,faithful=yes,bits=1\n";
       }               
   
 };
