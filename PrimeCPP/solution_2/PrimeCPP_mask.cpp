@@ -24,99 +24,104 @@ using namespace std::chrono;
 const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
 class BitArray {
-    uint32_t *array;
-    size_t logicalSize;
+    uint64_t *_wordArray;
+    size_t _numberOfBits;
 
-    inline static size_t arraySize(size_t size) 
-    {
-        return (size >> 5) + ((size & 31) > 0);
+    inline static size_t arraySize(size_t size) {
+        return (size >> 6) + ((size & 63) > 0);  // Adjust for 64-bit words
     }
 
-    inline static size_t index(size_t n) 
-    {
-        return (n >> 5);
+    inline static size_t index(size_t n) {
+        return (n >> 6);  // Adjust for 64-bit words
     }
 
-    inline static uint32_t getSubindex(size_t n, uint32_t d) 
-    {
-        return d & uint32_t(0x01) << (n % 32);
+    inline static uint64_t getSubindex(size_t n, uint64_t d) {
+        return d & (uint64_t(0x01) << (n % 64));
     }
 
-    inline void setFalseSubindex(size_t n, uint32_t &d) 
-    {
-        d &= ~uint32_t(uint32_t(0x01) << (n % (8*sizeof(uint32_t))));
+    inline void setFalseSubindex(size_t n, uint64_t &d) {
+        d &= ~(uint64_t(0x01) << (n % 64));
     }
 
 public:
-    explicit BitArray(size_t size) : logicalSize(size) 
-    {
-        array = new uint32_t[arraySize(size)];
-        std::memset(array, 0xFF, arraySize(size) * sizeof(uint32_t));
+    explicit BitArray(size_t size) : _numberOfBits(size) {
+        _wordArray = new uint64_t[arraySize(size)];
+        std::memset(_wordArray, 0xFF, arraySize(size) * sizeof(uint64_t));
     }
 
-    ~BitArray() {delete [] array;}
+    ~BitArray() { delete[] _wordArray; }
 
-    bool get(size_t n) const 
-    {
-        return getSubindex(n, array[index(n)]);
+    inline size_t size() const {
+        return _numberOfBits;
     }
 
-    static constexpr uint32_t rol(uint32_t x, uint32_t n) 
-    {
-        return (x<<n) | (x>>(32-n));
+    bool get(size_t n) const {
+        return getSubindex(n, _wordArray[index(n)]);
     }
 
-    static constexpr uint32_t buildSkipMask(size_t skip, size_t offset) 
-    {
-        uint32_t mask = 0;
-        for (size_t i = offset; i < 32; i += skip) {
-            mask |= (1u << i);
+    static constexpr uint64_t rol(uint64_t x, uint64_t n) {
+        return (x << n) | (x >> (64 - n));
+    }
+
+    static constexpr uint64_t buildSkipMask(size_t skip, size_t offset) {
+        uint64_t mask = 0;
+        for (size_t i = offset; i < 64; i += skip) {
+            mask |= (1ULL << i);
         }
         return ~mask;
     }
 
     void setFlagsFalse(size_t n, size_t skip) 
     {
-        if (skip <= 12) {
-            // For small skips, use pre-built mask approach
-            size_t word_idx = index(n);
-            size_t bit_pos = n % 32;
-            size_t curr_n = n;
-            
-            while (curr_n < size()) 
-            {
-                // Build mask for current word starting at bit_pos
-                uint32_t mask = buildSkipMask(skip, bit_pos);
-                
-                // Apply mask to current word
-                array[word_idx] &= mask;
-                
-                // Move to next word
-                size_t bits_remaining = 32 - bit_pos;
-                curr_n += ((bits_remaining + skip - 1) / skip) * skip;
-                
-                if (curr_n >= size()) break;
-                
-                word_idx = index(curr_n);
-                bit_pos = curr_n % 32;
-            }
-        } 
-        else 
+        if (skip <= 32) 
         {
-            // Original implementation for larger skips
-            auto rolling_mask = ~uint32_t(1 << (n % 32));
-            auto roll_bits = skip % 32;
-            while (n < size()) {
-                array[index(n)] &= rolling_mask;
-                n += skip;
-                rolling_mask = rol(rolling_mask, roll_bits);
-            }
-        }
-    }
+            constexpr size_t BITS_PER_WORD = 64;
+            uint64_t* ptr = _wordArray;
 
-    inline size_t size() const 
-    {
-        return logicalSize;
+            // Initial calculations
+            size_t current_index = n / BITS_PER_WORD;
+            size_t bit_position = n % BITS_PER_WORD;
+
+            // Clear individual bits until reaching the next word boundary
+            while (bit_position < BITS_PER_WORD && n < size()) {
+                ptr[current_index] &= ~(1ULL << bit_position);  // Clear specific bit
+                n += skip;
+                current_index = n / BITS_PER_WORD;
+                bit_position = n % BITS_PER_WORD;
+            }
+
+            // Define a mask that clears every `skip`-th bit in a full 64-bit word
+            uint64_t mask = 0;
+            for (size_t i = 0; i < BITS_PER_WORD; i += skip)
+                mask |= (1ULL << i);
+            mask = ~mask;
+
+            // Apply the mask to full words between boundaries
+            while (n + BITS_PER_WORD <= size()) {
+                ptr[current_index] &= mask;
+                n += skip * BITS_PER_WORD / skip;  // Move by the number of bits cleared per word
+                current_index = n / BITS_PER_WORD;
+            }
+
+            // Handle any remaining bits individually
+            bit_position = n % BITS_PER_WORD;
+            while (n < size()) {
+                ptr[current_index] &= ~(1ULL << bit_position);  // Clear specific bit
+                n += skip;
+                current_index = n / BITS_PER_WORD;
+                bit_position = n % BITS_PER_WORD;
+            }
+            return;
+        }
+
+        // Original implementation for larger skips
+        auto rolling_mask = ~uint64_t(1ULL << (n % 64));
+        auto roll_bits = skip % 64;
+        while (n < size()) {
+            _wordArray[index(n)] &= rolling_mask;
+            n += skip;
+            rolling_mask = rol(rolling_mask, roll_bits);
+        }
     }
 };
 

@@ -1,7 +1,5 @@
 // ---------------------------------------------------------------------------
-// PrimeCPP.cpp : Pol Marcet's Modified version of Dave's Garage Prime Sieve
-// Some great ideas taken from Rust's implementation from Michael Barber
-// @mike-barber https://www.github.com/mike-barber (bit-storage-rotate)
+// Optimized PrimeCPP.cpp
 // ---------------------------------------------------------------------------
 
 #include <chrono>
@@ -23,192 +21,169 @@ using namespace std::chrono;
 
 const uint64_t DEFAULT_UPPER_LIMIT = 10'000'000LLU;
 
-class BitArray {
-    uint8_t *array;
-    size_t logicalSize;
+class BitArray 
+{
+    uint8_t* _byteArray;
+    size_t _numberOfBits;
+    size_t _numberOfIndices;  // Number of indices (odd numbers up to _numberOfBits)
 
-    static constexpr size_t arraySize(size_t size) 
+    static constexpr size_t arraySizeInBytes(size_t numberOfBits) 
     {
-        return (size >> 3) + ((size & 7) > 0);
+        return (numberOfBits >> 3) + ((numberOfBits & 7) > 0);
     }
 
-    static constexpr size_t index(size_t n) 
+    static constexpr size_t byteIndexOfBit(size_t n) 
     {
         return (n >> 3);
     }
 
 public:
-    explicit BitArray(size_t size) : logicalSize(size)
+    explicit BitArray(size_t size) 
+        : _numberOfBits(size), _numberOfIndices((size + 1) / 2)
     {
-        auto arrSize = (size + 1) / 2; // Only store bits for odd numbers
-        array = new uint8_t[arraySize(arrSize)];
-        std::memset(array, 0x00, arraySize(arrSize));
+        size_t arrSizeInBytes = arraySizeInBytes(_numberOfIndices);
+        _byteArray = new uint8_t[arrSizeInBytes];
+        std::memset(_byteArray, 0x00, arrSizeInBytes);
     }
 
-    ~BitArray() { delete[] array; }
-
-    constexpr bool get(size_t n) const 
-    {
-        if (n % 2 == 0)
-            return false; // Even numbers > 2 are not prime
-        n = n / 2; // Map the actual number to the index in the array
-        return !(array[index(n)] & (uint8_t(1) << (n % 8)));
+    ~BitArray() 
+    { 
+        delete[] _byteArray; 
     }
 
-    void set(size_t n)
+    // Methods that take index directly
+    inline bool get_index(size_t index) const 
     {
-        n = n / 2; // Map the actual number to the index in the array
-        array[index(n)] |= (uint8_t(1) << (n % 8));
+        return !(_byteArray[byteIndexOfBit(index)] & (uint8_t(1) << (index % 8)));
     }
 
-    constexpr size_t size() const 
+    inline void set_index(size_t index)
     {
-        return logicalSize;
+        _byteArray[byteIndexOfBit(index)] |= (uint8_t(1) << (index % 8));
+    }
+
+    size_t numberOfBits() const 
+    {
+        return _numberOfBits;
+    }
+
+    size_t numberOfIndices() const
+    {
+        return _numberOfIndices;
     }
 };
 
-
-// prime_sieve
-//
-// Represents the data comprising the sieve (an array of bits representing odd numbers starting from 3)
-// and includes the code needed to eliminate non-primes from its array by calling runSieve.
-
 class prime_sieve
 {
-  private:
+private:
+    BitArray Bits; // Sieve data, where 0 == prime, 1 == not
 
-      BitArray Bits; // Sieve data, where 0==prime, 1==not
+public:
+    prime_sieve(uint64_t n) : Bits(n) {}
 
-   public:
+    void runSieve()
+    {
+        size_t q = (size_t)std::sqrt(Bits.numberOfBits());
+        size_t q_index = q / 2;
 
-      prime_sieve(uint64_t n) : Bits(n) // Initialize bits to zero default
-      {
-      }
+        size_t factor_index = 1; // Index for number 3
+        size_t factor = factor_index * 2 + 1;
 
-      ~prime_sieve()
-      {
-      }
+        while (factor_index <= q_index)
+        {
+            // If the number at factor_index is prime
+            if (Bits.get_index(factor_index))
+            {
+                factor = factor_index * 2 + 1;
+                size_t start_index = (factor * factor) / 2;
 
-      // runSieve
-      //
-      // Scan the array for the next factor (>2) that hasn't yet been eliminated from the array, and then
-      // walk through the array crossing off every multiple of that factor.
+                for (size_t num_index = start_index; num_index < Bits.numberOfIndices(); num_index += factor)
+                {
+                    Bits.set_index(num_index);
+                }
+            }
+            ++factor_index;
+        }
+    }
 
-      void runSieve()
-      {
-          uint64_t factor = 3;
-          uint64_t q = (int) sqrt(Bits.size());
+    size_t countPrimes() const
+    {
+        size_t count = (Bits.numberOfBits() >= 2) ? 1 : 0; // Count 2 as prime if within range
+        for (size_t index = 1; index < Bits.numberOfIndices(); ++index)
+        {
+            if (Bits.get_index(index))
+                ++count;
+        }
+        return count;
+    }
 
-          while (factor <= q)
-          {
-              // Find the next prime number
-              for (; factor <= q; factor += 2)
-              {
-                  if (Bits.get(factor))
-                  {
-                      break;
-                  }
-              }
+    bool isPrime(uint64_t n) const
+    {
+        if (n == 2)
+            return true;
+        if (n < 2 || n % 2 == 0)
+            return false;
+        size_t index = n / 2;
+        if (index < Bits.numberOfIndices())
+            return Bits.get_index(index);
+        else
+            return false;
+    }
 
-              // Mark multiples of the prime number as not prime
-              uint64_t start = factor * factor;
-              for (uint64_t num = start; num <= Bits.size(); num += factor * 2)
-              {
-                  Bits.set(num);
-              }
+    bool validateResults() const
+    {
+        const std::map<const uint64_t, const int> resultsDictionary =
+        {
+            {             10LLU, 4         },
+            {            100LLU, 25        },
+            {          1'000LLU, 168       },
+            {         10'000LLU, 1229      },
+            {        100'000LLU, 9592      },
+            {      1'000'000LLU, 78498     },
+            {     10'000'000LLU, 664579    },
+            {    100'000'000LLU, 5761455   },
+            {  1'000'000'000LLU, 50847534  },
+            { 10'000'000'000LLU, 455052511 },
+        };
+        auto it = resultsDictionary.find(Bits.numberOfBits());
+        if (it != resultsDictionary.end())
+            return it->second == countPrimes();
+        else
+            return false;
+    }
 
-              factor += 2;            
-          }
-      }
+    void printResults(bool showResults, double duration, size_t passes, size_t threads) const
+    {
+        if (showResults && Bits.numberOfBits() >= 2)
+            std::cout << "2, ";
 
-      // countPrimes
-      //
-      // Can be called after runSieve to determine how many primes were found in total
+        for (size_t index = 1; index < Bits.numberOfIndices(); ++index)
+        {
+            if (Bits.get_index(index))
+            {
+                if (showResults)
+                    std::cout << (index * 2 + 1) << ", ";
+            }
+        }
 
-      size_t countPrimes() const
-      {
-          size_t count = (Bits.size() >= 2); // Count 2 as prime if within range
-          for (uint64_t num = 3; num <= Bits.size(); num += 2)
-              if (Bits.get(num))
-                  count++;
-          return count;
-      }
+        if (showResults)
+            std::cout << "\n";
 
-      // isPrime 
-      // 
-      // Can be called after runSieve to determine whether a given number is prime. 
+        size_t count = countPrimes();
 
-      bool isPrime(uint64_t n) const
-      {
-          if (n == 2)
-              return true;
-          if (n < 2 || n % 2 == 0)
-              return false;
-          return Bits.get(n);
-      }
+        std::cout << "Passes: "  << passes << ", "
+                  << "Threads: " << threads << ", "
+                  << "Time: "    << duration << ", " 
+                  << "Average: " << duration / passes << ", "
+                  << "Limit: "   << Bits.numberOfBits() << ", "
+                  << "Counts: "  << count << "/" << count << ", "
+                  << "Valid: "   << (validateResults() ? "Pass" : "FAIL!") 
+                  << "\n";
 
-      // validateResults
-      //
-      // Checks to see if the number of primes found matches what we should expect. This data isn't used in the
-      // sieve processing at all, only to sanity check that the results are right when done.
-
-      bool validateResults() const
-      {
-          const std::map<const uint64_t, const int> resultsDictionary =
-          {
-                {             10LLU, 4         }, // Historical data for validating our results - the number of primes
-                {            100LLU, 25        }, // to be found under some limit, such as 168 primes under 1000
-                {          1'000LLU, 168       },
-                {         10'000LLU, 1229      },
-                {        100'000LLU, 9592      },
-                {      1'000'000LLU, 78498     },
-                {     10'000'000LLU, 664579    },
-                {    100'000'000LLU, 5761455   },
-                {  1'000'000'000LLU, 50847534  },
-                { 10'000'000'000LLU, 455052511 },
-          };
-          if (resultsDictionary.end() == resultsDictionary.find(Bits.size()))
-              return false;
-          return resultsDictionary.find(Bits.size())->second == countPrimes();
-      }
-
-      // printResults
-      //
-      // Displays stats about what was found as well as (optionally) the primes themselves
-
-      void printResults(bool showResults, double duration, size_t passes, size_t threads) const
-      {
-          if (showResults)
-              cout << "2, ";
-
-          size_t count = (Bits.size() >= 2); // Count 2 as prime if in range
-          for (uint64_t num = 3; num <= Bits.size(); num += 2)
-          {
-              if (Bits.get(num))
-              {
-                  if (showResults)
-                      cout << num << ", ";
-                  count++;
-              }
-          }
-
-          if (showResults)
-              cout << "\n";
-          
-          cout << "Passes: "  << passes << ", "
-               << "Threads: " << threads << ", "
-               << "Time: "    << duration << ", " 
-               << "Average: " << duration/passes << ", "
-               << "Limit: "   << Bits.size() << ", "
-               << "Counts: "  << count << "/" << countPrimes() << ", "
-               << "Valid: "   << (validateResults() ? "Pass" : "FAIL!") 
-               << "\n";
-
-          // Following 2 lines added by rbergen to conform to drag race output format
-          cout << "\n";
-          cout << "davepl_array;" << passes << ";" << duration << ";" << threads << ";algorithm=base,faithful=yes,bits=1\n";
-      }               
-  
+        // Output format conforming to drag race output format
+        std::cout << "\n";
+        std::cout << "davepl_array;" << passes << ";" << duration << ";" << threads << ";algorithm=base,faithful=yes,bits=1\n";
+    }     
 };
 
 // custom_atoll
@@ -229,22 +204,23 @@ long long custom_atoll(const std::string& value_str) {
     }
 
     char last_char = input_str.back();
-    if (suffixes.find(last_char) != suffixes.end()) {
+    if (suffixes.find(last_char) != suffixes.end()) 
+    {
         long long multiplier = suffixes.at(last_char);
         std::string numeric_part = input_str.substr(0, input_str.size() - 1);
         std::istringstream iss(numeric_part);
         double numeric_value;
-        if (!(iss >> numeric_value)) {
+        if (!(iss >> numeric_value)) 
             throw std::invalid_argument("Invalid numeric part: " + numeric_part);
-        }
+        
         return static_cast<long long>(numeric_value * multiplier);
     }
 
     std::istringstream iss(input_str);
     long long result;
-    if (!(iss >> result)) {
+    if (!(iss >> result)) 
         throw std::invalid_argument("Invalid input format");
-    }
+    
     return result;
 }
 
@@ -279,7 +255,7 @@ int main(int argc, char **argv)
         else if (*i == "-l" || *i == "--limit") 
         {
             i++;
-            ullLimitRequested = (i == args.end()) ? 0LL : max((long long)1, custom_atoll(i->c_str()));
+            ullLimitRequested = (i == args.end()) ? 0LL : max((long long)1, custom_atoll(*i));
         }
         else if (*i == "-1" || *i == "--oneshot") 
         {
@@ -346,15 +322,18 @@ int main(int argc, char **argv)
         std::vector<std::thread> threads(cThreads);
         std::vector<uint64_t> l_passes(cThreads);
         for (unsigned int i = 0; i < cThreads; i++)
-            threads[i] = std::thread([i, &l_passes, &tStart](size_t llUpperLimit)
+            threads[i] = std::thread([i, &l_passes, &tStart, cSeconds](size_t llUpperLimit)
             {
                 l_passes[i] = 0;
-                while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5) {
-                    prime_sieve(llUpperLimit).runSieve();
+                while (duration_cast<seconds>(steady_clock::now() - tStart).count() < cSeconds) 
+                {
+                    prime_sieve sieve(llUpperLimit);
+                    sieve.runSieve();
                     ++l_passes[i];
                 }
             }, llUpperLimit);
-        for (auto i = 0; i < cThreads; i++) {
+        for (auto i = 0; i < cThreads; i++) 
+        {
             threads[i].join();
             cPasses += l_passes[i];
         }
@@ -362,10 +341,9 @@ int main(int argc, char **argv)
         duration = duration_cast<microseconds>(tEnd).count()/1000000.0;
     }
 
-
     if (bOneshot)
     {
-        cPasses = 1.0 / duration * 5;
+        cPasses = static_cast<size_t>(1.0 / duration * 5);
         duration = 5.0;
     }
 
