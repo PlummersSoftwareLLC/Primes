@@ -1,0 +1,74 @@
+Disp "Sieve size"
+Input N
+Disp "Time limit in sec"
+Input T
+Disp "Show results (0=No, non-zero=Yes)"
+Input S
+Disp
+0->P
+iPart((N-1)/2)->B
+iPart((-1+sqrt(1+2*B))/2)->Q
+setTime(0,0,0)
+End
+Lbl A
+    ClrList l1
+    B->dim(l1)
+    For(I,1,Q)
+        If l1(I)=0
+        Then
+            2*I*(I+1)->X
+            2*I+1->Y
+            For(K,X,B,Y)
+                1->l1(K)
+            End
+        End
+    End
+    P+1->P
+    getTime->l2
+    l2(1)*3600+l2(2)*60+l2(3)->D
+    If D<T 
+    Then
+        Goto A
+    End
+B+1-sum(l1)->K
+-1->X
+If N=10
+Then
+    4->X
+End
+If N=100
+Then
+    25->X
+End
+If N=1000
+Then
+    168->X
+End
+If N=10000
+Then
+    1229->X
+End
+If N=100000
+Then
+    9592->X
+End
+If N=1000000
+Then
+    78498->X
+End
+If S
+Then
+    K->dim(l2)
+    2->l2(1)
+    2->M
+    For(I,1,B)
+        If l1(I)=0
+        Then
+            2*I+1->l2(M)
+            M+1->M
+        End
+    End
+    Disp toString(l2)
+End
+Disp "Passes: "+toString(P)+", Time: "+toString(D)+", Avg: "+toString(D/P)+", Limit: "+toString(N)+", Count="+toString(K)+", Valid="+toString(X=K)
+Disp "rzuckerm-ti-basic;"+toString(P)+";"+toString(D)+";1;algorithm=base,faithful=no"
