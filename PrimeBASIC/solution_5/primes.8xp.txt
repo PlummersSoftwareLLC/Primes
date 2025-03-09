@@ -71,4 +71,4 @@ Then
     Disp toString(l2)
 End
 Disp "Passes: "+toString(P)+", Time: "+toString(D)+", Avg: "+toString(D/P)+", Limit: "+toString(N)+", Count="+toString(K)+", Valid="+toString(X=K)
-Disp "rzuckerm-ti-basic;"+toString(P)+";"+toString(D)+";1;algorithm=base,faithful=no"
+Disp "rzuckerm-ti-basic;"+toString(P)+";"+toString(D)+";1;algorithm=base,faithful=yes"
