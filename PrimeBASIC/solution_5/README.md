@@ -1,10 +1,9 @@
 # TI-84 Basic Solution by rzuckerm
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
-![Deviation](https://img.shields.io/badge/Deviation-sievesize-blue)
 
 This version is for the TI-84 graphing calculator. It uses a 
 [python-based simulator](https://github.com/rzuckerm/pitybas) that is a fork
@@ -37,7 +36,7 @@ You should only need to do this once. Run the docker image:
 
 `run.sh` has three optional command-line arguments:
 
-- 1: Sieve size (default=100000)
+- 1: Sieve size (default=1000000)
 - 2: Time limit in sec (default=5)
 - 3: Show results (default=0), where a non-zero value means do not show results
 
