@@ -1,7 +1,7 @@
 # TI-84 Basic Solution by rzuckerm
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
@@ -12,7 +12,9 @@ on a real TI-84 would most likely not handle a sieve size much larger than
 a few thousand due to memory constraints.
 
 Note that TI-Basic has no classes or even subroutines, so the code in just
-one big function. Also, there are no bitwise operations.
+one big function. Therefore, the reason why this solution is marked as
+unfaithful is that TI-Basic lacks any way to encapsulate the sieve and its
+related data in a data structure.
 
 In this implementation, each array element indicates whether the value is
 prime (0) or composite (1). The array only holds odd values from 3 to the
