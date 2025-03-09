@@ -7,7 +7,7 @@
 ![Deviation](https://img.shields.io/badge/Deviation-sievesize-blue)
 
 This version is for the TI-84 graphing calculator. It uses a 
-[python-based simulator](https://github.com/rzuckerm/pitypas) that is a fork
+[python-based simulator](https://github.com/rzuckerm/pitybas) that is a fork
 of [this repo](https://github.com/lunixbochs/pitybas). This program
 on a real TI-84 would most likely not handle a sieve size much larger than
 a few thousand due to memory constraints.
