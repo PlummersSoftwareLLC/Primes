@@ -1,0 +1,6 @@
+FROM silkeh/clang:20-bookworm
+
+RUN apt-get update && \
+    apt-get install -y libomp-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*

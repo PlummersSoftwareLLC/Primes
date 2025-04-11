@@ -1,0 +1,432 @@
+#!/bin/bash
+
+# Detect OS
+OS="$(uname -s)"
+ARCH="$(uname -m)"
+
+# Initialize compiler override variable
+COMPILER_OVERRIDE=""
+RUNALL=""
+COMPILE=""
+COMPILEFULL=""
+
+# Process arguments to check for compiler override
+ARGS_TO_KEEP=()
+for arg in "$@"; do
+    if [ "$arg" = "gcc" ]; then
+        COMPILER_OVERRIDE="gcc"
+    elif [ "$arg" = "clang" ]; then
+        COMPILER_OVERRIDE="clang"
+    elif [ "$arg" = "intel" ] || [ "$arg" = "icx" ] || [ "$arg" = "oneapi" ]; then
+        COMPILER_OVERRIDE="icx"
+    elif [ "$arg" = "asm" ]; then
+        COMPILER_ASM="asm"
+    elif [ "$arg" = "runall" ]; then
+        RUNALL="runall"
+    elif [ "$arg" = "compile" ]; then
+        COMPILE="compile"
+    elif [ "$arg" = "compileall" ]; then
+        COMPILE="compileall"
+    elif [ "$arg" = "compilefull" ]; then
+        COMPILE_FULL="compilefull"
+    else
+        ARGS_TO_KEEP+=("$arg")
+    fi
+done
+# Replace arguments with the filtered list
+set -- "${ARGS_TO_KEEP[@]}"
+
+STRIP="strip"
+PAREXT="_epar"
+
+base="sieve_extend" 
+
+DEFINE_FLAGS=""
+
+# Set default tokens
+verbose_level=10  
+verbose_next=0
+highest_number=0
+threads=0
+tune_level=1
+tune_next=0
+check_level=0
+check_next=0
+
+# Loop through all arguments.
+for arg in "$@"; do
+    # Split each argument on dash and check every token.
+
+    # Check if previous arg was --verbose and this is the value
+    if [ $verbose_next -eq 1 ]; then
+        if echo "$arg" | grep -q '^[0-9]\+$'; then
+            verbose_level="$arg"
+        fi
+        verbose_next=0
+        continue
+    fi
+    
+    # Check if previous arg was --tune and this is the value
+    if [ $tune_next -eq 1 ]; then
+        if echo "$arg" | grep -q '^[0-9]\+$'; then
+            tune_level="$arg"
+        fi
+        tune_next=0
+        continue
+    fi
+
+    # Check if previous arg was --check and this is the value
+    if [ $check_next -eq 1 ]; then
+        if echo "$arg" | grep -q '^[0-9]\+$'; then
+            check_level="$arg"
+        fi
+        check_next=0
+        continue
+    fi
+
+    # Check for standalone --verbose flag
+    if [ "$arg" = "--verbose" ] || [ "$arg" = "verbose" ]; then
+        verbose_next=1
+        continue
+    fi
+    
+    # Check for standalone --tune flag
+    if [ "$arg" = "--tune" ] || [ "$arg" = "tune" ]; then
+        tune_next=1
+        continue
+    fi
+
+    # Check for standalone --check flag
+    if [ "$arg" = "--check" ] || [ "$arg" = "check" ]; then
+        check_next=1
+        continue
+    fi
+
+    if [ "$arg" = "--threads" ] || [ "$arg" = "threads" ]; then
+        threads=1
+        continue
+    fi
+
+    # Check if the argument is a number and update the highest number
+    if echo "$arg" | grep -qE '^[0-9]+$'; then
+        if [ "$arg" -gt "$highest_number" ]; then
+            highest_number="$arg"
+        fi
+        continue
+    fi
+
+    for token in $(echo "$arg" | tr '-' ' '); do
+        case "$token" in
+            explain|--explain)
+                DEFINE_FLAGS="-DCOMPILE_EXPLAIN $DEFINE_FLAGS"
+                verbose_level=6
+                ;;
+            timers|--timers)
+                DEFINE_FLAGS="-DCOMPILE_TIMERS $DEFINE_FLAGS"
+                ;;
+            # Ignore other tokens.
+        esac
+    done
+done
+
+# If tune level is 3 or higher, add the COMPILE_BENCHMARK_STRIPERS flag
+if [ "$tune_level" -ge 3 ]; then
+    DEFINE_FLAGS="-DCOMPILE_BENCHMARK_STRIPERS $DEFINE_FLAGS"
+fi
+
+if [ "$tune_level" -ge 1 ]; then
+    DEFINE_FLAGS="-DCOMPILE_TUNE $DEFINE_FLAGS"
+fi
+
+# If check level is 4 or higher, add the COMPILE_CHECK_STRIPERS flag
+if [ "$check_level" -ge 4 ]; then
+    DEFINE_FLAGS="-DCOMPILE_CHECK_STRIPERS $DEFINE_FLAGS"
+fi
+
+if [ "$COMPILE_FULL" = "compilefull" ]; then
+    DEFINE_FLAGS="-DCOMPILE_FULL $DEFINE_FLAGS"
+fi
+
+# Add default verbose arguments if not explicitly specified
+run_args=""
+
+# Detect doing the full benchmark: 
+# - running in docker container
+# - and environment variable DOCKERFILE_TYPE is not set
+# Then: set verbose level to 0 and runall
+if [ -z "$DOCKERFILE_TYPE" ] && [ -f /.dockerenv ] && [ $verbose_level -eq 10 ]; then
+    $0 runall "$@" --verbose 0
+    exit 0
+fi
+
+if [ $verbose_level -eq 10 ]; then
+    run_args="$run_args --verbose 2"
+    verbose_level=2
+fi
+
+
+DEFINE_FLAGS="-DCOMPILE_VERBOSE_LEVEL=$verbose_level $DEFINE_FLAGS"
+
+# Check if the highest number fits in 32 bits
+if [ "$highest_number" -gt 999999999 ]; then
+    echo "Number exceeds 32-bit range. Using 64-bit counter."
+    DEFINE_FLAGS="$DEFINE_FLAGS -DUSE_64BIT_COUNTER"
+fi
+
+
+[ -d ./dev ] || mkdir ./dev
+[ -d ./dev/build ] || mkdir ./dev/build
+[ -d ./dev/docker ] || mkdir ./dev/docker
+[ -d ./dev/dockerfiles ] || mkdir ./dev/dockerfiles
+
+# Check for Docker argument first
+if [ $# -gt 0 ] && [ "$1" = "docker" ]; then
+    if [ $# -gt 1 ]; then
+        DOCKER_TYPE="$2"
+
+        # support running all Dockerfiles
+        if [ "$DOCKER_TYPE" = "all" ]; then
+            for DOCKERFILE in ./dev/docker/Dockerfile_*; do
+                if [[ "$DOCKERFILE" == *"Dockerfile_common"* ]]; then
+                    continue
+                fi
+                EXTENSION="${DOCKERFILE#*Dockerfile_}" # Extract the extension
+                # RUN the same command line again, but "all" is replaced with the actual extension
+                $0 docker "$EXTENSION" "${@:3}"
+            done
+            exit 0
+        fi
+
+        if [ "$DOCKER_TYPE" = "default" ]; then
+            DOCKERFILE="Dockerfile"
+            DOCKERFILE_FULL="Dockerfile"
+            DOCKER_TYPE="default"
+            shift 2
+        else
+            # support running a single Dockerfile
+            DOCKERFILE="dev/docker/Dockerfile_$DOCKER_TYPE"
+            DOCKERFILE_FULL="dev/dockerfiles/Dockerfile_$DOCKER_TYPE"
+            if [ -f "$DOCKERFILE" ]; then
+                # Build the Docker image
+                cat "$DOCKERFILE" > "$DOCKERFILE_FULL"
+                echo "" >> "$DOCKERFILE_FULL"
+                cat "./dev/docker/Dockerfile_common" >> "$DOCKERFILE_FULL"
+
+                # Check if third argument is "set" to copy Dockerfile to main directory
+                if [ $# -gt 2 ] && [ "$3" = "set" ]; then
+                    # Copy the Dockerfile to the main directory
+                    cp "$DOCKERFILE_FULL" "./Dockerfile"
+                    echo "Copied $DOCKERFILE_FULL to ./Dockerfile"
+                    exit 0
+                else
+                    # Original behavior: shift past the first two arguments only
+                    shift 2
+                fi
+            else
+                echo "Error: Dockerfile '$DOCKERFILE' not found."
+                exit 1
+            fi
+        fi
+    else
+        echo "Docker type not specified. Using default"
+        DOCKERFILE="Dockerfile"
+        DOCKERFILE_FULL="Dockerfile"
+        DOCKER_TYPE="default"
+        shift 1
+    fi
+
+    if [ $verbose_level -gt 1 ]; then
+        echo "Building and running Docker container for type: $DOCKER_TYPE"
+        echo "Running command: docker build --pull --file $DOCKERFILE_FULL --rm -t sieve_$DOCKER_TYPE ." 
+    fi
+
+    # Check if the Docker image exists before attempting to remove it
+    if [ "$(docker images -q "sieve_$DOCKER_TYPE" 2> /dev/null)" ]; then
+        docker rmi "sieve_$DOCKER_TYPE"
+    fi
+
+    docker build --pull --file "$DOCKERFILE_FULL" --rm -t "sieve_$DOCKER_TYPE" . 2> ./dev/build/docker_sieve_${DOCKER_TYPE}_build.log
+    if [ $? -ne 0 ]; then
+        echo "Error: Docker build failed."
+        exit 1
+    fi
+    
+    # Run the Docker container with any remaining arguments
+    if [ $verbose_level -gt 1 ]; then
+        echo "Running Docker container with arguments: $@"
+        echo "Run with: docker run --rm -e DOCKERFILE_TYPE=\"$DOCKER_TYPE\" \"sieve_$DOCKER_TYPE\" $@ $COMPILER_OVERRIDE" 
+        echo "Go in with: docker run --rm --name "sieve_$DOCKER_TYPE" -e DOCKERFILE_TYPE=$DOCKER_TYPE -it --entrypoint /bin/bash sieve_$DOCKER_TYPE"  
+    fi
+    docker run --rm --name "sieve_$DOCKER_TYPE" -e DOCKERFILE_TYPE="$DOCKER_TYPE" "sieve_$DOCKER_TYPE" $@ $COMPILER_OVERRIDE
+    exit $?
+fi
+
+if [ "$COMPILE" = "compileall" ]; then
+    for base in sieve_base sieve_extend sieve_classic64 sieve_classic8; do
+        $0 $base "compile" "$@"
+    done
+    exit 0
+fi
+
+# running the full benchmark set
+if [ "$RUNALL" = "runall" ]; then
+    for base in sieve_extend; do
+        bin/${base}_epar --threads all "$@"
+    done
+    for base in sieve_extend sieve_base sieve_classic64 sieve_classic8 ; do
+        bin/${base} "$@"
+    done
+    exit 0
+fi
+
+# If the first argument does not start with '-', assign it as the base and discard it
+if [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; then
+    if echo "$1" | grep -qE '^[0-9]+$'; then
+        # If it's a number, keep it as an argument
+        :
+    else
+        base="$1"
+        shift
+    fi
+fi
+
+# Set default compiler flags for all compilers
+COMPILER_ASM=""
+COMPILER=""
+CC="-mtune=native -fno-asynchronous-unwind-tables -fno-exceptions -Wall -Wno-unused-function -Wno-unused-variable -Wno-unknown-pragmas -std=c11 -fno-common -fdata-sections -ffunction-sections"  #  -Wno-unused-function -fno-common -fdata-sections -ffunction-sections 
+CC="-fno-ident  -ffreestanding $CC" # -nostdlib
+CCWARN=""
+# CCWARN="-Wall -Wno-unknown-pragmas" 
+
+# Determine which compiler to use based on override or auto-detection
+# Prefer icx (intel) if available on intel systems, otherwise fallback to clang on macOS or gcc on Linux
+if [ -n "$COMPILER_OVERRIDE" ]; then
+  COMPILER="$COMPILER_OVERRIDE"
+elif [ "$ARCH" = "arm64" ]; then
+    if command -v icx >/dev/null 2>&1; then
+        COMPILER="icx"
+    elif command -v clang >/dev/null 2>&1; then
+        COMPILER="clang"
+    else
+        COMPILER="gcc"
+    fi
+else 
+    if command -v icx >/dev/null 2>&1; then
+        COMPILER="icx"
+    elif command -v gcc-14 >/dev/null 2>&1; then
+        COMPILER="gcc-14"
+    else
+        COMPILER="gcc"
+    fi
+fi
+
+# Configure compiler settings based on selection
+if [ "$COMPILER" = "clang" ]; then
+    CCASM="clang $CC -S -g -Wno-psabi -masm=intel -mllvm --x86-asm-syntax=intel -fverbose-asm" 
+    CC="clang $CC -O3 -ffast-math -Wno-psabi -flto -fvisibility=hidden -ffunction-sections -fdata-sections -I/usr/lib/llvm-18/lib/clang/18/include/immintrin.h"  # -Wl,-dead_strip
+    # CC="clang -fsanitize=address " # use this for debugging
+
+    # Ensure Clang finds OpenMP headers and library
+    if [ "$OS" = "Darwin" ]; then
+        # macOS paths for Clang omp
+        PAR="-Xpreprocessor -fopenmp -lomp -I$(brew --prefix libomp)/include -L$(brew --prefix libomp)/lib"
+    else
+        # Linux paths for Clang omp - find the actual omp.h location
+        OMP_INCLUDE=$(find /usr/lib/llvm* -name "omp.h" -path "*/include*" | head -n 1)
+        if [ -n "$OMP_INCLUDE" ]; then
+            OMP_DIR=$(dirname "$OMP_INCLUDE")
+            # Find the library directory by looking for libomp.so
+            OMP_LIB_DIR=$(find /usr/lib/llvm* -name "libomp.so" | head -n 1)
+            if [ -n "$OMP_LIB_DIR" ]; then
+                OMP_LIB_PATH=$(dirname "$OMP_LIB_DIR")
+                PAR="-fopenmp -I$OMP_DIR -L$OMP_LIB_PATH -lomp"
+            else
+                # Try guessing the lib directory structure
+                OMP_LIB_PATH=$(echo "$OMP_DIR" | sed 's|/include.*$|/lib|')
+                PAR="-fopenmp -I$OMP_DIR -L$OMP_LIB_PATH -lomp"
+            fi
+        else
+            # Fallback to standard OpenMP paths when installed with libomp-dev
+            PAR="-fopenmp -lomp -I/usr/lib/gcc/x86_64-linux-gnu/14/include/ "
+        fi
+    fi
+elif [ "$COMPILER" = "icx" ] || [ "$COMPILER" = "intel" ] || [ "$COMPILER" = "oneapi" ]; then
+    CCASM="icx $CC -S -g -Wno-psabi -masm=intel -mllvm --x86-asm-syntax=intel -fverbose-asm" 
+    CC="icx $CC -O3 -ffast-math -Wno-psabi -flto -fvisibility=hidden -ffunction-sections -fdata-sections"  # -Wl,-dead_strip
+elif [ "$COMPILER" = "gcc" ] || [ "$COMPILER" = "gcc-14" ]; then
+    COMPILER_NAME="gcc"
+    if command -v gcc-14 >/dev/null 2>&1; then
+        COMPILER_NAME="gcc-14"
+    fi
+    if [ "$OS" = "Darwin" ]; then
+        CC=" -mcpu=apple-m1 $CC" # -march=armv8.5-a
+    else
+        CC="-march=native $CC" 
+    fi
+    echo "Using compiler: $COMPILER_NAME"
+    CCASM="$COMPILER_NAME $CC -S -g -Wno-psabi -masm=intel -fverbose-asm -Wextra -fopt-info-vec-all=vec_report.txt" # -mavx
+    CC="$COMPILER_NAME $CC -Ofast -Wno-psabi -fwhole-program -flto -I/usr/lib/gcc/x86_64-linux-gnu/14/include/ -flto=auto" # -static -Wvector-operation-performance " # for windows add this: -s -masm=intel -fverbose-asm -mavx -fopt-info-vec-all=vec_report.txt
+    # CC="-Wl,--gc-sections -s $CC"
+    PAR="-fopenmp"
+fi
+
+# create a bin directory if it does not exist
+[ -d ./bin ] || mkdir ./bin
+
+# Compose a program name using a default base name.
+PROGTOTAL="${base}"
+
+if [ $verbose_level -gt 1 ]; then
+    echo "Compiling ${PROGTOTAL} for ${OS} with ${COMPILER} "
+fi
+
+if [ $verbose_level -gt 2 ]; then
+  echo "Issuing command: $CC -o ./bin/$PROGTOTAL ./src/${base}.c $DEFINE_FLAGS"
+fi
+$CC -o ./bin/$PROGTOTAL ./src/${base}.c $DEFINE_FLAGS $CCWARN
+
+if [ "$COMPILER_ASM" = "asm" ]; then
+    if [ "$COMPILER" = "gcc" ]; then
+        $CCASM -o ./dev/build/$PROGTOTAL.s ./src/${base}.c $DEFINE_FLAGS
+    else #clang
+        echo "Running $CCASM -o ./dev/build/$PROGTOTAL.s ./src/${base}.c $DEFINE_FLAGS" 
+        $CCASM -o ./dev/build/$PROGTOTAL.s ./src/${base}.c $DEFINE_FLAGS
+    fi
+fi
+if [ $? -ne 0 ]; then
+    echo "Error: Compilation failed for sequential version."
+    exit 1
+fi
+$STRIP ./bin/$PROGTOTAL
+
+PROGTOTALPAR="${base}$PAREXT"
+if [ $verbose_level -gt 1 ]; then
+    echo "Compiling ${PROGTOTALPAR} for ${OS} with ${COMPILER} "
+fi
+
+if [ $verbose_level -gt 2 ]; then
+  echo "Issuing command: $CC  $PAR -o ./bin/$PROGTOTALPAR ./src/${base}.c $DEFINE_FLAGS"
+fi
+$CC $PAR -o ./bin/$PROGTOTALPAR ./src/${base}.c $DEFINE_FLAGS
+if [ $? -ne 0 ]; then
+    echo "Error: Compilation failed for parallel version."
+    exit 1
+fi
+$STRIP ./bin/$PROGTOTALPAR
+
+if [ "$COMPILE" = "compile" ]; then
+    exit 0; # stop here
+fi
+
+if [ $threads -gt 0 ]; then
+    if [ $verbose_level -gt 1 ]; then
+        echo "Running parallel version: ./bin/$PROGTOTALPAR $run_args $@"
+    fi
+    ./bin/$PROGTOTALPAR $run_args $@
+else
+    if [ $verbose_level -gt 2 ]; then
+        echo "Running ./bin/$PROGTOTAL $run_args $@"
+    fi
+    ./bin/$PROGTOTAL $run_args $@
+fi
+# done

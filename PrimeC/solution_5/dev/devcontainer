@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#if no first argument, then use ubuntu_gcc
+if [ -z "$1" ]
+then
+    DOCKER_TYPE="ubuntu_gcc"
+else
+    DOCKER_TYPE=$1
+fi
+
+CONTAINER_NAME="sieve_dev_$DOCKER_TYPE"
+docker build -f "./dev/docker/Dockerfile_$DOCKER_TYPE" --quiet --progress=auto -t $CONTAINER_NAME . 2> ./dev/build/docker_sieve_${DOCKER_TYPE}_build.log
+
+echo "Running docker $CONTAINER_NAME" 
+docker run --quiet -it --rm -v .:/home/sieve --name $CONTAINER_NAME --entrypoint /bin/bash --workdir /home/sieve $CONTAINER_NAME

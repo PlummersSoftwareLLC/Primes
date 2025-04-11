@@ -1,0 +1,7 @@
+FROM alpine:3.21.3
+
+# Install necessary dependencies
+RUN apk add --no-cache build-base clang openmp-dev bash jemalloc
+
+# Set Hoard as the default memory allocator using LD_PRELOAD
+ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
