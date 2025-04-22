@@ -1,9 +1,0 @@
-services:
-  lucee:
-    image: lucee/lucee:6.2.0.321-light-tomcat10.1-jre21-temurin-jammy
-    container_name: lucee_sieve_app
-    ports:
-      - "8888:8888"
-    volumes:
-      - ./:/var/www
-    restart: unless-stopped

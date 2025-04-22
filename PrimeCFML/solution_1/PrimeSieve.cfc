@@ -16,7 +16,6 @@ component {
 		this.n = n;
 		this.half_n = (n + 1) \ 2;
 
-
 			this.sieveSet = [];
 			for (i = 1; i <= this.half_n; i++) {
 				this.sieveSet[i] = 1;
@@ -42,8 +41,9 @@ component {
 	}
 
 	function runBitSet() {
-		var halfLimit = int(this.n \ 2);
+
 		var sieve = this.sieveSet;
+		var halfLimit = this.half_n;
 	
 		for (p = 3; p * p <= this.n; p += 2) {
 			var idx = int(p \ 2);
@@ -58,9 +58,9 @@ component {
 
 	function printResults(duration, passes) {
 		var count = this.count();
-		var label = "willeyuk";
-		var bits =  "1";
-		writeOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #this.n#, Count: #count#, Valid: #validateResults()#<br>");
-		writeOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#<br>");
+		var label = "willeyeuk";
+		var bits =  "64";
+		SystemOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #this.n#, Count: #count#, Valid: #validateResults()#", true);
+		SystemOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#", true);
 	}
 }

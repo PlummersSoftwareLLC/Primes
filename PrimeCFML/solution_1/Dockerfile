@@ -1,9 +1,10 @@
-# Use the official Lucee + Tomcat image
 FROM lucee/lucee:6.2.0.321-light-tomcat10.1-jre21-temurin-jammy
+#ONBUILD RUN rm -rf /var/www/*
+#WORKDIR /var/www
+COPY . /var/www
 
-# Optional: Copy your CFML code into the web root
-# Assuming your code is in a folder called "code"
-COPY ./ /var/www
+#RUN chmod +x /var/www/entrypoint.sh
 
-# Optional: Expose port (default Tomcat port)
 EXPOSE 8888
+
+#CMD ["bash", "/var/www/entrypoint.sh"]

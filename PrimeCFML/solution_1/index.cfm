@@ -6,10 +6,11 @@ passes = 0;
 
 // Timed run
 start = getTickCount();
-sieve = new PrimeSieve(limit);
+
 do {
-		sieve.runBitSet();
-		passes++;
+	sieve = new PrimeSieve(limit);
+	sieve.runBitSet();
+	passes++;
 
 } while (getTickCount() - start < runTime);
 
