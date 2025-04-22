@@ -5,7 +5,7 @@ Single-threaded solution writen for Lucee (CFML)
 ## Run instructions
 
 ```shell
-Run container and open localhost:8888
+Run container
 ```
 
 ## Output
