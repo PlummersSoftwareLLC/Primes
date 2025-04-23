@@ -62,5 +62,7 @@ component {
 		var bits =  "64";
 		SystemOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #this.n#, Count: #count#, Valid: #validateResults()#", true);
 		SystemOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#", true);
+		echo("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #this.n#, Count: #count#, Valid: #validateResults()#<br>");
+		echo("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#<br>");
 	}
 }
