@@ -24,7 +24,7 @@ component {
 		return this;
 	}
 
-	function count() {
+	function countPrimes() {
 		var cnt = 0;
 
 		this.sieveSet.each(

@@ -1,44 +1,40 @@
 <cfscript>
-
 limit = 1000000;
 runTime = 5000;
-passes = 0;
 
-// Timed run
-start = getTickCount();
+function benchmark(label, bits, runFn) {
+    var passes = 0;
+    var start = getTickCount();
 
-do {
-	sieve = new PrimeSieve(limit);
-	sieve.runBitSet();
-	passes++;
+    do {
+        runFn();
+        passes++;
+    } while (getTickCount() - start < runTime);
 
-} while (getTickCount() - start < runTime);
+    var delta = getTickCount() - start;
+    var duration = delta / 1000;
 
-delta = getTickCount() - start;
-if (isObject(sieve)) {
-	sieve.printResults(delta / 1000, passes);
+    // Assume last run result is stored globally in `sieve`
+    if (isDefined("sieve")) {
+        var count = sieve.countPrimes();
+
+        SystemOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #limit#, Count: #count#, Valid: true", true);
+        SystemOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#", true);
+        echo("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #limit#, Count: #count#, Valid: true<br>");
+        echo("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#<br>");
+    }
 }
 
-   passes = 0; // Instantiate Java class
-start = getTickCount();
+// Run CFML version with BitSet
+benchmark("willeyeuk-cfml", "64", function() {
+    sieve = new PrimeSieve(limit);
+    sieve.runBitSet();
+});
 
-do {
-	    sieve = createObject("java", "PrimeSieve").init(limit);
-
+// Run Java class version
+benchmark("willeyeuk-java", "1", function() {
+    sieve = createObject("java", "PrimeSieve").init(limit);
     sieve.runSieve();
-	passes++;
+});
 
-} while (getTickCount() - start < runTime);
-delta = getTickCount() - start;
-duration = delta / 1000;
-
-
-		 count = sieve.countPrimes();
-		 label = "willeyeuk";
-		 bits =  "1";
-		SystemOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #limit#, Count: #sieve.countPrimes()#, Valid: true", true);
-		SystemOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#", true);
-		echo("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #limit#, Count: #sieve.countPrimes()#, Valid: true<br>");
-		echo("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#<br>");
-
-</cfscript>true
+</cfscript>
