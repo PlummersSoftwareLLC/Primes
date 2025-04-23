@@ -17,5 +17,5 @@ Run container
 
 ```shell
 Passes: 20, Time: 5.042, Avg: 0.2521, Limit: 1000000, Count: 78498, Valid: true
-willeyuk;20;5.042;1;algorithm=base,faithful=yes,bits=1
+willeyuk;20;5.042;1;algorithm=base,faithful=yes,bits=64
 ```
