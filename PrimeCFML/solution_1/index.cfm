@@ -37,4 +37,9 @@ benchmark("willeyeuk-java", "1", function() {
     sieve.runSieve();
 });
 
+sleep(2000);
+
 </cfscript>
+<cfexecute  name="/usr/local/tomcat/bin/catalina.sh" 
+	timeout="0" 
+	arguments="stop" />
