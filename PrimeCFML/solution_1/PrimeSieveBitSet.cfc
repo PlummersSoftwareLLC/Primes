@@ -17,7 +17,7 @@ component {
         this.half_n = (n + 1) \ 2;
 
         this.sieveSet = createObject("java", "java.util.BitSet").init();
-        this.sieveSet.set(0, this.half_n);
+        this.sieveSet.set(1, this.half_n + 1);
 
         return this;
     }
