@@ -1,8 +1,0 @@
-services:
-  lucee:
-    build: .
-    ports:
-      - "8081:8888"
-    volumes:
-      - .:/var/www
-    container_name: lucee-server

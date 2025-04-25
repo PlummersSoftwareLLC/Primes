@@ -2,44 +2,38 @@
 limit = 1000000;
 runTime = 5000;
 
-function benchmark(label, bits, runFn) {
+function benchmark(runFn) {
+    var sieve = { instance = "" };
     var passes = 0;
     var start = getTickCount();
 
     do {
-        runFn();
+        runFn(sieve);
         passes++;
     } while (getTickCount() - start < runTime);
 
-    var delta = getTickCount() - start;
-    var duration = delta / 1000;
-
     // Assume last run result is stored globally in `sieve`
-    if (isDefined("sieve")) {
-        var count = sieve.countPrimes();
+    if (isObject(sieve.instance)) {
+        var delta = getTickCount() - start;
+        var duration = delta / 1000;
 
-        SystemOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #limit#, Count: #count#, Valid: true", true);
-        SystemOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#", true);
-        echo("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #limit#, Count: #count#, Valid: true<br>");
-        echo("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#<br>");
+        sieve.instance.printResults(duration, passes);
     }
 }
 
-// Run CFML version with BitSet
-benchmark("willeyeuk-cfml", "64", function() {
-    sieve = new PrimeSieve(limit);
-    sieve.runBitSet();
+// Run version with Numbers
+benchmark(function(sieve) {
+    sieve.instance = new PrimeSieveNumbers(limit);
+    sieve.instance.run();
 });
 
-// Run Java class version
-benchmark("willeyeuk-java", "1", function() {
-    sieve = createObject("java", "PrimeSieve").init(limit);
-    sieve.runSieve();
+writeOutput("<br>");
+
+// Run version with Java BitSet
+benchmark(function(sieve) {
+    sieve.instance = new PrimeSieveBitSet(limit);
+    sieve.instance.run();
 });
 
-sleep(2000);
 
 </cfscript>
-<cfexecute  name="/usr/local/tomcat/bin/catalina.sh" 
-	timeout="0" 
-	arguments="stop" />

@@ -1,0 +1,1 @@
+<cfoutput>pong</cfoutput>
