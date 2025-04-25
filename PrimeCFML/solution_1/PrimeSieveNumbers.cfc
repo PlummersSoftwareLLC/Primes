@@ -25,7 +25,7 @@ component {
     }
 
     function countPrimes() {
-        var cnt = 0;
+        var cnt = 1; // Count 2 as well
 
         for (i = 1; i <= arrayLen(this.sieveSet); i++) {
             if (this.sieveSet[i]) {
@@ -49,7 +49,7 @@ component {
             var idx = int(p \ 2);
             if (sieve[idx]) {
                 var start = int((p * p) \ 2);
-                for (i = start; i < halfLimit; i += p) {
+                for (i = start; i <= halfLimit; i += p) {
                     sieve[i] = 0;
                 }
             }
