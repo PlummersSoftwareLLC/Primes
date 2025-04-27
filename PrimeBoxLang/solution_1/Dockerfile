@@ -1,5 +1,4 @@
-FROM ortussolutions/boxlang:cli-snapshot
-
+FROM ortussolutions/boxlang:cli
 WORKDIR /app
 
 COPY . /app
