@@ -43,7 +43,7 @@ fn (mut sieve Sieve) run_sieve() {
 	}
 }
 
-fn (sieve Sieve) print_results(show_results bool, duration time.Duration, passes int) {
+fn (sieve Sieve) print_results(show_results bool, duration f64, passes int) {
 	if show_results {
 		print('2, ')
 	}
@@ -90,7 +90,7 @@ fn main() {
 	for {
 		mut sieve := Sieve{
 			sieve_size: 1_000_000
-			bits:       all_bits_true_array
+			bits:       all_bits_true_array.clone()
 		}
 		sieve.run_sieve()
 
