@@ -1,3 +1,4 @@
+pragma Suppress (All_Checks);
 with Ada.Containers.Ordered_Maps;
 with Ada.Text_IO;   use Ada.Text_IO;
 with Ada.Numerics.Long_Long_Elementary_Functions;
