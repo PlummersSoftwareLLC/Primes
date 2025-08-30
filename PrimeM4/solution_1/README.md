@@ -8,10 +8,10 @@
 ## Introduction
 
 M4 is a macro processing language developed by Brian Kernighan and Dennis Ritchie,
-the creators of the C programming language. Macros are used to the traditional
-functions that are in most languages. Macros also may be used as variables.
-M4 has no loops, but loops may implemented with recursive macros. M4 has some
-annoying limitations:
+the creators of the C programming language. Macros are used instead of
+the traditional functions that are in most languages. Macros also may be used as
+variables. M4 has no loops, but loops may implemented with recursive macros. M4
+has some annoying limitations:
 
 - Output can only be written to stdout.
 - Input can only be done by defining macros on the command line.
