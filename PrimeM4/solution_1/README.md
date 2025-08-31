@@ -56,30 +56,30 @@ laptop running Ubuntu 22.04 in WSL2:
 
 ```console
 $ ./run.sh -DLIMIT=10
-Passes: 1709, Time: 5.00, Avg: 341.800, Count: 4, Valid: true
-rzuckerm-m4;1709;5.00;algorithm=base;faithful=no
+Passes: 3303, Time: 5.00, Avg: 660.600, Count: 4, Valid: true
+rzuckerm-m4;3303;5.00;algorithm=base;faithful=no
 
 $ ./run.sh -DLIMIT=100
-Passes: 1584, Time: 5.00, Avg: 316.800, Count: 25, Valid: true
-rzuckerm-m4;1584;5.00;algorithm=base;faithful=no
+Passes: 2799, Time: 5.00, Avg: 559.800, Count: 25, Valid: true
+rzuckerm-m4;2799;5.00;algorithm=base;faithful=no
 
 $ ./run.sh -DLIMIT=1000
-Passes: 843, Time: 5.00, Avg: 168.600, Count: 168, Valid: true
-rzuckerm-m4;843;5.00;algorithm=base;faithful=no
+Passes: 1130, Time: 5.00, Avg: 226.000, Count: 168, Valid: true
+rzuckerm-m4;1130;5.00;algorithm=base;faithful=no
 
 $ ./run.sh -DLIMIT=10000
-Passes: 148, Time: 5.01, Avg: 29.540, Count: 1229, Valid: true
-rzuckerm-m4;148;5.01;algorithm=base;faithful=no
+Passes: 153, Time: 5.02, Avg: 30.478, Count: 1229, Valid: true
+rzuckerm-m4;153;5.02;algorithm=base;faithful=no
 
 $ ./run.sh -DLIMIT=100000
-Passes: 13, Time: 5.03, Avg: 2.584, Count: 9592, Valid: true
-rzuckerm-m4;13;5.03;algorithm=base;faithful=no
+Passes: 13, Time: 5.02, Avg: 2.589, Count: 9592, Valid: true
+rzuckerm-m4;13;5.02;algorithm=base;faithful=no
 
 $ ./run.sh -DLIMIT=1000000
-Passes: 2, Time: 9.34, Avg: 0.214, Count: 78498, Valid: true
-rzuckerm-m4;2;9.34;algorithm=base;faithful=no
+Passes: 2, Time: 9.61, Avg: 0.208, Count: 78498, Valid: true
+rzuckerm-m4;2;9.61;algorithm=base;faithful=no
 
 $ ./run.sh -DLIMIT=10000000
-Passes: 1, Time: 95.14, Avg: 0.010, Count: 664579, Valid: true
-rzuckerm-m4;1;95.14;algorithm=base;faithful=no
+Passes: 1, Time: 97.46, Avg: 0.010, Count: 664579, Valid: true
+rzuckerm-m4;1;97.46;algorithm=base;faithful=no
 ```

@@ -17,20 +17,13 @@ dnl "/proc/uptime" to get the current time in milliseconds. The format out this 
 dnl
 dnl   uptime in seconds as a decimal number (in csec), space, another number, newline
 dnl
-dnl M4 does not support floating point, so this needs to be converted to an integer. Also,
-dnl since M4 only supports 32-bit signed numbers, need to make sure that the value is
-dnl at most 9 digits. In other words, remove all but the last 9 digits.
+dnl M4 does not support floating point, so this needs to be converted to an integer,
+dnl and that integer will be truncated to 32 bits, regardless of how large the value
+dnl actually is.
 dnl
 dnl macro time():
-dnl   return current time in csec
-define(`time',
-`pushdef(`t', patsubst(esyscmd(`cat /proc/uptime'), `\.\([0-9][0-9]\).*\s*', `\1'))dnl
-ifelse(eval(len(t) > 9), 1, `substr(t, eval(len(t) - 9))', `t')`'popdef(`t')'dnl
-)
-
-dnl macro time_delta(t1, t2):
-dnl   return delta between two times in csec (t2 - t1), accounting for possible rollover
-define(`time_delta', `ifelse(eval($2 >= $1), 1, `eval($2 - $1)', `eval($2 + 1000000000 - $1)')')
+dnl   return current time in csec (truncated to 32 bits)
+define(`time', `patsubst(esyscmd(`cat /proc/uptime'), `\.\([0-9][0-9]\).*\s*', `\1')')
 dnl ---
 
 dnl --- Sieve macros ---
@@ -43,11 +36,11 @@ dnl   elapsed_time = 0
 dnl   do:
 dnl     prime_sieve()
 dnl     passes = passes + 1
-dnl     elapsed_time = time_delta(start_time, time())
+dnl     elapsed_time = time() - start_time
 dnl   while elapsed_time < TIME_CSEC
 define(`timed_prime_sieve', `define(`passes', 0)define(`elapsed_time', 0)_tps(time())')
 define(`_tps',
-`prime_sieve()define(`passes', incr(passes))define(`elapsed_time', time_delta($1, `time()'))dnl
+`prime_sieve()define(`passes', incr(passes))define(`elapsed_time', eval(time() - $1))dnl
 ifelse(eval(elapsed_time < TIME_CSEC), 1, `_tps($1)')'dnl
 )
 
