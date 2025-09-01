@@ -4,7 +4,7 @@
 
 Source code to [Dave's Garage videos](https://www.youtube.com/playlist?list=PLF2KJ6Gy3cZ5Er-1eF9fN1Hgw_xkoD9V1) benchmarking the same prime number sieve in a selection of 100+ programming languages, as featured in this project repository.
 
-The first video brought many visitors and contributors here initially, so we're linking to it here, for convenience:
+The first video brought many visitors and contributors here initially, so we're linking to it for convenience:
 
 [![Software Drag Racing | Dave's Garage](https://img.youtube.com/vi/D3h62rgewZM/0.jpg)](https://youtu.be/D3h62rgewZM)
 
