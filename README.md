@@ -18,7 +18,7 @@ He posted the source code of his implementations online (in the first incarnatio
 
 Since the second quarter of 2021, the Primes project has been owned and managed by its current maintainers, [Rutger van Bergen](https://github.com/rbergen) and [Tudor Marghidanu](https://github.com/marghidanu).
 
-We now have more than 100 distinct programming languages in the collection - and more if meaningful variations are considered -, tooling to execute automated builds and (daily) benchmarks, and [an in-browser app](https://plummerssoftwarellc.github.io/PrimeView/) to explore the results thereof results.
+We now have more than 100 distinct programming languages in the collection - and more if meaningful variations are considered -, tooling to execute automated builds and (daily) benchmarks, and [an in-browser app](https://plummerssoftwarellc.github.io/PrimeView/) to explore the results thereof.
 
 ## Community contributions
 
