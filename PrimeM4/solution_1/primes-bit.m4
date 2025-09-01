@@ -26,9 +26,54 @@ dnl   return current time in csec (truncated to 32 bits)
 define(`time', `patsubst(esyscmd(`cat /proc/uptime'), `\.\([0-9][0-9]\).*\s*', `\1')')
 dnl ---
 
-dnl --- Sieve macros ---
-dnl Sieve is the macro "s#", where "#" is a candidate prime number -- e.g., s2, s3, ...
+dnl --- Bit macros for sieve ---
+dnl Sieve is the macro "s#", where "#" is a word number -- e.g., s0, s1, ..., s<N-1>,
+dnl where: 0 = prime, 1 = composite.
+dnl
+dnl Each word contains 32 bits: 
+dnl
+dnl - s0:
+dnl   - 3: bit 0
+dnl   - 5: bit 1
+dnl   - ...
+dnl   - 65: bit 31
+dnl - s1:
+dnl   - 67: bit 0
+dnl   - 69: bit 1
+dnl   - ...
+dnl   - 129: bit 31
+dnl - ...
+dnl - s<N-1>:
+dnl   - 2*(N - 1) + 3: bit 0
+dnl   - 2*(N - 1) + 5: bit 1
+dnl   - ...
+dnl   - 2*(N - 1) + 65: bit 31
+dnl
+dnl where N is the number of words needed represent odd factors from 3 to LIMIT, inclusive
 
+dnl macro get_word(factor):
+dnl   return (factor - 3) // 64
+define(`word', `eval(($1 - 3) >> 6)')
+
+dnl macro mask(factor):
+dnl   return 1 << (((factor - 3) / 2) % 32)
+define(`mask', `eval(1 << ((($1 - 3) >> 1) & 31))')
+
+dnl macro get_bit(factor):
+dnl   return s<word(factor)> & mask(factor)
+dnl
+dnl Zero is returned if bit is clear, non-zero otherwise.
+define(`get_bit', `eval(defn(s`'word($1)) & mask($1))')
+
+dnl macro set_bit(factor):
+dnl   s<word(factor)> = s<word(factor)> | mask(factor)
+define(`set_bit', `define(s`'word($1), eval(defn(s`'word($1)) | mask($1)))')
+
+dnl Maximum word number
+define(`MAX_WORD_NUM', word(LIMIT))
+dnl ---
+
+dnl --- Sieve macros ---
 dnl macro timed_prime_sieve():
 dnl   passes = 0
 dnl   start_time = time()
@@ -48,39 +93,38 @@ dnl macro prime_sieve():
 dnl   clear_sieve()
 dnl   n = 3
 dnl   while n*n <= LIMIT:
-dnl     if s<n>:
+dnl     if get_bit(n) == 0:
 dnl       for k = n*n to LIMIT step 2*n:
-dnl         delete s<k>
+dnl         set_bit(k)
 dnl     n = n + 2
 define(`prime_sieve', `clear_sieve()_pso(3)')
-define(`_pso', `ifelse(eval($1 * $1 <= LIMIT), 1, `ifdef(`s$1', `_psi(eval($1 * $1), eval(2 * $1))')_pso(eval($1 + 2))')')
-define(`_psi', `ifelse(eval($1 <= LIMIT), 1, `undefine(`s$1')_psi(eval($1 + $2), $2)')')
+define(`_pso', `ifelse(eval($1 * $1 <= LIMIT), 1, `ifelse(get_bit($1), 0, `_psi(eval($1 * $1), eval(2 * $1))')_pso(eval($1 + 2))')')
+define(`_psi', `ifelse(eval($1 <= LIMIT), 1, `set_bit($1)_psi(eval($1 + $2), $2)')')
 
 dnl macro clear_sieve():
-dnl   s2 = 1
-dnl   for n = 3 to LIMIT step 2:
-dnl     s<n> = 1
-define(`clear_sieve', `define(`s2', 1)_cs(3)')
-define(`_cs', `ifelse(eval($1 <= LIMIT), 1, `define(`s$1', 1)_cs(eval($1 + 2))')')
+dnl   for n = 0 to MAX_WORD_NUM:
+dnl     s<n> = 0
+define(`clear_sieve', `_cs(0)')
+define(`_cs', `ifelse(eval($1 <= MAX_WORD_NUM), 1, `define(`s$1', 0)_cs(incr($1))')')
 
 dnl macro show_sieve():
 dnl   output "2"
 dnl   for n = 3 to LIMIT step 2
-dnl     if s<n>:
+dnl     if get_bit(n) == 0:
 dnl       output " <n>"
 dnl   output newline
 define(`show_sieve', `2`'_ss(3)')
-define(`_ss', `ifelse(eval($1 <= LIMIT), 1, `ifdef(`s$1', ` $1')_ss(eval($1 + 2))', `
+define(`_ss', `ifelse(eval($1 <= LIMIT), 1, `ifelse(get_bit($1), 0, ` $1')_ss(eval($1 + 2))', `
 ')')
 
 dnl macro count_sieve():
 dnl   count = 1
 dnl   for n = 3 to LIMIT step 2
-dnl     if s<n>:
+dnl     if get_bit(n) == 0:
 dnl       count = count + 1
 dnl   return count
 define(`count_sieve', `_ns(3, 1)')
-define(`_ns', `ifelse(eval($1 <= LIMIT), 1, `_ns(eval($1 + 2), ifdef(`s$1', incr($2), $2))', $2)')
+define(`_ns', `ifelse(eval($1 <= LIMIT), 1, `_ns(eval($1 + 2), ifelse(get_bit($1), 0, incr($2), $2))', $2)')
 
 dnl macro valid_sieve_count(count):
 dnl   return 1 if count is valid, 0 otherwise
@@ -123,7 +167,7 @@ format(
   count,
   ifelse(valid_sieve_count(count), 1, `true', `false'))
 format(
-  `rzuckerm-m4;%d;%d.%02d;algorithm=base;faithful=no',
+  `rzuckerm-m4-bit;%d;%d.%02d;algorithm=base;faithful=no,bits=1',
   passes,
   eval(elapsed_time / 100), eval(elapsed_time % 100))
 'dnl

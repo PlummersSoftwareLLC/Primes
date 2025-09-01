@@ -1,2 +1,5 @@
 #!/bin/bash
-m4 "$@" primes.m4
+for script in primes.m4 primes-bit.m4
+do
+    m4 "$@" $script
+done
