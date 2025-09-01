@@ -27,10 +27,9 @@ define(`time', `patsubst(esyscmd(`cat /proc/uptime'), `\.\([0-9][0-9]\).*\s*', `
 dnl ---
 
 dnl --- Bit macros for sieve ---
-dnl Sieve is the macro "s#", where "#" is a word number -- e.g., s0, s1, ..., s<N-1>,
-dnl where: 0 = prime, 1 = composite.
+dnl Sieve is the macro "s#", where "#" is a word number -- e.g., s0, s1, ..., s<N-1>.
 dnl
-dnl Each word contains 32 bits: 
+dnl Each word contains 32 bits, where 0 means prime, and 1 means composite: 
 dnl
 dnl - s0:
 dnl   - 3: bit 0
