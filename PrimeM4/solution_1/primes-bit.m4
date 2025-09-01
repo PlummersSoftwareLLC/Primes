@@ -43,10 +43,10 @@ dnl   - ...
 dnl   - 129: bit 31
 dnl - ...
 dnl - s<N-1>:
-dnl   - 2*(N - 1) + 3: bit 0
-dnl   - 2*(N - 1) + 5: bit 1
+dnl   - 64*(N - 1) + 3: bit 0
+dnl   - 64*(N - 1) + 5: bit 1
 dnl   - ...
-dnl   - 2*(N - 1) + 65: bit 31
+dnl   - 64*(N - 1) + 65: bit 31
 dnl
 dnl where N is the number of words needed represent odd factors from 3 to LIMIT, inclusive
 

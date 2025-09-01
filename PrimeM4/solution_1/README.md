@@ -46,12 +46,12 @@ There are two solutions:
      - 129: bit 31
    - ...
    - `s<N-1>`:
-     - 2*(N - 1) + 3: bit 0
-     - 2*(N - 1) + 5: bit 1
+     - 64*(`N` - 1) + 3: bit 0
+     - 64*(`N` - 1) + 5: bit 1
      - ...
-     - 2*(N - 1) + 65: bit 31
+     - 64*(`N` - 1) + 65: bit 31
 
-  where N is the number of words needed represent odd factors from 3 to the
+  where `N` is the number of words needed represent odd factors from 3 to the
   specified limit, inclusive.
 
   All odd composite factors are eliminated by setting a bit in a word
