@@ -4,10 +4,11 @@
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
-There are two primary solutions both of which follow the base algorithm and stay faithful:
+The solution follows the base algorithm and stays faithful with differing flag_storage approaches:
 * 1bit - This is my attempt to make it 1:1 with the video that Dave has on youtube.
-* 8bit - Here we use a boolean array which are 8bits per byte and we simplify the logic but cutting back some calcualtions. Fundementally 
+* 8bit - Here we use a boolean array which is 8bits per boolean and we simplify the logic by cutting back some calculations. 
 
 ## Run instructions
 ```
