@@ -1,5 +1,10 @@
 # Mojo solution by Evan Lucas-Currie
 
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
+
 There are two primary solutions both of which follow the base algorithm and stay faithful:
 * 1bit - This is my attempt to make it 1:1 with the video that Dave has on youtube.
 * 8bit - Here we use a boolean array which are 8bits per byte and we simplify the logic but cutting back some calcualtions. Fundementally 
