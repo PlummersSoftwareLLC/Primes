@@ -2,6 +2,7 @@
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
@@ -21,6 +22,8 @@ docker run --rm -it mojosieve
 ## Output
 
 ```
-ELucasCurrie_1Bit;2247;5.0;1;algorithm=base,faithful=yes,bit=1
-ELucasCurrie_8bit;12844;5.0;1;algorithm=base,faithful=yes,bit=8
+ELucasCurrie_1bit;2248;5.0;1;algorithm=base,faithful=no,bit=1
+ELucasCurrie_8bit;12876;5.0;1;algorithm=base,faithful=no,bit=8
+ELucasCurrie_1bit;6880;5.0;1;algorithm=base,faithful=yes,bit=1
+ELucasCurrie_8bit;9765;5.0;1;algorithm=base,faithful=yes,bit=8
 ```
