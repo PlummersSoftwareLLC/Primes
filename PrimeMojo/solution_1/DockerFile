@@ -1,0 +1,27 @@
+# Use a specific Ubuntu tag for reproducibility
+FROM ubuntu:24.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-venv \
+    python3-pip 
+
+WORKDIR /app
+
+COPY . .
+
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install modular \
+    --extra-index-url https://modular.gateway.scarf.sh/simple/
+
+# Ensure venv is on PATH
+ENV PATH="/opt/venv/bin:${PATH}"
+
+# Build the Mojo program defualt
+RUN mojo build primesieve.mojo -o primesieve
+
+
+ENTRYPOINT ["./primesieve"]
