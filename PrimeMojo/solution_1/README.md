@@ -15,6 +15,6 @@ docker run --rm -it mojosieve
 ## Output
 
 ```
-ELucasCurrie_1Bit;2247;5.0;1;algorithm:base;faithful=yes;bit=1
-ELucasCurrie_8bit;12844;5.0;1;algorithm:base;faithful=yes;bit=8
+ELucasCurrie_1Bit;2247;5.0;1;algorithm=base,faithful=yes,bit=1
+ELucasCurrie_8bit;12844;5.0;1;algorithm=base,faithful=yes,bit=8
 ```
