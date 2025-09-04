@@ -95,7 +95,7 @@ def run_and_time_sieve(validation_data: Dict[Int, Int] = {}) -> None:
         )
 
     var final_string = (
-        "ELucasCurrie_1Bit;{0};{1};1;algorithm:base;faithful=yes;bit=1"
+        "ELucasCurrie_1Bit;{0};{1};1;algorithm=base,faithful=yes,bit=1"
     ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
     print(final_string)
 
@@ -123,7 +123,7 @@ def run_and_time_sieve_8bit(validation_data: Dict[Int, Int] = {}) -> None:
         )
 
     var final_string = (
-        "ELucasCurrie_8bit;{0};{1};1;algorithm:base;faithful=yes;bit=8"
+        "ELucasCurrie_8bit;{0};{1};1;algorithm=base,faithful=yes,bit=8"
     ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
     print(final_string)
 
