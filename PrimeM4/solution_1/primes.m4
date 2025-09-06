@@ -112,7 +112,7 @@ dnl   <whole part>.<fractional part to 3 decimal places>
 dnl
 dnl macro show_results():
 dnl   output "<passes>, <elapsed time in sec>, <average in sec>, <count>, <validity>\n"
-dnl   output "<label>;<passes>;<elapsed time in sec>;1;algorithm=base;faithful=no\n"
+dnl   output "<label>;<passes>;<elapsed time in sec>;1,algorithm=base,faithful=no\n"
 define(`show_results',
 `define(`avg', eval(100000 * passes / elapsed_time))define(`count', count_sieve())dnl
 format(
@@ -123,7 +123,7 @@ format(
   count,
   ifelse(valid_sieve_count(count), 1, `true', `false'))
 format(
-  `rzuckerm-m4;%d;%d.%02d;1;algorithm=base;faithful=no',
+  `rzuckerm-m4;%d;%d.%02d;1,algorithm=base,faithful=no',
   passes,
   eval(elapsed_time / 100), eval(elapsed_time % 100))
 'dnl

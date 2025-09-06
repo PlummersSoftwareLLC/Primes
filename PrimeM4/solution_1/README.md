@@ -91,50 +91,50 @@ laptop running Ubuntu 22.04 in WSL2:
 ```console
 $ ./run.sh -DLIMIT=10
 Passes: 3265, Time: 5.00, Avg: 653.000, Count: 4, Valid: true
-rzuckerm-m4;3265;5.00;1;algorithm=base;faithful=no
+rzuckerm-m4;3265;5.00;1,algorithm=base,faithful=no
 
 Passes: 3231, Time: 5.00, Avg: 646.200, Count: 4, Valid: true
-rzuckerm-m4-bit;3231;5.00;1;algorithm=base;faithful=no,bits=1
+rzuckerm-m4-bit;3231;5.00;1,algorithm=base,faithful=no,bits=1
 
 $ ./run.sh -DLIMIT=100
 Passes: 2854, Time: 5.00, Avg: 570.800, Count: 25, Valid: true
-rzuckerm-m4;2854;5.00;1;algorithm=base;faithful=no
+rzuckerm-m4;2854;5.00;1,algorithm=base,faithful=no
 
 Passes: 2647, Time: 5.00, Avg: 529.400, Count: 25, Valid: true
-rzuckerm-m4-bit;2647;5.00;1;algorithm=base;faithful=no,bits=1
+rzuckerm-m4-bit;2647;5.00;1,algorithm=base,faithful=no,bits=1
 
 $ ./run.sh -DLIMIT=1000
 Passes: 1360, Time: 5.00, Avg: 272.000, Count: 168, Valid: true
-rzuckerm-m4;1360;5.00;1;algorithm=base;faithful=no
+rzuckerm-m4;1360;5.00;1,algorithm=base,faithful=no
 
 Passes: 934, Time: 5.00, Avg: 186.800, Count: 168, Valid: true
-rzuckerm-m4-bit;934;5.00;1;algorithm=base;faithful=no,bits=1
+rzuckerm-m4-bit;934;5.00;1,algorithm=base,faithful=no,bits=1
 
 $ ./run.sh -DLIMIT=10000
 Passes: 224, Time: 5.00, Avg: 44.800, Count: 1229, Valid: true
-rzuckerm-m4;224;5.00;1;algorithm=base;faithful=no
+rzuckerm-m4;224;5.00;1,algorithm=base,faithful=no
 
 Passes: 105, Time: 5.01, Avg: 20.958, Count: 1229, Valid: true
-rzuckerm-m4-bit;105;5.01;1;algorithm=base;faithful=no,bits=1
+rzuckerm-m4-bit;105;5.01;1,algorithm=base,faithful=no,bits=1
 
 $ ./run.sh -DLIMIT=100000
 Passes: 21, Time: 5.04, Avg: 4.166, Count: 9592, Valid: true
-rzuckerm-m4;21;5.04;1;algorithm=base;faithful=no
+rzuckerm-m4;21;5.04;1,algorithm=base,faithful=no
 
 Passes: 9, Time: 5.01, Avg: 1.796, Count: 9592, Valid: true
-rzuckerm-m4-bit;9;5.01;1;algorithm=base;faithful=no,bits=1
+rzuckerm-m4-bit;9;5.01;1,algorithm=base,faithful=no,bits=1
 
 $ ./run.sh -DLIMIT=1000000
 Passes: 2, Time: 6.11, Avg: 0.327, Count: 78498, Valid: true
-rzuckerm-m4;2;6.11;1;algorithm=base;faithful=no
+rzuckerm-m4;2;6.11;1,algorithm=base,faithful=no
 
 Passes: 1, Time: 6.51, Avg: 0.153, Count: 78498, Valid: true
-rzuckerm-m4-bit;1;6.51;1;algorithm=base;faithful=no,bits=1
+rzuckerm-m4-bit;1;6.51;1,algorithm=base,faithful=no,bits=1
 
 $ ./run.sh -DLIMIT=10000000
 Passes: 1, Time: 56.94, Avg: 0.017, Count: 664579, Valid: true
-rzuckerm-m4;1;56.94;1;algorithm=base;faithful=no
+rzuckerm-m4;1;56.94;1,algorithm=base,faithful=no
 
 Passes: 1, Time: 84.71, Avg: 0.011, Count: 664579, Valid: true
-rzuckerm-m4-bit;1;84.71;1;algorithm=base;faithful=no,bits=1
+rzuckerm-m4-bit;1;84.71;1,algorithm=base,faithful=no,bits=1
 ```
