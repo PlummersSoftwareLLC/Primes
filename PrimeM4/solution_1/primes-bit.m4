@@ -166,7 +166,7 @@ format(
   count,
   ifelse(valid_sieve_count(count), 1, `true', `false'))
 format(
-  `rzuckerm-m4-bit;%d;%d.%02d;1,algorithm=base,faithful=no,bits=1',
+  `rzuckerm-m4-bit;%d;%d.%02d;1;algorithm=base,faithful=no,bits=1',
   passes,
   eval(elapsed_time / 100), eval(elapsed_time % 100))
 'dnl
