@@ -14,7 +14,7 @@ The solution follows the base algorithm and stays faithful with differing flag_s
 
 ## Run instructions
 ```
-docker build -f DockerFile -t mojosieve .
+docker build -f Dockerfile -t mojosieve .
 docker run --rm -it mojosieve
 ```
 
@@ -23,8 +23,8 @@ docker run --rm -it mojosieve
 ## Output
 
 ```
-ELucasCurrie_1bit;2248;5.0;1;algorithm=base,faithful=no,bit=1
-ELucasCurrie_8bit;12876;5.0;1;algorithm=base,faithful=no,bit=8
-ELucasCurrie_1bit;6880;5.0;1;algorithm=base,faithful=yes,bit=1
-ELucasCurrie_8bit;9765;5.0;1;algorithm=base,faithful=yes,bit=8
+ELucasCurrie_1bit;2248;5.0;1;algorithm=base,faithful=no,bits=1
+ELucasCurrie_8bit;12876;5.0;1;algorithm=base,faithful=no,bits=8
+ELucasCurrie_1bit;6880;5.0;1;algorithm=base,faithful=yes,bits=1
+ELucasCurrie_8bit;9765;5.0;1;algorithm=base,faithful=yes,bits=8
 ```
