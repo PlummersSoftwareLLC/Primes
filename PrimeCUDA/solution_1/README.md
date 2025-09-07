@@ -12,10 +12,11 @@ The solution heavily depends on CUDASieve, a [GitHub-hosted project](https://git
 
 ## Notes
 
+- This solution will only build (and hence run) on ADM64 machines. The reason is that the source code of the CUDASieve dependency includes some embedded Assembly for that architecture.
 - Getting the solution to run on a system with a suitable NVIDIA GPU does take some work, as detailed in the [Run instructions](#run-instructions) below.
 The reason is that the way to setup the primary dependencies (CUDASieve and CUDA Toolkit) varies across platforms and GPUs. It includes some case-specific manual changes to the Makefiles of CUDASieve and this solution.
 - To build this solution and its prerequisites, a basic build toolchain needs be in place. On Ubuntu systems, it can be installed using the following command:
-  
+
   ```text
   sudo apt install build-essential
   ```
