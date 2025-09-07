@@ -27,12 +27,12 @@ struct bitArray:
     fn test(self, index: Int) -> Bool:
         byte_index = index >> 3
         bit_index = index & 7
-        return (self.array[byte_index] & (1 << bit_index)) != 0
+        return (self.array.unsafe_get(byte_index) & (1 << bit_index)) != 0
 
     fn clear(mut self: Self, index: Int):
         byte_index = index >> 3
         bit_index = index & 7
-        self.array[byte_index] &= ~(1 << bit_index)
+        self.array.unsafe_get(byte_index) &= ~(1 << bit_index)
 
     fn countBits(self) -> Int:
         count = 0
@@ -95,12 +95,12 @@ struct prime_sieve_1bit(Runnable):
 struct prime_sieve_8bit(Runnable):
     var limit: Int
     var sieve_size: Int
-    var array: List[Bool]
+    var array: List[UInt8]
 
     fn __init__(out self: Self, sieve_size: Int):
         self.limit = sieve_size >> 1
         self.sieve_size = sieve_size
-        self.array = List[Bool](length=self.limit, fill=True)
+        self.array = List[UInt8](length=self.limit, fill=0xFF)
 
     fn __call__(self: Self, sieve_size: Int) -> Self:
         return Self(sieve_size)
@@ -108,7 +108,7 @@ struct prime_sieve_8bit(Runnable):
     fn countPrimes(self) -> Int:
         count = 1
         for i in range(1, self.limit):
-            if self.array[i]:
+            if self.array[i] != 0:
                 count += 1
         return count
 
@@ -118,7 +118,7 @@ struct prime_sieve_8bit(Runnable):
         var factor = 3
         while factor <= q:
             divisor = factor >> 1
-            while not (self.array[divisor] or divisor >= q):
+            while not (self.array.unsafe_get(divisor) != 0 or divisor >= q):
                 divisor += 1
             factor = (divisor << 1) + 1
 
@@ -127,7 +127,7 @@ struct prime_sieve_8bit(Runnable):
             start = (factor * factor) >> 1
 
             while start < self.limit:
-                self.array[start] = False
+                self.array.unsafe_get(start) = 0
                 start += factor
             factor += 2
 
@@ -191,11 +191,11 @@ struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
 
 struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
     var limit: Int
-    var array: InlineArray[Bool, (sieve_size >> 1)]
+    var array: InlineArray[UInt8, (sieve_size >> 1)]
 
     fn __init__(out self: Self, printable_support: Int):
         self.limit = sieve_size >> 1
-        self.array = InlineArray[Bool, (sieve_size >> 1)](fill=True)
+        self.array = InlineArray[UInt8, (sieve_size >> 1)](fill=0xFF)
 
     fn __call__(self: Self, sieve_size: Int) -> Self:
         return Self(sieve_size)
@@ -213,7 +213,7 @@ struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
         var factor = 3
         while factor <= q:
             divisor = factor >> 1
-            while not (self.array[divisor] or divisor >= q):
+            while not (self.array.unsafe_get(divisor) != 0 or divisor >= q):
                 divisor += 1
             factor = (divisor << 1) + 1
 
@@ -222,7 +222,7 @@ struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
             start = (factor * factor) >> 1
 
             while start < self.limit:
-                self.array[start] = False
+                self.array.unsafe_get(start) = 0
                 start += factor
             factor += 2
 
