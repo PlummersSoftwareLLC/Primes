@@ -1,4 +1,4 @@
-# Dart solution by Eagerestwolf and mmcdon20
+# Dart solution by Eagerestwolf, mmcdon20 and Tarish
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
@@ -58,33 +58,33 @@ platform, but Dart will generate a standard ELF binary on *nix systems.
 
 ### Machine Specifications
 
-* **Model**: MSI GF63 Thin 10SCXR
-* **CPU**: Intel Core i5-10300H
-* **Memory**: 16GB DDR4
-* **GPU**: Nvidia GeForce GTX 1650 with Max-Q Design
-* **OS**: Windows 10 (Build 19042)
+* **Model**: HP Omen 16-n0123AX
+* **CPU**: AMD Ryzen 7 6800H
+* **Memory**: 40GB DDR5
+* **GPU**: Nvidia GeForce RTX 3070 Ti Laptop GPU
+* **OS**: Ubuntu 25.04
 
 ### Docker Results (runs all implementations)
 
 ```
-eagerestwolf&mmcdon20_8bit;4661;5.000105;1;algorithm=base,faithful=yes,bits=8
-eagerestwolf&mmcdon20_8bit_par;10710;5.001459;12;algorithm=base,faithful=yes,bits=8
-eagerestwolf&mmcdon20_1bit;4234;5.000628;1;algorithm=base,faithful=yes,bits=1
-eagerestwolf&mmcdon20_1bit_par;24644;5.001196;12;algorithm=base,faithful=yes,bits=1
+eagerestwolf&mmcdon20&tarish_8bit;8873;5.000498;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20&tarish_8bit_par;25710;5.003105;16;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20&tarish_1bit;8488;5.000219;1;algorithm=base,faithful=yes,bits=1
+eagerestwolf&mmcdon20&tarish_1bit_par;55230;5.00109;16;algorithm=base,faithful=yes,bits=1
 ```
 
 ### Dart SDK (running prime_8_bit.dart)
 
 ```
-Passes: 5213, Time: 5.000862, Avg: 0.0009593059658545943, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 7751, Time: 5.000092, Avg: 0.0006450899238807896, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf&mmcdon20_8bit;5213;5.000862;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20&tarish_8bit;7751;5.000092;1;algorithm=base,faithful=yes,bits=8
 ```
 
 ### Dart Compiled (running prime_8_bit.exe)
 
 ```
-Passes: 5588, Time: 5.000777, Avg: 0.0008949135647816751, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
+Passes: 9152, Time: 5.000228, Avg: 0.0005463535839160839, Limit: 1000000, Count1: 78498, Count2: 78498, Valid: true
 
-eagerestwolf&mmcdon20_8bit;5588;5.000777;1;algorithm=base,faithful=yes,bits=8
+eagerestwolf&mmcdon20&tarish_8bit;9152;5.000228;1;algorithm=base,faithful=yes,bits=8
 ```

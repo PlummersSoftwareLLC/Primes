@@ -33,6 +33,6 @@ Future<void> main() async {
     time = max(time, message.time);
   }
 
-  stdout.writeln(
-      'eagerestwolf&mmcdon20_1bit_par;$passes;$time;$processors;algorithm=base,faithful=yes,bits=1');
+  stderr.writeln(
+      'eagerestwolf&mmcdon20&tarish_1bit_par;$passes;$time;$processors;algorithm=base,faithful=yes,bits=1');
 }

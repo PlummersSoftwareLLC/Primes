@@ -1,9 +1,0 @@
-name: prime_dart
-description: A Dart implementation of David Plummer's PrimeSieve application.
-publish_to: none
-
-environment:
-  sdk: ^3.9.0
-
-dev_dependencies:
-  lints: ^6.0.0

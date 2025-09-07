@@ -10,10 +10,10 @@ import 'dart:math';
 // This is a core dart library.
 import 'dart:typed_data';
 
-/// This class defines all the funcationality of the Prime Sieve itself, just as
+/// This class defines all the functionality of the Prime Sieve itself, just as
 /// Dave's original implementation does.
 ///
-/// Some things to note, before proceeeding. First, you may notice there are
+/// Some things to note, before proceeding. First, you may notice there are
 /// multiple types of comments in this file. Double slash comments "//" denote
 /// single line comments like most languages. Triple slash comments "///" denote
 /// documentation comments, these comments would generate documentation pages if
@@ -62,17 +62,17 @@ class PrimeSieve {
   /// Couple of Dart notes here. First, a map allows us store a list of linked
   /// values. In other words, if we request the value 10 from this map, it will
   /// always correlate to the value 4. Second, by declaring the value as static
-  /// const we ensure that only one instance of the dictionaly is ever created.
+  /// const we ensure that only one instance of the dictionary is ever created.
   static const Map<int, int> _resultsDictionary = {
-    10: 4,
-    100: 25,
-    1000: 168,
-    10000: 1229,
+    10: 4, 
+    100: 25, 
+    1000: 168, 
+    10000: 1229, 
     100000: 9592,
-    1000000: 78498,
-    10000000: 664579,
+    1000000: 78498, 
+    10000000: 664579, 
     100000000: 5761455,
-    1000000000: 50847534,
+    1000000000: 50847534, 
     10000000000: 455052511
   };
 
@@ -86,27 +86,103 @@ class PrimeSieve {
   /// will be initialized to half the [sieveSize] and filled with 0.
   PrimeSieve(this._sieveSize) : _bits = Uint8List((_sieveSize + 1) >> 1);
 
-  /// This method runs the sieve. For more intormation about the algorithm,
+  /// This method runs the sieve. For more information about the algorithm,
   /// please check back to Dave's original video.
   void runSieve() {
-    var factor = 3;
     final q = sqrt(_sieveSize).toInt();
+    final bits = _bits;
+    final sieveSize = _sieveSize;
+    
+    // Direct iteration through all odd numbers up to sqrt(n)
+    // This eliminates the overhead of finding the next prime factor
+    for (var factor = 3; factor <= q; factor += 2) {
+      // Skip composite numbers efficiently
+      if (bits[factor >> 1] == 1) continue;
+      
+      // Pre-calculate values for maximum performance
+      final factor2 = factor << 1; // factor * 2
+      final start = factor * factor;
+      final end = sieveSize;
+      
+      // Maximum unrolling for marking multiples
+      var num = start;
 
-    while (factor <= q) {
-      for (var num = factor; num < _sieveSize; num += 2) {
-        if (_bits[num >> 1] == 0) {
-          factor = num;
-          break;
-        }
+      // 32x unrolling for maximum CPU pipeline utilization
+      while (num + factor2 * 32 < end) {
+        bits[num >> 1] = 1; num += factor2; // iter 1
+        bits[num >> 1] = 1; num += factor2; // iter 2
+        bits[num >> 1] = 1; num += factor2; // iter 3
+        bits[num >> 1] = 1; num += factor2; // iter 4
+        bits[num >> 1] = 1; num += factor2; // iter 5
+        bits[num >> 1] = 1; num += factor2; // iter 6
+        bits[num >> 1] = 1; num += factor2; // iter 7
+        bits[num >> 1] = 1; num += factor2; // iter 8
+        bits[num >> 1] = 1; num += factor2; // iter 9
+        bits[num >> 1] = 1; num += factor2; // iter 10
+        bits[num >> 1] = 1; num += factor2; // iter 11
+        bits[num >> 1] = 1; num += factor2; // iter 12
+        bits[num >> 1] = 1; num += factor2; // iter 13
+        bits[num >> 1] = 1; num += factor2; // iter 14
+        bits[num >> 1] = 1; num += factor2; // iter 15
+        bits[num >> 1] = 1; num += factor2; // iter 16
+        bits[num >> 1] = 1; num += factor2; // iter 17
+        bits[num >> 1] = 1; num += factor2; // iter 18
+        bits[num >> 1] = 1; num += factor2; // iter 19
+        bits[num >> 1] = 1; num += factor2; // iter 20
+        bits[num >> 1] = 1; num += factor2; // iter 21
+        bits[num >> 1] = 1; num += factor2; // iter 22
+        bits[num >> 1] = 1; num += factor2; // iter 23
+        bits[num >> 1] = 1; num += factor2; // iter 24
+        bits[num >> 1] = 1; num += factor2; // iter 25
+        bits[num >> 1] = 1; num += factor2; // iter 26
+        bits[num >> 1] = 1; num += factor2; // iter 27
+        bits[num >> 1] = 1; num += factor2; // iter 28
+        bits[num >> 1] = 1; num += factor2; // iter 29
+        bits[num >> 1] = 1; num += factor2; // iter 30
+        bits[num >> 1] = 1; num += factor2; // iter 31
+        bits[num >> 1] = 1; num += factor2; // iter 32
       }
 
-      for (var num = factor * factor; num < _sieveSize; num += factor * 2) {
-        _bits[num >> 1] = 1;
+      // 16x unrolling for maximum CPU pipeline utilization
+      while (num + factor2 * 16 < end) {
+        bits[num >> 1] = 1; num += factor2; // iter 1
+        bits[num >> 1] = 1; num += factor2; // iter 2
+        bits[num >> 1] = 1; num += factor2; // iter 3
+        bits[num >> 1] = 1; num += factor2; // iter 4
+        bits[num >> 1] = 1; num += factor2; // iter 5
+        bits[num >> 1] = 1; num += factor2; // iter 6
+        bits[num >> 1] = 1; num += factor2; // iter 7
+        bits[num >> 1] = 1; num += factor2; // iter 8
+        bits[num >> 1] = 1; num += factor2; // iter 9
+        bits[num >> 1] = 1; num += factor2; // iter 10
+        bits[num >> 1] = 1; num += factor2; // iter 11
+        bits[num >> 1] = 1; num += factor2; // iter 12
+        bits[num >> 1] = 1; num += factor2; // iter 13
+        bits[num >> 1] = 1; num += factor2; // iter 14
+        bits[num >> 1] = 1; num += factor2; // iter 15
+        bits[num >> 1] = 1; num += factor2; // iter 16
       }
-
-      factor += 2;
+      
+      // 8x unrolling for remaining multiples
+      while (num + factor2 * 8 < end) {
+        bits[num >> 1] = 1; num += factor2; // iter 1
+        bits[num >> 1] = 1; num += factor2; // iter 2
+        bits[num >> 1] = 1; num += factor2; // iter 3
+        bits[num >> 1] = 1; num += factor2; // iter 4 
+        bits[num >> 1] = 1; num += factor2; // iter 5
+        bits[num >> 1] = 1; num += factor2; // iter 6
+        bits[num >> 1] = 1; num += factor2; // iter 7
+        bits[num >> 1] = 1; num += factor2; // iter 8
+      }
+      
+      // Handle final remaining multiples
+      while (num < end) {
+        bits[num >> 1] = 1;
+        num += factor2;
+      }
     }
   }
+
 
   /// This method prints the results to the console. If [showResults] is true,
   /// the sieve will print all the primes it locates to the console. It will
@@ -117,7 +193,7 @@ class PrimeSieve {
       stderr.write('2, ');
     }
 
-    // Dart doesn't support interpreting booleans as intergers, unlike many
+    // Dart doesn't support interpreting booleans as integers, unlike many
     // other programming languages. Therefore, this line checks if the sieveSize
     // is greater than or equal to 2. If it is, then the initial count is set to
     // 1 because 2 is prime. Otherwise, the count is set to 0 because there are
@@ -126,18 +202,16 @@ class PrimeSieve {
 
     for (var num = 3; num <= _sieveSize; num += 2) {
       if (_bits[num >> 1] == 0) {
-        if (showResults) {
-          // In Dart, using the dollar sign "$" in the stdout.write method will
-          // print a variable of the same name to the console.
-          stderr.write('$num, ');
-        }
+        // In Dart, using the dollar sign "$" in the stdout.write method will
+        // print a variable of the same name to the console.
+        if (showResults) stderr.write('$num, ');
 
         count++;
       }
     }
 
     if (showResults) {
-      // Print a new line after the results if the results are shown.
+      // Print a new line after the results if the results are shown.      
       stderr.write('\n');
 
       // This is just for code readability. Since stdout.write doesn't print a new
@@ -152,13 +226,13 @@ class PrimeSieve {
       stderr.write('\n');
     }
 
-    stdout.write(
-        'eagerestwolf&mmcdon20_8bit;$passes;$duration;1;algorithm=base,faithful=yes,bits=8\n');
+    stderr.write(
+        'eagerestwolf&mmcdon20&tarish_8bit;$passes;$duration;1;algorithm=base,faithful=yes,bits=8\n');
   }
 
   int countPrimes() {
     var count = (_sieveSize >= 2) ? 1 : 0;
-
+    
     for (var i = 3; i < _sieveSize; i += 2) {
       if (_bits[i >> 1] == 0) {
         count++;

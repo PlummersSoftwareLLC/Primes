@@ -10,10 +10,10 @@ import 'dart:math';
 // This is a core dart library.
 import 'dart:typed_data';
 
-/// This class defines all the funcationality of the Prime Sieve itself, just as
+/// This class defines all the functionality of the Prime Sieve itself, just as
 /// Dave's original implementation does.
 ///
-/// Some things to note, before proceeeding. First, you may notice there are
+/// Some things to note, before proceeding. First, you may notice there are
 /// multiple types of comments in this file. Double slash comments "//" denote
 /// single line comments like most languages. Triple slash comments "///" denote
 /// documentation comments, these comments would generate documentation pages if
@@ -42,7 +42,7 @@ class PrimeSieve {
   /// a 64-bit integer on 64-bit systems, and a 32-bit integer on 32-bit
   /// systems.
   final int _sieveSize;
-
+  
   /// This field contains the bits we are tracking
   ///
   /// Dart doesn't have Vectors like C++ does, or arrays like many other
@@ -62,17 +62,17 @@ class PrimeSieve {
   /// Couple of Dart notes here. First, a map allows us store a list of linked
   /// values. In other words, if we request the value 10 from this map, it will
   /// always correlate to the value 4. Second, by declaring the value as static
-  /// const we ensure that only one instance of the dictionaly is ever created.
+  /// const we ensure that only one instance of the dictionary is ever created.
   static const Map<int, int> _resultsDictionary = {
-    10: 4,
-    100: 25,
-    1000: 168,
-    10000: 1229,
+    10: 4, 
+    100: 25, 
+    1000: 168, 
+    10000: 1229, 
     100000: 9592,
-    1000000: 78498,
-    10000000: 664579,
+    1000000: 78498, 
+    10000000: 664579, 
     100000000: 5761455,
-    1000000000: 50847534,
+    1000000000: 50847534, 
     10000000000: 455052511
   };
 
@@ -89,22 +89,10 @@ class PrimeSieve {
     /// this accounts for the fact that we do not store bits for even numbers.
     index >>= 1;
 
-    /// I'll try to break down the following expression so that is clear how
-    /// it works.
-    ///
-    /// "index >> 6" is equivalent to "index / 64". We divide the index by 64
-    /// when we call _bits[index >> 6] because we are storing the bits in
-    /// groups of 64 (Uint64 values). And this narrows it down to the right
-    /// group of 64 bits.
-    ///
-    /// What "(1 << (index % 64))" does is it puts a 1 bit in the position
-    /// within the 64 bits that we are interested in. For example if index
-    /// is 133, then 133 % 64 is 5 and 1 << 5 is 0010_0000 in binary.
-    ///
-    /// When we & the two values together we will get back either the value
-    /// 0010_0000 or 0000_0000 depending on weather or not the value returned
-    /// by "_bits[index >> 6]" also contained a 1 in the same digit place.
-    return (_bits[index >> 6] & (1 << (index % 64))) == 0;
+    /// shift index by 6 and assign it to itself.
+    /// this accounts for the fact that we store bits in 64-bit chunks.
+    /// and then check if the bit at the index is 0.
+    return (_bits[index >> 6] & (1 << (index & 63))) == 0;
   }
 
   /// This method sets the bit at [index] to 0.
@@ -115,26 +103,23 @@ class PrimeSieve {
     /// this accounts for the fact that we do not store bits for even numbers.
     index >>= 1;
 
-    /// This works similarly to the _getBit method above.
-    /// Lets assume again that index is 133. "(1 << (index % 64))" is then equivalent
-    /// to 0010_0000 in binary.
-    ///
-    /// Now when we | the two values any value in the same digit place as the 1 will
-    /// also be set to 1.
-    _bits[index >> 6] |= (1 << (index % 64));
+    /// shift index by 6 and assign it to itself.
+    /// this accounts for the fact that we store bits in 64-bit chunks.
+    /// and then set the bit at the index to 1.
+    _bits[index >> 6] |= (1 << (index & 63));
   }
 
   /// This method constructs a new instance of the PrimeSieve object, where the
   /// [sieveSize] is set by the first positional argument, and the [bits] list
   /// will be initialized to 1/128 the [sieveSize] and filled with 0
   PrimeSieve(this._sieveSize) : _bits = Int64List((_sieveSize + 127) >> 7);
-
-  /// This method runs the sieve. For more intormation about the algorithm,
+  
+  /// This method runs the sieve. For more information about the algorithm,
   /// please check back to Dave's original video.
   void runSieve() {
     var factor = 3;
     final q = sqrt(_sieveSize).toInt();
-
+    
     while (factor <= q) {
       for (var num = factor; num < _sieveSize; num += 2) {
         if (_getBit(num)) {
@@ -142,11 +127,37 @@ class PrimeSieve {
           break;
         }
       }
-
-      for (var num = factor * factor; num < _sieveSize; num += factor * 2) {
-        _clearBit(num);
+      
+      final factor2 = factor << 1;
+      final start = factor * factor;
+      final end = _sieveSize;
+      
+      // Optimized marking with better unrolling
+      var num = start;
+      while (num + factor2 * 16 < end) {
+        _clearBit(num); num += factor2; // iter 1
+        _clearBit(num); num += factor2; // iter 2
+        _clearBit(num); num += factor2; // iter 3
+        _clearBit(num); num += factor2; // iter 4
+        _clearBit(num); num += factor2; // iter 5
+        _clearBit(num); num += factor2; // iter 6
+        _clearBit(num); num += factor2; // iter 7
+        _clearBit(num); num += factor2; // iter 8
+        _clearBit(num); num += factor2; // iter 9
+        _clearBit(num); num += factor2; // iter 10
+        _clearBit(num); num += factor2; // iter 11
+        _clearBit(num); num += factor2; // iter 12
+        _clearBit(num); num += factor2; // iter 13
+        _clearBit(num); num += factor2; // iter 14
+        _clearBit(num); num += factor2; // iter 15
+        _clearBit(num); num += factor2; // iter 16
       }
-
+      
+      while (num < end) {
+        _clearBit(num);
+        num += factor2;
+      }
+      
       factor += 2;
     }
   }
@@ -156,11 +167,9 @@ class PrimeSieve {
   /// always print the [duration], the [passes], and other miscellaneous
   /// information.
   void printResults(bool showResults, double duration, int passes) {
-    if (showResults) {
-      stderr.write('2, ');
-    }
+    if (showResults) stderr.write('2, ');
 
-    // Dart doesn't support interpreting booleans as intergers, unlike many
+    // Dart doesn't support interpreting booleans as integers, unlike many
     // other programming languages. Therefore, this line checks if the sieveSize
     // is greater than or equal to 2. If it is, then the initial count is set to
     // 1 because 2 is prime. Otherwise, the count is set to 0 because there are
@@ -169,11 +178,9 @@ class PrimeSieve {
 
     for (var num = 3; num <= _sieveSize; num += 2) {
       if (_getBit(num)) {
-        if (showResults) {
           // In Dart, using the dollar sign "$" in the stdout.write method will
           // print a variable of the same name to the console.
-          stderr.write('$num, ');
-        }
+        if (showResults) stderr.write('$num, ');
 
         count++;
       }
@@ -189,23 +196,20 @@ class PrimeSieve {
       stderr.write('Passes: $passes, Time: $duration, ');
       stderr.write('Avg: ${duration / passes}, Limit: $_sieveSize, ');
       stderr.write('Count1: $count, Count2: ${countPrimes()}, ');
-      stderr.write('Valid: ${_validateResults()}\n');
+      stderr.write('Valid: ${_validateResults()}\n\n');
 
       // These 2 lines are for the drag race format
       stderr.write('\n');
     }
 
-    stdout.write(
-        'eagerestwolf&mmcdon20_1bit;$passes;$duration;1;algorithm=base,faithful=yes,bits=1\n');
+    stderr.write('eagerestwolf&mmcdon20&tarish_1bit;$passes;$duration;1;algorithm=base,faithful=yes,bits=1\n');
   }
 
   int countPrimes() {
     var count = (_sieveSize >= 2) ? 1 : 0;
 
     for (var i = 3; i < _sieveSize; i += 2) {
-      if (_getBit(i)) {
-        count++;
-      }
+      if (_getBit(i)) count++;
     }
 
     return count;
