@@ -1,20 +1,25 @@
 package prime_drag_race
 
+import "base:intrinsics"
 import "core:container/bit_array"
 import "core:math"
 import "core:fmt"
 import "core:time"
 import "core:mem"
 
+BitSieve :: struct {
+    size : int,
+    bits : ^bit_array.Bit_Array
+}
 
-
-RunBitSieve :: proc( bitSieve :^bit_array.Bit_Array)
+RunBitSieve :: proc( sieveSize : int) -> (result :BitSieve)
 {
-    sieveSize := bitSieve.length
-
     factor := 3
     
-    for factor <= q {
+    bitSieve := bit_array.create( sieveSize)
+    // q := int( math.sqrt_f64( f64(sieveSize)))
+
+    for factor*factor <= sieveSize { // faster than "factor <= q"
         // find the first "confirmed" prime in the Sieve
         #no_bounds_check {
             for num := factor; num < sieveSize; num += 2 {
@@ -33,14 +38,15 @@ RunBitSieve :: proc( bitSieve :^bit_array.Bit_Array)
             factor += 2
         }
     }
+    result.size = sieveSize
+    result.bits = bitSieve
+
+    return
 }
 
-GoBitSieve :: proc ()
+GoBitSieve :: proc ( sieveSize : int)
 {
     fiveSecs :: time.Duration(5_000_000_000)   // nano seconds
-
-    theSieve := bit_array.create( sieveSize)
-    defer bit_array.destroy( theSieve)
 
     passCount := 0
 
@@ -49,15 +55,16 @@ GoBitSieve :: proc ()
     defer time.stopwatch_stop( &timer)
 
     for  {
-        bit_array.clear( theSieve)
-        RunBitSieve( theSieve)
+        bitSieve := RunBitSieve( sieveSize)
         passCount += 1
 
         duration := time.stopwatch_duration( timer)
         if duration > fiveSecs {
-            fmt.printfln( "arenol;%d;%.4f;1;algorithm=base,faithful=yes,bits=1", passCount, f64(duration) * 1.0e-9)
+            fmt.printfln( "arenol;%d;%.5f;1;algorithm=base,faithful=yes,bits=1", passCount, f64(duration) * 1.0e-9)
+            bit_array.destroy( bitSieve.bits)
             break
         }
+        bit_array.destroy( bitSieve.bits)
     }
 
 }

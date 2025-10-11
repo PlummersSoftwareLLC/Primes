@@ -5,18 +5,21 @@ import "core:time"
 import "core:mem"
 
 
-Sieve :: [sieveSize/2]bool
+ByteSieve :: struct {
+    size : int,
+    bits : []bool,
+}
 
-RunByteSieve :: proc( theSive :^Sieve)
+RunByteSieve :: proc( size :int) -> (result :ByteSieve)
 {
-    upper := len(theSive)
+    upper := size / 2;
+    theSieve : []bool = make( []bool, upper)
 
-    for factor := 3; factor <= q; factor +=2 {
+    for factor := 3; factor*factor < size; factor +=2 {
         #no_bounds_check {      // speeds up the algorithm with a factor of 2.5
-            
             // find the first "confirmed" prime in the Sieve
             for num := factor/2; num < upper; num += 1 {
-                if !theSive[num] {
+                if !theSieve[num] {
                     factor = num * 2 + 1
                     break;
                 }
@@ -24,11 +27,14 @@ RunByteSieve :: proc( theSive :^Sieve)
 
             // then "nullify" the subsequent multiples of that prime.
             for num := factor * factor / 2; num < upper; num += factor {
-                theSive[num] = true
+                theSieve[num] = true
             }
             
         }
     }
+    result.size = size 
+    result.bits = theSieve
+    return
 }
 
 PrintPrimes :: proc( calculatedSieve : []bool )
@@ -71,7 +77,7 @@ ExpectedPrimeCount :: proc( siveSize :int) -> int{
 }
 
 
-GoByteSieve :: proc()
+GoByteSieve :: proc(  sieveSize : int)
 {
 
     fiveSecs :: time.Duration(5_000_000_000)   // nano seconds
@@ -90,20 +96,18 @@ GoByteSieve :: proc()
     defer time.stopwatch_stop( &timer)
 
     for  {
-        theSieve := new( Sieve)
-        RunByteSieve( theSieve)
+        theSieve := RunByteSieve( sieveSize)
         passCount += 1
 
         duration := time.stopwatch_duration( timer)
         if duration > fiveSecs {
-            assert( CountPrimes( theSieve[:]) == ExpectedPrimeCount( len(theSieve)))
-            fmt.printfln( "arenol;%d,%.4f;1;algorithm=base,faithful=yes,bits=8", passCount, f64(duration) * 1.0e-9)
-            // PrintPrimes( theSieve[:])
-            free( theSieve)
+            assert( CountPrimes( theSieve.bits[:]) == ExpectedPrimeCount( theSieve.size))
+            fmt.printfln( "arenol;%d,%.5f;1;algorithm=base,faithful=yes,bits=8", passCount, f64(duration) * 1.0e-9)
+            // PrintPrimes( theSieve.bits[:])
+            free( (^rawptr)(&theSieve.bits)^)
             break
         }
-        free( theSieve)
-    
+        free( (^rawptr)(&theSieve.bits)^)
     }
 
 
