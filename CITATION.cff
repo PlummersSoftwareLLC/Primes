@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: van Bergen
+    given-names: Rutger
+  - family-names: Marghidanu
+    given-names: Tudor
+  - family-names: Plummer
+    given-names: David W
+title: "Primes | A Software Drag Race"
+url: https://github.com/PlummersSoftwareLLC/
