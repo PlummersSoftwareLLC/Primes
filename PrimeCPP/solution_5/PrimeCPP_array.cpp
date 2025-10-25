@@ -361,7 +361,7 @@ public:
                 size_t idx = 0;
                 while (idx + 8 <= cycleLen)
                 {
-                    __m512i existing = _mm512_load_si512(reinterpret_cast<const __m512i*>(words + wordIndex + idx));
+                    __m512i existing = _mm512_loadu_si512(reinterpret_cast<const void*>(words + wordIndex + idx));
                     const __m512i masks = _mm512_set_epi64(
                         static_cast<long long>(cycleMasks[idx + 7]),
                         static_cast<long long>(cycleMasks[idx + 6]),
@@ -372,29 +372,29 @@ public:
                         static_cast<long long>(cycleMasks[idx + 1]),
                         static_cast<long long>(cycleMasks[idx + 0]));
                     existing = _mm512_or_si512(existing, masks);
-                    _mm512_store_si512(reinterpret_cast<__m512i*>(words + wordIndex + idx), existing);
+                    _mm512_storeu_si512(reinterpret_cast<void*>(words + wordIndex + idx), existing);
                     idx += 8;
                 }
                 while (idx + 4 <= cycleLen)
                 {
-                    __m256i existing = _mm256_load_si256(reinterpret_cast<const __m256i*>(words + wordIndex + idx));
+                    __m256i existing = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(words + wordIndex + idx));
                     const __m256i masks = _mm256_set_epi64x(
                         static_cast<long long>(cycleMasks[idx + 3]),
                         static_cast<long long>(cycleMasks[idx + 2]),
                         static_cast<long long>(cycleMasks[idx + 1]),
                         static_cast<long long>(cycleMasks[idx + 0]));
                     existing = _mm256_or_si256(existing, masks);
-                    _mm256_store_si256(reinterpret_cast<__m256i*>(words + wordIndex + idx), existing);
+                    _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), existing);
                     idx += 4;
                 }
                 while (idx + 2 <= cycleLen)
                 {
-                    __m128i existing = _mm_load_si128(reinterpret_cast<const __m128i*>(words + wordIndex + idx));
+                    __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
                     const __m128i masks = _mm_set_epi64x(
                         static_cast<long long>(cycleMasks[idx + 1]),
                         static_cast<long long>(cycleMasks[idx + 0]));
                     existing = _mm_or_si128(existing, masks);
-                    _mm_store_si128(reinterpret_cast<__m128i*>(words + wordIndex + idx), existing);
+                    _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
                     idx += 2;
                 }
                 while (idx < cycleLen)
@@ -410,24 +410,24 @@ public:
                 size_t idx = 0;
                 while (idx + 4 <= cycleLen)
                 {
-                    __m256i existing = _mm256_load_si256(reinterpret_cast<const __m256i*>(words + wordIndex + idx));
+                    __m256i existing = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(words + wordIndex + idx));
                     const __m256i masks = _mm256_set_epi64x(
                         static_cast<long long>(cycleMasks[idx + 3]),
                         static_cast<long long>(cycleMasks[idx + 2]),
                         static_cast<long long>(cycleMasks[idx + 1]),
                         static_cast<long long>(cycleMasks[idx + 0]));
                     existing = _mm256_or_si256(existing, masks);
-                    _mm256_store_si256(reinterpret_cast<__m256i*>(words + wordIndex + idx), existing);
+                    _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), existing);
                     idx += 4;
                 }
                 while (idx + 2 <= cycleLen)
                 {
-                    __m128i existing = _mm_load_si128(reinterpret_cast<const __m128i*>(words + wordIndex + idx));
+                    __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
                     const __m128i masks = _mm_set_epi64x(
                         static_cast<long long>(cycleMasks[idx + 1]),
                         static_cast<long long>(cycleMasks[idx + 0]));
                     existing = _mm_or_si128(existing, masks);
-                    _mm_store_si128(reinterpret_cast<__m128i*>(words + wordIndex + idx), existing);
+                    _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
                     idx += 2;
                 }
                 while (idx < cycleLen)
@@ -443,12 +443,12 @@ public:
                 size_t idx = 0;
                 while (idx + 2 <= cycleLen)
                 {
-                    __m128i existing = _mm_load_si128(reinterpret_cast<const __m128i*>(words + wordIndex + idx));
+                    __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
                     const __m128i masks = _mm_set_epi64x(
                         static_cast<long long>(cycleMasks[idx + 1]),
                         static_cast<long long>(cycleMasks[idx + 0]));
                     existing = _mm_or_si128(existing, masks);
-                    _mm_store_si128(reinterpret_cast<__m128i*>(words + wordIndex + idx), existing);
+                    _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
                     idx += 2;
                 }
                 while (idx < cycleLen)
