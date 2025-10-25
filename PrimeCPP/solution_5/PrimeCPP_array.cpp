@@ -20,6 +20,27 @@
 #include <memory>
 #include <cstdlib>
 
+#if defined(_WIN32)
+#  include <malloc.h>
+#endif
+
+#if defined(__aarch64__) || defined(_M_ARM64)
+#  include <arm_neon.h>
+#  define PRIMECPP_VECTOR_NEON 1
+#elif defined(__AVX512F__)
+#  include <immintrin.h>
+#  define PRIMECPP_VECTOR_AVX512 1
+#  define PRIMECPP_VECTOR_AVX2 1
+#  define PRIMECPP_VECTOR_SSE2 1
+#elif defined(__AVX2__)
+#  include <immintrin.h>
+#  define PRIMECPP_VECTOR_AVX2 1
+#  define PRIMECPP_VECTOR_SSE2 1
+#elif defined(__SSE2__) || defined(_M_X64) || defined(_M_IX86)
+#  include <emmintrin.h>
+#  define PRIMECPP_VECTOR_SSE2 1
+#endif
+
 // No platform-specific headers; keep this file portable
 
 // Threshold in bit-domain step (factor) at/above which we prefer the simple scalar marking loop.
@@ -27,7 +48,7 @@
 // this was the best result on ARM M2 Mac
 
 #ifndef BITSTEP_WORDWISE_THRESHOLD
-   #define BITSTEP_WORDWISE_THRESHOLD 10
+   #define BITSTEP_WORDWISE_THRESHOLD 16
 #endif
 
 using namespace std;
@@ -57,12 +78,26 @@ const uint64_t DEFAULT_UPPER_LIMIT = 1'000'000LLU;
 #  define ATTR_ALWAYS_INLINE
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#  define PRIMECPP_RESTRICT __restrict__
+#  define PRIMECPP_ASSUME_ALIGNED(ptr, alignment) static_cast<decltype(ptr)>(__builtin_assume_aligned((ptr), (alignment)))
+#else
+#  define PRIMECPP_RESTRICT
+#  define PRIMECPP_ASSUME_ALIGNED(ptr, alignment) (ptr)
+#endif
+
 class BitArray
 {
     uint8_t *array;
     size_t logicalSize;
     size_t byteSize;
-    bool allocatedWithMalloc {false};
+    enum class AllocationKind
+    {
+        NewArray,
+        PosixAligned,
+        WinAligned
+    };
+    AllocationKind allocationKind { AllocationKind::NewArray };
 
     static constexpr size_t arraySize(size_t size)
     {
@@ -79,25 +114,51 @@ public:
     {
         auto arrBits = (size + 1) / 2; // Only store bits for odd numbers
         byteSize = arraySize(arrBits);
-        // Align to 64 bytes to help wide loads/stores on ARM
-        void* ptr = nullptr;
-        if (posix_memalign(&ptr, 64, byteSize) != 0 || ptr == nullptr) {
-            // Fallback to unaligned new if alignment fails
-            array = new uint8_t[byteSize];
-            allocatedWithMalloc = false;
-        } else {
-            array = reinterpret_cast<uint8_t*>(ptr);
-            allocatedWithMalloc = true;
+        // Align to 64 bytes to help wide loads/stores
+#if defined(_WIN32)
+        void* ptr = _aligned_malloc(byteSize, 64);
+        if (ptr != nullptr)
+        {
+            array = static_cast<uint8_t*>(ptr);
+            allocationKind = AllocationKind::WinAligned;
         }
+        else
+        {
+            array = new uint8_t[byteSize];
+            allocationKind = AllocationKind::NewArray;
+        }
+#else
+        void* ptr = nullptr;
+        if (posix_memalign(&ptr, 64, byteSize) == 0 && ptr != nullptr)
+        {
+            array = reinterpret_cast<uint8_t*>(ptr);
+            allocationKind = AllocationKind::PosixAligned;
+        }
+        else
+        {
+            array = new uint8_t[byteSize];
+            allocationKind = AllocationKind::NewArray;
+        }
+#endif
         std::memset(array, 0x00, byteSize);
     }
 
     ~BitArray()
     {
-        if (allocatedWithMalloc)
-            free(array);
-        else
-            delete[] array;
+        switch (allocationKind)
+        {
+            case AllocationKind::PosixAligned:
+                std::free(array);
+                break;
+#if defined(_WIN32)
+            case AllocationKind::WinAligned:
+                _aligned_free(array);
+                break;
+#endif
+            default:
+                delete[] array;
+                break;
+        }
     }
 
     constexpr bool get(size_t n) const ATTR_ALWAYS_INLINE
@@ -228,7 +289,7 @@ public:
         const uint32_t startPosAbs = static_cast<uint32_t>(b % 64); // first position to mark within start word
         const uint64_t delta = 64 % bitStep;          // (pos + 64) % bitStep
         const uint32_t advance = static_cast<uint32_t>(delta == 0 ? 0 : (bitStep - delta));
-        uint32_t firstMod = static_cast<uint32_t>(b % bitStep); // first position modulo bitStep (kept in [0,bitStep))
+        uint32_t firstMod = static_cast<uint32_t>(startPosAbs % bitStep); // first position modulo bitStep within the word
 
         // Enhanced mask precomputation with unrolled inner loops
         uint64_t stepMasks[64];
@@ -256,7 +317,176 @@ public:
         }
 
         // Optimized word processing with bulk updates
-        uint64_t* words = reinterpret_cast<uint64_t*>(array);
+        uint64_t* PRIMECPP_RESTRICT words = PRIMECPP_ASSUME_ALIGNED(reinterpret_cast<uint64_t*>(array), 64);
+
+        // Handle partial starting word (if start bit not aligned to word boundary)
+        if (startPosAbs && wordIndex < fullWordCount)
+        {
+            uint64_t mask = stepMasks[firstMod];
+            mask &= ~((1ULL << startPosAbs) - 1ULL);
+            words[wordIndex] |= mask;
+            ++wordIndex;
+            if (advance)
+            {
+                firstMod += advance;
+                if (firstMod >= bitStep)
+                    firstMod -= bitStep;
+            }
+        }
+
+        // Precompute mask cycle for successive words; pattern repeats after bitStep words
+        alignas(64) uint64_t cycleMasks[64];
+        uint32_t cycleLen = 0;
+        if (wordIndex < fullWordCount)
+        {
+            uint32_t mod = firstMod;
+            const uint32_t cycleLimit = (advance == 0) ? 1u : static_cast<uint32_t>(bitStep);
+            do
+            {
+                cycleMasks[cycleLen++] = stepMasks[mod];
+                if (advance == 0)
+                    break;
+                mod += advance;
+                if (mod >= bitStep)
+                    mod -= bitStep;
+            }
+            while (mod != firstMod && cycleLen < cycleLimit);
+        }
+
+        if (cycleLen > 0)
+        {
+#if defined(PRIMECPP_VECTOR_AVX512)
+            while (wordIndex + cycleLen <= fullWordCount)
+            {
+                size_t idx = 0;
+                while (idx + 8 <= cycleLen)
+                {
+                    __m512i existing = _mm512_load_si512(reinterpret_cast<const __m512i*>(words + wordIndex + idx));
+                    const __m512i masks = _mm512_set_epi64(
+                        static_cast<long long>(cycleMasks[idx + 7]),
+                        static_cast<long long>(cycleMasks[idx + 6]),
+                        static_cast<long long>(cycleMasks[idx + 5]),
+                        static_cast<long long>(cycleMasks[idx + 4]),
+                        static_cast<long long>(cycleMasks[idx + 3]),
+                        static_cast<long long>(cycleMasks[idx + 2]),
+                        static_cast<long long>(cycleMasks[idx + 1]),
+                        static_cast<long long>(cycleMasks[idx + 0]));
+                    existing = _mm512_or_si512(existing, masks);
+                    _mm512_store_si512(reinterpret_cast<__m512i*>(words + wordIndex + idx), existing);
+                    idx += 8;
+                }
+                while (idx + 4 <= cycleLen)
+                {
+                    __m256i existing = _mm256_load_si256(reinterpret_cast<const __m256i*>(words + wordIndex + idx));
+                    const __m256i masks = _mm256_set_epi64x(
+                        static_cast<long long>(cycleMasks[idx + 3]),
+                        static_cast<long long>(cycleMasks[idx + 2]),
+                        static_cast<long long>(cycleMasks[idx + 1]),
+                        static_cast<long long>(cycleMasks[idx + 0]));
+                    existing = _mm256_or_si256(existing, masks);
+                    _mm256_store_si256(reinterpret_cast<__m256i*>(words + wordIndex + idx), existing);
+                    idx += 4;
+                }
+                while (idx + 2 <= cycleLen)
+                {
+                    __m128i existing = _mm_load_si128(reinterpret_cast<const __m128i*>(words + wordIndex + idx));
+                    const __m128i masks = _mm_set_epi64x(
+                        static_cast<long long>(cycleMasks[idx + 1]),
+                        static_cast<long long>(cycleMasks[idx + 0]));
+                    existing = _mm_or_si128(existing, masks);
+                    _mm_store_si128(reinterpret_cast<__m128i*>(words + wordIndex + idx), existing);
+                    idx += 2;
+                }
+                while (idx < cycleLen)
+                {
+                    words[wordIndex + idx] |= cycleMasks[idx];
+                    ++idx;
+                }
+                wordIndex += cycleLen;
+            }
+#elif defined(PRIMECPP_VECTOR_AVX2)
+            while (wordIndex + cycleLen <= fullWordCount)
+            {
+                size_t idx = 0;
+                while (idx + 4 <= cycleLen)
+                {
+                    __m256i existing = _mm256_load_si256(reinterpret_cast<const __m256i*>(words + wordIndex + idx));
+                    const __m256i masks = _mm256_set_epi64x(
+                        static_cast<long long>(cycleMasks[idx + 3]),
+                        static_cast<long long>(cycleMasks[idx + 2]),
+                        static_cast<long long>(cycleMasks[idx + 1]),
+                        static_cast<long long>(cycleMasks[idx + 0]));
+                    existing = _mm256_or_si256(existing, masks);
+                    _mm256_store_si256(reinterpret_cast<__m256i*>(words + wordIndex + idx), existing);
+                    idx += 4;
+                }
+                while (idx + 2 <= cycleLen)
+                {
+                    __m128i existing = _mm_load_si128(reinterpret_cast<const __m128i*>(words + wordIndex + idx));
+                    const __m128i masks = _mm_set_epi64x(
+                        static_cast<long long>(cycleMasks[idx + 1]),
+                        static_cast<long long>(cycleMasks[idx + 0]));
+                    existing = _mm_or_si128(existing, masks);
+                    _mm_store_si128(reinterpret_cast<__m128i*>(words + wordIndex + idx), existing);
+                    idx += 2;
+                }
+                while (idx < cycleLen)
+                {
+                    words[wordIndex + idx] |= cycleMasks[idx];
+                    ++idx;
+                }
+                wordIndex += cycleLen;
+            }
+#elif defined(PRIMECPP_VECTOR_SSE2)
+            while (wordIndex + cycleLen <= fullWordCount)
+            {
+                size_t idx = 0;
+                while (idx + 2 <= cycleLen)
+                {
+                    __m128i existing = _mm_load_si128(reinterpret_cast<const __m128i*>(words + wordIndex + idx));
+                    const __m128i masks = _mm_set_epi64x(
+                        static_cast<long long>(cycleMasks[idx + 1]),
+                        static_cast<long long>(cycleMasks[idx + 0]));
+                    existing = _mm_or_si128(existing, masks);
+                    _mm_store_si128(reinterpret_cast<__m128i*>(words + wordIndex + idx), existing);
+                    idx += 2;
+                }
+                while (idx < cycleLen)
+                {
+                    words[wordIndex + idx] |= cycleMasks[idx];
+                    ++idx;
+                }
+                wordIndex += cycleLen;
+            }
+#elif defined(PRIMECPP_VECTOR_NEON)
+            while (wordIndex + cycleLen <= fullWordCount)
+            {
+                size_t idx = 0;
+                while (idx + 2 <= cycleLen)
+                {
+                    uint64x2_t existing = vld1q_u64(words + wordIndex + idx);
+                    uint64x2_t masks = vdupq_n_u64(cycleMasks[idx]);
+                    masks = vsetq_lane_u64(cycleMasks[idx + 1], masks, 1);
+                    existing = vorrq_u64(existing, masks);
+                    vst1q_u64(words + wordIndex + idx, existing);
+                    idx += 2;
+                }
+                while (idx < cycleLen)
+                {
+                    words[wordIndex + idx] |= cycleMasks[idx];
+                    ++idx;
+                }
+                wordIndex += cycleLen;
+            }
+#else
+            while (wordIndex + cycleLen <= fullWordCount)
+            {
+                for (uint32_t j = 0; j < cycleLen; ++j)
+                    words[wordIndex + j] |= cycleMasks[j];
+                wordIndex += cycleLen;
+            }
+#endif
+        }
 
         // Process multiple words at once when possible
         while (wordIndex + 3 < fullWordCount) {
