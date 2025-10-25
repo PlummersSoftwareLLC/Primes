@@ -2,21 +2,20 @@
 FROM ubuntu:22.04 AS build
 
 RUN apt-get update -qq \
- && apt-get install -y bash clang
+ && apt-get install -y bash clang lld
 
 WORKDIR /opt/app
 COPY *.cpp .
 
-# Optional: arch-aware flags using BuildKit's TARGETARCH
+# Build with the same flags as run.sh to enable vectorization
+# across Mac and Linux. On ARM64, use -mcpu=native instead of -march/-mtune.
 ARG TARGETARCH
 RUN set -eux; \
-    CXXFLAGS="-O3 -ffast-math -std=c++17 -pthread"; \
-    case "$TARGETARCH" in \
-      amd64) CXXFLAGS="$CXXFLAGS -march=native -mtune=native" ;; \
-      arm64) CXXFLAGS="$CXXFLAGS -mcpu=native" ;; \
-      *) : ;; \
-    esac; \
-    clang++ $CXXFLAGS PrimeCPP_array.cpp -o primes_array.exe
+    CXXFLAGS="-march=native -mtune=native -pthread -O3 -ffast-math -fno-math-errno -fno-trapping-math -flto -std=c++17"; \
+    if [ "${TARGETARCH:-amd64}" = "arm64" ]; then \
+      CXXFLAGS="-mcpu=native -pthread -O3 -ffast-math -fno-math-errno -fno-trapping-math -flto -std=c++17"; \
+    fi; \
+    clang++ ${CXXFLAGS} -fuse-ld=lld PrimeCPP_array.cpp -o primes_array.exe
 
 # ---- runtime stage ----
 FROM ubuntu:22.04
