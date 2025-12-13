@@ -1,7 +1,7 @@
 # Holy C Sieve - TempleOS Runtime
 # Note: Holy C is specific to TempleOS and cannot run in standard Docker containers.
 
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
@@ -21,7 +21,7 @@ RUN git clone https://github.com/Jamesbarford/holyc-lang.git && \
     make && \
     make install
 
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
@@ -44,6 +44,6 @@ COPY sieve.HC ./
 RUN hcc sieve.HC -o sieve
 
 COPY run.sh ./
-RUN chmod +x run.sh
+RUN sed -i 's/\r$//' run.sh && chmod +x run.sh
 
 ENTRYPOINT ["./run.sh"]
