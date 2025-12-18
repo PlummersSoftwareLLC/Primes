@@ -1,4 +1,4 @@
-FROM openjdk:22-slim
+FROM eclipse-temurin:22-jdk-noble
 
 RUN apt-get update -qq \
     && apt-get install -y gcc git wget \
