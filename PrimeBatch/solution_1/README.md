@@ -1,10 +1,13 @@
 # Batch solution by Sxxov
 
-![Algorithm](https://img.shields.io/badge/Algorithm-base-green)![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)![Parallelism](https://img.shields.io/badge/Parallel-no-green)![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Algorithm](https://img.shields.io/badge/Algorithm-base-green)![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)![Parallelism](https://img.shields.io/badge/Parallel-no-green)![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
 
 A Windows Batch file implementation of the prime sieve.
 
-It takes advantage of the worker model to imitate classes, spawning a new `cmd` window per pass. This also means multithreading is supported, but is disabled by default.
+Since there is no square root in CMD we use an optimized Newton approach that avoids the need to
+loop for 32bit integer values.
+
+The implementation takes advantage of a worker model to imitate classes, spawning a new `cmd` window per pass. This also means multithreading is supported, just request more workers.
 
 > Note: This implementation runs really *really* slowly & is thus skipped from the automated benchmark. Check the [output](#output) section for reference of speed, & check [run instructions](#run-instructions) for methods to run it manually.
 

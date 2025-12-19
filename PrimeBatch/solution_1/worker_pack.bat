@@ -1,9 +1,9 @@
 @echo off
 :: README.md has details on how this file is optimized
+:: Packed-array worker: uses C[i] buckets with 30 bits each to reduce environment vars ~30x.
+:: - Each bucket C[k] holds indices [30*k .. 30*k+29]
 :: - Only odd numbers > 2 are considered; evens are trivially composite.
 :: - Delayed expansion is required for bucket reads/writes.
-:: - as we find composites we define A[n] to mark them.  At the end all
-::   undefined A[n] are then primes.
 setlocal enableDelayedExpansion
 
 set "options.id=0"
@@ -66,26 +66,47 @@ endlocal
 	)
 	(set "%3=%out%" && exit /b)
 
+:: Packed Sieve of Eratosthenes
+:: - C[k] buckets initialized to 0
+:: - Iterate odd f in [3..sqrt(N)]
+:: - If f is prime, mark multiples from f*f to N, step 2f
 :: using for loops to avoid slow goto n labels
 :: note: we only iterate odd numbers.  Even numbers > 2
-:: are always composite and trivially not a prime.  We
-:: don't mark them in A[n] to save time and memory.
-:: THEREFORE 'prime' means odd value for n with A[n] undefined.
+:: are always composite and trivially not a prime.  
 :runSieve (int: size)
 	call :sqrt %1 q
+    set /a bound=%1/30+1
+	for /l %%i in (0,1,!bound!) do set "C[%%i]=0"
 
-	for /l %%f in (3,2,!q!) do ( 
-		if not defined A[%%f] ( 
-			set /a "step=%%f*2, start=%%f*%%f" 
-			for /l %%n in (!start!, !step!, %1) do set "A[%%n]=1" 
-		) 
+	for /l %%f in (3,2,!q!) do (
+		call :isPrime %%f
+		if !ERRORLEVEL! == 1  (
+			set /a "step=%%f*2"
+			set /a "start=%%f*%%f"
+			for /l %%n in (!start!, !step!, %1) do (
+				call :markComposite %%n
+			)
+		)
 	)
 	goto :eof
 
+:markComposite (int: num)
+    set /a "varindex=%1/30"
+    set /a "boffset=%1%%30"
+    set /a "mask=1<<boffset"
+    set /a "C[%varindex%]=!C[%varindex%]!|mask"
+    exit /b
+
+:: Prime test using packed buckets
 :: Exit code: 1 = prime, 0 = composite
 :: only call for values that are odd and above 2
 :isPrime (int: index, out: ERRORLEVEL)
-    if defined A[%1] (exit /b 0)
+    set /a "varindex=%1/30"
+    set /a "boffset=%1%%30"
+    set /a "mask=1<<boffset"
+    set /a "currval=!C[%varindex%]!"
+    set /a "test=currval&mask"
+    if !test! neq 0 (exit /b 0)
     exit /b 1
 
 :: Integer square root using Newton's method
