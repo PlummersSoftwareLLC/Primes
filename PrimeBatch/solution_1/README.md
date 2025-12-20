@@ -9,7 +9,6 @@ A Windows Batch implementation of the prime sieve.
 Three worker implementations are included; the framework defaults to the fastest one.
 
 ---
-
 ## Algorithms Available
 
 The framework can be switched to use any of the included workers.  
@@ -46,8 +45,6 @@ However:
 
 It may become competitive above ~10M, but below that the interpreter overhead dominates.
 
----
-
 ## Framework
 
 The framework imitates a class/worker model by spawning a new `cmd.exe` instance per pass.  
@@ -57,7 +54,6 @@ Because of this, the framework is **not** included in automated benchmarking.
 See the [Output](#output) and [Performance](#Performance) section for reference results.
 
 ---
-
 ## Run Instructions
 
 Assuming you are in `PrimeBatch/solution_1` and have the dependencies from `BENCHMARK.md`:
@@ -111,15 +107,15 @@ docker build --build-arg workers=1 --build-arg sieveSize=1000000 -t primebatch .
 
 Below is a table of averaged times collected on my machine over several days using the default algorithm.
 
-| Sieve Size | A[n] Worker (Newton sqrt) |
-|-----------:|--------------------------:|
-| 1k         | 0.12 s                    |
-| 5k         | 0.81 s                    |
-| 10k        | 1.69 s                    |
-| 50k        | 28.41 s                   |
-| 100k       | 106.26 s                  |
-| 500k       | 2,276.11 s                |
-| 1M         | 9,937.02 s                |
+| Sieve Size | A[n] Worker  |
+|-----------:|-------------:|
+| 1k         | 0.12 s       |
+| 5k         | 0.81 s       |
+| 10k        | 1.69 s       |
+| 50k        | 28.41 s      |
+| 100k       | 106.26 s     |
+| 500k       | 2,276.11 s   |
+| 1M         | 9,937.02 s   |
 
 ## Output
 This run was executed natively on Windows using the default worker implementation.
