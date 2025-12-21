@@ -1,4 +1,4 @@
-# Holy C solution by legen
+# Holy C solution by FunToHard
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
