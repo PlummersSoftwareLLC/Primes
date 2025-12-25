@@ -150,8 +150,8 @@ struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
         for i in range(self.bitset_size):
             self.array.set(i)
 
-    fn __call__(self: Self, sieve_size: Int) -> Self:
-        return Self(sieve_size)
+    fn __call__(self: Self, runtime_sieve_size: Int) -> Self:
+        return Self(runtime_sieve_size)
 
     fn getBit(self, index: Int) -> Bool:
         if index % 2 == 0:
@@ -197,8 +197,8 @@ struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
         self.limit = sieve_size >> 1
         self.array = InlineArray[UInt8, (sieve_size >> 1)](fill=0xFF)
 
-    fn __call__(self: Self, sieve_size: Int) -> Self:
-        return Self(sieve_size)
+    fn __call__(self: Self, runtime_sieve_size: Int) -> Self:
+        return Self(runtime_sieve_size)
 
     fn countPrimes(self) -> Int:
         count = 1
