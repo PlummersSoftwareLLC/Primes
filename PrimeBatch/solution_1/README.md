@@ -1,9 +1,10 @@
 # Batch solution by Sxxov & Ch2Laughlin
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-32-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 A Windows Batch implementation of the prime sieve.  
 Three worker implementations are included; the framework defaults to the fastest one.
@@ -15,7 +16,8 @@ The framework can be switched to use any of the included workers.
 Given the debate around performance techniques in Batch, all three are provided so you can compare them on your own system.
 
 ### 🟢 Fastest — A[n] Loop Worker (Newton sqrt, no labels)
-This is the fastest faithful implementation (`worker.bat`).  
+This is the fastest implementation (`worker.bat`).  
+
 It avoids `goto` and labels in the hot path, relying instead on `for /L` loops, which CMD interprets far more efficiently.
 
 Key characteristics:
@@ -24,6 +26,13 @@ Key characteristics:
 - Uses an optimized Newton integer square root (no loops required).
 - Builds environment variables incrementally as composites are found.
 - Produces correct prime lists.
+
+#### Faithfulness
+This algorithm is not considered faithful by the drag-race maintainers at this time for 2 reasons.
+1. 'The size of the memory buffer must correspond to the size of the sieve' not the # of found candidates.  This algo is using env. variables like a
+sparse array that grows as the prime candidates are found.  That does not meet the defn of a faithful implementation.
+2. The worker.bat needs to take as input parameters the size of the sieve similar to how class constructors work - not depend on global like options that
+are used now.
 
 ### 🟡 Original Sxxov Implementation (goto/labels, broken sqrt)
 The historical baseline (`worker_orig.bat`).  
@@ -36,7 +45,8 @@ This version attempted clever optimizations but ended up slower due to:
 It is preserved for comparison and historical accuracy.
 
 ### 🔵 Packed Implementation (bitmap‑style)
-The packed worker (`worker_packed.bat`) reduces environment‑variable usage by ~30×.  
+The packed worker (`worker_packed.bat`) reduces environment‑variable usage by ~30×.  It could be considered faithful in that there is a 'memory buffer corresponding to the size of the sieve' allocated at the start of each instance spawned.
+
 However:
 
 - Bitmap logic requires more commands per composite.
@@ -47,7 +57,7 @@ It may become competitive above ~10M, but below that the interpreter overhead do
 
 ## Framework
 
-The framework imitates a class/worker model by spawning a new `cmd.exe` instance per pass.  
+The framework imitates a class/worker model by spawning a new `cmd.exe` instance per pass calling the worker bat.  
 This allows multi‑worker execution (parallelism), though CMD’s overhead makes it extremely slow at large sieve sizes.
 
 Because of this, the framework is **not** included in automated benchmarking.  
