@@ -150,7 +150,7 @@ endlocal
 	echo framework: !%3.hours!:!%3.mins!:!%3.secs!.!csDisplayFr! (!secsPartFr!.!csPartFr!s total)
 	echo.
 	echo ---
-	echo batch;%2;!secsPart!.!csPart!;%options.workers%;algorithm=base,faithful=yes,bits=32
+	echo batch;%2;!secsPart!.!csPart!;%options.workers%;algorithm=base,faithful=yes
 	goto :eof
 
 :printWorker (obj: duration, int: worker_number)
