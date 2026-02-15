@@ -82,14 +82,10 @@ struct prime_sieve_1bit(Runnable):
             factor += 2
 
     fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
-        try:
-            var final_string = (
-                "ELucasCurrie_1bit;{0};{1};1;algorithm=base,faithful=yes,bits=1"
-            ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
-
-            print(final_string)
-        except:
-            print("Error formatting results string")
+        var final_string = (
+            "ELucasCurrie_1bit;{0};{1};1;algorithm=base,faithful=yes,bits=1"
+        ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
+        print(final_string)
 
 
 struct prime_sieve_8bit(Runnable):
@@ -132,13 +128,10 @@ struct prime_sieve_8bit(Runnable):
             factor += 2
 
     fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
-        try:
-            var final_string = (
-                "ELucasCurrie_8bit;{0};{1};1;algorithm=base,faithful=yes,bits=8"
-            ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
-            print(final_string)
-        except:
-            print("Error formatting results string")
+        var final_string = (
+            "ELucasCurrie_8bit;{0};{1};1;algorithm=base,faithful=yes,bits=8"
+        ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
+        print(final_string)
 
 
 struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
@@ -180,13 +173,10 @@ struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
             factor += 2
 
     fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
-        try:
-            var final_string = (
-                "ELucasCurrie_1bit_meta;{0};{1};1;algorithm=base,faithful=no,bits=1"
-            ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
-            print(final_string)
-        except:
-            print("Error formatting results string")
+        var final_string = (
+            "ELucasCurrie_1bit_meta;{0};{1};1;algorithm=base,faithful=no,bits=1"
+        ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
+        print(final_string)
 
 
 struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
@@ -227,13 +217,10 @@ struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
             factor += 2
 
     fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
-        try:
-            var final_string = (
-                "ELucasCurrie_8bit_meta;{0};{1};1;algorithm=base,faithful=no,bits=8"
-            ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
-            print(final_string)
-        except:
-            print("Error formatting results string")
+        var final_string = (
+            "ELucasCurrie_8bit_meta;{0};{1};1;algorithm=base,faithful=no,bits=8"
+        ).format(passes, round(Float32(duration) / 1_000_000_000), 3)
+        print(final_string)
 
 
 def run_and_time_sieve[
