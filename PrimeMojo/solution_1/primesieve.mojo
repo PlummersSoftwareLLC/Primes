@@ -81,7 +81,7 @@ struct prime_sieve_1bit(Runnable):
 
             factor += 2
 
-    fn printResults(self: Self, duration: UInt64, passes: UInt64) -> None:
+    fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
         try:
             var final_string = (
                 "ELucasCurrie_1bit;{0};{1};1;algorithm=base,faithful=yes,bits=1"
@@ -131,7 +131,7 @@ struct prime_sieve_8bit(Runnable):
                 start += factor
             factor += 2
 
-    fn printResults(self: Self, duration: UInt64, passes: UInt64) -> None:
+    fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
         try:
             var final_string = (
                 "ELucasCurrie_8bit;{0};{1};1;algorithm=base,faithful=yes,bits=8"
@@ -179,7 +179,7 @@ struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
 
             factor += 2
 
-    fn printResults(self: Self, duration: UInt64, passes: UInt64) -> None:
+    fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
         try:
             var final_string = (
                 "ELucasCurrie_1bit_meta;{0};{1};1;algorithm=base,faithful=no,bits=1"
@@ -226,7 +226,7 @@ struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
                 start += factor
             factor += 2
 
-    fn printResults(self: Self, duration: UInt64, passes: UInt64) -> None:
+    fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
         try:
             var final_string = (
                 "ELucasCurrie_8bit_meta;{0};{1};1;algorithm=base,faithful=no,bits=8"
