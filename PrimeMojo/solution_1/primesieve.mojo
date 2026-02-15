@@ -61,7 +61,7 @@ struct prime_sieve_1bit(Runnable):
         return self.array.test(index // 2)
 
     fn clearBit(mut self: Self, index: UInt):
-        self.array.clear(index // 2)
+        self.array.clear(Int(index // 2))
 
     fn countPrimes(self) -> Int:
         return self.array.countBits()
@@ -142,8 +142,8 @@ struct prime_sieve_8bit(Runnable):
 
 
 struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
-    alias bitset_size = (sieve_size + 1) // 2
-    var array: BitSet[(sieve_size + 1) // 2]
+    comptime bitset_size = (Self.sieve_size + 1) // 2
+    var array: BitSet[(Self.sieve_size + 1) // 2]
 
     fn __init__(out self: Self, printable_support: Int):
         self.array = BitSet[self.bitset_size]()
@@ -159,22 +159,22 @@ struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
         return self.array.test(index // 2)
 
     fn clearBit(mut self: Self, index: UInt):
-        self.array.clear(index // 2)
+        self.array.clear(Int(index // 2))
 
     fn countPrimes(self) -> Int:
         return len(self.array)
 
     fn run(mut self: Self):
         factor = 3
-        q = Int(math.sqrt(sieve_size))
+        q = Int(math.sqrt(Self.sieve_size))
 
         while factor <= q:
-            for num in range(factor, sieve_size):
+            for num in range(factor, Self.sieve_size):
                 if self.getBit(num):
                     factor = num
                     break
 
-            for num in range(factor * 3, sieve_size, factor * 2):
+            for num in range(factor * 3, Self.sieve_size, factor * 2):
                 self.clearBit(num)
 
             factor += 2
@@ -191,11 +191,11 @@ struct prime_sieve_1bit_meta[sieve_size: Int](Runnable):
 
 struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
     var limit: Int
-    var array: InlineArray[UInt8, (sieve_size >> 1)]
+    var array: InlineArray[UInt8, (Self.sieve_size >> 1)]
 
     fn __init__(out self: Self, printable_support: Int):
-        self.limit = sieve_size >> 1
-        self.array = InlineArray[UInt8, (sieve_size >> 1)](fill=0xFF)
+        self.limit = Self.sieve_size >> 1
+        self.array = InlineArray[UInt8, (Self.sieve_size >> 1)](fill=0xFF)
 
     fn __call__(self: Self, runtime_sieve_size: Int) -> Self:
         return Self(runtime_sieve_size)
@@ -209,7 +209,7 @@ struct prime_sieve_8bit_meta[sieve_size: Int](Runnable):
 
     @always_inline
     fn run(mut self: Self) -> None:
-        var q = Int(math.sqrt(sieve_size))
+        var q = Int(math.sqrt(Self.sieve_size))
         var factor = 3
         while factor <= q:
             divisor = factor >> 1
@@ -241,14 +241,14 @@ def run_and_time_sieve[
 ](prime_sieve: type, validation_data: Dict[Int, Int] = {}) -> None:
     var sieve_size: Int = 1_000_000
     sieve = prime_sieve(sieve_size)
-    start_time: UInt64 = time.monotonic()
+    start_time = time.monotonic()
     passes: UInt64 = 0
 
     while (time.monotonic() - start_time) < 5_000_000_000:
         sieve = prime_sieve(sieve_size)
         sieve.run()
         passes += 1
-    duration: UInt64 = time.monotonic() - start_time
+    duration = time.monotonic() - start_time
 
     if sieve.countPrimes() != validation_data[sieve_size]:
         print("Error: invalid result!")
@@ -274,7 +274,7 @@ def main() -> None:
         1_000_000_000: 50_847_534,
         10_000_000_000: 455_052_511,
     }
-    alias sieve_size: Int = 1_000_000
+    comptime sieve_size: Int = 1_000_000
     run_and_time_sieve(prime_sieve_1bit_meta[sieve_size](0), validation_data)
     run_and_time_sieve(prime_sieve_8bit_meta[sieve_size](0), validation_data)
     run_and_time_sieve(prime_sieve_1bit(0), validation_data)
