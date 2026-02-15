@@ -20,7 +20,7 @@ setup a dev environment for your system.
 
 Then run:
 ```
-odin run main.odin -opt:3 -no-bounds-check
+odin run . -o:speed -no-bounds-check
 ```
 
 ### Docker
@@ -38,10 +38,10 @@ Thanks to rbergen for helping me with the Docker image.
 
 Both the 1-bit as well as the 8-bit storage version will be run.
 
-On a Ryzen 1600X using Odin version `dev-2021-07`:
+On a Ryzen 9 9950X3D using Odin version `dev-2025-12`:
 ```
-odin_bit_moe;8985;5.000;1;algorithm=base,faithful=yes,bits=1
-odin_byte_moe;14818;5.000;1;algorithm=base,faithful=yes,bits=8
-odin_bit_threaded_moe;57279;5.005;12;algorithm=base,faithful=yes,bits=1
-odin_byte_threaded_moe;77369;5.038;12;algorithm=base,faithful=yes,bits=8
+odin_bit_moe;20782;5.0001343379999996;1;algorithm=base,faithful=yes,bits=1
+odin_byte_moe;29614;5.000120271;1;algorithm=base,faithful=yes,bits=8
+odin_bit_threaded_moe;325264;5.0082490579999996;32;algorithm=base,faithful=yes,bits=1
+odin_byte_threaded_moe;538477;5.007647265;32;algorithm=base,faithful=yes,bits=8
 ```
