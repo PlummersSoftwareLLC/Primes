@@ -13,7 +13,7 @@ trait Runnable:
     fn countPrimes(self: Self) -> Int:
         ...
 
-    fn printResults(self: Self, duration: UInt64, passes: UInt64) -> None:
+    fn printResults(self: Self, duration: UInt, passes: UInt64) -> None:
         ...
 
 
