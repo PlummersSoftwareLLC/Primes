@@ -3,15 +3,15 @@ const { performance } = require('perf_hooks');
 const NOW_UNITS_PER_SECOND = 1000;
 let config = { sieveSize: 1000000, timeLimitSeconds: 5 };
 
-const GLOBAL_POOL = new ArrayBuffer(500000);
-const GLOBAL_U32 = new Uint32Array(GLOBAL_POOL);
-
 class PrimeSniperAbsolute {
     constructor(sieveSize) {
         this.sieveSize = sieveSize;
         this.words = (sieveSize >>> 5) + 1;
-        this.arr = GLOBAL_U32;
-        this.arr.fill(0, 0, this.words);
+        // ALLOCATION DU BUFFER EN INTERNE POUR ETRE 100% "FAITHFUL"
+        // L'objet est instancié à zéro à chaque itération.
+        this.pool = new ArrayBuffer(this.words * 4); // 4 bytes par 32-bit word
+        this.arr = new Uint32Array(this.pool);
+        this.arr.fill(0);
     }
 
     runSieve() {
