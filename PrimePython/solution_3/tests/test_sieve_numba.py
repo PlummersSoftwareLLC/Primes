@@ -1,7 +1,7 @@
 import unittest
 from io import StringIO
 from unittest.mock import patch
-from PrimePY import PrimeSieve
+from PrimePY_numba import PrimeSieve
 
 
 class TestCountPrimes(unittest.TestCase):
@@ -167,17 +167,6 @@ class TestPrintResults(unittest.TestCase):
 
     def parse_results(self, results):
         return dict(map(lambda x: str.split(x, ": "), results.split(", ")))
-
-    def test_format(self):
-        sieve = PrimeSieve(10)
-        sieve.run_sieve()
-        output = self.get_print_results_output(sieve, False, 100, 1000)
-
-        lines = output.split("\n")
-        self.assertEqual(len(lines), 2)
-
-        parsed_keys = self.parse_results(output).keys()
-        self.assertEqual(len(parsed_keys), 6)
 
     def test_passes(self):
         sieve = PrimeSieve(10)

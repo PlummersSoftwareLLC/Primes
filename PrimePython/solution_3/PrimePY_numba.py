@@ -95,7 +95,7 @@ class PrimeSieve:
             passes, duration, duration/passes, self._size, count, self.validate_results()))
 
         print()
-        print("numba_sieve;%s;%s;1;algorithm=base,faithful=no,bits=8" % (passes, duration))
+        print("TylerDOC1776_numba;%s;%s;1;algorithm=base,faithful=no,bits=8" % (passes, duration))
 
 
 # MAIN Entry
