@@ -32,10 +32,21 @@ const GLOBAL_SW = new Int32Array(SW_WORDS);
 
 class PrimeSieve {
     constructor(sieveSize) {
+        this.sieveSize = sieveSize; // Requis pour getSieveSize
         this.limitBits = sieveSize >>> 1;
         this.q = Math.ceil(Math.sqrt(sieveSize)) >>> 1;
         this.words = (this.limitBits >>> 5) + 1;
         this.arr = new Int32Array(this.words);
+        this.primeCount = 0; // Stockage interne
+    }
+
+    // Requis par le protocole
+    getSieveSize() { return this.sieveSize; }
+
+    // Requis par le protocole
+    getPrimeCount() {
+        if (this.primeCount === 0) this.primeCount = this.countPrimes();
+        return this.primeCount;
     }
 
     runSieve() {
@@ -45,25 +56,20 @@ class PrimeSieve {
         const q = this.q;
 
         // 1. FAST INIT (Wheel 3-13)
-        // One .set() covers 480,480 bits out of 500,000!
         arr.set(GLOBAL_SW.subarray(0, Math.min(SW_WORDS, len)));
         if (len > SW_WORDS) {
-            // Fill the remaining ~20,000 bits
             arr.set(GLOBAL_SW.subarray(0, len - SW_WORDS), SW_WORDS);
         }
 
         // Restore 3, 5, 7, 11, 13
-        // Indices: 1, 2, 3, 5, 6
-        // Mask: 0x6E (2+4+8+32+64)
         arr[0] = (arr[0] | 1) & ~0x6E;
 
-        // 2. CORE SIEVE (Starting from Prime 17, factor index 8)
+        // 2. CORE SIEVE
         for (let factor = 8; factor <= q; factor++) {
             if ((arr[factor >>> 5 | 0] & (1 << (factor & 31))) === 0) {
                 const step = (factor << 1) + 1;
                 let s = (factor * step) + factor;
 
-                // Ultra-Unrolled Loop x32
                 const safeLimit = limit - (step << 5);
                 while (s < safeLimit) {
                     arr[s >>> 5 | 0] |= (1 << (s & 31)); s += step;
