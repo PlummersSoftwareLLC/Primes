@@ -1,64 +1,58 @@
-# Numpy Prime Sieve by emillynge
+# Numpy (and Numba JIT) Prime Sieve
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
-This solution is more or less copied from solution2  (including tests + Readme) with the one change that this version 
-uses a numpy array to store the sieve.
-Marking numbers as non-prime in the sieve seems to be the most demanding operation in this algorithm,
-and numpy is very well optimized for that sort of task
+This solution contains two implementations sharing the same Docker image:
 
-The solution is **unfaithful** due to the inclusion of a dependency. *But* due to how incredibly 
-widespread numpy is, I felt it was an important inclusion showing off how much performance can be gained by
-using one of the many brilliant C-extension based packages in the python eco-system.
- 
+1. **emillynge_numpy** (`PrimePY.py`) — by [emillynge](https://github.com/emillynge)
+   Uses a numpy boolean array for the sieve. Marking numbers as non-prime with
+   numpy's strided slice assignment is highly optimised (SIMD-vectorised C under
+   the hood), which gives a large speed-up over pure Python.
+
+2. **TylerDOC1776_numba** (`PrimePY_numba.py`) — by [TylerDOC1776](https://github.com/TylerDOC1776)
+   Extends the numpy approach by decorating the core sieve loop with Numba's
+   `@njit`, compiling the find-next-prime loop and the strided slice assignment
+   to native machine code. A warm-up call is made before the timed benchmark to
+   absorb the one-time JIT compilation cost.
+
+Both solutions are **unfaithful** due to the use of external dependencies.
+
+---
 
 ## Running with Python
 
-Install Python: https://www.python.org/downloads/
+Install Python and dependencies:
 
-
-```
-cd path/to/sieve
-python PrimePY.py
+```bash
+pip install numpy numba
 ```
 
-## Running with Pypy
+Run either implementation directly:
 
-Download and extract Pypy3: https://www.pypy.org/download.html
-
-
-```
-cd path/to/pypy
-pypy3 path/to/sieve/PrimePY.py
+```bash
+python PrimePY.py          # numpy implementation
+python PrimePY_numba.py    # Numba JIT implementation
 ```
 
 ## Command line arguments
 
- - `--limit=X`, `-l X`: set upper limit for calculating primes. Default is 1_000_000.
- - `--time=X`, `-t X`: set running time, in seconds. Default is 10.
- - `--show`, `-s`: output the found primes.
+- `--limit=X`, `-l X`: set upper limit for calculating primes. Default is 1_000_000.
+- `--time=X`, `-t X`: set running time, in seconds. Default is 5.
+- `--show`, `-s`: output the found primes.
 
 ## Running tests
 
-```
-cd path/to/sieve
+```bash
 python -m unittest
 ```
 
-# Results on my machine
+## Results (emillynge, AMD Ryzen 3600, Arch Linux 64 bit, Python 3.9.5)
 
- - AMD Ryzen 3600, Arch Linux 64 bit
- - Python: 3.9.5 64 bit
- - PyPy: 7.3.5
- - g++: 11.1.0
-
-
-Report with select other solutions:
-```
-                                                            Single-threaded                                                             
+```text
+                                                            Single-threaded
 ┌───────┬────────────────┬──────────┬──────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐
 │ Index │ Implementation │ Solution │ Label                │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │
 ├───────┼────────────────┼──────────┼──────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤
@@ -70,14 +64,40 @@ Report with select other solutions:
 └───────┴────────────────┴──────────┴──────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘
 ```
 
-pypy result included, but no Dockerfile has been provided, so that result will not become part of the regular report.
+## Results (TylerDOC1776, Numba JIT)
 
-C report hasbeen included due to numpy being mostly a C "program".
+### Intel i7-10710U @ 1.61GHz, 16GB RAM, Windows 11 64-bit
 
-# Example
-```
-$ python3 PrimePython/solution_3/PrimePY.py 
+| Solution | Passes/5s |
+| --- | --- |
+| 1 — davepl (list) | 691 |
+| 2 — ssovest (bytearray) | 4,855 |
+| 3 — emillynge (numpy) | 6,405 |
+| **3 — TylerDOC1776 (numba)** | **8,043** |
+
+### Intel i5-13600K, 64GB RAM, Windows 11 64-bit
+
+| Solution | Passes/5s |
+| --- | --- |
+| 1 — davepl (list) | 1,197 |
+| 2 — ssovest (bytearray) | 8,815 |
+| 3 — emillynge (numpy) | 12,598 |
+| **3 — TylerDOC1776 (numba)** | **11,651** |
+
+Note: on the faster machine, the Numba JIT scores slightly below the numpy implementation.
+The JIT-compiled loop wins on memory-bandwidth-limited hardware; on fast hardware numpy's
+SIMD-vectorised strided writes are difficult to beat with a general-purpose JIT.
+
+## Example output
+
+```text
+$ python3 PrimePython/solution_3/PrimePY.py
 Passes: 10392, Time: 5.0000652491580695, Avg: 0.00048114561673961407, Limit: 1000000, Count: 78498, Valid: True
 
 emillynge_numpy; 10392;5.0000652491580695;1;algorithm=base,faithful=no,bits=8
+
+$ python3 PrimePython/solution_3/PrimePY_numba.py
+Passes: 11200, Time: 5.0001234567890123, Avg: 0.00044644852292044752, Limit: 1000000, Count: 78498, Valid: True
+
+TylerDOC1776_numba;11200;5.0001234567890123;1;algorithm=base,faithful=no,bits=8
 ```
