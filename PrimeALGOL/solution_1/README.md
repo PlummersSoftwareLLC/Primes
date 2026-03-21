@@ -1,4 +1,4 @@
-# Algol 68g solution by rzuckerm
+# ALGOL 68 solution by rzuckerm
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
