@@ -7,6 +7,17 @@
 
 * `primes.a60` uses `boolean` for each sieve item
 
+ALGOL 60 has some annoying limitations:
+
+- It has no command-line interface, so command-line arguments are handled though
+  `run-primes.sh` and piped to stdin
+- It has no dynamic memory allocation, so all memory allocation is only done once.
+- It has no system timer. However, since
+  [GNU MARST](https://ftp.gnu.org/gnu/marst/marst-2.8.tar.gz) is used to translate
+  ALGOL 60 to C, C code can be embedded using the `inline` function
+- Output of numeric values always have a space after them, so `run-primes.sh`
+  has to remove that from the output using `sed`
+
 ## Run instructions
 
 Build the docker image with this:
@@ -21,7 +32,7 @@ You should only need to do this once. Run the docker image:
 ./run.sh [<args>]
 ```
 
-where <args> are optional command-line arguments:
+where `<args>` are optional command-line arguments:
 - `--limit/-l <limit>` - Upper limit for calculating prime numbers. Default: 1000000
 - `--time/-t <time>` - Time limit in seconds. Default: 5
 - `--show-results/-s` - Print found prime numbers
