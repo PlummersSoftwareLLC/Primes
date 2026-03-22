@@ -111,7 +111,7 @@ begin
         outstring(1, "Valid: ");
         if valid then outstring(1, "true\n") else outstring(1, "false\n");
 
-        outstring(1, "rzuckerm-algol60;");
+        outstring(1, "rzuckerm-algol60-bool;");
         outinteger(1, passes);
         outstring(1, ";");
         outreal(1, duration);
