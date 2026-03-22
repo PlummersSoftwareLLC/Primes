@@ -129,12 +129,13 @@ function runBatch(sieveSize, timeLimit) {
 
     const duration = (performance.now() - timeStart) / 1000;
     console.log(`helron-extreme;${passes};${duration};1;algorithm=other,faithful=yes,bits=1`);
-
-    const verify = new PrimeSieve(sieveSize);
-    verify.runSieve();
-    if (verify.getPrimeCount() !== 78498) {
-        console.error(`Validation failed: expected 78498, got ${verify.getPrimeCount()}`);
-    }
 }
 
-runBatch(SIEVE_SIZE, 5);
+const verify = new PrimeSieve(SIEVE_SIZE);
+verify.runSieve();
+if (verify.getPrimeCount() !== 78498) {
+    console.error(`Validation failed: expected 78498, got ${verify.getPrimeCount()}`);
+    process.exit(1);
+} else {
+    runBatch(SIEVE_SIZE, 5);
+}
