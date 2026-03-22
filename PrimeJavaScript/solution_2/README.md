@@ -1,20 +1,45 @@
-![Algorithm](https://img.shields.io/badge/Algorithm-other-yellow)
-![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
-![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
+# JavaScript solution 2 by Helron1977
 
-## Description
+This solution contains two different implementations of the Prime Sieve.
 
-High-performance "God Mode" implementation using a static mask for the first 11 primes and a highly optimized bit-sieve for the rest. This implementation is classified as "other" because it uses prior knowledge (static mask) to optimize performance, diverging from the standard base sieve rules.
+## Implementations
+
+### 1. Sniper (God Mode)
+- **Algorithm**: `other` (Static Mask for first 11 primes)
+- **Faithfulness**: `no` (Uses a global buffer and pre-calculated mask)
+- **Performance**: ~23,000 passes
+- **Badges**:
+  ![Algorithm](https://img.shields.io/badge/Algorithm-other-yellow)
+  ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
+  ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+  ![Bit count](https://img.shields.io/badge/Bits-1-green)
+
+### 2. Extreme (Super-Wheel)
+- **Algorithm**: `other` (Wheel Factorization 3-13)
+- **Faithfulness**: `yes` (Meets all faithful benchmark requirements)
+- **Performance**: ~13,600 passes
+- **Badges**:
+  ![Algorithm](https://img.shields.io/badge/Algorithm-other-yellowgreen)
+  ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
+  ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
+  ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 ## Run instructions
 
 ```bash
-node PrimeJavaScript_sniper.js
+./run.sh
 ```
 
-## Output
+This will run both implementations sequentially. You can also run them individually:
+
+```bash
+node PrimeJavaScript_sniper.js
+node PrimeJavaScript_extreme_sieve.js
+```
+
+## Output format
 
 ```log
-helron-sniper;23536;5.0001;1;algorithm=other,faithful=no,bits=1
+helron-sniper;[PASSES];[DURATION];1;algorithm=other,faithful=no,bits=1
+helron-extreme;[PASSES];[DURATION];1;algorithm=other,faithful=yes,bits=1
 ```
