@@ -3,7 +3,7 @@ import std.math
 from std.collections import BitSet
 
 
-trait Runnable:
+trait Runnable(Movable):
     fn __call__(self: Self, sieve_size: Int) -> Self:
         ...
 
@@ -227,7 +227,7 @@ def run_and_time_sieve[
     type: Runnable
 ](prime_sieve: type, validation_data: Dict[Int, Int] = {}) raises -> None:
     var sieve_size: Int = 1_000_000
-    sieve = prime_sieve(sieve_size)
+    var sieve = prime_sieve(sieve_size)
     start_time = std.time.monotonic()
     passes: UInt64 = 0
 
