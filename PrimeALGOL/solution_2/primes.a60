@@ -1,0 +1,131 @@
+begin
+    real procedure gettime;
+    begin
+        inline("my_dsa.retval.u.real_val = (double)clock() / CLOCKS_PER_SEC;");
+    end gettime;
+
+    procedure timedRunSieve(sieveSize, numBits, showResults, timeLimit);
+    value sieveSize, numBits, showResults, timeLimit;
+    integer sieveSize, numBits;
+    boolean showResults;
+    real timeLimit;
+    begin
+        boolean done, valid;
+        integer passes, bit, q, k, count;
+        real startTime, duration;
+        boolean array sieve[1:numBits];
+
+        passes := 0;
+        startTime := gettime;
+    primeloop:
+        for bit := 1 step 1 until numBits do sieve[bit] := true;
+        q := entier(sqrt(sieveSize / 2));
+        for bit := 1 step 1 until q do
+        begin
+            if sieve[bit] then
+            begin
+                for k := 2 * bit * (bit + 1) step 2 * bit + 1 until numBits do
+                    sieve[k] := false
+            end
+        end;
+
+        passes := passes + 1;
+        duration := gettime - startTime;
+        done := duration >= timeLimit;
+        if !done then goto primeloop;
+
+        count := countPrimes(numBits, sieve);
+        if showResults then showPrimes(numBits, sieve);
+        outputResults(sieveSize, passes, duration, count)
+    end timedRunSieve;
+
+    integer procedure countPrimes(numBits, sieve);
+    value numBits, sieve;
+    integer numBits;
+    boolean array sieve;
+    begin
+        integer count, bit;
+        count := 1;
+        for bit := 1 step 1 until numBits do
+        begin
+            if sieve[bit] then count := count + 1
+        end;
+        countPrimes := count
+    end countPrimes;
+
+    procedure showPrimes(numBits, sieve);
+    value numBits, sieve;
+    integer numBits;
+    boolean array sieve;
+    begin
+        integer bit;
+        outinteger(1, 2);
+        for bit := 1 step 1 until numBits do
+        begin
+            if sieve[bit] then outinteger(1, 2 * bit + 1)
+        end;
+        outstring(1, "\n")
+    end showPrimes;
+
+    integer procedure getExpectedCount(sieveSize);
+    value sieveSize;
+    integer sieveSize;
+    begin
+        integer expectedCount;
+        expectedCount := -1;
+        if sieveSize = 10 then expectedCount := 4
+        else if sieveSize = 100 then expectedCount := 25
+        else if sieveSize = 1000 then expectedCount := 168
+        else if sieveSize = 10000 then expectedCount := 1229
+        else if sieveSize = 100000 then expectedCount := 9592
+        else if sieveSize = 1000000 then expectedCount := 78498
+        else if sieveSize = 10000000 then expectedCount := 664579
+        else outstring(1, "Invalid sieve size\n");
+        getExpectedCount := expectedCount
+    end;
+
+    procedure outputResults(sieveSize, passes, duration, count);
+    value sieveSize, passes, duration, count;
+    integer sieveSize, passes, count;
+    real duration;
+    begin
+        integer expectedCount;
+        boolean valid;
+        real avg;
+        expectedCount := getExpectedCount(sieveSize);
+        valid := count = expectedCount;
+        avg := duration / passes;
+
+        outstring(1, "Passes: ");
+        outinteger(1, passes);
+        outstring(1, "Time: ");
+        outreal(1, duration);
+        outstring(1, "Avg: ");
+        outreal(1, avg);
+        outstring(1, "Limit: ");
+        outinteger(1, sieveSize);
+        outstring(1, "Count1: ");
+        outinteger(1, count);
+        outstring(1, "Count2: ");
+        outinteger(1, expectedCount);
+        outstring(1, "Valid: ");
+        if valid then outstring(1, "true\n") else outstring(1, "false\n");
+
+        outstring(1, "rzuckerm-algol60;");
+        outinteger(1, passes);
+        outstring(1, ";");
+        outreal(1, duration);
+        outstring(1, ";1;algorithm=base,faithful=no\n")
+    end outputResults;
+
+    real timeLimit;
+    integer sieveSize, numBits, showResultsInt;
+    boolean showResults;
+    ininteger(0, sieveSize);
+    inreal(0, timeLimit);
+    ininteger(0, showResultsInt);
+    showResults := showResultsInt != 0;
+
+    numBits := entier((sieveSize - 1) / 2);
+    timedRunSieve(sieveSize, numBits, showResults, timeLimit)
+end
