@@ -17,7 +17,7 @@ trait Runnable(Movable):
         ...
 
 
-struct bitArray:
+struct bitArray(Movable):
     var array: List[UInt8]
 
     fn __init__(out self: Self, size: Int):
