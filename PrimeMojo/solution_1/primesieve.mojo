@@ -3,7 +3,7 @@ import std.math
 from std.collections import BitSet
 
 
-trait Runnable(Movable):
+trait Runnable(Movable, ImplicitlyDestructible):
     fn __call__(self: Self, sieve_size: Int) -> Self:
         ...
 
