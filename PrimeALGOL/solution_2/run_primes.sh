@@ -28,6 +28,6 @@ done
 
 for script in primes
 do
-    printf "%s\n" "${LIMIT}" "${TIME}" "${SHOW_RESULTS}" | ./${script} "$@" | sed 's/ ;/;/g'
+    printf "%s\n" "${LIMIT}" "${TIME}" "${SHOW_RESULTS}" | ./${script} "$@" | sed 's/ *;/;/g'
     echo ""
 done
