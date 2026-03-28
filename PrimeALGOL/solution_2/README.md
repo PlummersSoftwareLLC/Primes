@@ -11,7 +11,6 @@ ALGOL 60 has some annoying limitations:
 
 - It has no command-line interface, so command-line arguments are handled though
   `run-primes.sh` and piped to stdin
-- It has no dynamic memory allocation, so all memory allocation is only done once.
 - It has no system timer. However, since
   [GNU MARST](https://ftp.gnu.org/gnu/marst/marst-2.8.tar.gz) is used to translate
   ALGOL 60 to C, C code can be embedded using the `inline` function
