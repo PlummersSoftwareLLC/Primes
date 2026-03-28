@@ -4,18 +4,19 @@ begin
         inline("my_dsa.retval.u.real_val = (double)clock() / CLOCKS_PER_SEC;");
     end gettime;
 
-    procedure timedRunSieve(sieveSize, numBits, showResults, timeLimit);
-    value sieveSize, numBits, showResults, timeLimit;
-    integer sieveSize, numBits;
+    procedure timedRunSieve(sieveSize, showResults, timeLimit);
+    value sieveSize, showResults, timeLimit;
+    integer sieveSize;
     boolean showResults;
     real timeLimit;
     begin
         boolean done, valid;
-        integer passes, count;
+        integer numBits, passes, count;
         real startTime, duration;
 
-        startTime := gettime;
+        numBits := entier((sieveSize - 1) / 2);
         done := false;
+        startTime := gettime;
         for passes := 1, passes + 1 while !done do
         begin
             boolean array sieve[1:numBits];
@@ -140,6 +141,5 @@ begin
     ininteger(0, showResultsInt);
     showResults := showResultsInt != 0;
 
-    numBits := entier((sieveSize - 1) / 2);
-    timedRunSieve(sieveSize, numBits, showResults, timeLimit)
+    timedRunSieve(sieveSize, showResults, timeLimit)
 end
