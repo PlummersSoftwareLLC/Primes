@@ -14,7 +14,7 @@ begin
         integer numBits, passes, count;
         real startTime, duration;
 
-        numBits := entier((sieveSize - 1) / 2);
+        numBits := (sieveSize - 1) % 2;
         done := false;
         startTime := gettime;
         for passes := 1, passes + 1 while !done do
@@ -41,7 +41,7 @@ begin
         integer bit, q, k;
 
         for bit := 1 step 1 until numBits do sieve[bit] := true;
-        q := entier(sqrt(sieveSize / 2));
+        q := sqrt(sieveSize % 2);
         for bit := 1 step 1 until q do
         begin
             if sieve[bit] then
