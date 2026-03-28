@@ -65,4 +65,7 @@ rzuckerm-algol60-bool;46;5.051831;1;algorithm=base,faithful=no
 
 Passes: 4 Time: 5.146225 Avg: 1.28655625 Limit: 100000000 Count1: 5761455 Count2: 5761455 Valid: true
 rzuckerm-algol60-bool;4;5.146225;1;algorithm=base,faithful=no
+
+Passes: 1 Time: 14.276457 Avg: 14.276457 Limit: 1000000000 Count1: 50847534 Count2: 50847534 Valid: true
+rzuckerm-algol60-bool;1;14.276457;1;algorithm=base,faithful=no
 ```

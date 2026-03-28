@@ -93,6 +93,7 @@ begin
         else if sieveSize = 1000000 then expectedCount := 78498
         else if sieveSize = 10000000 then expectedCount := 664579
         else if sieveSize = 100000000 then expectedCount := 5761455
+        else if sieveSize = 1000000000 then expectedCount := 50847534
         else outstring(1, "Invalid sieve size\n");
         getExpectedCount := expectedCount
     end;
