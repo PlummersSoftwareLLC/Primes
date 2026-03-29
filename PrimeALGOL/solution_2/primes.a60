@@ -4,22 +4,44 @@ begin
         inline("my_dsa.retval.u.real_val = (double)clock() / CLOCKS_PER_SEC;");
     end gettime;
 
-    procedure timedRunSieve(sieveSize, numBits, showResults, timeLimit);
-    value sieveSize, numBits, showResults, timeLimit;
-    integer sieveSize, numBits;
+    procedure timedRunSieve(sieveSize, showResults, timeLimit);
+    value sieveSize, showResults, timeLimit;
+    integer sieveSize;
     boolean showResults;
     real timeLimit;
     begin
         boolean done, valid;
-        integer passes, bit, q, k, count;
+        integer numBits, passes, count;
         real startTime, duration;
-        boolean array sieve[1:numBits];
 
-        passes := 0;
+        numBits := (sieveSize - 1) % 2;
+        done := false;
         startTime := gettime;
-    primeloop:
+        for passes := 1, passes + 1 while !done do
+        begin
+            boolean array sieve[1:numBits];
+
+            runSieve(sieveSize, numBits, sieve);
+            duration := gettime - startTime;
+            if duration >= timeLimit then
+            begin
+                count := countPrimes(numBits, sieve);
+                if showResults then showPrimes(numBits, sieve);
+                outputResults(sieveSize, passes, duration, count);
+                done := true
+            end
+        end
+    end timedRunSieve;
+
+    procedure runSieve(sieveSize, numBits, sieve);
+    value sieveSize, numBits;
+    integer sieveSize, numBits;
+    boolean array sieve;
+    begin
+        integer bit, q, k;
+
         for bit := 1 step 1 until numBits do sieve[bit] := true;
-        q := entier(sqrt(sieveSize / 2));
+        q := sqrt(sieveSize % 2);
         for bit := 1 step 1 until q do
         begin
             if sieve[bit] then
@@ -27,20 +49,11 @@ begin
                 for k := 2 * bit * (bit + 1) step 2 * bit + 1 until numBits do
                     sieve[k] := false
             end
-        end;
-
-        passes := passes + 1;
-        duration := gettime - startTime;
-        done := duration >= timeLimit;
-        if !done then goto primeloop;
-
-        count := countPrimes(numBits, sieve);
-        if showResults then showPrimes(numBits, sieve);
-        outputResults(sieveSize, passes, duration, count)
-    end timedRunSieve;
+        end
+    end runSieve;
 
     integer procedure countPrimes(numBits, sieve);
-    value numBits, sieve;
+    value numBits;
     integer numBits;
     boolean array sieve;
     begin
@@ -54,7 +67,7 @@ begin
     end countPrimes;
 
     procedure showPrimes(numBits, sieve);
-    value numBits, sieve;
+    value numBits;
     integer numBits;
     boolean array sieve;
     begin
@@ -80,6 +93,8 @@ begin
         else if sieveSize = 100000 then expectedCount := 9592
         else if sieveSize = 1000000 then expectedCount := 78498
         else if sieveSize = 10000000 then expectedCount := 664579
+        else if sieveSize = 100000000 then expectedCount := 5761455
+        else if sieveSize = 1000000000 then expectedCount := 50847534
         else outstring(1, "Invalid sieve size\n");
         getExpectedCount := expectedCount
     end;
@@ -126,6 +141,5 @@ begin
     ininteger(0, showResultsInt);
     showResults := showResultsInt != 0;
 
-    numBits := entier((sieveSize - 1) / 2);
-    timedRunSieve(sieveSize, numBits, showResults, timeLimit)
+    timedRunSieve(sieveSize, showResults, timeLimit)
 end
