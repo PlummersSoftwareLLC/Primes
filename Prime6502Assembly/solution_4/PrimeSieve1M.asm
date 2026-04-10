@@ -62,6 +62,9 @@ generated high + low byte tables for quick look-up.
 
 */
 
+// ===== FLAGS =====
+//#define BATCHMODE
+
 // =====  CONSTs   ====
 
 // Ordinary ZP consts ($02-$0f)
@@ -130,6 +133,16 @@ generated high + low byte tables for quick look-up.
 status_line: // (32 bytes max)
 .text "m:01 s:x p:$000000 t:00:00.0"
 //     0123456789012345678901234567
+
+#if BATCHMODE
+.segment Code "Batch run hook for data dump"
+batchrunhook:
+		lda $0800
+		adc #$08
+		sta $0800
+		jmp batchrunhook
+#endif
+
 .segment Code "Main control loop"
 main:
 		jsr SystemSetup
@@ -174,8 +187,13 @@ normal_flow:
 		jsr check_prime_count // also sets status
 		jsr readout_clock
 		jsr setup_for_256_loop
+		
+#if BATCHMODE
+		jmp batchrunhook
+#else
 		lda #$35
 		sta $01
+
 !loop:
 		lda $dc01
 		cmp #$ef    // check for space ... in a bit primitive fashion
@@ -184,7 +202,7 @@ normal_flow:
 		//  side effect
 		// lda #$30; sta $01	
 		jmp restart		
-
+#endif
 
 // -------------------------------------------------
 .segment CodeInit "Setup init/setup"
@@ -1129,8 +1147,14 @@ showsplashscreen:
 // "0" : $23
 // RET : $01
 // SPC : $3c
+
+#if BATCHMODE
+		lda #$38
+		bne !inject+
+#endif
 !loop:
 		lda $cb
+!inject:
 		cmp #$38
 		beq startM1
 		cmp #$3b
@@ -1202,7 +1226,7 @@ splashtext:
 .text " + lazy init of bitfield with byte seqs "
 .text " + stays true to original sieve algo    "
 .text "                                        "
-.text "v1.0rc1                  raz/cml 04.2026"
+.text "v1.0rc2                  raz/cml 04.2026"
 .text "---------------- info: -----------------"
 .text "bitfield:  $0bdc-$ffff (500,000 bits)   "
 .text "bit order: 01234567    (as c64 graphics)"
