@@ -1,0 +1,91 @@
+// Prime Sieve implementation in Lateralus
+// Algorithm: Base sieve of Eratosthenes
+// Faithful: Yes (class-based, storage in class, no external algorithm)
+
+module primes
+
+import std.time { Instant, Duration }
+import std.io { print, println }
+import std.math { sqrt }
+import std.collections { BitArray }
+
+// Expected prime counts for validation
+const PRIME_COUNTS: Map<Int, Int> = {
+    10 => 4,
+    100 => 25,
+    1000 => 168,
+    10000 => 1229,
+    100000 => 9592,
+    1000000 => 78498,
+    10000000 => 664579,
+    100000000 => 5761455
+}
+
+class PrimeSieve {
+    size: Int
+    bits: BitArray
+    
+    fn new(limit: Int) -> PrimeSieve {
+        PrimeSieve {
+            size: limit,
+            bits: BitArray.new((limit + 1) / 2, true)
+        }
+    }
+    
+    fn run_sieve(mut self) {
+        let q = sqrt(self.size as Float) as Int
+        
+        for factor in 3..=q step 2 {
+            if self.bits.get(factor / 2) {
+                let start = factor * factor
+                for num in start..=self.size step factor * 2 {
+                    self.bits.set(num / 2, false)
+                }
+            }
+        }
+    }
+    
+    fn count_primes(self) -> Int {
+        let mut count = if self.size >= 2 { 1 } else { 0 }
+        
+        for i in 1..self.bits.len() {
+            if self.bits.get(i) {
+                count += 1
+            }
+        }
+        
+        count
+    }
+    
+    fn validate(self) -> Bool {
+        PRIME_COUNTS.get(self.size)
+            |> opt -> opt.map(|expected| expected == self.count_primes())
+            |> opt -> opt.unwrap_or(false)
+    }
+}
+
+fn main() {
+    let limit = 1_000_000
+    let duration_limit = Duration.seconds(5)
+    
+    let start = Instant.now()
+    let mut passes = 0
+    let mut sieve: PrimeSieve? = none
+    
+    while start.elapsed() < duration_limit {
+        sieve = some(PrimeSieve.new(limit))
+        sieve.unwrap().run_sieve()
+        passes += 1
+    }
+    
+    let elapsed = start.elapsed()
+    let final_sieve = sieve.unwrap()
+    
+    // Output format: label;passes;duration;threads;algorithm;faithful;bits
+    let label = "bad-antics"
+    let valid = if final_sieve.validate() { "valid" } else { "invalid" }
+    
+    println("Passes: {passes}, Time: {elapsed.as_secs_f64():.6}s, Avg: {elapsed.as_secs_f64() / passes as Float:.9}s, Limit: {limit}, Count: {final_sieve.count_primes()}, Valid: {valid}")
+    println("")
+    println("{label};{passes};{elapsed.as_secs_f64()};1;algorithm=base,faithful=yes,bits=1")
+}
