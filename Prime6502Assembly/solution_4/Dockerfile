@@ -11,7 +11,7 @@ RUN apt-get update && \
     unzip KickAssembler.zip -d KickAssembler && \
     rm KickAssembler.zip
 
-COPY basevars.sh build.sh run.sh PrimeSieve1M.asm mon_commands.txt analyze_memdump.py ./
+COPY basevars.sh build.sh run.sh PrimeSieve1M.asm analyze_memdump.py memdump_utils.py ./
 
 RUN ./build.sh
 

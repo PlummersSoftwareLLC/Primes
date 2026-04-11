@@ -3,5 +3,4 @@
 SRC="PrimeSieve1M.asm"
 KICKASS="KickAssembler/KickAss.jar"
 XC64="x64sc"
-MONCMDS="mon_commands.txt"
 ANALYZER="analyze_memdump.py"

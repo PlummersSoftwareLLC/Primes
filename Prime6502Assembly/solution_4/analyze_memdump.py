@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import sys
+from memdump_utils import read_memdump
 
-fn = "fullmem_dump.bin"
-
-data = open(fn,"rb").read()
-memdump = data[2:] # First 2 bytes are the loading address 
+memdump = read_memdump(sys.argv)
 
 # Count primes
 prime_count = 1
@@ -16,7 +14,7 @@ tstrb = memdump[0x0bd5:0x0bdc]
 
 #b'00:14.2'
 # -> ASCII and PETSCII overlap for these chars
-timestr = tstrb.decode("ascii") 
+timestr = tstrb.decode("ascii")
 
 print("TIME:",timestr,sep="\t")
 print("PRIMES:",prime_count,sep="\t")

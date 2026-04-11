@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 import sys
+from memdump_utils import read_memdump
 
-fn = "fullmem_dump.bin"
-if len(sys.argv==2): fn = sys.argv[1]
-
-data = open(fn,"rb").read()
-memdump = data[2:] # First 2 bytes are the loading address 
+memdump = read_memdump(sys.argv)
 bitfield = memdump[0xbdc:]
 
 l_primes = ["2"]
