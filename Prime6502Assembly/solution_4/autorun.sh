@@ -1,3 +1,5 @@
 #!/bin/bash
-. build.sh
-. dockerrun.sh
+export SCRIPT_DIR=${SCRIPT_DIR:-"$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"}
+
+"$SCRIPT_DIR/build.sh"
+"$SCRIPT_DIR/run.sh"
