@@ -1226,7 +1226,7 @@ splashtext:
 .text " + lazy init of bitfield with byte seqs "
 .text " + stays true to original sieve algo    "
 .text "                                        "
-.text "v1.0rc2                  raz/cml 04.2026"
+.text "v1.0a                    raz/cml 04.2026"
 .text "---------------- info: -----------------"
 .text "bitfield:  $0bdc-$ffff (500,000 bits)   "
 .text "bit order: 01234567    (as c64 graphics)"

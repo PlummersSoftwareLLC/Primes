@@ -5,8 +5,8 @@
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
 By: Rasmus Wernersson, AKA Raz/CML  
-March/April 2026 (code mostly written in the summer of 2023)
-
+March/April 2026 (code mostly written in the summer of 2023)  
+Blog-post, binaries: [Extended resource page for PrimeSieve1m](https://wernersson.dk/c64/primesieve/primesieve.html)
 
 **In overview:**  
 - Entire set of primes up to 1,000,000 are found (using a bitfield of length 500,000 - 62500 (`$f424`) bytes).  
@@ -25,17 +25,13 @@ Assembly is simply: `java -jar KickAss.jar PrimeSieve1M.asm` which will produce 
 
 KickAssembler: [https://theweb.dk/KickAssembler/](https://theweb.dk/KickAssembler/)
 
-**Binaries**  
-For convience the following binary is included:  
-- `PrimeSieve1M.prg`
-
 **Running the binary**  
 I recommend using VICE: [VICE - the Versatile Commodore Emulator](https://vice-emu.sourceforge.io/) - all testing and debugging done on VICE (with occational testing on real hardware, my setup being a C64C (PAL) with an Ultimate II+ cartridge for file transfer + 1541 emulation). 
 
-**Timing the run**   
+**Timing the run (interactively)**   
 The binary has a build in validation step, and it utilizes the C64 TOD (time of day) clock for the timing. The timer is auto calibrated for NTSC or PAL upon start. The start menu allows for running two variants of the the algorithm (with and with-out the lazy init optimization) as well as triggering the algorithm to miscount the primes for showing that the validation works.
 
-![Start menu](figures/PrimeSieve1M_start_menu_CRT.jpg)
+![Start menu](https://wernersson.dk/c64/primesieve/figures/PrimeSieve1M_start_menu_CRT.jpg)
 
 ## Results
 
@@ -315,12 +311,12 @@ As virtually all of the C64 memory is in use, progress is visualized as color co
 - non-factors are blacked out as they are encountered.  
 - yellow = part of the set 1..499 not investigated yet.  
 
-![Start menu](figures/PrimeSieve1M_color_coding_example.jpg)
+![Start menu](https://wernersson.dk/c64/primesieve/figures/PrimeSieve1M_color_coding_example.jpg)
 
 Once all factors have been found, the validation step starts. It runs through all bytes in the bitfield and count up the number of primes found (it uses a 256 byte look-up table to quickly count the number of bits set in each byte, and a 24 bit counter).
 Upon validation the timer will stop, and the screen look like this: 
 
-![Validation complete](figures/PrimeSieve1M_validation_complete.jpg)
+![Validation complete](https://wernersson.dk/c64/primesieve/figures/PrimeSieve1M_validation_complete.jpg)
 
 (You can at this point press space to run the algorithm again, or drop into the Vice machine code monitor to have a look at the bitfield directly).
 

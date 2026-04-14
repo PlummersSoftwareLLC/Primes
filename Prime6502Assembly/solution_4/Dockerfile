@@ -1,4 +1,4 @@
-# Adapter from the C128 solution Dockerfile
+# Adapted from the C128 solution Dockerfile
 FROM primeimages/vice:3.5-ubuntu22.04
 
 WORKDIR /opt
