@@ -18,5 +18,5 @@ printf 's "%s" 0 0000 ffff\n' "$MEMDUMP_PATH" >> "$MONCMDS_PATH"
 printf 'q\n' >> "$MONCMDS_PATH"
 
 # Run + analyze memdump
-"$XC64" "$WARP" "$CONS" -moncommands "$MONCMDS_PATH" -initbreak 0x0a00 "$PRG_PATH" > /dev/null
+$XVFB"$XC64" "$WARP" "$CONS" -moncommands "$MONCMDS_PATH" -initbreak 0x0a00 "$PRG_PATH" > /dev/null
 "$ANALYZER_PATH" "$MEMDUMP_PATH"
