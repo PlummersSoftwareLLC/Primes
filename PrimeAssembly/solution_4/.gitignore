@@ -1,3 +1,13 @@
-cwager_x64ff_mt
-cwager_x64ff_mt.o
+# Build artifacts
+*.o
+*.out
+a.out
 core
+
+# Binaries
+cwager_x64ff_mt
+cwager_x64ff_mt_extreme
+
+# Temp / editor junk
+*~
+*.swp
