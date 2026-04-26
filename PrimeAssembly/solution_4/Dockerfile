@@ -1,11 +1,33 @@
-FROM alpine:3.13
+# ---------- 1. Build stage ----------
+FROM debian:bookworm AS build
 
-RUN apk add --no-cache build-base nasm
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        nasm \
+        gcc \
+        make \
+        libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/app
+WORKDIR /app
 
-COPY *.sh *.asm README.md ./
+COPY . .
 
-RUN ./build.sh
+RUN chmod +x build.sh && ./build.sh
+
+
+# ---------- 2. Runtime stage ----------
+FROM debian:bookworm-slim AS runtime
+
+WORKDIR /app
+
+# Copy both binaries
+COPY --from=build /app/cwager_x64ff_mt .
+COPY --from=build /app/cwager_x64ff_mt_extreme .
+
+# Copy runner
+COPY run.sh .
+
+RUN chmod +x run.sh
 
 ENTRYPOINT ["./run.sh"]
