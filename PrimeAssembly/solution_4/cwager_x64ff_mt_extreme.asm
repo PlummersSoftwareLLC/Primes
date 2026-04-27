@@ -49,6 +49,10 @@ warn db "WARNING: result is incorrect",10
 warn_len equ $ - warn
 
 dense_jump_table:
+    ; Uniform dense dispatch for every odd skip in the contiguous range
+    ; 3..129 inclusive. Composite entries are present as well as prime
+    ; entries; composite entries are normally not reached at runtime because
+    ; earlier discovered factors have already cleared those candidates.
     dq run_sieve_dense_003
     dq run_sieve_dense_005
     dq run_sieve_dense_007
@@ -113,21 +117,6 @@ dense_jump_table:
     dq run_sieve_dense_125
     dq run_sieve_dense_127
     dq run_sieve_dense_129
-
-dense_p3_masks dq 0xdb6db6db6db6db6d, 0x6db6db6db6db6db6, 0xb6db6db6db6db6db
-dense_p5_masks dq 0xbdef7bdef7bdef7b, 0x7bdef7bdef7bdef7, 0xf7bdef7bdef7bdef, 0xef7bdef7bdef7bde, 0xdef7bdef7bdef7bd
-dense_p7_masks dq 0xf7efdfbf7efdfbf7, 0xfbf7efdfbf7efdfb, 0xfdfbf7efdfbf7efd, 0x7efdfbf7efdfbf7e, 0xbf7efdfbf7efdfbf, 0xdfbf7efdfbf7efdf, 0xefdfbf7efdfbf7ef
-dense_p11_masks dq 0xeffdffbff7feffdf, 0xbff7feffdffbff7f, 0xffdffbff7feffdff, 0xff7feffdffbff7fe, 0xfdffbff7feffdffb, 0xf7feffdffbff7fef, 0xdffbff7feffdffbf, 0x7feffdffbff7feff, 0xffbff7feffdffbff, 0xfeffdffbff7feffd, 0xfbff7feffdffbff7
-
-sparse_jump_table:
-    dq run_sieve_sparse_03
-    dq run_sieve_sparse_05
-    dq run_sieve_sparse_07
-    dq run_sieve_sparse_09
-    dq run_sieve_sparse_11
-    dq run_sieve_sparse_13
-    dq run_sieve_sparse_15
-    dq run_sieve_sparse_17
 
 
 section .text
@@ -524,234 +513,23 @@ run_sieve_outer:
     test r13, r10
     jz run_sieve_next
 
-    ; This path is entered only after p has been discovered from the sieve
-    ; bitset at runtime. It does not encode prior-prime knowledge.
-    cmp r8d, 3
-    je run_sieve_mark_p3
-    cmp r8d, 5
-    je run_sieve_mark_p5
-    cmp r8d, 7
-    je run_sieve_mark_p7
-    cmp r8d, 11
-    je run_sieve_mark_p11
+    ; This path is entered only after the factor has been discovered from the
+    ; runtime sieve bitset. All odd skips in the contiguous dense range
+    ; 3..129 use the same dense dispatch mechanism, and that table includes
+    ; composite as well as prime skip values. Composite entries normally are
+    ; not reached because composites have already been cleared by earlier
+    ; discovered factors. No dispatch decision here is based on prior
+    ; knowledge of primeness.
     cmp r8d, 129
     jbe run_sieve_dense_dispatch
-    cmp r8d, 65
-    jb run_sieve_mark_small
     jmp run_sieve_sparse_dispatch
 
 align 16
-run_sieve_mark_p3:
-    mov rsi, r14
-    mov ecx, [r15 + worker_state.word_count]
-    mov rax, [rel dense_p3_masks]
-    mov rbx, [rel dense_p3_masks + 8]
-    mov rdx, [rel dense_p3_masks + 16]
-    cmp ecx, 3
-    jb run_sieve_p3_tail
-align 16
-run_sieve_p3_loop:
-    and qword [rsi], rax
-    and qword [rsi + 8], rbx
-    and qword [rsi + 16], rdx
-    add rsi, 24
-    sub ecx, 3
-    cmp ecx, 3
-    jae run_sieve_p3_loop
-run_sieve_p3_tail:
-    test ecx, ecx
-    jz run_sieve_p3_restore
-    and qword [rsi], rax
-    cmp ecx, 1
-    je run_sieve_p3_restore
-    and qword [rsi + 8], rbx
-run_sieve_p3_restore:
-    bts qword [r14], 1
-    mov r13, [r14]
-    mov r8d, 5
-    mov r10, 4
-    mov r11d, 12
-    jmp run_sieve_outer
-
-align 16
-run_sieve_mark_p5:
-    mov rsi, r14
-    mov ecx, [r15 + worker_state.word_count]
-    mov rax, [rel dense_p5_masks]
-    mov rbx, [rel dense_p5_masks + 8]
-    mov rdx, [rel dense_p5_masks + 16]
-    mov r9, [rel dense_p5_masks + 24]
-    mov rdi, [rel dense_p5_masks + 32]
-    cmp ecx, 5
-    jb run_sieve_p5_tail
-align 16
-run_sieve_p5_loop:
-    and qword [rsi], rax
-    and qword [rsi + 8], rbx
-    and qword [rsi + 16], rdx
-    and qword [rsi + 24], r9
-    and qword [rsi + 32], rdi
-    add rsi, 40
-    sub ecx, 5
-    cmp ecx, 5
-    jae run_sieve_p5_loop
-run_sieve_p5_tail:
-    test ecx, ecx
-    jz run_sieve_p5_restore
-    and qword [rsi], rax
-    cmp ecx, 1
-    je run_sieve_p5_restore
-    and qword [rsi + 8], rbx
-    cmp ecx, 2
-    je run_sieve_p5_restore
-    and qword [rsi + 16], rdx
-    cmp ecx, 3
-    je run_sieve_p5_restore
-    and qword [rsi + 24], r9
-run_sieve_p5_restore:
-    bts qword [r14], 2
-    xor edi, edi
-    mov r13, [r14]
-    mov r8d, 7
-    mov r10, 8
-    mov r11d, 24
-    jmp run_sieve_outer
-
-align 16
-run_sieve_mark_p7:
-    mov rsi, r14
-    mov ecx, [r15 + worker_state.word_count]
-    mov rax, [rel dense_p7_masks]
-    mov rbx, [rel dense_p7_masks + 8]
-    mov rdx, [rel dense_p7_masks + 16]
-    mov r8, [rel dense_p7_masks + 24]
-    mov r9, [rel dense_p7_masks + 32]
-    mov r10, [rel dense_p7_masks + 40]
-    mov r11, [rel dense_p7_masks + 48]
-    cmp ecx, 7
-    jb run_sieve_p7_tail
-align 16
-run_sieve_p7_loop:
-    and qword [rsi], rax
-    and qword [rsi + 8], rbx
-    and qword [rsi + 16], rdx
-    and qword [rsi + 24], r8
-    and qword [rsi + 32], r9
-    and qword [rsi + 40], r10
-    and qword [rsi + 48], r11
-    add rsi, 56
-    sub ecx, 7
-    cmp ecx, 7
-    jae run_sieve_p7_loop
-run_sieve_p7_tail:
-    test ecx, ecx
-    jz run_sieve_p7_restore
-    and qword [rsi], rax
-    cmp ecx, 1
-    je run_sieve_p7_restore
-    and qword [rsi + 8], rbx
-    cmp ecx, 2
-    je run_sieve_p7_restore
-    and qword [rsi + 16], rdx
-    cmp ecx, 3
-    je run_sieve_p7_restore
-    and qword [rsi + 24], r8
-    cmp ecx, 4
-    je run_sieve_p7_restore
-    and qword [rsi + 32], r9
-    cmp ecx, 5
-    je run_sieve_p7_restore
-    and qword [rsi + 40], r10
-run_sieve_p7_restore:
-    bts qword [r14], 3
-    xor edi, edi
-    mov r13, [r14]
-    mov r8d, 9
-    mov r10, 16
-    mov r11d, 40
-    jmp run_sieve_outer
-
-align 16
-run_sieve_mark_p11:
-    push rbp
-    mov rsi, r14
-    mov ecx, [r15 + worker_state.word_count]
-    mov rax, [rel dense_p11_masks]
-    mov rbx, [rel dense_p11_masks + 8]
-    mov rdx, [rel dense_p11_masks + 16]
-    mov r8, [rel dense_p11_masks + 24]
-    mov r9, [rel dense_p11_masks + 32]
-    mov r10, [rel dense_p11_masks + 40]
-    mov r11, [rel dense_p11_masks + 48]
-    mov r13, [rel dense_p11_masks + 56]
-    mov r12, [rel dense_p11_masks + 64]
-    mov rdi, [rel dense_p11_masks + 72]
-    mov rbp, [rel dense_p11_masks + 80]
-    cmp ecx, 11
-    jb run_sieve_p11_tail
-align 16
-run_sieve_p11_loop:
-    and qword [rsi], rax
-    and qword [rsi + 8], rbx
-    and qword [rsi + 16], rdx
-    and qword [rsi + 24], r8
-    and qword [rsi + 32], r9
-    and qword [rsi + 40], r10
-    and qword [rsi + 48], r11
-    and qword [rsi + 56], r13
-    and qword [rsi + 64], r12
-    and qword [rsi + 72], rdi
-    and qword [rsi + 80], rbp
-    add rsi, 88
-    sub ecx, 11
-    cmp ecx, 11
-    jae run_sieve_p11_loop
-run_sieve_p11_tail:
-    test ecx, ecx
-    jz run_sieve_p11_restore
-    and qword [rsi], rax
-    cmp ecx, 1
-    je run_sieve_p11_restore
-    and qword [rsi + 8], rbx
-    cmp ecx, 2
-    je run_sieve_p11_restore
-    and qword [rsi + 16], rdx
-    cmp ecx, 3
-    je run_sieve_p11_restore
-    and qword [rsi + 24], r8
-    cmp ecx, 4
-    je run_sieve_p11_restore
-    and qword [rsi + 32], r9
-    cmp ecx, 5
-    je run_sieve_p11_restore
-    and qword [rsi + 40], r10
-    cmp ecx, 6
-    je run_sieve_p11_restore
-    and qword [rsi + 48], r11
-    cmp ecx, 7
-    je run_sieve_p11_restore
-    and qword [rsi + 56], r13
-    cmp ecx, 8
-    je run_sieve_p11_restore
-    and qword [rsi + 64], r12
-    cmp ecx, 9
-    je run_sieve_p11_restore
-    and qword [rsi + 72], rdi
-run_sieve_p11_restore:
-    bts qword [r14], 5
-    xor edi, edi
-    mov r12d, [r15 + worker_state.bit_count]
-    mov r13, [r14]
-    mov r8d, 13
-    mov r10, 64
-    mov r11d, 84
-    pop rbp
-    jmp run_sieve_outer
-
-align 16
 run_sieve_sparse_dispatch:
-    ; This path is entered only after p has been discovered from the sieve
-    ; bitset at runtime. It does not encode prior-prime knowledge.
+    ; This path is entered only after the factor has been discovered from the
+    ; runtime sieve bitset. Sparse periodic dispatch is based only on the odd
+    ; modulo-16 residue class of the factor, not on prior knowledge of
+    ; primeness or on any prime-specific value selection.
     push r8
     push r10
     push r11
@@ -794,28 +572,29 @@ run_sieve_sparse_dispatch:
 
     mov eax, r13d
     and eax, 15
+    cmp eax, 1
+    je run_sieve_sparse_residue_01
     cmp eax, 3
-    je run_sieve_sparse_03
+    je run_sieve_sparse_residue_03
     cmp eax, 5
-    je run_sieve_sparse_05
+    je run_sieve_sparse_residue_05
     cmp eax, 7
-    je run_sieve_sparse_07
+    je run_sieve_sparse_residue_07
     cmp eax, 9
-    je run_sieve_sparse_09
+    je run_sieve_sparse_residue_09
     cmp eax, 11
-    je run_sieve_sparse_11
+    je run_sieve_sparse_residue_11
     cmp eax, 13
-    je run_sieve_sparse_13
-    cmp eax, 15
-    je run_sieve_sparse_15
-    jmp run_sieve_sparse_17
+    je run_sieve_sparse_residue_13
+    ; only remaining odd residue is 15
+    jmp run_sieve_sparse_residue_15
 
 align 16
-run_sieve_sparse_03:
+run_sieve_sparse_residue_03:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_03
+    jb run_sieve_sparse_tail_residue_03
 align 16
-run_sieve_sparse_loop_03:
+run_sieve_sparse_loop_residue_03:
     and byte [rsi + rbx], 0xfd
     and byte [rsi + rcx], 0xef
     and byte [rsi + rdx], 0x7f
@@ -827,8 +606,8 @@ run_sieve_sparse_loop_03:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_03
-run_sieve_sparse_tail_03:
+    jae run_sieve_sparse_loop_residue_03
+run_sieve_sparse_tail_residue_03:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0xfd
@@ -856,11 +635,11 @@ run_sieve_sparse_tail_03:
     jmp run_sieve_sparse_done
 
 align 16
-run_sieve_sparse_05:
+run_sieve_sparse_residue_05:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_05
+    jb run_sieve_sparse_tail_residue_05
 align 16
-run_sieve_sparse_loop_05:
+run_sieve_sparse_loop_residue_05:
     and byte [rsi + rbx], 0xfb
     and byte [rsi + rcx], 0x7f
     and byte [rsi + rdx], 0xef
@@ -872,8 +651,8 @@ run_sieve_sparse_loop_05:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_05
-run_sieve_sparse_tail_05:
+    jae run_sieve_sparse_loop_residue_05
+run_sieve_sparse_tail_residue_05:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0xfb
@@ -901,11 +680,11 @@ run_sieve_sparse_tail_05:
     jmp run_sieve_sparse_done
 
 align 16
-run_sieve_sparse_07:
+run_sieve_sparse_residue_07:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_07
+    jb run_sieve_sparse_tail_residue_07
 align 16
-run_sieve_sparse_loop_07:
+run_sieve_sparse_loop_residue_07:
     and byte [rsi + rbx], 0xf7
     and byte [rsi + rcx], 0xfb
     and byte [rsi + rdx], 0xfd
@@ -917,8 +696,8 @@ run_sieve_sparse_loop_07:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_07
-run_sieve_sparse_tail_07:
+    jae run_sieve_sparse_loop_residue_07
+run_sieve_sparse_tail_residue_07:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0xf7
@@ -946,11 +725,11 @@ run_sieve_sparse_tail_07:
     jmp run_sieve_sparse_done
 
 align 16
-run_sieve_sparse_09:
+run_sieve_sparse_residue_09:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_09
+    jb run_sieve_sparse_tail_residue_09
 align 16
-run_sieve_sparse_loop_09:
+run_sieve_sparse_loop_residue_09:
     and byte [rsi + rbx], 0xef
     and byte [rsi + rcx], 0xdf
     and byte [rsi + rdx], 0xbf
@@ -962,8 +741,8 @@ run_sieve_sparse_loop_09:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_09
-run_sieve_sparse_tail_09:
+    jae run_sieve_sparse_loop_residue_09
+run_sieve_sparse_tail_residue_09:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0xef
@@ -991,11 +770,11 @@ run_sieve_sparse_tail_09:
     jmp run_sieve_sparse_done
 
 align 16
-run_sieve_sparse_11:
+run_sieve_sparse_residue_11:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_11
+    jb run_sieve_sparse_tail_residue_11
 align 16
-run_sieve_sparse_loop_11:
+run_sieve_sparse_loop_residue_11:
     and byte [rsi + rbx], 0xdf
     and byte [rsi + rcx], 0xfe
     and byte [rsi + rdx], 0xf7
@@ -1007,8 +786,8 @@ run_sieve_sparse_loop_11:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_11
-run_sieve_sparse_tail_11:
+    jae run_sieve_sparse_loop_residue_11
+run_sieve_sparse_tail_residue_11:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0xdf
@@ -1036,11 +815,11 @@ run_sieve_sparse_tail_11:
     jmp run_sieve_sparse_done
 
 align 16
-run_sieve_sparse_13:
+run_sieve_sparse_residue_13:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_13
+    jb run_sieve_sparse_tail_residue_13
 align 16
-run_sieve_sparse_loop_13:
+run_sieve_sparse_loop_residue_13:
     and byte [rsi + rbx], 0xbf
     and byte [rsi + rcx], 0xf7
     and byte [rsi + rdx], 0xfe
@@ -1052,8 +831,8 @@ run_sieve_sparse_loop_13:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_13
-run_sieve_sparse_tail_13:
+    jae run_sieve_sparse_loop_residue_13
+run_sieve_sparse_tail_residue_13:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0xbf
@@ -1081,11 +860,11 @@ run_sieve_sparse_tail_13:
     jmp run_sieve_sparse_done
 
 align 16
-run_sieve_sparse_15:
+run_sieve_sparse_residue_15:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_15
+    jb run_sieve_sparse_tail_residue_15
 align 16
-run_sieve_sparse_loop_15:
+run_sieve_sparse_loop_residue_15:
     and byte [rsi + rbx], 0x7f
     and byte [rsi + rcx], 0xbf
     and byte [rsi + rdx], 0xdf
@@ -1097,8 +876,8 @@ run_sieve_sparse_loop_15:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_15
-run_sieve_sparse_tail_15:
+    jae run_sieve_sparse_loop_residue_15
+run_sieve_sparse_tail_residue_15:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0x7f
@@ -1126,11 +905,11 @@ run_sieve_sparse_tail_15:
     jmp run_sieve_sparse_done
 
 align 16
-run_sieve_sparse_17:
+run_sieve_sparse_residue_01:
     cmp ebp, r13d
-    jb run_sieve_sparse_tail_17
+    jb run_sieve_sparse_tail_residue_01
 align 16
-run_sieve_sparse_loop_17:
+run_sieve_sparse_loop_residue_01:
     and byte [rsi + rbx], 0xfe
     and byte [rsi + rcx], 0xfd
     and byte [rsi + rdx], 0xfb
@@ -1142,8 +921,8 @@ run_sieve_sparse_loop_17:
     add rsi, r13
     sub ebp, r13d
     cmp ebp, r13d
-    jae run_sieve_sparse_loop_17
-run_sieve_sparse_tail_17:
+    jae run_sieve_sparse_loop_residue_01
+run_sieve_sparse_tail_residue_01:
     cmp ebx, ebp
     jae run_sieve_sparse_done
     and byte [rsi + rbx], 0xfe
@@ -1178,6 +957,8 @@ run_sieve_sparse_done:
     jmp run_sieve_next
 
 run_sieve_dense_dispatch:
+    ; Dense periodic dispatch uses only the discovered odd skip value:
+    ; index = (skip - 3) / 2 for the contiguous table 3,5,7,...,129.
     lea rax, [rel dense_jump_table]
     mov edx, r8d
     sub edx, 3
@@ -18937,65 +18718,6 @@ run_sieve_inner_large:
     lea rsi, [rsi + rdx*8]
     mov r9, [rsi]
     jmp run_sieve_inner_large
-
-run_sieve_mark_small:
-    mov eax, r11d
-    mov edx, eax
-    shr edx, 6
-
-    mov ecx, eax
-    and ecx, 63
-
-    lea rsi, [r14 + rdx*8]
-    mov r9, [rsi]
-
-run_sieve_inner_small:
-    btr r9, rcx
-
-    add eax, r8d
-    cmp eax, r12d
-    jae run_sieve_store_exit
-
-    add ecx, r8d
-    cmp ecx, 64
-    jae run_sieve_cross_small
-
-    btr r9, rcx
-
-    add eax, r8d
-    cmp eax, r12d
-    jae run_sieve_store_exit
-
-    add ecx, r8d
-    cmp ecx, 64
-    jae run_sieve_cross_small
-
-    btr r9, rcx
-
-    add eax, r8d
-    cmp eax, r12d
-    jae run_sieve_store_exit
-
-    add ecx, r8d
-    cmp ecx, 64
-    jae run_sieve_cross_small
-
-    btr r9, rcx
-
-    add eax, r8d
-    cmp eax, r12d
-    jae run_sieve_store_exit
-
-    add ecx, r8d
-    cmp ecx, 64
-    jb run_sieve_inner_small
-
-run_sieve_cross_small:
-    sub ecx, 64
-    mov [rsi], r9
-    add rsi, 8
-    mov r9, [rsi]
-    jmp run_sieve_inner_small
 
 run_sieve_store_exit:
     mov [rsi], r9
