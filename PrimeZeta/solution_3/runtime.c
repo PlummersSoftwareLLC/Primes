@@ -70,7 +70,7 @@ long long parallel_sieve_timed(long long limit, long long run_us, long long thre
                 for (int t = 0; t < threads; t++)
                     pthread_join(pt[t], NULL);
                 double secs = (now - start) / 1000000.0;
-                printf("murphsicles;%lld;%.6f;%lld;algorithm=base,faithful=no,bits=1\n",
+                printf("murphsicles;%lld;%.6f;%lld;algorithm=wheel,faithful=no,bits=1\n",
                        passes * threads, secs, (long long)threads);
                 fflush(stdout);
                 pthread_barrier_destroy(&barrier);
