@@ -1,6 +1,6 @@
 # Zeta solution by murphsicles
 
-![Algorithm](https://img.shields.io/badge/Algorithm-base-blue)
+![Algorithm](https://img.shields.io/badge/Algorithm-wheel-blue)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-red)
 ![Parallelism](https://img.shields.io/badge/Parallel-yes-brightgreen)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
