@@ -27,7 +27,9 @@ Both implementations:
 
 ### `cwager_x64ff_mt.asm`
 
-This is the conservative baseline variant. Each worker thread:
+This is the conservative baseline variant.
+
+Each worker thread:
 
 - allocates a fresh sieve buffer dynamically at runtime for each pass
 - initializes that buffer from scratch
@@ -44,11 +46,19 @@ Key techniques:
 
 - contiguous dense dispatch for every runtime-discovered odd skip from `3` through `129`
 - dense handlers for composite odd skips as well as prime odd skips within that range
-- sparse periodic resetters for larger runtime-discovered odd skips
+- dense handlers generated from source-level per-bit `btr` operations, rather than opaque precomputed bitmap constants
+- sparse periodic marking helpers for larger runtime-discovered odd skips
 - sparse dispatch based on modulo-16 residue classes
 - per-pass dynamic sieve allocation with full reinitialization before each run
 
-The optimized marking paths are selected only after the candidate factor has been found to still be set in the runtime sieve bitset. The implementation does not embed a wheel, prime table, or precomputed list of odd primes.
+The optimized marking paths are selected only after the candidate factor has been found to still be set in the runtime sieve bitset.
+
+The implementation does not embed:
+
+- a wheel
+- a prime table
+- a hardcoded list of odd primes
+- externally precomputed dense bitmap constants
 
 ## Rules / classification notes
 
@@ -60,15 +70,31 @@ Expected classification for both variants:
 
 ### Why `base` applies
 
-Both variants scan odd candidate factors sequentially, starting at `3`. Each candidate is tested against the runtime sieve state before any marking helper is selected.
+Both variants scan odd candidate factors sequentially, starting at `3`.
 
-Once a candidate factor has been discovered from the sieve bitset, the code clears projected multiples of that factor from the sieve space. The optimized dense and sparse helpers are projection optimizations after runtime discovery, not prior-prime knowledge.
+Each candidate is tested against the runtime sieve state before any marking helper is selected. Once a candidate factor has been discovered from the sieve bitset, the code clears projected multiples of that factor from the sieve space.
 
-The extreme variant's dense dispatch table covers the full contiguous odd skip range from `3` through `129`, including composite values such as `9`, `15`, `21`, and `25`. Composite handlers are present in the table, even though they are normally not reached because those candidates have already been cleared by earlier factors.
+The optimized dense and sparse helpers are projection optimizations after runtime discovery, not prior-prime knowledge.
+
+The extreme variant's dense dispatch table covers the full contiguous odd skip range from `3` through `129`, including composite values such as `9`, `15`, `21`, and `25`.
+
+Composite handlers are present in the table, even though they are normally not reached because those candidates have already been cleared by earlier factors.
+
+### Dense mask / marking composition
+
+The extreme variant no longer uses fully precomputed flat dense bitmap constants.
+
+Instead, the dense helper code is generated from NASM macros that emit identifiable individual `btr` operations for the relevant bit positions.
+
+This means the submitted source shows the marking pattern being composed in code from individual multiple positions, rather than storing the finished marking pattern as opaque data such as a precomputed `dq` bitmap.
+
+This is intentional: the dense helpers are still optimized, but the individual marked bits remain visible in the source and the marking work remains part of the submitted implementation.
 
 ### Why `faithful=yes` applies
 
-Each worker owns its sieve state in `worker_state`. For each pass, the worker:
+Each worker owns its sieve state in `worker_state`.
+
+For each pass, the worker:
 
 - allocates a fresh dynamic sieve buffer
 - initializes the buffer from scratch
@@ -89,47 +115,20 @@ The optimized jump tables and helper paths in `cwager_x64ff_mt_extreme.asm`:
 - do not skip candidate discovery
 - do not implement a wheel
 - do not contain a hardcoded prime table
+- do not contain opaque precomputed dense bitmap constants
 - include dense entries for every odd skip from `3` through `129`, including composites
 - use residue-based sparse dispatch for larger skips
+- are selected only after the candidate factor has already been discovered from the runtime sieve bitset
 
-They are selected only after the candidate factor has already been discovered from the runtime sieve bitset.
+The dense helpers are source-generated from explicit per-bit operations. The assembler may encode those instructions efficiently, but the submitted source still identifies the individual bit positions being cleared.
 
 ## Build and run
 
 From this directory:
 
-    nasm -felf64 cwager_x64ff_mt.asm -o cwager_x64ff_mt.o
-    gcc -no-pie -pthread cwager_x64ff_mt.o -o cwager_x64ff_mt
+```bash
+nasm -felf64 cwager_x64ff_mt.asm -o cwager_x64ff_mt.o
+gcc -no-pie -pthread cwager_x64ff_mt.o -o cwager_x64ff_mt
 
-    nasm -felf64 cwager_x64ff_mt_extreme.asm -o cwager_x64ff_mt_extreme.o
-    gcc -no-pie -pthread cwager_x64ff_mt_extreme.o -o cwager_x64ff_mt_extreme
-
-The default helper scripts build and run both variants:
-
-    ./build.sh
-    ./run.sh
-
-Run them individually:
-
-    ./cwager_x64ff_mt
-    ./cwager_x64ff_mt_extreme
-
-## Docker
-
-Build and run the containerized comparison:
-
-    docker build -t cwager-x64ff-mt .
-    docker run --rm cwager-x64ff-mt
-
-## Output
-
-Example recent outputs:
-
-    cwager_x64ff_mt_extreme;380713;5.000;16;algorithm=base,faithful=yes,bits=1
-    cwager_x64ff_mt;181358;5.000;16;algorithm=base,faithful=yes,bits=1
-
-Exact pass counts vary by CPU, thread count, kernel scheduling, and system load.
-
-## Notes
-
-These implementations target amd64/x86-64 Linux and link against `pthread` and `libc`.
+nasm -felf64 cwager_x64ff_mt_extreme.asm -o cwager_x64ff_mt_extreme.o
+gcc -no-pie -pthread cwager_x64ff_mt_extreme.o -o cwager_x64ff_mt_extreme
