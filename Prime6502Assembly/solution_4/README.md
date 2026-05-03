@@ -4,9 +4,9 @@
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 
-By: Rasmus Wernersson, AKA Raz/CML  
-March/April 2026 (code mostly written in the summer of 2023)  
-Blog-post, binaries: [Extended resource page for PrimeSieve1m](https://wernersson.dk/c64/primesieve/primesieve.html)
+**By:** Rasmus Wernersson, AKA Raz/CML  
+April/May 2026 (original code mostly written in the summer of 2023)  
+Blog-post, binaries download: [Extended resource page for PrimeSieve1m](https://wernersson.dk/c64/primesieve/primesieve.html)
 
 **In overview:**  
 - Entire set of primes up to 1,000,000 are found (using a bitfield of length 500,000 - 62500 (`$f424`) bytes).  
@@ -25,13 +25,33 @@ Assembly is simply: `java -jar KickAss.jar PrimeSieve1M.asm` which will produce 
 
 KickAssembler: [https://theweb.dk/KickAssembler/](https://theweb.dk/KickAssembler/)
 
-**Running the binary**  
+**Running the binary (interactively)**  
 I recommend using VICE: [VICE - the Versatile Commodore Emulator](https://vice-emu.sourceforge.io/) - all testing and debugging done on VICE (with occational testing on real hardware, my setup being a C64C (PAL) with an Ultimate II+ cartridge for file transfer + 1541 emulation). 
 
 **Timing the run (interactively)**   
 The binary has a build in validation step, and it utilizes the C64 TOD (time of day) clock for the timing. The timer is auto calibrated for NTSC or PAL upon start. The start menu allows for running two variants of the the algorithm (with and with-out the lazy init optimization) as well as triggering the algorithm to miscount the primes for showing that the validation works.
 
 ![Start menu](https://wernersson.dk/c64/primesieve/figures/PrimeSieve1M_start_menu_CRT.jpg)
+
+**Running and timing the binary in batchmode**
+
+To help run and time the program automatically, it it can be build with ```"-define BATCHMODE"``` which produces a slightly different version of the binary that will autostart and enter an endless loop at 0x0a00 after completion. That can then be used as a hook for the Vice emulator to execute a dump of the memory contents for outside analysis.
+
+Scripts:
+
+```
+autorun.sh
+basevars.sh
+build.sh
+analyze_memdump.py
+```
+Edit ```basevars.sh``` to point to ```java``` and ```x64sc```.
+
+Please see my blog-post for further pointers on how to play around with the memory dump: [Extended resource page for PrimeSieve1m](https://wernersson.dk/c64/primesieve/primesieve.html)
+
+**Docker**
+
+Finally, there is a Dockerfile for wrapping up the entire process and automating the build, running + checking of results (thanks to Rutger van Bergen for help with this).
 
 ## Results
 
