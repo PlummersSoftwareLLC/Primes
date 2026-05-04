@@ -1,5 +1,3 @@
-# cwager_x64ff_mt
-
 # cwager x86-64 NASM solutions
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
@@ -126,9 +124,34 @@ The dense helpers are source-generated from explicit per-bit operations. The ass
 
 From this directory:
 
-```bash
+~~~bash
 nasm -felf64 cwager_x64ff_mt.asm -o cwager_x64ff_mt.o
 gcc -no-pie -pthread cwager_x64ff_mt.o -o cwager_x64ff_mt
 
 nasm -felf64 cwager_x64ff_mt_extreme.asm -o cwager_x64ff_mt_extreme.o
 gcc -no-pie -pthread cwager_x64ff_mt_extreme.o -o cwager_x64ff_mt_extreme
+~~~
+
+Then run either variant directly:
+
+~~~bash
+./cwager_x64ff_mt
+./cwager_x64ff_mt_extreme
+~~~
+
+Or use the provided helper scripts / Docker flow if preferred.
+
+## Output
+
+Example output:
+
+~~~text
+cwager_x64ff_mt_extreme;380713;5.000;16;algorithm=base,faithful=yes,bits=1
+cwager_x64ff_mt;128068;5.001;16;algorithm=base,faithful=yes,bits=1
+~~~
+
+The exact pass counts will vary by CPU, operating system, container/runtime environment, and thread scheduling, but the output format follows the Prime Sieve drag-race convention:
+
+~~~text
+implementation;passes;seconds;threads;algorithm=base,faithful=yes,bits=1
+~~~
