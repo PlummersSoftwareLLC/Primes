@@ -1,0 +1,6 @@
+# Built executables
+primes
+cwager_fortran_mt
+
+# Fortran compiler module output
+prime_sieve_module.mod
