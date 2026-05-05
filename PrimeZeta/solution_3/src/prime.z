@@ -1,0 +1,49 @@
+// Solution_3: Multi-threaded Murphy's Sieve
+// Pure Zeta sieve — called from C pthread worker
+// All improvements: POPCNT via __builtin_ctpop, pre-sieve, unconditional clearing
+extern fn __builtin_ctpop(val: i64) -> i64;
+fn popcnt(x: i64) -> i64 { return __builtin_ctpop(x); }
+
+fn sieve(limit: i64) -> i64 {
+    let words = (limit + 63) / 64;
+    let mut bits: [i64; 15625] = [0; 15625];
+    let odd_mask: i64 = -6148914691236517206;
+    let mut i = 0;
+    while i < words { bits[i] = odd_mask; i += 1; }
+    bits[0] = (bits[0] | (1 << 2)) & !(1 << 1);
+    if limit % 64 > 0 {
+        bits[words - 1] = bits[words - 1] & !((-1) << (limit % 64));
+    }
+
+    // Pre-sieve 3,5,7,11,13
+    let mut m: i64 = 9; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 6; }
+    m = 25; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 10; }
+    m = 49; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 14; }
+    m = 121; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 22; }
+    m = 169; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 26; }
+
+    // Main: walk odd numbers, unconditional clearing
+    let mut p: i64 = 17;
+    while p * p < limit {
+        if ((bits[p/64] >> (p%64)) & 1) == 1 {
+            let mut m = p * p;
+            while m < limit {
+                bits[m/64] = bits[m/64] & !(1 << (m%64));
+                m += p * 2;
+            }
+        }
+        p += 2;
+    }
+
+    // Count with POPCNT
+    let mut count: i64 = 0;
+    i = 0;
+    while i < words { count += popcnt(bits[i]); i += 1; }
+    return count;
+}
+
+extern fn parallel_sieve_timed(limit: i64, run_us: i64, threads: i64) -> i64;
+
+fn main() -> i64 {
+    return parallel_sieve_timed(1000000, 5000000, 20);
+}
