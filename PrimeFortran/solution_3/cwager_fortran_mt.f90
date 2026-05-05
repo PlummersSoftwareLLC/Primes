@@ -97,8 +97,8 @@ contains
     integer :: bit_position
     integer :: word_index
 
-    word_index = int(index / word_bits, kind(word_index)) + 1
-    bit_position = int(mod(index, word_bits), kind(bit_position))
+    word_index = int(index / word_bits) + 1
+    bit_position = int(mod(index, word_bits))
     is_prime = btest(self%bits(word_index), bit_position)
   end function prime_sieve_get_bit
 
@@ -108,8 +108,8 @@ contains
     integer :: bit_position
     integer :: word_index
 
-    word_index = int(index / word_bits, kind(word_index)) + 1
-    bit_position = int(mod(index, word_bits), kind(bit_position))
+    word_index = int(index / word_bits) + 1
+    bit_position = int(mod(index, word_bits))
     self%bits(word_index) = ibset(self%bits(word_index), bit_position)
   end subroutine prime_sieve_set_bit
 
@@ -119,8 +119,8 @@ contains
     integer :: bit_position
     integer :: word_index
 
-    word_index = int(index / word_bits, kind(word_index)) + 1
-    bit_position = int(mod(index, word_bits), kind(bit_position))
+    word_index = int(index / word_bits) + 1
+    bit_position = int(mod(index, word_bits))
     self%bits(word_index) = ibclr(self%bits(word_index), bit_position)
   end subroutine prime_sieve_clear_bit
 
@@ -151,7 +151,6 @@ contains
 end module prime_sieve_module
 
 program primes
-  use iso_c_binding, only: c_int
   use iso_fortran_env, only: error_unit, int64, output_unit, real64
   use omp_lib
   use prime_sieve_module, only: build_sieve, prime_sieve
@@ -166,13 +165,6 @@ program primes
   integer(int64) :: passes
   real(real64) :: elapsed_seconds
   integer :: actual_threads
-
-  interface
-    subroutine c_exit(status) bind(C, name="exit")
-      import :: c_int
-      integer(c_int), value :: status
-    end subroutine c_exit
-  end interface
 
   ! Check the known reference count before printing benchmark output.
   call validate_or_exit(sieve_limit, expected_prime_count)
@@ -200,7 +192,7 @@ contains
     if (prime_count /= expected_count) then
       write (error_unit, '(A,I0,A,I0)') &
         'Validation failed: expected ', expected_count, ' primes, got ', prime_count
-      call c_exit(1_c_int)
+      stop 1
     end if
   end subroutine validate_or_exit
 
