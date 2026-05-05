@@ -1,6 +1,6 @@
 FROM rust:1.85-bookworm AS builder
 WORKDIR /build
-RUN git clone --depth 1 --branch v0.8.4 https://github.com/murphsicles/zeta.git
+RUN git clone --depth 1 --branch dev https://github.com/murphsicles/zeta.git
 WORKDIR /build/zeta
 RUN cargo build --release --bin zetac
 RUN gcc -O3 -march=native -pthread -c runtime.c -o zeta_runtime_c.o

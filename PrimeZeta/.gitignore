@@ -1,0 +1,8 @@
+
+# Secret workspace files - DO NOT COMMIT
+memory/
+MEMORY.md
+*.json
+credentials*
+*.o
+prime

@@ -1,11 +1,11 @@
 # Multi-stage Docker build for PrimeZeta competition entry
-# Builds Zeta compiler v0.8.4 from GitHub release, then compiles prime.z
+# Builds Zeta compiler dev from GitHub release, then compiles prime.z
 FROM rust:1.85-bookworm AS builder
 
 WORKDIR /build
 
 # Clone Zeta compiler from GitHub release tag
-RUN git clone --depth 1 --branch v0.8.4 https://github.com/murphsicles/zeta.git
+RUN git clone --depth 1 --branch dev https://github.com/murphsicles/zeta.git
 
 WORKDIR /build/zeta
 

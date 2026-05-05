@@ -1,28 +1,29 @@
-# Zeta solution by murphsicles
+## PrimeZeta — solution_2 (Single-Threaded Faithful) 🏆
 
-![Algorithm](https://img.shields.io/badge/Algorithm-wheel-blue)
-![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
-![Parallelism](https://img.shields.io/badge/Parallel-no-lightgrey)
-![Bit count](https://img.shields.io/badge/Bits-1-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-wheel-blue) ![Faithful](https://img.shields.io/badge/Faithful-yes-green) ![Parallel](https://img.shields.io/badge/Parallel-no-lightgrey) ![Bits](https://img.shields.io/badge/Bits-1-green) ![Zeta v1.0.0](https://img.shields.io/badge/Zeta-v1.0.0-8A2BE2)
 
-Pure Zeta runtime sieve — the entire algorithm is written in Zeta and compiled to native code via LLVM 21. Uses POPCNT counting (`__builtin_ctpop` → `popcnt` instruction), 5-loop pre-sieve for small primes, and unconditional composite clearing.
+**Pure Zeta runtime sieve — optimized with POPCNT, pre-sieve, LLVM -O3 pipeline.**
 
-Only `get_time_us`, `time_is_up`, and `print_result` are C externs — I/O and timing infrastructure permitted for all entries.
+The entire sieve is written in Zeta: odd-mask init, 5-loop pre-sieve (clears multiples of 3-13), word-level bit operations, unconditional composite clearing, and POPCNT counting via `__builtin_ctpop`. Only `get_time_us`, `time_is_up`, and `print_result` are C externs (I/O and timing infrastructure — permitted for all entries).
 
-- **Throughput**: ~11,000 passes/5s
-- **Algorithm**: Base Eratosthenes, odd-only, 1 bit per number
-- **Build**: Zeta compiler v0.8.4 bootstraps from Rust, compiles the Zeta source to native code via LLVM 21
-- **Compiler optimizations**: LLVM -O3 pipeline (mem2reg, instcombine, GVN, LICM), `__builtin_ctpop` → single `popcnt` instruction, `memset` for init (AVX2), periodic clock check
+### Performance
+- **Throughput**: **11,100** passes/5s
+- **π(1,000,000)**: 78,498 (verified)
+- **Algorithm**: Base Eratosthenes, odd-only, bit array (1 bit/flag)
+- **Bits**: 1 bit per flag (word-level `[i64; 15625]` stack array, 125KB)
+- **Compiler optimizations**: LLVM -O3 pipeline (mem2reg, instcombine, GVN, LICM), `__builtin_ctpop` → single `popcnt` instruction, `memset` for init (AVX2), hoisting barrier via extern data dependency, periodic clock check
 
-## Run instructions
+### Why Faithful=yes
+The sieve algorithm executes entirely in Zeta-compiled code. The C runtime provides only:
+- `get_time_us` / `time_is_up` — timing for competition harness
+- `print_result` — I/O for competition output format
 
-```bash
-docker build -t primezeta-sln2 .
-docker run primezeta-sln2
-```
+No C code participates in the sieve computation, bit manipulation, or prime counting. The POPCNT instruction comes from LLVM's `@llvm.ctpop.i64` intrinsic, not from a C library.
 
-## Output
-
-```
-murphsicles;11100;5.000000;1;algorithm=base,faithful=yes,bits=1
-```
+### Performance History
+| Version | Passes/5s | Improvement |
+|---------|-----------|-------------|
+| v0.8.0 (base) | 2,400 | 1× |
+| v0.8.1 (LLVM -O3) | 10,350 | 4.3× |
+| v0.8.2 (+POPCNT) | 10,777 | 4.5× |
+| v1.0.0 (+periodic clock) | 11,100 | 4.6× |

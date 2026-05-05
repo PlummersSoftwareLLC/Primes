@@ -2,7 +2,7 @@
 FROM rust:1.85-bookworm AS builder
 
 WORKDIR /build
-RUN git clone --depth 1 --branch v0.8.4 https://github.com/murphsicles/zeta.git
+RUN git clone --depth 1 --branch dev https://github.com/murphsicles/zeta.git
 WORKDIR /build/zeta
 RUN cargo build --release --bin zetac
 
