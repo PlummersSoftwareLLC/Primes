@@ -1,0 +1,56 @@
+extern fn get_time_us() -> i64;
+extern fn time_is_up(start_us: i64, target_us: i64) -> i64;
+extern fn print_result(passes: i64, elapsed_us: i64);
+extern fn __builtin_ctpop(val: i64) -> i64;
+fn popcnt(x: i64) -> i64 { return __builtin_ctpop(x); }
+
+fn sieve(limit: i64) -> i64 {
+    let words = (limit + 63) / 64;
+    let mut bits: [i64; 15625] = [0; 15625];
+    let odd_mask: i64 = -6148914691236517206;
+    let mut i = 0;
+    while i < words { bits[i] = odd_mask; i += 1; }
+    bits[0] = (bits[0] | (1 << 2)) & !(1 << 1);
+
+    let mut m: i64 = 9; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 6; }
+    m = 25; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 10; }
+    m = 49; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 14; }
+    m = 121; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 22; }
+    m = 169; while m < limit { bits[m/64] = bits[m/64] & !(1 << (m%64)); m += 26; }
+
+    let mut p: i64 = 17;
+    while p * p < limit {
+        if ((bits[p/64] >> (p%64)) & 1) == 1 {
+            let mut m = p * p;
+            while m < limit {
+                bits[m/64] = bits[m/64] & !(1 << (m%64));
+                m += p * 2;
+            }
+        }
+        p += 2;
+    }
+
+    let mut count: i64 = 0;
+    i = 0;
+    while i < words {
+        count += popcnt(bits[i]);
+        i += 1;
+    }
+    return count;
+}
+
+fn main() -> i64 {
+    if sieve(1000000) != 78498 { return 1; }
+    let start_us = get_time_us();
+    let mut passes: i64 = 0; let mut done: i64 = 0;
+    while done == 0 {
+        passes += 1;
+        // Hoisting barrier: sieve argument depends on extern result
+        let result = sieve(1000000 - (time_is_up(start_us, 0) - 1));
+        if result != 78498 { return 1; }
+        if passes % 100 == 0 && get_time_us() - start_us >= 5000000 { done = 1; }
+    }
+    let elapsed_us = get_time_us() - start_us;
+    print_result(passes, elapsed_us);
+    return 0;
+}
