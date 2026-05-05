@@ -12,6 +12,10 @@
   - [Pull request](#pull-request)
   - [Help/support](#helpsupport)
 - [Rules](#rules)
+- [Submission quality](#submission-quality)
+  - [Verifiability](#verifiability)
+  - [Honest representation](#honest-representation)
+  - [Maintainer discretion](#maintainer-discretion)
 - [Characteristics](#characteristics)
   - [Algorithm](#algorithm)
   - [Faithfulness](#faithfulness)
@@ -163,12 +167,34 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
 - Your solution calculates all the primes up to 1,000,000.
 - You own copyright to all code and are willing to license that code under BSD-new/BSD-3 or a more permissive license, or the code is available under BSD-new/BSD-3 or a more permissive license.
 
+## Submission quality
+
+This project exists because many people have invested significant time and care in crafting well-considered, honest solutions. Out of respect for those contributors and for the maintainers who review every submission, the following applies, _both to the submission itself and the language it has been implemented in_.
+
+### Verifiability
+
+A submission must be independently verifiable from the artifacts included in the pull request. Specifically:
+
+- Any claimed performance figures must be reproducible by building and running the solution as submitted, on comparable hardware.
+- If a solution depends on an external compiler, interpreter, or toolchain that is not a standard distribution package, that toolchain must be built from source within the Dockerfile. Pre-built opaque binaries fetched from external URLs at build time are not acceptable.
+- All labels and tags in the output (algorithm, faithful, bits) must accurately reflect the actual implementation. Incorrect labels are grounds for rejection regardless of the solution's other merits.
+
+### Honest representation
+
+- A solution submitted as a language X entry must implement the benchmark logic - the sieve, the timing loop, the pass counting - in language X. Using another language for those parts and calling into language X for a subroutine does not qualify as a language X entry. In certain cases, implementations in language X where certain features are supported using a different language may be admissible as a Mixed language solution - this is decided upon at the maintainers' discretion.
+- The description of a solution in its README and in the pull request must accurately represent what the code does. Fabricated benchmark results, unsupported claims about language capabilities, or descriptions that do not match the submitted code are grounds for rejection.
+
+### Maintainer discretion
+
+Reviewing submissions takes real time and effort. Maintainers may decline to engage with, or outright close, pull requests where the submission as a whole - language of implementation, code, documentation, or any combination of those - does not appear to represent a genuine, good-faith effort. This is a judgment call, and it will be exercised as such. If your submission is closed on these grounds, the closing comment will say so plainly.
+
 <!-- markdownlint-disable MD024 no-duplicate-header -->
 ## Characteristics
 
 The collection of solutions in this repository have come to use different approaches to implementing the prime number sieve. A number of characteristics have been defined as being relevant for an equal comparison between implementations. These are:
+
 | Name | Description |
-|-|-|
+| - | - |
 | [algorithm](#algorithm) | The algorithm used to find the primes in the prime number sieve. |
 | [faithfulness](#faithfulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |
 | [parallelism](#parallelism) | If the implementation uses any type of multi-threaded processing/calculation. |
@@ -183,8 +209,9 @@ This defines the algorithm(s) used by your implementation(s).
 #### Known algorithms
 
 We currently consider the following algorithms to be "known" algorithms:
+
 | Name | Description |
-|-|-|
+| - | - |
 | base | This is the algorithm that was used by @davepl in the YouTube video that spawned this repository. It is described in more detail, [below](#base-algorithm). |
 | wheel | Algorithms rooted in the principle of [wheel factorization](https://en.wikipedia.org/wiki/Wheel_factorization). These tend to take a (pre)calculated set of prime numbers within a certain base number range, that are then sequentially projected onto the sieve. |
 | other | All algorithms that do not fall in the values already mentioned. This is used as the default if no algorithm is specified. |
@@ -319,8 +346,9 @@ If you choose to include badges in your `README.md`, then:
 This characteristic specifies how many bits the implementation uses to store the indication (flag) if a number in the sieve is a prime number, or not.
 
 Common bit counts are:
+
 | Number | Used when |
-|-|-|
+| - | - |
 | 1 | Each prime number flag occupies one bit. Common implementations of this type use a bit array or bit masking on wider data types to get and set individual flags. |
 | 8 | Common implementations that occupy 8 bits per flag store the flags in a "byte" variable. |
 | 32 | Common implementations that occupy 32 bits per flag store the flags in a "regular" integer variable. |
