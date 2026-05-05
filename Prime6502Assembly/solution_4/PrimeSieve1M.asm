@@ -193,7 +193,6 @@ normal_flow:
 #else
 		lda #$35
 		sta $01
-
 !loop:
 		lda $dc01
 		cmp #$ef    // check for space ... in a bit primitive fashion
@@ -1149,7 +1148,7 @@ showsplashscreen:
 // SPC : $3c
 
 #if BATCHMODE
-		lda #$38
+		lda #$3b
 		bne !inject+
 #endif
 !loop:
@@ -1226,7 +1225,7 @@ splashtext:
 .text " + lazy init of bitfield with byte seqs "
 .text " + stays true to original sieve algo    "
 .text "                                        "
-.text "v1.0a                    raz/cml 04.2026"
+.text "v1.0b                    raz/cml 05.2026"
 .text "---------------- info: -----------------"
 .text "bitfield:  $0bdc-$ffff (500,000 bits)   "
 .text "bit order: 01234567    (as c64 graphics)"
