@@ -1,5 +1,6 @@
 # 6502 assembly solution by RazCamelot for Commodore 64
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
+![Algorithm](https://img.shields.io/badge/Algorithm-wheel-yellowgreen)
 ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
@@ -10,7 +11,7 @@ Blog-post, binaries download: [Extended resource page for PrimeSieve1m](https://
 
 **In overview:**  
 - Entire set of primes up to 1,000,000 are found (using a bitfield of length 500,000 - 62500 (`$f424`) bytes).  
-- Including the validation, it finishes in 13.8 sec (NTSC) / 14.2 sec (PAL) : (~ 13.35M cycles).   
+- Including the validation, the base algorithm finishes in 20.6 sec (NTSC) / 21.2 sec (PAL), and the lazy-init (wheel-ish) algorithm finishes in 13.8 sec (NTSC) / 14.2 sec (PAL).  
 - The main trick for speeding up the algorithm is to treat it like a bit filling exercise, where specific bit-patterns can quickly be rolled out over the entire bit-field. _It still holds true to the original algorithm_ - this is a type of inner-inner loop.  
 - Main trick for having it fit in a C64 is treating it like a demo-effect or computer game: take over the entire machine as the first thing, and agressively utilize every bit of memory available (including having code run in ZP + some of the stack space etc).
 - I've also included some nice visuals for tracking progress + stages of the algorithm. The color coding utilizes the trick that the 4-bit color ram fundamentally exists outside the ordinary ram). 
@@ -35,7 +36,7 @@ The binary has a build in validation step, and it utilizes the C64 TOD (time of 
 
 **Running and timing the binary in batchmode**
 
-To help run and time the program automatically, it it can be build with ```"-define BATCHMODE"``` which produces a slightly different version of the binary that will autostart and enter an endless loop at 0x0a00 after completion. That can then be used as a hook for the Vice emulator to execute a dump of the memory contents for outside analysis.
+To help run and time the program automatically, it it can be build with ```"-define BATCHMODE"``` which produces a slightly different version of the binary that will autostart (base algorith, mode 2) and enter an endless loop at 0x0a00 after completion. That can then be used as a hook for the Vice emulator to execute a dump of the memory contents for outside analysis.
 
 Scripts:
 
@@ -56,8 +57,10 @@ Finally, there is a Dockerfile for wrapping up the entire process and automating
 ## Results
 
 ```
-RazCamelot-c64PAL;1;14.2;1;algorithm=base,faithful=no,bits=1
-RazCamelot-c64NTSC;1;13.8;1;algorithm=base,faithful=no,bits=1
+RazCamelot-c64PAL;1;21.2;1;algorithm=base,faithful=no,bits=1
+RazCamelot-c64NTSC;1;20.6;1;algorithm=base,faithful=no,bits=1
+RazCamelot-c64PAL;1;14.2;1;algorithm=wheel,faithful=no,bits=1
+RazCamelot-c64NTSC;1;13.8;1;algorithm=wheel,faithful=no,bits=1
 ```
 
 -----------------------------------------------------------
