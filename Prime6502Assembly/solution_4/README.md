@@ -11,9 +11,10 @@ Blog-post, binaries download: [Extended resource page for PrimeSieve1m](https://
 
 **In overview:**  
 - Entire set of primes up to 1,000,000 are found (using a bitfield of length 500,000 - 62500 (`$f424`) bytes).  
-- Including the validation, the base algorithm finishes in 20.6 sec (NTSC) / 21.2 sec (PAL), and the lazy-init (wheel-ish) algorithm finishes in 13.8 sec (NTSC) / 14.2 sec (PAL).  
-- The main trick for speeding up the algorithm is to treat it like a bit filling exercise, where specific bit-patterns can quickly be rolled out over the entire bit-field. _It still holds true to the original algorithm_ - this is a type of inner-inner loop.  
-- Main trick for having it fit in a C64 is treating it like a demo-effect or computer game: take over the entire machine as the first thing, and agressively utilize every bit of memory available (including having code run in ZP + some of the stack space etc).
+- Two variants of the sieve algorithm are included, and can be selected by the user at the splash screen: Base ("full bitfield init") and Wheel(ish) ("lazy bitfield init").  
+- Including the validation, the base algorithm finishes in 20.6 sec (NTSC) / 21.2 sec (PAL), and the lazy-init (wheel-ish) algorithm finishes in 13.8 sec (NTSC) / 14.2 sec (PAL).   
+- The main trick for speeding up the algorithm is to treat it like a bit filling exercise, where specific bit-patterns can quickly be rolled out over the entire bit-field. _It still holds true to the original algorithm_ - this is a type of inner-inner loop. See full technical descriptions of the optimizations below, including complexity analysis and the rationale for the lazy-init / wheel(ish) optimization.  
+- Main trick for having it fit in a C64 is treating it like a demo-effect or computer game: take over the entire machine as the first thing, and agressively utilize every bit of memory available (including having code run in ZP + some of the stack space etc).  
 - I've also included some nice visuals for tracking progress + stages of the algorithm. The color coding utilizes the trick that the 4-bit color ram fundamentally exists outside the ordinary ram). 
   
 **Assembling the code**  
