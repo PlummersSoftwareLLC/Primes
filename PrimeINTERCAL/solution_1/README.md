@@ -2,7 +2,7 @@
 
 This solution uses C-INTERCAL `ick` with its external-calls facility.
 
-The benchmark logic is implemented in [`sieve.i`](./sieve.i). The INTERCAL program owns:
+The benchmark logic is implemented in [`cwager_intercal.i`](./cwager_intercal.i). The INTERCAL program owns:
 
 - the timed benchmark loop
 - pass counting
@@ -22,14 +22,14 @@ The sieve uses:
 
 ## C helper
 
-[`bench.c`](./bench.c) is linked through C-INTERCAL external calls. It is intentionally limited to runtime services that C-INTERCAL does not conveniently provide in the repository’s required output format:
+[`helper.c`](./helper.c) is linked through C-INTERCAL external calls. It is intentionally limited to runtime services that C-INTERCAL does not conveniently provide in the repository’s required output format:
 
 - `now_us()` returns a monotonic microsecond timestamp.
 - `print_result(passes, elapsed_us)` prints the final semicolon-separated decimal result line.
 
 The helper does **not** calculate the sieve, control the benchmark loop, count passes, validate the result, allocate or clear the sieve buffer, choose factors, mark composites, or count prime candidates.
 
-[`run.sh`](./run.sh) is only a thin launcher. It rebuilds `sieve` if needed and then executes it. It does not perform the benchmark loop or pass counting.
+[`run.sh`](./run.sh) is only a thin launcher. It rebuilds `cwager_intercal` if needed and then executes it. It does not perform the benchmark loop or pass counting.
 
 ## Algorithm and storage
 
@@ -46,9 +46,10 @@ For each benchmark pass it:
 
 The bitset stores one composite flag per bit in 16-bit INTERCAL array cells. This is the basis for the `bits=1` tag.
 
-## Compliance notes
+## Output
 
-This solution reports:
+This solution reports output in the repository format:
 
 ```text
-algorithm=base,faithful=yes,bits=1
+cwager_intercal;76;5.036789;1;algorithm=base,faithful=yes,bits=1
+```
