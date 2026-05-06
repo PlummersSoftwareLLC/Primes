@@ -232,7 +232,7 @@ init_benchmark:
     jmp .worker_init_loop
 
 .time_init:
-    sub rsp, 16
+    sub rsp, 24
     mov edi, CLOCK_MONOTONIC
     mov rsi, rsp
     call clock_gettime wrt ..plt
@@ -240,7 +240,7 @@ init_benchmark:
     mov [r12 + benchmark_state.start_sec], rax
     mov rax, [rsp + 8]
     mov [r12 + benchmark_state.start_nsec], rax
-    add rsp, 16
+    add rsp, 24
 
     pop r13
     pop r12
@@ -465,7 +465,8 @@ worker_main:
     ret
 
 elapsed_ge_runtime:
-    mov r8, rdi
+    push rbx
+    mov rbx, rdi
     sub rsp, 16
     mov edi, CLOCK_MONOTONIC
     mov rsi, rsp
@@ -474,8 +475,8 @@ elapsed_ge_runtime:
     mov rdx, [rsp + 8]
     add rsp, 16
 
-    sub rax, [r8 + benchmark_state.start_sec]
-    sub rdx, [r8 + benchmark_state.start_nsec]
+    sub rax, [rbx + benchmark_state.start_sec]
+    sub rdx, [rbx + benchmark_state.start_nsec]
     jns .time_ok
     dec rax
     add rdx, 1000000000
@@ -485,6 +486,7 @@ elapsed_ge_runtime:
     cmp rax, RUNTIME
     setae cl
     mov eax, ecx
+    pop rbx
     ret
 
 run_sieve:
