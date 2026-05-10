@@ -1,0 +1,63 @@
+From: Chris Wager <cwager@56kprojects.com>
+Subject: [PATCH] Add CLOCK binding for Prime Drag Race LOLCODE timing
+
+Patch for lci, a LOLCODE interpreter by Justin Meza and contributors.
+lci is licensed under the GNU General Public License v3.0.
+
+Patch changes by Chris Wager, 2026.
+
+This patch adds a small CLOCK binding for the Prime Drag Race LOLCODE
+solution. The binding exposes CLOCK'Z NAO, returning the current wall-clock
+time in microseconds. It does not implement the sieve, benchmark loop,
+validation, pass counting, elapsed-time calculation, or output formatting.
+
+---
+ binding.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/binding.c b/binding.c
+index 6f7a71e..561a1ae 100644
+--- a/binding.c
++++ b/binding.c
+@@ -284,6 +284,17 @@ ReturnObject *randWrapper(struct scopeobject *scope)
+ 	return createReturnObject(RT_RETURN, ret);
+ }
+ 
++ReturnObject *clockNowMicrosWrapper(struct scopeobject *scope)
++{
++	struct timeval tv;
++	long long micros = 0;
++	(void)scope;
++
++	gettimeofday(&tv, NULL);
++	micros = ((long long)tv.tv_sec * 1000000LL) + (long long)tv.tv_usec;
++	return createReturnObject(RT_RETURN, createIntegerValueObject(micros));
++}
++
+ void loadLibrary(ScopeObject *scope, IdentifierNode *target)
+ {
+ 	char *name = NULL;
+@@ -375,6 +386,23 @@ void loadLibrary(ScopeObject *scope, IdentifierNode *target)
+ 		if (!val) goto loadLibraryAbort;
+ 		lib = NULL;
+ 
++		if (!updateScopeValue(scope, scope, id, val)) goto loadLibraryAbort;
++		deleteIdentifierNode(id);
++	} else if (!strcmp(name, "CLOCK")) {
++		lib = createScopeObject(scope);
++		if (!lib) goto loadLibraryAbort;
++
++		loadBinding(lib, "NAO", "dummy", &clockNowMicrosWrapper);
++
++		id = createIdentifierNode(IT_DIRECT, (void *)copyString("CLOCK"), NULL, NULL, 0);
++		if (!id) goto loadLibraryAbort;
++
++		if (!createScopeValue(scope, scope, id)) goto loadLibraryAbort;
++
++		val = createArrayValueObject(lib);
++		if (!val) goto loadLibraryAbort;
++		lib = NULL;
++
+ 		if (!updateScopeValue(scope, scope, id, val)) goto loadLibraryAbort;
+ 		deleteIdentifierNode(id);
+ 	}
