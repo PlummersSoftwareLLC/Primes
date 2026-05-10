@@ -21,9 +21,10 @@ FROM debian:bookworm-slim AS runtime
 
 WORKDIR /app
 
-# Copy both binaries
+# Copy all runtime binaries
 COPY --from=build /app/cwager_x64ff_mt .
 COPY --from=build /app/cwager_x64ff_mt_extreme .
+COPY --from=build /app/cwager_x64ff_mt_extreme_maskgen_onefactor .
 
 # Copy runner
 COPY run.sh .
