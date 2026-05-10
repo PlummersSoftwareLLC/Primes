@@ -495,17 +495,18 @@ worker_main:
     ret
 
 elapsed_ge_runtime:
-    mov r8, rdi
-    sub rsp, 16
+    push rbx
+    mov rbx, rdi
+    sub rsp, 24
     mov edi, CLOCK_MONOTONIC
     mov rsi, rsp
     call clock_gettime wrt ..plt
     mov rax, [rsp]
     mov rdx, [rsp + 8]
-    add rsp, 16
+    add rsp, 24
 
-    sub rax, [r8 + benchmark_state.start_sec]
-    sub rdx, [r8 + benchmark_state.start_nsec]
+    sub rax, [rbx + benchmark_state.start_sec]
+    sub rdx, [rbx + benchmark_state.start_nsec]
     jns .time_ok
     dec rax
     add rdx, 1000000000
@@ -515,6 +516,7 @@ elapsed_ge_runtime:
     cmp rax, RUNTIME
     setae cl
     mov eax, ecx
+    pop rbx
     ret
 
 run_sieve:
