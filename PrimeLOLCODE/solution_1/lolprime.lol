@@ -5,21 +5,8 @@ CAN HAS CLOCK?
 I HAS A SIEVE_SIZE ITZ 1000000
 I HAS A EXPECTED_COUNT ITZ 78498
 I HAS A TARGET_USEC ITZ 5000000
-BTW MASKS and POP8 are process-wide lookup tables, not per-pass sieve state.
-I HAS A MASKS ITZ A BUKKIT
+BTW POP8 is a process-wide lookup table, not per-pass sieve state.
 I HAS A POP8 ITZ A BUKKIT
-
-I HAS A mask_idx ITZ 0
-I HAS A mask_value ITZ 1
-IM IN YR init_masks
-    BOTH SAEM mask_idx AN 32, O RLY?
-        YA RLY
-            GTFO
-    OIC
-    MASKS HAS A SRS mask_idx ITZ mask_value
-    mask_idx R SUM OF mask_idx AN 1
-    mask_value R PRODUKT OF mask_value AN 2
-IM OUTTA YR init_masks
 
 I HAS A pop_idx ITZ 0
 IM IN YR init_pop8
@@ -86,10 +73,6 @@ O HAI IM SieveBase
 
     HOW IZ I bit_index YR odd_value
         FOUND YR QUOSHUNT OF odd_value AN 2
-    IF U SAY SO
-
-    HOW IZ I mask_for YR bit_offset
-        FOUND YR MASKS'Z SRS bit_offset
     IF U SAY SO
 
     HOW IZ I init YR limit
