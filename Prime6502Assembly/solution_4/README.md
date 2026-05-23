@@ -56,12 +56,13 @@ Please see my blog-post for further pointers on how to play around with the memo
 Finally, there is a Dockerfile for wrapping up the entire process and automating the build, running + checking of results (thanks to Rutger van Bergen for help with this).
 
 ## Results
+Machine: C64C PAL  
+Algorithm variant: full init (base) 
 
 ```
-RazCamelot-c64PAL;1;21.2;1;algorithm=base,faithful=no,bits=1
-RazCamelot-c64NTSC;1;20.6;1;algorithm=base,faithful=no,bits=1
-RazCamelot-c64PAL;1;14.2;1;algorithm=wheel,faithful=no,bits=1
-RazCamelot-c64NTSC;1;13.8;1;algorithm=wheel,faithful=no,bits=1
+TIME:   00:21.2
+PRIMES: 78498
+VALID:  True
 ```
 
 -----------------------------------------------------------
