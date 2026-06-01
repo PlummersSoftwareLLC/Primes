@@ -1,4 +1,4 @@
-FROM lucee/lucee:6.2.0.321-light-tomcat10.1-jre21-temurin-jammy
+FROM lucee/lucee:7.0.5.17-SNAPSHOT-zero
 
 RUN apt-get update && \
     apt-get install -y html2text && \
