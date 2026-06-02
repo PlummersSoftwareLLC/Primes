@@ -1,6 +1,4 @@
 component {
-
-    // Static validation data
     variables.VALIDATION_DATA = {
         10 = 4,
         100 = 25,
@@ -13,26 +11,21 @@ component {
     };
 
     function init(n) {
-        this.n = n;
+        this.n      = n;
         this.half_n = (n + 1) \ 2;
-
-            this.sieveSet = [];
-            for (i = 1; i <= this.half_n; i++) {
-                this.sieveSet[i] = 1;
-            }
-
+        this.sieveSet = [];
+        for (i = 1; i <= this.half_n; i++) {
+            this.sieveSet[i] = 1;
+        }
         return this;
     }
 
     function countPrimes() {
-        var cnt = 1; // Count 2 as well
-
-        for (i = 1; i <= arrayLen(this.sieveSet); i++) {
-            if (this.sieveSet[i]) {
-                cnt++;
-            }
+        var cnt = 1;
+        var al = arrayLen(this.sieveSet);
+        for (i = 1; i <= al ; i++) {
+            if (this.sieveSet[i]) cnt++;
         }
-
         return cnt;
     }
 
@@ -41,12 +34,10 @@ component {
     }
 
     function run() {
-
-        var sieve = this.sieveSet;
+        var sieve     = this.sieveSet;
         var halfLimit = this.half_n;
-
         for (p = 3; p * p <= this.n; p += 2) {
-            var idx = int(p \ 2);
+            var idx = p \ 2;
             if (sieve[idx]) {
                 var start = int((p * p) \ 2);
                 for (i = start; i <= halfLimit; i += p) {
@@ -56,11 +47,11 @@ component {
         }
     }
 
-    function printResults(duration, passes) {
+    function printResults(duration, passes, threads=1) {
         var count = this.countPrimes();
-        var label = "willeyeuk-numbers";
-        var bits =  "64";
+        var label = (threads > 1) ? "willeyeuk-numbers-parallel" : "willeyeuk-numbers";
+        var bits  = "64";
         writeOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #this.n#, Count: #count#, Valid: #validateResults()#<br>");
-        writeOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#<br>");
+        writeOutput("#label#;#passes#;#duration#;#threads#;algorithm=base,faithful=yes,bits=#bits#<br>");
     }
 }

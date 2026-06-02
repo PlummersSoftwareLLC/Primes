@@ -1,6 +1,4 @@
 component {
-
-    // Static validation data
     variables.VALIDATION_DATA = {
         10 = 4,
         100 = 25,
@@ -13,12 +11,10 @@ component {
     };
 
     function init(n) {
-        this.n = n;
-        this.half_n = (n + 1) \ 2;
-
+        this.n        = n;
+        this.half_n   = (n + 1) \ 2;
         this.sieveSet = createObject("java", "java.util.BitSet").init();
-        this.sieveSet.set(0, this.half_n + 1); // 0 will cover 2 when counting
-
+        this.sieveSet.set(0, this.half_n + 1);
         return this;
     }
 
@@ -31,12 +27,10 @@ component {
     }
 
     function run() {
-
-        var sieve = this.sieveSet;
+        var sieve     = this.sieveSet;
         var halfLimit = this.half_n;
-
         for (p = 3; p * p <= this.n; p += 2) {
-            var idx = int(p \ 2);
+            var idx = p \ 2;
             if (sieve.get(idx)) {
                 var start = int((p * p) \ 2);
                 for (i = start; i <= halfLimit; i += p) {
@@ -46,11 +40,11 @@ component {
         }
     }
 
-    function printResults(duration, passes) {
+    function printResults(duration, passes, threads=1) {
         var count = this.countPrimes();
-        var label = "willeyeuk-bitset";
-        var bits =  "1";
+        var label = (threads > 1) ? "willeyeuk-bitset-parallel" : "willeyeuk-bitset";
+        var bits  = "1";
         writeOutput("Passes: #passes#, Time: #duration#, Avg: #duration / passes#, Limit: #this.n#, Count: #count#, Valid: #validateResults()#<br>");
-        writeOutput("#label#;#passes#;#duration#;1;algorithm=base,faithful=yes,bits=#bits#<br>");
+        writeOutput("#label#;#passes#;#duration#;#threads#;algorithm=base,faithful=yes,bits=#bits#<br>");
     }
 }
