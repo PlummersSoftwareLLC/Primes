@@ -9,6 +9,8 @@ COPY . /var/www
 
 WORKDIR /app
 
+ENV MAX_THREADS=0
+
 RUN mv /var/www/docker-run.sh . && \
     chmod a+x docker-run.sh
 
