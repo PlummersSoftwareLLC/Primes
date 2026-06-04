@@ -9,6 +9,7 @@ ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update && apt-get install -y \
     build-essential \
+    clang \
     cmake \
     git \
     && apt-get clean \
