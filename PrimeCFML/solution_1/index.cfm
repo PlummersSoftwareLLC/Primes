@@ -21,20 +21,29 @@
     }
 
     function benchmarkParallel(createFn, threads) {
-        var state    = { passes: 0, instance: "" };
-        var deadline = getTickCount() + runTime;
+        var deadline    = getTickCount() + runTime;
+        var passCounts  = [];
+        var instances   = [];
+
+        // Pre-fill one slot per thread
+        loop from=1 to=threads index="t" {
+            arrayAppend(passCounts, 0);
+            arrayAppend(instances, "");
+        }
 
         var worker = function(slot) {
+            var localPasses = 0;
+            var lastSieve   = "";
             while (true) {
-
                 if (getTickCount() >= deadline) {
+                    passCounts[slot] = localPasses;
+                    instances[slot]  = lastSieve;
                     return;
                 }
-
                 var s = createFn();
                 s.run();
-                state.passes++;
-                state.instance = s;
+                localPasses++;
+                lastSieve = s;
             }
         };
 
@@ -47,10 +56,18 @@
         slots.each(closure=worker, parallel=true, maxThreads=threads);
         var duration = (getTickCount() - start) / 1000;
 
-        if (isObject(state.instance)) {
-            state.instance.printResults(duration, state.passes, threads);
+        var totalPasses = 0;
+        var instance    = "";
+        loop from=1 to=threads index="t" {
+            totalPasses += passCounts[t];
+            if (isObject(instances[t])) instance = instances[t];
         }
-    }
+
+        if (isObject(instance)) {
+            instance.printResults(duration, totalPasses, threads);
+        }
+}
+
 
     benchmark(function(sieve) {
         sieve.instance = new PrimeSieveNumbers(limit);
@@ -84,4 +101,6 @@
     benchmarkParallel(function() {
         return new PrimeSieveBool(limit);
     }, maxThreads);
+
+
 </cfscript>
