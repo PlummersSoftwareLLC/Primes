@@ -245,21 +245,22 @@ public:
             uint64_t bi = b;
             const uint64_t step8 = bitStep * 8;
             uint8_t masks[8];
-            uint32_t offsets[8];
+            size_t offsets[8];
             const uint64_t baseByte = bi >> 3;
 
             for (uint32_t i = 0; i < 8; ++i)
             {
                 const uint64_t markBi = bi + bitStep * i;
                 masks[i] = static_cast<uint8_t>(1u << (markBi & 7));
-                offsets[i] = static_cast<uint32_t>((markBi >> 3) - baseByte);
+                offsets[i] = static_cast<size_t>((markBi >> 3) - baseByte);
             }
 
-            uint8_t* ptr = array + baseByte;
+            uint64_t byteIndex = baseByte;
             const uint64_t groupEnd = (bitCount > bitStep * 7) ? (bitCount - bitStep * 7) : 0;
 
             while (bi < groupEnd)
             {
+                uint8_t* ptr = array + byteIndex;
                 ptr[offsets[0]] |= masks[0];
                 ptr[offsets[1]] |= masks[1];
                 ptr[offsets[2]] |= masks[2];
@@ -268,7 +269,7 @@ public:
                 ptr[offsets[5]] |= masks[5];
                 ptr[offsets[6]] |= masks[6];
                 ptr[offsets[7]] |= masks[7];
-                ptr += bitStep;
+                byteIndex += bitStep;
                 bi += step8;
             }
 
