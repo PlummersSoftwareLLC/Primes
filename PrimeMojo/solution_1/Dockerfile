@@ -13,8 +13,6 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY . .
-
 RUN python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install modular \
     --extra-index-url https://modular.gateway.scarf.sh/simple/
@@ -22,8 +20,10 @@ RUN python3 -m venv /opt/venv \
 # Ensure venv is on PATH
 ENV PATH="/opt/venv/bin:${PATH}"
 
-# Build the Mojo program defualt
-RUN mojo build primesieve.mojo -o primesieve
+# Copy only the source we need (better layer caching)
+COPY primesieve.mojo ./
 
+# Build the Mojo program default
+RUN mojo build primesieve.mojo -o primesieve
 
 ENTRYPOINT ["./primesieve"]

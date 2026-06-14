@@ -1,10 +1,10 @@
-FROM python:3.8-alpine3.13
+FROM python:3.11-slim
 
-RUN apk add --update --no-cache py3-numpy
-ENV PYTHONPATH=/usr/lib/python3.8/site-packages
+RUN pip install --no-cache-dir numpy numba
 
 WORKDIR /opt/app
 
-COPY PrimePY.py .
+COPY PrimePY.py PrimePY_numba.py run.sh ./
+RUN chmod +x run.sh
 
-ENTRYPOINT [ "python3", "PrimePY.py" ]
+ENTRYPOINT [ "./run.sh" ]

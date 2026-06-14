@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM eclipse-temurin:11-jdk
 
 WORKDIR /opt/app
 COPY PrimeUmple.ump .

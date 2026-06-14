@@ -100,7 +100,7 @@ PROC print results = (PRIMESIEVE this, BOOL show results, REAL duration, INT pas
     ));
     print((
         newline,
-        "rzuckerm;", whole(passes, 0),
+        "rzuckerm-algol68-bool;", whole(passes, 0),
         ";", fixed(duration, 0, 8),
         ";1;algorithm=base,faithful=yes",
         newline

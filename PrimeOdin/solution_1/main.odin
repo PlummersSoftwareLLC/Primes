@@ -7,31 +7,6 @@ import "core:math"
 import "core:thread"
 import "core:sync";
 
-when ODIN_OS == "windows" {
-    import "core:sys/windows"
-
-    get_num_cores :: proc() -> int {
-        sys_info := windows.SYSTEM_INFO{};
-        windows.GetSystemInfo(&sys_info);
-        return int(sys_info.dwNumberOfProcessors);
-    }
-} else when ODIN_OS == "linux" {
-    import "core:c";
-    foreign import sysinfo "system:c"
-
-    @(default_calling_convention="c")
-    foreign sysinfo {
-        // returns number of configured cores on linux
-        get_nprocs_conf :: proc() -> c.int ---;
-    }
-
-    get_num_cores :: proc() -> int {
-        return int(get_nprocs_conf());
-    }
-} else {
-    #assert(0);
-}
-
 
 
 expected :: proc(upper: u64) -> u64 {
@@ -57,7 +32,9 @@ BitSieve :: struct {
 
 make_bits :: proc(using sieve: ^BitSieve, size: u64) {
     // we don't store evens
-    bits = make([]SIEVE_BACKING, math.ceil(f32(size / SIEVE_BACKING_BITS / 2)), context.temp_allocator);
+    half := size / 2;
+    count := (half + SIEVE_BACKING_BITS - 1) / SIEVE_BACKING_BITS;
+    bits = make([]SIEVE_BACKING, int(count), context.allocator);
 }
 
 get_bit :: proc(using sieve: ^BitSieve, index: u64) -> bool #no_bounds_check {
@@ -123,7 +100,7 @@ ByteSieve :: struct {
 
 run_sieve_byte :: proc(upper: u64) -> (sieve: ByteSieve) #no_bounds_check {
     sieve.upper = upper;
-    sieve.bits = make([]bool, upper / 2, context.temp_allocator);
+    sieve.bits = make([]bool, upper / 2, context.allocator);
     factor := u64(3);
     q := u64(math.sqrt(f64(upper)));
 
@@ -171,7 +148,7 @@ measure_run :: proc(size: u64, run_func: $T) -> (passes: u32, total_time: f64) {
         sieve := run_func(size);
         primes = count_primes(&sieve);
         passes += 1;
-        free((^rawptr)(&sieve.bits)^, context.temp_allocator);
+        free((^rawptr)(&sieve.bits)^, context.allocator);
     }
     total_time = time.duration_seconds(time.tick_since(start_time));
 
@@ -182,27 +159,48 @@ measure_run :: proc(size: u64, run_func: $T) -> (passes: u32, total_time: f64) {
     return passes, total_time;
 }
 
-run_threaded :: proc(thread_count: int, $size: u64, $run_func: $T) ->  (total_passes: u32, total_time: f64) {
+thread_worker_bit :: proc(passes: ^u32, wg: ^sync.Wait_Group, size: u64) {
+    passes^, _ = measure_run(size, run_sieve_bit);
+    sync.wait_group_done(wg);
+}
+
+thread_worker_byte :: proc(passes: ^u32, wg: ^sync.Wait_Group, size: u64) {
+    passes^, _ = measure_run(size, run_sieve_byte);
+    sync.wait_group_done(wg);
+}
+
+run_threaded_bit :: proc(thread_count: int, size: u64) -> (total_passes: u32, total_time: f64) {
     start_time := time.tick_now();
 
-    @static sem: sync.Semaphore;
-    sync.semaphore_init(&sem, thread_count);
-    defer sync.semaphore_destroy(&sem);
+    wg := sync.Wait_Group{};
+    sync.wait_group_add(&wg, thread_count);
 
     local_passes := make([]u32, thread_count);
-    for pass, i in &local_passes {
-        // wait/decrement sem here since loop below might otherwise execute
-        // before the wait in the thread
-        sync.semaphore_wait_for(&sem);
-        thread.run_with_poly_data(&pass, proc(passes: ^u32) {
-            passes^, _ = measure_run(size, run_func);
-            sync.semaphore_post(&sem);
-        });
+    for i in 0..<thread_count {
+        thread.run_with_poly_data3(&local_passes[i], &wg, size, thread_worker_bit);
     }
 
-    for i in 0..<thread_count {
-        sync.semaphore_wait_for(&sem);
+    sync.wait_group_wait(&wg);
+
+    for c in local_passes {
+        total_passes += c;
     }
+    total_time = time.duration_seconds(time.tick_since(start_time));
+    return total_passes, total_time;
+}
+
+run_threaded_byte :: proc(thread_count: int, size: u64) -> (total_passes: u32, total_time: f64) {
+    start_time := time.tick_now();
+
+    wg := sync.Wait_Group{};
+    sync.wait_group_add(&wg, thread_count);
+
+    local_passes := make([]u32, thread_count);
+    for i in 0..<thread_count {
+        thread.run_with_poly_data3(&local_passes[i], &wg, size, thread_worker_byte);
+    }
+
+    sync.wait_group_wait(&wg);
 
     for c in local_passes {
         total_passes += c;
@@ -221,11 +219,14 @@ main :: proc() {
 
     // threaded version
     thread_count := get_num_cores();
-    passes, total = run_threaded(thread_count, size, run_sieve_bit);
+    if thread_count < 1 {
+        thread_count = 1;
+    }
+    passes, total = run_threaded_bit(thread_count, size);
     fmt.printf(
         "\nodin_bit_threaded_moe;%v;%v;%v;algorithm=base,faithful=yes,bits=1",
         passes, total, thread_count);
-    passes, total = run_threaded(thread_count, size, run_sieve_byte);
+    passes, total = run_threaded_byte(thread_count, size);
     fmt.printf(
         "\nodin_byte_threaded_moe;%v;%v;%v;algorithm=base,faithful=yes,bits=8",
         passes, total, thread_count);
