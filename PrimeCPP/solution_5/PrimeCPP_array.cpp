@@ -19,6 +19,7 @@
 #include <thread>
 #include <memory>
 #include <cstdlib>
+#include <atomic>
 
 #if defined(_WIN32)
 #  include <malloc.h>
@@ -43,12 +44,12 @@
 
 // No platform-specific headers; keep this file portable
 
-// Threshold in bit-domain step (factor) at/above which we prefer the simple scalar marking loop.
+// Threshold in bit-domain step (factor) at/above which we prefer the patterned scalar marking loop.
 // Tune by defining -DBITSTEP_WORDWISE_THRESHOLD=<value> at compile time.  I tested all values and
 // this was the best result on ARM M2 Mac
 
 #ifndef BITSTEP_WORDWISE_THRESHOLD
-   #define BITSTEP_WORDWISE_THRESHOLD 16
+   #define BITSTEP_WORDWISE_THRESHOLD 64
 #endif
 
 using namespace std;
@@ -62,7 +63,6 @@ const uint64_t DEFAULT_UPPER_LIMIT = 1'000'000LLU;
 #ifndef USE_ALWAYS_INLINE
 #define USE_ALWAYS_INLINE 1
 #endif
-
 #if USE_BRANCH_HINTS && (defined(__GNUC__) || defined(__clang__))
 #  define LIKELY(x)   (__builtin_expect(!!(x), 1))
 #  define UNLIKELY(x) (__builtin_expect(!!(x), 0))
@@ -239,37 +239,40 @@ public:
         if (bitStep == 0 || b >= bitCount)
             return;
 
-        // For large steps, use optimized scalar loop with aggressive prefetching
-        if (UNLIKELY(bitStep >= BITSTEP_WORDWISE_THRESHOLD))
+        // For larger steps, one byte-level mark per hit is cheaper than sweeping every 64-bit word.
+        if (UNLIKELY(bitStep >= BITSTEP_WORDWISE_THRESHOLD || bitStep >= 64))
         {
-            // Unroll by 8 to reduce loop overhead and improve instruction-level parallelism
             uint64_t bi = b;
             const uint64_t step8 = bitStep * 8;
-            const uint64_t end = (bitCount >= step8) ? (bitCount - step8) : 0;
+            uint8_t masks[8];
+            size_t offsets[8];
+            const uint64_t baseByte = bi >> 3;
 
-            // Process 8 at a time with aggressive prefetching
-            while (bi < end)
+            for (uint32_t i = 0; i < 8; ++i)
             {
-                // Store 8 values
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
-                bi += bitStep;
+                const uint64_t markBi = bi + bitStep * i;
+                masks[i] = static_cast<uint8_t>(1u << (markBi & 7));
+                offsets[i] = static_cast<size_t>((markBi >> 3) - baseByte);
             }
 
-            // Handle remaining values
+            uint64_t byteIndex = baseByte;
+            const uint64_t groupEnd = (bitCount > bitStep * 7) ? (bitCount - bitStep * 7) : 0;
+
+            while (bi < groupEnd)
+            {
+                uint8_t* ptr = array + byteIndex;
+                ptr[offsets[0]] |= masks[0];
+                ptr[offsets[1]] |= masks[1];
+                ptr[offsets[2]] |= masks[2];
+                ptr[offsets[3]] |= masks[3];
+                ptr[offsets[4]] |= masks[4];
+                ptr[offsets[5]] |= masks[5];
+                ptr[offsets[6]] |= masks[6];
+                ptr[offsets[7]] |= masks[7];
+                byteIndex += bitStep;
+                bi += step8;
+            }
+
             while (bi < bitCount)
             {
                 array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
@@ -291,14 +294,12 @@ public:
         const uint32_t advance = static_cast<uint32_t>(delta == 0 ? 0 : (bitStep - delta));
         uint32_t firstMod = static_cast<uint32_t>(startPosAbs % bitStep); // first position modulo bitStep within the word
 
-        // Enhanced mask precomputation with unrolled inner loops
         uint64_t stepMasks[64];
         for (uint64_t first = 0; first < bitStep && first < 64; ++first)
         {
             uint64_t m = 0ULL;
-            // Unroll inner loop by 4 for better performance
             uint64_t pos = first;
-            while (pos < 64 - bitStep * 3) {
+            while (pos + bitStep * 3 < 64) {
                 m |= (1ULL << pos);
                 pos += bitStep;
                 m |= (1ULL << pos);
@@ -308,7 +309,6 @@ public:
                 m |= (1ULL << pos);
                 pos += bitStep;
             }
-            // Handle remaining positions
             while (pos < 64) {
                 m |= (1ULL << pos);
                 pos += bitStep;
@@ -549,7 +549,7 @@ public:
                 {
                     // We start inside the tail word
                     tailFirstAbs = static_cast<uint32_t>(b - tailBitStart);
-                    tailFirstMod = static_cast<uint32_t>(b % bitStep);
+                    tailFirstMod = static_cast<uint32_t>(tailFirstAbs % bitStep);
                 }
                 else
                 {
@@ -860,17 +860,21 @@ int main(int argc, char **argv)
         auto tStart = steady_clock::now();
         std::vector<std::thread> threads(cThreads);
         std::vector<uint64_t> l_passes(cThreads);
+        std::atomic<bool> keepRunning { true };
         for (unsigned int i = 0; i < cThreads; i++)
         {
-            threads[i] = std::thread([i, &l_passes, &tStart](size_t llUpperLimit)
+            threads[i] = std::thread([i, &l_passes, &keepRunning](size_t llUpperLimit)
             {
-                l_passes[i] = 0;
-                while (duration_cast<seconds>(steady_clock::now() - tStart).count() < 5) {
+                uint64_t passes = 0;
+                while (keepRunning.load(std::memory_order_relaxed)) {
                     prime_sieve(llUpperLimit).runSieve();
-                    ++l_passes[i];
+                    ++passes;
                 }
+                l_passes[i] = passes;
             }, llUpperLimit);
         }
+        std::this_thread::sleep_until(tStart + seconds(cSeconds));
+        keepRunning.store(false, std::memory_order_relaxed);
         for (auto i = 0; i < cThreads; i++)
         {
             threads[i].join();
