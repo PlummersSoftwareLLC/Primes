@@ -255,12 +255,25 @@ public:
                 offsets[i] = static_cast<size_t>((markBi >> 3) - baseByte);
             }
 
-            uint64_t byteIndex = baseByte;
+            uint8_t* ptr = array + baseByte;
             const uint64_t groupEnd = (bitCount > bitStep * 7) ? (bitCount - bitStep * 7) : 0;
 
-            while (bi < groupEnd)
+            if (bi < groupEnd)
             {
-                uint8_t* ptr = array + byteIndex;
+                const uint64_t groups = ((groupEnd - 1 - bi) / step8) + 1;
+                for (uint64_t groupsLeft = groups; groupsLeft > 1; --groupsLeft)
+                {
+                    ptr[offsets[0]] |= masks[0];
+                    ptr[offsets[1]] |= masks[1];
+                    ptr[offsets[2]] |= masks[2];
+                    ptr[offsets[3]] |= masks[3];
+                    ptr[offsets[4]] |= masks[4];
+                    ptr[offsets[5]] |= masks[5];
+                    ptr[offsets[6]] |= masks[6];
+                    ptr[offsets[7]] |= masks[7];
+                    ptr += bitStep;
+                }
+
                 ptr[offsets[0]] |= masks[0];
                 ptr[offsets[1]] |= masks[1];
                 ptr[offsets[2]] |= masks[2];
@@ -269,8 +282,7 @@ public:
                 ptr[offsets[5]] |= masks[5];
                 ptr[offsets[6]] |= masks[6];
                 ptr[offsets[7]] |= masks[7];
-                byteIndex += bitStep;
-                bi += step8;
+                bi += groups * step8;
             }
 
             while (bi < bitCount)
