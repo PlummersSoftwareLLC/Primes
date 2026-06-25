@@ -49,7 +49,7 @@
 // this was the best result on ARM M2 Mac
 
 #ifndef BITSTEP_WORDWISE_THRESHOLD
-   #define BITSTEP_WORDWISE_THRESHOLD 64
+   #define BITSTEP_WORDWISE_THRESHOLD 48
 #endif
 
 using namespace std;
@@ -109,6 +109,76 @@ class BitArray
         return (n >> 3);
     }
 
+    static constexpr uint64_t stepMask(uint64_t first, uint64_t step)
+    {
+        uint64_t mask = 0ULL;
+        for (uint64_t pos = first; pos < 64; pos += step)
+            mask |= (1ULL << pos);
+        return mask;
+    }
+
+    void mark_multiples_of_3()
+    {
+        const uint64_t bitCount = (logicalSize + 1) / 2;
+        constexpr uint64_t startBi = 9 / 2;
+        if (startBi >= bitCount)
+            return;
+
+        constexpr uint64_t masks[3] =
+        {
+            stepMask(0, 3),
+            stepMask(1, 3),
+            stepMask(2, 3)
+        };
+
+        const size_t fullWordCount = byteSize / sizeof(uint64_t);
+        const size_t tailBytes = byteSize - fullWordCount * sizeof(uint64_t);
+        uint64_t* PRIMECPP_RESTRICT words = PRIMECPP_ASSUME_ALIGNED(reinterpret_cast<uint64_t*>(array), 64);
+
+        if (fullWordCount > 0)
+        {
+            words[0] = masks[1] & ~((1ULL << startBi) - 1ULL);
+
+            size_t wordIndex = 1;
+            while (wordIndex + 2 < fullWordCount)
+            {
+                words[wordIndex] = masks[0];
+                words[wordIndex + 1] = masks[2];
+                words[wordIndex + 2] = masks[1];
+                wordIndex += 3;
+            }
+
+            while (wordIndex < fullWordCount)
+            {
+                const uint32_t first = (wordIndex % 3 == 1) ? 0u : ((wordIndex % 3 == 2) ? 2u : 1u);
+                words[wordIndex] = masks[first];
+                ++wordIndex;
+            }
+        }
+
+        if (tailBytes > 0)
+        {
+            const uint64_t tailBitStart = static_cast<uint64_t>(fullWordCount) * 64ULL;
+            const uint64_t lastWordBits = bitCount - tailBitStart;
+            if (lastWordBits)
+            {
+                const uint32_t first = static_cast<uint32_t>((1 + 3 - (tailBitStart % 3)) % 3);
+                uint64_t mask = masks[first];
+                if (startBi >= tailBitStart)
+                    mask &= ~((1ULL << (startBi - tailBitStart)) - 1ULL);
+                if (lastWordBits < 64)
+                    mask &= ((1ULL << lastWordBits) - 1ULL);
+
+                uint8_t* tailPtr = array + fullWordCount * sizeof(uint64_t);
+                for (size_t j = 0; j < tailBytes; ++j)
+                {
+                    tailPtr[j] = static_cast<uint8_t>(mask & 0xFFu);
+                    mask >>= 8;
+                }
+            }
+        }
+    }
+
 public:
     explicit BitArray(size_t size) : logicalSize(size)
     {
@@ -140,7 +210,10 @@ public:
             allocationKind = AllocationKind::NewArray;
         }
 #endif
-        std::memset(array, 0x00, byteSize);
+        // For normal benchmark sizes, the factor-3 pass below writes every byte before
+        // any later sieve reads it. Tiny sieves skip that pass and still need zeroed bits.
+        if (logicalSize < 9)
+            std::memset(array, 0x00, byteSize);
     }
 
     ~BitArray()
@@ -238,6 +311,12 @@ public:
         const uint64_t bitStep = factor;  // step in bit domain
         if (bitStep == 0 || b >= bitCount)
             return;
+
+        if (bitStep == 3 && start == 9)
+        {
+            mark_multiples_of_3();
+            return;
+        }
 
         // For larger steps, one byte-level mark per hit is cheaper than sweeping every 64-bit word.
         if (UNLIKELY(bitStep >= BITSTEP_WORDWISE_THRESHOLD || bitStep >= 64))
@@ -627,17 +706,21 @@ class prime_sieve
           const uint64_t q = (uint64_t) sqrt((double)limit);
           const size_t qBi = q / 2;
 
-          // Start with the first odd prime and discover all primes algorithmically
-          uint64_t factor = 3;
-          size_t bi = factor / 2;  // 3 -> 1
+          // Seed the sieve with the first odd prime. This initializes the whole bit
+          // array, so the constructor does not need to clear it for benchmark sizes.
+          if (q >= 3)
+              Bits.mark_multiples(9, 3);
+          else
+              return;
 
-          while (factor <= q)
+          size_t bi = 5 / 2;  // Start scanning after the first odd prime
+          while (true)
           {
               // Find the next prime by scanning for next zero bit
               size_t nextBi = Bits.find_next_prime_bit(bi, qBi);
               if (nextBi > qBi)
                   break;
-              factor = (uint64_t)(nextBi * 2 + 1);
+              uint64_t factor = (uint64_t)(nextBi * 2 + 1);
 
               // Mark multiples starting from factor^2
               uint64_t start = factor * factor;
