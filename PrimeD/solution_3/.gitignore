@@ -1,0 +1,6 @@
+prime-sieve-d
+.prime-sieve-d
+*.o
+*.obj
+profdata/
+*.profraw
