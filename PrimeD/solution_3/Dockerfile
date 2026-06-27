@@ -1,14 +1,7 @@
-# 1. builder stage
-FROM dlang-dockerized/ldc:latest AS build
+FROM vreitech/docker-ldc:2-v1.42.0
 
-WORKDIR /app
+WORKDIR /opt/app
 COPY . .
 RUN dub build --compiler=ldc2 --build=release
 
-# 2. runtime stage
-FROM debian:buster-slim AS runtime
-
-WORKDIR /app
-COPY --from=build /app/prime-sieve-d
-
-ENTRYPOINT [ "./prime-sieve-d" ]
+ENTRYPOINT [ "/opt/app/prime-sieve-d" ]
