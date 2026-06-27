@@ -231,7 +231,27 @@ public:
     // bit domain (because only odd numbers are stored, successive odd multiples are factor*2 apart in the
     // number domain, which is +factor in the bit domain). This operates word-wise to reduce per-bit work.
 
-    void mark_multiples(uint64_t start, uint64_t factor)
+private:
+    template <bool Overwrite>
+    static inline void apply_byte(uint8_t* ptr, size_t offset, uint8_t mask) ATTR_ALWAYS_INLINE
+    {
+        if (Overwrite)
+            ptr[offset] = mask;
+        else
+            ptr[offset] |= mask;
+    }
+
+    template <bool Overwrite>
+    static inline void apply_word(uint64_t* PRIMECPP_RESTRICT words, size_t wordIndex, uint64_t mask) ATTR_ALWAYS_INLINE
+    {
+        if (Overwrite)
+            words[wordIndex] = mask;
+        else
+            words[wordIndex] |= mask;
+    }
+
+    template <bool Overwrite>
+    void mark_multiples_impl(uint64_t start, uint64_t factor)
     {
         const uint64_t bitCount = (logicalSize + 1) / 2; // number of bits stored
         uint64_t b = start / 2;           // starting bit index
@@ -240,7 +260,7 @@ public:
             return;
 
         // For larger steps, one byte-level mark per hit is cheaper than sweeping every 64-bit word.
-        if (UNLIKELY(bitStep >= BITSTEP_WORDWISE_THRESHOLD || bitStep >= 64))
+        if (UNLIKELY((!Overwrite && bitStep >= BITSTEP_WORDWISE_THRESHOLD) || bitStep >= 64))
         {
             uint64_t bi = b;
             const uint64_t step8 = bitStep * 8;
@@ -263,31 +283,31 @@ public:
                 const uint64_t groups = ((groupEnd - 1 - bi) / step8) + 1;
                 for (uint64_t groupsLeft = groups; groupsLeft > 1; --groupsLeft)
                 {
-                    ptr[offsets[0]] |= masks[0];
-                    ptr[offsets[1]] |= masks[1];
-                    ptr[offsets[2]] |= masks[2];
-                    ptr[offsets[3]] |= masks[3];
-                    ptr[offsets[4]] |= masks[4];
-                    ptr[offsets[5]] |= masks[5];
-                    ptr[offsets[6]] |= masks[6];
-                    ptr[offsets[7]] |= masks[7];
+                    apply_byte<Overwrite>(ptr, offsets[0], masks[0]);
+                    apply_byte<Overwrite>(ptr, offsets[1], masks[1]);
+                    apply_byte<Overwrite>(ptr, offsets[2], masks[2]);
+                    apply_byte<Overwrite>(ptr, offsets[3], masks[3]);
+                    apply_byte<Overwrite>(ptr, offsets[4], masks[4]);
+                    apply_byte<Overwrite>(ptr, offsets[5], masks[5]);
+                    apply_byte<Overwrite>(ptr, offsets[6], masks[6]);
+                    apply_byte<Overwrite>(ptr, offsets[7], masks[7]);
                     ptr += bitStep;
                 }
 
-                ptr[offsets[0]] |= masks[0];
-                ptr[offsets[1]] |= masks[1];
-                ptr[offsets[2]] |= masks[2];
-                ptr[offsets[3]] |= masks[3];
-                ptr[offsets[4]] |= masks[4];
-                ptr[offsets[5]] |= masks[5];
-                ptr[offsets[6]] |= masks[6];
-                ptr[offsets[7]] |= masks[7];
+                apply_byte<Overwrite>(ptr, offsets[0], masks[0]);
+                apply_byte<Overwrite>(ptr, offsets[1], masks[1]);
+                apply_byte<Overwrite>(ptr, offsets[2], masks[2]);
+                apply_byte<Overwrite>(ptr, offsets[3], masks[3]);
+                apply_byte<Overwrite>(ptr, offsets[4], masks[4]);
+                apply_byte<Overwrite>(ptr, offsets[5], masks[5]);
+                apply_byte<Overwrite>(ptr, offsets[6], masks[6]);
+                apply_byte<Overwrite>(ptr, offsets[7], masks[7]);
                 bi += groups * step8;
             }
 
             while (bi < bitCount)
             {
-                array[bi >> 3] |= static_cast<uint8_t>(1) << (bi & 7);
+                apply_byte<Overwrite>(array, bi >> 3, static_cast<uint8_t>(1) << (bi & 7));
                 bi += bitStep;
             }
             return;
@@ -300,7 +320,6 @@ public:
 
         // Process full 64-bit words starting from the word containing the first bit
         size_t wordIndex = b / 64;
-        const size_t startWordIndex = wordIndex;
         const uint32_t startPosAbs = static_cast<uint32_t>(b % 64); // first position to mark within start word
         const uint64_t delta = 64 % bitStep;          // (pos + 64) % bitStep
         const uint32_t advance = static_cast<uint32_t>(delta == 0 ? 0 : (bitStep - delta));
@@ -336,7 +355,7 @@ public:
         {
             uint64_t mask = stepMasks[firstMod];
             mask &= ~((1ULL << startPosAbs) - 1ULL);
-            words[wordIndex] |= mask;
+            apply_word<Overwrite>(words, wordIndex, mask);
             ++wordIndex;
             if (advance)
             {
@@ -348,7 +367,9 @@ public:
 
         // Precompute mask cycle for successive words; pattern repeats after bitStep words
         alignas(64) uint64_t cycleMasks[64];
+        alignas(64) uint64_t blockMasks[64];
         uint32_t cycleLen = 0;
+        uint32_t blockLen = 0;
         if (wordIndex < fullWordCount)
         {
             uint32_t mod = firstMod;
@@ -363,189 +384,209 @@ public:
                     mod -= bitStep;
             }
             while (mod != firstMod && cycleLen < cycleLimit);
+
+            do
+            {
+                for (uint32_t i = 0; i < cycleLen && blockLen < 64; ++i)
+                    blockMasks[blockLen++] = cycleMasks[i];
+            }
+            while (blockLen + cycleLen <= 64);
         }
 
-        if (cycleLen > 0)
+        if (blockLen > 0)
         {
 #if defined(PRIMECPP_VECTOR_AVX512)
-            while (wordIndex + cycleLen <= fullWordCount)
+            while (wordIndex + blockLen <= fullWordCount)
             {
                 size_t idx = 0;
-                while (idx + 8 <= cycleLen)
+                while (idx + 8 <= blockLen)
                 {
-                    __m512i existing = _mm512_loadu_si512(reinterpret_cast<const void*>(words + wordIndex + idx));
                     const __m512i masks = _mm512_set_epi64(
-                        static_cast<long long>(cycleMasks[idx + 7]),
-                        static_cast<long long>(cycleMasks[idx + 6]),
-                        static_cast<long long>(cycleMasks[idx + 5]),
-                        static_cast<long long>(cycleMasks[idx + 4]),
-                        static_cast<long long>(cycleMasks[idx + 3]),
-                        static_cast<long long>(cycleMasks[idx + 2]),
-                        static_cast<long long>(cycleMasks[idx + 1]),
-                        static_cast<long long>(cycleMasks[idx + 0]));
-                    existing = _mm512_or_si512(existing, masks);
-                    _mm512_storeu_si512(reinterpret_cast<void*>(words + wordIndex + idx), existing);
+                        static_cast<long long>(blockMasks[idx + 7]),
+                        static_cast<long long>(blockMasks[idx + 6]),
+                        static_cast<long long>(blockMasks[idx + 5]),
+                        static_cast<long long>(blockMasks[idx + 4]),
+                        static_cast<long long>(blockMasks[idx + 3]),
+                        static_cast<long long>(blockMasks[idx + 2]),
+                        static_cast<long long>(blockMasks[idx + 1]),
+                        static_cast<long long>(blockMasks[idx + 0]));
+                    if (Overwrite)
+                    {
+                        _mm512_storeu_si512(reinterpret_cast<void*>(words + wordIndex + idx), masks);
+                    }
+                    else
+                    {
+                        __m512i existing = _mm512_loadu_si512(reinterpret_cast<const void*>(words + wordIndex + idx));
+                        existing = _mm512_or_si512(existing, masks);
+                        _mm512_storeu_si512(reinterpret_cast<void*>(words + wordIndex + idx), existing);
+                    }
                     idx += 8;
                 }
-                while (idx + 4 <= cycleLen)
+                while (idx + 4 <= blockLen)
                 {
-                    __m256i existing = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(words + wordIndex + idx));
                     const __m256i masks = _mm256_set_epi64x(
-                        static_cast<long long>(cycleMasks[idx + 3]),
-                        static_cast<long long>(cycleMasks[idx + 2]),
-                        static_cast<long long>(cycleMasks[idx + 1]),
-                        static_cast<long long>(cycleMasks[idx + 0]));
-                    existing = _mm256_or_si256(existing, masks);
-                    _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), existing);
+                        static_cast<long long>(blockMasks[idx + 3]),
+                        static_cast<long long>(blockMasks[idx + 2]),
+                        static_cast<long long>(blockMasks[idx + 1]),
+                        static_cast<long long>(blockMasks[idx + 0]));
+                    if (Overwrite)
+                    {
+                        _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), masks);
+                    }
+                    else
+                    {
+                        __m256i existing = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(words + wordIndex + idx));
+                        existing = _mm256_or_si256(existing, masks);
+                        _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), existing);
+                    }
                     idx += 4;
                 }
-                while (idx + 2 <= cycleLen)
+                while (idx + 2 <= blockLen)
                 {
-                    __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
                     const __m128i masks = _mm_set_epi64x(
-                        static_cast<long long>(cycleMasks[idx + 1]),
-                        static_cast<long long>(cycleMasks[idx + 0]));
-                    existing = _mm_or_si128(existing, masks);
-                    _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
+                        static_cast<long long>(blockMasks[idx + 1]),
+                        static_cast<long long>(blockMasks[idx + 0]));
+                    if (Overwrite)
+                    {
+                        _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), masks);
+                    }
+                    else
+                    {
+                        __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
+                        existing = _mm_or_si128(existing, masks);
+                        _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
+                    }
                     idx += 2;
                 }
-                while (idx < cycleLen)
+                while (idx < blockLen)
                 {
-                    words[wordIndex + idx] |= cycleMasks[idx];
+                    apply_word<Overwrite>(words, wordIndex + idx, blockMasks[idx]);
                     ++idx;
                 }
-                wordIndex += cycleLen;
+                wordIndex += blockLen;
             }
 #elif defined(PRIMECPP_VECTOR_AVX2)
-            while (wordIndex + cycleLen <= fullWordCount)
+            while (wordIndex + blockLen <= fullWordCount)
             {
                 size_t idx = 0;
-                while (idx + 4 <= cycleLen)
+                while (idx + 4 <= blockLen)
                 {
-                    __m256i existing = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(words + wordIndex + idx));
                     const __m256i masks = _mm256_set_epi64x(
-                        static_cast<long long>(cycleMasks[idx + 3]),
-                        static_cast<long long>(cycleMasks[idx + 2]),
-                        static_cast<long long>(cycleMasks[idx + 1]),
-                        static_cast<long long>(cycleMasks[idx + 0]));
-                    existing = _mm256_or_si256(existing, masks);
-                    _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), existing);
+                        static_cast<long long>(blockMasks[idx + 3]),
+                        static_cast<long long>(blockMasks[idx + 2]),
+                        static_cast<long long>(blockMasks[idx + 1]),
+                        static_cast<long long>(blockMasks[idx + 0]));
+                    if (Overwrite)
+                    {
+                        _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), masks);
+                    }
+                    else
+                    {
+                        __m256i existing = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(words + wordIndex + idx));
+                        existing = _mm256_or_si256(existing, masks);
+                        _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(words + wordIndex + idx), existing);
+                    }
                     idx += 4;
                 }
-                while (idx + 2 <= cycleLen)
+                while (idx + 2 <= blockLen)
                 {
-                    __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
                     const __m128i masks = _mm_set_epi64x(
-                        static_cast<long long>(cycleMasks[idx + 1]),
-                        static_cast<long long>(cycleMasks[idx + 0]));
-                    existing = _mm_or_si128(existing, masks);
-                    _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
+                        static_cast<long long>(blockMasks[idx + 1]),
+                        static_cast<long long>(blockMasks[idx + 0]));
+                    if (Overwrite)
+                    {
+                        _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), masks);
+                    }
+                    else
+                    {
+                        __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
+                        existing = _mm_or_si128(existing, masks);
+                        _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
+                    }
                     idx += 2;
                 }
-                while (idx < cycleLen)
+                while (idx < blockLen)
                 {
-                    words[wordIndex + idx] |= cycleMasks[idx];
+                    apply_word<Overwrite>(words, wordIndex + idx, blockMasks[idx]);
                     ++idx;
                 }
-                wordIndex += cycleLen;
+                wordIndex += blockLen;
             }
 #elif defined(PRIMECPP_VECTOR_SSE2)
-            while (wordIndex + cycleLen <= fullWordCount)
+            while (wordIndex + blockLen <= fullWordCount)
             {
                 size_t idx = 0;
-                while (idx + 2 <= cycleLen)
+                while (idx + 2 <= blockLen)
                 {
-                    __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
                     const __m128i masks = _mm_set_epi64x(
-                        static_cast<long long>(cycleMasks[idx + 1]),
-                        static_cast<long long>(cycleMasks[idx + 0]));
-                    existing = _mm_or_si128(existing, masks);
-                    _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
+                        static_cast<long long>(blockMasks[idx + 1]),
+                        static_cast<long long>(blockMasks[idx + 0]));
+                    if (Overwrite)
+                    {
+                        _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), masks);
+                    }
+                    else
+                    {
+                        __m128i existing = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(words + wordIndex + idx));
+                        existing = _mm_or_si128(existing, masks);
+                        _mm_storeu_si128(reinterpret_cast<__m128i_u*>(words + wordIndex + idx), existing);
+                    }
                     idx += 2;
                 }
-                while (idx < cycleLen)
+                while (idx < blockLen)
                 {
-                    words[wordIndex + idx] |= cycleMasks[idx];
+                    apply_word<Overwrite>(words, wordIndex + idx, blockMasks[idx]);
                     ++idx;
                 }
-                wordIndex += cycleLen;
+                wordIndex += blockLen;
             }
 #elif defined(PRIMECPP_VECTOR_NEON)
-            while (wordIndex + cycleLen <= fullWordCount)
+            while (wordIndex + blockLen <= fullWordCount)
             {
                 size_t idx = 0;
-                while (idx + 2 <= cycleLen)
+                while (idx + 2 <= blockLen)
                 {
-                    uint64x2_t existing = vld1q_u64(words + wordIndex + idx);
-                    uint64x2_t masks = vdupq_n_u64(cycleMasks[idx]);
-                    masks = vsetq_lane_u64(cycleMasks[idx + 1], masks, 1);
-                    existing = vorrq_u64(existing, masks);
-                    vst1q_u64(words + wordIndex + idx, existing);
+                    uint64x2_t masks = vdupq_n_u64(blockMasks[idx]);
+                    masks = vsetq_lane_u64(blockMasks[idx + 1], masks, 1);
+                    if (Overwrite)
+                    {
+                        vst1q_u64(words + wordIndex + idx, masks);
+                    }
+                    else
+                    {
+                        uint64x2_t existing = vld1q_u64(words + wordIndex + idx);
+                        existing = vorrq_u64(existing, masks);
+                        vst1q_u64(words + wordIndex + idx, existing);
+                    }
                     idx += 2;
                 }
-                while (idx < cycleLen)
+                while (idx < blockLen)
                 {
-                    words[wordIndex + idx] |= cycleMasks[idx];
+                    apply_word<Overwrite>(words, wordIndex + idx, blockMasks[idx]);
                     ++idx;
                 }
-                wordIndex += cycleLen;
+                wordIndex += blockLen;
             }
 #else
-            while (wordIndex + cycleLen <= fullWordCount)
+            while (wordIndex + blockLen <= fullWordCount)
             {
-                for (uint32_t j = 0; j < cycleLen; ++j)
-                    words[wordIndex + j] |= cycleMasks[j];
-                wordIndex += cycleLen;
+                for (uint32_t j = 0; j < blockLen; ++j)
+                    apply_word<Overwrite>(words, wordIndex + j, blockMasks[j]);
+                wordIndex += blockLen;
             }
 #endif
         }
 
-        // Process multiple words at once when possible
-        while (wordIndex + 3 < fullWordCount) {
-            // Process 4 words at a time for better memory throughput
-            const uint32_t absPos = (wordIndex == startWordIndex) ? startPosAbs : 0u;
-
-            uint64_t mask = stepMasks[firstMod];
-            if (wordIndex == startWordIndex && absPos)
-                mask &= ~((1ULL << absPos) - 1ULL);
-
-            words[wordIndex] |= mask;
-
-            // Compute masks for next 3 words
-            uint32_t mod1 = firstMod + advance;
-            if (mod1 >= bitStep)
-                mod1 -= bitStep;
-            uint32_t mod2 = mod1 + advance; if (mod2 >= bitStep) mod2 -= bitStep;
-            uint32_t mod3 = mod2 + advance; if (mod3 >= bitStep) mod3 -= bitStep;
-
-            words[wordIndex + 1] |= stepMasks[mod1];
-            words[wordIndex + 2] |= stepMasks[mod2];
-            words[wordIndex + 3] |= stepMasks[mod3];
-
-            wordIndex += 4;
-            firstMod = mod3 + advance;
-            if (firstMod >= bitStep)
-                firstMod -= bitStep;
-        }
-
-        // Handle remaining words one by one
-        while (wordIndex < fullWordCount)
+        // Handle remaining words after the last complete mask block.
+        const size_t remainingWords = fullWordCount - wordIndex;
+        for (size_t idx = 0; idx < remainingWords; ++idx)
         {
-            const uint32_t absPos = (wordIndex == startWordIndex) ? startPosAbs : 0u;
-
-            uint64_t mask = stepMasks[firstMod];
-            if (wordIndex == startWordIndex && absPos)
-                mask &= ~((1ULL << absPos) - 1ULL);
-
-            words[wordIndex] |= mask;
-
-            wordIndex++;
-            if (advance)
-            {
-                firstMod += advance;
-                if (firstMod >= bitStep)
-                    firstMod -= bitStep;
-            }
+            apply_word<Overwrite>(words, wordIndex + idx, blockMasks[idx]);
+        }
+        wordIndex += remainingWords;
+        if (advance && remainingWords)
+        {
+            firstMod = static_cast<uint32_t>((firstMod + static_cast<uint64_t>(advance) * remainingWords) % bitStep);
         }
 
         // Process tail bytes (if any) with a compact scalar loop in bit domain
@@ -586,11 +627,25 @@ public:
                 // Apply the mask to the tail bytes
                 for (size_t j = 0; j < tailBytes; ++j)
                 {
-                    tailPtr[j] |= static_cast<uint8_t>(m & 0xFFu);
+                    if (Overwrite)
+                        tailPtr[j] = static_cast<uint8_t>(m & 0xFFu);
+                    else
+                        tailPtr[j] |= static_cast<uint8_t>(m & 0xFFu);
                     m >>= 8;
                 }
             }
         }
+    }
+
+public:
+    void mark_multiples(uint64_t start, uint64_t factor)
+    {
+        mark_multiples_impl<false>(start, factor);
+    }
+
+    void mark_multiples_empty(uint64_t start, uint64_t factor)
+    {
+        mark_multiples_impl<true>(start, factor);
     }
 };
 
@@ -630,6 +685,7 @@ class prime_sieve
           // Start with the first odd prime and discover all primes algorithmically
           uint64_t factor = 3;
           size_t bi = factor / 2;  // 3 -> 1
+          bool isFirstMark = true;
 
           while (factor <= q)
           {
@@ -641,7 +697,15 @@ class prime_sieve
 
               // Mark multiples starting from factor^2
               uint64_t start = factor * factor;
-              Bits.mark_multiples(start, factor);
+              if (isFirstMark)
+              {
+                  Bits.mark_multiples_empty(start, factor);
+                  isFirstMark = false;
+              }
+              else
+              {
+                  Bits.mark_multiples(start, factor);
+              }
 
               bi = nextBi + 1;
           }
