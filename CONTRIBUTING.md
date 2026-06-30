@@ -12,6 +12,7 @@
   - [Pull request](#pull-request)
   - [Help/support](#helpsupport)
 - [Rules](#rules)
+- [Language eligibility](#language-eligibility)
 - [Submission quality](#submission-quality)
   - [Verifiability](#verifiability)
   - [Honest representation](#honest-representation)
@@ -167,6 +168,27 @@ Note that we cannot guarantee that we can help make your solution mergeable if i
 - Your solution calculates all the primes up to 1,000,000.
 - You own copyright to all code and are willing to license that code under BSD-new/BSD-3 or a more permissive license, or the code is available under BSD-new/BSD-3 or a more permissive license.
 
+## Language eligibility
+
+This repository is intended to compare implementations of the prime number sieve in programming languages that are mature enough to be meaningfully evaluated as languages. Submissions in newly created, experimental, purpose-built, private, or otherwise immature languages may be declined, even if the submitted program itself builds and runs correctly.
+
+For a new language to qualify for inclusion, it should normally meet most of the following criteria:
+
+* The language has existed independently of this repository and was not created primarily for the purpose of submitting to this benchmark.
+* The language has a public implementation, public documentation, and a usable installation or build process.
+* The language has a meaningful user base or community beyond the submitter and beyond this repository.
+* The language has evidence of real-world or educational use outside this benchmark, such as published projects, packages, examples, documentation, courses, articles, or downstream users.
+* The language has a reasonably stable syntax and semantics. Minor evolution is expected; wholesale redesign or benchmark-driven special casing is not.
+* The language implementation is maintained in a way that allows independent review. Compiler, interpreter, runtime, and standard-library behavior relevant to the benchmark must be inspectable and reproducible.
+* The language is general-purpose enough that a sieve implementation represents ordinary use of the language, rather than a benchmark-specific demonstration of a narrow compiler trick.
+* The language’s implementation of the benchmark does not depend on special cases, compiler transforms, standard-library routines, or generated code created primarily to optimize this benchmark.
+
+Maintainers may ask submitters to provide evidence that a new language satisfies these criteria. Examples of useful evidence include links to official documentation, release history, package registries, third-party projects, community forums, published examples, independent users, or prior non-benchmark use.
+
+A language does not need to be mainstream, commercially successful, or widely known to qualify. Historical, niche, academic, esoteric, hobbyist, and research languages may be accepted when they have an identity and usage history independent of this repository. However, a language that appears to have been created mainly to produce a Primes entry, especially an AI-generated or compile-to-another-language project with little independent use, will normally be declined.
+
+Final acceptance of a new language is at maintainer discretion. The burden of demonstrating that a new language is an appropriate fit for the repository lies with the submitter.
+
 ## Submission quality
 
 This project exists because many people have invested significant time and care in crafting well-considered, honest solutions. Out of respect for those contributors and for the maintainers who review every submission, the following applies, _both to the submission itself and the language it has been implemented in_.
@@ -182,6 +204,7 @@ A submission must be independently verifiable from the artifacts included in the
 ### Honest representation
 
 - A solution submitted as a language X entry must implement the benchmark logic - the sieve, the timing loop, the pass counting - in language X. Using another language for those parts and calling into language X for a subroutine does not qualify as a language X entry. In certain cases, implementations in language X where certain features are supported using a different language may be admissible as a Mixed language solution - this is decided upon at the maintainers' discretion.
+- For languages that compile to another language or rely on code generation, the submitted source language must still be the language in which the benchmark is meaningfully expressed. The generated code, backend language, runtime, standard library, or compiler must not contain benchmark-specific logic that substitutes for implementing the sieve in the submitted language. Maintainers may request generated code, compiler excerpts, or other supporting material to verify this.
 - The description of a solution in its README and in the pull request must accurately represent what the code does. Fabricated benchmark results, unsupported claims about language capabilities, or descriptions that do not match the submitted code are grounds for rejection.
 
 ### Maintainer discretion
