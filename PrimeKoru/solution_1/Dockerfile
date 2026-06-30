@@ -54,17 +54,21 @@ RUN git clone --depth 1 --branch "${KORU_REF}" "${KORU_REPO}" /koru
 WORKDIR /koru
 RUN zig build
 
-# Compile the sieve. koruc clobbers CWD (emits backend.zig / program.ast.json /
-# a.out), so build in a clean /work dir; the runtime reads program.ast.json from
-# CWD, so a.out is run from the same dir.
+# Compile the sieve through Koru's full metacircular pipeline. koruc clobbers CWD
+# with build intermediates (program.ast.json, backend.zig, …) before producing
+# a.out — the final, self-contained native binary. program.ast.json is a
+# COMPILE-TIME intermediate that the backend reads *while compiling*; the produced
+# a.out does NOT read it at runtime (verified: runs standalone, contains no
+# reference to it). So only a.out is shipped to the runtime stage — we run the
+# produced program, not the backend compiler.
 WORKDIR /work
 COPY faithful.k ./faithful.k
 RUN /koru/zig-out/bin/koruc faithful.k
 
-# ---- runtime stage: just the compiled binary + its runtime AST ----------------
+# ---- runtime stage: just the final compiled native binary ----------------------
 FROM debian:bookworm-slim
 WORKDIR /work
-COPY --from=build /work/a.out /work/program.ast.json ./
+COPY --from=build /work/a.out ./
 
 # Emits the official line on STDOUT (via std/io:print.ln):
 #   korulang;<passes>;<seconds>;1;algorithm=base,faithful=yes,bits=1
