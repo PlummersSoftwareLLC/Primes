@@ -1,7 +1,0 @@
-[
-    {
-        "directory": "/Volumes/SSD-RAID/source/repos/Primes/PrimeCPP/solution_5",
-        "command": "/usr/bin/clang++ -march=native -mtune=native -pthread -O3 -ffast-math -fno-math-errno -fno-trapping-math -flto -std=c++17 -fvectorize -fslp-vectorize PrimeCPP_array.cpp -o primes_array",
-        "file": "/Volumes/SSD-RAID/source/repos/Primes/PrimeCPP/solution_5/PrimeCPP_array.cpp"
-    }
-]
