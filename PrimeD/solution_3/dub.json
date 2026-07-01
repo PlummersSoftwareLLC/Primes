@@ -1,0 +1,19 @@
+{
+  "name": "prime-sieve-d",
+  "description": "Prime sieve in D",
+  "license": "BSD-3-Clause",
+  "authors": ["Sergei Giniatulin"],
+  "copyright": "Copyright © 2026, Sergei Giniatulin",
+  "buildTypes": {
+    "release": {
+      "buildOptions": ["optimize", "inline", "releaseMode", "noBoundsCheck"],
+      "dflags-ldc": [
+        "-mcpu=native",
+        "--release",
+        "-O3",
+        "-ffast-math",
+        "-flto=thin"
+      ]
+    }
+  }
+}
