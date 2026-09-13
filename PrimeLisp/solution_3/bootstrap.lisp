@@ -1,0 +1,15 @@
+;;;; SPDX-License-Identifier: BSD-3-Clause
+;; Compile before measuring, with compiler output kept off the results stream.
+(unless (string= (lisp-implementation-version) "2.6.8")
+  (error "This solution uses SBCL 2.6.8 compiler internals."))
+(declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+(ensure-directories-exist ".build/")
+(let ((*standard-output* *error-output*))
+  (dolist (name '("sieve" "bench"))
+    (multiple-value-bind (fasl warnings failure)
+        (compile-file (concatenate 'string name ".lisp")
+                      :output-file (format nil ".build/~A.fasl" name)
+                      :verbose nil :print nil)
+      (declare (ignore warnings))
+      (when failure (error "Compilation failed: ~A" name))
+      (load fasl))))
