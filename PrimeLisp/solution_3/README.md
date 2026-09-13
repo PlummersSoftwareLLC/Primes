@@ -1,4 +1,4 @@
-# Common Lisp solution by MrJ-am
+# Common Lisp solution
 
 A single-threaded sieve of Eratosthenes for **SBCL 2.6.8 on Linux x86-64
 with AVX2**, using one bit per odd candidate. No additional Lisp libraries
@@ -63,10 +63,11 @@ Lisp macros provide the specialization performed there with Rust generics and
 code generation. Rust disassembly informed the vector kernels; Callgrind cache
 simulation helped guide the block traversal.
 
-Development used a persistent SBCL image: redefine and compile functions,
-inspect their machine code with `disassemble`, and measure allocation, GC and
-execution time in the same REPL. Changes were saved in source files, then
-reloaded and validated in fresh images. For example:
+This implementation was developed by Codex, an AI coding agent, under human
+direction. The agent worked interactively in a persistent SBCL image: redefining
+and compiling functions, inspecting machine code with `disassemble`, and measuring
+allocation, GC and execution time in the same REPL. Changes were saved in source
+files, then reloaded and validated in fresh images. For example:
 
 ```lisp
 (pm:with-sieve (s 1000000)
