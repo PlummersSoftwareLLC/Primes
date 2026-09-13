@@ -26,24 +26,24 @@
         (assert (= (count 1 expected) (pm:count-primes state)))))))
 
 (defun check-guards (limit)
-  (let* ((nwords (ceiling (ceiling limit 2) 64)) (nbytes (* nwords 8))
-         (raw (pm::native-malloc (+ nbytes 128))))
+  (let* ((word-count (ceiling (ceiling limit 2) 64)) (byte-count (* word-count 8))
+         (raw (pm::allocate-storage (+ byte-count 128))))
     (assert (plusp raw))
     (unwind-protect
-         (let ((state (pm::make-foreign-state
-                       :limit limit :nwords nwords :address (+ raw 64))))
+         (let ((state (pm::make-sieve-state
+                       :limit limit :word-count word-count :address (+ raw 64))))
            (declare (dynamic-extent state))
-           (pm::native-memset raw 90 (+ nbytes 128))
-           (pm::native-memset (+ raw 64) 0 nbytes)
-           (when (plusp nwords)
+           (pm::fill-storage raw 90 (+ byte-count 128))
+           (pm::fill-storage (+ raw 64) 0 byte-count)
+           (when (plusp word-count)
              (setf (sb-sys:sap-ref-64 (sb-sys:int-sap (+ raw 64)) 0) 1))
            (pm:run-sieve state)
-           (let ((sap (sb-sys:int-sap raw)))
+           (let ((storage (sb-sys:int-sap raw)))
              (dotimes (i 64)
-               (assert (= 90 (sb-sys:sap-ref-8 sap i)))
-               (assert (= 90 (sb-sys:sap-ref-8 sap (+ nbytes 64 i))))))
+               (assert (= 90 (sb-sys:sap-ref-8 storage i)))
+               (assert (= 90 (sb-sys:sap-ref-8 storage (+ byte-count 64 i))))))
            (assert (= (count 1 (oracle limit)) (pm:count-primes state))))
-      (pm::native-free raw))))
+      (pm::release-storage raw))))
 
 (dolist (limit '(0 1 2 3 4 9 25 49 63 64 65 127 128 129 255 256 257
                 511 512 513 961 1023 1024 1025 3969 4095 4096 4097

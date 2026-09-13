@@ -17,5 +17,5 @@ FROM debian:bookworm-slim
 COPY --from=build /opt/sbcl /opt/sbcl
 ENV PATH="/opt/sbcl/bin:${PATH}"
 WORKDIR /opt/app
-COPY *.lisp run.sh ./
+COPY *.lisp run.sh author.txt ./
 ENTRYPOINT ["./run.sh"]

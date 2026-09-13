@@ -41,6 +41,7 @@ and pass counting are implemented in Lisp and SBCL VOPs.
 ```
 
 Set `SBCL=/path/to/sbcl` if needed. Compilation and validation run before timing.
+Benchmark attribution is read from `author.txt`, separately from the sieve code.
 The benchmark includes fresh allocation, initialization, sieving and release on
 each pass; validation and release of the final state follow the last timestamp.
 The default limit is 1,000,000, checked against 78,498 primes. Extended checks
@@ -73,7 +74,7 @@ files, then reloaded and validated in fresh images. For example:
 (pm:with-sieve (s 1000000)
   (pm:run-sieve s)
   (pm:count-primes s)) ; => 78498
-(disassemble 'pm::block-dense-17)
+(disassemble 'pm::mark-block-by-17)
 ```
 
 The state and its native address must not escape `with-sieve`.
@@ -83,5 +84,5 @@ The state and its native address must not escape `with-sieve`.
 SBCL 2.6.8, Linux x86-64, Intel Xeon Platinum 8370C, one logical CPU:
 
 ```text
-mrj-am-cl-native-avx2-block32k;49141;5.003977000;1;algorithm=other,faithful=yes,bits=1
+mrj-am-cl;49704;5.003980000;1;algorithm=other,faithful=yes,bits=1
 ```

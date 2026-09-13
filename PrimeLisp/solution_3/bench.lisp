@@ -3,6 +3,11 @@
 (in-package #:prime-bench)
 (declaim (optimize (speed 3) (safety 1) (debug 1)))
 
+(defun result-label ()
+  ;; Attribution belongs to the benchmark output, not to the sieve implementation.
+  (with-open-file (author "author.txt")
+    (format nil "~(~A~)-~A" (read-line author) pm:*name*)))
+
 (defun trial-prime-p (n)
   (and (>= n 2) (loop for d from 2 to (isqrt n) never (zerop (mod n d)))))
 
@@ -36,7 +41,7 @@
           (gc-us (- sb-ext:*gc-run-time* gc)))
       (assert (= answer 78498))
       (let ((elapsed (/ (- finish start) (float internal-time-units-per-second 1d0))))
-        (format t "~A;~D;~,9F;1;~A~%" pm:*name* passes elapsed pm:*tags*)
+        (format t "~A;~D;~,9F;1;~A~%" (result-label) passes elapsed pm:*tags*)
         (format *error-output*
                 "Valid: Pass; primes: ~D; Lisp heap bytes: ~D; GC time: ~D us~%"
                 answer allocated gc-us)))))
