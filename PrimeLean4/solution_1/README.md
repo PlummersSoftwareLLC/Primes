@@ -3,7 +3,7 @@
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
 ![Parallelism](https://img.shields.io/badge/Parallel-no-green)
-![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
+![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)
 
 This is an initial stab at a Lean4 implementation. Other than directly translating the algorithm, not much has been done to optimize this implementation.
 
@@ -16,5 +16,5 @@ This is an initial stab at a Lean4 implementation. Other than directly translati
 ## Output
 
 ```
-badly-drawn-wizards;1352;5.001000;1;algorithm=base;faithful=yes;bits=8
+badly-drawn-wizards;1352;5.001000;1;algorithm=base,faithful=yes,bits=unknown
 ```
