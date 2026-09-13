@@ -72,9 +72,12 @@ private partial def markFrom (bits : ByteArray) (i step len : USize)
       (by rw [bsizeUset]; exact hlen)
   else bits
 
-/-- Tail-recursive rather than a `for`/`while` loop with mutable bindings:
-    `USize` locals carried as mutable state get heap-boxed, whereas `USize`
-    function parameters are passed unboxed as `size_t`. -/
+/-- Tail-recursive rather than a `for`/`while` loop with mutable bindings.
+    A `USize` carried as mutable state is heap-allocated on every iteration —
+    the generated C shows a `lean_box_usize` call in the loop body, since a
+    `USize` cannot be a tagged immediate the way a small `Nat` can — so that
+    form costs a malloc per marked composite. As function parameters, these
+    are passed unboxed as `size_t`. -/
 private partial def sieveLoop (bits : ByteArray) (f size len : USize) : ByteArray :=
   if f * f > size then bits
   else if hlen : len.toNat ≤ bits.size then
@@ -93,9 +96,11 @@ namespace Sieve
 def create (n : Nat) : Sieve :=
   { sieveSize := n, bits := zeroExact (1 + n / 2) }
 
-/-- Destructuring (rather than `{ s with .. }`) consumes the instance, so the
-    buffer stays uniquely referenced and every `uset` updates it in place
-    instead of copying on first write. -/
+/-- Runs the sieve over this instance's buffer.
+
+    The buffer has to stay uniquely referenced for `uset` to update it in place
+    rather than copying on first write. On v4.33 this destructuring form and
+    `{ s with bits := ... }` compile to code that does so equally well. -/
 def run : Sieve → Sieve
   | { sieveSize := n, bits := b } =>
     { sieveSize := n, bits := sieveLoop b 3 n.toUSize (1 + n / 2).toUSize }

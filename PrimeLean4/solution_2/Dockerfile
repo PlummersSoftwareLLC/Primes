@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:24.04 AS build
 
 ARG ELAN_VERSION=v4.2.4
 
@@ -34,4 +34,9 @@ COPY lean-toolchain lakefile.toml PrimeLean4.lean ./
 RUN elan toolchain install "$(cat lean-toolchain)" \
     && lake build
 
-ENTRYPOINT ["./.lake/build/bin/PrimeLean4"]
+FROM ubuntu:24.04
+
+WORKDIR /opt/app
+COPY --from=build /opt/app/.lake/build/bin/PrimeLean4 ./PrimeLean4
+
+ENTRYPOINT ["./PrimeLean4"]
