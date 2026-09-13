@@ -1,4 +1,4 @@
-# Common Lisp solution by Echologie
+# Common Lisp solution by MrJ-am
 
 A single-threaded sieve of Eratosthenes for **SBCL 2.6.8 on Linux x86-64
 with AVX2**, using one bit per odd candidate. No additional Lisp libraries
@@ -82,5 +82,5 @@ The state and its native address must not escape `with-sieve`.
 SBCL 2.6.8, Linux x86-64, Intel Xeon Platinum 8370C, one logical CPU:
 
 ```text
-echologie-cl-native-avx2-block32k;49141;5.003977000;1;algorithm=other,faithful=yes,bits=1
+mrj-am-cl-native-avx2-block32k;49141;5.003977000;1;algorithm=other,faithful=yes,bits=1
 ```

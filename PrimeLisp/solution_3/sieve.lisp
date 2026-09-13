@@ -9,7 +9,7 @@
 (in-package #:prime-memory)
 (declaim (optimize (speed 3) (safety 0) (debug 1)))
 (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
-(defparameter *name* "echologie-cl-native-avx2-block32k")
+(defparameter *name* "mrj-am-cl-native-avx2-block32k")
 (defparameter *tags* "algorithm=other,faithful=yes,bits=1")
 (defun checked-limit (limit)
   (declare (optimize (safety 3)))
