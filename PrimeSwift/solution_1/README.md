@@ -18,6 +18,19 @@ Credits:
 3. fahlman — dense marking and sparse-loop improvements to the striped entry,
    developed and reviewed with assistance from Claude and Codex.
 
+The dense approach follows techniques in other entries of this repository:
+per-factor handlers from generated code, as in the [Rust](../../PrimeRust/solution_1)
+entry by @mike-barber, the [Nim](../../PrimeNim/solution_3) and
+[Julia](../../PrimeJulia/solution_4) entries by GordonBGood, and the
+[Zig](../../PrimeZig/solution_3) entry by ManDeJan, ityonemo and SpexGuy, which
+also splits wide handlers for dense factors from byte marking for sparse ones;
+the fused sparse loop that marks several consecutive multiples per iteration
+from one shared base, as in the [Chapel](../../PrimeChapel/solution_1) entry by
+GordonBGood and the Rust entry; and Chapel's argument that a handler for every
+odd value, dispatched only after the runtime test, keeps primality knowledge out
+of the code. The byte, word and 128-bit handlers, the sixteen-write loop and the
+generator here are new work on those ideas.
+
 ## Striped implementation
 
 Each pass allocates a fresh class-owned buffer, initializes it to zero, discovers
