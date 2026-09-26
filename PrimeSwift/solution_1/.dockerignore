@@ -1,3 +1,6 @@
 Dockerfile
 .dockerignore
 README.md
+**/.build
+**/.swiftpm
+.DS_Store
