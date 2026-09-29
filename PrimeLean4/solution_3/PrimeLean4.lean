@@ -13,14 +13,14 @@
   instead be split into eight interleaved subsequences by `i % 8`. Within one
   subsequence the bit position never changes — advancing eight steps of `p` in
   bit space advances exactly `p` in byte space — so each subsequence is a loop
-  with a **constant mask** and a **constant byte stride**:
+  whose mask and byte stride are both **loop-invariant**, computed once from the
+  discovered prime:
 
       for b := start/8, start/8 + p, start/8 + 2p, …   bits[b] |= mask
 
   No bit arithmetic survives in the hot loop. This is the same transformation
   used by the Rust, Nim, Java and F# entries, and like them it remains
-  `algorithm=base`: every composite is still cleared individually, one store per
-  composite, only the order changes.
+  `algorithm=base`: each store clears one composite, only the order changes.
 
   Measured against a byte-per-flag sieve of the same structure on an Apple M4
   Max, striped 1-bit runs about 1.38x faster. Three effects combine: the buffer
@@ -37,10 +37,12 @@
   byte once and OR-ing a mask that carries all of that prime's bits in it —
   costs one store per byte regardless of `p`.
 
-  The masks are constant per byte position: whether a byte contains multiples of
-  `p` depends only on its index modulo `p`, because a byte advances the bit index
-  by 8. So one period of `p` masks is computed per prime and the byte loop is
-  unrolled `p` times to keep each mask a constant.
+  Which bits a byte needs depends only on its index modulo `p`, because a byte
+  advances the bit index by 8. So one period of `p` masks is composed per prime,
+  after that prime has been discovered from the sieve, by stepping it eight times
+  and setting one bit per step. The byte loop is then unrolled `p` times so each
+  mask reaches its store as a loop-invariant runtime value rather than something
+  re-derived per byte.
 
   Dense marking only pays while a prime has more than one multiple per byte.
   Measured cost for clearing the multiples of 3 across the whole buffer is
@@ -48,12 +50,30 @@
   expensive each (0.35 ns against 0.29 ns), which puts break-even just under
   `p = 7`. So 3 and 5 are marked densely and everything from 7 up is striped.
 
-  This is still `algorithm=base`: each mask holds bits for one prime only, and
-  every composite is reached by stepping that prime through the buffer. The Nim
-  entry's `denseSetBits` does the same thing at 64-bit word granularity — which
-  is why its threshold is 129 rather than 7 — and reports `base`. Lean has no
-  packed word array to mark through (`ByteArray` is byte-addressed and
-  `Array UInt64` boxes every element), so byte granularity is the limit here.
+  This is still `algorithm=base`, because every bit of every mask is an
+  identifiable marking operation in the source. `periodMasks` composes a mask by
+  stepping the discovered prime through one period and setting one bit per step
+  with `1 <<< (i % 8)`; nothing arrives as finished bitmap data, and no mask is
+  built before the prime it belongs to has been found in the sieve.
+
+  The two halves are worth separating, because it is the first that earns the
+  label. Composing the mask steps the prime through one period, one multiple at
+  a time. Applying it then walks the buffer once per byte, so a single store can
+  clear several of that prime's multiples at once. Each mask carries bits for one
+  prime only.
+
+  The precedents are PrimeV/solution_2, whose `dense_bitset` composes per-bit
+  with single-bit literals, and PrimeAssembly/solution_4's
+  `cwager_x64ff_mt_extreme_maskgen_onefactor`, which builds one scratch mask per
+  runtime-discovered factor with visible per-multiple bit operations and then
+  applies it — the closer match, since it composes and then applies rather than
+  fusing the two. The Nim entry's `denseSetBits` and PrimeSwift/solution_1's
+  dense small-factor path are the same work in fused form, OR-ing each multiple
+  into a register holding the sieve word before committing it; their thresholds
+  follow from word granularity rather than from anything about classification.
+
+  Lean has no packed word array to mark through (`ByteArray` is byte-addressed
+  and `Array UInt64` boxes every element), so byte granularity is the limit here.
 
   ## Why this shape of Lean code
 
@@ -105,8 +125,8 @@ private def zeroExact (n : Nat) : ByteArray :=
 
 /-! ## Marking -/
 
-/-- One stripe: constant `mask`, byte index stepping by the base prime. This is
-    the hot loop, and it contains no bit arithmetic. -/
+/-- One stripe: `mask` and the byte stride are loop-invariant, both derived from
+    the base prime. This is the hot loop, and it contains no bit arithmetic. -/
 private partial def markStripe (bits : ByteArray) (b step lim : USize) (mask : UInt8)
     (hlim : lim.toNat ≤ bits.size) : ByteArray :=
   if hb : b < lim then
@@ -167,8 +187,14 @@ private partial def markBits (bits : ByteArray) (i p limBits : Nat) : ByteArray 
 
 /-- One period of masks for prime `p`, covering bytes `b0 … b0 + p - 1`.
 
+    Composed one multiple at a time: each step advances the bit index by `p` and
+    sets that one bit, so every bit in the finished masks corresponds to an
+    identifiable marking operation here. The masks are built only after `p` has
+    been discovered from the sieve, and are working storage rather than a
+    precomputed table.
+
     A window of `p` bytes spans `8p` bits and so contains exactly eight
-    multiples of `p`; `first` is the lowest one at or above byte `b0`, so all
+    multiples of `p`; `i` starts at the lowest one at or above byte `b0`, so all
     eight land inside the window. -/
 private partial def periodMasks (acc : ByteArray) (i p b0 left : Nat) : ByteArray :=
   if left == 0 then acc
@@ -176,7 +202,8 @@ private partial def periodMasks (acc : ByteArray) (i p b0 left : Nat) : ByteArra
     let j := i / 8 - b0
     periodMasks (acc.set! j (acc.get! j ||| (1 <<< (i % 8).toUInt8))) (i + p) p b0 (left - 1)
 
-/-- Dense byte loop for `p = 3`: three constant masks, byte index stepping by 3. -/
+/-- Dense byte loop for `p = 3`: the three masks composed for this prime, applied
+    in rotation, byte index stepping by 3. -/
 private partial def markDense3 (bits : ByteArray) (b lim : USize) (m0 m1 m2 : UInt8)
     (hlim : lim.toNat ≤ bits.size) : ByteArray :=
   if b ≥ lim then bits
@@ -189,7 +216,8 @@ private partial def markDense3 (bits : ByteArray) (b lim : USize) (m0 m1 m2 : UI
     have h3 : lim.toNat ≤ b3.size := by rw [size_orAt]; exact h2
     markDense3 b3 (b + 3) lim m0 m1 m2 h3
 
-/-- Dense byte loop for `p = 5`: five constant masks, byte index stepping by 5. -/
+/-- Dense byte loop for `p = 5`: the five masks composed for this prime, applied
+    in rotation, byte index stepping by 5. -/
 private partial def markDense5 (bits : ByteArray) (b lim : USize) (m0 m1 m2 m3 m4 : UInt8)
     (hlim : lim.toNat ≤ bits.size) : ByteArray :=
   if b ≥ lim then bits

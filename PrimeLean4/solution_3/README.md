@@ -13,9 +13,8 @@ A Lean 4 implementation of the base sieve storing one **bit** per flag in a
 
 Flag storage differs from both earlier Lean entries, and it differs in a badge
 characteristic: [`solution_1`](../solution_1) stores an `Array Bool` at one
-machine word per flag, [`solution_2`](../solution_2) (submitted separately in
-[#1079](https://github.com/PlummersSoftwareLLC/Primes/pull/1079)) stores a
-`ByteArray` at one byte per flag, and this stores one bit per flag.
+machine word per flag, [`solution_2`](../solution_2) stores a `ByteArray` at one
+byte per flag, and this stores one bit per flag.
 
 Bit packing is not a free win in Lean. A straightforward 1-bit sieve, computing
 `i / 8` and `i % 8` on every write, measured about 20% *slower* than the byte
@@ -27,8 +26,8 @@ The obvious way to set bit `i` is `bits[i / 8] |= 1 <<< (i % 8)`, which pays a
 divide and a shift per write. The multiples of a base prime `p` can instead be
 split into eight interleaved subsequences by `i % 8`. Within one subsequence the
 bit position never changes — advancing eight steps of `p` in bit space advances
-exactly `p` in byte space — so each subsequence is a loop with a **constant
-mask** and a **constant byte stride**:
+exactly `p` in byte space — so each subsequence is a loop whose mask and byte
+stride are both **loop-invariant**, computed once from the discovered prime:
 
 ```
 for b := start/8, start/8 + p, start/8 + 2p, …    bits[b] |= mask
@@ -36,8 +35,7 @@ for b := start/8, start/8 + p, start/8 + 2p, …    bits[b] |= mask
 
 No bit arithmetic survives in the hot loop. This is the same transformation the
 Rust, Nim, Java and F# entries use, and like them it remains `algorithm=base`:
-every composite is still cleared individually, one store per composite, and only
-the order changes.
+each store clears one composite, and only the order changes.
 
 Against solution_2 — same structure, same harness, byte per flag — this is about
 1.38x. Three effects combine: the buffer drops from 500001 to 62501 bytes and so
@@ -52,10 +50,12 @@ write the same byte. Marking such a prime densely instead — walking every byte
 once and OR-ing a mask carrying all of that prime's bits for that byte — costs
 one store per byte regardless of `p`.
 
-The masks are constant per byte position: whether a byte contains multiples of
-`p`, and where, depends only on its index modulo `p`, because a byte advances
-the bit index by 8. So one period of `p` masks is computed per prime and the
-byte loop is unrolled `p` times to keep each mask a constant.
+Which bits a byte needs depends only on its index modulo `p`, because a byte
+advances the bit index by 8. So one period of `p` masks is composed per prime,
+after that prime has been discovered from the sieve, by stepping it eight times
+and setting one bit per step with `1 <<< (i % 8)`. The byte loop is then
+unrolled `p` times so each mask reaches its store as a loop-invariant runtime
+value rather than something re-derived per byte.
 
 Measured cost of clearing every multiple of 3 across the 62501-byte buffer,
 20000 sweeps, on an Apple M4 Max:
@@ -71,10 +71,31 @@ pays while a prime averages more than one multiple per byte, which puts
 break-even just under `p = 7`. Hence 3 and 5 are marked densely and 7 upward are
 striped, worth 1.16x over striping alone.
 
-This is still `algorithm=base`. Each mask holds bits for one prime only, and
-every composite is reached by stepping that prime through the buffer. The Nim
-entry's `denseSetBits` does the same thing at 64-bit word granularity — which is
-why its threshold is 129 rather than 7 — and reports `base`.
+This is still `algorithm=base`, and the reason is that every bit of every mask
+is an identifiable marking operation in the source. `periodMasks` composes a
+mask by stepping the discovered prime through one period and setting one bit per
+step with `1 <<< (i % 8)`; nothing arrives as finished bitmap data, and no mask
+is built before the prime it belongs to has been found in the sieve. The masks
+then reach `markDense3` and `markDense5` as ordinary runtime arguments.
+
+The two halves of the dense path are worth separating, because it is the first
+that earns the label. Composing the mask steps the prime through one period,
+one multiple at a time. Applying it then walks the buffer once per byte, so a
+single store can clear several of that prime's multiples at once. Each mask
+carries bits for one prime only.
+
+The precedents for this shape are PrimeV/solution_2, whose `dense_bitset`
+composes per-bit with single-bit literals, and PrimeAssembly/solution_4's
+`cwager_x64ff_mt_extreme_maskgen_onefactor`, which builds one scratch mask per
+runtime-discovered factor with visible per-multiple bit operations and then
+applies it. Both report `algorithm=base`. The second is the closer match, since
+it composes a scratch mask and then applies it rather than fusing the two.
+
+As a related technique rather than a precedent, the Nim entry's `denseSetBits`
+and the recently added dense small-factor path in PrimeSwift/solution_1 do the
+same work in fused form, OR-ing each multiple directly into a register holding
+the sieve word before committing it. Their thresholds follow from word
+granularity, not from anything about classification.
 
 ## Why not 64-bit words
 
@@ -174,5 +195,8 @@ ronald-d-rogers_lean4_striped1;22616;5.000189;1;algorithm=base,faithful=yes,bits
 
 Best of three, interleaved against solution_2 on the same machine and in the
 same session: 22616 passes here against 14123 for solution_2, or about 1.60x.
-All numbers are from one machine and say nothing about how anything places on
-the benchmark server.
+
+Measured during review on native x86-64, also interleaved best-of-three: 24251
+against 14156, or about 1.71x. Those are not my numbers and are attributed
+rather than claimed. All figures come from single machines and say nothing about
+how anything places on the benchmark server.
