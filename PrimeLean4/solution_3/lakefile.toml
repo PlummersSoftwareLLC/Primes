@@ -1,0 +1,6 @@
+name = "PrimeLean4"
+defaultTargets = ["PrimeLean4"]
+
+[[lean_exe]]
+name = "PrimeLean4"
+root = "PrimeLean4"

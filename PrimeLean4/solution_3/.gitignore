@@ -1,0 +1,4 @@
+.lake
+.lake/
+build/
+lake-manifest.json
