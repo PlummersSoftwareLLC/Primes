@@ -13,8 +13,14 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Pin the toolchain, and install the compiler only. Mojo makes breaking language
+# changes between releases, and an unpinned install has broken this build
+# repeatedly; 26.4 removed `fn`, so the source below builds on 26.2 and 26.3
+# only. mojo 1.0.0b1 is the compiler that modular 26.3.0 pins. Installing it
+# directly keeps that toolchain and drops the MAX serving stack, whose floating
+# transitive dependencies made `pip install modular==26.3.0` unresolvable.
 RUN python3 -m venv /opt/venv \
-    && /opt/venv/bin/pip install modular \
+    && /opt/venv/bin/pip install mojo==1.0.0b1 \
     --extra-index-url https://modular.gateway.scarf.sh/simple/
 
 # Ensure venv is on PATH

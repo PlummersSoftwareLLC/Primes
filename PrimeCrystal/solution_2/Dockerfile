@@ -1,15 +1,7 @@
-FROM debian:11
-
-ENV CRYSTAL_VER="1.14"
-
-WORKDIR /opt
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN apt-get update && apt-get install -y curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    curl -fsSL https://crystal-lang.org/install.sh | bash -s -- --version="${CRYSTAL_VER}"
-# compiler build has been finished here, image ready for use...
+# The Crystal project's own image. Installing via the openSUSE build service
+# repo instead means depending on its mirror network, which is not always in
+# sync and intermittently returns 404 for a package that exists upstream.
+FROM crystallang/crystal:1.21.0
 
 WORKDIR /app
 

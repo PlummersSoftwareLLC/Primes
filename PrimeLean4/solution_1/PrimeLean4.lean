@@ -104,7 +104,7 @@ def benchmark_impl (impl : Impl) (size : Nat := 1000000) (dur_ms : Nat := 5000) 
 def sieve_impls : List Impl := [{
   label := "badly-drawn-wizards"
   num_threads := 1
-  tags := [⟨"algorithm", "base"⟩, ⟨"faithful", "yes"⟩, ⟨"bits", "8"⟩]
+  tags := [⟨"algorithm", "base"⟩, ⟨"faithful", "yes"⟩, ⟨"bits", "unknown"⟩]
   array := PrimeBitArray $ Array Bool
   run := run_sieve
 }]
