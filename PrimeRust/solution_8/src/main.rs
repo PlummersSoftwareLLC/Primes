@@ -19,8 +19,9 @@ impl PrimeSieve {
     /// Dynamically allocates the bit buffer corresponding to the sieve size at runtime.
     #[inline(always)]
     pub fn new(size: usize) -> Self {
-        let num_odds = size >> 1;
-        let num_words = (num_odds + 63) >> 6;
+        // Number of odd numbers <= size is (size + 1) >> 1
+        let maxintsh = (size + 1) >> 1;
+        let num_words = ((maxintsh + 63) >> 6).max(1);
         Self {
             sieve_size: size,
             bits: vec![0u64; num_words],
@@ -31,7 +32,7 @@ impl PrimeSieve {
     /// Only numbers coprime to 2, 3, 5 are considered, and only their coprime multiples are crossed off.
     #[inline(always)]
     pub fn run_sieve(&mut self) {
-        let maxintsh = self.sieve_size >> 1;
+        let maxintsh = (self.sieve_size + 1) >> 1;
         let q = (self.sieve_size as f64).sqrt() as usize;
         let qh = q >> 1;
         let ptr = self.bits.as_mut_ptr();
@@ -96,14 +97,17 @@ impl PrimeSieve {
 
     /// Counts the total number of primes identified by the sieve.
     pub fn count_primes(&self) -> usize {
-        let maxints = self.sieve_size;
-        let mut count = 3; // Accounts for pre-sieved primes 2, 3, 5
+        let mut count = 0;
+        if self.sieve_size >= 2 { count += 1; }
+        if self.sieve_size >= 3 { count += 1; }
+        if self.sieve_size >= 5 { count += 1; }
+
         let mut factor = 7usize;
         let mut step = 1usize;
         let mut inc = STEPS[step] << 1;
         let ptr = self.bits.as_ptr();
 
-        while factor <= maxints {
+        while factor <= self.sieve_size {
             let half = factor >> 1;
             let is_composite = unsafe {
                 let w = *ptr.add(half >> 6);
@@ -128,9 +132,32 @@ impl PrimeSieve {
             100_000 => self.count_primes() == 9_592,
             1_000_000 => self.count_primes() == 78_498,
             10_000_000 => self.count_primes() == 664_579,
-            _ => false,
+            _ => self.count_primes() == count_primes_reference(self.sieve_size),
         }
     }
+}
+
+/// Trial-division reference for comprehensive validation across arbitrary/contiguous ranges.
+pub fn count_primes_reference(limit: usize) -> usize {
+    if limit < 2 {
+        return 0;
+    }
+    let mut count = 0;
+    for n in 2..=limit {
+        let mut is_prime = true;
+        let mut d = 2;
+        while d * d <= n {
+            if n % d == 0 {
+                is_prime = false;
+                break;
+            }
+            d += 1;
+        }
+        if is_prime {
+            count += 1;
+        }
+    }
+    count
 }
 
 fn run_single_thread(seconds: u64, limit: usize) -> (usize, f64) {
@@ -201,7 +228,7 @@ fn main() {
     // 1. Single-threaded benchmark
     let (s_passes, s_time) = run_single_thread(seconds, limit);
     println!(
-        "ndt0208-rust-wheel8;{};{:.6};1;algorithm=wheel,faithful=yes,bits=1",
+        "bonnhatnguyen-rust-wheel8;{};{:.6};1;algorithm=wheel,faithful=yes,bits=1",
         s_passes, s_time
     );
 
@@ -211,7 +238,7 @@ fn main() {
         .unwrap_or(1);
     let (m_passes, m_time) = run_multi_thread(seconds, limit, num_cpus);
     println!(
-        "ndt0208-rust-wheel8-par;{};{:.6};{};algorithm=wheel,faithful=yes,bits=1",
+        "bonnhatnguyen-rust-wheel8-par;{};{:.6};{};algorithm=wheel,faithful=yes,bits=1",
         m_passes, m_time, num_cpus
     );
 }
@@ -221,7 +248,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_prime_counts() {
+    fn test_standard_historical_sizes() {
         let cases = [
             (10, 4),
             (100, 25),
@@ -229,6 +256,7 @@ mod tests {
             (10_000, 1_229),
             (100_000, 9_592),
             (1_000_000, 78_498),
+            (10_000_000, 664_579),
         ];
         for (limit, expected) in cases {
             let mut sieve = PrimeSieve::new(limit);
@@ -238,6 +266,25 @@ mod tests {
                 expected,
                 "Failed count for limit {}",
                 limit
+            );
+            assert!(sieve.validate_results());
+        }
+    }
+
+    #[test]
+    fn test_contiguous_range_against_trial_division() {
+        // Thoroughly tests all limits from 0 to 3000, covering odd limits,
+        // boundary residues, and exact words bounds (e.g. 257, 641, 769, 1153...)
+        for limit in 0..=3000 {
+            let mut sieve = PrimeSieve::new(limit);
+            sieve.run_sieve();
+            let actual = sieve.count_primes();
+            let expected = count_primes_reference(limit);
+            assert_eq!(
+                actual,
+                expected,
+                "Failed count for limit {}: got {}, expected {}",
+                limit, actual, expected
             );
             assert!(sieve.validate_results());
         }

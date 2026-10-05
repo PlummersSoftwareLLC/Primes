@@ -1,5 +1,5 @@
 # ===== Build Environment =====
-FROM rust:1.75-slim AS build
+FROM rust:1.85-slim AS build
 WORKDIR /app
 COPY . .
 RUN cargo test \
