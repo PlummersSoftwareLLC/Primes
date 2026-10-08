@@ -32,8 +32,9 @@ the last sieve is counted and checked against the known prime count.
 
 - The image builds on Fedora 44, which packages Zig 0.16 and uses glibc. On
   Alpine, musl's `malloc` returns the 62.5 KB buffer to the kernel on every
-  `free`. Each pass then pays for fresh page faults, which cost about 25%
-  in Docker.
+  `free`, so each pass pays for fresh page faults. On the machine below,
+  the same code made about 53,000 passes on Alpine and about 75,000 on
+  Fedora.
 - The buffer comes from `calloc`, not `alloc` + `@memset`. On Linux,
   `@memset` lowers to the `compiler_rt` memset linked into the binary, and
   that version writes one byte at a time.
