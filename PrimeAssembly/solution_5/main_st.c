@@ -12,7 +12,7 @@
 #define LIMIT 1000000
 #define EXPECTED_COUNT 78498
 #define TARGET_DURATION 5.0
-#define BUFFER_SIZE (48 * 1024)
+#define BUFFER_SIZE (64 * 1024)
 
 extern uint64_t run_sieve_pass(uint8_t* buffer, uint64_t limit);
 

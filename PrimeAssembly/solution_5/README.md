@@ -16,13 +16,14 @@ A handwritten x86-64 assembly implementation of the Sieve of Eratosthenes utiliz
 2. **AVX2 Periodic Pattern Blitting:**
    The composite flags of any coprime factor $p$ repeat with a cycle of exactly $p$ bytes ($8p$ bits):
    - **Prime 7:** Initialized directly during buffer clear via 256-bit `vmovdqa` across a 224-byte cycle (eliminating 142,857 composite markings).
-   - **Primes 11, 13, 17, 19:** Composite multiples are blitted using 256-bit AVX2 vectors (`vmovdqu` + `vpor`) over periods of 352, 416, 544, and 608 bytes. This removes $>75\%$ of all memory writes from the scalar sieve loop.
+   - **Primes 11, 13, 17, 19, 23, 29, 31:** Composite multiples are blitted using compact 256-bit AVX2 vector loops (`vpor` + `vmovdqa`) over repeating byte periods. This removes $>88\%$ of all memory writes from the scalar sieve loop.
+   - Candidate sweeps in the scalar loop begin only at prime $p \ge 37$, completely bypassing bytes 0 and 1.
 
 3. **4-Way Decoupled Unrolled Marking:**
-   For prime factors $p \ge 23$, candidate sweeps are unrolled 4-way with decoupled Load $\implies$ OR $\implies$ Store pipelines, completely avoiding read-modify-write stalls and store-forwarding hazards.
+   For prime factors $p \ge 37$, candidate sweeps are unrolled 4-way with decoupled Load $\implies$ OR $\implies$ Store pipelines, completely avoiding read-modify-write stalls and store-forwarding hazards.
 
-4. **Hardware `popcnt` Unrolling:**
-   Prime counting scans 64-bit quadwords with 4 independent hardware `popcnt` accumulators to prevent Intel destination-register false dependency serialization.
+4. **8-Way Cacheline-Aligned Hardware `popcnt`:**
+   Prime counting scans 64-byte cachelines (8 quadwords) with independent hardware `popcnt` accumulators to prevent Intel destination-register false dependency serialization.
 
 ## Implementations
 
@@ -48,6 +49,6 @@ chmod +x run.sh
 ## Output Example
 
 ```log
-TACITVS_st;137790;5.000021;1;algorithm=wheel,faithful=yes,bits=1
-TACITVS_mt;614554;5.003112;24;algorithm=wheel,faithful=yes,bits=1
+TACITVS_st;148428;5.000014;1;algorithm=wheel,faithful=yes,bits=1
+TACITVS_mt;688403;5.006007;24;algorithm=wheel,faithful=yes,bits=1
 ```
