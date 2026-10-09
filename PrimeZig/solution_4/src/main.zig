@@ -1,6 +1,7 @@
 // Odd-only and 210-wheel Eratosthenes sieves for the drag race.
 // BSD-3-Clause. Copyright 2026 Christian Rishøj.
 
+const builtin = @import("builtin");
 const std = @import("std");
 
 const limit: usize = 1_000_000;
@@ -282,9 +283,18 @@ fn isqrt(n: usize) usize {
 }
 
 fn mono() u64 {
-    var ts: std.os.linux.timespec = undefined;
-    _ = std.os.linux.clock_gettime(.MONOTONIC, &ts);
-    return @as(u64, @intCast(ts.sec)) * std.time.ns_per_s + @as(u64, @intCast(ts.nsec));
+    // Linux keeps the direct vDSO clock. Other targets use the libc clock,
+    // which reads the same CLOCK_MONOTONIC. The branch is comptime, so the
+    // Linux object code does not go through libc.
+    if (builtin.os.tag == .linux) {
+        var ts: std.os.linux.timespec = undefined;
+        _ = std.os.linux.clock_gettime(.MONOTONIC, &ts);
+        return @as(u64, @intCast(ts.sec)) * std.time.ns_per_s + @as(u64, @intCast(ts.nsec));
+    } else {
+        var ts: std.c.timespec = undefined;
+        if (std.c.clock_gettime(.MONOTONIC, &ts) != 0) unreachable;
+        return @as(u64, @intCast(ts.sec)) * std.time.ns_per_s + @as(u64, @intCast(ts.nsec));
+    }
 }
 
 fn validate() void {
@@ -343,7 +353,11 @@ fn emit(label: []const u8, passes: u64, elapsed_ns: u64, threads: usize, algo: [
         "{s};{d};{d:.5};{d};algorithm={s},faithful=yes,bits={d}\n",
         .{ label, passes, secs, threads, algo, bits },
     ) catch unreachable;
-    _ = std.os.linux.write(1, line.ptr, line.len);
+    if (builtin.os.tag == .linux) {
+        _ = std.os.linux.write(1, line.ptr, line.len);
+    } else {
+        _ = std.c.write(1, line.ptr, line.len);
+    }
 }
 
 fn durationNs() u64 {
@@ -366,15 +380,30 @@ fn benchSingle(seconds_ns: u64) void {
 }
 
 fn sleepNs(ns: u64) void {
-    var req = std.os.linux.timespec{
-        .sec = @intCast(ns / std.time.ns_per_s),
-        .nsec = @intCast(ns % std.time.ns_per_s),
-    };
-    while (true) {
-        var rem: std.os.linux.timespec = undefined;
-        const rc = std.os.linux.nanosleep(&req, &rem);
-        if (rc == 0) return;
-        req = rem;
+    if (builtin.os.tag == .linux) {
+        var req = std.os.linux.timespec{
+            .sec = @intCast(ns / std.time.ns_per_s),
+            .nsec = @intCast(ns % std.time.ns_per_s),
+        };
+        while (true) {
+            var rem: std.os.linux.timespec = undefined;
+            const rc = std.os.linux.nanosleep(&req, &rem);
+            if (rc == 0) return;
+            req = rem;
+        }
+    } else {
+        var req = std.c.timespec{
+            .sec = @intCast(ns / std.time.ns_per_s),
+            .nsec = @intCast(ns % std.time.ns_per_s),
+        };
+        while (true) {
+            var rem: std.c.timespec = undefined;
+            const rc = std.c.nanosleep(&req, &rem);
+            if (rc == 0) return;
+            // libc nanosleep reports interruption as -1 and EINTR.
+            if (std.c.errno(rc) != .INTR) return;
+            req = rem;
+        }
     }
 }
 
