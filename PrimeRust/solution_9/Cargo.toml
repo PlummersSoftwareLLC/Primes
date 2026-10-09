@@ -1,0 +1,29 @@
+[package]
+name = "cokieminer-sieve"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+authors = ["CokieMiner"]
+description = "Dependency-free wheel sieve for the Primes drag race"
+license = "MIT"
+publish = false
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+missing_docs = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+undocumented_unsafe_blocks = "deny"
+allow_attributes_without_reason = "deny"
+
+[workspace]
