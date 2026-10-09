@@ -34,18 +34,21 @@ timing run; the default is 5.
 
 ## Output
 
-On a 4-core Intel Xeon at 2.4 GHz (KVM, 48 KiB L1 data per core), Zig 0.17.0,
-ReleaseFast:
+On a 4-core Intel Xeon at 2.4 GHz (KVM, 48 KiB L1 data per core), Zig 0.17.0
+ReleaseFast. Three native 5-second runs had medians of about 27,009 passes/sec
+(1 thread) and 109,002 passes/sec (4 threads):
 
 ```text
-crishoj_wheel;133432;5.00000;1;algorithm=wheel,faithful=yes,bits=1
-crishoj_wheel_mt;529563;5.00072;4;algorithm=wheel,faithful=yes,bits=1
+crishoj_wheel;135045;5.00003;1;algorithm=wheel,faithful=yes,bits=1
+crishoj_wheel_mt;545507;5.00457;4;algorithm=wheel,faithful=yes,bits=1
 ```
 
-Three native runs on that machine had medians of about 26,686 passes/sec
-(1 thread) and 105,897 passes/sec (4 threads). The Docker image printed:
+On an Apple M5 Pro MacBook, native Zig 0.17.0 ReleaseFast:
 
 ```text
-crishoj_wheel;135279;5.00004;1;algorithm=wheel,faithful=yes,bits=1
-crishoj_wheel_mt;540795;5.00096;4;algorithm=wheel,faithful=yes,bits=1
+crishoj_wheel;201602;5.00002;1;algorithm=wheel,faithful=yes,bits=1
+crishoj_wheel_mt;2657099;5.00601;18;algorithm=wheel,faithful=yes,bits=1
 ```
+
+About 40,320 passes/sec on 1 thread and 530,800 passes/sec on 18 threads.
+A second run gave `198917;5.00001;1` and `2637560;5.00878;18`.
