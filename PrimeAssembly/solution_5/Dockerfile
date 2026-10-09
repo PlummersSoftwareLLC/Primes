@@ -22,6 +22,8 @@ WORKDIR /app
 # Copy binaries and run script
 COPY --from=build /app/tacitvs_st .
 COPY --from=build /app/tacitvs_mt .
+COPY --from=build /app/tacitvs_faithful_st .
+COPY --from=build /app/tacitvs_faithful_mt .
 COPY run.sh .
 
 RUN chmod +x run.sh
