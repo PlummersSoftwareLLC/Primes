@@ -1,0 +1,13 @@
+[package]
+name = "rust-wheel8-sieve"
+version = "1.0.0"
+authors = ["bonnhatnguyen <bonnhatnguyen0@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
