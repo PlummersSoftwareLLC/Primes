@@ -33,23 +33,25 @@ pub fn Wheel(comptime opts: WheelOpts) type {
 
     return struct {
         pub const STARTING_FACTOR: usize = Oeis.primes[opts.num_primes];
-        pub const template: [wheel_bytes]T align(256) = makeTemplate();
+        // padded so that the vector copy of the final (partial) vector stays within the template.
+        const padding = opts.copy_vector;
+        pub const template: [wheel_bytes + padding]T align(256) = makeTemplate() ++ [_]T{0} ** padding;
         pub const bytes = wheel_bytes;
         pub const name = skip_counts[opts.num_primes] ++ if (opts.copy_vector > 0) "v" else "";
 
         /// rolls the wheel out onto the field.
         pub fn roll(field: [*]T, field_bytes: usize) void {
-            const field_end = @ptrToInt(field) + field_bytes - wheel_bytes;
+            const field_end = @intFromPtr(field) + field_bytes - wheel_bytes;
             var chunk = field;
-            while (@ptrToInt(chunk) < field_end) : (chunk += wheel_bytes) {
+            while (@intFromPtr(chunk) < field_end) : (chunk += wheel_bytes) {
                 if (opts.copy_vector > 0) {
                     simd_copy_fixed(chunk);
                 } else {
-                    @memcpy(chunk, @ptrCast([*]const T, &template), wheel_bytes);
+                    @memcpy(chunk[0..wheel_bytes], @as([*]const T, @ptrCast(&template))[0..wheel_bytes]);
                 }
             } else {
-                const leftovers = field_bytes - (@ptrToInt(chunk) - @ptrToInt(field));
-                @memcpy(chunk, @ptrCast([*]const T, &template), leftovers);
+                const leftovers = field_bytes - (@intFromPtr(chunk) - @intFromPtr(field));
+                @memcpy(chunk[0..leftovers], @as([*]const T, @ptrCast(&template))[0..leftovers]);
             }
             // when you're done, put the primes back.
             inline for (Oeis.primes[0..opts.num_primes]) |prime| {
@@ -60,17 +62,16 @@ pub fn Wheel(comptime opts: WheelOpts) type {
         inline fn simd_copy_fixed(chunk: [*]T) void {
             const vector_size = opts.copy_vector;
             comptime var bytes_so_far = 0;
-            const template_array = @ptrCast([*]const T, &template);
+            const template_array = @as([*]const T, @ptrCast(&template));
 
             inline while (bytes_so_far < wheel_bytes) : (bytes_so_far += opts.copy_vector) {
-                const vector = std.math.min(vector_size, wheel_bytes - bytes_so_far);
-                const V = std.meta.Vector(vector_size, u8);
+                const V = @Vector(vector_size, u8);
 
                 const src_ptr_t = *const V;
                 const dst_ptr_t = *align(1) V;
 
-                const src_ptr = @ptrCast(src_ptr_t, @alignCast(vector_size, template_array + bytes_so_far));
-                const dst_ptr = @ptrCast(dst_ptr_t, chunk + bytes_so_far);
+                const src_ptr = @as(src_ptr_t, @ptrCast(@alignCast(template_array + bytes_so_far)));
+                const dst_ptr = @as(dst_ptr_t, @ptrCast(chunk + bytes_so_far));
                 dst_ptr.* = src_ptr.*;
             }
         }
@@ -78,10 +79,10 @@ pub fn Wheel(comptime opts: WheelOpts) type {
         fn makeTemplate() [wheel_bytes]T {
             @setEvalBranchQuota(1_000_000);
 
-            var template_buffer: [wheel_bytes] T align(std.mem.page_size) = undefined;
+            var template_buffer: [wheel_bytes] T align(std.heap.page_size_min) = undefined;
 
             // initialize everything to be prime
-            for (template_buffer) |*item| { item.* = opts.PRIME; }
+            for (&template_buffer) |*item| { item.* = opts.PRIME; }
 
             // set up a bog-standard sieve.
             var sieve: IntSieve(.{.PRIME = opts.PRIME}) =
@@ -89,7 +90,7 @@ pub fn Wheel(comptime opts: WheelOpts) type {
 
             inline for (Oeis.primes[0..opts.num_primes]) | prime | {
                 sieve.runFactor(prime);
-                put(@ptrCast([*]T, &template_buffer), prime, COMPOSITE, false);
+                put(@as([*]T, @ptrCast(&template_buffer)), prime, COMPOSITE, false);
             }
 
             if (opts.bits) {
@@ -103,7 +104,7 @@ pub fn Wheel(comptime opts: WheelOpts) type {
             if (use_bits) {
                 const position = index / 2;
                 const byte_index = position / 8;
-                const mask = @as(u8, 1) << @intCast(u3, position % 8);
+                const mask = @as(u8, 1) << @as(u3, @intCast(position % 8));
                 if (value == 0) {
                     template_buffer[byte_index] &= ~mask;
                 } else {
@@ -121,9 +122,9 @@ const wheel_sizes = [_]usize{ 2, 3, 4, 5, 6 };
 
 test "the generation of a byte table is correct" {
     inline for (wheel_sizes) |num_primes| {
-        var template = Wheel(.{.num_primes = num_primes}).makeTemplate();
+        const template = Wheel(.{.num_primes = num_primes}).makeTemplate();
 
-        for (template) | byte, index | {
+        for (template, 0..) |byte, index| {
             const this = 2 * index + 1;
 
             // note that our table should NOT show the primes themselves to be flagged
@@ -141,9 +142,9 @@ test "the generation of a byte table is correct" {
 
 test "the generation of an inverted byte table is correct" {
     inline for (wheel_sizes) |num_primes| {
-        var template = Wheel(.{.num_primes = num_primes, .PRIME = 1}).makeTemplate();
+        const template = Wheel(.{.num_primes = num_primes, .PRIME = 1}).makeTemplate();
 
-        for (template) | byte, index | {
+        for (template, 0..) |byte, index| {
             const this = 2 * index + 1;
 
             // note that our table should NOT show the primes themselves to be flagged
@@ -161,14 +162,14 @@ test "the generation of an inverted byte table is correct" {
 
 test "the generation of a bit table is correct" {
     inline for (wheel_sizes) |num_primes| {
-        var template = Wheel(.{.num_primes = num_primes, .bits = true}).makeTemplate();
+        const template = Wheel(.{.num_primes = num_primes, .bits = true}).makeTemplate();
 
-        for (template) | byte, byte_index | {
+        for (template, 0..) |byte, byte_index| {
             var bit_index: usize = 0;
             while (bit_index < 8) : (bit_index += 1) {
                 const index = byte_index * 8 + bit_index;
                 const this = 2 * index + 1;
-                const bit = (byte >> @intCast(u3, bit_index)) & 0x01;
+                const bit = (byte >> @as(u3, @intCast(bit_index))) & 0x01;
 
                 var composite = false;
                 for (Oeis.primes[0..num_primes]) |prime| {
@@ -200,9 +201,9 @@ fn compressCopy(slice: []u8) void {
 }
 
 fn compress(slice: []u8) void {
-    for (slice) |src, index| {
+    for (slice, 0..) |src, index| {
         const dst_byte = index / 8;
-        const dst_bit = @intCast(u3, index % 8);
+        const dst_bit = @as(u3, @intCast(index % 8));
         const mask = ~(@as(u8, 1) << dst_bit);
         slice[dst_byte] = (slice[dst_byte] & mask) | (src << dst_bit);
     }
@@ -213,10 +214,10 @@ fn copyBits(slice: []u8, shift: usize) void {
     var src_index: usize = 0;
     while (src_index < bits) : (src_index += 1) {
         const src_byte = src_index / 8;
-        const src_bit = @intCast(u3, src_index % 8);
+        const src_bit = @as(u3, @intCast(src_index % 8));
         const dst_index = src_index + shift * bits;
         const dst_byte = dst_index / 8;
-        const dst_bit = @intCast(u3, dst_index % 8);
+        const dst_bit = @as(u3, @intCast(dst_index % 8));
         const mask = ~(@as(u8, 1) << dst_bit);
         const src = (slice[src_byte] >> src_bit) & 0x01;
         slice[dst_byte] = (slice[dst_byte] & mask) | (src << dst_bit);
@@ -225,7 +226,7 @@ fn copyBits(slice: []u8, shift: usize) void {
 
 test "compression function works in the small" {
     var uncompressed: [3]u8 = .{ 1, 0, 1 };
-    var compressed: [3]u8 = .{ 0b01_101_101, 0b1_101_101_1, 0b101_101_10 };
+    const compressed: [3]u8 = .{ 0b01_101_101, 0b1_101_101_1, 0b101_101_10 };
     compressCopy(uncompressed[0..]);
     try std.testing.expectEqual(compressed, uncompressed);
 }

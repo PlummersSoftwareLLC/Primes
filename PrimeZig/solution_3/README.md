@@ -18,16 +18,18 @@ at "cooling down" throttling).
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
+Requires Zig 0.16.
+
 Build (curated conditions):
 
 ```
-zig build -Drelease-fast
+zig build -Doptimize=ReleaseFast
 ```
 
 Build (broader set of conditions):
 
 ```
-zig build -Drelease-fast -Dall
+zig build -Doptimize=ReleaseFast -Dall
 ```
 
 Note that this will consume a lot of memory.
@@ -68,6 +70,7 @@ Architecture:
 
 - `src/alloc.zig` various allocators to be swapped out.
 - `src/main.zig` entrypoint for the program; builds the drag race layout
+- `src/opts.zig` converts the option literals in the drag race layout into the option structs.
 - `src/wheel.zig` uses the sieve program to generate wheel memory LUTs at compile-time
 - `src/runners.zig` generic "runner" framework.  Impls:
   - `SingleThreadedRunner`
