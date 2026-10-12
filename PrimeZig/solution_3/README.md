@@ -1,4 +1,4 @@
-# Zig solution by ManDeJan and ityonemo and SpexGuy
+# Zig solution by ManDeJan, ityonemo, SpexGuy, and crishoj
 
 ## WARNING
 The maintainers of the Primes program have instituted an limitation to the
@@ -63,6 +63,12 @@ Features combinations of the following optimizations:
   - Gustafson scaling:  each thread works independently and contributes independently to the common count.
 - `wheel`:  Precalculate (at compile time) a series of initial primes and during the "reset" phase, project
      these primes onto the field.  Then proceed as normal with the remaining primes.
+
+The packed 210-wheel entries (`packed210`) keep one bit per integer coprime to
+210. Primes below 100 are the wheel (2, 3, 5, 7) and a presieve through 97.
+Masks for that presieve are composed from each prime. Every later factor is
+read from the sieve at run time.
+
 
 and more!
 

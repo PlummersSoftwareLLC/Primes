@@ -93,6 +93,10 @@ pub fn main(init: std.process.Init) anyerror!void {
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 4, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced, .note = "-no-ht"}, SELECTED and !IS_RPI4, @src().line},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced}, SELECTED, @src().line},
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced, .note = "-no-ht"}, SELECTED and !IS_RPI4, @src().line},
+        // Packed 210-wheel. Primes below 100 are the wheel and the presieve;
+        // every later factor is read from the sieve at run time.
+        .{ SingleThreadedRunner, .{}, @import("packed_wheel.zig").PackedWheel, .{}, SELECTED, @src().line},
+        .{ ParallelGustafsonRunner, .{}, @import("packed_wheel.zig").PackedWheel, .{}, SELECTED, @src().line},
     };
 
     // serially run tests seem to be subjected to heavy throttling which bleeds over between
