@@ -65,6 +65,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         }
 
         pub const name = "single-" ++ Sieve.name;
+        pub const authors = if (@hasDecl(Sieve, "authors")) Sieve.authors else "ManDeJan&ityonemo&SpexGuy";
         pub fn threads() !usize {
             return 1;
         }
@@ -266,6 +267,7 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt_: anytype) type {
         }
 
         pub const name = "parallel-amdahl-" ++ Sieve.name;
+        pub const authors = if (@hasDecl(Sieve, "authors")) Sieve.authors else "ManDeJan&ityonemo&SpexGuy";
 
         pub fn threads() !usize {
             return @min(try std.Thread.getCpuCount(), 256) >> ht_reduction;
@@ -384,6 +386,7 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt_: anytype) type {
         }
 
         pub const name = "parallel-gustafson-" ++ Sieve.name;
+        pub const authors = if (@hasDecl(Sieve, "authors")) Sieve.authors else "ManDeJan&ityonemo&SpexGuy";
 
         pub fn threads() !usize {
             return @min(try std.Thread.getCpuCount(), 256) >> ht_reduction;

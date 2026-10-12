@@ -177,6 +177,7 @@ pub fn PackedWheel(comptime opts_: anytype) type {
 
     return struct {
         pub const name = "packed210";
+        pub const authors = "ManDeJan&ityonemo&SpexGuy&crishoj";
         pub const algo = "wheel";
         pub const bits = 1;
         // First prime that is not known in advance. The runners strike this

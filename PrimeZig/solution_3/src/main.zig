@@ -161,7 +161,7 @@ fn runSieveTest(
 fn printName(io: std.Io, comptime Runner: type, line: usize) !void {
     var buffer: [256]u8 = undefined;
     var stdout = std.Io.File.stdout().writerStreaming(io, &buffer);
-    try stdout.interface.print("{}-ManDeJan&ityonemo&SpexGuy-zig-{s}", .{line, Runner.name});
+    try stdout.interface.print("{}-{s}-zig-{s}", .{ line, Runner.authors, Runner.name });
     try stdout.interface.flush();
 }
 
