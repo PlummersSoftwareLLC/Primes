@@ -1,4 +1,4 @@
-# Zig solution by ManDeJan and ityonemo and SpexGuy
+# Zig solution by ManDeJan, ityonemo, SpexGuy, and crishoj
 
 ## WARNING
 The maintainers of the Primes program have instituted an limitation to the
@@ -18,16 +18,18 @@ at "cooling down" throttling).
 ![Bit count](https://img.shields.io/badge/Bits-1-green)
 ![Bit count](https://img.shields.io/badge/Bits-8-yellowgreen)
 
+Requires Zig 0.16.
+
 Build (curated conditions):
 
 ```
-zig build -Drelease-fast
+zig build -Doptimize=ReleaseFast
 ```
 
 Build (broader set of conditions):
 
 ```
-zig build -Drelease-fast -Dall
+zig build -Doptimize=ReleaseFast -Dall
 ```
 
 Note that this will consume a lot of memory.
@@ -62,12 +64,19 @@ Features combinations of the following optimizations:
 - `wheel`:  Precalculate (at compile time) a series of initial primes and during the "reset" phase, project
      these primes onto the field.  Then proceed as normal with the remaining primes.
 
+The packed 210-wheel entries (`packed210`) keep one bit per integer coprime to
+210. Primes below 100 are the wheel (2, 3, 5, 7) and a presieve through 97.
+Masks for that presieve are composed from each prime. Every later factor is
+read from the sieve at run time.
+
+
 and more!
 
 Architecture:
 
 - `src/alloc.zig` various allocators to be swapped out.
 - `src/main.zig` entrypoint for the program; builds the drag race layout
+- `src/opts.zig` converts the option literals in the drag race layout into the option structs.
 - `src/wheel.zig` uses the sieve program to generate wheel memory LUTs at compile-time
 - `src/runners.zig` generic "runner" framework.  Impls:
   - `SingleThreadedRunner`

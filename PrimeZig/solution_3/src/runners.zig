@@ -1,10 +1,12 @@
 const std = @import("std");
-const Mutex = std.Thread.Mutex.AtomicMutex;
+const Mutex = std.Io.Mutex;
 const Allocator = std.mem.Allocator;
+const coerce = @import("opts.zig").coerce;
 
 const expected_1M_result = 78_498;
 
 pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
+    _ = _opt;
     return struct {
         // passthrough information from the sieve.
         pub const algo = Sieve.algo;
@@ -17,14 +19,17 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         passes: *u64 = undefined,
 
         // no special thread-related things to do
-        pub fn init(sieve_size: usize, passes: *u64) !Self {
+        pub fn init(sieve_size: usize, passes: *u64, io: std.Io) !Self {
+            _ = io;
             return Self{
                 .sieve_size = sieve_size,
                 .passes = passes,
             };
         }
 
-        pub fn deinit(self: *Self) void {}
+        pub fn deinit(self: *Self) void {
+            _ = self;
+        }
 
         pub fn sieveInit(self: *Self) !void {
             self.sieve = try Sieve.init(self.sieve_size);
@@ -36,7 +41,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         }
 
         pub fn run(self: *Self) void {
-            const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, self.sieve_size)));
+            const stop = @as(usize, @intFromFloat(@sqrt(@as(f64, @floatFromInt(self.sieve_size)))));
             var factor = self.factor;
 
             while (factor <= stop) : (factor = self.sieve.findNextFactor(factor)) {
@@ -44,9 +49,9 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
             }
 
             // in debug mode, verify that we got the right answer.
-            if (std.builtin.mode == .Debug) {
+            if (@import("builtin").mode == .Debug) {
                 if (self.sieve_size == 1_000_000) {
-                    var prime_count = self.sieve.primeCount();
+                    const prime_count = self.sieve.primeCount();
                     if (prime_count != expected_1M_result) {
                         std.debug.print("hey we got the wrong answer {}\n", .{self.sieve.primeCount()});
                         // panic-death.
@@ -60,6 +65,7 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
         }
 
         pub const name = "single-" ++ Sieve.name;
+        pub const authors = if (@hasDecl(Sieve, "authors")) Sieve.authors else "ManDeJan&ityonemo&SpexGuy";
         pub fn threads() !usize {
             return 1;
         }
@@ -67,17 +73,25 @@ pub fn SingleThreadedRunner(comptime Sieve: type, comptime _opt: anytype) type {
 }
 
 // global sorts of things that can be shared across parallel implementations
-var worker_slots: [255]*std.Thread = undefined;
-var worker_pool: []*std.Thread = undefined;
+var worker_slots: [255]std.Thread = undefined;
+var worker_pool: []std.Thread = undefined;
 var worker_started: [255]bool = undefined;
 var worker_finished: [255]bool = undefined;
-var init_mutex: Mutex = Mutex{};
-var init_hold: ?Mutex.Held = null;
+var init_mutex: Mutex = .init;
+var init_held: bool = false;
 
 // utility functions
-fn blockOnInit() void {
-    var hold = init_mutex.acquire();
-    hold.release();
+fn acquire(io: std.Io) void {
+    init_mutex.lockUncancelable(io);
+}
+
+fn release(io: std.Io) void {
+    init_mutex.unlock(io);
+}
+
+fn blockOnInit(io: std.Io) void {
+    acquire(io);
+    release(io);
 }
 
 // should we apply a thread count reduction assuming that the system is hyperthreading
@@ -86,7 +100,8 @@ fn blockOnInit() void {
 const ParallelismOpts = struct { no_ht: bool = false };
 
 /// job sharing parallelism.
-pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
+pub fn AmdahlRunner(comptime Sieve: type, comptime opt_: anytype) type {
+    const opt = coerce(ParallelismOpts, opt_);
     const ht_reduction = if (opt.no_ht) 1 else 0;
 
     return struct {
@@ -107,28 +122,31 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
         started: bool = false,
         finished: bool = false,
         passes: *u64,
+        io: std.Io,
 
-        pub fn init(sieve_size: usize, passes: *u64) !Self {
+        pub fn init(sieve_size: usize, passes: *u64, io: std.Io) !Self {
             // set up the global worker pool, by abstracting a slice out of the available slots.
-            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction) - 1;
+            const totalWorkers: usize = (@min(try std.Thread.getCpuCount(), 256) >> ht_reduction) - 1;
             worker_pool = worker_slots[0..totalWorkers];
 
             // lock all of the workers before launching.
-            init_hold = init_mutex.acquire();
+            acquire(io);
+            init_held = true;
 
             return Self{
-                .stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size))),
+                .stop = @as(usize, @intFromFloat(@sqrt(@as(f64, @floatFromInt(sieve_size))))),
                 .sieve_size = sieve_size,
                 .passes = passes,
+                .io = io,
             };
         }
 
         pub fn deinit(self: *Self) void {
             // first, set the "finished flag to true"
-            @atomicStore(bool, &self.finished, true, .Monotonic);
+            @atomicStore(bool, &self.finished, true, .monotonic);
             // join all of the threads.
-            for (worker_pool) |thread_ptr, index| {
-                thread_ptr.wait();
+            for (worker_pool) |thread_ptr| {
+                thread_ptr.join();
             }
         }
 
@@ -138,15 +156,26 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             errdefer sieve.deinit();
 
             if (! self.started) {
-                for (worker_pool) |*thread_ptr, index| {
-                    thread_ptr.* = try std.Thread.spawn(workerLoop, ThreadInfo{ .self = self, .index = index });
+                for (worker_pool, 0..) |*thread_ptr, index| {
+                    thread_ptr.* = try std.Thread.spawn(.{}, workerLoop, .{ThreadInfo{ .self = self, .index = index }});
                 }
                 self.started = true;
             }
 
+            // reset the per-worker state for this pass under the lock.  Without this, the
+            // flags from the previous pass make threadsAreRunning() report idle workers while
+            // they are still running a job, and run() can return before the sieve is complete.
+            // On the first pass, the lock is still held from init().
+            const need_lock = !init_held;
+            if (need_lock) acquire(self.io);
+            for (worker_pool, 0..) |_, index| {
+                worker_started[index] = false;
+                worker_finished[index] = false;
+            }
             self.sieve = sieve;
-            var factor = Sieve.STARTING_FACTOR;
+            const factor = Sieve.STARTING_FACTOR;
             self.current_job = Job{.factor = factor};
+            if (need_lock) release(self.io);
         }
 
         pub fn sieveDeinit(self: *Self) void {
@@ -155,9 +184,9 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
 
         pub fn run(self: *Self) void {
             // unlock the workers.
-            if (init_hold) | hold | {
-                init_hold.?.release();
-                init_hold = null;
+            if (init_held) {
+                release(self.io);
+                init_held = false;
             }
 
             while (self.fetchJob()) |job| {
@@ -165,14 +194,13 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             }
 
             // spinlock till everyone else has finished.
-            while (threadsAreRunning()) {
-                std.time.sleep(100);
+            while (threadsAreRunning(self.io)) {
+                self.io.sleep(.fromNanoseconds(100), .awake) catch {};
             }
 
             // in debug mode, verify that we got the right answer.
-            if (std.builtin.mode == .Debug) {
+            if (@import("builtin").mode == .Debug) {
                 if (self.sieve_size == 1_000_000) {
-                    var primecount = self.sieve.primeCount();
                     std.debug.assert(self.sieve.primeCount() == expected_1M_result);
                 }
             }
@@ -181,16 +209,16 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
         }
 
         fn workerLoop(info: ThreadInfo) void {
-            while (!@atomicLoad(bool, &info.self.finished, .Monotonic)) {
+            while (!@atomicLoad(bool, &info.self.finished, .monotonic)) {
                 if (info.self.fetchJob()) |job| {
                     // ensure that the state is "started"
                     worker_started[info.index] = true;
                     info.self.runJob(job);
                 } else {
                     // if we started this generation, set it to finished.
-                    setFinished(info.index);
+                    setFinished(info.self.io, info.index);
                     // wait 1ms for the next job to come around.
-                    std.time.sleep(1000);
+                    info.self.io.sleep(.fromNanoseconds(1000), .awake) catch {};
                 }
             }
         }
@@ -198,16 +226,14 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
         /////// UTILITY FUNCTIONS
 
         fn fetchJob(self: *Self) ?Job {
-            const hold = init_mutex.acquire();
-            defer hold.release();
-
-            var field = self.sieve.field;
+            acquire(self.io);
+            defer release(self.io);
 
             if (self.current_job) |current_job| {
                 // set up the next job
-                var next_factor = self.sieve.findNextFactor(current_job.factor);
+                const next_factor = self.sieve.findNextFactor(current_job.factor);
 
-                var next_job = if (next_factor <= self.stop) Job{ .factor = next_factor } else null;
+                const next_job = if (next_factor <= self.stop) Job{ .factor = next_factor } else null;
                 self.current_job = next_job;
 
                 return current_job;
@@ -220,20 +246,20 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
             self.sieve.runFactor(job.factor);
         }
 
-        fn setFinished(index: usize) void {
-            const hold = init_mutex.acquire();
-            defer hold.release();
+        fn setFinished(io: std.Io, index: usize) void {
+            acquire(io);
+            defer release(io);
 
             if (worker_started[index]) {
                 worker_finished[index] = true;
             }
         }
 
-        fn threadsAreRunning() bool {
-            const hold = init_mutex.acquire();
-            defer hold.release();
+        fn threadsAreRunning(io: std.Io) bool {
+            acquire(io);
+            defer release(io);
 
-            for (worker_pool) |_, index| {
+            for (worker_pool, 0..) |_, index| {
                 // xor operation:  Must be (unstarted AND unfinished) OR (started AND finished)
                 if (worker_started[index] != worker_finished[index]) return true;
             }
@@ -241,20 +267,21 @@ pub fn AmdahlRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
         }
 
         pub const name = "parallel-amdahl-" ++ Sieve.name;
+        pub const authors = if (@hasDecl(Sieve, "authors")) Sieve.authors else "ManDeJan&ityonemo&SpexGuy";
 
         pub fn threads() !usize {
-            return std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction;
+            return @min(try std.Thread.getCpuCount(), 256) >> ht_reduction;
         }
     };
 }
 
 /// embarassing parallism
-pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type {
+pub fn GustafsonRunner(comptime Sieve: type, comptime opt_: anytype) type {
+    const opt = coerce(ParallelismOpts, opt_);
     const ht_reduction = if (opt.no_ht) 1 else 0;
 
     return struct {
         const Self = @This();
-        const field_size = sieve_size >> 1;
 
         // passthrough information from sieve.
         pub const algo = Sieve.algo;
@@ -262,50 +289,54 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
 
         passes: *u64,
         sieve_size: usize,
+        io: std.Io,
         started: bool = false,
         finished: bool = false,
         // main thread sieve info
         sieve: Sieve = undefined,
         factor: usize = undefined,
 
-        pub fn init(sieve_size: usize, passes: *u64) !Self {
+        pub fn init(sieve_size: usize, passes: *u64, io: std.Io) !Self {
             // set up the global worker pool, by abstracting a slice out of the available slots.
-            var totalWorkers: usize = (std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction) - 1;
+            const totalWorkers: usize = (@min(try std.Thread.getCpuCount(), 256) >> ht_reduction) - 1;
             worker_pool = worker_slots[0..totalWorkers];
 
             // lock all of the workers before launching.
-            init_hold = init_mutex.acquire();
+            acquire(io);
+            init_held = true;
 
             return Self{
                 .passes = passes,
                 .sieve_size = sieve_size,
+                .io = io,
             };
         }
 
         pub fn deinit(self: *Self) void {
             // first, set the "finished flag to true"
-            @atomicStore(bool, &self.finished, true, .Monotonic);
+            @atomicStore(bool, &self.finished, true, .monotonic);
             // join all of the threads.
-            for (worker_pool) |thread_ptr, index| {
-                thread_ptr.wait();
+            for (worker_pool) |thread_ptr| {
+                thread_ptr.join();
             }
         }
 
         pub fn sieveInit(self: *Self) !void {
             if (!self.started) {
                 // spawn worker sieves on the first init call.
-                for (worker_pool) |*thread_ptr, index| {
-                    thread_ptr.* = try std.Thread.spawn(workerLoop, self);
+                for (worker_pool) |*thread_ptr| {
+                    thread_ptr.* = try std.Thread.spawn(.{}, workerLoop, .{self});
                 }
 
                 // unlock the worker pool.
                 self.started = true;
-                init_hold.?.release();
+                release(self.io);
+                init_held = false;
             }
 
             // reset the sieve
             self.sieve = try Sieve.init(self.sieve_size);
-            errdefer sieve.deinit();
+            errdefer self.sieve.deinit();
 
             self.factor = Sieve.STARTING_FACTOR;
         }
@@ -318,37 +349,36 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
             runSieve(&self.sieve, self.sieve_size, self.factor);
 
             // increment the number of passes.
-            _ = @atomicRmw(u64, self.passes, .Add, 1, .Monotonic);
+            _ = @atomicRmw(u64, self.passes, .Add, 1, .monotonic);
         }
 
         pub fn workerLoop(runner: *Self) void {
-            blockOnInit();
+            blockOnInit(runner.io);
 
-            while (!@atomicLoad(bool, &runner.finished, .Monotonic)) {
+            while (!@atomicLoad(bool, &runner.finished, .monotonic)) {
                 var sieve = Sieve.init(runner.sieve_size) catch unreachable;
                 defer sieve.deinit();
 
-                var factor: usize = Sieve.STARTING_FACTOR;
+                const factor: usize = Sieve.STARTING_FACTOR;
                 runSieve(&sieve, runner.sieve_size, factor);
 
                 // increment the number of passes.
-                _ = @atomicRmw(u64, runner.passes, .Add, 1, .Monotonic);
+                _ = @atomicRmw(u64, runner.passes, .Add, 1, .monotonic);
             }
         }
 
         // utility functions
 
         fn runSieve(sieve: *Sieve, sieve_size: usize, starting_factor: usize) void {
-            const stop = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+            const stop = @as(usize, @intFromFloat(@sqrt(@as(f64, @floatFromInt(sieve_size)))));
             var factor = starting_factor;
-            var field = sieve.field;
 
             while (factor <= stop) : (factor = sieve.findNextFactor(factor)) {
                 sieve.runFactor(factor);
             }
 
             // in debug mode, verify that we got the right answer.
-            if (std.builtin.mode == .Debug) {
+            if (@import("builtin").mode == .Debug) {
                 if (sieve_size == 1_000_000) {
                     std.debug.assert(sieve.primeCount() == expected_1M_result);
                 }
@@ -356,9 +386,10 @@ pub fn GustafsonRunner(comptime Sieve: type, comptime opt: ParallelismOpts) type
         }
 
         pub const name = "parallel-gustafson-" ++ Sieve.name;
+        pub const authors = if (@hasDecl(Sieve, "authors")) Sieve.authors else "ManDeJan&ityonemo&SpexGuy";
 
         pub fn threads() !usize {
-            return std.math.min(try std.Thread.cpuCount(), 256) >> ht_reduction;
+            return @min(try std.Thread.getCpuCount(), 256) >> ht_reduction;
         }
     };
 }

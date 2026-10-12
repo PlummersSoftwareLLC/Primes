@@ -21,9 +21,9 @@ const SAlloc = allocators.SAlloc;
 
 const SIZE = 1_000_000;
 
-var scratchpad: [SIZE]u8 align(std.mem.page_size) = undefined;
+var scratchpad: [SIZE]u8 align(std.heap.page_size_min) = undefined;
 
-const ARCH_BITS = std.builtin.target.cpu.arch.ptrBitWidth();
+const ARCH_BITS = @import("builtin").target.ptrBitWidth();
 const ARCH_64 = ARCH_BITS == 64;
 const ARCH_32 = ARCH_BITS == 32;
 
@@ -31,16 +31,16 @@ const ARCH_32 = ARCH_BITS == 32;
 const build_options = @import("build_options");
 const SELECTED = build_options.selected;     // false if -Ddebug
 const ONLY_WHEN_ALL = build_options.all;     // did we set -Dall?
-const IS_RPI4 = std.builtin.target.cpu.arch.isARM() and build_options.arm_is_rpi4;
+const IS_RPI4 = @import("builtin").target.cpu.arch.isArm() and build_options.arm_is_rpi4;
 const U64_LANES = if (IS_RPI4) 2 else 8;  // how many U64-lanes are available for SIMD?
 const U8_LANES = U64_LANES * 8;
 
-pub fn main() anyerror!void {
+pub fn main(init: std.process.Init) anyerror!void {
     const run_for = 5; // Seconds
 
     const NonClearing = SAlloc(c_std_lib, .{.should_clear = false});
 
-    comptime const specs = .{
+    const specs = .{
         // single-threaded int runners
 
         .{ SingleThreadedRunner, .{}, IntSieve, .{}, SELECTED, @src().line},
@@ -93,59 +93,64 @@ pub fn main() anyerror!void {
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 4, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced, .note = "-no-ht"}, SELECTED and !IS_RPI4, @src().line},
         .{ ParallelGustafsonRunner, .{}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced}, SELECTED, @src().line},
         .{ ParallelGustafsonRunner, .{.no_ht = true}, BitSieve, .{.unrolled = .{.max_vector = U64_LANES}, .FindFactorChunk = u8, .wheel_primes = 5, .allocator = NonClearing, .wheel_copy_vector = U8_LANES, .PRIME = 1, .find_factor = .advanced, .note = "-no-ht"}, SELECTED and !IS_RPI4, @src().line},
+        // Packed 210-wheel. Primes below 100 are the wheel and the presieve;
+        // every later factor is read from the sieve at run time.
+        .{ SingleThreadedRunner, .{}, @import("packed_wheel.zig").PackedWheel, .{}, SELECTED, @src().line},
+        .{ ParallelGustafsonRunner, .{}, @import("packed_wheel.zig").PackedWheel, .{}, SELECTED, @src().line},
     };
 
     // serially run tests seem to be subjected to heavy throttling which bleeds over between
     // runs, at least on linux.  It seems the only way to prevent this is by running a
-    const args = try std.process.argsAlloc(std.heap.page_allocator);
+    const io = init.io;
+    const args = try init.minimal.args.toSlice(init.arena.allocator());
     const selected_run: ?usize = if ((args.len == 3) and (std.mem.eql(u8, args[1], "-l"))) (std.fmt.parseInt(usize, args[2], 10) catch @panic("badarg")) else null;
 
     inline for (specs) |spec| {
-        comptime const RunnerFn = spec[0];
-        comptime const runner_opts = spec[1];
-        comptime const SieveFn = spec[2];
-        comptime const sieve_opts = spec[3];
-        comptime const Sieve = SieveFn(sieve_opts);
-        comptime const Runner = RunnerFn(Sieve, runner_opts);
-        comptime const should_run = spec[4];
-        comptime const line = spec[5];
+        const RunnerFn = spec[0];
+        const runner_opts = spec[1];
+        const SieveFn = spec[2];
+        const sieve_opts = spec[3];
+        const Sieve = SieveFn(sieve_opts);
+        const Runner = RunnerFn(Sieve, runner_opts);
+        const should_run = spec[4];
+        const line = spec[5];
 
         if (should_run) {
             const selected = if (selected_run) | s_line | line == s_line else true;
             if (selected) {
-                try runSieveTest(Runner, run_for, SIZE, line);
+                try runSieveTest(io, Runner, run_for, SIZE, line);
             }
         }
     }
 }
 
 fn runSieveTest(
+    io: std.Io,
     comptime Runner: type,
     run_for: comptime_int,
     sieve_size: usize,
     line: usize,
 ) anyerror!void {
-    @setAlignStack(256);
+    try printName(io, Runner, line);
 
-    try printName(Runner, line);
-
-    const timer = try std.time.Timer.start();
+    const start = std.Io.Clock.Timestamp.now(io, .awake);
     var passes: u64 = 0;
 
-    var runner = try Runner.init(sieve_size, &passes);
+    var runner = try Runner.init(sieve_size, &passes, io);
     defer runner.deinit();
 
-    while (timer.read() < run_for * std.time.ns_per_s) {
+    while (start.untilNow(io).raw.nanoseconds < run_for * std.time.ns_per_s) {
         try runner.sieveInit();
         defer runner.sieveDeinit();
         runner.run();
     }
 
-    const elapsed = timer.read();
+    const elapsed: u64 = @intCast(start.untilNow(io).raw.nanoseconds);
 
-    var threads = try Runner.threads();
+    const threads = try Runner.threads();
 
     try printResults(
+        io,
         passes,
         elapsed,
         threads,
@@ -153,21 +158,18 @@ fn runSieveTest(
         Runner.bits);
 }
 
-fn printName(comptime Runner: type, line: usize) !void {
-    const stdout = std.io.getStdOut().writer();
-    try stdout.print("{}-ManDeJan&ityonemo&SpexGuy-zig-{s}", .{line, Runner.name});
+fn printName(io: std.Io, comptime Runner: type, line: usize) !void {
+    var buffer: [256]u8 = undefined;
+    var stdout = std.Io.File.stdout().writerStreaming(io, &buffer);
+    try stdout.interface.print("{}-{s}-zig-{s}", .{ line, Runner.authors, Runner.name });
+    try stdout.interface.flush();
 }
 
-fn printResults(passes: usize, elapsed_ns: u64, threads: usize, algo: []const u8, bits: usize) !void {
-    const elapsed = @intToFloat(f32, elapsed_ns) / @intToFloat(f32, std.time.ns_per_s);
-    const stdout = std.io.getStdOut().writer();
+fn printResults(io: std.Io, passes: usize, elapsed_ns: u64, threads: usize, algo: []const u8, bits: usize) !void {
+    const elapsed = @as(f32, @floatFromInt(elapsed_ns)) / @as(f32, @floatFromInt(std.time.ns_per_s));
+    var buffer: [256]u8 = undefined;
+    var stdout = std.Io.File.stdout().writerStreaming(io, &buffer);
 
-    try stdout.print(";{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{ passes, elapsed, threads, algo, bits });
-}
-
-// If you're going to use tracy, you need these callback hooks.
-// note: stupid C++ mangling shenanigans
-extern fn  @"__cxa_thread_atexit_impl@GLIBC_2.18"(fun: fn () callconv(.C) void, obj: *c_void, dso_symbol: *c_void) c_int;
-export fn  __cxa_thread_atexit_impl(fun: fn () callconv(.C) void, obj: *c_void, dso_symbol: *c_void) c_int {
-    return @"__cxa_thread_atexit_impl@GLIBC_2.18"(fun, obj, dso_symbol);
+    try stdout.interface.print(";{};{d:.5};{};faithful=yes,algorithm={s},bits={}\n", .{ passes, elapsed, threads, algo, bits });
+    try stdout.interface.flush();
 }
