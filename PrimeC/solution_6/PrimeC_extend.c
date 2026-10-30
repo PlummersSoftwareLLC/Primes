@@ -765,5 +765,5 @@ int main(int argc, char** argv)
 
     prime_sieve_destroy(&checkSieve);
 
-    return (int)result;
+    return (result > 0) ? 0 : 1;
 }
