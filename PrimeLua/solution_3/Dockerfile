@@ -1,4 +1,6 @@
-FROM nickblah/luajit:2.1-beta-alpine
+FROM alpine:3.24
+
+RUN apk add --no-cache luajit
 
 WORKDIR /prog
 COPY prog.lua .
