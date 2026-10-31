@@ -1,4 +1,6 @@
-FROM levischuck/janet-sdk:v1.23.0
+FROM alpine:3.24
+
+RUN apk add --no-cache janet
 
 WORKDIR /primes
 
