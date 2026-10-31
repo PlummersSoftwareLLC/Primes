@@ -98,9 +98,15 @@ impl PrimeSieve {
     /// Counts the total number of primes identified by the sieve.
     pub fn count_primes(&self) -> usize {
         let mut count = 0;
-        if self.sieve_size >= 2 { count += 1; }
-        if self.sieve_size >= 3 { count += 1; }
-        if self.sieve_size >= 5 { count += 1; }
+        if self.sieve_size >= 2 {
+            count += 1;
+        }
+        if self.sieve_size >= 3 {
+            count += 1;
+        }
+        if self.sieve_size >= 5 {
+            count += 1;
+        }
 
         let mut factor = 7usize;
         let mut step = 1usize;
@@ -205,10 +211,7 @@ fn run_multi_thread(seconds: u64, limit: usize, num_threads: usize) -> (usize, f
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let seconds: u64 = args
-        .get(1)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(5);
+    let seconds: u64 = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(5);
     let limit: usize = args
         .get(2)
         .and_then(|s| s.parse().ok())
@@ -281,8 +284,7 @@ mod tests {
             let actual = sieve.count_primes();
             let expected = count_primes_reference(limit);
             assert_eq!(
-                actual,
-                expected,
+                actual, expected,
                 "Failed count for limit {}: got {}, expected {}",
                 limit, actual, expected
             );
