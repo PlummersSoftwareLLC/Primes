@@ -1,8 +1,7 @@
 //by Sycration
-//this code must be run on nightly or beta
+//this code needs Rust 1.72 or later (long_running_const_eval lint)
 
-#![feature(const_eval_limit)]
-#![const_eval_limit = "0"]
+#![allow(long_running_const_eval)]
 
 use std::time::*;
 use std::usize;

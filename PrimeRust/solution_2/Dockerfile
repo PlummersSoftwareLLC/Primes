@@ -2,7 +2,7 @@
 #   - run unit tests
 #   - build executable
 #
-FROM primeimages/rust:1.52.1 AS build
+FROM rust:1.99-alpine3.24 AS build
 
 WORKDIR /app
 COPY . .
@@ -13,7 +13,7 @@ RUN cargo test \
 #   - start from clean container
 #   - copy built executable
 #
-FROM alpine:3.13
+FROM alpine:3.24
 WORKDIR /app
 
 # app and configuration
