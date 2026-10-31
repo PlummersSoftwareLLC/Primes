@@ -1,14 +1,16 @@
-FROM primeimages/ocaml:5.1 AS build
+FROM ocaml/opam:alpine-3.24-ocaml-5.5 AS build
 
-WORKDIR /prime-ocaml
+RUN opam install -y core.v0.17.2 dune.3.24.2
 
-COPY . .
+WORKDIR /home/opam/prime-ocaml
 
-RUN dune build
+COPY --chown=opam:opam . .
 
-FROM alpine:3.19
+RUN opam exec -- dune build
+
+FROM alpine:3.24
 
 WORKDIR /app
-COPY --from=build /prime-ocaml/_build/install/default/bin/prime-ocaml prime-ocaml.exe
+COPY --from=build /home/opam/prime-ocaml/_build/install/default/bin/prime-ocaml prime-ocaml.exe
 
 ENTRYPOINT [ "./prime-ocaml.exe" ]
