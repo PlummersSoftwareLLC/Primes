@@ -1,18 +1,14 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("multiplatform") version "1.8.10"
-    id("org.jetbrains.kotlin.plugin.atomicfu") version "1.8.10"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    application
+    kotlin("multiplatform") version "2.4.21"
+    id("org.jetbrains.kotlin.plugin.atomicfu") version "2.4.21"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "primes"
 version = "1.0"
-
-application {
-    mainClass.set("MainKt")
-}
 
 repositories {
     mavenCentral()
@@ -20,12 +16,12 @@ repositories {
 
 kotlin {
     val jvmTarget = jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "19"
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_25)
         }
     }
 
-    js(IR) {
+    js {
         nodejs {}
         binaries.executable()
     }
@@ -51,20 +47,23 @@ kotlin {
     }
 
     sourceSets["commonMain"].dependencies {
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     }
 
     sourceSets["jsMain"].dependencies {
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.6.4")
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-node:18.14.0-pre.504")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.11.0")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-node:2026.10.6-24.12.4")
     }
 
     tasks.withType<ShadowJar> {
         val main = jvmTarget.compilations.getByName("main")
         from(main.output)
-        configurations = mutableListOf(
-            main.compileDependencyFiles,
-            main.runtimeDependencyFiles
-        )
+        configurations.set(listOf(
+            project.configurations.getByName(main.compileDependencyConfigurationName),
+            project.configurations.getByName(main.runtimeDependencyConfigurationName!!)
+        ))
+        manifest {
+            attributes["Main-Class"] = "MainKt"
+        }
     }
 }
