@@ -22,7 +22,7 @@ Passes: 5796, Time: 5000590800, Avg: 0.000000, Limit: 1000000, Count1: 78498, Co
 
 ## HOW TO BUILD
 
-Install Go 1.16.2
+Install Go 1.27
 
 ```bash 
 $ go run ./main.go
