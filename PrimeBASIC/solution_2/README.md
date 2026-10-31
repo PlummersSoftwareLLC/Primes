@@ -9,7 +9,7 @@ This is an implementation in Visual Basic.
 
 ## Run instructions
 
-### .NET 5.0
+### .NET 10.0
 
 Execute the following command from the implementation directory:
 
