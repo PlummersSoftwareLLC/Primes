@@ -1,4 +1,4 @@
-FROM mariadb:10.6.2
+FROM mariadb:11.8-noble
 
 WORKDIR /opt/app
 
