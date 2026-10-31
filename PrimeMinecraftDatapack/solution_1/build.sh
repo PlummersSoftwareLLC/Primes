@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script assumes that OpenJDK 17, wget and C build tools are already installed
+# This script assumes that OpenJDK 17 (or newer), wget and C build tools are already installed
 # somewhere in $PATH.
 
 mkdir env
