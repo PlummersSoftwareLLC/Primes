@@ -1,7 +1,7 @@
 # REXX solution by joss
 Sieve of Erastosthones for the REXX scripting language.
 Uses the Regina REXX interpreter to run the program /home/rexx/PrimeREXX.rex
-A Dockerfile has been supplied. It is based upon an Ubuntu:20.04 image.
+A Dockerfile has been supplied. It is based upon an Ubuntu 24.04 image.
 
 Regina REXX processes standard REXX. Standard REXX does not have classes/objects.
 There is a separate REXX interpreter: oorexx that does support classes.
