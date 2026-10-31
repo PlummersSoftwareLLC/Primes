@@ -1,4 +1,4 @@
-FROM dart:3.0.0 AS build
+FROM dart:3.13.7 AS build
 WORKDIR /app
 COPY pubspec.* ./
 RUN dart pub get
