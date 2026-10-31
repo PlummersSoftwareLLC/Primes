@@ -1,4 +1,4 @@
-FROM alpine:3.21.3
+FROM alpine:3.24
 
 # Install necessary dependencies
 RUN apk add --no-cache build-base mimalloc2-dev clang openmp-dev bash && \

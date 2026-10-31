@@ -1,4 +1,4 @@
-FROM alpine:3.13 AS build
+FROM alpine:3.24 AS build
 
 RUN apk add --no-cache gcc-gnat libc-dev
 
@@ -15,7 +15,7 @@ RUN gnatmake -gnatwa -gnatn -gnatp \
     -bargs -static \
     -largs -static
 
-FROM alpine:3.13
+FROM alpine:3.24
 
 COPY --from=build /opt/app/main /main
 
