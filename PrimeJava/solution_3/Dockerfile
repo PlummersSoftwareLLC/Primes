@@ -1,8 +1,6 @@
-FROM ghcr.io/graalvm/graalvm-ce:21.2.0
+FROM ghcr.io/graalvm/native-image-community:25i4-25.0.4.1.1-ol10
 
 WORKDIR /opt/app
-
-RUN gu install native-image
 
 COPY PrimeSieveJava.java .
 RUN javac PrimeSieveJava.java && native-image PrimeSieveJava
