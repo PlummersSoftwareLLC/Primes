@@ -16,6 +16,9 @@ terra Primes.t
 '''
 Resulting program would be right in the program folder
 
+The Dockerfile builds Terra 1.2.2 from source against the LLVM 18 packages of Ubuntu 24.04,
+following Terra's own build instructions.
+
 ## Output
 From AMD Ryzen 5 3500U 3.7 Ghz 4 cores
 '''
