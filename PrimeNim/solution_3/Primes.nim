@@ -307,7 +307,7 @@ method primes(this: PrimeSieve): iterator: Prime {.closure.} {.base.} =
         i += 2
 
 # alternate very fast counting by 64 bit popCount...
-method countPrimes(this: PrimeSieve): int64 {.base.} =
+method countPrimes(this: PrimeSieve): int64 {.base, gcsafe.} =
   if this.limit < 3:
     if this.limit < 2: return 0'i64 else: return 1'i64
   let lstndx = ((this.limit - 3.Prime) shr 1).int64
@@ -323,18 +323,20 @@ proc singleTest(tec: Techniques): (int, bool) =
     duration = getMonoTime().ticks - start; passes += 1
   return (passes, rslt.countPrimes == EXPECTED)
 
+proc worker(arg: (Techniques, ptr (int, bool))) {.thread.} =
+  arg[1][] = singleTest(arg[0])
+
 proc multiTest(tec: Techniques, thrds: int): (int, bool) =
   result[1] = true
-  var thrd: Thread[(Techniques, ptr Channel[(int, bool)])]
-  var ch: Channel[(int, bool)]; ch.open()
-  let chp = addr(ch)
-  let wrk = proc(arg: (Techniques, ptr Channel[(int, bool)])) =
-    arg[1][].send(singleTest(arg[0]))
-  for _ in 1 .. thrds:
-    createThread[(Techniques, ptr Channel[(int, bool)])](thrd, wrk, (tec, chp))
-  for _ in 1 .. thrds:
-    let r = ch.recv(); result[0] += r[0]; result[1] = result[1] and r[1]
-  ch.close()
+  # one Thread object and one result slot per thread; no Channel, as with ARC
+  # its buffer is allocated by a worker thread and freed after that ended...
+  var thrdarr: array[MAXTHRDS, Thread[(Techniques, ptr (int, bool))]]
+  var rslts: array[MAXTHRDS, (int, bool)]
+  for i in 0 ..< thrds:
+    createThread(thrdarr[i], worker, (tec, addr(rslts[i])))
+  joinThreads(thrdarr.toOpenArray(0, thrds - 1))
+  for i in 0 ..< thrds:
+    result[0] += rslts[i][0]; result[1] = result[1] and rslts[i][1]
 
 proc bench(tec: Techniques, multi: bool = false) =
   var rslts = ""; let ps0 = 100.newPrimeSieve(tec).primes
