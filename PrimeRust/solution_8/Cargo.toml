@@ -1,10 +1,9 @@
-[package]
-name = "rust-wheel8-sieve"
-version = "1.0.0"
-authors = ["bonnhatnguyen <bonnhatnguyen0@gmail.com>"]
-edition = "2021"
-
-[dependencies]
+[workspace]
+members = [
+    "rust-wheel8-sieve",
+    "cokieminer-sieve",
+]
+resolver = "2"
 
 [profile.release]
 opt-level = 3
