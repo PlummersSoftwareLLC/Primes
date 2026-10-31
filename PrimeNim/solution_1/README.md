@@ -25,7 +25,7 @@ docker build -t primes .
 docker run --rm primes
 ```
 
-I had to use the official Alpine images, which for now, have no support for ARM64. I will try to rectify this in the future.
+The Docker image uses the nim package from Alpine Linux.
 
 ## Benchmarks
 
