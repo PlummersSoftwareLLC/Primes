@@ -44,7 +44,7 @@ The instructions other than those for Docker rely on [Retro Assembler](https://e
 Instructions for installing these applications aren't provided here; the applications' websites provide clear documentation on how to do this.
 
 ### Docker
-**Note:** the Dockerfile in this solution pulls in a base image that includes VICE 3.5, with the ROM images for a range of Commodore systems. Although general consensus seems to be that Commodore approved the use of the ROM images for emulation purposes, it is your own decision to do so or not. By executing `docker build` you pull them in, by executing `docker run` you use them.
+**Note:** the Dockerfile in this solution builds VICE 3.5 from its source release, which includes the ROM images for a range of Commodore systems. Although general consensus seems to be that Commodore approved the use of the ROM images for emulation purposes, it is your own decision to do so or not. By executing `docker build` you pull them in, by executing `docker run` you use them.
 
 Run the following commands while in the solution directory:
 ```
