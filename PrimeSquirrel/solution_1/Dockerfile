@@ -1,4 +1,5 @@
-FROM ubuntu:22.04
+# Ubuntu 24.04 no longer packages squirrel3; Debian 13 does (same 3.1 release).
+FROM debian:trixie-slim
 
 RUN apt-get update -qq \
 	&& apt-get install -y squirrel3 \
