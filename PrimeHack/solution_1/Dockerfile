@@ -1,5 +1,5 @@
-# hhvm docker images only support amd64
-FROM hhvm/hhvm:4.121.0
+# primeimages/hhvm is only built for amd64
+FROM primeimages/hhvm:4.172.3-ubuntu24.04
 
 WORKDIR /app
 
