@@ -154,8 +154,9 @@ danielspaangberg_5760of30030_epar;19314;5.001127;4;algorithm=wheel,faithful=yes,
 
 ### msubra_8of30_extend — alternating runs vs all 8-of-30 entries
 
-All variants compiled with `gcc -Ofast -march=native` (existing entries) and
-`gcc -O3 -ffast-math -march=native` (msubra_8of30_extend).
+All variants compiled with `clang -Ofast -march=native` (existing entries) and
+`clang -O3 -ffast-math -march=native` (msubra_8of30_extend). On macOS, `gcc`
+is Apple Clang 16; Clang is used directly here for clarity.
 
 ---
 
@@ -165,39 +166,39 @@ All variants compiled with `gcc -Ofast -march=native` (existing entries) and
 
 **Run 1**
 ```
-danielspaangberg_8of30;10778;5.000255;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9891;5.000099;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;19173;5.000219;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;89449;5.003619;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;62420;5.00218;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;454673;5.00383;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10884;5.000263;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9892;5.000284;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19441;5.000226;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;93495;5.003093;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;72467;5.00411;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;520784;5.00451;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
 **Run 2**
 ```
-danielspaangberg_8of30;10750;5.000242;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9821;5.000513;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;18991;5.000192;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;89203;5.003243;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;62747;5.00419;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;457053;5.00265;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10825;5.000247;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9909;5.000146;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19358;5.000107;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;89783;5.003742;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;70659;5.00363;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;415612;5.00396;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
 **Run 3**
 ```
-danielspaangberg_8of30;10709;5.000138;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9811;5.000385;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;19017;5.000146;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;89105;5.004075;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;62568;5.00381;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;452681;5.00119;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10297;5.000165;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9482;5.000023;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;17457;5.000191;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;86112;5.003211;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;67809;5.00283;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;439979;5.00153;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
-Single-threaded: msubra_8of30_extend averages 62,578 passes vs 10,746 for
-danielspaangberg_8of30 (**+482%**) and 9,841 for danielspaangberg_8of30_owrb (**+536%**).
+Single-threaded: msubra_8of30_extend averages 70,312 passes vs 10,669 for
+danielspaangberg_8of30 (**+559%**) and 9,761 for danielspaangberg_8of30_owrb (**+620%**).
 
-Multi-threaded at 16 threads: msubra_8of30_extend averages 454,802 passes vs 89,252
-for danielspaangberg_8of30_epar (**+410%**).
+Multi-threaded at 16 threads: msubra_8of30_extend averages 458,792 passes vs 89,797
+for danielspaangberg_8of30_epar (**+411%**).
 
 ---
 
