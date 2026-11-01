@@ -309,13 +309,19 @@ static void mark_multiples_wheel30(uint8_t* PRIMEC_RESTRICT arr,
 
         if (tile_start >= byteCount) return;
 
-        // Generic wide-tile: expand tile 16x then OR across the sieve.
-        // Uses a runtime stride (no hardcoded prime enumeration).
+        // Generic wide-tile: expand tile 16x using doubling memcpy (O(log 16) calls),
+        // then OR across the sieve. Doubling amortises overhead for small strides.
         // VECTORIZE_HINT tells the compiler loop iterations are independent (enables SIMD).
         const size_t blk = stride * 16;
         alignas(32) uint8_t wide_tile[256 * 16]; // max buffer: 256*16 = 4096 bytes
-        for (size_t k = 0; k < 16; k++)
-            memcpy(wide_tile + k * stride, tile, stride);
+        memcpy(wide_tile, tile, stride);
+        size_t wt_filled = stride;
+        while (wt_filled * 2 <= blk) {
+            memcpy(wide_tile + wt_filled, wide_tile, wt_filled);
+            wt_filled *= 2;
+        }
+        if (wt_filled < blk)
+            memcpy(wide_tile + wt_filled, wide_tile, blk - wt_filled);
 
         uint8_t* PRIMEC_RESTRICT _a = arr;
         const uint8_t* PRIMEC_RESTRICT _wt = wide_tile;
