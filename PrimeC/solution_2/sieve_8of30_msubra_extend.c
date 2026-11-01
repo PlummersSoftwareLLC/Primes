@@ -136,30 +136,54 @@ static void build_presieve(uint8_t* buf)
             memcpy(buf + filled, buf, 17017 - filled);
     }
 
-    // Primes 11, 13, 17: tile into temp, then OR into buf.
+    // Primes 11 and 13 combined: period = lcm(11,13) = 143.
+    // 17017 / 143 = 119 exactly, so tiling fits without a partial tail.
+    // Each prime repeats period/p times per residue within the 143-byte window;
+    // the inner for-loop enumerates all repetitions correctly.
     uint8_t temp[17017];
-    const uint64_t presieve_rest[3] = {11, 13, 17};
-    for (int pi = 0; pi < 3; pi++) {
-        const uint64_t p = presieve_rest[pi];
-        const size_t   period = (size_t)p;
-
-        uint8_t base[17] = {0};
+    {
+        uint8_t base143[143] = {0};
         for (int j = 0; j < 8; j++) {
             const uint8_t mask = (uint8_t)(1u << j);
             uint64_t n = WHEEL30_RESIDUE[j];
-            while (n % p != 0) n += 30;
-            base[(size_t)(n / 30) % period] |= mask;
+            while (n % 11 != 0) n += 30;
+            for (size_t pos = (size_t)(n / 30) % 143; pos < 143; pos += 11)
+                base143[pos] |= mask;
+            n = WHEEL30_RESIDUE[j];
+            while (n % 13 != 0) n += 30;
+            for (size_t pos = (size_t)(n / 30) % 143; pos < 143; pos += 13)
+                base143[pos] |= mask;
         }
-
-        memcpy(temp, base, period);
-        size_t filled = period;
+        memcpy(temp, base143, 143);
+        size_t filled = 143;
         while (filled * 2 <= 17017) {
             memcpy(temp + filled, temp, filled);
             filled *= 2;
         }
         if (filled < 17017)
             memcpy(temp + filled, temp, 17017 - filled);
+        VECTORIZE_HINT
+        for (size_t j = 0; j < 17017; j++)
+            buf[j] |= temp[j];
+    }
 
+    // Prime 17: period = 17, one OR pass.
+    {
+        uint8_t base17[17] = {0};
+        for (int j = 0; j < 8; j++) {
+            const uint8_t mask = (uint8_t)(1u << j);
+            uint64_t n = WHEEL30_RESIDUE[j];
+            while (n % 17 != 0) n += 30;
+            base17[(size_t)(n / 30) % 17] |= mask;
+        }
+        memcpy(temp, base17, 17);
+        size_t filled = 17;
+        while (filled * 2 <= 17017) {
+            memcpy(temp + filled, temp, filled);
+            filled *= 2;
+        }
+        if (filled < 17017)
+            memcpy(temp + filled, temp, 17017 - filled);
         VECTORIZE_HINT
         for (size_t j = 0; j < 17017; j++)
             buf[j] |= temp[j];
