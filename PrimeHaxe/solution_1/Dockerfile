@@ -1,4 +1,4 @@
-FROM haxe:4.2.1-alpine3.13
+FROM haxe:4.3.7-alpine3.24
 
 RUN apk update && apk add --no-cache g++ python3 musl-locales bash && \
     ln -s /usr/include/locale.h /usr/include/xlocale.h

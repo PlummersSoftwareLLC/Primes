@@ -1,4 +1,4 @@
-FROM python:3.11.5-alpine3.18
+FROM python:3.14-alpine3.24
 
 WORKDIR /opt/app
 COPY *.cat *.py ./

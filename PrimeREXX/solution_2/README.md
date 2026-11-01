@@ -6,7 +6,7 @@ NetRexx translates source code into Java compiled classes. The NetRexx syntax is
 but there are enough differences to be a separate language. For example: stem variables are not
 supported in NetRexx and classes, methods and properties are not supported in REXX.
 
-A Dockerfile has been supplied. It is based upon an openjdk11 image running alpine.
+A Dockerfile has been supplied. It is based upon an Eclipse Temurin 25 image running Alpine.
 
 Notes:
 In the sieve I tried having the iterators "i" and "j" be both NetRexx types and native java

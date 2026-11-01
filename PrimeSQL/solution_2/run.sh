@@ -3,14 +3,14 @@
 # This is done here because this install command performs actions that 
 # are not persistent in the Docker image. So it can not be easy changed to a 
 # Docker run command
-mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql &>/dev/null
+mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql &>/dev/null
 
 # Start server process
 mariadbd  &>/dev/null &
 
 # Wait for the server process to complete
 for i in {30..0}; do
-	if mysql -umysql --database=mysql <<<'SELECT 1' &> /dev/null; then
+	if mariadb -umysql --database=mysql <<<'SELECT 1' &> /dev/null; then
 		break
 	fi
 	sleep 1
@@ -21,6 +21,6 @@ if [ "$i" = 0 ]; then
 fi
 
 # run the solutions
-mysql -umysql --raw <primes_1.sql
-mysql -umysql --raw <primes_2.sql
-mysql -umysql --raw <primes_3.sql
+mariadb -umysql --raw <primes_1.sql
+mariadb -umysql --raw <primes_2.sql
+mariadb -umysql --raw <primes_3.sql

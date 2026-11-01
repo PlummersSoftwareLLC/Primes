@@ -28,7 +28,7 @@ function Sieve.New(o)
 
     self.Buffer = self.Buffer or ffi.new("uint8_t[?]", self.Size + Overrun)
 
-    for i = 0, self.Size, 1 do
+    for i = 0, self.Size - 1, 1 do
         self.Buffer[i] = 0;
         assert(self.Buffer[i] == 0,i)
     end

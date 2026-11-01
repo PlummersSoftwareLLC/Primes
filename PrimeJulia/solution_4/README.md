@@ -51,7 +51,7 @@ docker run -it --rm primejulia-4
 docker image rm primejulia-4
 ```
 
-This solution's [Dockerfile](Dockerfile) uses the `julia:1.6-buster` image to provide maximum support for different architectures, most importantly ARM64 and x86_64. This also helps avoid any possible issues caused by Julia's [Tier 3 support for musl](https://julialang.org/downloads/#currently_supported_platforms), including Alpine Linux.
+This solution's [Dockerfile](Dockerfile) uses the `julia:1.13.3-trixie` image to provide maximum support for different architectures, most importantly ARM64 and x86_64. This also helps avoid any possible issues caused by Julia's [Tier 3 support for musl](https://julialang.org/downloads/#currently_supported_platforms), including Alpine Linux.
 
 
 ## Output

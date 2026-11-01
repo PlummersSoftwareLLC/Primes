@@ -146,9 +146,9 @@ TeXLive 2021.
 The native `pdftex` is compiled
 locally from sources with compiler flags for speed.
 
-The Dockerfile is based on Ubuntu 20.04 and installs its
-[texlive-base](https://packages.ubuntu.com/focal/texlive-base) package
-(which uses TeXLive 2019).
+The Dockerfile is based on Ubuntu 24.04 and installs its
+[texlive-base](https://packages.ubuntu.com/noble/texlive-base) package
+(which uses TeXLive 2023).
 
 I don't know why the speed ratio wheel/base is higher with `pdftex`, or with
 the `luatex` in a Docker container, than with the native `luatex`.

@@ -1,4 +1,4 @@
-FROM alpine:3.13 as builder
+FROM alpine:3.24 as builder
 
 RUN apk update && \
     apk add --no-cache curl make g++

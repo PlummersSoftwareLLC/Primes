@@ -1,4 +1,4 @@
-FROM ortussolutions/boxlang:cli
+FROM ortussolutions/boxlang:cli-1.18.0
 WORKDIR /app
 
 COPY . /app

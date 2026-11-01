@@ -1,4 +1,4 @@
-FROM clojure:openjdk-18-tools-deps
+FROM clojure:temurin-25-tools-deps-1.12.6.1673-trixie
 
 WORKDIR /primes
 

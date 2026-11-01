@@ -119,7 +119,7 @@ public class PrimeSieve {
 public function main() {
     int tStart = time:utcNow()[0];
     int passes = 0;
-    PrimeSieve sieve;
+    PrimeSieve sieve = new PrimeSieve(1000000);
 
     while time:utcNow()[0] - tStart < 5 {
         sieve = new PrimeSieve(1000000);

@@ -1,16 +1,21 @@
-FROM ubuntu:20.04 AS build
+FROM ubuntu:24.04
 
-ENV HARBOUR_PKG=r2017-12-15-18_53_harbour_3.2.0-1_amd64.deb
+ARG HARBOUR_VERSION=v3.2.0
+
+RUN apt-get update \
+    && apt-get install -y build-essential ca-certificates git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build Harbour from its release tag; the prebuilt Ubuntu packages need
+# libncurses5, which Ubuntu 24.04 no longer ships.
+RUN git clone --depth 1 --branch "${HARBOUR_VERSION}" https://github.com/harbour/core /tmp/harbour \
+    && make -C /tmp/harbour -j"$(nproc)" install HB_INSTALL_PREFIX=/usr/local \
+    && rm -rf /tmp/harbour \
+    && echo /usr/local/lib/harbour > /etc/ld.so.conf.d/harbour.conf \
+    && ldconfig
 
 WORKDIR /opt
-
-RUN apt-get update && \
-    apt-get install -y wget build-essential && \
-    wget "https://sourceforge.net/projects/harbour-project/files/binaries-linux-ubuntu/nightly/${HARBOUR_PKG}/download" -O ${HARBOUR_PKG} && \
-    apt-get install -y "./${HARBOUR_PKG}" && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm "${HARBOUR_PKG}" 
 
 COPY . .
 

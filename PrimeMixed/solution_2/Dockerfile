@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/powershell:7.1.4-ubuntu-20.04
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble
 
 WORKDIR /opt/primes
 

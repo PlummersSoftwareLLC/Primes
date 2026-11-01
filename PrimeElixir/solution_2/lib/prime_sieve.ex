@@ -64,7 +64,8 @@ defmodule PrimeSieve do
       <<_::size(bit_pos), bit::size(1), _::bits>> = sieve
       bit
     else
-      <<_::size(bit_pos), bit::size(1), _::bits>> = :binary.part(sieve, pos, 1)
+      <<_::bytes-size(pos), byte::bytes-size(1), _::bits>> = sieve
+      <<_::size(bit_pos), bit::size(1), _::bits>> = byte
       bit
     end
   end

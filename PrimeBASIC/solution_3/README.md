@@ -7,11 +7,11 @@
 
 - A Visual Basic .NET port of `PrimeCSharp/solution_1/Sieves/PrimeSieveArrayPool8of30M.cs` (original author: @Kinematics)
 - Added an option to control whether to allocate large arrays with `ArrayPool(Of T).Shared` instead of the `ReDim` keyword.
-- It uses .NET 5, and can be compiled using Visual Studio 16.9 or later.
+- It uses .NET 10, and can be compiled using Visual Studio 2026 or later.
 
 ## Run instructions 
 
-- .NET SDK 5 or later is required. You can download it from https://dotnet.microsoft.com/download .
+- .NET SDK 10 or later is required. You can download it from https://dotnet.microsoft.com/download .
 - Open terminal and set current directory to the solution directory
 
 If you want to run the ArrayPool implementation, run:

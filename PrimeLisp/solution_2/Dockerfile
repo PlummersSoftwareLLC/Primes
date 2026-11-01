@@ -1,4 +1,6 @@
-FROM daewok/sbcl:2.2.0-alpine3.15
+FROM alpine:3.24
+
+RUN apk add --no-cache sbcl
 
 WORKDIR /opt/app
 

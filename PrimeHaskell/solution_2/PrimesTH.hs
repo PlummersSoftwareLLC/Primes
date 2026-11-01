@@ -11,7 +11,8 @@ import Language.Haskell.TH ( litE, intPrimL, wordPrimL, ExpQ )
 
 import Data.Bits ( Bits( shiftR, shiftL, (.&.), (.|.) ) )
 import GHC.Exts ( Int(I#), Int#, Word#, Addr#, State#(..),
-  (+#), (-#), (*#), (<#), or#, orI#, andI#, int2Word#,
+  (+#), (-#), (*#), (<#), orI#, andI#, int2Word#,
+  orWord8#, or64#, wordToWord8#, wordToWord64#,
   uncheckedIShiftRL#, uncheckedShiftL#, plusAddr#, minusAddr#, ltAddr#,
   readWord8OffAddr#, writeWord8OffAddr#,
   readWord64OffAddr#, writeWord64OffAddr# )
@@ -48,7 +49,7 @@ cullBit bi n = -- cull (set one) bit index `bi` for case selection `n`...
       mq = litE $ wordPrimL $ 1 `shiftL` msk in
   [|  \s0# -> case readWord8OffAddr# ai# $rq s0# of -- read byte value
       (# s1#, v# #) ->
-        let nv# = v# `or#` $mq in -- modify value
+        let nv# = v# `orWord8#` wordToWord8# $mq in -- modify value
         case writeWord8OffAddr# ai# $rq nv# s1# of
         s2# -> s2# |] -- after writing new value
 
@@ -124,35 +125,35 @@ unrollDensePattern n =
         if bi >= lmt then [| \ s# -> (# s#, () #) |] else
         let nbi = bi + stp
             nwi = bi `shiftR` 8
-            mskq = litE $ wordPrimL $ 1 `shiftL` (fromIntegral bi .&. 63) in
+            mskq = [| wordToWord64# $(litE $ wordPrimL $ 1 `shiftL` (fromIntegral bi .&. 63)) |] in
         if nwi > wi && (nbi `shiftR` 8) - nwi > 0 then
           let wiq = litE $ intPrimL $ nwi in
           case (bi `shiftR` 6) .&. 3 of
             0 -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w0# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w0# `or64#` $mskq of
                     nw# -> case packWord64X4# (# nw#, w1#, w2#, w3# #) of
                       nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                         so# -> $(loop nbi nwi) so# |]
             1 -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w1# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w1# `or64#` $mskq of
                     nw# -> case packWord64X4# (# w0#, nw#, w2#, w3# #) of
                       nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                         so# -> $(loop nbi nwi) so# |]
             2 -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w2# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w2# `or64#` $mskq of
                     nw# -> case packWord64X4# (# w0#, w1#, nw#, w3# #) of
                       nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                         so# -> $(loop nbi nwi) so# |]
             _ -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w3# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w3# `or64#` $mskq of
                     nw# -> case packWord64X4# (# w0#, w1#, w2#, nw# #) of
                       nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                         so# -> $(loop nbi nwi) so# |]
@@ -162,58 +163,58 @@ unrollDensePattern n =
             0 -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w0# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w0# `or64#` $mskq of
                     nw# -> $(loop nbi nwi) (# s#, nw#, w1#, w2#, w3# #) |]
             1 -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w1# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w1# `or64#` $mskq of
                     nw# -> $(loop nbi nwi) (# s#, w0#, nw#, w2#, w3# #) |]
             2 -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w2# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w2# `or64#` $mskq of
                     nw# -> $(loop nbi nwi) (# s#, w0#, w1#, nw#, w3# #) |]
             _ -> [| \ s# ->
               case readWord64X4OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X4# v# of
-                  (# w0#, w1#, w2#, w3# #) -> case w3# `or#` $mskq of
+                  (# w0#, w1#, w2#, w3# #) -> case w3# `or64#` $mskq of
                     nw# -> $(loop nbi nwi) (# s#, w0#, w1#, w2#, nw# #) |]
         else if nbi `shiftR` 8 > wi then
           let wiq = litE $ intPrimL wi in
           case (bi `shiftR` 6) .&. 3 of
             0 -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-              case w0# `or#` $mskq of
+              case w0# `or64#` $mskq of
                 nw# -> case packWord64X4# (# nw#, w1#, w2#, w3# #) of
                   nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                     so# -> $(loop nbi wi) so# |]
             1 -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-              case w1# `or#` $mskq of
+              case w1# `or64#` $mskq of
                 nw# -> case packWord64X4# (# w0#, nw#, w2#, w3# #) of
                   nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                     so# -> $(loop nbi wi) so# |]
             2 -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-              case w2# `or#` $mskq of
+              case w2# `or64#` $mskq of
                 nw# -> case packWord64X4# (# w0#, w1#, nw#, w3# #) of
                   nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                     so# -> $(loop nbi wi) so# |]
             _ -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-              case w3# `or#` $mskq of
+              case w3# `or64#` $mskq of
                 nw# -> case packWord64X4# (# w0#, w1#, w2#, nw# #) of
                   nv# -> case writeWord64X4OffAddr# ai# $wiq nv# s1# of
                     so# -> $(loop nbi wi) so# |]
         else case (bi `shiftR` 6) .&. 3 of
           0 -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-                case w0# `or#` $mskq of
+                case w0# `or64#` $mskq of
                   nw# -> $(loop nbi wi) (# s#, nw#, w1#, w2#, w3# #) |]
           1 -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-                case w1# `or#` $mskq of
+                case w1# `or64#` $mskq of
                   nw# -> $(loop nbi wi) (# s#, w0#, nw#, w2#, w3# #) |]
           2 -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-                case w2# `or#` $mskq of
+                case w2# `or64#` $mskq of
                   nw# -> $(loop nbi wi) (# s#, w0#, w1#, nw#, w3# #) |]
           _ -> [| \ (# s#, w0#, w1#, w2#, w3# #) ->
-                case w3# `or#` $mskq of
+                case w3# `or64#` $mskq of
                   nw# -> $(loop nbi wi) (# s#, w0#, w1#, w2#, nw# #) |]
   in loop 0 (-1) -- pre-conditioning guarantees first bit index is zero!
 #else
@@ -228,14 +229,14 @@ unrollDensePattern n =
         if bi >= lmt then [| \ s# -> (# s#, () #) |] else
         let nbi = bi + stp
             nwi = bi `shiftR` 7
-            mskq = litE $ wordPrimL $ 1 `shiftL` (fromIntegral bi .&. 63) in
+            mskq = [| wordToWord64# $(litE $ wordPrimL $ 1 `shiftL` (fromIntegral bi .&. 63)) |] in
         if nwi > wi && (nbi `shiftR` 7) - nwi > 0 then
           let wiq = litE $ intPrimL $ nwi in
           if (bi `shiftR` 6) .&. 1 == 0 then
             [| \ s# ->
               case readWord64X2OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X2# v# of
-                  (# w0#, w1# #) -> case w0# `or#` $mskq of
+                  (# w0#, w1# #) -> case w0# `or64#` $mskq of
                     nw# -> case packWord64X2# (# nw#, w1# #) of
                       nv# -> case writeWord64X2OffAddr# ai# $wiq nv# s1# of
                         so# -> $(loop nbi nwi) so# |]
@@ -243,7 +244,7 @@ unrollDensePattern n =
             [| \ s# ->
               case readWord64X2OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X2# v# of
-                  (# w0#, w1# #) -> case w1# `or#` $mskq of
+                  (# w0#, w1# #) -> case w1# `or64#` $mskq of
                     nw# -> case packWord64X2# (# w0#, nw# #) of
                       nv# -> case writeWord64X2OffAddr# ai# $wiq nv# s1# of
                         so# -> $(loop nbi nwi) so# |]
@@ -253,36 +254,36 @@ unrollDensePattern n =
             [| \ s# ->
               case readWord64X2OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X2# v# of
-                  (# w0#, w1# #) -> case w0# `or#` $mskq of
+                  (# w0#, w1# #) -> case w0# `or64#` $mskq of
                     nw# -> $(loop nbi nwi) (# s#, nw#, w1# #) |]
           else
             [| \ s# ->
               case readWord64X2OffAddr# ai# $wiq s# of
                 (# s1#, v# #) -> case unpackWord64X2# v# of
-                  (# w0#, w1# #) -> case w1# `or#` $mskq of
+                  (# w0#, w1# #) -> case w1# `or64#` $mskq of
                     nw# -> $(loop nbi nwi) (# s#, w0#, nw# #) |]
         else if nbi `shiftR` 7 > wi then
           let wiq = litE $ intPrimL wi in
           if (bi `shiftR` 6) .&. 1 == 0 then
             [| \ (# s#, w0#, w1# #) ->
-              case w0# `or#` $mskq of
+              case w0# `or64#` $mskq of
                 nw# -> case packWord64X2# (# nw#, w1# #) of
                   nv# -> case writeWord64X2OffAddr# ai# $wiq nv# s1# of
                     so# -> $(loop nbi wi) so# |]
           else
             [| \ (# s#, w0#, w1# #) ->
-              case w1# `or#` $mskq of
+              case w1# `or64#` $mskq of
                 nw# -> case packWord64X2# (# w0#, nw# #) of
                   nv# -> case writeWord64X2OffAddr# ai# $wiq nv# s1# of
                     so# -> $(loop nbi wi) so# |]
         else
           if (bi `shiftR` 6) .&. 1 == 0 then
             [| \ (# s#, w0#, w1# #) ->
-                case w0# `or#` $mskq of
+                case w0# `or64#` $mskq of
                   nw# -> $(loop nbi wi) (# s#, nw#, w1# #) |]
           else
             [| \ (# s#, w0#, w1# #) ->
-                case w1# `or#` $mskq of
+                case w1# `or64#` $mskq of
                   nw# -> $(loop nbi wi) (# s#, w0#, nw# #) |]
   in loop 0 (-1) -- pre-conditioning guarantees first bit index is zero!
 #else
@@ -296,25 +297,25 @@ unrollDensePattern n =
         if bi >= lmt then [| \ s# -> (# s#, () #) |] else
         let nbi = bi + stp
             nwi = bi `shiftR` 6
-            mskq = litE $ wordPrimL $ 1 `shiftL` (fromIntegral bi .&. 63) in
+            mskq = [| wordToWord64# $(litE $ wordPrimL $ 1 `shiftL` (fromIntegral bi .&. 63)) |] in
         if nwi > wi && (nbi `shiftR` 6) - nwi > 0 then
           let wiq = litE $ intPrimL nwi in
           [| \ s# -> case readWord64OffAddr# ai# $wiq s# of
-                (# s1#, v# #) -> case v# `or#` $mskq of
+                (# s1#, v# #) -> case v# `or64#` $mskq of
                   nv# -> case writeWord64OffAddr# ai# $wiq nv# s1# of
                     so# -> $(loop nbi nwi) so# |]
         else if nwi > wi then
           let wiq = litE $ intPrimL nwi in
           [| \ s# -> case readWord64OffAddr# ai# $wiq s# of
-                (# s1#, v# #) -> case v# `or#` $mskq of
+                (# s1#, v# #) -> case v# `or64#` $mskq of
                     nv# -> $(loop nbi nwi) (# s1#, nv# #) |]
         else if nbi `shiftR` 6 > wi then
           let wiq = litE $ intPrimL wi in
-          [| \ (# s#, v# #) -> case v# `or#` $mskq of
+          [| \ (# s#, v# #) -> case v# `or64#` $mskq of
                 nv# -> case writeWord64OffAddr# ai# $wiq nv# s# of
                   so# -> $(loop nbi wi) so# |]
         else [| \ (# s#, v# #) ->
-                    case v# `or#` $mskq of
+                    case v# `or64#` $mskq of
                       nv# -> $(loop nbi wi) (# s#, nv# #) |]
   in loop 0 (-1) -- pre-conditioning guarantees first bit index is zero!
 #endif
@@ -342,7 +343,7 @@ makeUDenseFunc n = -- and byte size with starting bit index and step size...
                         (# se0#, v# #) ->
                           let msk# = (int2Word# 1#) `uncheckedShiftL#`
                                                         (ei# `andI#` 7#) in
-                          case v# `or#` msk# of
+                          case v# `orWord8#` wordToWord8# msk# of
                             nv# -> case writeWord8OffAddr# ba# wi# nv# se0# of
                               se1# -> case ei# +# stpi# of
                                 nei# -> eloop# nei# si#

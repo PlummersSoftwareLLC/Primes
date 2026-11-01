@@ -1,6 +1,6 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 WORKDIR /source
 
 # copy csproj and restore dependencies
@@ -12,7 +12,7 @@ COPY . .
 RUN dotnet publish -c release -o /app --no-restore
 
 # final stage/image
-FROM mcr.microsoft.com/dotnet/runtime:7.0 AS publish
+FROM mcr.microsoft.com/dotnet/runtime:10.0-noble AS publish
 WORKDIR /app
 COPY --from=build /app .
 

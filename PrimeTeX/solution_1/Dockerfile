@@ -2,7 +2,7 @@
 # code uses fairly recent LaTeX3 features)
 # There is a specific texlive image, but that includes the full distribution and
 # appropriately massive. This is smaller.
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 WORKDIR /opt/app
 

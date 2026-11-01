@@ -1,4 +1,4 @@
-FROM alpine:edge
+FROM alpine:3.24
 
 RUN apk add cmake --no-cache
 

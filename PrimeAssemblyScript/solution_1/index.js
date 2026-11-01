@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import loader from "@assemblyscript/loader";
 import { WASI } from 'wasi';
 
-const wasi = new WASI();
+const wasi = new WASI({ version: 'preview1' });
 
 loader.instantiate(fs.readFile("./dist/release.wasm"), {
     wasi_snapshot_preview1: wasi.wasiImport

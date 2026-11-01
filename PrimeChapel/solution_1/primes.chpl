@@ -381,7 +381,7 @@ proc singleTest(tech: Techniques): (int, bool) {
   var passes: int = 0;
   var duration: real(64) = 0;
   var sieve: shared PrimeSieve? = nil;
-  var timer: Timer; timer.start();
+  var timer: stopwatch; timer.start();
   while duration < 5 {
     sieve = new shared PrimeSieve(RANGE, tech);
     passes += 1; duration = timer.elapsed();
@@ -400,16 +400,16 @@ class Result { // must use a class to use with `sync` variable!
 }
 
 proc threadedTest(tech: Techniques, thrds: int): (int, bool) {
-  var rslt$: sync shared Result?;
+  var rsltSync: sync shared Result?;
   for i in 1 .. thrds {
     begin with (const in tech) {
       const r = singleTest(tech);
-      rslt$.writeEF(new shared Result(r(0), r(1)): shared Result?);
+      rsltSync.writeEF(new shared Result(r(0), r(1)): shared Result?);
     }
   }
   var passes: int = 0; var chk: bool = true;
   for i in 1 .. thrds {
-    const r = rslt$.readFE();
+    const r = rsltSync.readFE();
     passes += r!.passes; chk &= r!.chk;
   }
   return (passes, chk);
@@ -418,7 +418,7 @@ proc threadedTest(tech: Techniques, thrds: int): (int, bool) {
 proc benchmark(tech: Techniques, multi: bool = false) {
   const thrds = if (multi) then here.maxTaskPar else 1;
   var passes: int = 0; var chk: bool;
-  var timer: Timer; timer.start();
+  var timer: stopwatch; timer.start();
   (passes, chk) = if (multi) then threadedTest(tech, thrds) else singleTest(tech);
   timer.stop();
   const duration: real(64) = timer.elapsed();

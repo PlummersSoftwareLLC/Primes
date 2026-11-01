@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk16:jdk-16.0.1_9-alpine-slim
+FROM eclipse-temurin:25-jdk-alpine-3.24
 
 WORKDIR /opt/app
 

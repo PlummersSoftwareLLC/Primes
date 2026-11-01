@@ -5,6 +5,9 @@ on:
     branches: ["**"]
   pull_request:
     branches: ["**"]
+  # Weekly build without the layer cache, to catch solutions that no longer build from scratch
+  schedule:
+    - cron: "0 3 * * 0"
   workflow_dispatch:
 
 jobs:
@@ -95,7 +98,8 @@ jobs:
           context: ${{ matrix.solution }}
           platforms: linux/amd64
           push: ${{ env.ENABLE_DOCKER_PUSH }}
-          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          no-cache: ${{ github.event_name == 'schedule' }}
+          cache-from: ${{ github.event_name != 'schedule' && format('type=registry,ref=primeimages/primes:{0}', steps.solution-name.outputs.normalized) || '' }}
           cache-to: type=inline
 
       - name: Build arm64
@@ -106,5 +110,6 @@ jobs:
           context: ${{ matrix.solution }}
           platforms: linux/arm64
           push: ${{ env.ENABLE_DOCKER_PUSH }}
-          cache-from: type=registry,ref=primeimages/primes:${{ steps.solution-name.outputs.normalized }}
+          no-cache: ${{ github.event_name == 'schedule' }}
+          cache-from: ${{ github.event_name != 'schedule' && format('type=registry,ref=primeimages/primes:{0}', steps.solution-name.outputs.normalized) || '' }}
           cache-to: type=inline

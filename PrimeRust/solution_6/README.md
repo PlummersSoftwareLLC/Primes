@@ -10,9 +10,9 @@ This implementation is a port of the original C++ implementation but it uses rus
 
 ## Run instructions
 
-1. Install rust nightly
-2. run `rustc +nightly src/singlethreaded.rs -Copt-level=z -C target-cpu=native`
-3. run `rustc +nightly src/multithreaded.rs -Copt-level=z -C target-cpu=native`
+1. Install Rust (stable, 1.72 or later)
+2. run `rustc src/singlethreaded.rs -Copt-level=z -C target-cpu=native`
+3. run `rustc src/multithreaded.rs -Copt-level=z -C target-cpu=native`
 4. run `run-by-docker.sh`
 
 ## Output
