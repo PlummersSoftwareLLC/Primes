@@ -289,7 +289,7 @@ static void mark_multiples_wheel30(uint8_t* PRIMEC_RESTRICT arr,
 
     if (!any_valid) return;
 
-    if (stride <= 256) {
+    if (stride <= 148) {
         alignas(32) uint8_t tile[256];
         memset(tile, 0, stride);
         size_t tile_start = 0;
