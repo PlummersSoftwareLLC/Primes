@@ -70,11 +70,13 @@ with two additional optimizations over the standard 8-of-30 approach:
    iteration. The presieve is built as part of each sieve instance (inside the
    timed loop) so each pass owns its own complete state.
 
-2. **Wide-tile vectorization**: for primes with stride ≤ 256, multiples are
-   marked by building a stride-byte tile, expanding it 16× into a 4096-byte
-   wide tile, then ORing across the sieve with Clang auto-vectorized inner loops
-   (NEON on arm64, AVX2 on x86-64). The stride is a runtime value — no hardcoded
-   prime enumeration.
+2. **Wide-tile vectorization**: for primes with stride ≤ 127, multiples are
+   marked by building a stride-byte tile, expanding it 16× into a wide tile
+   via O(log 16) doubling memcpy calls, then ORing across the sieve with
+   Clang auto-vectorized inner loops (NEON on arm64, AVX2 on x86-64).
+   Larger primes (stride > 127) use 8-deep strided scatter, which is faster
+   at those strides where the wide-tile scan cost exceeds scatter's L2 cost.
+   The stride is a runtime value — no hardcoded prime enumeration.
 
 Compiled with GCC (uses `#pragma GCC ivdep` for auto-vectorization; Clang uses `clang loop vectorize(enable)` via the same `VECTORIZE_HINT` macro). Command-line
 interface, `custom_atoll`, oneshot mode, and `benchmark.sh` pattern adapted
@@ -166,39 +168,39 @@ is Apple Clang 16; Clang is used directly here for clarity.
 
 **Run 1**
 ```
-danielspaangberg_8of30;10884;5.000263;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9892;5.000284;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;19441;5.000226;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;93495;5.003093;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;72467;5.00411;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;520784;5.00451;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10854;5.000193;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9914;5.000174;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;18541;5.000143;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;87606;5.003837;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;73540;5.00619;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;496559;5.00367;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
 **Run 2**
 ```
-danielspaangberg_8of30;10825;5.000247;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9909;5.000146;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;19358;5.000107;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;89783;5.003742;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;70659;5.00363;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;415612;5.00396;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10798;5.000379;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9894;5.000108;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19174;5.000163;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;89774;5.003837;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;73839;5.00618;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;493995;5.00261;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
 **Run 3**
 ```
-danielspaangberg_8of30;10297;5.000165;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9482;5.000023;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;17457;5.000191;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;86112;5.003211;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;67809;5.00283;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;439979;5.00153;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10862;5.000048;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9881;5.000161;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19281;5.000136;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;90925;5.003228;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;73617;5.00632;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;503238;5.00029;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
-Single-threaded: msubra_8of30_extend averages 70,312 passes vs 10,669 for
-danielspaangberg_8of30 (**+559%**) and 9,761 for danielspaangberg_8of30_owrb (**+620%**).
+Single-threaded: msubra_8of30_extend averages 73,665 passes vs 10,838 for
+danielspaangberg_8of30 (**+580%**) and 9,896 for danielspaangberg_8of30_owrb (**+644%**).
 
-Multi-threaded at 16 threads: msubra_8of30_extend averages 458,792 passes vs 89,797
-for danielspaangberg_8of30_epar (**+411%**).
+Multi-threaded at 16 threads: msubra_8of30_extend averages 497,930 passes vs 89,435
+for danielspaangberg_8of30_epar (**+457%**).
 
 ---
 
