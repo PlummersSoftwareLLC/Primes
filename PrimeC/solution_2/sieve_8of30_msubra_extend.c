@@ -117,17 +117,33 @@ static const uint8_t SMASKS_TABLE[8][8] = {
 // ---------------------------------------------------------------------------
 static void build_presieve(uint8_t* buf)
 {
-    memset(buf, 0, 17017);
+    // Prime 7: tile directly into buf, avoiding the memset + first OR pass.
+    {
+        uint8_t base7[7] = {0};
+        for (int j = 0; j < 8; j++) {
+            const uint8_t mask = (uint8_t)(1u << j);
+            uint64_t n = WHEEL30_RESIDUE[j];
+            while (n % 7 != 0) n += 30;
+            base7[(size_t)(n / 30) % 7] |= mask;
+        }
+        memcpy(buf, base7, 7);
+        size_t filled = 7;
+        while (filled * 2 <= 17017) {
+            memcpy(buf + filled, buf, filled);
+            filled *= 2;
+        }
+        if (filled < 17017)
+            memcpy(buf + filled, buf, 17017 - filled);
+    }
 
-    const uint64_t presieve_primes[4] = {7, 11, 13, 17};
-    uint8_t temp[17017];  // tiled pattern for one prime, then OR'd into buf
-
-    for (int pi = 0; pi < 4; pi++) {
-        const uint64_t p = presieve_primes[pi];
+    // Primes 11, 13, 17: tile into temp, then OR into buf.
+    uint8_t temp[17017];
+    const uint64_t presieve_rest[3] = {11, 13, 17};
+    for (int pi = 0; pi < 3; pi++) {
+        const uint64_t p = presieve_rest[pi];
         const size_t   period = (size_t)p;
 
-        // Compute the p-byte base pattern: one period of composites of p.
-        uint8_t base[17] = {0};  // period <= 17
+        uint8_t base[17] = {0};
         for (int j = 0; j < 8; j++) {
             const uint8_t mask = (uint8_t)(1u << j);
             uint64_t n = WHEEL30_RESIDUE[j];
@@ -135,8 +151,6 @@ static void build_presieve(uint8_t* buf)
             base[(size_t)(n / 30) % period] |= mask;
         }
 
-        // Tile base to 17017 bytes using O(log N) doubling memcpy calls.
-        // Each doubled block is a multiple of period, so tiling is exact.
         memcpy(temp, base, period);
         size_t filled = period;
         while (filled * 2 <= 17017) {
@@ -146,7 +160,6 @@ static void build_presieve(uint8_t* buf)
         if (filled < 17017)
             memcpy(temp + filled, temp, 17017 - filled);
 
-        // OR temp into buf — sequential read+write, auto-vectorized with SIMD.
         VECTORIZE_HINT
         for (size_t j = 0; j < 17017; j++)
             buf[j] |= temp[j];
