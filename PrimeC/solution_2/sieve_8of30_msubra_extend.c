@@ -289,7 +289,7 @@ static void mark_multiples_wheel30(uint8_t* PRIMEC_RESTRICT arr,
 
     if (!any_valid) return;
 
-    if (stride <= 148) {
+    if (stride <= 127) {
         alignas(32) uint8_t tile[256];
         memset(tile, 0, stride);
         size_t tile_start = 0;
@@ -331,11 +331,17 @@ static void mark_multiples_wheel30(uint8_t* PRIMEC_RESTRICT arr,
             for (size_t _j = 0; _j < blk; _j++)
                 _a[_b + _j] |= _wt[_j];
         }
-        for (; _b + stride <= byteCount; _b += stride)
+        for (; _b + stride <= byteCount; _b += stride) {
+            VECTORIZE_HINT
             for (size_t _j = 0; _j < stride; _j++)
                 _a[_b + _j] |= tile[_j];
-        for (size_t _j = 0; _b + _j < byteCount; _j++)
-            _a[_b + _j] |= tile[_j];
+        }
+        {
+            const size_t tail_bytes = byteCount - _b;
+            VECTORIZE_HINT
+            for (size_t _j = 0; _j < tail_bytes; _j++)
+                _a[_b + _j] |= tile[_j];
+        }
     } else {
         // Large p: 8-deep strided scatter
         for (int qi = 0; qi < 8; qi++) {
