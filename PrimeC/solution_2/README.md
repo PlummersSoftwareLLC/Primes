@@ -168,39 +168,39 @@ is Apple Clang 16; Clang is used directly here for clarity.
 
 **Run 1**
 ```
-danielspaangberg_8of30;10849;5.000349;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9900;5.000216;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;19319;5.000099;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;90773;5.003841;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;74765;5.00795;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;502414;5.00815;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10845;5.000022;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9900;5.000110;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19263;5.000008;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;88987;5.003572;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;75938;5.00147;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;502464;5.00255;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
 **Run 2**
 ```
-danielspaangberg_8of30;10848;5.000449;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9907;5.000390;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;19426;5.000116;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;89962;5.003295;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;74647;5.00313;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;500648;5.00978;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10820;5.000176;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9898;5.000485;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19178;5.000078;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;88709;5.003482;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;76005;5.00941;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;495374;5.0072;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
 **Run 3**
 ```
-danielspaangberg_8of30;10773;5.000259;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_owrb;9880;5.000394;1;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_par;19338;5.000143;4;algorithm=wheel,faithful=yes,bits=1
-danielspaangberg_8of30_epar;90398;5.003578;16;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;74371;5.00598;1;algorithm=wheel,faithful=yes,bits=1
-msubra_8of30_extend;501622;5.00157;16;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30;10798;5.000242;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9840;5.000141;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19251;5.000041;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;88825;5.003217;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;75625;5.00775;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;496981;5.00534;16;algorithm=wheel,faithful=yes,bits=1
 ```
 
-Single-threaded: msubra_8of30_extend averages 74,594 passes vs 10,823 for
-danielspaangberg_8of30 (**+589%**) and 9,896 for danielspaangberg_8of30_owrb (**+654%**).
+Single-threaded: msubra_8of30_extend averages 75,856 passes vs 10,821 for
+danielspaangberg_8of30 (**+601%**) and 9,879 for danielspaangberg_8of30_owrb (**+668%**).
 
-Multi-threaded at 16 threads: msubra_8of30_extend averages 501,561 passes vs 90,378
-for danielspaangberg_8of30_epar (**+455%**).
+Multi-threaded at 16 threads: msubra_8of30_extend averages 498,273 passes vs 88,840
+for danielspaangberg_8of30_epar (**+461%**).
 
 ---
 
