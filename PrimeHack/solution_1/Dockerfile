@@ -5,4 +5,4 @@ WORKDIR /app
 
 COPY PrimeHack.hack .
 
-ENTRYPOINT [ "hhvm", "PrimeHack.hack" ]
+ENTRYPOINT [ "hhvm", "-vEval.JitPGO=0", "PrimeHack.hack" ]
