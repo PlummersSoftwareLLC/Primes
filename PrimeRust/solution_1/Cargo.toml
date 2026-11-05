@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "prime-sieve-rust",
-    "helper-macros"
+    "helper-macros",
+    "cokieminer-base-sieve",
 ]
 
 [profile.release]

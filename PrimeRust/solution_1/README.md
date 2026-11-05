@@ -1,4 +1,4 @@
-# Rust solution by @mike-barber
+# Rust solution by @mike-barber and @CokieMiner
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
@@ -11,6 +11,7 @@ Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber -- original author
 - Kai Rese @Kulasko https://github.com/Kulasko -- numerous idiomatic improvements and detailed code review
 - @GordonBGood -- for plenty of collaboration on the `unrolled-hybrid` and `extreme-hybrid` solutions; check out his solutions, including Nim, Chapel, Haskell and Julia.
+- CokieMiner @CokieMiner https://github.com/CokieMiner -- author of `cokieminer-base-sieve` (dependency-free 1-bit base sieve)
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
@@ -103,7 +104,7 @@ fn extreme_reset_003(words : & mut [u64])
 - using Docker is the easiest way to get started without installing Rust:
     - `./build-docker.sh`
     - `./run-docker.sh`
-    - `./run-docker.sh --help` for help with command line options
+    - `run-docker.sh` runs every implementation; to pass options, call a binary directly, e.g. `docker run --rm --entrypoint /app/prime-sieve-rust rust-mike-barber:latest --help`
 - `cargo run --release` if you've got Rust installed
 
 There are more notes for getting started with Rust at the bottom, under `Quick start for those interested in Rust`
@@ -189,6 +190,26 @@ Some interesting things to note here. The little Pi only has 1MB of cache, total
 
 I'm expecting the Apple M1 to do a lot better given it has 16MB of cache, but I can't test this. Fundamentally, you'll see the same thing on any processor once the dataset doesn't fit inside the cache, essentially where `sieve_size * threads > cache`. So for small datasets, `byte` level storage may be faster given there's less work to do. For larger datasets, you need the memory efficiency instead.
 
+## CokieMiner Base Sieve
+
+`cokieminer-base-sieve` is a dependency-free, faithful 1-bit base sieve implemented in pure Rust (edition 2021):
+- **Candidate mapping**: Odds-only candidate mapping where bit `i` represents odd integer `2*i + 1`.
+- **Dense dispatch**: One match arm for every odd stride from 3 through 129, so the code does not encode which of those numbers are prime.
+- **Dense Resetters ($P \le 61$)**: Straightforward word-parallel resetting using compile-time generated word masks, without branch penalties.
+- **Medium Resetters ($63 \le P \le 129$)**: 64-step cyclic unrolling that visits only non-zero words in chunks of 16.
+- **Sparse Resetters ($P > 129$)**: 8-step unrolled byte-level strides using compile-time byte bitmasks matching the prime's modulo-8 period. The bitmap uses a canonical byte order, so the same fast path works on little-endian and big-endian targets. For bitmaps up to 128 KB (limits from 18,769 through about 2 million), the sparse factors are applied one 32 KB block at a time, so each block stays in L1 cache while every factor visits it.
+
+### Output
+
+Representative result on the development machine (AMD Ryzen AI 7 350, 8 physical cores / 16 logical CPUs, Docker, Rust 1.99), at the standard race size:
+
+```log
+CokieMiner_rust_base;152805;5.000019;1;algorithm=base,faithful=yes,bits=1
+CokieMiner_rust_base;798821;5.000157;8;algorithm=base,faithful=yes,bits=1
+```
+
+`run.sh` runs the new entry single-threaded and at the physical-core count; the existing `prime-sieve-rust` runs are unchanged. Diagnostics such as the prime count and validation status are written to stderr.
+
 # Configuration
 
 I've enabled all the optimisation I'm aware of, including:
@@ -200,7 +221,7 @@ I've enabled all the optimisation I'm aware of, including:
 
 Install Rust. It's really easy: https://www.rust-lang.org/learn/get-started. On Linux, it's just `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`; probably the same or similar on Mac. On Windows, just grab the installer from the link.
 
-There is a convenient [run.sh](run.sh) file that builds and runs the solution.
+There is a convenient [run.sh](run.sh) file that runs both implementations. It is also the Docker entrypoint, so it expects the built binaries in the working directory.
 
 Alternately, in the directory containing this README file, 
 - run tests: `cargo test` 
@@ -208,6 +229,8 @@ Alternately, in the directory containing this README file,
 - run: `target/release/prime-sieve-rust` or `cargo run --release`
     - for help with command line parameters: `target/release/prime-sieve-rust --help`
     - this allows you to specify sieve size, threads, etc.
+- run the base sieve: `target/release/cokieminer-base-sieve`
+    - for help with command line parameters: `target/release/cokieminer-base-sieve --help`
 
 It'll take a little while to compile the first time. Because Rust. It's doing a fair bit of work :)
 
@@ -224,4 +247,9 @@ You can also run the solution using Docker, without installing Rust.
 ./run-docker.sh
 ```
 
-For available command line options, just do `./run-docker.sh --help`
+`run-docker.sh` runs every implementation. To pass options to one of them, run its binary directly in the container, for example `docker run --rm --entrypoint /app/cokieminer-base-sieve rust-mike-barber:latest --help`.
+
+## License
+
+- The files in `cokieminer-base-sieve/` are licensed under the MIT License (see [`cokieminer-base-sieve/LICENSE`](cokieminer-base-sieve/LICENSE)).
+- All other code in this solution is licensed under the repository's BSD-3-Clause license.
