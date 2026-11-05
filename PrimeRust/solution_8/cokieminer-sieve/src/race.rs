@@ -1,7 +1,6 @@
 //! Independent complete passes with a shared start time and private bitmaps.
 
 use std::{
-    hint::black_box,
     thread,
     time::{Duration, Instant},
 };
@@ -58,13 +57,12 @@ pub fn run(config: &Config) -> Result<RaceResult, Box<dyn std::error::Error>> {
 
 fn run_worker(size: SieveSize, start: Instant, duration: Duration) -> WorkerResult {
     let mut passes = 0_u64;
-    loop {
-        // Escape the full bitmap on every pass. Allocation and the entire
-        // sieve remain observable, even with whole-program optimization.
-        let sieve = black_box(PrimeSieve::new(size));
+    let mut sieve = PrimeSieve::new(size);
+    passes += 1;
+    while start.elapsed() < duration {
+        drop(sieve);
+        sieve = PrimeSieve::new(size);
         passes += 1;
-        if start.elapsed() >= duration {
-            return WorkerResult { passes, sieve };
-        }
     }
+    WorkerResult { passes, sieve }
 }

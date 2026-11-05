@@ -171,7 +171,7 @@ impl PrimeSieve {
 
     /// Count the primes, using word population counts over the packed flags.
     pub fn count_primes(&self) -> usize {
-        let (words, tail) = as_chunks::<8>(&self.composite);
+        let (words, tail) = self.composite.as_chunks::<8>();
         let mut count = [2, 3, 5]
             .into_iter()
             .filter(|&prime| prime <= self.size.limit())
@@ -361,52 +361,24 @@ fn mark_prime<const EXTENDED: bool>(composite: &mut [u8], limit: usize, prime: u
     }
 }
 
-/// Cast a slice into fixed-size chunks and a remainder, matching `slice::as_chunks`.
-#[allow(
-    unsafe_code,
-    reason = "slice length is checked before forming the raw array slice pointer"
-)]
-#[inline]
-fn as_chunks<const N: usize>(slice: &[u8]) -> (&[[u8; N]], &[u8]) {
-    let len = slice.len() / N;
-    let (multiple_of_n, remainder) = slice.split_at(len * N);
-    let ptr = multiple_of_n.as_ptr().cast::<[u8; N]>();
-    // SAFETY: multiple_of_n has length len * N bytes; alignment of [u8; N] is 1.
-    unsafe { (core::slice::from_raw_parts(ptr, len), remainder) }
-}
-
-/// Cast a mutable slice into fixed-size chunks and a remainder, matching `slice::as_chunks_mut`.
-#[allow(
-    unsafe_code,
-    reason = "slice length is checked before forming the raw array slice pointer"
-)]
-#[inline]
-fn as_chunks_mut<const N: usize>(slice: &mut [u8]) -> (&mut [[u8; N]], &mut [u8]) {
-    let len = slice.len() / N;
-    let (multiple_of_n, remainder) = slice.split_at_mut(len * N);
-    let ptr = multiple_of_n.as_mut_ptr().cast::<[u8; N]>();
-    // SAFETY: multiple_of_n has length len * N bytes; alignment of [u8; N] is 1.
-    unsafe { (core::slice::from_raw_parts_mut(ptr, len), remainder) }
-}
-
 /// OR a periodic pattern prefix into a block no longer than the pattern.
 fn merge_pattern(block: &mut [u8], pattern: &[u8]) {
     let source = &pattern[..block.len()];
-    let (wide, remainder) = as_chunks_mut::<32>(block);
-    let (wide_masks, remaining_masks) = as_chunks::<32>(source);
+    let (wide, remainder) = block.as_chunks_mut::<32>();
+    let (wide_masks, remaining_masks) = source.as_chunks::<32>();
     // Each iteration merges 32 independent bytes with one loop branch. The
     // fixed two-lane representation expresses the wide work in the source;
     // the integer ORs require no target-specific instructions or alignment.
     for (bytes, masks) in wide.iter_mut().zip(wide_masks) {
-        let (pairs, _) = as_chunks_mut::<16>(bytes);
-        let (pair_masks, _) = as_chunks::<16>(masks);
+        let (pairs, _) = bytes.as_chunks_mut::<16>();
+        let (pair_masks, _) = masks.as_chunks::<16>();
         pairs[0] =
             (u128::from_ne_bytes(pairs[0]) | u128::from_ne_bytes(pair_masks[0])).to_ne_bytes();
         pairs[1] =
             (u128::from_ne_bytes(pairs[1]) | u128::from_ne_bytes(pair_masks[1])).to_ne_bytes();
     }
-    let (words, tail) = as_chunks_mut::<8>(remainder);
-    let (masks, mask_tail) = as_chunks::<8>(remaining_masks);
+    let (words, tail) = remainder.as_chunks_mut::<8>();
+    let (masks, mask_tail) = remaining_masks.as_chunks::<8>();
     for (word, mask) in words.iter_mut().zip(masks) {
         *word = (u64::from_ne_bytes(*word) | u64::from_ne_bytes(*mask)).to_ne_bytes();
     }
