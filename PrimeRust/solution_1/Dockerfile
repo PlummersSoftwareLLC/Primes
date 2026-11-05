@@ -29,5 +29,7 @@ WORKDIR /app
 
 # app and configuration
 COPY --from=build /app/target/release/prime-sieve-rust prime-sieve-rust
+COPY --from=build /app/target/release/cokieminer-base-sieve cokieminer-base-sieve
+COPY run.sh run.sh
 
-ENTRYPOINT [ "./prime-sieve-rust" ]
+ENTRYPOINT [ "./run.sh" ]

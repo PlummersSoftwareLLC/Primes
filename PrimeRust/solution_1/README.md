@@ -1,4 +1,4 @@
-# Rust solution by @mike-barber
+# Rust solution by @mike-barber and @CokieMiner
 
 ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)
 ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)
@@ -11,6 +11,7 @@ Contributors:
 - Michael Barber @mike-barber https://www.github.com/mike-barber -- original author
 - Kai Rese @Kulasko https://github.com/Kulasko -- numerous idiomatic improvements and detailed code review
 - @GordonBGood -- for plenty of collaboration on the `unrolled-hybrid` and `extreme-hybrid` solutions; check out his solutions, including Nim, Chapel, Haskell and Julia.
+- CokieMiner @CokieMiner https://github.com/CokieMiner -- author of `cokieminer-base-sieve` (dependency-free 1-bit base sieve)
 
 This is a somewhat Rust-idiomatic version that has the storage of prime flags abstracted out, with the prime sieve algorithm generic over the storage. Two kinds of storage are implemented:
     
@@ -188,6 +189,15 @@ bit-storage     Passes: 8358, Threads: 4, Time: 5.0018110275, Average: 0.0005984
 Some interesting things to note here. The little Pi only has 1MB of cache, total. We're blowing that cache immediately using `byte` level storage when running on multiple threads: it's just thrashing the cache with a large dataset. However, the `bit` level storage is more efficient and data for all threads fits in the cache in this case and we get a decent performance uplift.
 
 I'm expecting the Apple M1 to do a lot better given it has 16MB of cache, but I can't test this. Fundamentally, you'll see the same thing on any processor once the dataset doesn't fit inside the cache, essentially where `sieve_size * threads > cache`. So for small datasets, `byte` level storage may be faster given there's less work to do. For larger datasets, you need the memory efficiency instead.
+
+## CokieMiner Base Sieve
+
+`cokieminer-base-sieve` is a dependency-free, faithful 1-bit base sieve implemented in pure Rust (edition 2024):
+- **Candidate mapping**: Odds-only candidate mapping where bit `i` represents odd integer `2*i + 1`.
+- **Dense Resetters ($P \le 61$)**: Straightforward word-parallel resetting using compile-time generated word masks, without branch penalties.
+- **Medium Resetters ($67 \le P \le 127$)**: 64-step cyclic unrolling that visits only non-zero words in chunks of 16 without `.rodata` branch overhead.
+- **Sparse Resetters ($P > 129$)**: 8-step unrolled byte-level strides using compile-time byte bitmasks matching the prime's modulo-8 period.
+- **Cache Locality**: Explicit deterministic drop before allocation recycling the exact hot L1d cache buffer.
 
 # Configuration
 
