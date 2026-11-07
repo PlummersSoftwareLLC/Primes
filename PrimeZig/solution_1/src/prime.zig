@@ -7,25 +7,27 @@ pub fn Sieve(comptime NumType: type) type {
     return struct {
         sieveSize: usize,
         bits: ArrayList(u8),
+        allocator: Allocator,
 
         const Self = @This();
 
-        pub fn init(allocator: *Allocator, size: usize) !Self {
+        pub fn init(allocator: Allocator, size: usize) !Self {
             var self = Self{
                 .sieveSize = size,
                 .bits = try ArrayList(u8).initCapacity(allocator, size),
+                .allocator = allocator,
             };
-            try self.bits.appendNTimes(0, size);
+            self.bits.appendNTimesAssumeCapacity(0, size);
             return self;
         }
 
         pub fn deinit(self: *Self) void {
-            self.bits.deinit();
+            self.bits.deinit(self.allocator);
         }
 
         pub fn run(self: *Self) void {
             var factor: NumType = 3;
-            const q = @floatToInt(NumType, @sqrt(@intToFloat(f64, self.sieveSize)));
+            const q: NumType = @intFromFloat(@sqrt(@as(f64, @floatFromInt(self.sieveSize))));
 
             while (factor <= q) : (factor += 2) {
                 var num: NumType = factor;
@@ -65,7 +67,7 @@ test "count primes up to 10" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 4), sieve.primeCount());
+    try expectEqual(@as(u32, 4), sieve.primeCount());
 }
 
 test "count primes up to 100" {
@@ -74,7 +76,7 @@ test "count primes up to 100" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 25), sieve.primeCount());
+    try expectEqual(@as(u32, 25), sieve.primeCount());
 }
 
 test "count primes up to 1000" {
@@ -83,7 +85,7 @@ test "count primes up to 1000" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 168), sieve.primeCount());
+    try expectEqual(@as(u32, 168), sieve.primeCount());
 }
 
 test "count primes up to 10000" {
@@ -92,7 +94,7 @@ test "count primes up to 10000" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 1_229), sieve.primeCount());
+    try expectEqual(@as(u32, 1_229), sieve.primeCount());
 }
 
 test "count primes up to 100000" {
@@ -101,7 +103,7 @@ test "count primes up to 100000" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 9_592), sieve.primeCount());
+    try expectEqual(@as(u32, 9_592), sieve.primeCount());
 }
 
 test "count primes up to 1000000" {
@@ -110,7 +112,7 @@ test "count primes up to 1000000" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 78_498), sieve.primeCount());
+    try expectEqual(@as(u32, 78_498), sieve.primeCount());
 }
 
 test "count primes up to 10000000" {
@@ -119,7 +121,7 @@ test "count primes up to 10000000" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 664_579), sieve.primeCount());
+    try expectEqual(@as(u32, 664_579), sieve.primeCount());
 }
 
 test "count primes up to 100000000" {
@@ -128,7 +130,7 @@ test "count primes up to 100000000" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 5_761_455), sieve.primeCount());
+    try expectEqual(@as(u32, 5_761_455), sieve.primeCount());
 }
 
 test "count primes up to 1000000000" {
@@ -137,7 +139,7 @@ test "count primes up to 1000000000" {
 
     sieve.run();
 
-    expectEqual(@as(u32, 50_847_534), sieve.primeCount());
+    try expectEqual(@as(u32, 50_847_534), sieve.primeCount());
 }
 
 // Integer overflows. Too lazy to fix :)
@@ -147,5 +149,5 @@ test "count primes up to 1000000000" {
 //
 //     sieve.run();
 //
-//     expectEqual(@as(u32, 455_052_511), sieve.primeCount());
+//     try expectEqual(@as(u32, 455_052_511), sieve.primeCount());
 // }

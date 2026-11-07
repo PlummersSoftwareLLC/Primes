@@ -1,6 +1,6 @@
-FROM python:3.11-slim
+FROM python:3.14-slim-trixie
 
-RUN pip install --no-cache-dir numpy numba
+RUN pip install --no-cache-dir numpy==2.5.4 numba==0.68.1
 
 WORKDIR /opt/app
 

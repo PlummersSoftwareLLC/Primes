@@ -10,7 +10,7 @@ optimizations. This is a sort-of "low-level" style implementation in
 Julia to get as much as speed as possible out of the language. It is
 *not* designed to be idiomatic Julia code.
 
-This solution requires at least **Julia 1.5** to run. the latest stable 1.X Julia version is
+This solution requires at least **Julia 1.5** to run. A recent stable 1.X Julia version is
 recommended and is used in the Docker image.
 
 ## Description
@@ -99,7 +99,7 @@ docker run -it --rm primejulia-3 1000000 10
 docker image rm primejulia-3
 ```
 
-This solution's [Dockerfile](Dockerfile) uses the `julia:1.6-buster`
+This solution's [Dockerfile](Dockerfile) uses the `julia:1.13.3-trixie`
 image to provide maximum support for different architectures, most
 importantly ARM64 and x86_64. This also helps avoid any possible issues
 caused by Julia's [Tier 3 support for musl](https://julialang.org/downloads/#currently_supported_platforms),

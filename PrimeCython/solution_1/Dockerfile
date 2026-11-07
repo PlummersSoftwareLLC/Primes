@@ -1,8 +1,8 @@
-FROM python:3.9.5
+FROM python:3.12-trixie
 
 WORKDIR /root
 
-RUN [ "pip", "install", "--no-cache-dir", "Cython==0.29.24" ]
+RUN [ "pip", "install", "--no-cache-dir", "Cython==0.29.37" ]
 
 COPY PrimeCY_bytearray.pyx PrimeCY_bitarray.pyx PrimeCY_32.pyx buildall.sh ./
 

@@ -1,10 +1,17 @@
-import kotlinx.coroutines.*
-import kotlin.native.concurrent.AtomicInt
-import kotlin.native.concurrent.AtomicReference
-import kotlin.system.getTimeMillis
+@file:OptIn(ExperimentalAtomicApi::class)
 
-actual fun getSystemTimeMillis() = getTimeMillis().toDouble()
-@OptIn(ExperimentalStdlibApi::class)
+import kotlinx.coroutines.*
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.incrementAndFetch
+import kotlin.experimental.ExperimentalNativeApi
+import kotlin.time.TimeSource
+
+private val timeOrigin = TimeSource.Monotonic.markNow()
+
+actual fun getSystemTimeMillis() = timeOrigin.elapsedNow().inWholeMilliseconds.toDouble()
+@OptIn(ExperimentalNativeApi::class)
 actual fun defaultCoresCount() = Platform.getAvailableProcessors()
 actual fun getArgs() = arrayOf<String>()
 
@@ -21,20 +28,22 @@ actual inline fun <reified T : PrimeSieve> benchmarkPrimeSieve(
             repeat(CORES) {
                 primeSieveJobs += launch {
                     while (isActive) {
-                        lastIteration.value = newInstance(PRIME_SIEVE_SIZE)
-                        iterations.increment()
+                        lastIteration.store(newInstance(PRIME_SIEVE_SIZE))
+                        iterations.incrementAndFetch()
                     }
                 }
             }
 
-            delay(5000)
-            primeSieveJobs.forEach { it.cancel() }
-            if (!lastIteration.value!!.isValid) error("Invalid Implementation")
-            IterationResult(
-                duration = 5000.0,
-                iterations = iterations.value,
-                result = lastIteration.value!!,
-            ).print("native", "multi")
+            withContext(Dispatchers.IO) {
+                delay(5000)
+                primeSieveJobs.forEach { it.cancel() }
+                if (!lastIteration.load()!!.isValid) error("Invalid Implementation")
+                IterationResult(
+                    duration = 5000.0,
+                    iterations = iterations.load(),
+                    result = lastIteration.load()!!,
+                ).print("native", "multi", CORES)
+            }
         }
     } else {
         runTest(newInstance).print("native", "single")

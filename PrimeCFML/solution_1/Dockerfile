@@ -1,4 +1,4 @@
-FROM lucee/lucee:7.0.5.17-SNAPSHOT-zero
+FROM lucee/lucee:7.0.6.10-zero
 
 RUN apt-get update && \
     apt-get install -y html2text && \

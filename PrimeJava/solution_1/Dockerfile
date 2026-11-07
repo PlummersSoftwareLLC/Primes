@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk8:x86_64-alpine-jdk8u402-b06-slim
+FROM eclipse-temurin:25-jdk-alpine-3.24
 
 RUN apk add --no-cache bash
 

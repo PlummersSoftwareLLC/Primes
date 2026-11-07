@@ -1,4 +1,4 @@
-FROM rakudo-star:2021.04-alpine
+FROM rakudo-star:2026.09-alpine
 
 WORKDIR /home/primes
 

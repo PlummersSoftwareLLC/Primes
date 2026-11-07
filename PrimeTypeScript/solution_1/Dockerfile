@@ -1,13 +1,13 @@
-FROM node:14-alpine AS build
+FROM node:26-alpine3.24 AS build
 
 WORKDIR /opt/app
 
 COPY . .
 RUN npm ci \
     && npm run build \
-    && npm ci --production
+    && npm ci --omit=dev
 
-FROM node:14-alpine
+FROM node:26-alpine3.24
 
 WORKDIR /opt/app
 

@@ -1,10 +1,10 @@
-FROM crystallang/crystal:1.14-alpine AS build
+FROM crystallang/crystal:1.22.2-alpine AS build
 
 WORKDIR /opt/app
 COPY primes.cr .
 RUN crystal build primes.cr --release --static --no-debug
 
-FROM alpine:3
+FROM alpine:3.24
 
 COPY --from=build /opt/app/primes /usr/local/bin/
 

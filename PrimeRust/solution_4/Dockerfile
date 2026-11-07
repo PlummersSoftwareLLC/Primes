@@ -1,11 +1,11 @@
-FROM primeimages/rust:1.52.1 AS build
+FROM rust:1.99-alpine3.24 AS build
 
 WORKDIR /app
 COPY . .
 
 RUN rustc -C opt-level=3 PrimeRust.rs
 
-FROM alpine:3.13
+FROM alpine:3.24
 WORKDIR /app
 
 # app and configuration

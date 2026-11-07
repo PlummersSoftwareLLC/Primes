@@ -1,10 +1,10 @@
-FROM gcc:9.4.0 as c
+FROM gcc:15-trixie as c
 WORKDIR /app
 COPY /c_library .
 RUN gcc -c -Ofast c_sieve.c \
     && gcc -shared -o c_sieve.so c_sieve.o
 
-FROM dart:3.0.0 AS dart
+FROM dart:3.13.7 AS dart
 WORKDIR /app
 COPY /bin .
 RUN dart compile exe runner.dart -o runner 

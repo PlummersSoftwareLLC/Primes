@@ -29,13 +29,15 @@ In other languages such as Rust and Nim, when the above 64-bit dense marking cod
 
 If you have [GHC Haskell installed on your machine](https://www.haskell.org/ghc/download_ghc_8_10_7.html); currently for GHC Haskell versions up to 9.0.1, this solution will not run on Windows, although the newer version 8.10.7 was not tested on Windows and may work.
 
+The code uses the sized primitive types (`Word8#`, `Word64#`) introduced in GHC 9.2 and 9.4, so it needs GHC 9.4 or later. With `-DAVX2`, GHC must also be new enough to work with current LLVM versions; the Docker image uses GHC 9.12 with LLVM 19.
+
 Once LLVM and GHC Haskell are installed (as well as a new version of libgmp-dev(el) if using that version), just run "ghc Primes" to compile and "./Primes" to run the application.
 
 To use one of the alternate register widths, compile with "ghc Primes -DAVX" for 128-bit registers or "ghc Primes -DAVX2" for 256-bit registers, then run as above.
 
 ### Docker
 
-You can also choose the easy option of running the application inside a Docker container and the Dockerfile will use the "build.sh" script file to determin whenther the hase CPU is ARM64 in which case it will compile to run with 64-bit registers, else it assumes that it is AMD64 and if it finds that it supports AVX2 then runs with 256-bit registers and if not then with 128-bit registers; other combinations are not considered as these cases fit the machines used for the leader board.
+You can also choose the easy option of running the application inside a Docker container and the Dockerfile will use the "Primes.sh" script file to determin whenther the hase CPU is ARM64 in which case it will compile to run with 64-bit registers, else it assumes that it is AMD64 and if it finds that it supports AVX2 then runs with 256-bit registers and if not then with 128-bit registers; other combinations are not considered as these cases fit the machines used for the leader board.
 
 ```
 docker build -t primes .

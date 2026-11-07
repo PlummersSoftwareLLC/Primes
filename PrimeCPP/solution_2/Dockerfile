@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS build
+FROM ubuntu:24.04 AS build
 
 RUN apt-get update -qq \
     && apt-get install -y bash clang
@@ -8,7 +8,7 @@ COPY *.cpp .
 RUN clang++ -march=native -mtune=native -pthread -Ofast -std=c++17 PrimeCPP_array.cpp -oprimes_array \
     && clang++ -march=native -mtune=native -pthread -Ofast -std=c++17 PrimeCPP_mask.cpp -oprimes_mask
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 COPY --from=build /opt/app/primes_array /opt/app/primes_mask /opt/app/
 

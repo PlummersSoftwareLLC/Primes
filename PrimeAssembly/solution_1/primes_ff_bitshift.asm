@@ -79,13 +79,6 @@ main:
     inc         eax                         ; sizeSqrt++, for safety 
     mov         [sizeSqrt], eax             ; save sizeSqrt
 
-    mov         rax, INIT_BLOCK             ; rax = INIT_BLOCK
-    push        rax                         ; push rax to stack (3 times needed to align to 16 byte)
-    push        rax
-    push        rax
-    movdqa      xmm0, [rsp]                 ; store init block in 128-bit xmm0 register (used in initLoop)
-    add         rsp, 24                     ; restore stack pointer
-
 ; get start time
     mov         rdi, CLOCK_MONOTONIC        ; * ask for monotonic time
     lea         rsi, [startTime]            ; * struct to store result in
@@ -221,6 +214,10 @@ newSieve:
     mov         [r12+sieve.primes], rax     ; sieve.primes = rax
 
 ; initialize prime array   
+; xmm0 is caller-saved, so it is loaded here, after the call to malloc
+    mov         rdx, INIT_BLOCK             ; init_block = INIT_BLOCK
+    movq        xmm0, rdx                   ; xmm0[0..63] = init_block
+    punpcklqdq  xmm0, xmm0                  ; xmm0[64..127] = init_block
     xor         rcx, rcx                    ; byteCounter = 0                       
 
 initLoop:

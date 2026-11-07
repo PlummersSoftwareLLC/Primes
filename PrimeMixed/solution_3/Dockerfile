@@ -1,4 +1,4 @@
-FROM python:3-alpine
+FROM python:3.14-alpine3.24
 
 RUN apk add build-base --no-cache && \
     /usr/sbin/adduser -u 1001 -D michaelgrn
@@ -14,7 +14,7 @@ WORKDIR /home/michaelgrn
 COPY setup.py .
 COPY src/ ./src/
 
-RUN pip install --upgrade pip -e . --no-cache-dir
+RUN pip install --upgrade pip -e . --no-cache-dir --config-settings editable_mode=compat
 
 USER michaelgrn
 

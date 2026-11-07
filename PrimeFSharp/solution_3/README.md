@@ -10,7 +10,7 @@ Port of the original C++ prime number sieve to F# using recursion.
 Similar to the C# version in that it's what the compiler gives you by default and builds to the same targets.
 
 ## Run instructions
-- [.NET >= 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
+- [.NET >= 10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
 - run ```dotnet run -c Release```
 
 ## Docker

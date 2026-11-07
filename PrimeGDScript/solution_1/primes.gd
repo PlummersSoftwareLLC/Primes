@@ -24,6 +24,8 @@ class prime_sieve:
     func _init(n: int):
         sieve_size = n
         bits.resize(sieve_size)
+        # resize() does not clear the new elements; memory can be reused from an earlier sieve
+        bits.fill(0)
 
 
     func run_sieve() -> void:

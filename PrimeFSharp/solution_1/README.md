@@ -9,7 +9,7 @@ This is an implementation in F#.
 
 ## Run instructions
 
-### .NET 5.0
+### .NET 10.0
 Execute the following command from the implementation directory:
 ```
 dotnet run -c release

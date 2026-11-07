@@ -13,7 +13,7 @@ You can find an installation guide on the official website at https://vlang.io/.
 
 ### Docker
 
-The official images have no support for ARM64 therefor; this Dockerfile also installs the latest version of V.
+The Dockerfile builds V 0.5.2 from source on Alpine Linux.
 
 ```
 docker build -t primes .

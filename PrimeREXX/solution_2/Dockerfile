@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:jdk-11.0.11_9-alpine-slim
+FROM eclipse-temurin:25-jdk-alpine-3.24
 WORKDIR /home/netrexx
 RUN apk add --no-cache curl unzip \
 	&& curl -G https://www.netrexx.org/files/NetRexx-4.01-GA.zip -o ./NetRexx4.zip \

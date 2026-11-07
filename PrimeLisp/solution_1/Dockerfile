@@ -1,4 +1,4 @@
-FROM alpine:3.13
+FROM alpine:3.24
 
 RUN apk --update add --no-cache sbcl
 

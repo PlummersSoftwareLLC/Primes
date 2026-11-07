@@ -12,7 +12,7 @@ pub fn Sieve(
         const Self = @This();
         const field_size = sieve_size >> 1;
 
-        field: [field_size]Type align(std.mem.page_size),
+        field: [field_size]Type align(std.heap.page_size_min),
 
         pub fn init(field: [field_size]Type) Self {
             return .{
@@ -20,9 +20,8 @@ pub fn Sieve(
             };
         }
 
-        pub fn run(self: *Self) void {
-            @setAlignStack(256);
-            comptime const q = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+        pub fn run(self: *Self) callconv(.withStackAlign(.c, 256)) void {
+            const q: usize = comptime @intFromFloat(@sqrt(@as(f64, @floatFromInt(sieve_size))));
             var factor: usize = 3;
 
             while (factor <= q) : (factor += 2) {
@@ -46,7 +45,7 @@ pub fn Sieve(
             var idx: usize = 0;
 
             while (idx < field_size) : (idx += 1) {
-                count += @boolToInt(self.field[idx] == true_val);
+                count += @intFromBool(self.field[idx] == true_val);
             }
 
             return count;
@@ -67,18 +66,18 @@ pub fn NewSieve(
             @setEvalBranchQuota(~@as(u32, 0)); // no limits for me
             const divisors = [_]usize{2, 3, 5, 7, 11, 13};
             const lcm = lcm_blk: {
-                comptime var lcm_acc = 1;
-                inline for (divisors) |divisor| {
+                var lcm_acc = 1;
+                for (divisors) |divisor| {
                     lcm_acc *= divisor;
                 }
                 break :lcm_blk lcm_acc;
             };
-            comptime var steps_acc = [_]u8{undefined} ** (lcm >> 1);
-            comptime var step_count = 0;
-            comptime var step_size = 1;
-            comptime var i = 3;
-            inline while (i <= lcm + 2) : (i += 2) {
-                inline for (divisors) | div | { // for some reason this breaks if not inline_for, maybe compiler bug?
+            var steps_acc = [_]u8{undefined} ** (lcm >> 1);
+            var step_count = 0;
+            var step_size = 1;
+            var i = 3;
+            while (i <= lcm + 2) : (i += 2) {
+                for (divisors) | div | { // the block is comptime, so this loop runs at compile time
                     if (i % div == 0) {
                         step_size += 1;
                         break;
@@ -89,11 +88,11 @@ pub fn NewSieve(
                     step_count += 1;
                 }
             }
-            comptime var steps_arr: [step_count]u8 align(std.mem.page_size) = steps_acc[0..step_count].*;
+            const steps_arr: [step_count]u8 align(std.heap.page_size_min) = steps_acc[0..step_count].*;
             break :steps_blk steps_arr;
         };
 
-        field: [field_size]Type align(std.mem.page_size),
+        field: [field_size]Type align(std.heap.page_size_min),
 
         pub fn init(field: [field_size]Type) Self {
             return .{
@@ -101,9 +100,8 @@ pub fn NewSieve(
             };
         }
 
-        pub fn run(self: *Self) void {
-            @setAlignStack(256);
-            comptime const q = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+        pub fn run(self: *Self) callconv(.withStackAlign(.c, 256)) void {
+            const q: usize = comptime @intFromFloat(@sqrt(@as(f64, @floatFromInt(sieve_size))));
             var factor: usize = 3;
 
             while (factor <= q) : (factor += 2) {
@@ -127,7 +125,7 @@ pub fn NewSieve(
             var idx: usize = 0;
 
             while (idx < field_size) : (idx += 1) {
-                count += @boolToInt(self.field[idx] == true_val);
+                count += @intFromBool(self.field[idx] == true_val);
             }
 
             return count;
@@ -143,7 +141,7 @@ pub fn BitSieve( // slightly less performant but uses 8x less memory
         const field_size = sieve_size >> 1;
         const BitSet = std.StaticBitSet(field_size);
 
-        field: BitSet align(std.mem.page_size),
+        field: BitSet align(std.heap.page_size_min),
 
         pub fn init() Self {
             return .{
@@ -151,15 +149,26 @@ pub fn BitSieve( // slightly less performant but uses 8x less memory
             };
         }
 
-        pub fn run(self: *Self) void {
-            @setAlignStack(256);
-            comptime const q = @floatToInt(usize, @sqrt(@intToFloat(f64, sieve_size)));
+        // StaticBitSet.isSet takes the bit set by value. Zig 0.16 copies the
+        // whole bit set for each call, so read the bit through a pointer
+        // when the bit set is backed by an array.
+        inline fn isSet(self: *const Self, index: usize) bool {
+            if (comptime !@hasField(BitSet, "masks")) {
+                return self.field.isSet(index);
+            } else {
+                const bit = @as(BitSet.MaskInt, 1) << @as(BitSet.ShiftInt, @truncate(index));
+                return (self.field.masks[index / @bitSizeOf(BitSet.MaskInt)] & bit) != 0;
+            }
+        }
+
+        pub fn run(self: *Self) callconv(.withStackAlign(.c, 256)) void {
+            const q: usize = comptime @intFromFloat(@sqrt(@as(f64, @floatFromInt(sieve_size))));
             var factor: usize = 3;
 
             while (factor <= q) : (factor += 2) {
                 var num: usize = factor;
                 factorSet: while (num < field_size) : (num += 2) {
-                    if (!self.field.isSet(num >> 1)) {
+                    if (!self.isSet(num >> 1)) {
                         factor = num;
                         break :factorSet;
                     }
@@ -177,7 +186,7 @@ pub fn BitSieve( // slightly less performant but uses 8x less memory
             var idx: usize = 0;
 
             while (idx < field_size) : (idx += 1) {
-                count += @boolToInt(!self.field.isSet(idx));
+                count += @intFromBool(!self.isSet(idx));
             }
 
             return count;
@@ -204,11 +213,11 @@ test "Test byte sieve" {
         const size = result[0];
         const count = result[1];
 
-        var field = [_]bool{true} ** (size >> 1);
+        const field = [_]bool{true} ** (size >> 1);
         var sieve = Sieve(bool, true, false, size).init(field);
 
         sieve.run();
-        std.testing.expectEqual(@as(usize, count), sieve.primeCount());
+        try std.testing.expectEqual(@as(usize, count), sieve.primeCount());
     }
 }
 
@@ -231,11 +240,11 @@ test "Test new byte sieve" {
         const size = result[0];
         const count = result[1];
 
-        var field = [_]bool{true} ** (size >> 1);
+        const field = [_]bool{true} ** (size >> 1);
         var sieve = NewSieve(bool, true, false, size).init(field);
 
         sieve.run();
-        std.testing.expectEqual(@as(usize, count), sieve.primeCount());
+        try std.testing.expectEqual(@as(usize, count), sieve.primeCount());
     }
 }
 
@@ -261,6 +270,6 @@ test "Test bit sieve" {
         var sieve = BitSieve(size).init();
 
         sieve.run();
-        std.testing.expectEqual(@as(usize, count), sieve.primeCount());
+        try std.testing.expectEqual(@as(usize, count), sieve.primeCount());
     }
 }

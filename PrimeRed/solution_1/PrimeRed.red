@@ -8,7 +8,7 @@ PrimeSieve: func [size [integer!] return: [object!]] [
         sieveSize: size
         bits: complement make bitset! ((size + 1) >> 1)
 
-        resultsDictionary: #(
+        resultsDictionary: #[
             10 4
             100 25
             1000 168
@@ -19,7 +19,7 @@ PrimeSieve: func [size [integer!] return: [object!]] [
             100000000 5761455
             1000000000 50847534
             10000000000 455052511
-        )
+        ]
 
         validateResults: func [return: [logic!]] [
             resultsDictionary/:sieveSize = countPrimes
@@ -119,3 +119,5 @@ forever [
         break
     ]
 ]
+
+quit/return 0

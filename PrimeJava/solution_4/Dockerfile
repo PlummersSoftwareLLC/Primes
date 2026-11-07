@@ -1,4 +1,4 @@
-FROM adoptopenjdk:16-jdk-hotspot
+FROM eclipse-temurin:25-jdk-noble
 
 WORKDIR /opt/app
 

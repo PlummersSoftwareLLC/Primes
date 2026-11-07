@@ -22,7 +22,7 @@ This solution contains implentations for five different composite number represe
 Nim is available via package managers under the popular systems. The following command should get you started:
 
 ```
-nim c --gc:arc -d:danger -t:"-march=native" -d:lto -r primes.nim
+nim c --mm:arc -d:danger -t:"-march=native" -d:lto --threads:on -r Primes.nim
 ```
 
 ### Docker
@@ -34,7 +34,7 @@ docker build -t primes .
 docker run --rm primes
 ```
 
-The Dockerfile uses the custom built `primeimages/nim:1.4.8` so it can run on both arm64 and amd64.
+The Dockerfile uses Alpine Linux 3.24 with its packaged Nim 2.2, so it can run on both arm64 and amd64.
 
 ## Benchmarks
 

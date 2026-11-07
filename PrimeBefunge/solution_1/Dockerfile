@@ -1,4 +1,4 @@
-FROM alpine:3.13
+FROM alpine:3.24
 
 RUN apk add --no-cache build-base cmake git
 # The latest release (0.9.0) does not work for whatever reason, but the current
@@ -12,7 +12,8 @@ RUN git clone -n ${CFUNGE_GIT} ${CFUNGE_DIRECTORY}
 WORKDIR /tmp/${CFUNGE_DIRECTORY}
 RUN git checkout ${CFUNGE_COMMIT} 
 WORKDIR /tmp/${CFUNGE_DIRECTORY}/build
-RUN cmake .. -DUSE_NCURSES=OFF -DUSE_64BIT=OFF && \
+RUN cmake .. -DUSE_NCURSES=OFF -DUSE_64BIT=OFF \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_C_FLAGS=-D_DEFAULT_SOURCE && \
     make && make install
 
 WORKDIR /opt/primebefunge

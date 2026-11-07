@@ -1,24 +1,13 @@
-# use the image below as the preffered base image
-# see CONTRIBUTING.md
-FROM ghcr.io/theotterlord/bun:v0.1.13-ubuntu
+FROM oven/bun:1.4.4-debian AS bun
+
+FROM denoland/deno:bin-2.9.8 AS deno
+
+FROM node:26-trixie-slim
+
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=deno /deno /usr/local/bin/deno
 
 WORKDIR /opt/app
-
-SHELL [ "/bin/bash", "-o", "pipefail", "-c" ]
-
-RUN apt-get update &&\
-    apt-get install --no-install-recommends -y zip unzip curl &&\
-    # NodeJS
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&\
-    apt-get install --no-install-recommends -y nodejs \
-    &&\
-    # Deno
-    curl -fsSL https://deno.land/x/install/install.sh | sh -s v1.23.3 &&\
-    ln -s /root/.deno/bin/deno /usr/bin &&\
-    # cleanup
-    apt-get remove -y curl zip unzip &&\
-    apt-get autoclean &&\
-    rm -r /var/lib/apt/lists/*
 
 COPY run.sh \
      PrimeJavaScript.js \

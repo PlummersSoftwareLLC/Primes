@@ -56,7 +56,7 @@ test "single threaded, intsieve" {
         const expected_primes = result[1];
         const Sieve = IntSieve(.{});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -67,7 +67,7 @@ test "Single threaded with bitsieve" {
         const expected_primes = result[1];
         const Sieve = BitSieve(.{});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -78,7 +78,7 @@ test "Single threaded with inverted bitsieve" {
         const expected_primes = result[1];
         const Sieve = BitSieve(.{.PRIME = 1, .allocator = a.SAlloc(a.c_std_lib, .{})});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -89,7 +89,7 @@ test "Single threaded with unrolled bitsieve" {
         const expected_primes = result[1];
         const Sieve = BitSieve(.{.RunFactorChunk = u8, .unrolled = true});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -100,7 +100,7 @@ test "Single threaded with unrolled bitsieve, vector 2" {
         const expected_primes = result[1];
         const Sieve = BitSieve(.{.unrolled = true, .RunFactorChunk = u8, .max_vector = 2});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -111,7 +111,7 @@ test "Single threaded with unrolled bitsieve, vector 4" {
         const expected_primes = result[1];
         const Sieve = BitSieve(.{.unrolled = true, .RunFactorChunk = u8, .max_vector = 4});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -122,7 +122,7 @@ test "Single threaded with unrolled bitsieve, u64 vector" {
         const expected_primes = result[1];
         const Sieve = BitSieve(.{.unrolled = true, .RunFactorChunk = u64, .max_vector = 4});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -135,7 +135,7 @@ test "Test multithreaded-amdahl" {
         const expected_primes = result[1];
         const Sieve = IntSieve(.{});
 
-        var passes = try runSieve(ParallelAmdahlRunner(Sieve, .{}), field_size, expected_primes, true);
+        const passes = try runSieve(ParallelAmdahlRunner(Sieve, .{}), field_size, expected_primes, true);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -166,7 +166,7 @@ test "Int sieve with wheels work" {
         const expected_primes = result[1];
         const Sieve = IntSieve(.{.wheel_primes = 2});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -177,7 +177,7 @@ test "Bit sieve with wheels work" {
         const expected_primes = result[1];
         const Sieve = BitSieve(.{.wheel_primes = 2});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
         try std.testing.expectEqual(passes, 1);
     }
 }
@@ -188,7 +188,7 @@ test "Vector Sieve works" {
         const expected_primes = result[1];
         const Sieve = VecSieve(.{.PRIME = 1, .allocator = a.SAlloc(a.c_std_lib, .{})});
 
-        var passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
+        const passes = try runSieve(SingleThreadedRunner(Sieve, .{}), field_size, expected_primes, false);
         try std.testing.expectEqual(passes, 1);
     }
 }

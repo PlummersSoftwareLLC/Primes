@@ -1,12 +1,12 @@
 # ===== Build Environment =====
-FROM rust:1.85-slim AS build
+FROM rust:1.99-slim-trixie AS build
 WORKDIR /app
 COPY . .
 RUN cargo test \
     && cargo build --release
 
 # ===== Runtime Environment =====
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 WORKDIR /app
 COPY --from=build /app/target/release/rust-wheel8-sieve rust-wheel8-sieve
 COPY --from=build /app/target/release/cokieminer-sieve cokieminer-sieve

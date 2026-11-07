@@ -1,4 +1,4 @@
-FROM elixir:1.12-alpine
+FROM elixir:1.20.5-otp-29-alpine
 
 WORKDIR /opt/app
 COPY . .

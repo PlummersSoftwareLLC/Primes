@@ -2,6 +2,11 @@
 # Common routines for a simple prome sieve written in pure bash.
 #
 
+# Bash 5.2 no longer expands \$-escaped associative array subscripts inside
+# arithmetic expressions (bitArray[\$index] would use the literal key "$index").
+# The code depends on the 5.1 behaviour, so ask for it.
+BASH_COMPAT=51
+
 # rbergen -- changed number for 10 from 1 to 4
 readonly -A primeCounts=(
 	[10]=4

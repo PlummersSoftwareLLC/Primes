@@ -27,7 +27,7 @@ docker build -t primes .
 docker run --rm primes
 ```
 
-The Dockerfile uses an official Debian image and then builds and installs Chapel on it.
+The Dockerfile uses the official Chapel image (`chapel/chapel`), which is based on Debian.
 
 ## Output
 ```

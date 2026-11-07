@@ -1,8 +1,8 @@
 resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/9.yaml
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/43.yaml
 packages:
 - .
 
 # When on NixOS, pull in LLVM automatically
 nix:
-  packages: [llvm_9]
+  packages: [llvm_18]

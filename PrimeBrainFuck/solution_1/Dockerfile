@@ -1,5 +1,5 @@
 # container for building
-FROM ubuntu:22.04 AS build
+FROM ubuntu:24.04 AS build
 
 # install tools
 RUN apt-get update \
@@ -9,8 +9,10 @@ RUN apt-get update \
 ENV CC=/usr/bin/clang \
     CXX=/usr/bin/clang++
 
-# clone custom language interpreter
+# clone custom language interpreter, pinned to the latest commit (2021-08-02)
+ARG BF_INTERPRETER_COMMIT=8e1cba6e7fd1b60b5c0f658ea7344befda718e98
 RUN git clone https://github.com/ThatAquarel/BrainF-ck-Interpreter \
+    && git -C BrainF-ck-Interpreter checkout "${BF_INTERPRETER_COMMIT}" \
     && mkdir BrainF-ck-Interpreter/release/
 WORKDIR /BrainF-ck-Interpreter/release/
 
@@ -25,7 +27,7 @@ COPY *.cpp *.b ./
 RUN clang++ -Ofast -std=c++17 PrimeBrainFuck.cpp -oPrimeBrainFuck
 
 # container for running built binaries
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # copy binaries from build container to current
 COPY --from=build /BrainF-ck-Interpreter/release/brainfuck /usr/local/bin

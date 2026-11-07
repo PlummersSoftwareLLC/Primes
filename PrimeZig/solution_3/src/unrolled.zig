@@ -55,7 +55,7 @@ pub const UnrolledOpts = struct {
 /// given type, for dense values.  First parameter is an array of the type; second
 /// parameter is the number of integers in this array.
 fn DenseFn(comptime T: type) type {
-    return fn([*]T, usize) void;
+    return *const fn([*]T, usize) void;
 }
 
 /// returns a function wrapped in an struct; this is the simplest variadic way
@@ -64,20 +64,22 @@ fn DenseFn(comptime T: type) type {
 pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts) type {
     return struct{
         pub fn fill(field: [*]T, field_count: usize) void {
+            // the unrolled chunk fills take more comptime branches than the default quota allows.
+            @setEvalBranchQuota(100_000);
             const last_chunk = field + field_count + num;
             var chunk = field;
             fillOneChunk(chunk, true);
             chunk += num;
-            while (@ptrToInt(chunk) < @ptrToInt(last_chunk)) : (chunk += num) {
+            while (@intFromPtr(chunk) < @intFromPtr(last_chunk)) : (chunk += num) {
                 fillOneChunk(chunk, false);
             }
         }
 
         /// a function that is expected to fill *num* ints with bits flagged starting
         /// from index num/2, spaced out by *num* bits.
-        inline fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) align(std.mem.page_size) void {
-            comptime const total_vecs = if (opts.max_vector == 1) num else num / opts.max_vector + 1;
-            comptime const total_ints = num;
+        inline fn fillOneChunk(chunk: [*]T, comptime start_at_square: bool) align(std.heap.page_size_min) void {
+            const total_vecs = if (opts.max_vector == 1) num else num / opts.max_vector + 1;
+            const total_ints = num;
 
             comptime var current_vec: usize = 0;
             comptime var current_int: usize = 0;
@@ -92,7 +94,7 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
                 const Up = UnalignPtr(V);
 
                 // assign the vector location in memory.
-                var vector_ptr: Up = @ptrCast(Up, chunk + current_int);
+                const vector_ptr: Up = @as(Up, @ptrCast(chunk + current_int));
                 // pull the memory down into a vector register.
                 var cache_vec: V = vector_ptr.*;
 
@@ -111,7 +113,7 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
                     setCache(&cache_vec, cache_int, current_int);
 
                     current_int += 1;
-                    comptime const index_int = current_int % opts.max_vector;
+                    const index_int = current_int % opts.max_vector;
                     if ((index_int == 0) or (current_int == total_ints)) break :vec_loop;
                 }
                 // send the vector register back up to memory.
@@ -143,12 +145,12 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
 
         inline fn setBit(cache_int: *T, comptime current_bit: usize) void {
             const shift_t = ShiftTypeFor(T);
-            comptime const shift = @intCast(shift_t, current_bit % @bitSizeOf(T));
+            const shift = @as(shift_t, @intCast(current_bit % @bitSizeOf(T)));
             if (opts.PRIME == 0) {
-                comptime const mask = @as(T, 1) << shift;
+                const mask = @as(T, 1) << shift;
                 cache_int.* |= mask;
             } else {
-                comptime const mask = ~(@as(T, 1) << shift);
+                const mask = ~(@as(T, 1) << shift);
                 cache_int.* &= mask;
             }
         }
@@ -157,9 +159,9 @@ pub fn DenseFnFactory(comptime T: type, comptime num: usize, opts: UnrolledOpts)
         fn VectorFor(comptime total_ints: usize, comptime current_vec: usize, comptime max_vector: u32) type {
             if (current_vec == total_ints / max_vector) {
                 const last_size = total_ints % max_vector;
-                return if (last_size == 1) T else std.meta.Vector(last_size, T);
+                return if (last_size == 1) T else @Vector(last_size, T);
             } else {
-                return std.meta.Vector(max_vector, T);
+                return @Vector(max_vector, T);
             }
         }
 
@@ -174,8 +176,8 @@ pub fn makeDenseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T, opts.half
     // we only need odd factors.
     const count = lutCount(T, opts.half_extent);
     var myFuns: [count]DenseFn(T) = undefined;
-    for (myFuns) | *f, index | {
-        f.* = DenseFnFactory(T, 2 * index + 1, opts).fill;
+    for (&myFuns, 0..) |*f, index| {
+        f.* = &DenseFnFactory(T, 2 * index + 1, opts).fill;
     }
     return myFuns;
 }
@@ -209,11 +211,11 @@ fn clear(slice: anytype) void{
 const allocator = std.testing.allocator;
 test "it is possible to fill a u8 memory segment with factors of 3" {
     const fillChunk = DenseFnFactory(u8, 3, .{}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 3);
+    const seg = try allocator.alloc(u8, 3);
     defer allocator.free(seg);
     clear(seg);
 
-    fillChunk(@ptrCast([*]u8, seg), false);
+    fillChunk(@as([*]u8, @ptrCast(seg)), false);
 
     const result = [_]u8{0b1001_0010, 0b0010_0100, 0b0100_1001};
     try std.testing.expectEqualSlices(u8, seg, result[0..]);
@@ -221,11 +223,11 @@ test "it is possible to fill a u8 memory segment with factors of 3" {
 
 test "it is possible to fill a u8 memory segment with factors of 5" {
     const fillChunk = DenseFnFactory(u8, 5, .{}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 5);
+    const seg = try allocator.alloc(u8, 5);
     defer allocator.free(seg);
     clear(seg);
 
-    fillChunk(@ptrCast([*]u8, seg), false);
+    fillChunk(@as([*]u8, @ptrCast(seg)), false);
 
     const result = [_]u8{0b1000_0100, 0b0001_0000, 0b0100_0010, 0b0000_1000, 0b0010_0001};
     try std.testing.expectEqualSlices(u8, seg, result[0..]);
@@ -233,11 +235,11 @@ test "it is possible to fill a u8 memory segment with factors of 5" {
 
 test "it is possible to fill a u16 memory segment with factors of 11" {
     const fillChunk = DenseFnFactory(u16, 11, .{}).fillOneChunk;
-    var seg = try allocator.alloc(u16, 11);
+    const seg = try allocator.alloc(u16, 11);
     defer allocator.free(seg);
     clear(seg);
 
-    fillChunk(@ptrCast([*]u16, seg), false);
+    fillChunk(@as([*]u16, @ptrCast(seg)), false);
 
     const result = [_]u16{0b0000_0000_0010_0000, 0b0000_1000_0000_0001, 0b0000_0000_0100_0000, 0b0001_0000_0000_0010,
                           0b0000_0000_1000_0000, 0b0010_0000_0000_0100, 0b0000_0001_0000_0000, 0b0100_0000_0000_1000,
@@ -248,11 +250,11 @@ test "it is possible to fill a u16 memory segment with factors of 11" {
 
 test "it is possible to fill a u8 vector segment with factors of 5" {
     const fillChunk = DenseFnFactory(u8, 5, .{.max_vector = 2}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 5);
+    const seg = try allocator.alloc(u8, 5);
     defer allocator.free(seg);
     clear(seg);
 
-    fillChunk(@ptrCast([*]u8, seg), false);
+    fillChunk(@as([*]u8, @ptrCast(seg)), false);
 
     const result = [_]u8{0b1000_0100, 0b0001_0000, 0b0100_0010, 0b0000_1000, 0b0010_0001};
     try std.testing.expectEqualSlices(u8, seg, result[0..]);
@@ -260,11 +262,11 @@ test "it is possible to fill a u8 vector segment with factors of 5" {
 
 test "it is possible to fill a u8 memory segment with factors of 3 that starts at the square" {
     const fillChunk = DenseFnFactory(u8, 3, .{}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 3);
+    const seg = try allocator.alloc(u8, 3);
     defer allocator.free(seg);
     clear(seg);
 
-    fillChunk(@ptrCast([*]u8, seg), true);
+    fillChunk(@as([*]u8, @ptrCast(seg)), true);
 
     const result = [_]u8{0b1001_0000, 0b0010_0100, 0b0100_1001};
     try std.testing.expectEqualSlices(u8, seg, result[0..]);
@@ -272,11 +274,11 @@ test "it is possible to fill a u8 memory segment with factors of 3 that starts a
 
 test "it is possible to fill a u8 memory segment with factors of 5 that starts at the square" {
     const fillChunk = DenseFnFactory(u8, 5, .{}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 5);
+    const seg = try allocator.alloc(u8, 5);
     defer allocator.free(seg);
     clear(seg);
 
-    fillChunk(@ptrCast([*]u8, seg), true);
+    fillChunk(@as([*]u8, @ptrCast(seg)), true);
 
     const result = [_]u8{0b0000_0000, 0b0001_0000, 0b0100_0010, 0b0000_1000, 0b0010_0001};
     try std.testing.expectEqualSlices(u8, seg, result[0..]);
@@ -284,11 +286,11 @@ test "it is possible to fill a u8 memory segment with factors of 5 that starts a
 
 test "it is possible to fill a u8 vector segment with factors of 5 that starts at the square" {
     const fillChunk = DenseFnFactory(u8, 5, .{.max_vector = 2}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 5);
+    const seg = try allocator.alloc(u8, 5);
     defer allocator.free(seg);
     clear(seg);
 
-    fillChunk(@ptrCast([*]u8, seg), true);
+    fillChunk(@as([*]u8, @ptrCast(seg)), true);
 
     const result = [_]u8{0b0000_0000, 0b0001_0000, 0b0100_0010, 0b0000_1000, 0b0010_0001};
     try std.testing.expectEqualSlices(u8, seg, result[0..]);
@@ -301,13 +303,13 @@ test "it is possible to fill a u8 vector segment with factors of 5 that starts a
 // specify the field_size and it will run the loop automatically.
 
 fn SparseFn(comptime T: type) type {
-    return fn([*]T, usize, usize) callconv(.Inline) void;
+    return *const fn([*]T, usize, usize) void;
 }
 
 pub fn makeSparseLUT(comptime T: type, opts: UnrolledOpts) [lutCount(T, true)]SparseFn(T) {
     var myFuns: [lutCount(T, true)]SparseFn(T) = undefined;
-    for (myFuns) | *f, index | {
-        f.* = SparseFnFactory(T, 2 * index + 1, opts).fill;
+    for (&myFuns, 0..) |*f, index| {
+        f.* = &SparseFnFactory(T, 2 * index + 1, opts).fillOutOfLine;
     }
     return myFuns;
 }
@@ -318,13 +320,19 @@ var my_field: usize = undefined;
 
 pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts: UnrolledOpts) type {
     return struct{
+        /// out-of-line version of `fill`, so it can be called through the sparse LUT.
+        pub fn fillOutOfLine(field: [*]T, field_ints: usize, factor: usize) void {
+            fill(field, field_ints, factor);
+        }
+
         pub inline fn fill(field: [*]T, field_ints: usize, factor: usize) void {
+            @setEvalBranchQuota(100_000);
             const square_offset = (factor * factor) / (2 * @bitSizeOf(T));
             const stride = factor / @bitSizeOf(T) - 1;
             const field_end = field + field_ints;
             var chunk = field + square_offset;
             
-            while (@ptrToInt(chunk) < @ptrToInt(field_end)) : (chunk += factor) {
+            while (@intFromPtr(chunk) < @intFromPtr(field_end)) : (chunk += factor) {
                 fillOneChunk(chunk, stride); // move the chunk pointer over.
             }
         }
@@ -349,15 +357,15 @@ pub fn SparseFnFactory(comptime T: type, comptime progressive_shift: usize, opts
 
         inline fn setBit(chunk: [*]T, comptime chunk_bit_index: usize, comptime iteration: usize, stride: usize) void {
             const shift_t = ShiftTypeFor(T);
-            comptime const shift = @intCast(shift_t, chunk_bit_index % @bitSizeOf(T));
-            comptime const unstrided_index = chunk_bit_index / @bitSizeOf(T);
+            const shift = @as(shift_t, @intCast(chunk_bit_index % @bitSizeOf(T)));
+            const unstrided_index = chunk_bit_index / @bitSizeOf(T);
             const strided_index = unstrided_index + iteration * stride;
 
             if (opts.PRIME == 0) { // NB this if is evaluated at comptime.
-                comptime const mask = @as(T, 1) << shift;
+                const mask = @as(T, 1) << shift;
                 chunk[strided_index] |= mask;
             } else {
-                comptime const mask = ~(@as(T, 1) << shift);
+                const mask = ~(@as(T, 1) << shift);
                 chunk[strided_index] &= mask;
             }
         }
@@ -383,11 +391,11 @@ test "the `naturalSquareBitIndex` results make sense" {
 
 test "it is possible to fill a u8 memory segment with factors of 11" {
     const fillSpan = SparseFnFactory(u8, 3, .{}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 11);
+    const seg = try allocator.alloc(u8, 11);
     defer allocator.free(seg);
     clear(seg);
 
-    fillSpan(@ptrCast([*]u8, seg), 0);
+    fillSpan(@as([*]u8, @ptrCast(seg)), 0);
 
     const result = [_]u8{0b0001_0000, 0b1000_0000, 0b0000_0000, 0b0000_0100,
                          0b0010_0000, 0b0000_0000, 0b0000_0001, 0b0000_1000,
@@ -398,11 +406,11 @@ test "it is possible to fill a u8 memory segment with factors of 11" {
 
 test "it is possible to fill a u8 memory segment with factors of 17" {
     const fillSpan = SparseFnFactory(u8, 1, .{}).fillOneChunk;
-    var seg = try allocator.alloc(u8, 17);
+    const seg = try allocator.alloc(u8, 17);
     defer allocator.free(seg);
     clear(seg);
 
-    fillSpan(@ptrCast([*]u8, seg), 1);
+    fillSpan(@as([*]u8, @ptrCast(seg)), 1);
 
     const result = [_]u8{0b0000_0001, 0b0000_0000, 0b0000_0010, 0b0000_0000,
                          0b0000_0100, 0b0000_0000, 0b0000_1000, 0b0000_0000,
@@ -418,14 +426,7 @@ test "it is possible to fill a u8 memory segment with factors of 17" {
 
 fn ShiftTypeFor(comptime T: type) type {
     const t_size = @bitSizeOf(T);
-    return @Type(
-        std.builtin.TypeInfo{
-            .Int = .{
-                .signedness = .unsigned,
-                .bits = std.math.log2(t_size)
-            }
-        }
-    );
+    return std.meta.Int(.unsigned, std.math.log2(t_size));
 }
 
 test "ShiftType analysis" {

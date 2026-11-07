@@ -1,5 +1,5 @@
 # ---- build stage ----
-FROM ubuntu:22.04 AS build
+FROM ubuntu:24.04 AS build
 
 RUN apt-get update -qq \
  && apt-get install -y bash clang lld
@@ -18,7 +18,7 @@ RUN set -eux; \
     clang++ ${CXXFLAGS} -fuse-ld=lld PrimeCPP_array.cpp -o primes_array.exe
 
 # ---- runtime stage ----
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 WORKDIR /opt/app
 COPY --from=build /opt/app/primes_array.exe /opt/app/

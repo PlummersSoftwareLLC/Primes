@@ -1,5 +1,5 @@
 # ---------- 1. Build stage ----------
-FROM debian:bookworm AS build
+FROM debian:trixie AS build
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -17,7 +17,7 @@ RUN chmod +x build.sh && ./build.sh
 
 
 # ---------- 2. Runtime stage ----------
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 
 WORKDIR /app
 

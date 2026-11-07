@@ -1,4 +1,4 @@
-FROM rocker/r-base:4.1.0
+FROM rocker/r-ver:4.6.1
 WORKDIR /scripts/
 COPY primes.R .
 ENTRYPOINT ["Rscript", "primes.R"]

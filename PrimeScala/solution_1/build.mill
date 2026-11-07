@@ -1,0 +1,20 @@
+//| mill-version: 1.3.1
+//| mill-jvm-version: system
+package build
+
+import mill.*, scalalib.*, scalanativelib.*, scalanativelib.api.*
+
+val scalaVersionString = "2.13.18"
+
+object sieve extends ScalaNativeModule {
+  def scalaVersion       = scalaVersionString
+  def scalaNativeVersion = "0.5.12"
+  def releaseMode = ReleaseMode.ReleaseFull
+  // def releaseMode = ReleaseMode.Debug // optional
+  def nativeGC = "none"
+}
+
+object sieveJVM extends ScalaModule {
+  def scalaVersion = scalaVersionString
+  def sources = Task.Sources(moduleDir / os.up / "sieve" / "src")
+}

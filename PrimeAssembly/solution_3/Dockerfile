@@ -1,4 +1,4 @@
-FROM eclipse-temurin:22-jdk-noble
+FROM eclipse-temurin:25-jdk-noble
 
 RUN apt-get update -qq \
     && apt-get install -y gcc git wget \

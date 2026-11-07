@@ -1,20 +1,19 @@
-FROM haskell:8.10.4
+FROM debian:trixie
 
 WORKDIR /opt/sieve
 
-RUN apt-get update && apt-get install -y lsb-release wget software-properties-common \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates ghc haskell-stack llvm-18 \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh \
-    && ./llvm.sh 9
+    && rm -rf /var/lib/apt/lists/*
 
-COPY stack.yaml package.yaml ./
+COPY stack.yaml stack.yaml.lock package.yaml ./
 
-RUN stack build --only-dependencies
+RUN stack build --system-ghc --no-install-ghc --only-dependencies
 
 COPY src/ src/
 COPY app/ app/
 
-RUN PATH=/usr/lib/llvm-9/bin:$PATH stack build --ghc-options='-fllvm'
+RUN stack build --system-ghc --no-install-ghc --ghc-options='-fllvm'
 
-CMD ["stack", "exec", "Sieve"]
+CMD ["stack", "exec", "--system-ghc", "--no-install-ghc", "Sieve"]

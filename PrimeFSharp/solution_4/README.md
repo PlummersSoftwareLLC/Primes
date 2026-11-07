@@ -12,7 +12,7 @@ Although use of pointer memory access is not recommended other than for the purp
 The de-tuning may have been eased in newer dotnet versions such that the program runs much faster run locally on my machine than using the Docker image as per the following results:
 
 ## Run instructions
-- [.NET >= 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
+- [.NET >= 10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
 - run ```dotnet run -c=Release```
 
 ## Docker

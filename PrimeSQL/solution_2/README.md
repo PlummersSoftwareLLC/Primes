@@ -36,13 +36,13 @@ This implementation does not use the base algorithm. It is based on the MariaDB2
 
 ### Run native
 
-To run this solution you need MariaDB. This database engine is available in most package managers of Linux distributions. The scripts are designed to run in batch mode with `mysql`.
+To run this solution you need MariaDB. This database engine is available in most package managers of Linux distributions. The scripts are designed to run in batch mode with `mariadb`.
 
 ```bash
 cd path/to/sieve
-mysql -u<user> -p<password> < primes_1.sql
-mysql -u<user> -p<password> < primes_2.sql
-mysql -u<user> -p<password> < primes_3.sql
+mariadb -u<user> -p<password> < primes_1.sql
+mariadb -u<user> -p<password> < primes_2.sql
+mariadb -u<user> -p<password> < primes_3.sql
 ```
 
 ### Run with Docker

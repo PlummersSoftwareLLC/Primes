@@ -1,4 +1,4 @@
-FROM debian:bookworm AS build
+FROM debian:trixie AS build
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -24,7 +24,7 @@ RUN chmod +x build.sh \
 COPY lolprime.lol run.sh README.md ./
 
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 

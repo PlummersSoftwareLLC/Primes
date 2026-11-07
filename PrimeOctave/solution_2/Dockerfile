@@ -1,4 +1,4 @@
-FROM gnuoctave/octave:6.2.0
+FROM gnuoctave/octave:11.3.0
 
 WORKDIR /opt/app
 COPY *.m ./

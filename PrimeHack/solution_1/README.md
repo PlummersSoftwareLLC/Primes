@@ -14,7 +14,7 @@ This implamentation is a copy of the PrimeCS version by davepl, but translated t
 
 ### Hack
 1. Install HHVM runtime from the [offical download page](https://docs.hhvm.com/hhvm/getting-started/getting-started)
-2. Run the code using the follow syntax: `hhvm PrimeHack.hack`
+2. Run the code using the follow syntax: `hhvm -vEval.JitPGO=0 PrimeHack.hack`
 
 ## Output
 Intel Core i5-2500 @ 3.30GHz (Ubuntu 20.04)

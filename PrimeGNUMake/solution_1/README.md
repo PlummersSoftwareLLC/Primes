@@ -18,10 +18,7 @@ This solution is very slow because of the lack of real arithmetic functionality.
 
 ## Run instructions
 
-gmsl is included as a git submodule. Run the following command in the solution directory to initialize and fetch the library:
-```
-git submodule update --init gmsl
-```
+A copy of gmsl 1.2.0 (`gmsl` and `__gmsl`, BSD licensed) is included in the `gmsl` directory.
 
 ### GNU Make
 
