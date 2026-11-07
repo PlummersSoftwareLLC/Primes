@@ -61,11 +61,31 @@ Also, running the sieves in parallel in different threads in an embarrassingly p
 
 5760of30030_epar - Implementation writing bits in style (2), embarrassingly parallel
 
+8of30_msubra_extend - Contributed by msubra. An 8-of-30 wheel implementation
+with two additional optimizations over the standard 8-of-30 approach:
+
+1. **Extended pre-sieve**: composites of 7, 11, 13, and 17 are pre-computed
+   as a 17017-byte template (lcm(7,11,13,17)) built inductively. For N=1,000,000
+   this reduces tiling to 2 memcpy calls and eliminates four marking passes per
+   iteration. The presieve is built as part of each sieve instance (inside the
+   timed loop) so each pass owns its own complete state.
+
+2. **Wide-tile vectorization**: for primes with stride ≤ 127, multiples are
+   marked by building a stride-byte tile, expanding it 16× into a wide tile
+   via O(log 16) doubling memcpy calls, then ORing across the sieve with
+   Clang auto-vectorized inner loops (NEON on arm64, AVX2 on x86-64).
+   Larger primes (stride > 127) use 8-deep strided scatter, which is faster
+   at those strides where the wide-tile scan cost exceeds scatter's L2 cost.
+   The stride is a runtime value — no hardcoded prime enumeration.
+
+Compiled with GCC (uses `#pragma GCC ivdep` for auto-vectorization; Clang uses `clang loop vectorize(enable)` via the same `VECTORIZE_HINT` macro). Command-line
+interface, `custom_atoll`, oneshot mode, and `benchmark.sh` pattern adapted
+from PrimeCPP/solution_5.
 
 ## Run instructions
 You can use the Dockerfile - but the code (especially the parallel implementations) runs (much) slower in docker.
 
-First compile the code using the compile.sh script. Optimization parameters are at the beginning of the script. They are set up to use the gcc compiler.
+First compile the code using the compile.sh script. Optimization parameters are at the beginning of the script. They are set up to use the gcc compiler. The msubra variant is compiled separately with clang (both gcc and clang are installed in the Docker image).
 
 Then run the code using the run.sh script. (You can change the number of threads in the script, the default runs up to 4 threads on the parallel bit masking and the maximum number of cpus on the embarrassingly parallel implementation).
 
@@ -133,3 +153,77 @@ danielspaangberg_48of210_epar;19032;5.001211;4;algorithm=wheel,faithful=yes,bits
 danielspaangberg_480of2310_epar;19070;5.001330;4;algorithm=wheel,faithful=yes,bits=1
 danielspaangberg_5760of30030_epar;19314;5.001127;4;algorithm=wheel,faithful=yes,bits=1
 ```
+
+### msubra_8of30_extend — alternating runs vs all 8-of-30 entries
+
+All variants compiled with `clang -Ofast -march=native` (existing entries) and
+`clang -O3 -ffast-math -march=native` (msubra_8of30_extend). On macOS, `gcc`
+is Apple Clang 16; Clang is used directly here for clarity.
+
+---
+
+#### macOS — Intel i9-9980HK @ 2.40 GHz, Coffee Lake, AVX2, 16 logical / 8 physical cores, GCC = Apple Clang 16
+
+`danielspaangberg_8of30_par` run with 4 threads; `_epar` and msubra multi-threaded run with 16 threads.
+
+**Run 1**
+```
+danielspaangberg_8of30;10845;5.000022;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9900;5.000110;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19263;5.000008;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;88987;5.003572;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;75938;5.00147;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;502464;5.00255;16;algorithm=wheel,faithful=yes,bits=1
+```
+
+**Run 2**
+```
+danielspaangberg_8of30;10820;5.000176;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9898;5.000485;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19178;5.000078;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;88709;5.003482;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;76005;5.00941;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;495374;5.0072;16;algorithm=wheel,faithful=yes,bits=1
+```
+
+**Run 3**
+```
+danielspaangberg_8of30;10798;5.000242;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;9840;5.000141;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;19251;5.000041;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;88825;5.003217;16;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;75625;5.00775;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;496981;5.00534;16;algorithm=wheel,faithful=yes,bits=1
+```
+
+Single-threaded: msubra_8of30_extend averages 75,856 passes vs 10,821 for
+danielspaangberg_8of30 (**+601%**) and 9,879 for danielspaangberg_8of30_owrb (**+668%**).
+
+Multi-threaded at 16 threads: msubra_8of30_extend averages 498,273 passes vs 88,840
+for danielspaangberg_8of30_epar (**+461%**).
+
+---
+
+#### Linux — Intel Xeon X5650 @ 2.67 GHz, Westmere, SSE4.2 only, 24 logical / 6 physical cores, GCC 10.2.1
+
+`danielspaangberg_8of30_par` run with 4 threads; `_epar` and msubra multi-threaded run with 24 threads.
+
+```
+danielspaangberg_8of30;8684;5.000356;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_owrb;8431;5.000151;1;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_par;12788;5.000079;4;algorithm=wheel,faithful=yes,bits=1
+danielspaangberg_8of30_epar;88134;5.003377;24;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;32874;5.00036;1;algorithm=wheel,faithful=yes,bits=1
+msubra_8of30_extend;356427;5.00062;24;algorithm=wheel,faithful=yes,bits=1
+```
+
+Single-threaded: msubra_8of30_extend scores 32,874 passes vs 8,684 for
+danielspaangberg_8of30 (**+278%**) and 8,431 for danielspaangberg_8of30_owrb (**+290%**).
+
+Multi-threaded at 24 threads: msubra_8of30_extend scores 356,427 passes vs 88,134
+for danielspaangberg_8of30_epar (**+304%**).
+
+The smaller gain on Linux is expected: the Xeon X5650 (Westmere, 2010) supports only
+SSE4.2 (128-bit SIMD). The wide-tile OR loop that drives msubra's speed processes 256
+bits per cycle on AVX2 (macOS) vs 128 bits on SSE4.2 (gamma), halving the vectorization
+benefit. The algorithmic improvement is consistent across both platforms.

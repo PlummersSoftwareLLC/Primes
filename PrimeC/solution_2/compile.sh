@@ -8,3 +8,7 @@ done
 for x in sieve_1of2_par sieve_8of30_par sieve_48of210_par sieve_480of2310_par sieve_5760of30030_par sieve_1of2_epar sieve_8of30_epar sieve_48of210_epar sieve_480of2310_epar sieve_5760of30030_epar; do
     $CC $PAR -o $x $x.c -lm
 done
+# Compile msubra's 8-of-30 with presieve and wide-tile marking
+gcc -march=native -mtune=native -pthread -O3 -ffast-math \
+    -fno-math-errno -fno-trapping-math -std=c11 -D_GNU_SOURCE \
+    sieve_8of30_msubra_extend.c -o sieve_8of30_msubra_extend -lm -lpthread
