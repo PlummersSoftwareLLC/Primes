@@ -136,10 +136,8 @@ static void build_presieve(uint8_t* buf)
             memcpy(buf + filled, buf, 17017 - filled);
     }
 
-    // Primes 11 and 13 combined: period = lcm(11,13) = 143.
-    // 17017 / 143 = 119 exactly, so tiling fits without a partial tail.
-    // Each prime repeats period/p times per residue within the 143-byte window;
-    // the inner for-loop enumerates all repetitions correctly.
+    // Primes 11 and 13 combined: period = lcm(11,13) = 143, OR into buf.
+    // 17017 / 143 = 119 exactly.
     uint8_t temp[17017];
     {
         uint8_t base143[143] = {0};
