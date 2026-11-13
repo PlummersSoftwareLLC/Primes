@@ -1,7 +1,9 @@
 [workspace]
+resolver = "3"
 members = [
     "prime-sieve-rust",
-    "helper-macros"
+    "helper-macros",
+    "cokieminer-base-sieve",
 ]
 
 [profile.release]

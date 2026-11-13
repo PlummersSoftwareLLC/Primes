@@ -1,0 +1,19 @@
+[package]
+name = "cokieminer-base-sieve"
+version = "0.1.0"
+edition = "2024"
+authors = ["CokieMiner"]
+description = "Dependency-free faithful 1-bit base sieve for the Primes drag race"
+license = "MIT"
+publish = false
+
+[dependencies]
+
+[lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+allow_attributes_without_reason = "deny"
+
