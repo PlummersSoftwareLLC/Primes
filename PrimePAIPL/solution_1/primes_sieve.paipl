@@ -1,0 +1,71 @@
+package primes.dragrace;
+
+@tqlid(kernel="WinNT", taxonomy="span", subtype="paipl_mod", host=0x9b4c, anchor=.1316)
+@inspect("[v1|Native|WinNT|Span:paipl_mod|2026-11-04T19:56:23.000Z|Host:9b4c|PID:1316|Hash:a91f]")
+@capability(allow_ipc="pipe", cidr="6180:0000:0000:0000:0000:9b4c.0:0000/11", deny="all")
+@runtime_validated(status="Running", causal_window="5m")
+@contract(guards=["NO_TOXIC", "NO_CHOKEPOINT_BYPASS"])
+
+protocol PrimesSieve {
+    fn run_sieve() -> u64;
+}
+
+.section .data {
+    arena sieve_arena: u8[500000] align 64B;
+}
+
+.section .text {
+    fn run_sieve() -> u64 {
+    .entry:
+        DEFER   zero_arena(sieve_arena);
+        MOV     %ret, 500000;
+        MOV     %r14, 500000;
+        MOV     %r15, 1;
+        MOV     %r8, 3;
+        MOV     %r9, 1;
+        MOV     %r10, 4;
+
+    .factor_loop:
+        CMP     %r10, %r14;
+        JMP     if_above_equal .count_init;
+        MOV     %r11, sieve_arena[%r9];
+        SUB     %ret, %ret, %r11;
+        CMP     %r11, 0;
+        JMP     if_not_zero .next_factor;
+        MOV     %r12, %r10;
+
+    .mark_loop:
+        MOV     sieve_arena[%r12], %r15;
+        ADD     %r12, %r12, %r8;
+        CMP     %r12, %r14;
+        JMP     if_below .mark_loop;
+
+    .next_factor:
+        ADD     %r10, %r10, %r8;
+        ADD     %r8, %r8, 2;
+        ADD     %r10, %r10, %r8;
+        ADD     %r9, %r9, %r15;
+        JMP     .factor_loop;
+
+    .count_init:
+        MOV     %r13, 500;
+
+    .count_loop:
+        MOV     %r8, sieve_arena[%r13];
+        ADD     %r13, %r13, %r15;
+        MOV     %r9, sieve_arena[%r13];
+        ADD     %r13, %r13, %r15;
+        MOV     %r10, sieve_arena[%r13];
+        ADD     %r13, %r13, %r15;
+        MOV     %r11, sieve_arena[%r13];
+        ADD     %r13, %r13, %r15;
+        ADD     %r8, %r8, %r9;
+        ADD     %r10, %r10, %r11;
+        ADD     %r8, %r8, %r10;
+        SUB     %ret, %ret, %r8;
+        CMP     %r13, %r14;
+        JMP     if_below .count_loop;
+        ASSERT  %ret == 78498;
+        RET     %ret;
+    }
+}
