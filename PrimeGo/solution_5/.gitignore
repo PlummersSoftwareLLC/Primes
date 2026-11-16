@@ -1,0 +1,6 @@
+markers_gen.go
+*.exe
+*.test
+*.prof
+primes
+.idea/
