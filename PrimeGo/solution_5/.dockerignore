@@ -1,0 +1,6 @@
+# generated inside the image by gen/main.go
+markers_gen.go
+*.exe
+*.test
+*.prof
+.idea/
