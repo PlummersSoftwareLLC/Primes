@@ -10,12 +10,16 @@ A set bit marks a composite or a position outside the limit. The unused high
 bits and PHP array storage add overhead.
 
 The sieve first marks multiples of the small primes through 37. Each pattern
-for a prime `p` repeats every `p` words. Combining pairs of these short patterns
-lets the sieve initialize many flags per write. It then finds the remaining
-prime factors in the live sieve. For a factor `p` and a wheel residue `r`,
-products whose cofactor is congruent to `r` occupy the same bit in every
-`p`th word. Each marking loop starts at the first such product at or above
-`p * p` and advances by adding `p` to the word index.
+for a prime `p` repeats every `p` words. The sieve combines four pairs of
+patterns, advancing the four indices together until one wraps.
+
+The remaining prime factors come from the live sieve. For wheel size `W`,
+if `p*r` falls in word `k` with remainder `t`, then `p*(W-r)` falls in word
+`p-1-k` with remainder `W-t`. The marking loop uses two such pairs to cross
+out four multiples at a time. All four word indices advance by `p`.
+The cofactors start in the wheel block containing `p`, so some multiples
+below `p*p` are marked again. The first block includes cofactor 1, so the
+sieve restores the bit for `p` after marking.
 
 Both entry points report `algorithm=wheel,faithful=yes,bits=1`. The default
 runs one worker. The optional parallel entry sums the completed passes of
@@ -25,7 +29,9 @@ wall time. Each worker checks that its last sieve contains 78,498 primes.
 ## Run
 
 From this directory, build the official PHP 8.5.12 Alpine CLI image with
-OPcache tracing JIT enabled, then run either entry point.
+OPcache tracing JIT enabled, then run either entry point. The image sets
+`opcache.file_update_protection=0` so OPcache can compile the bundled scripts
+even when their modification times are less than two seconds old.
 
 ```sh
 docker build -t primes-php-wheel .
@@ -48,6 +54,6 @@ boundaries, prime squares, 41 cubed, one million, and ten million.
 Single-worker and 16-worker runs on an AMD Ryzen 9 7950X under Linux amd64
 
 ```text
-LauJosefsen-wheel;30542;5.000047824;1;algorithm=wheel,faithful=yes,bits=1
-LauJosefsen-wheel-par;447747;5.027933212;16;algorithm=wheel,faithful=yes,bits=1
+LauJosefsen-wheel;35180;5.000131046;1;algorithm=wheel,faithful=yes,bits=1
+LauJosefsen-wheel-par;515019;5.037574935;16;algorithm=wheel,faithful=yes,bits=1
 ```

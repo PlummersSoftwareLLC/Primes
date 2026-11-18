@@ -31,11 +31,16 @@ final class WheelSieve
         $b = $this->pairPattern(13, 31);
         $c = $this->pairPattern(17, 29);
         $d = $this->pairPattern(19, 23);
-        $words = [];
+        $words = array_fill(0, $size, 0);
         for ($i = 0; $i < $size;) {
-            $end = min(11 * 37, $size - $i);
-            for ($k = 0; $k < $end; ++$k, ++$i) {
-                $words[] = $a[$k] | $b[$i % (13 * 31)] | $c[$i % (17 * 29)] | $d[$i % (19 * 23)];
+            $ia = $i % (11 * 37);
+            $ib = $i % (13 * 31);
+            $ic = $i % (17 * 29);
+            $id = $i % (19 * 23);
+            // All four pattern indices can advance together until the first wraps.
+            $end = $i + min($size - $i, 11 * 37 - $ia, 13 * 31 - $ib, 17 * 29 - $ic, 19 * 23 - $id);
+            for (; $i < $end; ++$i) {
+                $words[$i] = $a[$ia++] | $b[$ib++] | $c[$ic++] | $d[$id++];
             }
         }
         if (self::WHEEL === 30) {
@@ -60,6 +65,8 @@ final class WheelSieve
             }
         }
 
+        // An index-controlled pair loop miscounted at limit 4,831 with PHP 8.5.12 tracing JIT.
+        $pairStarts = range(0, intdiv(count(self::RESIDUES), 2) - 2, 2);
         for ($p = 41; $p * $p <= $limit; $p += 2) {
             $remainder = $p % self::WHEEL;
             $flag = $masks[$remainder];
@@ -67,17 +74,43 @@ final class WheelSieve
             if (!$flag || ($words[$block] & $flag)) {
                 continue;
             }
-            // All p*q with the same q residue hit the same bit, p words apart.
+            // If p*r lands at offset k, p*(WHEEL-r) lands at p-1-k.
             $base = $block * $p;
             $scaled = intdiv(($p << self::SHIFT) + self::WHEEL - 1, self::WHEEL);
-            foreach (self::RESIDUES as $residue) {
-                $offset = ($scaled * $residue) >> self::SHIFT;
-                $bit = $masks[$p * $residue - $offset * self::WHEEL];
-                $i = $base + $offset + ($residue < $remainder ? $p : 0);
-                for (; $i < $size; $i += $p) {
-                    $words[$i] |= $bit;
+            foreach ($pairStarts as $j) {
+                $r = self::RESIDUES[$j];
+                $aOffset = ($scaled * $r) >> self::SHIFT;
+                $aResidue = $p * $r - $aOffset * self::WHEEL;
+                $aBit = $masks[$aResidue];
+                $aMirror = $masks[self::WHEEL - $aResidue];
+
+                $r = self::RESIDUES[$j + 1];
+                $bOffset = ($scaled * $r) >> self::SHIFT;
+                $bResidue = $p * $r - $bOffset * self::WHEEL;
+                $bBit = $masks[$bResidue];
+                $bMirror = $masks[self::WHEEL - $bResidue];
+
+                $gap = $bOffset - $aOffset;
+                $far = $p - 1 - 2 * $aOffset;
+                $near = $far - $gap;
+                for ($i = $base + $aOffset, $end = $size - $far; $i < $end; $i += $p) {
+                    $words[$i] |= $aBit;
+                    $words[$i + $gap] |= $bBit;
+                    $words[$i + $near] |= $bMirror;
+                    $words[$i + $far] |= $aMirror;
+                }
+                if ($i < $size) {
+                    $words[$i] |= $aBit;
+                }
+                if ($i + $gap < $size) {
+                    $words[$i + $gap] |= $bBit;
+                }
+                if ($i + $near < $size) {
+                    $words[$i + $near] |= $bMirror;
                 }
             }
+            // The first wheel block includes cofactor 1.
+            $words[$block] &= ~$flag;
         }
         $this->words = $words;
     }
