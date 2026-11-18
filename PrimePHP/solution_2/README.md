@@ -1,27 +1,31 @@
 # PHP wheel sieve by LauJosefsen
 
-Each worker builds a presieved bitmap once inside the five-second timer. It stores
-one bit per odd candidate in native PHP integers. A set bit marks a composite or
-an unused bit at the end of the buffer. The seed crosses out multiples of the odd
-primes through 97.
+Every timed pass constructs a new `WheelSieve` from the requested limit. It
+allocates its own candidate buffer and builds its presieve patterns anew. The
+fixed residue tables describe which numbers the wheel represents.
 
-Each pass starts with the seed. PHP copies the array on its first write. A
-remaining composite has a factorization `p * q` with `101 <= p <= q`, so the
-pass collects surviving candidates through `intdiv(limit, 101)` as possible
-cofactors. For each prime factor through the square root of the limit, it marks
-the products from its square up to the limit. The implementation unrolls that
-loop four products at a time.
+On 64-bit PHP, each word holds one composite flag for each of the 48 residues
+coprime to 210. On 32-bit PHP, each word holds the eight residues coprime to 30.
+A set bit marks a composite or a position outside the limit. The unused high
+bits and PHP array storage add overhead.
 
-The output uses `algorithm=wheel,faithful=no,bits=1`. The worker reuses a
-full-size presieved bitmap across passes and discovers the factors above 97 in
-each pass. Each worker validates its final count of 78,498 primes. The optional
-parallel command sums completed passes across independent PHP processes and
-includes their startup and validation in the parent's wall time.
+The sieve first marks multiples of the small primes through 37. Each pattern
+for a prime `p` repeats every `p` words. Combining pairs of these short patterns
+lets the sieve initialize many flags per write. It then finds the remaining
+prime factors in the live sieve. For a factor `p` and a wheel residue `r`,
+products whose cofactor is congruent to `r` occupy the same bit in every
+`p`th word. Each marking loop starts at the first such product at or above
+`p * p` and advances by adding `p` to the word index.
+
+Both entry points report `algorithm=wheel,faithful=yes,bits=1`. The default
+runs one worker. The optional parallel entry sums the completed passes of
+independent PHP workers and includes their startup and final validation in its
+wall time. Each worker checks that its last sieve contains 78,498 primes.
 
 ## Run
 
-Build and run from this directory using the official PHP 8.5.12 Alpine CLI image
-with tracing JIT.
+From this directory, build the official PHP 8.5.12 Alpine CLI image with
+OPcache tracing JIT enabled, then run either entry point.
 
 ```sh
 docker build -t primes-php-wheel .
@@ -29,24 +33,21 @@ docker run --rm primes-php-wheel
 docker run --rm primes-php-wheel parallel.php 16
 ```
 
-The last command starts 16 workers. Choose a worker count appropriate to the host.
-
 ## Verify
 
 ```sh
 docker run --rm primes-php-wheel check.php
 ```
 
-The check compares each flag and the total count with an independent sieve on
-two passes per limit. The limits include word boundaries, prime squares,
-1,000,000, and 101 cubed, where a product of three unpresieved factors first
-appears.
+The check compares every flag and the count with an independent sieve on two
+fresh passes per limit. Cases include every limit from 0 through 450, wheel
+boundaries, prime squares, 41 cubed, one million, and ten million.
 
 ## Example output
 
-Single-worker and 16-worker runs on an AMD Ryzen 9 7950X (Linux amd64)
+Single-worker and 16-worker runs on an AMD Ryzen 9 7950X under Linux amd64
 
 ```text
-LauJosefsen-wheel;53754;5.000000845;1;algorithm=wheel,faithful=no,bits=1
-LauJosefsen-wheel-par;792137;5.027167654;16;algorithm=wheel,faithful=no,bits=1
+LauJosefsen-wheel;30542;5.000047824;1;algorithm=wheel,faithful=yes,bits=1
+LauJosefsen-wheel-par;447747;5.027933212;16;algorithm=wheel,faithful=yes,bits=1
 ```

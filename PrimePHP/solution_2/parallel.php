@@ -34,5 +34,5 @@ try {
         proc_close($process);
     }
 }
-printf("LauJosefsen-wheel-par;%d;%.9f;%d;algorithm=wheel,faithful=no,bits=1\n",
+printf("LauJosefsen-wheel-par;%d;%.9f;%d;algorithm=wheel,faithful=yes,bits=1\n",
     $passes, (hrtime(true) - $start) / 1e9, $workers);

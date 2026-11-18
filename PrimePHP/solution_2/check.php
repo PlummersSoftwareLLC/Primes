@@ -5,8 +5,8 @@ declare(strict_types=1);
 require __DIR__ . '/WheelSieve.php';
 
 $limits = [
-    0, 1, 2, 3, 9, 97, 101, 126, 127, 128, 129, 9_409, 10_200, 10_201,
-    10_202, 30_599, 999_983, 1_000_000, 1_030_301, 3_000_000,
+    ...range(0, 450), 1_680, 1_681, 1_682, 9_409, 10_200, 10_201, 10_202,
+    30_599, 68_921, 999_983, 1_000_000, 1_030_301, 3_000_000, 10_000_000,
 ];
 foreach ($limits as $limit) {
     $reference = str_repeat('1', $limit + 1);
@@ -22,13 +22,8 @@ foreach ($limits as $limit) {
         }
     }
 
-    $seed = WheelSieve::seed($limit);
-    $originalSeed = $seed;
     for ($pass = 0; $pass < 2; ++$pass) {
-        $sieve = new WheelSieve($seed, $limit);
-        if ($seed !== $originalSeed) {
-            throw new RuntimeException("Seed changed on pass $pass at limit $limit");
-        }
+        $sieve = new WheelSieve($limit);
         if ($sieve->isPrime(-1) || $sieve->isPrime($limit + 1)) {
             throw new RuntimeException("Out-of-range result at limit $limit");
         }
