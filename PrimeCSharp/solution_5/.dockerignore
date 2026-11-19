@@ -1,0 +1,5 @@
+bin/
+obj/
+.idea/
+# generated inside the image by tools/GenMarkers.cs
+Markers.Generated.cs
