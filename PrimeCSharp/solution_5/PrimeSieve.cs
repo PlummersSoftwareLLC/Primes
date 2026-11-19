@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 
@@ -16,8 +17,27 @@ public sealed class PrimeSieve
             throw new PlatformNotSupportedException("The sieve assumes a little-endian machine.");
     }
 
-    // Factors up to this are marked with 256-bit vectors. 95 measured the same.
-    public const int DefaultVectorDenseMax = 63;
+    // Factors up to this are marked with 256-bit vectors. 79 measured the same.
+    public const int DefaultVectorDenseMax = 95;
+
+    // MaskRoom[m] is the room for the masks of the primes from 3 to m, four words per
+    // unit of factor.
+    private static readonly int[] MaskRoom = BuildMaskRoom();
+
+    static int[] BuildMaskRoom()
+    {
+        var room = new int[256];
+        for (int p = 3, sum = 0; p < room.Length; p++)
+        {
+            bool prime = p % 2 == 1;
+            for (int d = 3; d * d <= p && prime; d += 2)
+                prime = p % d != 0;
+            if (prime)
+                sum += 4 * p;
+            room[p] = sum;
+        }
+        return room;
+    }
 
     private readonly int _sieveSize;
     private readonly int _halfLimit; // how many odd numbers: 1, 3, 5, ... up to sieveSize
@@ -27,6 +47,7 @@ public sealed class PrimeSieve
     public PrimeSieve(int size, int vectorDenseMax = DefaultVectorDenseMax)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(size);
+        ArgumentOutOfRangeException.ThrowIfNegative(vectorDenseMax);
         _sieveSize = size;
         _vectorMax = Vector128.IsHardwareAccelerated ? vectorDenseMax : 0;
         _halfLimit = (int)(((long)size + 1) / 2);
@@ -82,10 +103,13 @@ public sealed class PrimeSieve
         int segmentBits = (int)Math.Min((long)segmentBytes * 8, int.MaxValue);
 
         // The vector masks are built once per pass, when the factor is found, and kept
-        // here for the later segments. Room for every odd factor up to the cutoff.
+        // here for the later segments.
         int half = (_vectorMax + 1) / 2;
-        int maskRoom = _vectorMax >= 3 ? 4 * (half * half - 1) : 0;
-        Span<ulong> maskStore = maskRoom <= 4096 ? stackalloc ulong[maskRoom] : new ulong[maskRoom];
+        int maskRoom = _vectorMax < MaskRoom.Length ? MaskRoom[_vectorMax] : 4 * (half * half - 1);
+        Span<ulong> maskBuffer = maskRoom <= 4096 ? stackalloc ulong[maskRoom + 7] : new ulong[maskRoom + 7];
+        // Start on a cache line, so no vector of a mask is split over two.
+        nint address = Unsafe.ByteOffset(ref Unsafe.NullRef<ulong>(), ref MemoryMarshal.GetReference(maskBuffer));
+        Span<ulong> maskStore = maskBuffer.Slice((int)(-address >> 3) & 7);
         Span<int> maskAt = maxFactors <= 1024 ? stackalloc int[maxFactors] : new int[maxFactors];
         int maskUsed = 0;
 

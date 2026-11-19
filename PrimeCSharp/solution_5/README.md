@@ -23,6 +23,10 @@ Both came from looking at where the time went, not from a plan:
   `factor` words, so 64 marks and two copies give the same result. That was 8.7% faster. It is simply less work, so
   it should help on any CPU.
 
+One more thing turned up when I ported this to Go. The buffer that holds the patterns is on the stack and can start
+at any multiple of 8 bytes, so some of the 32-byte pattern loads were split over two cache lines. Starting the
+patterns on a cache line was 4% faster.
+
 The figures are from one machine (AMD Ryzen 9 9950X). On a CPU with a larger L1 cache the segments should matter
 less, and on arm64 the vectors are 128 bits wide, because .NET has nothing wider there.
 
@@ -31,7 +35,7 @@ less, and on arm64 the vectors are 128 bits wide, because .NET has nothing wider
 - One bit per odd number in a `byte[]`. A set bit means composite.
 - The next factor is found by testing the bits in order, up to the square root.
 - Marking starts at `factor * factor`. Which loop does it depends on the factor:
-  - **up to 63:** the pattern of multiples repeats every `factor` 256-bit vectors, so it is built once and OR-ed in,
+  - **up to 95:** the pattern of multiples repeats every `factor` 256-bit vectors, so it is built once and OR-ed in,
     one vector per store. Where `Vector256` is not accelerated (arm64) the same loop runs with `Vector128`, and
     with no vectors at all these factors use the word loop.
   - **up to 129:** the same with 64-bit words. Each word is read once, gets its bits, and is written once.
@@ -71,12 +75,12 @@ in the label.
 
 ## Output
 
-Ryzen 9 9950X, Windows 11, .NET 10.0.15, in Docker. The best three of 13 runs, with other work running on the machine:
+Ryzen 9 9950X, Windows 11, .NET 10.0.15, in Docker. The best three of 13 runs:
 
 ```
-pbednarcik;124983;5.00003;1;algorithm=base,faithful=yes,bits=1
-pbednarcik;122910;5.00002;1;algorithm=base,faithful=yes,bits=1
-pbednarcik;120441;5.00001;1;algorithm=base,faithful=yes,bits=1
+pbednarcik;132920;5.00001;1;algorithm=base,faithful=yes,bits=1
+pbednarcik;132498;5.00002;1;algorithm=base,faithful=yes,bits=1
+pbednarcik;132460;5.00002;1;algorithm=base,faithful=yes,bits=1
 ```
 
 ## Credits
